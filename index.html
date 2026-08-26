@@ -212,7 +212,7 @@
             min-width: 0;
         }
 
-        /* BARRA SUPERIOR FLEXÍVEL E SEM CORTES */
+        /* BARRA SUPERIOR TOTALMENTE FLUIDA E VISÍVEL */
         #top-bar {
             height: 52px;
             background: #ffffff;
@@ -220,25 +220,25 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 16px;
+            padding: 0 12px;
             gap: 8px;
             flex-shrink: 0;
+            width: 100%;
         }
 
         .top-bar-controls {
             display: flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
+            gap: 4px;
         }
 
         .icon-btn {
             background: transparent;
             border: none;
             color: var(--primary-blue);
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
-            padding: 6px 10px;
+            padding: 6px 8px;
             border-radius: 4px;
             transition: background 0.15s ease;
         }
@@ -250,21 +250,20 @@
         .time-stepper {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             background: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 2px;
-            flex-shrink: 0;
         }
 
         .time-select {
             border: none;
             background: transparent;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #334155;
-            padding: 2px 6px;
+            padding: 2px 4px;
             outline: none;
             cursor: pointer;
         }
