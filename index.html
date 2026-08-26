@@ -327,7 +327,7 @@
         }
 
         /* MODAIS PERSONALIZADOS */
-        #modalOverlay, #modalEditOverlay {
+        #modalOverlay, #modalEditOverlay, #modalImportOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.5);
@@ -338,7 +338,7 @@
         }
         .modal-box {
             background: #ffffff;
-            width: 420px;
+            width: 460px;
             border-radius: 8px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             padding: 20px;
@@ -359,6 +359,17 @@
             border-radius: 6px;
             font-size: 13px;
             outline: none;
+        }
+        .modal-textarea {
+            width: 100%;
+            height: 160px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: monospace;
+            outline: none;
+            resize: vertical;
         }
         .city-results {
             max-height: 120px;
@@ -392,9 +403,6 @@
 </head>
 <body>
 
-    <!-- INPUT OCULTO PARA SELEÇÃO DO ICLOUD -->
-    <input type="file" id="filePickerInput" accept=".SFcht,.sfcht" style="display: none;" onchange="processarArquivoSelecionadoIcloud(event)">
-
     <!-- PAINEL LATERAL DE NAVEGAÇÃO -->
     <aside id="sidebar">
         <div class="sidebar-header">
@@ -412,6 +420,10 @@
             <li class="menu-item" onclick="abrirModalNovoMapa()">
                 <span>Novo Mapa Natal</span>
                 <i class="fa-solid fa-user-plus"></i>
+            </li>
+            <li class="menu-item" onclick="abrirModalImportacaoTexto()">
+                <span>Importar Lista em Massa</span>
+                <i class="fa-solid fa-file-import"></i>
             </li>
         </ul>
 
@@ -458,8 +470,7 @@
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
-                <!-- BOTÃO DE SELEÇÃO DIRETA DO ICLOUD -->
-                <button class="icon-btn" onclick="abrirSeletorIcloud()" title="Importar .SFcht do iCloud / Astro Gold" style="color: #9a6d18;">
+                <button class="icon-btn" onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="color: #9a6d18;">
                     <i class="fa-solid fa-file-import"></i>
                 </button>
             </div>
@@ -495,25 +506,25 @@
             <div class="modal-title">Novo Mapa Natal</div>
             <div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
-                <input type="text" id="modalCodigo" class="modal-input" placeholder="Ex: C-001 (deixe em branco se não tiver)">
+                <input type="text" id="modalCodigo" class="modal-input" placeholder="Ex: 0011 (deixe em branco se não tiver)">
             </div>
             <div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Identificação</label>
-                <input type="text" id="modalNome" class="modal-input" placeholder="Ex: Cássio Pereira">
+                <input type="text" id="modalNome" class="modal-input" placeholder="Ex: Eryell Souza">
             </div>
             <div style="display: flex; gap: 8px;">
                 <div style="flex: 1;">
                     <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
-                    <input type="text" id="modalData" class="modal-input" placeholder="09/10/1989">
+                    <input type="text" id="modalData" class="modal-input" placeholder="11/06/1999">
                 </div>
                 <div style="flex: 1;">
                     <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
-                    <input type="text" id="modalHora" class="modal-input" placeholder="11:00" value="12:00">
+                    <input type="text" id="modalHora" class="modal-input" placeholder="18:28" value="12:00">
                 </div>
             </div>
             <div style="position: relative;">
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
-                <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Belém, PA)..." oninput="pesquisarCidadesAutocomplete(this.value, 'cityResultsList')">
+                <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Mauá, SP)..." oninput="pesquisarCidadesAutocomplete(this.value, 'cityResultsList')">
                 <div id="cityResultsList" class="city-results"></div>
             </div>
             <div class="modal-actions">
@@ -554,6 +565,21 @@
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalEdicao()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="salvarEdicaoMapaModal()">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE IMPORTAÇÃO EM MASSA POR TEXTO -->
+    <div id="modalImportOverlay">
+        <div class="modal-box">
+            <div class="modal-title">Importar Lista de Clientes em Massa</div>
+            <p style="font-size: 11px; color: #64748b;">Cole abaixo a sua lista. Aceita formatos como:<br><b>0011 - Eryell Souza, 11/06/1999, 18:28, Mauá</b></p>
+            <textarea id="importTextArea" class="modal-textarea" placeholder="Exemplo:
+0011 - Eryell Souza, 11/06/1999, 18:28, Mauá
+0012 - João Silva, 05/08/1985, 09:15, São Paulo"></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="fecharModalImportacaoTexto()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="processarImportacaoTextoEmMassa()">Importar Todos</button>
             </div>
         </div>
     </div>
@@ -727,7 +753,6 @@
       const nomeLimpo = novoNome.trim();
 
       try {
-        // Atualiza os registros do Supabase para refletirem o novo nome da pasta
         await _supabase.from('mapas').update({ pasta: nomeLimpo }).eq('pasta', pastaAntiga);
         
         const index = customFolders.indexOf(pastaAntiga);
@@ -840,7 +865,6 @@
 
       let html = '';
       lista.forEach((item, index) => {
-        // CÓDIGO LIMPO (SEM COLCHETES)
         const cod = item.codigo ? `${item.codigo} ` : '';
         const dataStr = item.dataNascimento || "Data n/i";
         const cidStr = item.cidade || "Local n/i";
@@ -924,6 +948,73 @@
         }
       } catch (err) {
         alert("Erro de conexão ao atualizar.");
+      }
+    }
+
+    /* IMPORTAÇÃO EM MASSA POR COPIAR/COLAR */
+    function abrirModalImportacaoTexto() {
+      document.getElementById('importTextArea').value = "";
+      document.getElementById('modalImportOverlay').style.display = "flex";
+    }
+
+    function fecharModalImportacaoTexto() {
+      document.getElementById('modalImportOverlay').style.display = "none";
+    }
+
+    async function processarImportacaoTextoEmMassa() {
+      const rawText = document.getElementById('importTextArea').value.trim();
+      if (!rawText) { alert("Cole o texto com a lista de clientes."); return; }
+
+      const linhas = rawText.split('\n');
+      const registros = [];
+
+      linhas.forEach(linha => {
+        let l = linha.trim();
+        if (!l) return;
+
+        // Tenta separar por vírgula, hífen ou tabulação
+        let partes = l.split(/[,;\t]/);
+        
+        let nomeBruto = partes[0] ? partes[0].trim() : "Sem Nome";
+        let codigo = null;
+        let nome = nomeBruto;
+
+        // Se o nome começar com número (ex: 0011 - Eryell Souza ou 0011 Eryell)
+        let matchCod = nomeBruto.match(/^(\d+)\s*[-_]?\s*(.+)$/);
+        if (matchCod) {
+          codigo = matchCod[1];
+          nome = matchCod[2].trim();
+        }
+
+        let dataStr = partes[1] ? partes[1].trim() : "01/01/2000";
+        let horaStr = partes[2] ? partes[2].trim() : "12:00";
+        let cidadeStr = partes[3] ? partes[3].trim() : "Brasil";
+
+        registros.push({
+          pasta: activeFolder,
+          codigo: codigo,
+          nome: nome,
+          data_nascimento: dataStr,
+          hora_nascimento: horaStr,
+          cidade: cidadeStr,
+          latitude: -23.5505,
+          longitude: -46.6333
+        });
+      });
+
+      if (registros.length === 0) { alert("Nenhum registro legível encontrado."); return; }
+
+      try {
+        const { error } = await _supabase.from('mapas').insert(registros);
+        if (!error) {
+          alert(`Sucesso! ${registros.length} clientes importados para a pasta "${activeFolder}".`);
+          fecharModalImportacaoTexto();
+          carregarConteudoPastaAtual();
+        } else {
+          alert("Erro ao salvar importação: " + error.message);
+        }
+      } catch (e) {
+        alert("Erro de conexão ao salvar.");
       }
     }
 
@@ -1183,74 +1274,6 @@
       }
     }
 
-    function abrirSeletorIcloud() {
-      document.getElementById('filePickerInput').click();
-    }
-
-    async function processarArquivoSelecionadoIcloud(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      let nomeSemExtensao = file.name.replace(/\.[^/.]+$/, "");
-      let partesNomePasta = nomeSemExtensao.split('-');
-      let pastaDestino = partesNomePasta.length > 1 ? partesNomePasta[1].trim() : activeFolder;
-
-      try {
-        const buffer = await file.arrayBuffer();
-        const decoder = new TextDecoder('latin1');
-        const textoBruto = decoder.decode(buffer);
-
-        const blocos = textoBruto.split(/[\x00-\x1F\x7F-\x9F]+/g);
-        const registrosValidos = [];
-
-        for (let bloco of blocos) {
-          let limpo = bloco.replace(/[^\x20-\x7E\xA0-\xFF]/g, '').trim();
-          if (limpo.length >= 3 && !/^(Created|SolarFire|AstroGold|Chart|ChartData)$/i.test(limpo)) {
-            if (/^[A-Za-zÀ-ú0-9\s\-\.\,\']+$/.test(limpo) && !registrosValidos.includes(limpo)) {
-              registrosValidos.push(limpo);
-            }
-          }
-        }
-
-        if (registrosValidos.length === 0) {
-          alert("Não foram encontrados registros legíveis no arquivo.");
-          return;
-        }
-
-        let inseridos = 0;
-        for (let reg of registrosValidos.slice(0, 300)) {
-          const { error } = await _supabase
-            .from('mapas')
-            .insert([{
-              pasta: pastaDestino,
-              codigo: null,
-              nome: reg,
-              data_nascimento: '01/01/2000',
-              hora_nascimento: '12:00',
-              cidade: 'Brasil',
-              latitude: -23.5505,
-              longitude: -46.6333
-            }]);
-
-          if (!error) inseridos++;
-        }
-
-        alert(`Sucesso! ${inseridos} mapas importados para a pasta "${pastaDestino}".`);
-        
-        if (!customFolders.includes(pastaDestino)) {
-          customFolders.push(pastaDestino);
-          salvarPastasStorage();
-          renderBarraDePastas();
-        }
-        selecionarPasta(pastaDestino);
-
-      } catch (err) {
-        alert("Erro ao ler o arquivo do iCloud.");
-      }
-      
-      event.target.value = '';
-    }
-
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1404,7 +1427,6 @@
       let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="#ffffff"/>`;
 
-      // CABEÇALHO DO PNG TAMBÉM LIMPO (SEM COLCHETES)
       const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
       svg += `<g id="png-discreet-header">
