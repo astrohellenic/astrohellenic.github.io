@@ -37,7 +37,7 @@
             display: flex;
         }
 
-        /* PAINEL LATERAL (ESTILO ASTRO GOLD) */
+        /* PAINEL LATERAL */
         #sidebar {
             width: 320px;
             background: var(--bg-sidebar);
@@ -123,7 +123,7 @@
             position: relative;
         }
 
-        /* BARRA DE CONTROLE SUPERIOR MINIMALISTA */
+        /* BARRA SUPERIOR MINIMALISTA */
         #top-bar {
             height: 48px;
             background: #fafafa;
@@ -176,7 +176,7 @@
             cursor: pointer;
         }
 
-        /* DADOS DO NATIVO DISCRETOS (ESTILO ASTRO GOLD) */
+        /* DADOS DO NATIVO DISCRETOS */
         #chart-discreet-info {
             position: absolute;
             top: 60px;
@@ -428,7 +428,7 @@
       }
     }
 
-    /* BUSCA NOME DA CIDADE REAL VIA OPENSTREETMAP (GEOCODING) */
+    /* BUSCA NOME DA CIDADE REAL VIA OPENSTREETMAP */
     async function obterNomeCidade(lat, lon) {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
@@ -496,7 +496,6 @@
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
       const horaStr = `${hora}:${min}`;
 
-      // Atualiza textos discretos da tela
       document.getElementById('infoName').innerText = currentSubjectName;
       document.getElementById('infoDetails').innerText = `${dia}/${mes}/${ano} às ${horaStr} • ${currentGeo.city}\nTropical • Signos Inteiros`;
 
@@ -622,7 +621,7 @@
         svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
       }
 
-      // ELEMENTOS INTERNOS (LOTES, NODOS, SÍZIGIA, EIXOS)
+      // ELEMENTOS INTERNOS
       const allRingItems = [
         { label: "ASC", deg: ascAbs, color: "#000000", itemType: "axis" },
         { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", itemType: "axis" },
@@ -671,8 +670,10 @@
 
         if (item.itemType === "syzygy") {
           svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
-            <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="#ffffff"/>
+            <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+            <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
             <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
+            <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
             <text x="0" y="21" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
           </g>`;
         } else if (item.itemType === "node") {
@@ -741,7 +742,7 @@
         svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
       }
 
-      // PLANETAS COM ANTI-COLISÃO
+      // PLANETAS
       const planetList = PLANETS_DEF.map(p => ({ ...p, deg: pObj[p.id].abs, retro: pObj[p.id].retro, aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs) }));
       planetList.sort((a, b) => a.aScreen - b.aScreen);
 
@@ -774,7 +775,6 @@
 
       svg += `</svg>`;
 
-      // MONTA CANVAS E DESENHA A IMAGEM
       const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
       const blobURL = URL.createObjectURL(svgBlob);
 
@@ -804,7 +804,7 @@
       link.click();
     }
 
-    /* AÇÕES DE MENU (FAVORITOS / BUSCA) */
+    /* AÇÕES DE MENU */
     function abrirNovoMapa() {
       const nome = prompt("Nome do Nativo:");
       if (!nome) return;
