@@ -358,6 +358,9 @@
 </head>
 <body>
 
+    <!-- INPUT OCULTO PARA ABRIR O SELETOR DE ARQUIVOS DO IPAD/ICLOUD -->
+    <input type="file" id="filePickerInput" accept=".SFcht,.sfcht" style="display: none;" onchange="processarArquivoSelecionadoIcloud(event)">
+
     <!-- PAINEL LATERAL DE NAVEGAÇÃO -->
     <aside id="sidebar">
         <div class="sidebar-header">
@@ -418,8 +421,8 @@
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
-                <!-- BOTÃO DE PARSE DO BINÁRIO .SFCHT -->
-                <button class="icon-btn" onclick="importarBinarioSfcht()" title="Ler Binário SFcht e Salvar no Supabase" style="color: #9a6d18;">
+                <!-- BOTÃO DE SELEÇÃO DIRETA DO ICLOUD NO IPAD -->
+                <button class="icon-btn" onclick="abrirSeletorIcloud()" title="Importar .SFcht do iCloud / Astro Gold" style="color: #9a6d18;">
                     <i class="fa-solid fa-file-import"></i>
                 </button>
             </div>
@@ -664,7 +667,6 @@
       carregarConteudoPastaAtual();
     }
 
-    // BUSCAR DADOS DO SUPABASE (LISTAGEM)
     async function carregarConteudoPastaAtual() {
       const container = document.getElementById('clientsListContainer');
       const statusEl = document.getElementById('searchStatusFeedback');
@@ -888,7 +890,6 @@
       executarCalculo();
     }
 
-    // SALVAR MAPA DIRETO NO SUPABASE
     async function salvarMapaNaPlanilha() {
       if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
         alert("Gere um Mapa Natal antes de salvar.");
@@ -934,61 +935,58 @@
       }
     }
 
-    // LEITOR CORRETO DO BINÁRIO .SFCHT (VARREDURA POR BLOCOS E EXTRAÇÃO DE STRINGS)
-    async function importarBinarioSfcht() {
-      try {
-        const res = await fetch('02 - Clientes.SFcht');
-        if (!res.ok) {
-          alert("Arquivo 02 - Clientes.SFcht não encontrado na raiz do GitHub.");
-          return;
-        }
-        const buffer = await res.arrayBuffer();
-        const decoder = new TextDecoder('latin1');
-        const textoCompleto = decoder.decode(buffer);
+    // DISPARADOR DO SELETOR DE ARQUIVOS DO ICLOUD NO IPAD
+    function abrirSeletorIcloud() {
+      document.getElementById('filePickerInput').click();
+    }
 
-        // Varredura por blocos binários para capturar nomes e locais formatados do Astro Gold
-        const registros = [];
-        let ponteiro = 0;
-        while (ponteiro < textoCompleto.length) {
-          let bloco = textoCompleto.substr(ponteiro, 300);
-          let pedacos = bloco.split('\x00').map(s => s.trim()).filter(s => s.length > 2);
-          
-          if (pedacos.length >= 1) {
-            let nomeCandidato = pedacos[0];
-            // Identifica o padrão de nome do Astro Gold (ex: números seguidos de hífen ou texto válido)
-            if (nomeCandidato.length >= 3 && !registros.includes(nomeCandidato)) {
-              registros.push(nomeCandidato);
+    // PROCESSADOR DE ARQUIVO .SFCHT SELECIONADO DIRETO DO ICLOUD DRIVE
+    async function processarArquivoSelecionadoIcloud(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Define a pasta de destino com base na aba ativa ou no nome do arquivo
+      let nomeSemExtensao = file.name.replace(/\.[^/.]+$/, "");
+      let partesNomePasta = nomeSemExtensao.split('-');
+      let pastaDestino = partesNomePasta.length > 1 ? partesNomePasta[1].trim() : activeFolder;
+
+      try {
+        const buffer = await file.arrayBuffer();
+        const decoder = new TextDecoder('latin1');
+        const textoBruto = decoder.decode(buffer);
+
+        // Limpeza estrita para remover null-bytes e blocos de controle binário do Astro Gold
+        const linhasOuBlocos = textoBruto.split(/[\x00-\x1F]+/g);
+        const nomesExtraidos = [];
+
+        linhasOuBlocos.forEach(bloco => {
+          let limpo = bloco.replace(/[^\x20-\x7E\xA0-\xFF]/g, '').trim();
+          // Validação de nomes e estruturas válidas
+          if (limpo.length >= 3 && !/^(Created|SolarFire|AstroGold|Chart|ChartData)$/i.test(limpo)) {
+            if (/^[A-Za-zÀ-ú0-9\s\-\.\,\']+$/.test(limpo) && !nomesExtraidos.includes(limpo)) {
+              nomesExtraidos.push(limpo);
             }
           }
-          ponteiro += 280; // Pulo do tamanho fixo de bloco do Solar Fire/Astro Gold
-        }
+        });
 
-        if (registros.length === 0) {
-          // Fallback de varredura global por regex caso o bloco exato varie
-          let matches = textoCompleto.match(/[A-Za-zÀ-ú0-9\s\-]{4,30}/g);
-          if (matches) {
-            matches.forEach(m => {
-              let limpo = m.trim();
-              if (limpo.length > 3 && !registros.includes(limpo)) registros.push(limpo);
-            });
-          }
-        }
-
-        if (registros.length === 0) {
-          alert("Não foi possível extrair registros legíveis do binário.");
+        if (nomesExtraidos.length === 0) {
+          alert("Não foram encontrados nomes legíveis dentro do arquivo selecionado.");
           return;
         }
 
-        let salvos = 0;
-        for (let reg of registros.slice(0, 150)) { // Limita aos primeiros registros válidos para teste
-          let partes = reg.split('-');
-          let cod = partes[0] ? partes[0].trim() : '';
+        let inseridos = 0;
+        for (let reg of nomesExtraidos.slice(0, 300)) {
+          let codigoExt = null;
+          let partesReg = reg.split('-');
+          if (partesReg.length > 1 && /^\d+$/.test(partesReg[0].trim())) {
+            codigoExt = partesReg[0].trim();
+          }
 
           const { error } = await _supabase
             .from('mapas')
             .insert([{
-              pasta: 'Clientes',
-              codigo: /^\d+$/.test(cod) ? cod : null,
+              pasta: pastaDestino,
+              codigo: codigoExt,
               nome: reg,
               data_nascimento: '01/01/2000',
               hora_nascimento: '12:00',
@@ -997,15 +995,25 @@
               longitude: -46.6333
             }]);
 
-          if (!error) salvos++;
+          if (!error) inseridos++;
         }
 
-        alert(`Sucesso! ${salvos} registros importados para a pasta "Clientes" no Supabase.`);
-        carregarConteudoPastaAtual();
+        alert(`Sucesso! ${inseridos} mapas importados de "${file.name}" para a pasta "${pastaDestino}".`);
+        
+        // Atualiza a barra de pastas se tiver criado uma pasta nova
+        if (!customFolders.includes(pastaDestino)) {
+          customFolders.push(pastaDestino);
+          salvarPastasStorage();
+          renderBarraDePastas();
+        }
+        selecionarPasta(pastaDestino);
 
-      } catch (e) {
-        alert("Erro ao processar o arquivo binário.");
+      } catch (err) {
+        alert("Erro ao ler o arquivo do iCloud.");
       }
+      
+      // Limpa o valor para permitir selecionar o mesmo arquivo novamente se necessário
+      event.target.value = '';
     }
 
     function escapeHtml(str) {
