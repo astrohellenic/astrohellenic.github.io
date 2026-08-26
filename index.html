@@ -122,7 +122,7 @@
             background: #fafafa;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            padding: 6px 10px;
+            padding: 6px 8px;
             font-size: 11px;
             font-weight: 700;
             color: #475569;
@@ -143,6 +143,15 @@
             color: var(--primary-blue);
             border-color: #93c5fd;
         }
+
+        .folder-action-icon {
+            font-size: 10px;
+            opacity: 0.6;
+            padding: 2px;
+            transition: opacity 0.15s;
+        }
+        .folder-action-icon:hover { opacity: 1; }
+        .folder-delete-icon:hover { color: #dc2626; }
 
         .add-folder-btn {
             font-size: 11px;
@@ -710,15 +719,69 @@
       }
     }
 
+    async function editarNomePasta(event, pastaAntiga) {
+      event.stopPropagation();
+      const novoNome = prompt(`Novo nome para a pasta "${pastaAntiga}":`, pastaAntiga);
+      if (!novoNome || !novoNome.trim() || novoNome.trim() === pastaAntiga) return;
+      
+      const nomeLimpo = novoNome.trim();
+
+      try {
+        // Atualiza os registros do Supabase para refletirem o novo nome da pasta
+        await _supabase.from('mapas').update({ pasta: nomeLimpo }).eq('pasta', pastaAntiga);
+        
+        const index = customFolders.indexOf(pastaAntiga);
+        if (index !== -1) {
+          customFolders[index] = nomeLimpo;
+          salvarPastasStorage();
+          if (activeFolder === pastaAntiga) activeFolder = nomeLimpo;
+          renderBarraDePastas();
+          carregarConteudoPastaAtual();
+        }
+      } catch (e) {
+        alert("Erro ao renomear pasta.");
+      }
+    }
+
+    async function apagarPasta(event, pastaParaDeletar) {
+      event.stopPropagation();
+
+      if (customFolders.length <= 1) {
+        alert("Você precisa manter pelo menos uma pasta.");
+        return;
+      }
+
+      if (confirm(`Deseja remover a pasta "${pastaParaDeletar}"?\n\nOs mapas salvos nela no banco de dados também serão apagados.`)) {
+        try {
+          await _supabase.from('mapas').delete().eq('pasta', pastaParaDeletar);
+          
+          customFolders = customFolders.filter(p => p !== pastaParaDeletar);
+          salvarPastasStorage();
+
+          if (activeFolder === pastaParaDeletar) {
+            activeFolder = customFolders[0];
+          }
+
+          renderBarraDePastas();
+          carregarConteudoPastaAtual();
+        } catch (e) {
+          alert("Erro ao apagar pasta do banco de dados.");
+        }
+      }
+    }
+
     function renderBarraDePastas() {
       const container = document.getElementById('foldersBarContainer');
       let html = '';
       customFolders.forEach(pasta => {
         const activeClass = pasta === activeFolder ? 'active' : '';
         html += `
-          <button type="button" class="folder-tab-btn ${activeClass}" id="folder-tab-${pasta}" onclick="selecionarPasta('${pasta}')">
-            <i class="fa-solid fa-folder"></i> ${escapeHtml(pasta)}
-          </button>
+          <div class="folder-tab-btn ${activeClass}" id="folder-tab-${pasta}" onclick="selecionarPasta('${pasta}')" ondblclick="editarNomePasta(event, '${pasta}')">
+            <i class="fa-solid fa-folder"></i> 
+            <span>${escapeHtml(pasta)}</span>
+            <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Editar nome da pasta"></i>
+            <i class="fa-solid fa-xmark folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta"></i>
+          </div>
         `;
       });
       html += `
@@ -777,7 +840,8 @@
 
       let html = '';
       lista.forEach((item, index) => {
-        const cod = item.codigo ? `[${item.codigo}] ` : '';
+        // CÓDIGO LIMPO (SEM COLCHETES)
+        const cod = item.codigo ? `${item.codigo} ` : '';
         const dataStr = item.dataNascimento || "Data n/i";
         const cidStr = item.cidade || "Local n/i";
         html += `
@@ -800,7 +864,7 @@
       container.innerHTML = html;
     }
 
-    /* EDICAO DE MAPA */
+    /* EDIÇÃO DE MAPA */
     function abrirModalEdicao(event, index) {
       event.stopPropagation();
       const item = cachedFolderData[index];
@@ -1340,7 +1404,8 @@
       let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="#ffffff"/>`;
 
-      const headerTitle = currentCustomCode ? `[${currentCustomCode}] ${currentSubjectName}` : currentSubjectName;
+      // CABEÇALHO DO PNG TAMBÉM LIMPO (SEM COLCHETES)
+      const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
       svg += `<g id="png-discreet-header">
         <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
