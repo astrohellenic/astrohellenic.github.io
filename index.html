@@ -418,6 +418,10 @@
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
+                <!-- BOTÃO DE IMPORTAÇÃO AUTOMÁTICA DO .SFCHT -->
+                <button class="icon-btn" onclick="importarSfchtParaSupabaseAutomatico()" title="Importar Clientes do SFcht para o Supabase" style="color: #9a6d18;">
+                    <i class="fa-solid fa-file-import"></i>
+                </button>
             </div>
 
             <!-- NAVEGADOR TEMPORAL (STEPPER) -->
@@ -927,6 +931,64 @@
         }
       } catch (err) {
         alert("Erro de conexão ao salvar o mapa.");
+      }
+    }
+
+    // ROTINA AUTOMÁTICA DE LEITURA DO .SFCHT SUBIDO NO GITHUB E ENVIO AO SUPABASE
+    async function importarSfchtParaSupabaseAutomatico() {
+      try {
+        const res = await fetch('02 - Clientes.SFcht');
+        if (!res.ok) {
+          alert("Arquivo 02 - Clientes.SFcht não encontrado na raiz do GitHub.");
+          return;
+        }
+        const buffer = await res.arrayBuffer();
+        const decoder = new TextDecoder('latin1');
+        const texto = decoder.decode(buffer);
+
+        const pedacos = texto.split('\x00');
+        const clientesEncontrados = [];
+
+        for (let i = 0; i < pedacos.length; i++) {
+          let nome = pedacos[i] ? pedacos[i].trim() : '';
+          // Captura o padrão de nomes/códigos da listagem do Astro Gold (ex: "0001 - Nome")
+          if (/^\d{4}\s*-\s*.+/.test(nome) && !clientesEncontrados.includes(nome)) {
+            clientesEncontrados.push(nome);
+          }
+        }
+
+        if (clientesEncontrados.length === 0) {
+          alert("Nenhum cliente formatado foi encontrado no arquivo binário.");
+          return;
+        }
+
+        let salvos = 0;
+        for (let nomeCliente of clientesEncontrados) {
+          // Extrai código e nome se possível
+          let partesCod = nomeCliente.split('-');
+          let codigoStr = partesCod[0] ? partesCod[0].trim() : '';
+          
+          const { error } = await _supabase
+            .from('mapas')
+            .insert([{
+              pasta: 'Clientes',
+              codigo: codigoStr,
+              nome: nomeCliente,
+              data_nascimento: '01/01/2000',
+              hora_nascimento: '12:00',
+              cidade: 'Brasil',
+              latitude: -23.5505,
+              longitude: -46.6333
+            }]);
+          
+          if (!error) salvos++;
+        }
+
+        alert(`Importação concluída! ${salvos} de ${clientesEncontrados.length} clientes foram adicionados na pasta "Clientes" do Supabase.`);
+        carregarConteudoPastaAtual();
+
+      } catch (e) {
+        alert("Erro ao processar o arquivo .SFcht automaticamente.");
       }
     }
 
