@@ -93,30 +93,19 @@
         }
 
         .database-section {
-            padding: 16px;
+            padding: 12px 16px;
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        .section-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--gold-dark);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
         .folders-container {
             display: flex;
             gap: 4px;
+            align-items: center;
             overflow-x: auto;
-            padding-bottom: 6px;
+            padding-bottom: 8px;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border-color);
         }
@@ -145,6 +134,18 @@
             background: #e0f2fe;
             color: var(--primary-blue);
             border-color: #93c5fd;
+        }
+
+        .add-folder-btn {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            padding: 6px 8px;
+            border: 1px stroke var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
         .search-box-container {
@@ -222,7 +223,7 @@
         .top-bar-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .icon-btn {
@@ -310,17 +311,12 @@
 
         <!-- SELEÇÃO DE PASTAS E BUSCA -->
         <div class="database-section">
-            <div class="section-label">
-                <span>Pastas / Caixinhas</span>
-                <button type="button" onclick="criarNovaPasta()" class="icon-btn" style="font-size: 11px; font-weight: 700; color: var(--primary-blue); padding: 2px 6px; border: 1px solid var(--border-color); background: #fafafa;" title="Criar Nova Pasta">
-                    <i class="fa-solid fa-folder-plus"></i> + Pasta
-                </button>
-            </div>
-
-            <!-- NAVEGAÇÃO DINÂMICA DE PASTAS -->
             <div id="foldersBarContainer" class="folders-container">
                 <button type="button" class="folder-tab-btn active" id="folder-tab-Clientes" onclick="selecionarPasta('Clientes')">
                     <i class="fa-solid fa-folder"></i> Clientes
+                </button>
+                <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
+                    <i class="fa-solid fa-plus"></i> Pasta
                 </button>
             </div>
 
@@ -335,7 +331,7 @@
 
             <div id="clientsListContainer" class="client-list-container">
                 <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
-                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando pasta...
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...
                 </div>
             </div>
         </div>
@@ -350,7 +346,10 @@
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <button class="icon-btn" onclick="salvarImagemMandala()" title="Salvar Imagem">
+                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                </button>
+                <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
             </div>
@@ -504,7 +503,7 @@
       }
     }
 
-    /* GERENCIAMENTO DINÂMICO DE PASTAS */
+    /* GERENCIAMENTO DE PASTAS */
     function carregarPastasSalvas() {
       try {
         const saved = localStorage.getItem('astro_custom_folders');
@@ -523,7 +522,7 @@
     }
 
     function criarNovaPasta() {
-      const nome = prompt("Digite o nome da nova pasta / caixinha:");
+      const nome = prompt("Nome da nova pasta:");
       if (!nome || !nome.trim()) return;
       const limpo = nome.trim();
       if (!customFolders.includes(limpo)) {
@@ -547,6 +546,11 @@
           </button>
         `;
       });
+      html += `
+        <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
+            <i class="fa-solid fa-plus"></i> Pasta
+        </button>
+      `;
       container.innerHTML = html;
     }
 
@@ -559,7 +563,7 @@
     async function carregarConteudoPastaAtual() {
       const container = document.getElementById('clientsListContainer');
       const statusEl = document.getElementById('searchStatusFeedback');
-      container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Lendo pasta "${escapeHtml(activeFolder)}"...</div>`;
+      container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...</div>`;
       statusEl.innerText = '';
 
       try {
@@ -570,17 +574,17 @@
           cachedFolderData = json.dados;
           renderListaPasta(cachedFolderData);
         } else {
-          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta "${escapeHtml(activeFolder)}" vazia ou aguardando conexão.</div>`;
+          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta vazia.</div>`;
         }
       } catch (err) {
-        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Use a busca acima para consultar.</div>`;
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Use a busca acima.</div>`;
       }
     }
 
     function renderListaPasta(lista) {
       const container = document.getElementById('clientsListContainer');
       if (!lista || lista.length === 0) {
-        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro nesta pasta.</div>`;
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro.</div>`;
         return;
       }
 
@@ -622,7 +626,7 @@
       if (!query) return;
 
       statusEl.style.color = "#0284c7";
-      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando na planilha...';
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
 
       try {
         const res = await fetch(`${SCRIPT_URL_CENTRAL}?codigo=${encodeURIComponent(query)}&busca=${encodeURIComponent(query)}&pasta=${encodeURIComponent(activeFolder)}`);
@@ -681,12 +685,101 @@
       executarCalculo();
     }
 
+    /* CRIAR NOVO MAPA SOLICITANDO CIDADE DE NASCIMENTO */
+    async function abrirNovoMapa() {
+      const nome = prompt("Nome completo / identificação:");
+      if (!nome) return;
+      const data = prompt("Data de nascimento (YYYY-MM-DD ou DD/MM/YYYY):");
+      if (!data) return;
+      const hora = prompt("Horário de nascimento (HH:MM):", "12:00");
+      if (!hora) return;
+      const cidadeInput = prompt("Cidade e Estado de nascimento (Ex: Jacareí, SP):");
+      if (!cidadeInput) return;
+
+      currentSubjectName = nome;
+      const pData = data.includes('/') ? data.split('/').reverse().join('-') : data;
+      const [ano, mes, dia] = pData.split('-');
+      const [h, m] = hora.split(':');
+
+      currentMoment = new Date(ano, mes - 1, dia, h, m);
+
+      // Busca latitude e longitude exatas da cidade informada
+      try {
+        const resGeo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidadeInput)}&limit=1`);
+        const geoArr = await resGeo.json();
+        if (geoArr && geoArr.length > 0) {
+          const item = geoArr[0];
+          currentGeo = {
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            city: cidadeInput
+          };
+        } else {
+          currentGeo = { lat: -23.5505, lon: -46.6333, city: cidadeInput };
+        }
+      } catch (e) {
+        currentGeo = { lat: -23.5505, lon: -46.6333, city: cidadeInput };
+      }
+
+      executarCalculo();
+    }
+
+    /* SALVAR MAPA VISUALIZADO NA PLANILHA (ÍCONE DE DISQUETE) */
+    async function salvarMapaNaPlanilha() {
+      if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
+        alert("Gere um Mapa Natal antes de salvar.");
+        return;
+      }
+
+      let opcoes = customFolders.map((f, i) => `${i + 1}. ${f}`).join("\n");
+      let escolha = prompt(`Escolha o número da pasta para salvar:\n\n${opcoes}`, "1");
+      if (!escolha) return;
+
+      let idx = parseInt(escolha, 10) - 1;
+      let pastaAlvo = customFolders[idx] || customFolders[0];
+
+      const ano = currentMoment.getFullYear();
+      const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+      const dia = String(currentMoment.getDate()).padStart(2, '0');
+      const hora = String(currentMoment.getHours()).padStart(2, '0');
+      const min = String(currentMoment.getMinutes()).padStart(2, '0');
+
+      const payload = {
+        pasta: pastaAlvo,
+        nome: currentSubjectName,
+        dataNascimento: `${dia}/${mes}/${ano}`,
+        horaNascimento: `${hora}:${min}`,
+        cidade: currentGeo.city,
+        latitude: currentGeo.lat,
+        longitude: currentGeo.lon
+      };
+
+      try {
+        const res = await fetch(SCRIPT_URL_CENTRAL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.status === "sucesso") {
+          alert(`Mapa salvo com sucesso na pasta "${pastaAlvo}"!`);
+          if (activeFolder === pastaAlvo) {
+            carregarConteudoPastaAtual();
+          }
+        } else {
+          alert("Erro ao salvar: " + json.message);
+        }
+      } catch (err) {
+        alert("Erro de conexão ao salvar mapa.");
+      }
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    /* BUSCA NOME DA CIDADE REAL VIA OPENSTREETMAP */
     async function obterNomeCidade(lat, lon) {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
@@ -700,7 +793,6 @@
       }
     }
 
-    /* CARREGA CÊU DO MOMENTO */
     function carregarCeuDoMomento() {
       document.getElementById('menu-here-now').classList.add('active');
 
@@ -728,7 +820,6 @@
       }
     }
 
-    /* AVANÇAR / VOLTAR TEMPO (STEPPER) */
     function ajustarTempo(direcao) {
       const unit = document.getElementById('stepUnit').value;
       const amount = direcao;
@@ -745,7 +836,6 @@
       executarCalculo();
     }
 
-    /* REQUISIÇÃO API DA VERCEL */
     async function executarCalculo() {
       const ano = currentMoment.getFullYear();
       const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
@@ -805,7 +895,6 @@
       }
     }
 
-    /* DESENHA A MANDALA RADIAL E EMBUTE CABEÇALHO DENTRO DO PNG */
     function renderMandala() {
       const container = document.getElementById('mandala-container');
       if (!container || !currentCalculatedData) return;
@@ -839,7 +928,6 @@
       let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${size}" height="${size}" fill="#ffffff"/>`;
 
-      // CABEÇALHO DISCRETO EMBUTIDO NO PNG
       svg += `<g id="png-discreet-header">
         <text x="35" y="52" font-family="'Cinzel', serif" font-size="22" font-weight="800" fill="#103b70">${currentSubjectName}</text>
         <text x="35" y="74" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
@@ -849,7 +937,6 @@
 
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
-      // ASPECTOS
       const occupiedSigns = new Set();
       PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
       const occupiedArray = Array.from(occupiedSigns);
@@ -871,13 +958,11 @@
         }
       }
 
-      // ANÉIS
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.Scale}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
 
-      // EIXOS
       const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, ascAbs));
       const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, ascAbs) + 180) % 360);
       svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
@@ -886,14 +971,12 @@
       const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, ascAbs) + 180) % 360);
       svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
 
-      // LINHAS DE SIGNOS
       for (let i = 0; i < 12; i++) {
         const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, ascAbs));
         const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, ascAbs));
         svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
       }
 
-      // ELEMENTOS INTERNOS
       const allRingItems = [
         { label: "ASC", deg: ascAbs, color: "#000000", itemType: "axis" },
         { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", itemType: "axis" },
@@ -972,7 +1055,6 @@
         }
       });
 
-      // CASAS E SIGNOS
       const ascSignIdx = Math.floor(ascAbs / 30);
       for (let i = 0; i < 12; i++) {
         const aMid = eclToScreenAngle((i * 30) + 15, ascAbs);
@@ -983,7 +1065,6 @@
         svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
       }
 
-      // DODECATEMÓRIA E TERMOS
       for (let i = 0; i < 12; i++) {
         for (let d = 0; d < 12; d++) {
           const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), ascAbs));
@@ -1014,7 +1095,6 @@
         svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
       }
 
-      // PLANETAS
       const planetList = PLANETS_DEF.map(p => ({ ...p, deg: pObj[p.id].abs, retro: pObj[p.id].retro, aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs) }));
       planetList.sort((a, b) => a.aScreen - b.aScreen);
 
@@ -1067,30 +1147,12 @@
       imgLoader.src = blobURL;
     }
 
-    /* SALVAR IMAGEM */
     function salvarImagemMandala() {
       if (!lastRenderedPngUrl) return;
       const link = document.createElement('a');
       link.download = `Astro_Hellenic_${currentSubjectName.replace(/\s+/g, '_')}.png`;
       link.href = lastRenderedPngUrl;
       link.click();
-    }
-
-    /* AÇÕES DE MENU */
-    function abrirNovoMapa() {
-      const nome = prompt("Nome do Nativo:");
-      if (!nome) return;
-      const data = prompt("Data de Nascimento (YYYY-MM-DD ou DD/MM/YYYY):");
-      if (!data) return;
-      const hora = prompt("Horário (HH:MM):", "12:00");
-      
-      currentSubjectName = nome;
-      const pData = data.includes('/') ? data.split('/').reverse().join('-') : data;
-      const [ano, mes, dia] = pData.split('-');
-      const [h, m] = hora.split(':');
-
-      currentMoment = new Date(ano, mes - 1, dia, h, m);
-      executarCalculo();
     }
 
     window.onload = function() {
