@@ -59,7 +59,7 @@ const EGYPTIAN_TERMS = [
 let currentCalculatedData = null;
 let currentMoment = new Date();
 let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
-let currentSubjectName = "Céu do Momento";
+let currentSubjectName = "Here & Now";
 let currentCustomCode = null;
 let lastRenderedPngUrl = "";
 
@@ -263,7 +263,7 @@ async function obterNomeCidade(lat, lon) {
 function carregarCeuDoMomento() {
   const menuHere = document.getElementById('menu-here-now');
   if (menuHere) menuHere.classList.add('active');
-  currentSubjectName = "Céu do Momento";
+  currentSubjectName = "Here & Now";
   currentCustomCode = null;
   currentMoment = new Date();
 
