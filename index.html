@@ -211,17 +211,24 @@
             margin-top: 2px;
         }
 
-        .delete-record-btn {
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .action-record-btn {
             background: transparent;
             border: none;
-            color: #dc2626;
             cursor: pointer;
             padding: 6px;
             font-size: 12px;
             opacity: 0.7;
             transition: opacity 0.15s;
         }
-        .delete-record-btn:hover { opacity: 1; }
+        .action-record-btn:hover { opacity: 1; }
+        .edit-btn { color: var(--primary-blue); }
+        .delete-btn { color: #dc2626; }
 
         /* ÁREA PRINCIPAL DA MANDALA */
         #main-stage {
@@ -310,8 +317,8 @@
             display: block;
         }
 
-        /* MODAL PERSONALIZADO */
-        #modalOverlay {
+        /* MODAIS PERSONALIZADOS */
+        #modalOverlay, #modalEditOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.5);
@@ -497,12 +504,47 @@
             </div>
             <div style="position: relative;">
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
-                <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Belém, PA)..." oninput="pesquisarCidadesAutocomplete(this.value)">
+                <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Belém, PA)..." oninput="pesquisarCidadesAutocomplete(this.value, 'cityResultsList')">
                 <div id="cityResultsList" class="city-results"></div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalNovoMapa()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="confirmarNovoMapaModal()">Gerar Mapa</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE MAPA -->
+    <div id="modalEditOverlay">
+        <div class="modal-box">
+            <div class="modal-title">Editar Mapa</div>
+            <input type="hidden" id="editModalId">
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
+                <input type="text" id="editModalCodigo" class="modal-input">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Identificação</label>
+                <input type="text" id="editModalNome" class="modal-input">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
+                    <input type="text" id="editModalData" class="modal-input">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
+                    <input type="text" id="editModalHora" class="modal-input">
+                </div>
+            </div>
+            <div style="position: relative;">
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
+                <input type="text" id="editModalCidadeInput" class="modal-input" oninput="pesquisarCidadesAutocomplete(this.value, 'editCityResultsList', true)">
+                <div id="editCityResultsList" class="city-results"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="fecharModalEdicao()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="salvarEdicaoMapaModal()">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -513,6 +555,7 @@
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
+    let editSelectedCityGeo = null;
 
     const SIGNS = [
       { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
@@ -708,7 +751,6 @@
         if (!error && Array.isArray(data)) {
           cachedFolderData = data.map(item => ({
             id: item.id,
-            // AQUI: RESPEITA O CÓDIGO APENAS SE ELE TIVER SIDO PREENCHIDO MANUALMENTE
             codigo: (item.codigo && String(item.codigo).trim() !== '') ? item.codigo : null,
             nome: item.nome,
             dataNascimento: item.data_nascimento,
@@ -735,7 +777,6 @@
 
       let html = '';
       lista.forEach((item, index) => {
-        // EXIBE CÓDIGO APENAS SE EXISTIR DE FATO
         const cod = item.codigo ? `[${item.codigo}] ` : '';
         const dataStr = item.dataNascimento || "Data n/i";
         const cidStr = item.cidade || "Local n/i";
@@ -745,13 +786,81 @@
               <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
               <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
             </div>
-            <button type="button" class="delete-record-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar este mapa">
-              <i class="fa-solid fa-trash"></i>
-            </button>
+            <div class="card-actions">
+              <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar este mapa">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar este mapa">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
           </div>
         `;
       });
       container.innerHTML = html;
+    }
+
+    /* EDICAO DE MAPA */
+    function abrirModalEdicao(event, index) {
+      event.stopPropagation();
+      const item = cachedFolderData[index];
+      if (!item) return;
+
+      document.getElementById('editModalId').value = item.id;
+      document.getElementById('editModalCodigo').value = item.codigo || '';
+      document.getElementById('editModalNome').value = item.nome || '';
+      document.getElementById('editModalData').value = item.dataNascimento || '';
+      document.getElementById('editModalHora').value = item.horaNascimento || '12:00';
+      document.getElementById('editModalCidadeInput').value = item.cidade || '';
+      
+      editSelectedCityGeo = {
+        lat: parseFloat(item.latitude) || -23.5505,
+        lon: parseFloat(item.longitude) || -46.6333,
+        name: item.cidade || 'São Paulo, SP'
+      };
+
+      document.getElementById('editCityResultsList').style.display = 'none';
+      document.getElementById('modalEditOverlay').style.display = 'flex';
+    }
+
+    function fecharModalEdicao() {
+      document.getElementById('modalEditOverlay').style.display = 'none';
+    }
+
+    async function salvarEdicaoMapaModal() {
+      const idMapa = document.getElementById('editModalId').value;
+      const codDigitado = document.getElementById('editModalCodigo').value.trim();
+      const nome = document.getElementById('editModalNome').value.trim();
+      const dataStr = document.getElementById('editModalData').value.trim();
+      const horaStr = document.getElementById('editModalHora').value.trim();
+
+      if (!nome) { alert("Informe o nome."); return; }
+      if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
+      if (!horaStr) { alert("Informe o horário."); return; }
+
+      try {
+        const { error } = await _supabase
+          .from('mapas')
+          .update({
+            codigo: codDigitado !== "" ? codDigitado : null,
+            nome: nome,
+            data_nascimento: dataStr,
+            hora_nascimento: horaStr,
+            cidade: editSelectedCityGeo ? editSelectedCityGeo.name : document.getElementById('editModalCidadeInput').value,
+            latitude: editSelectedCityGeo ? editSelectedCityGeo.lat : -23.5505,
+            longitude: editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333
+          })
+          .eq('id', idMapa);
+
+        if (!error) {
+          fecharModalEdicao();
+          carregarConteudoPastaAtual();
+        } else {
+          alert("Erro ao atualizar o mapa: " + error.message);
+        }
+      } catch (err) {
+        alert("Erro de conexão ao atualizar.");
+      }
     }
 
     async function deletarRegistroUnico(event, idMapa) {
@@ -895,8 +1004,8 @@
     }
 
     let searchCityTimer = null;
-    async function pesquisarCidadesAutocomplete(query) {
-      const listDiv = document.getElementById('cityResultsList');
+    async function pesquisarCidadesAutocomplete(query, containerId, isEdit = false) {
+      const listDiv = document.getElementById(containerId);
       if (!query || query.length < 3) {
         listDiv.style.display = "none";
         return;
@@ -914,7 +1023,7 @@
               const displayName = item.display_name;
               const lat = item.lat;
               const lon = item.lon;
-              html += `<div class="city-item" onclick="selecionarCidadeModal('${escapeHtml(displayName)}', ${lat}, ${lon})">${escapeHtml(displayName)}</div>`;
+              html += `<div class="city-item" onclick="selecionarCidadeModal('${escapeHtml(displayName)}', ${lat}, ${lon}, '${containerId}', ${isEdit})">${escapeHtml(displayName)}</div>`;
             });
             listDiv.innerHTML = html;
             listDiv.style.display = "block";
@@ -927,10 +1036,15 @@
       }, 300);
     }
 
-    function selecionarCidadeModal(nomeFormatado, lat, lon) {
-      selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
-      document.getElementById('modalCidadeInput').value = nomeFormatado;
-      document.getElementById('cityResultsList').style.display = "none";
+    function selecionarCidadeModal(nomeFormatado, lat, lon, containerId, isEdit) {
+      if (isEdit) {
+        editSelectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
+        document.getElementById('editModalCidadeInput').value = nomeFormatado;
+      } else {
+        selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
+        document.getElementById('modalCidadeInput').value = nomeFormatado;
+      }
+      document.getElementById(containerId).style.display = "none";
     }
 
     function confirmarNovoMapaModal() {
@@ -983,7 +1097,7 @@
           .from('mapas')
           .insert([{
             pasta: pastaAlvo,
-            codigo: currentCustomCode, // APENAS SE VOCÊ PREENCHEU
+            codigo: currentCustomCode,
             nome: currentSubjectName,
             data_nascimento: `${dia}/${mes}/${ano}`,
             hora_nascimento: `${hora}:${min}`,
@@ -1041,7 +1155,6 @@
 
         let inseridos = 0;
         for (let reg of registrosValidos.slice(0, 300)) {
-          // NÃO FORÇA CÓDIGO AUTOMÁTICO NA IMPORTAÇÃO
           const { error } = await _supabase
             .from('mapas')
             .insert([{
