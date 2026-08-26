@@ -92,12 +92,9 @@
             color: var(--gold-dark);
         }
 
-        .clients-section {
+        .search-section {
             padding: 16px;
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
         }
 
         .section-label {
@@ -107,9 +104,6 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
         .client-search-input {
@@ -119,44 +113,6 @@
             border-radius: 6px;
             font-size: 12px;
             outline: none;
-            margin-bottom: 8px;
-        }
-
-        .client-list-container {
-            flex: 1;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background: #fafafa;
-        }
-
-        .client-card-item {
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.15s ease;
-        }
-
-        .client-card-item:hover {
-            background: #f1f5f9;
-        }
-
-        .client-card-item.selected {
-            background: #e0f2fe;
-            border-left: 4px solid var(--primary-blue);
-        }
-
-        .client-name {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--primary-blue);
-        }
-
-        .client-meta {
-            font-size: 10px;
-            font-weight: 500;
-            color: #64748b;
-            margin-top: 2px;
         }
 
         /* ÁREA PRINCIPAL DA MANDALA */
@@ -268,18 +224,15 @@
             </li>
         </ul>
 
-        <div class="clients-section">
-            <div class="section-label">
-                <span>Clientes Planilha</span>
-                <i class="fa-solid fa-rotate" style="cursor: pointer;" onclick="carregarListaClientes()" title="Recarregar Lista"></i>
+        <div class="search-section">
+            <div class="section-label">Buscar na Planilha</div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <input type="text" id="input_codigo_cliente" class="client-search-input" placeholder="Cód. Cliente (Ex: 0001)" onkeypress="if(event.key==='Enter') buscarClientePlanilha()">
+                <button type="button" onclick="buscarClientePlanilha()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar Cliente">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
             </div>
-            <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Filtrar por nome..." oninput="filtrarListaClientes(this.value)">
-            
-            <div id="clientsListContainer" class="client-list-container">
-                <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
-                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando clientes...
-                </div>
-            </div>
+            <div id="sheetSearchStatus" style="font-size: 11px; font-weight: 600; min-height: 18px;"></div>
         </div>
     </aside>
 
@@ -381,7 +334,6 @@
     let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
     let currentSubjectName = "Céu do Momento";
     let lastRenderedPngUrl = "";
-    let cachedClientsList = [];
 
     function formatDegMin(absDeg) {
       const degInSign = absDeg % 30;
@@ -443,99 +395,69 @@
       }
     }
 
-    /* CARREGA A LISTA COMPLETA DE CLIENTES DA PLANILHA */
-    async function carregarListaClientes() {
-      const container = document.getElementById('clientsListContainer');
-      container.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Buscando planilha...</div>';
+    /* BUSCA CLIENTE NA PLANILHA GOOGLE */
+    async function buscarClientePlanilha() {
+      const codigoInput = document.getElementById('input_codigo_cliente').value.trim();
+      const statusEl = document.getElementById('sheetSearchStatus');
+
+      if (!codigoInput) {
+        statusEl.style.color = "#dc2626";
+        statusEl.innerText = "Digite o código do cliente.";
+        return;
+      }
+
+      statusEl.style.color = "#0284c7";
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?acao=listar`);
+        const res = await fetch(`${SCRIPT_URL}?codigo=${encodeURIComponent(codigoInput)}`);
         const json = await res.json();
 
-        if (json.status === "sucesso" && Array.isArray(json.clientes)) {
-          cachedClientsList = json.clientes;
-          renderListaClientes(cachedClientsList);
+        if (json.status === "sucesso") {
+          const c = json.cliente;
+
+          let ano = 2000, mes = 1, dia = 1;
+          if (c.dataNascimento) {
+            const rawData = String(c.dataNascimento).trim();
+            if (rawData.includes('/')) {
+              const p = rawData.split('/');
+              if (p.length === 3) { dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10); }
+            } else if (rawData.includes('-')) {
+              const p = rawData.split('-');
+              if (p.length === 3) { ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10); }
+            }
+          }
+
+          let hora = 12, min = 0;
+          if (c.horaNascimento) {
+            const rawHora = String(c.horaNascimento).trim();
+            const p = rawHora.split(':');
+            if (p.length >= 2) { hora = parseInt(p[0], 10); min = parseInt(p[1], 10); }
+          }
+
+          currentSubjectName = c.nome || `Cliente ${codigoInput}`;
+          currentMoment = new Date(ano, mes - 1, dia, hora, min);
+
+          const lat = parseFloat(c.latitude) || -23.5505;
+          const lon = parseFloat(c.longitude) || -46.6333;
+          const cidade = c.cidade || "Localidade não informada";
+
+          currentGeo = { lat, lon, city: cidade };
+
+          document.getElementById('menu-here-now').classList.remove('active');
+          statusEl.style.color = "#16a34a";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(currentSubjectName)}`;
+
+          executarCalculo();
+
         } else {
-          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #dc2626; text-align: center;">Nenhum cliente retornado.</div>`;
+          statusEl.style.color = "#dc2626";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${json.message || "Não encontrado"}`;
         }
       } catch (err) {
-        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #dc2626; text-align: center;">Erro de conexão com a planilha.</div>`;
+        statusEl.style.color = "#dc2626";
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro de conexão`;
       }
-    }
-
-    function renderListaClientes(lista) {
-      const container = document.getElementById('clientsListContainer');
-      if (!lista || lista.length === 0) {
-        container.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum cliente encontrado.</div>';
-        return;
-      }
-
-      let html = '';
-      lista.forEach((c, index) => {
-        const dataStr = c.dataNascimento || "Data n/i";
-        const cidStr = c.cidade || "Local n/i";
-        html += `
-          <div class="client-card-item" id="client-card-${index}" onclick="selecionarCliente(${index})">
-            <div class="client-name">${escapeHtml(c.nome || 'Sem Nome')}</div>
-            <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    function filtrarListaClientes(termo) {
-      const q = termo.toLowerCase().trim();
-      if (!q) {
-        renderListaClientes(cachedClientsList);
-        return;
-      }
-      const filtrados = cachedClientsList.filter(c => 
-        (c.nome && c.nome.toLowerCase().includes(q)) || 
-        (c.cidade && c.cidade.toLowerCase().includes(q)) ||
-        (c.codigo && String(c.codigo).includes(q))
-      );
-      renderListaClientes(filtrados);
-    }
-
-    function selecionarCliente(index) {
-      const c = cachedClientsList[index];
-      if (!c) return;
-
-      document.querySelectorAll('.client-card-item').forEach(el => el.classList.remove('selected'));
-      const card = document.getElementById(`client-card-${index}`);
-      if (card) card.classList.add('selected');
-
-      document.getElementById('menu-here-now').classList.remove('active');
-
-      let ano = 2000, mes = 1, dia = 1;
-      if (c.dataNascimento) {
-        const rawData = String(c.dataNascimento).trim();
-        if (rawData.includes('/')) {
-          const p = rawData.split('/');
-          if (p.length === 3) { dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10); }
-        } else if (rawData.includes('-')) {
-          const p = rawData.split('-');
-          if (p.length === 3) { ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10); }
-        }
-      }
-
-      let hora = 12, min = 0;
-      if (c.horaNascimento) {
-        const rawHora = String(c.horaNascimento).trim();
-        const p = rawHora.split(':');
-        if (p.length >= 2) { hora = parseInt(p[0], 10); min = parseInt(p[1], 10); }
-      }
-
-      currentSubjectName = c.nome || "Cliente";
-      currentMoment = new Date(ano, mes - 1, dia, hora, min);
-
-      const lat = parseFloat(c.latitude) || -23.5505;
-      const lon = parseFloat(c.longitude) || -46.6333;
-      const cidade = c.cidade || "Localidade não informada";
-
-      currentGeo = { lat, lon, city: cidade };
-      executarCalculo();
     }
 
     function escapeHtml(str) {
@@ -559,7 +481,6 @@
 
     /* CARREGA CÊU DO MOMENTO */
     function carregarCeuDoMomento() {
-      document.querySelectorAll('.client-card-item').forEach(el => el.classList.remove('selected'));
       document.getElementById('menu-here-now').classList.add('active');
 
       currentSubjectName = "Céu do Momento";
@@ -951,10 +872,7 @@
       executarCalculo();
     }
 
-    window.onload = function() {
-      carregarCeuDoMomento();
-      carregarListaClientes();
-    };
+    window.onload = carregarCeuDoMomento;
 </script>
 
 </body>
