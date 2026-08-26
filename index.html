@@ -59,6 +59,9 @@
             padding: 16px;
             border-bottom: 1px solid var(--border-color);
             background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sidebar-title {
@@ -180,6 +183,9 @@
             padding: 10px 12px;
             border-bottom: 1px solid var(--border-color);
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             transition: background 0.15s ease;
         }
 
@@ -204,6 +210,18 @@
             color: #64748b;
             margin-top: 2px;
         }
+
+        .delete-record-btn {
+            background: transparent;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            padding: 6px;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .delete-record-btn:hover { opacity: 1; }
 
         /* ÁREA PRINCIPAL DA MANDALA */
         #main-stage {
@@ -358,13 +376,16 @@
 </head>
 <body>
 
-    <!-- INPUT OCULTO PARA ABRIR O SELETOR DE ARQUIVOS DO IPAD/ICLOUD -->
+    <!-- INPUT OCULTO PARA SELEÇÃO DO ICLOUD -->
     <input type="file" id="filePickerInput" accept=".SFcht,.sfcht" style="display: none;" onchange="processarArquivoSelecionadoIcloud(event)">
 
     <!-- PAINEL LATERAL DE NAVEGAÇÃO -->
     <aside id="sidebar">
         <div class="sidebar-header">
             <h1 class="sidebar-title">Astro Hellenic</h1>
+            <button class="icon-btn" onclick="limparPastaAtualSupabase()" title="Limpar/Apagar todos os mapas desta pasta" style="color: #dc2626;">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
         </div>
 
         <ul class="menu-list">
@@ -421,7 +442,7 @@
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
-                <!-- BOTÃO DE SELEÇÃO DIRETA DO ICLOUD NO IPAD -->
+                <!-- BOTÃO DE SELEÇÃO DIRETA DO ICLOUD -->
                 <button class="icon-btn" onclick="abrirSeletorIcloud()" title="Importar .SFcht do iCloud / Astro Gold" style="color: #9a6d18;">
                     <i class="fa-solid fa-file-import"></i>
                 </button>
@@ -483,7 +504,6 @@
     </div>
 
 <script>
-    // INICIALIZAÇÃO SUPABASE DEFINITIVA
     const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
     const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -682,6 +702,7 @@
 
         if (!error && Array.isArray(data)) {
           cachedFolderData = data.map(item => ({
+            id: item.id,
             codigo: item.codigo || String(item.id).padStart(4, '0'),
             nome: item.nome,
             dataNascimento: item.data_nascimento,
@@ -712,13 +733,50 @@
         const dataStr = item.dataNascimento || "Data n/i";
         const cidStr = item.cidade || "Local n/i";
         html += `
-          <div class="client-card-item" id="card-item-${index}" onclick="selecionarRegistro(${index})">
-            <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
-            <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+          <div class="client-card-item" id="card-item-${index}">
+            <div style="flex: 1; cursor: pointer;" onclick="selecionarRegistro(${index})">
+              <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+              <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+            </div>
+            <button type="button" class="delete-record-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar este mapa">
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </div>
         `;
       });
       container.innerHTML = html;
+    }
+
+    async function deletarRegistroUnico(event, idMapa) {
+      event.stopPropagation();
+      if (!confirm("Deseja realmente apagar este mapa do banco?")) return;
+
+      try {
+        const { error } = await _supabase.from('mapas').delete().eq('id', idMapa);
+        if (!error) {
+          carregarConteudoPastaAtual();
+        } else {
+          alert("Erro ao deletar registro.");
+        }
+      } catch (e) {
+        alert("Erro de conexão.");
+      }
+    }
+
+    async function limparPastaAtualSupabase() {
+      if (!confirm(`ATENÇÃO: Deseja apagar TODOS os mapas da pasta "${activeFolder}"? Esta ação não pode ser desfeita.`)) return;
+
+      try {
+        const { error } = await _supabase.from('mapas').delete().eq('pasta', activeFolder);
+        if (!error) {
+          alert(`Pasta "${activeFolder}" limpa com sucesso!`);
+          carregarConteudoPastaAtual();
+        } else {
+          alert("Erro ao limpar a pasta.");
+        }
+      } catch (e) {
+        alert("Erro de conexão.");
+      }
     }
 
     function executarBuscaLocalOuRemota(termo) {
@@ -785,7 +843,7 @@
       document.getElementById('menu-here-now').classList.remove('active');
 
       let ano = 2000, mes = 1, dia = 1;
-      if (c.dataNascimento) {
+      if (c.dataNascimento && c.dataNascimento.includes('/')) {
         const partes = c.dataNascimento.split('/');
         if (partes.length === 3) {
           dia = parseInt(partes[0]);
@@ -795,7 +853,7 @@
       }
 
       let hora = 12, min = 0;
-      if (c.horaNascimento) {
+      if (c.horaNascimento && c.horaNascimento.includes(':')) {
         const partesH = c.horaNascimento.split(':');
         if (partesH.length >= 2) {
           hora = parseInt(partesH[0]);
@@ -935,17 +993,14 @@
       }
     }
 
-    // DISPARADOR DO SELETOR DE ARQUIVOS DO ICLOUD NO IPAD
     function abrirSeletorIcloud() {
       document.getElementById('filePickerInput').click();
     }
 
-    // PROCESSADOR DE ARQUIVO .SFCHT SELECIONADO DIRETO DO ICLOUD DRIVE
     async function processarArquivoSelecionadoIcloud(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      // Define a pasta de destino com base na aba ativa ou no nome do arquivo
       let nomeSemExtensao = file.name.replace(/\.[^/.]+$/, "");
       let partesNomePasta = nomeSemExtensao.split('-');
       let pastaDestino = partesNomePasta.length > 1 ? partesNomePasta[1].trim() : activeFolder;
@@ -955,32 +1010,36 @@
         const decoder = new TextDecoder('latin1');
         const textoBruto = decoder.decode(buffer);
 
-        // Limpeza estrita para remover null-bytes e blocos de controle binário do Astro Gold
-        const linhasOuBlocos = textoBruto.split(/[\x00-\x1F]+/g);
-        const nomesExtraidos = [];
+        // Varredura refinada para extrair os blocos limpos
+        const blocos = textoBruto.split(/[\x00-\x1F\x7F-\x9F]+/g);
+        const registrosValidos = [];
 
-        linhasOuBlocos.forEach(bloco => {
+        for (let bloco of blocos) {
           let limpo = bloco.replace(/[^\x20-\x7E\xA0-\xFF]/g, '').trim();
-          // Validação de nomes e estruturas válidas
           if (limpo.length >= 3 && !/^(Created|SolarFire|AstroGold|Chart|ChartData)$/i.test(limpo)) {
-            if (/^[A-Za-zÀ-ú0-9\s\-\.\,\']+$/.test(limpo) && !nomesExtraidos.includes(limpo)) {
-              nomesExtraidos.push(limpo);
+            if (/^[A-Za-zÀ-ú0-9\s\-\.\,\']+$/.test(limpo) && !registrosValidos.includes(limpo)) {
+              registrosValidos.push(limpo);
             }
           }
-        });
+        }
 
-        if (nomesExtraidos.length === 0) {
-          alert("Não foram encontrados nomes legíveis dentro do arquivo selecionado.");
+        if (registrosValidos.length === 0) {
+          alert("Não foram encontrados registros legíveis no arquivo.");
           return;
         }
 
         let inseridos = 0;
-        for (let reg of nomesExtraidos.slice(0, 300)) {
+        for (let reg of registrosValidos.slice(0, 300)) {
           let codigoExt = null;
           let partesReg = reg.split('-');
           if (partesReg.length > 1 && /^\d+$/.test(partesReg[0].trim())) {
             codigoExt = partesReg[0].trim();
           }
+
+          // Tenta extrair ano/data se houver padrão numérico no registro
+          let anoDetectado = 2000;
+          let matchAno = reg.match(/\b(19\d{2}|20\d{2})\b/);
+          if (matchAno) anoDetectado = parseInt(matchAno[1]);
 
           const { error } = await _supabase
             .from('mapas')
@@ -988,7 +1047,7 @@
               pasta: pastaDestino,
               codigo: codigoExt,
               nome: reg,
-              data_nascimento: '01/01/2000',
+              data_nascimento: `01/01/${anoDetectado}`,
               hora_nascimento: '12:00',
               cidade: 'Brasil',
               latitude: -23.5505,
@@ -998,9 +1057,8 @@
           if (!error) inseridos++;
         }
 
-        alert(`Sucesso! ${inseridos} mapas importados de "${file.name}" para a pasta "${pastaDestino}".`);
+        alert(`Sucesso! ${inseridos} mapas importados para a pasta "${pastaDestino}".`);
         
-        // Atualiza a barra de pastas se tiver criado uma pasta nova
         if (!customFolders.includes(pastaDestino)) {
           customFolders.push(pastaDestino);
           salvarPastasStorage();
@@ -1012,7 +1070,6 @@
         alert("Erro ao ler o arquivo do iCloud.");
       }
       
-      // Limpa o valor para permitir selecionar o mesmo arquivo novamente se necessário
       event.target.value = '';
     }
 
@@ -1036,7 +1093,6 @@
 
     function carregarCeuDoMomento() {
       document.getElementById('menu-here-now').classList.add('active');
-
       currentSubjectName = "Céu do Momento";
       currentMoment = new Date();
 
