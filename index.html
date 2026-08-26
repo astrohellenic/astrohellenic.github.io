@@ -92,9 +92,12 @@
             color: var(--gold-dark);
         }
 
-        .search-section {
+        .database-section {
             padding: 16px;
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .section-label {
@@ -103,6 +106,15 @@
             color: var(--gold-dark);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box-container {
+            display: flex;
+            gap: 6px;
             margin-bottom: 8px;
         }
 
@@ -113,6 +125,43 @@
             border-radius: 6px;
             font-size: 12px;
             outline: none;
+        }
+
+        .client-list-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .client-card-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .client-card-item:hover {
+            background: #f1f5f9;
+        }
+
+        .client-card-item.selected {
+            background: #e0f2fe;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .client-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .client-meta {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 2px;
         }
 
         /* ÁREA PRINCIPAL DA MANDALA */
@@ -224,15 +273,33 @@
             </li>
         </ul>
 
-        <div class="search-section">
-            <div class="section-label">Buscar na Planilha</div>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                <input type="text" id="input_codigo_cliente" class="client-search-input" placeholder="Cód. Cliente (Ex: 0001)" onkeypress="if(event.key==='Enter') buscarClientePlanilha()">
-                <button type="button" onclick="buscarClientePlanilha()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar Cliente">
+        <!-- SELEÇÃO DE BANCO E BUSCA -->
+        <div class="database-section">
+            <div class="section-label">
+                <span id="currentDatabaseCategoryLabel">Clientes</span>
+                <i class="fa-solid fa-rotate" style="cursor: pointer;" onclick="carregarListaCategoriaAtual()" title="Atualizar Lista"></i>
+            </div>
+
+            <!-- NAVEGAÇÃO ENTRE CLIENTES E OUTROS PERFIS -->
+            <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                <button type="button" id="tabBtnClientes" class="icon-btn" onclick="alternarCategoriaDatabase('clientes')" style="flex:1; border: 1px solid var(--border-color); font-size: 11px; font-weight: 700; background: #e0f2fe;">Clientes</button>
+                <button type="button" id="tabBtnOutros" class="icon-btn" onclick="alternarCategoriaDatabase('outros')" style="flex:1; border: 1px solid var(--border-color); font-size: 11px; font-weight: 700; background: #fafafa;">Outros Perfis</button>
+            </div>
+
+            <div class="search-box-container">
+                <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar por código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
+                <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </div>
-            <div id="sheetSearchStatus" style="font-size: 11px; font-weight: 600; min-height: 18px;"></div>
+            
+            <div id="searchStatusFeedback" style="font-size: 10px; font-weight: 600; min-height: 14px; margin-bottom: 4px;"></div>
+
+            <div id="clientsListContainer" class="client-list-container">
+                <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando registros...
+                </div>
+            </div>
         </div>
     </aside>
 
@@ -276,7 +343,8 @@
     </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
+    const SCRIPT_URL_CLIENTES = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
+    let SCRIPT_URL_OUTROS = ""; // Reservado para a segunda base de dados
 
     const SIGNS = [
       { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
@@ -334,6 +402,9 @@
     let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
     let currentSubjectName = "Céu do Momento";
     let lastRenderedPngUrl = "";
+    
+    let activeCategory = "clientes"; // "clientes" ou "outros"
+    let cachedCategoryList = [];
 
     function formatDegMin(absDeg) {
       const degInSign = absDeg % 30;
@@ -395,69 +466,163 @@
       }
     }
 
-    /* BUSCA CLIENTE NA PLANILHA GOOGLE */
-    async function buscarClientePlanilha() {
-      const codigoInput = document.getElementById('input_codigo_cliente').value.trim();
-      const statusEl = document.getElementById('sheetSearchStatus');
+    /* SISTEMA DE BANCO DE DADOS E ALTERNÂNCIA DE CATEGORIAS */
+    function alternarCategoriaDatabase(cat) {
+      activeCategory = cat;
+      const btnClientes = document.getElementById('tabBtnClientes');
+      const btnOutros = document.getElementById('tabBtnOutros');
+      const label = document.getElementById('currentDatabaseCategoryLabel');
 
-      if (!codigoInput) {
+      if (cat === 'clientes') {
+        btnClientes.style.background = '#e0f2fe';
+        btnOutros.style.background = '#fafafa';
+        label.innerText = 'Clientes';
+      } else {
+        btnClientes.style.background = '#fafafa';
+        btnOutros.style.background = '#e0f2fe';
+        label.innerText = 'Outros Perfis';
+      }
+
+      carregarListaCategoriaAtual();
+    }
+
+    async function carregarListaCategoriaAtual() {
+      const container = document.getElementById('clientsListContainer');
+      const statusEl = document.getElementById('searchStatusFeedback');
+      container.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando lista...</div>';
+      statusEl.innerText = '';
+
+      const targetUrl = (activeCategory === 'clientes') ? SCRIPT_URL_CLIENTES : SCRIPT_URL_OUTROS;
+
+      if (!targetUrl) {
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Base de ${activeCategory === 'outros' ? 'Outros Perfis' : 'Clientes'} pendente de conexão.</div>`;
+        return;
+      }
+
+      try {
+        const res = await fetch(`${targetUrl}?acao=listar`);
+        const json = await res.json();
+
+        if (json.status === "sucesso" && Array.isArray(json.dados)) {
+          cachedCategoryList = json.dados;
+          renderListaCustom(cachedCategoryList);
+        } else {
+          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #dc2626; text-align: center;">Aguardando liberação de lista no servidor...</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Use a busca por código ou nome acima.</div>`;
+      }
+    }
+
+    function renderListaCustom(lista) {
+      const container = document.getElementById('clientsListContainer');
+      if (!lista || lista.length === 0) {
+        container.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro encontrado.</div>';
+        return;
+      }
+
+      let html = '';
+      lista.forEach((item, index) => {
+        const cod = item.codigo ? `[${item.codigo}] ` : '';
+        const dataStr = item.dataNascimento || "Data n/i";
+        const cidStr = item.cidade || "Local n/i";
+        html += `
+          <div class="client-card-item" id="card-item-${index}" onclick="selecionarRegistro(${index})">
+            <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+            <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function executarBuscaLocalOuRemota(termo) {
+      const q = termo.toLowerCase().trim();
+      if (!q) {
+        renderListaCustom(cachedCategoryList);
+        return;
+      }
+      if (cachedCategoryList.length > 0) {
+        const filtrados = cachedCategoryList.filter(item => 
+          (item.nome && item.nome.toLowerCase().includes(q)) || 
+          (item.codigo && String(item.codigo).toLowerCase().includes(q)) ||
+          (item.cidade && item.cidade.toLowerCase().includes(q))
+        );
+        renderListaCustom(filtrados);
+      }
+    }
+
+    /* BUSCA DIRETA NO SERVIDOR SE NÃO ESTIVER NA LISTA LOCAL */
+    async function buscarDiretoPorCodigoOuNome() {
+      const query = document.getElementById('filterClientsInput').value.trim();
+      const statusEl = document.getElementById('searchStatusFeedback');
+      const targetUrl = (activeCategory === 'clientes') ? SCRIPT_URL_CLIENTES : SCRIPT_URL_OUTROS;
+
+      if (!query) return;
+      if (!targetUrl) {
         statusEl.style.color = "#dc2626";
-        statusEl.innerText = "Digite o código do cliente.";
+        statusEl.innerText = "URL do banco não configurada.";
         return;
       }
 
       statusEl.style.color = "#0284c7";
-      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando no servidor...';
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?codigo=${encodeURIComponent(codigoInput)}`);
+        const res = await fetch(`${targetUrl}?codigo=${encodeURIComponent(query)}&busca=${encodeURIComponent(query)}`);
         const json = await res.json();
 
-        if (json.status === "sucesso") {
+        if (json.status === "sucesso" && json.cliente) {
           const c = json.cliente;
-
-          let ano = 2000, mes = 1, dia = 1;
-          if (c.dataNascimento) {
-            const rawData = String(c.dataNascimento).trim();
-            if (rawData.includes('/')) {
-              const p = rawData.split('/');
-              if (p.length === 3) { dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10); }
-            } else if (rawData.includes('-')) {
-              const p = rawData.split('-');
-              if (p.length === 3) { ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10); }
-            }
-          }
-
-          let hora = 12, min = 0;
-          if (c.horaNascimento) {
-            const rawHora = String(c.horaNascimento).trim();
-            const p = rawHora.split(':');
-            if (p.length >= 2) { hora = parseInt(p[0], 10); min = parseInt(p[1], 10); }
-          }
-
-          currentSubjectName = c.nome || `Cliente ${codigoInput}`;
-          currentMoment = new Date(ano, mes - 1, dia, hora, min);
-
-          const lat = parseFloat(c.latitude) || -23.5505;
-          const lon = parseFloat(c.longitude) || -46.6333;
-          const cidade = c.cidade || "Localidade não informada";
-
-          currentGeo = { lat, lon, city: cidade };
-
-          document.getElementById('menu-here-now').classList.remove('active');
+          aplicarDadosDoPerfilNoMapa(c);
           statusEl.style.color = "#16a34a";
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(currentSubjectName)}`;
-
-          executarCalculo();
-
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(c.nome || query)}`;
         } else {
           statusEl.style.color = "#dc2626";
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${json.message || "Não encontrado"}`;
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${json.message || "Não localizado"}`;
         }
       } catch (err) {
         statusEl.style.color = "#dc2626";
         statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro de conexão`;
       }
+    }
+
+    function selecionarRegistro(index) {
+      const c = cachedCategoryList[index];
+      if (c) aplicarDadosDoPerfilNoMapa(c);
+    }
+
+    function aplicarDadosDoPerfilNoMapa(c) {
+      document.getElementById('menu-here-now').classList.remove('active');
+
+      let ano = 2000, mes = 1, dia = 1;
+      if (c.dataNascimento) {
+        const rawData = String(c.dataNascimento).trim();
+        if (rawData.includes('/')) {
+          const p = rawData.split('/');
+          if (p.length === 3) { dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10); }
+        } else if (rawData.includes('-')) {
+          const p = rawData.split('-');
+          if (p.length === 3) { ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10); }
+        }
+      }
+
+      let hora = 12, min = 0;
+      if (c.horaNascimento) {
+        const rawHora = String(c.horaNascimento).trim();
+        const p = rawHora.split(':');
+        if (p.length >= 2) { hora = parseInt(p[0], 10); min = parseInt(p[1], 10); }
+      }
+
+      currentSubjectName = c.nome || "Nativo";
+      currentMoment = new Date(ano, mes - 1, dia, hora, min);
+
+      const lat = parseFloat(c.latitude) || -23.5505;
+      const lon = parseFloat(c.longitude) || -46.6333;
+      const cidade = c.cidade || "Localidade não informada";
+
+      currentGeo = { lat, lon, city: cidade };
+      executarCalculo();
     }
 
     function escapeHtml(str) {
@@ -872,7 +1037,10 @@
       executarCalculo();
     }
 
-    window.onload = carregarCeuDoMomento;
+    window.onload = function() {
+      carregarCeuDoMomento();
+      carregarListaCategoriaAtual();
+    };
 </script>
 
 </body>
