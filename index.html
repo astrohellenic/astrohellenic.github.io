@@ -13,7 +13,7 @@
 
     <style>
         :root {
-            --bg-main: #f1f5f9;
+            --bg-main: #f8fafc;
             --bg-sidebar: #ffffff;
             --primary-blue: #103b70;
             --gold-primary: #d4af37;
@@ -126,7 +126,7 @@
         /* BARRA SUPERIOR MINIMALISTA */
         #top-bar {
             height: 48px;
-            background: #fafafa;
+            background: #ffffff;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -152,7 +152,7 @@
         }
 
         .icon-btn:hover {
-            background: #e2e8f0;
+            background: #f1f5f9;
         }
 
         .time-stepper {
@@ -176,63 +176,31 @@
             cursor: pointer;
         }
 
-        /* DADOS DO NATIVO DISCRETOS */
-        #chart-discreet-info {
-            position: absolute;
-            top: 60px;
-            left: 20px;
-            z-index: 5;
-            font-family: 'Montserrat', sans-serif;
-            pointer-events: none;
-        }
-
-        .info-name {
-            font-family: 'Cinzel', serif;
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--primary-blue);
-            margin-bottom: 2px;
-        }
-
-        .info-details {
-            font-size: 11px;
-            color: #475569;
-            line-height: 1.4;
-            font-weight: 500;
-        }
-
-        .info-sect-tag {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--gold-dark);
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
-
-        /* PALCO DA MANDALA */
+        /* PALCO DA MANDALA (SEM BORDAS OU QUADRADOS SEPARADOS) */
         #mandala-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
             position: relative;
+            background-color: #ffffff;
         }
 
         #mandala-container img {
             max-width: 100%;
-            max-height: calc(100vh - 100px);
+            max-height: calc(100vh - 68px);
             width: auto;
             height: auto;
             display: block;
-            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.05));
+            border: none !important;
+            box-shadow: none !important;
+            filter: none !important;
         }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
             #sidebar { width: 100%; height: auto; }
-            #chart-discreet-info { position: static; padding: 12px; }
         }
     </style>
 </head>
@@ -291,13 +259,6 @@
                 </select>
                 <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
             </div>
-        </div>
-
-        <!-- INFORMAÇÕES DISCRETAS SOBRE A MANDALA -->
-        <div id="chart-discreet-info">
-            <div id="infoName" class="info-name">Carregando...</div>
-            <div id="infoDetails" class="info-details">Obtendo dados...</div>
-            <div id="infoSectTag" class="info-sect-tag"></div>
         </div>
 
         <!-- RENDERIZADOR DA MANDALA -->
@@ -496,9 +457,6 @@
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
       const horaStr = `${hora}:${min}`;
 
-      document.getElementById('infoName').innerText = currentSubjectName;
-      document.getElementById('infoDetails').innerText = `${dia}/${mes}/${ano} às ${horaStr} • ${currentGeo.city}\nTropical • Signos Inteiros`;
-
       try {
         const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=-3&lat=${currentGeo.lat}&lon=${currentGeo.lon}`;
         const res = await fetch(urlApi);
@@ -548,7 +506,7 @@
       }
     }
 
-    /* DESENHA A MANDALA RADIAL */
+    /* DESENHA A MANDALA RADIAL E EMBUTE CABEÇALHO DENTRO DO PNG */
     function renderMandala() {
       const container = document.getElementById('mandala-container');
       if (!container || !currentCalculatedData) return;
@@ -566,7 +524,13 @@
       });
 
       const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-      document.getElementById('infoSectTag').innerText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+      const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+
+      const ano = currentMoment.getFullYear();
+      const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+      const dia = String(currentMoment.getDate()).padStart(2, '0');
+      const hora = String(currentMoment.getHours()).padStart(2, '0');
+      const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
       const size = 960, cx = 480, cy = 480;
       const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262, Scale: 280 };
@@ -574,8 +538,17 @@
       const goldColor = "#c59b27";
 
       let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="${size}" height="${size}" fill="#ffffff"/>
-        <circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
+        <rect width="${size}" height="${size}" fill="#ffffff"/>`;
+
+      // CABEÇALHO DISCRETO EMBUTIDO NA PRÓPRIA IMAGEM DO PNG
+      svg += `<g id="png-discreet-header">
+        <text x="35" y="52" font-family="'Cinzel', serif" font-size="22" font-weight="800" fill="#103b70">${currentSubjectName}</text>
+        <text x="35" y="74" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
+        <text x="35" y="92" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
+        <text x="35" y="110" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#9a6d18">${sectText}</text>
+      </g>`;
+
+      svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
       // ASPECTOS
       const occupiedSigns = new Set();
@@ -621,7 +594,7 @@
         svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
       }
 
-      // ELEMENTOS INTERNOS
+      // ELEMENTOS INTERNOS (PRESERVANDO 100% O ÍCONE DA SÍZIGIA)
       const allRingItems = [
         { label: "ASC", deg: ascAbs, color: "#000000", itemType: "axis" },
         { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", itemType: "axis" },
