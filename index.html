@@ -43,6 +43,7 @@
         /* PAINEL LATERAL */
         #sidebar {
             width: 320px;
+            min-width: 320px;
             background: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             display: flex;
@@ -207,23 +208,27 @@
             flex-direction: column;
             background-color: #ffffff;
             position: relative;
+            overflow: hidden;
         }
 
         /* BARRA SUPERIOR MINIMALISTA */
         #top-bar {
             height: 48px;
+            min-height: 48px;
             background: #ffffff;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
         .top-bar-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .icon-btn {
@@ -271,11 +276,12 @@
             padding: 10px;
             position: relative;
             background-color: #ffffff;
+            overflow: hidden;
         }
 
         #mandala-container img {
             max-width: 100%;
-            max-height: calc(100vh - 68px);
+            max-height: calc(100vh - 58px);
             width: auto;
             height: auto;
             display: block;
@@ -341,7 +347,7 @@
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { width: 100%; height: auto; }
+            #sidebar { width: 100%; min-width: 100%; height: auto; }
         }
     </style>
 </head>
@@ -401,8 +407,8 @@
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha" style="color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px;">
-                    <i class="fa-solid fa-floppy-disk"></i> Salvar
+                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha">
+                    <i class="fa-solid fa-floppy-disk"></i>
                 </button>
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
@@ -834,7 +840,6 @@
       if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
       if (!horaStr) { alert("Informe o horário."); return; }
 
-      // Conversão interna DD/MM/YYYY para YYYY-MM-DD
       const partesData = dataStr.split('/');
       if (partesData.length !== 3) { alert("Data inválida."); return; }
       const dia = partesData[0], mes = partesData[1], ano = partesData[2];
@@ -851,7 +856,7 @@
       executarCalculo();
     }
 
-    /* SALVAR MAPA VISUALIZADO NA PLANILHA (ÍCONE DE DISQUETE) */
+    /* SALVAR MAPA VISUALIZADO NA PLANILHA (APENAS ÍCONE DE DISQUETE) */
     async function salvarMapaNaPlanilha() {
       if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
         alert("Gere um Mapa Natal antes de salvar.");
