@@ -1050,10 +1050,10 @@
       const hora = String(currentMoment.getHours()).padStart(2, '0');
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-      // AJUSTE DEFINITIVO DE DIMENSÕES:
-      // Aumentamos a altura total da tela para 1080px e empurramos o centro (cy) para 610px.
-      // Isso abre um espaço no topo de mais de 180px completamente limpo.
-      const width = 960, height = 1080, cx = 480, cy = 610;
+      // CORREÇÃO:
+      // O centro vertical cy foi movido para 680 para empurrar o círculo da mandala bem para baixo.
+      // As coordenadas y do texto começam em 120, ficando MUITO abaixo da barra superior fixa.
+      const width = 960, height = 1150, cx = 480, cy = 680;
       const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262, Scale: 280 };
       const R_OuterLine = 399;
       const goldColor = "#c59b27";
@@ -1061,12 +1061,12 @@
       let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="#ffffff"/>`;
 
-      // TEXTO DO TOPO FIXADO COM AMPLA MARGEM DE RESPIRO
+      // TEXTO COM COORDENADAS AUMENTADAS PARA DESCER NA TELA
       svg += `<g id="png-discreet-header">
-        <text x="50" y="50" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${currentSubjectName}</text>
-        <text x="50" y="80" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
-        <text x="50" y="102" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
-        <text x="50" y="124" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
+        <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${currentSubjectName}</text>
+        <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
+        <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
+        <text x="50" y="194" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
       </g>`;
 
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
@@ -1268,11 +1268,11 @@
       imgLoader.onload = function() {
         const canvas = document.createElement('canvas');
         canvas.width = 1920;
-        canvas.height = 2160;
+        canvas.height = 2300;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 1920, 2160);
-        ctx.drawImage(imgLoader, 0, 0, 1920, 2160);
+        ctx.fillRect(0, 0, 1920, 2300);
+        ctx.drawImage(imgLoader, 0, 0, 1920, 2300);
 
         lastRenderedPngUrl = canvas.toDataURL('image/png');
         container.innerHTML = `<img src="${lastRenderedPngUrl}" alt="Mandala Astrológica">`;
