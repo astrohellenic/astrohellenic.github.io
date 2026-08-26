@@ -1,3 +1,1030 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro Hellenic</title>
+    
+    <!-- FAVICON -->
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+
+    <!-- FONTES E ÍCONES -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-sidebar: #ffffff;
+            --primary-blue: #103b70;
+            --gold-primary: #d4af37;
+            --gold-dark: #9a6d18;
+            --text-dark: #0f172a;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            height: 100dvh;
+            min-height: -webkit-fill-available;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* PAINEL LATERAL */
+        #sidebar {
+            width: 320px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafafa;
+        }
+
+        .sidebar-title {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.15s ease;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #f1f5f9;
+            color: var(--primary-blue);
+        }
+
+        .menu-item i {
+            color: var(--gold-dark);
+        }
+
+        .database-section {
+            padding: 12px 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .folders-container {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .folder-tab-btn {
+            background: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .folder-tab-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .folder-tab-btn.active {
+            background: #e0f2fe;
+            color: var(--primary-blue);
+            border-color: #93c5fd;
+        }
+
+        .add-folder-btn {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .search-box-container {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .client-search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .client-list-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .client-card-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .client-card-item:hover {
+            background: #f1f5f9;
+        }
+
+        .client-card-item.selected {
+            background: #e0f2fe;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .client-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .client-meta {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ÁREA PRINCIPAL DA MANDALA */
+        #main-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        /* BARRA SUPERIOR */
+        #top-bar {
+            height: 52px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            gap: 8px;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .top-bar-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary-blue);
+            font-size: 15px;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+        }
+
+        .icon-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .time-stepper {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .time-select {
+            border: none;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            padding: 2px 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* PALCO DA MANDALA */
+        #mandala-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        #mandala-container img {
+            max-width: 100%;
+            max-height: calc(100vh - 62px);
+            width: auto;
+            height: auto;
+            display: block;
+        }
+
+        /* MODAL PERSONALIZADO */
+        #modalOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: #ffffff;
+            width: 420px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+        .modal-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .city-results {
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+            display: none;
+        }
+        .city-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .city-item:hover { background: #f1f5f9; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-primary { background: var(--primary-blue); color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; }
+        .btn-secondary { background: #e2e8f0; color: #334155; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAINEL LATERAL DE NAVEGAÇÃO -->
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">Astro Hellenic</h1>
+        </div>
+
+        <ul class="menu-list">
+            <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento()">
+                <span>Céu do Momento (Here & Now)</span>
+                <i class="fa-solid fa-clock"></i>
+            </li>
+            <li class="menu-item" onclick="abrirModalNovoMapa()">
+                <span>Novo Mapa Natal</span>
+                <i class="fa-solid fa-user-plus"></i>
+            </li>
+        </ul>
+
+        <!-- SELEÇÃO DE PASTAS E BUSCA -->
+        <div class="database-section">
+            <div id="foldersBarContainer" class="folders-container">
+                <button type="button" class="folder-tab-btn active" id="folder-tab-Clientes" onclick="selecionarPasta('Clientes')">
+                    <i class="fa-solid fa-folder"></i> Clientes
+                </button>
+                <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
+                    <i class="fa-solid fa-plus"></i> Pasta
+                </button>
+            </div>
+
+            <div class="search-box-container">
+                <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
+                <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+            
+            <div id="searchStatusFeedback" style="font-size: 10px; font-weight: 600; min-height: 14px; margin-bottom: 4px;"></div>
+
+            <div id="clientsListContainer" class="client-list-container">
+                <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main id="main-stage">
+        
+        <!-- BARRA SUPERIOR -->
+        <div id="top-bar">
+            <div class="top-bar-controls">
+                <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                </button>
+                <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
+                    <i class="fa-solid fa-share-from-square"></i>
+                </button>
+            </div>
+
+            <!-- NAVEGADOR TEMPORAL (STEPPER) -->
+            <div class="time-stepper">
+                <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
+                <select id="stepUnit" class="time-select">
+                    <option value="second">Segundo</option>
+                    <option value="minute">Minuto</option>
+                    <option value="hour">Hora</option>
+                    <option value="day">Dia</option>
+                    <option value="month" selected>Mês</option>
+                    <option value="year">Ano</option>
+                </select>
+                <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
+        </div>
+
+        <!-- RENDERIZADOR DA MANDALA -->
+        <div id="mandala-container">
+            <div id="loadingSpinner" style="color: #64748b; font-size: 13px; font-weight: 600; text-align: center;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #103b70; margin-bottom: 8px; display: block;"></i>
+                Gerando mapa...
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE NOVO MAPA NATAL COM BUSCA DE CIDADE -->
+    <div id="modalOverlay">
+        <div class="modal-box">
+            <div class="modal-title">Novo Mapa Natal</div>
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Identificação</label>
+                <input type="text" id="modalNome" class="modal-input" placeholder="Ex: Cássio Pereira">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
+                    <input type="text" id="modalData" class="modal-input" placeholder="09/10/1989">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
+                    <input type="text" id="modalHora" class="modal-input" placeholder="11:00" value="12:00">
+                </div>
+            </div>
+            <div style="position: relative;">
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
+                <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Belém, PA)..." oninput="pesquisarCidadesAutocomplete(this.value)">
+                <div id="cityResultsList" class="city-results"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="fecharModalNovoMapa()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="confirmarNovoMapaModal()">Gerar Mapa</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const SCRIPT_URL_CENTRAL = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
+
+    let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
+
+    const SIGNS = [
+      { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
+      { name: "Câncer", ruler: "Lua" }, { name: "Leão", ruler: "Sol" }, { name: "Virgem", ruler: "Mercúrio" },
+      { name: "Libra", ruler: "Vênus" }, { name: "Escorpião", ruler: "Marte" }, { name: "Sagitário", ruler: "Júpiter" },
+      { name: "Capricórnio", ruler: "Saturno" }, { name: "Aquário", ruler: "Saturno" }, { name: "Peixes", ruler: "Júpiter" }
+    ];
+
+    const SIGN_ELEMENTS = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
+
+    const MONOLINE_ZODIAC_SVGS = [
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
+      `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" cx="32" cy="43" r="18"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M0,3c14,0,15,12,15,12s0,10,17,10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M64,3C50,3,49,15,49,15s0,10-17,10"></path>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M0,8c0,0,16,4,32,4s32-4,32-4"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M64,56c0,0-16-4-32-4S0,56,0,56"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="21" y1="12" x2="21" y2="52"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="43" y1="12" x2="43" y2="52"></line>`,
+      `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" cx="11" cy="27" r="10"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M5,19c0,0,7-6,28-6c15,0,31,10,31,10"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" cx="53" cy="37" r="10"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M59,45c0,0-7,6-28,6C16,51,0,41,0,41"></path>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="0" y1="55" x2="64" y2="55"></line>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" stroke-miterlimit="10" points="52,53 57,58 52,63 "></polyline>`,
+      `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="1" y1="28" x2="36" y2="63"></line>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
+      `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
+      `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="7" y1="32" x2="57" y2="32"></line>`
+    ];
+
+    const ELEMENT_SIGN_COLORS = { fire: "#e84118", earth: "#8b4513", air: "#0ea5e9", water: "#1d4ed8" };
+
+    const PLANETS_DEF = [
+      { id: "Sun", name: "Sol", symbol: "☉", key: "Sol" },
+      { id: "Moon", name: "Lua", symbol: "☽", key: "Lua" },
+      { id: "Mercury", name: "Mercúrio", symbol: "☿", key: "Mercúrio" },
+      { id: "Venus", name: "Vênus", symbol: "♀", key: "Vênus" },
+      { id: "Mars", name: "Marte", symbol: "♂", key: "Marte" },
+      { id: "Jupiter", name: "Júpiter", symbol: "♃", key: "Júpiter" },
+      { id: "Saturn", name: "Saturno", symbol: "♄", key: "Saturno" }
+    ];
+
+    const EGYPTIAN_TERMS = [
+      [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
+      [{ p: "♀", deg: 8 }, { p: "☿", deg: 14 }, { p: "♃", deg: 22 }, { p: "♄", deg: 27 }, { p: "♂", deg: 30 }],
+      [{ p: "☿", deg: 6 }, { p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "♂", deg: 24 }, { p: "♄", deg: 30 }],
+      [{ p: "♂", deg: 7 }, { p: "♀", deg: 13 }, { p: "☿", deg: 19 }, { p: "♃", deg: 26 }, { p: "♄", deg: 30 }],
+      [{ p: "♃", deg: 6 }, { p: "♀", deg: 11 }, { p: "♄", deg: 18 }, { p: "☿", deg: 24 }, { p: "♂", deg: 30 }],
+      [{ p: "☿", deg: 7 }, { p: "♀", deg: 17 }, { p: "♃", deg: 21 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }],
+      [{ p: "♄", deg: 6 }, { p: "☿", deg: 14 }, { p: "♃", deg: 21 }, { p: "♀", deg: 28 }, { p: "♂", deg: 30 }],
+      [{ p: "♂", deg: 7 }, { p: "♀", deg: 11 }, { p: "☿", deg: 19 }, { p: "♃", deg: 24 }, { p: "♄", deg: 30 }],
+      [{ p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "☿", deg: 21 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
+      [{ p: "☿", deg: 7 }, { p: "♃", deg: 14 }, { p: "♀", deg: 22 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
+      [{ p: "♄", deg: 7 }, { p: "☿", deg: 13 }, { p: "♀", deg: 20 }, { p: "♃", deg: 25 }, { p: "♂", deg: 30 }],
+      [{ p: "♀", deg: 12 }, { p: "♃", deg: 16 }, { p: "☿", deg: 19 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }]
+    ];
+
+    let currentCalculatedData = null;
+    let currentMoment = new Date();
+    let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
+    let currentSubjectName = "Céu do Momento";
+    let lastRenderedPngUrl = "";
+    
+    let activeFolder = "Clientes";
+    let customFolders = ["Clientes"];
+    let cachedFolderData = [];
+
+    function formatDegMin(absDeg) {
+      const degInSign = absDeg % 30;
+      const degrees = Math.floor(degInSign);
+      const minutes = Math.round((degInSign - degrees) * 60);
+      const minStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
+      return `${degrees}°${minStr}′`;
+    }
+
+    function eclToScreenAngle(eclDeg, ascAbs) {
+      return (180 - (eclDeg - ascAbs) + 36000) % 360;
+    }
+
+    function polarToCart(cx, cy, r, angleDeg) {
+      const rad = angleDeg * Math.PI / 180.0;
+      return { x: cx + (r * Math.cos(rad)), y: cy + (r * Math.sin(rad)) };
+    }
+
+    function calculateSevenLots(ascAbs, isDay, planetObj) {
+      const sun = planetObj.Sun.abs;
+      const moon = planetObj.Moon.abs;
+      const merc = planetObj.Mercury.abs;
+      const ven = planetObj.Venus.abs;
+      const mars = planetObj.Mars.abs;
+      const jup = planetObj.Jupiter.abs;
+      const sat = planetObj.Saturn.abs;
+
+      const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
+      const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
+      const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
+      const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
+      const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
+      const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
+      const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
+
+      return [
+        { label: "FORT", type: "fortune", deg: fortAbs },
+        { label: "ESP", type: "spirit", deg: spirAbs },
+        { label: "EROS", type: "venus", sym: "♀", deg: erosAbs },
+        { label: "NEC", type: "mercury", sym: "☿", deg: necAbs },
+        { label: "AUD", type: "mars", sym: "♂", deg: courAbs },
+        { label: "VIT", type: "jupiter", sym: "♃", deg: vicAbs },
+        { label: "NÊM", type: "saturn", sym: "♄", deg: nemAbs }
+      ];
+    }
+
+    function angleDist(a1, a2) {
+      let diff = Math.abs(a1 - a2) % 360;
+      return diff > 180 ? 360 - diff : diff;
+    }
+
+    function getRadiusForLevel(level) {
+      switch(level) {
+        case 0: return 198;
+        case 1: return 174;
+        case 2: return 150;
+        case 3: return 126;
+        default: return 198 - (level * 24);
+      }
+    }
+
+    function carregarPastasSalvas() {
+      try {
+        const saved = localStorage.getItem('astro_custom_folders');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) customFolders = parsed;
+        }
+      } catch (e) {}
+      renderBarraDePastas();
+    }
+
+    function salvarPastasStorage() {
+      try {
+        localStorage.setItem('astro_custom_folders', JSON.stringify(customFolders));
+      } catch (e) {}
+    }
+
+    function criarNovaPasta() {
+      const nome = prompt("Nome da nova pasta:");
+      if (!nome || !nome.trim()) return;
+      const limpo = nome.trim();
+      if (!customFolders.includes(limpo)) {
+        customFolders.push(limpo);
+        salvarPastasStorage();
+        renderBarraDePastas();
+        selecionarPasta(limpo);
+      } else {
+        selecionarPasta(limpo);
+      }
+    }
+
+    function renderBarraDePastas() {
+      const container = document.getElementById('foldersBarContainer');
+      let html = '';
+      customFolders.forEach(pasta => {
+        const activeClass = pasta === activeFolder ? 'active' : '';
+        html += `
+          <button type="button" class="folder-tab-btn ${activeClass}" id="folder-tab-${pasta}" onclick="selecionarPasta('${pasta}')">
+            <i class="fa-solid fa-folder"></i> ${escapeHtml(pasta)}
+          </button>
+        `;
+      });
+      html += `
+        <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
+            <i class="fa-solid fa-plus"></i> Pasta
+        </button>
+      `;
+      container.innerHTML = html;
+    }
+
+    function selecionarPasta(pasta) {
+      activeFolder = pasta;
+      renderBarraDePastas();
+      carregarConteudoPastaAtual();
+    }
+
+    async function carregarConteudoPastaAtual() {
+      const container = document.getElementById('clientsListContainer');
+      const statusEl = document.getElementById('searchStatusFeedback');
+      container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...</div>`;
+      statusEl.innerText = '';
+
+      try {
+        const res = await fetch(`${SCRIPT_URL_CENTRAL}?acao=listar&pasta=${encodeURIComponent(activeFolder)}`);
+        const json = await res.json();
+
+        if (json.status === "sucesso" && Array.isArray(json.dados)) {
+          cachedFolderData = json.dados;
+          renderListaPasta(cachedFolderData);
+        } else {
+          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta vazia.</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Erro ao carregar dados.</div>`;
+      }
+    }
+
+    function renderListaPasta(lista) {
+      const container = document.getElementById('clientsListContainer');
+      if (!lista || lista.length === 0) {
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro.</div>`;
+        return;
+      }
+
+      let html = '';
+      lista.forEach((item, index) => {
+        const cod = item.codigo ? `[${item.codigo}] ` : '';
+        const dataStr = item.dataNascimento ? new Date(item.dataNascimento).toLocaleDateString('pt-BR') : "Data n/i";
+        const cidStr = item.cidade || "Local n/i";
+        html += `
+          <div class="client-card-item" id="card-item-${index}" onclick="selecionarRegistro(${index})">
+            <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+            <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function executarBuscaLocalOuRemota(termo) {
+      const q = termo.toLowerCase().trim();
+      if (!q) {
+        renderListaPasta(cachedFolderData);
+        return;
+      }
+      if (cachedFolderData.length > 0) {
+        const filtrados = cachedFolderData.filter(item => 
+          (item.nome && item.nome.toLowerCase().includes(q)) || 
+          (item.codigo && String(item.codigo).toLowerCase().includes(q)) ||
+          (item.cidade && item.cidade.toLowerCase().includes(q))
+        );
+        renderListaPasta(filtrados);
+      }
+    }
+
+    async function buscarDiretoPorCodigoOuNome() {
+      const query = document.getElementById('filterClientsInput').value.trim();
+      const statusEl = document.getElementById('searchStatusFeedback');
+
+      if (!query) return;
+
+      statusEl.style.color = "#0284c7";
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
+
+      try {
+        const res = await fetch(`${SCRIPT_URL_CENTRAL}?codigo=${encodeURIComponent(query)}&busca=${encodeURIComponent(query)}&pasta=${encodeURIComponent(activeFolder)}`);
+        const json = await res.json();
+
+        if (json.status === "sucesso" && json.cliente) {
+          const c = json.cliente;
+          aplicarDadosDoPerfilNoMapa(c);
+          statusEl.style.color = "#16a34a";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(c.nome || query)}`;
+        } else {
+          statusEl.style.color = "#dc2626";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${json.message || "Não localizado"}`;
+        }
+      } catch (err) {
+        statusEl.style.color = "#dc2626";
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro de conexão`;
+      }
+    }
+
+    function selecionarRegistro(index) {
+      const c = cachedFolderData[index];
+      if (c) aplicarDadosDoPerfilNoMapa(c);
+    }
+
+    function aplicarDadosDoPerfilNoMapa(c) {
+      document.getElementById('menu-here-now').classList.remove('active');
+
+      let ano = 2000, mes = 1, dia = 1;
+      if (c.dataNascimento) {
+        const dObj = new Date(c.dataNascimento);
+        if (!isNaN(dObj.getTime())) {
+          ano = dObj.getFullYear();
+          mes = dObj.getMonth() + 1;
+          dia = dObj.getDate();
+        }
+      }
+
+      let hora = 12, min = 0;
+      if (c.horaNascimento) {
+        const hObj = new Date(c.horaNascimento);
+        if (!isNaN(hObj.getTime())) {
+          hora = hObj.getUTCHours();
+          min = hObj.getUTCMinutes();
+        }
+      }
+
+      currentSubjectName = c.nome || "Nativo";
+      currentMoment = new Date(ano, mes - 1, dia, hora, min);
+
+      const lat = parseFloat(c.latitude) || -23.5505;
+      const lon = parseFloat(c.longitude) || -46.6333;
+      const cidade = c.cidade || "Localidade não informada";
+
+      currentGeo = { lat, lon, city: cidade };
+      executarCalculo();
+    }
+
+    function abrirModalNovoMapa() {
+      document.getElementById('modalNome').value = "";
+      document.getElementById('modalData').value = "";
+      document.getElementById('modalHora').value = "12:00";
+      document.getElementById('modalCidadeInput').value = "";
+      document.getElementById('cityResultsList').style.display = "none";
+      document.getElementById('modalOverlay').style.display = "flex";
+    }
+
+    function fecharModalNovoMapa() {
+      document.getElementById('modalOverlay').style.display = "none";
+    }
+
+    let searchCityTimer = null;
+    async function pesquisarCidadesAutocomplete(query) {
+      const listDiv = document.getElementById('cityResultsList');
+      if (!query || query.length < 3) {
+        listDiv.style.display = "none";
+        return;
+      }
+
+      clearTimeout(searchCityTimer);
+      searchCityTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`);
+          const data = await res.json();
+          
+          if (data && data.length > 0) {
+            let html = '';
+            data.forEach(item => {
+              const displayName = item.display_name;
+              const lat = item.lat;
+              const lon = item.lon;
+              html += `<div class="city-item" onclick="selecionarCidadeModal('${escapeHtml(displayName)}', ${lat}, ${lon})">${escapeHtml(displayName)}</div>`;
+            });
+            listDiv.innerHTML = html;
+            listDiv.style.display = "block";
+          } else {
+            listDiv.style.display = "none";
+          }
+        } catch (e) {
+          listDiv.style.display = "none";
+        }
+      }, 300);
+    }
+
+    function selecionarCidadeModal(nomeFormatado, lat, lon) {
+      selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
+      document.getElementById('modalCidadeInput').value = nomeFormatado;
+      document.getElementById('cityResultsList').style.display = "none";
+    }
+
+    function confirmarNovoMapaModal() {
+      const nome = document.getElementById('modalNome').value.trim();
+      const dataStr = document.getElementById('modalData').value.trim();
+      const horaStr = document.getElementById('modalHora').value.trim();
+
+      if (!nome) { alert("Informe o nome."); return; }
+      if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
+      if (!horaStr) { alert("Informe o horário."); return; }
+
+      const partesData = dataStr.split('/');
+      if (partesData.length !== 3) { alert("Data inválida."); return; }
+      const dia = partesData[0], mes = partesData[1], ano = partesData[2];
+
+      const partesHora = horaStr.split(':');
+      const h = partesHora[0] || 12, m = partesHora[1] || 0;
+
+      currentSubjectName = nome;
+      currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
+      currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, city: selectedCityGeo.name };
+
+      fecharModalNovoMapa();
+      executarCalculo();
+    }
+
+    async function salvarMapaNaPlanilha() {
+      if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
+        alert("Gere um Mapa Natal antes de salvar.");
+        return;
+      }
+
+      let opcoes = customFolders.map((f, i) => `${i + 1}. ${f}`).join("\n");
+      let escolha = prompt(`Escolha o número da pasta para salvar:\n\n${opcoes}`, "1");
+      if (!escolha) return;
+
+      let idx = parseInt(escolha, 10) - 1;
+      let pastaAlvo = customFolders[idx] || customFolders[0];
+
+      const ano = currentMoment.getFullYear();
+      const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+      const dia = String(currentMoment.getDate()).padStart(2, '0');
+      const hora = String(currentMoment.getHours()).padStart(2, '0');
+      const min = String(currentMoment.getMinutes()).padStart(2, '0');
+
+      const payload = {
+        pasta: pastaAlvo,
+        nome: currentSubjectName,
+        dataNascimento: `${dia}/${mes}/${ano}`,
+        horaNascimento: `${hora}:${min}`,
+        cidade: currentGeo.city,
+        latitude: currentGeo.lat,
+        longitude: currentGeo.lon
+      };
+
+      try {
+        const res = await fetch(SCRIPT_URL_CENTRAL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.status === "sucesso") {
+          alert(`Mapa salvo com sucesso na pasta "${pastaAlvo}"!`);
+          if (activeFolder === pastaAlvo) {
+            carregarConteudoPastaAtual();
+          }
+        } else {
+          alert("Erro ao salvar: " + json.message);
+        }
+      } catch (err) {
+        alert("Erro de conexão ao salvar mapa.");
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function obterNomeCidade(lat, lon) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
+        const data = await res.json();
+        const addr = data.address || {};
+        const cidade = addr.city || addr.town || addr.village || addr.municipality || "Local Localizado";
+        const estado = addr.state ? `, ${addr.state}` : "";
+        return `${cidade}${estado}`;
+      } catch (e) {
+        return "Jacareí, SP";
+      }
+    }
+
+    function carregarCeuDoMomento() {
+      document.getElementById('menu-here-now').classList.add('active');
+
+      currentSubjectName = "Céu do Momento";
+      currentMoment = new Date();
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const nomeCidade = await obterNomeCidade(lat, lon);
+            currentGeo = { lat, lon, city: nomeCidade };
+            executarCalculo();
+          },
+          () => {
+            currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
+            executarCalculo();
+          },
+          { timeout: 4000 }
+        );
+      } else {
+        currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
+        executarCalculo();
+      }
+    }
+
+    function ajustarTempo(direcao) {
+      const unit = document.getElementById('stepUnit').value;
+      const amount = direcao;
+
+      switch(unit) {
+        case 'second': currentMoment.setSeconds(currentMoment.getSeconds() + amount); break;
+        case 'minute': currentMoment.setMinutes(currentMoment.getMinutes() + amount); break;
+        case 'hour': currentMoment.setHours(currentMoment.getHours() + amount); break;
+        case 'day': currentMoment.setDate(currentMoment.getDate() + amount); break;
+        case 'month': currentMoment.setMonth(currentMoment.getMonth() + amount); break;
+        case 'year': currentMoment.setFullYear(currentMoment.getFullYear() + amount); break;
+      }
+
+      executarCalculo();
+    }
+
+    async function executarCalculo() {
+      const ano = currentMoment.getFullYear();
+      const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+      const dia = String(currentMoment.getDate()).padStart(2, '0');
+      const dataStr = `${ano}-${mes}-${dia}`;
+
+      const hora = String(currentMoment.getHours()).padStart(2, '0');
+      const min = String(currentMoment.getMinutes()).padStart(2, '0');
+      const horaStr = `${hora}:${min}`;
+
+      try {
+        const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=-3&lat=${currentGeo.lat}&lon=${currentGeo.lon}`;
+        const res = await fetch(urlApi);
+        if (!res.ok) throw new Error("Erro na API");
+
+        const apiJson = await res.json();
+
+        const SIGNOS_INDEX = {
+          "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
+          "Leao": 4, "Virgem": 5, "Libra": 6, "Escorpiao": 7,
+          "Sagitario": 8, "Capricornio": 9, "Aquario": 10, "Peixes": 11
+        };
+
+        const planetas = apiJson.planetas || {};
+        const ascData = apiJson.ascendente || {};
+        const mcData = apiJson.meio_ceu || {};
+        const sizigiaData = apiJson.sizigia || {};
+
+        const ascAbs = ((SIGNOS_INDEX[ascData.signo] || 0) * 30) + (parseFloat(ascData.grau) || 0);
+        const mcAbs = ((SIGNOS_INDEX[mcData.signo] || 0) * 30) + (parseFloat(mcData.grau) || 0);
+
+        const checkRetro = (pObj) => {
+          if (!pObj) return false;
+          if (pObj.retrogrado !== undefined) return Boolean(pObj.retrogrado);
+          if (pObj.velocidade !== undefined) return parseFloat(pObj.velocidade) < 0;
+          return false;
+        };
+
+        currentCalculatedData = {
+          Ascendente: { grau_absoluto: ascAbs },
+          MC: { grau_absoluto: mcAbs },
+          Nodo_Norte: { grau_absoluto: planetas.NodoNorte ? planetas.NodoNorte.grau_absoluto : 0, retro: checkRetro(planetas.NodoNorte) },
+          Sizigia: { grau_absoluto: sizigiaData.grau_absoluto !== undefined ? parseFloat(sizigiaData.grau_absoluto) : 0 },
+          Sol: { grau_absoluto: planetas.Sol ? planetas.Sol.grau_absoluto : 0, retro: false },
+          Lua: { grau_absoluto: planetas.Lua ? planetas.Lua.grau_absoluto : 0, retro: false },
+          Mercúrio: { grau_absoluto: planetas.Mercurio ? planetas.Mercurio.grau_absoluto : 0, retro: checkRetro(planetas.Mercurio) },
+          Vênus: { grau_absoluto: planetas.Venus ? planetas.Venus.grau_absoluto : 0, retro: checkRetro(planetas.Venus) },
+          Marte: { grau_absoluto: planetas.Marte ? planetas.Marte.grau_absoluto : 0, retro: checkRetro(planetas.Marte) },
+          Júpiter: { grau_absoluto: planetas.Jupiter ? planetas.Jupiter.grau_absoluto : 0, retro: checkRetro(planetas.Jupiter) },
+          Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno) }
+        };
+
+        renderMandala();
+
+      } catch (err) {
+        document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
+      }
+    }
+
     function renderMandala() {
       const container = document.getElementById('mandala-container');
       if (!container || !currentCalculatedData) return;
@@ -23,7 +1050,7 @@
       const hora = String(currentMoment.getHours()).padStart(2, '0');
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-      const size = 960, cx = 480, cy = 500; // Deslocado ligeiramente para baixo para dar respiro absoluto no topo
+      const size = 960, cx = 480, cy = 520;
       const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262, Scale: 280 };
       const R_OuterLine = 399;
       const goldColor = "#c59b27";
@@ -31,12 +1058,11 @@
       let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${size}" height="${size}" fill="#ffffff"/>`;
 
-      // Cabeçalho reposicionado de forma elegante e limpa, longe da borda superior e fora do círculo da mandala
       svg += `<g id="png-discreet-header">
-        <text x="50" y="55" font-family="'Cinzel', serif" font-size="24" font-weight="800" fill="#103b70">${currentSubjectName}</text>
-        <text x="50" y="80" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
-        <text x="50" y="100" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
-        <text x="50" y="120" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
+        <text x="50" y="50" font-family="'Cinzel', serif" font-size="24" font-weight="800" fill="#103b70">${currentSubjectName}</text>
+        <text x="50" y="75" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
+        <text x="50" y="95" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
+        <text x="50" y="115" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
       </g>`;
 
       svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
@@ -250,3 +1276,21 @@
       };
       imgLoader.src = blobURL;
     }
+
+    function salvarImagemMandala() {
+      if (!lastRenderedPngUrl) return;
+      const link = document.createElement('a');
+      link.download = `Astro_Hellenic_${currentSubjectName.replace(/\s+/g, '_')}.png`;
+      link.href = lastRenderedPngUrl;
+      link.click();
+    }
+
+    window.onload = function() {
+      carregarPastasSalvas();
+      carregarCeuDoMomento();
+      carregarConteudoPastaAtual();
+    };
+</script>
+
+</body>
+</html>
