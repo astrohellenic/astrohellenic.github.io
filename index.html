@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
     
-    <!-- FAVICON CORRIGIDO -->
+    <!-- FAVICON -->
     <link rel="icon" type="image/png" href="favicon.png?v=2">
 
     <!-- FONTES E ÍCONES -->
@@ -31,7 +31,6 @@
             padding: 0;
         }
 
-        /* CORREÇÃO DO SAFARI NO IPAD (ALTURA DINÂMICA) */
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: var(--bg-main);
@@ -404,7 +403,7 @@
     <!-- ÁREA PRINCIPAL -->
     <main id="main-stage">
         
-        <!-- BARRA SUPERIOR MINIMALISTA -->
+        <!-- BARRA SUPERIOR -->
         <div id="top-bar">
             <div class="top-bar-controls">
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
@@ -673,7 +672,7 @@
           container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta vazia.</div>`;
         }
       } catch (err) {
-        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Use a busca acima.</div>`;
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Erro ao carregar dados.</div>`;
       }
     }
 
@@ -687,7 +686,7 @@
       let html = '';
       lista.forEach((item, index) => {
         const cod = item.codigo ? `[${item.codigo}] ` : '';
-        const dataStr = item.dataNascimento || "Data n/i";
+        const dataStr = item.dataNascimento ? new Date(item.dataNascimento).toLocaleDateString('pt-BR') : "Data n/i";
         const cidStr = item.cidade || "Local n/i";
         html += `
           <div class="client-card-item" id="card-item-${index}" onclick="selecionarRegistro(${index})">
@@ -753,21 +752,21 @@
 
       let ano = 2000, mes = 1, dia = 1;
       if (c.dataNascimento) {
-        const rawData = String(c.dataNascimento).trim();
-        if (rawData.includes('/')) {
-          const p = rawData.split('/');
-          if (p.length === 3) { dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10); }
-        } else if (rawData.includes('-')) {
-          const p = rawData.split('-');
-          if (p.length === 3) { ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10); }
+        const dObj = new Date(c.dataNascimento);
+        if (!isNaN(dObj.getTime())) {
+          ano = dObj.getFullYear();
+          mes = dObj.getMonth() + 1;
+          dia = dObj.getDate();
         }
       }
 
       let hora = 12, min = 0;
       if (c.horaNascimento) {
-        const rawHora = String(c.horaNascimento).trim();
-        const p = rawHora.split(':');
-        if (p.length >= 2) { hora = parseInt(p[0], 10); min = parseInt(p[1], 10); }
+        const hObj = new Date(c.horaNascimento);
+        if (!isNaN(hObj.getTime())) {
+          hora = hObj.getUTCHours();
+          min = hObj.getUTCMinutes();
+        }
       }
 
       currentSubjectName = c.nome || "Nativo";
@@ -846,7 +845,6 @@
       const partesData = dataStr.split('/');
       if (partesData.length !== 3) { alert("Data inválida."); return; }
       const dia = partesData[0], mes = partesData[1], ano = partesData[2];
-      const dataISO = `${ano}-${mes}-${dia}`;
 
       const partesHora = horaStr.split(':');
       const h = partesHora[0] || 12, m = partesHora[1] || 0;
@@ -859,7 +857,7 @@
       executarCalculo();
     }
 
-    /* SALVAR MAPA VISUALIZADO NA PLANILHA (APENAS ÍCONE DE DISQUETE) */
+    /* SALVAR MAPA VISUALIZADO NA PLANILHA */
     async function salvarMapaNaPlanilha() {
       if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
         alert("Gere um Mapa Natal antes de salvar.");
