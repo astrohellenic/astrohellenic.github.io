@@ -112,6 +112,41 @@
             justify-content: space-between;
         }
 
+        .folders-container {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .folder-tab-btn {
+            background: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .folder-tab-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .folder-tab-btn.active {
+            background: #e0f2fe;
+            color: var(--primary-blue);
+            border-color: #93c5fd;
+        }
+
         .search-box-container {
             display: flex;
             gap: 6px;
@@ -273,21 +308,24 @@
             </li>
         </ul>
 
-        <!-- SELEÇÃO DE BANCO E BUSCA -->
+        <!-- SELEÇÃO DE PASTAS E BUSCA -->
         <div class="database-section">
             <div class="section-label">
-                <span id="currentDatabaseCategoryLabel">Clientes</span>
-                <i class="fa-solid fa-rotate" style="cursor: pointer;" onclick="carregarListaCategoriaAtual()" title="Atualizar Lista"></i>
+                <span>Pastas / Caixinhas</span>
+                <button type="button" onclick="criarNovaPasta()" class="icon-btn" style="font-size: 11px; font-weight: 700; color: var(--primary-blue); padding: 2px 6px; border: 1px solid var(--border-color); background: #fafafa;" title="Criar Nova Pasta">
+                    <i class="fa-solid fa-folder-plus"></i> + Pasta
+                </button>
             </div>
 
-            <!-- NAVEGAÇÃO ENTRE CLIENTES E OUTROS PERFIS -->
-            <div style="display: flex; gap: 4px; margin-bottom: 8px;">
-                <button type="button" id="tabBtnClientes" class="icon-btn" onclick="alternarCategoriaDatabase('clientes')" style="flex:1; border: 1px solid var(--border-color); font-size: 11px; font-weight: 700; background: #e0f2fe;">Clientes</button>
-                <button type="button" id="tabBtnOutros" class="icon-btn" onclick="alternarCategoriaDatabase('outros')" style="flex:1; border: 1px solid var(--border-color); font-size: 11px; font-weight: 700; background: #fafafa;">Outros Perfis</button>
+            <!-- NAVEGAÇÃO DINÂMICA DE PASTAS -->
+            <div id="foldersBarContainer" class="folders-container">
+                <button type="button" class="folder-tab-btn active" id="folder-tab-Clientes" onclick="selecionarPasta('Clientes')">
+                    <i class="fa-solid fa-folder"></i> Clientes
+                </button>
             </div>
 
             <div class="search-box-container">
-                <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar por código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
+                <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
                 <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
@@ -297,7 +335,7 @@
 
             <div id="clientsListContainer" class="client-list-container">
                 <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
-                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando registros...
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando pasta...
                 </div>
             </div>
         </div>
@@ -343,8 +381,7 @@
     </main>
 
 <script>
-    const SCRIPT_URL_CLIENTES = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
-    let SCRIPT_URL_OUTROS = ""; // Reservado para a segunda base de dados
+    const SCRIPT_URL_CENTRAL = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
 
     const SIGNS = [
       { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
@@ -403,8 +440,9 @@
     let currentSubjectName = "Céu do Momento";
     let lastRenderedPngUrl = "";
     
-    let activeCategory = "clientes"; // "clientes" ou "outros"
-    let cachedCategoryList = [];
+    let activeFolder = "Clientes";
+    let customFolders = ["Clientes"];
+    let cachedFolderData = [];
 
     function formatDegMin(absDeg) {
       const degInSign = absDeg % 30;
@@ -466,58 +504,83 @@
       }
     }
 
-    /* SISTEMA DE BANCO DE DADOS E ALTERNÂNCIA DE CATEGORIAS */
-    function alternarCategoriaDatabase(cat) {
-      activeCategory = cat;
-      const btnClientes = document.getElementById('tabBtnClientes');
-      const btnOutros = document.getElementById('tabBtnOutros');
-      const label = document.getElementById('currentDatabaseCategoryLabel');
-
-      if (cat === 'clientes') {
-        btnClientes.style.background = '#e0f2fe';
-        btnOutros.style.background = '#fafafa';
-        label.innerText = 'Clientes';
-      } else {
-        btnClientes.style.background = '#fafafa';
-        btnOutros.style.background = '#e0f2fe';
-        label.innerText = 'Outros Perfis';
-      }
-
-      carregarListaCategoriaAtual();
+    /* GERENCIAMENTO DINÂMICO DE PASTAS */
+    function carregarPastasSalvas() {
+      try {
+        const saved = localStorage.getItem('astro_custom_folders');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) customFolders = parsed;
+        }
+      } catch (e) {}
+      renderBarraDePastas();
     }
 
-    async function carregarListaCategoriaAtual() {
+    function salvarPastasStorage() {
+      try {
+        localStorage.setItem('astro_custom_folders', JSON.stringify(customFolders));
+      } catch (e) {}
+    }
+
+    function criarNovaPasta() {
+      const nome = prompt("Digite o nome da nova pasta / caixinha:");
+      if (!nome || !nome.trim()) return;
+      const limpo = nome.trim();
+      if (!customFolders.includes(limpo)) {
+        customFolders.push(limpo);
+        salvarPastasStorage();
+        renderBarraDePastas();
+        selecionarPasta(limpo);
+      } else {
+        selecionarPasta(limpo);
+      }
+    }
+
+    function renderBarraDePastas() {
+      const container = document.getElementById('foldersBarContainer');
+      let html = '';
+      customFolders.forEach(pasta => {
+        const activeClass = pasta === activeFolder ? 'active' : '';
+        html += `
+          <button type="button" class="folder-tab-btn ${activeClass}" id="folder-tab-${pasta}" onclick="selecionarPasta('${pasta}')">
+            <i class="fa-solid fa-folder"></i> ${escapeHtml(pasta)}
+          </button>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function selecionarPasta(pasta) {
+      activeFolder = pasta;
+      renderBarraDePastas();
+      carregarConteudoPastaAtual();
+    }
+
+    async function carregarConteudoPastaAtual() {
       const container = document.getElementById('clientsListContainer');
       const statusEl = document.getElementById('searchStatusFeedback');
-      container.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando lista...</div>';
+      container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Lendo pasta "${escapeHtml(activeFolder)}"...</div>`;
       statusEl.innerText = '';
 
-      const targetUrl = (activeCategory === 'clientes') ? SCRIPT_URL_CLIENTES : SCRIPT_URL_OUTROS;
-
-      if (!targetUrl) {
-        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Base de ${activeCategory === 'outros' ? 'Outros Perfis' : 'Clientes'} pendente de conexão.</div>`;
-        return;
-      }
-
       try {
-        const res = await fetch(`${targetUrl}?acao=listar`);
+        const res = await fetch(`${SCRIPT_URL_CENTRAL}?acao=listar&pasta=${encodeURIComponent(activeFolder)}`);
         const json = await res.json();
 
         if (json.status === "sucesso" && Array.isArray(json.dados)) {
-          cachedCategoryList = json.dados;
-          renderListaCustom(cachedCategoryList);
+          cachedFolderData = json.dados;
+          renderListaPasta(cachedFolderData);
         } else {
-          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #dc2626; text-align: center;">Aguardando liberação de lista no servidor...</div>`;
+          container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta "${escapeHtml(activeFolder)}" vazia ou aguardando conexão.</div>`;
         }
       } catch (err) {
-        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Use a busca por código ou nome acima.</div>`;
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Use a busca acima para consultar.</div>`;
       }
     }
 
-    function renderListaCustom(lista) {
+    function renderListaPasta(lista) {
       const container = document.getElementById('clientsListContainer');
       if (!lista || lista.length === 0) {
-        container.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro encontrado.</div>';
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro nesta pasta.</div>`;
         return;
       }
 
@@ -539,37 +602,30 @@
     function executarBuscaLocalOuRemota(termo) {
       const q = termo.toLowerCase().trim();
       if (!q) {
-        renderListaCustom(cachedCategoryList);
+        renderListaPasta(cachedFolderData);
         return;
       }
-      if (cachedCategoryList.length > 0) {
-        const filtrados = cachedCategoryList.filter(item => 
+      if (cachedFolderData.length > 0) {
+        const filtrados = cachedFolderData.filter(item => 
           (item.nome && item.nome.toLowerCase().includes(q)) || 
           (item.codigo && String(item.codigo).toLowerCase().includes(q)) ||
           (item.cidade && item.cidade.toLowerCase().includes(q))
         );
-        renderListaCustom(filtrados);
+        renderListaPasta(filtrados);
       }
     }
 
-    /* BUSCA DIRETA NO SERVIDOR SE NÃO ESTIVER NA LISTA LOCAL */
     async function buscarDiretoPorCodigoOuNome() {
       const query = document.getElementById('filterClientsInput').value.trim();
       const statusEl = document.getElementById('searchStatusFeedback');
-      const targetUrl = (activeCategory === 'clientes') ? SCRIPT_URL_CLIENTES : SCRIPT_URL_OUTROS;
 
       if (!query) return;
-      if (!targetUrl) {
-        statusEl.style.color = "#dc2626";
-        statusEl.innerText = "URL do banco não configurada.";
-        return;
-      }
 
       statusEl.style.color = "#0284c7";
-      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando no servidor...';
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando na planilha...';
 
       try {
-        const res = await fetch(`${targetUrl}?codigo=${encodeURIComponent(query)}&busca=${encodeURIComponent(query)}`);
+        const res = await fetch(`${SCRIPT_URL_CENTRAL}?codigo=${encodeURIComponent(query)}&busca=${encodeURIComponent(query)}&pasta=${encodeURIComponent(activeFolder)}`);
         const json = await res.json();
 
         if (json.status === "sucesso" && json.cliente) {
@@ -588,7 +644,7 @@
     }
 
     function selecionarRegistro(index) {
-      const c = cachedCategoryList[index];
+      const c = cachedFolderData[index];
       if (c) aplicarDadosDoPerfilNoMapa(c);
     }
 
@@ -1038,8 +1094,9 @@
     }
 
     window.onload = function() {
+      carregarPastasSalvas();
       carregarCeuDoMomento();
-      carregarListaCategoriaAtual();
+      carregarConteudoPastaAtual();
     };
 </script>
 
