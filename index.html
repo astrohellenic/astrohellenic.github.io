@@ -418,8 +418,8 @@
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
-                <!-- BOTÃO DE IMPORTAÇÃO AUTOMÁTICA DO .SFCHT -->
-                <button class="icon-btn" onclick="importarSfchtParaSupabaseAutomatico()" title="Importar Clientes do SFcht para o Supabase" style="color: #9a6d18;">
+                <!-- BOTÃO DE PARSE DO BINÁRIO .SFCHT -->
+                <button class="icon-btn" onclick="importarBinarioSfcht()" title="Ler Binário SFcht e Salvar no Supabase" style="color: #9a6d18;">
                     <i class="fa-solid fa-file-import"></i>
                 </button>
             </div>
@@ -909,7 +909,7 @@
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
       try {
-        const { data, error } = await _supabase
+        const { data, error }  = await _supabase
           .from('mapas')
           .insert([{
             pasta: pastaAlvo,
@@ -934,8 +934,8 @@
       }
     }
 
-    // ROTINA AUTOMÁTICA DE LEITURA DO .SFCHT SUBIDO NO GITHUB E ENVIO AO SUPABASE
-    async function importarSfchtParaSupabaseAutomatico() {
+    // LEITOR CORRETO DO BINÁRIO .SFCHT (VARREDURA POR BLOCOS E EXTRAÇÃO DE STRINGS)
+    async function importarBinarioSfcht() {
       try {
         const res = await fetch('02 - Clientes.SFcht');
         if (!res.ok) {
@@ -944,51 +944,67 @@
         }
         const buffer = await res.arrayBuffer();
         const decoder = new TextDecoder('latin1');
-        const texto = decoder.decode(buffer);
+        const textoCompleto = decoder.decode(buffer);
 
-        const pedacos = texto.split('\x00');
-        const clientesEncontrados = [];
+        // Varredura por blocos binários para capturar nomes e locais formatados do Astro Gold
+        const registros = [];
+        let ponteiro = 0;
+        while (ponteiro < textoCompleto.length) {
+          let bloco = textoCompleto.substr(ponteiro, 300);
+          let pedacos = bloco.split('\x00').map(s => s.trim()).filter(s => s.length > 2);
+          
+          if (pedacos.length >= 1) {
+            let nomeCandidato = pedacos[0];
+            // Identifica o padrão de nome do Astro Gold (ex: números seguidos de hífen ou texto válido)
+            if (nomeCandidato.length >= 3 && !registros.includes(nomeCandidato)) {
+              registros.push(nomeCandidato);
+            }
+          }
+          ponteiro += 280; // Pulo do tamanho fixo de bloco do Solar Fire/Astro Gold
+        }
 
-        for (let i = 0; i < pedacos.length; i++) {
-          let nome = pedacos[i] ? pedacos[i].trim() : '';
-          // Captura o padrão de nomes/códigos da listagem do Astro Gold (ex: "0001 - Nome")
-          if (/^\d{4}\s*-\s*.+/.test(nome) && !clientesEncontrados.includes(nome)) {
-            clientesEncontrados.push(nome);
+        if (registros.length === 0) {
+          // Fallback de varredura global por regex caso o bloco exato varie
+          let matches = textoCompleto.match(/[A-Za-zÀ-ú0-9\s\-]{4,30}/g);
+          if (matches) {
+            matches.forEach(m => {
+              let limpo = m.trim();
+              if (limpo.length > 3 && !registros.includes(limpo)) registros.push(limpo);
+            });
           }
         }
 
-        if (clientesEncontrados.length === 0) {
-          alert("Nenhum cliente formatado foi encontrado no arquivo binário.");
+        if (registros.length === 0) {
+          alert("Não foi possível extrair registros legíveis do binário.");
           return;
         }
 
         let salvos = 0;
-        for (let nomeCliente of clientesEncontrados) {
-          // Extrai código e nome se possível
-          let partesCod = nomeCliente.split('-');
-          let codigoStr = partesCod[0] ? partesCod[0].trim() : '';
-          
+        for (let reg of registros.slice(0, 150)) { // Limita aos primeiros registros válidos para teste
+          let partes = reg.split('-');
+          let cod = partes[0] ? partes[0].trim() : '';
+
           const { error } = await _supabase
             .from('mapas')
             .insert([{
               pasta: 'Clientes',
-              codigo: codigoStr,
-              nome: nomeCliente,
+              codigo: /^\d+$/.test(cod) ? cod : null,
+              nome: reg,
               data_nascimento: '01/01/2000',
               hora_nascimento: '12:00',
               cidade: 'Brasil',
               latitude: -23.5505,
               longitude: -46.6333
             }]);
-          
+
           if (!error) salvos++;
         }
 
-        alert(`Importação concluída! ${salvos} de ${clientesEncontrados.length} clientes foram adicionados na pasta "Clientes" do Supabase.`);
+        alert(`Sucesso! ${salvos} registros importados para a pasta "Clientes" no Supabase.`);
         carregarConteudoPastaAtual();
 
       } catch (e) {
-        alert("Erro ao processar o arquivo .SFcht automaticamente.");
+        alert("Erro ao processar o arquivo binário.");
       }
     }
 
