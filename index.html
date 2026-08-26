@@ -141,7 +141,7 @@
             font-weight: 700;
             color: var(--primary-blue);
             padding: 6px 8px;
-            border: 1px stroke var(--border-color);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             background: #fafafa;
             cursor: pointer;
@@ -223,7 +223,7 @@
         .top-bar-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
 
         .icon-btn {
@@ -279,10 +279,65 @@
             width: auto;
             height: auto;
             display: block;
-            border: none !important;
-            box-shadow: none !important;
-            filter: none !important;
         }
+
+        /* MODAL PERSONALIZADO */
+        #modalOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: #ffffff;
+            width: 420px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+        .modal-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .city-results {
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+            display: none;
+        }
+        .city-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .city-item:hover { background: #f1f5f9; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-primary { background: var(--primary-blue); color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; }
+        .btn-secondary { background: #e2e8f0; color: #334155; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -303,7 +358,7 @@
                 <span>Céu do Momento (Here & Now)</span>
                 <i class="fa-solid fa-clock"></i>
             </li>
-            <li class="menu-item" onclick="abrirNovoMapa()">
+            <li class="menu-item" onclick="abrirModalNovoMapa()">
                 <span>Novo Mapa Natal</span>
                 <i class="fa-solid fa-user-plus"></i>
             </li>
@@ -346,8 +401,8 @@
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha">
-                    <i class="fa-solid fa-floppy-disk"></i>
+                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha" style="color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar
                 </button>
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
@@ -379,8 +434,40 @@
 
     </main>
 
+    <!-- MODAL DE NOVO MAPA NATAL COM BUSCA DE CIDADE -->
+    <div id="modalOverlay">
+        <div class="modal-box">
+            <div class="modal-title">Novo Mapa Natal</div>
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Identificação</label>
+                <input type="text" id="modalNome" class="modal-input" placeholder="Ex: Cássio Pereira">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
+                    <input type="text" id="modalData" class="modal-input" placeholder="09/10/1989">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
+                    <input type="text" id="modalHora" class="modal-input" placeholder="11:00" value="12:00">
+                </div>
+            </div>
+            <div style="position: relative;">
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
+                <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Belém, PA)..." oninput="pesquisarCidadesAutocomplete(this.value)">
+                <div id="cityResultsList" class="city-results"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="fecharModalNovoMapa()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="confirmarNovoMapaModal()">Gerar Mapa</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     const SCRIPT_URL_CENTRAL = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
+
+    let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
 
     const SIGNS = [
       { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
@@ -685,42 +772,82 @@
       executarCalculo();
     }
 
-    /* CRIAR NOVO MAPA SOLICITANDO CIDADE DE NASCIMENTO */
-    async function abrirNovoMapa() {
-      const nome = prompt("Nome completo / identificação:");
-      if (!nome) return;
-      const data = prompt("Data de nascimento (YYYY-MM-DD ou DD/MM/YYYY):");
-      if (!data) return;
-      const hora = prompt("Horário de nascimento (HH:MM):", "12:00");
-      if (!hora) return;
-      const cidadeInput = prompt("Cidade e Estado de nascimento (Ex: Jacareí, SP):");
-      if (!cidadeInput) return;
+    /* MODAL DE NOVO MAPA COM BUSCA DE CIDADE */
+    function abrirModalNovoMapa() {
+      document.getElementById('modalNome').value = "";
+      document.getElementById('modalData').value = "";
+      document.getElementById('modalHora').value = "12:00";
+      document.getElementById('modalCidadeInput').value = "";
+      document.getElementById('cityResultsList').style.display = "none";
+      document.getElementById('modalOverlay').style.display = "flex";
+    }
 
-      currentSubjectName = nome;
-      const pData = data.includes('/') ? data.split('/').reverse().join('-') : data;
-      const [ano, mes, dia] = pData.split('-');
-      const [h, m] = hora.split(':');
+    function fecharModalNovoMapa() {
+      document.getElementById('modalOverlay').style.display = "none";
+    }
 
-      currentMoment = new Date(ano, mes - 1, dia, h, m);
-
-      // Busca latitude e longitude exatas da cidade informada
-      try {
-        const resGeo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidadeInput)}&limit=1`);
-        const geoArr = await resGeo.json();
-        if (geoArr && geoArr.length > 0) {
-          const item = geoArr[0];
-          currentGeo = {
-            lat: parseFloat(item.lat),
-            lon: parseFloat(item.lon),
-            city: cidadeInput
-          };
-        } else {
-          currentGeo = { lat: -23.5505, lon: -46.6333, city: cidadeInput };
-        }
-      } catch (e) {
-        currentGeo = { lat: -23.5505, lon: -46.6333, city: cidadeInput };
+    let searchCityTimer = null;
+    async function pesquisarCidadesAutocomplete(query) {
+      const listDiv = document.getElementById('cityResultsList');
+      if (!query || query.length < 3) {
+        listDiv.style.display = "none";
+        return;
       }
 
+      clearTimeout(searchCityTimer);
+      searchCityTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`);
+          const data = await res.json();
+          
+          if (data && data.length > 0) {
+            let html = '';
+            data.forEach(item => {
+              const displayName = item.display_name;
+              const lat = item.lat;
+              const lon = item.lon;
+              html += `<div class="city-item" onclick="selecionarCidadeModal('${escapeHtml(displayName)}', ${lat}, ${lon})">${escapeHtml(displayName)}</div>`;
+            });
+            listDiv.innerHTML = html;
+            listDiv.style.display = "block";
+          } else {
+            listDiv.style.display = "none";
+          }
+        } catch (e) {
+          listDiv.style.display = "none";
+        }
+      }, 300);
+    }
+
+    function selecionarCidadeModal(nomeFormatado, lat, lon) {
+      selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
+      document.getElementById('modalCidadeInput').value = nomeFormatado;
+      document.getElementById('cityResultsList').style.display = "none";
+    }
+
+    function confirmarNovoMapaModal() {
+      const nome = document.getElementById('modalNome').value.trim();
+      const dataStr = document.getElementById('modalData').value.trim();
+      const horaStr = document.getElementById('modalHora').value.trim();
+
+      if (!nome) { alert("Informe o nome."); return; }
+      if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
+      if (!horaStr) { alert("Informe o horário."); return; }
+
+      // Conversão interna DD/MM/YYYY para YYYY-MM-DD
+      const partesData = dataStr.split('/');
+      if (partesData.length !== 3) { alert("Data inválida."); return; }
+      const dia = partesData[0], mes = partesData[1], ano = partesData[2];
+      const dataISO = `${ano}-${mes}-${dia}`;
+
+      const partesHora = horaStr.split(':');
+      const h = partesHora[0] || 12, m = partesHora[1] || 0;
+
+      currentSubjectName = nome;
+      currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
+      currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, city: selectedCityGeo.name };
+
+      fecharModalNovoMapa();
       executarCalculo();
     }
 
