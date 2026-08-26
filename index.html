@@ -43,12 +43,12 @@
         /* PAINEL LATERAL */
         #sidebar {
             width: 320px;
-            min-width: 320px;
             background: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .sidebar-header {
@@ -209,26 +209,27 @@
             background-color: #ffffff;
             position: relative;
             overflow: hidden;
+            min-width: 0;
         }
 
-        /* BARRA SUPERIOR MINIMALISTA */
+        /* BARRA SUPERIOR FLEXÍVEL E SEM CORTES */
         #top-bar {
-            height: 48px;
-            min-height: 48px;
+            height: 52px;
             background: #ffffff;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
-            gap: 12px;
+            gap: 8px;
             flex-shrink: 0;
         }
 
         .top-bar-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: nowrap;
         }
 
         .icon-btn {
@@ -254,6 +255,7 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 2px;
+            flex-shrink: 0;
         }
 
         .time-select {
@@ -281,7 +283,7 @@
 
         #mandala-container img {
             max-width: 100%;
-            max-height: calc(100vh - 58px);
+            max-height: calc(100vh - 62px);
             width: auto;
             height: auto;
             display: block;
@@ -347,7 +349,7 @@
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { width: 100%; min-width: 100%; height: auto; }
+            #sidebar { width: 100%; height: auto; }
         }
     </style>
 </head>
