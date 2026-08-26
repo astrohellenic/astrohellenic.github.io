@@ -14,6 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- SUPABASE CLIENT SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --bg-main: #f8fafc;
@@ -409,7 +412,7 @@
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa na Planilha">
+                <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa no Banco">
                     <i class="fa-solid fa-floppy-disk"></i>
                 </button>
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
@@ -473,7 +476,10 @@
     </div>
 
 <script>
-    const SCRIPT_URL_CENTRAL = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
+    // INICIALIZAÇÃO SUPABASE DEFINITIVA
+    const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
 
@@ -654,6 +660,7 @@
       carregarConteudoPastaAtual();
     }
 
+    // BUSCAR DADOS DO SUPABASE (LISTAGEM)
     async function carregarConteudoPastaAtual() {
       const container = document.getElementById('clientsListContainer');
       const statusEl = document.getElementById('searchStatusFeedback');
@@ -661,11 +668,22 @@
       statusEl.innerText = '';
 
       try {
-        const res = await fetch(`${SCRIPT_URL_CENTRAL}?acao=listar&pasta=${encodeURIComponent(activeFolder)}`);
-        const json = await res.json();
+        const { data, error } = await _supabase
+          .from('mapas')
+          .select('*')
+          .eq('pasta', activeFolder)
+          .order('id', { ascending: true });
 
-        if (json.status === "sucesso" && Array.isArray(json.dados)) {
-          cachedFolderData = json.dados;
+        if (!error && Array.isArray(data)) {
+          cachedFolderData = data.map(item => ({
+            codigo: item.codigo || String(item.id).padStart(4, '0'),
+            nome: item.nome,
+            dataNascimento: item.data_nascimento,
+            horaNascimento: item.hora_nascimento,
+            cidade: item.cidade,
+            latitude: item.latitude,
+            longitude: item.longitude
+          }));
           renderListaPasta(cachedFolderData);
         } else {
           container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta vazia.</div>`;
@@ -685,7 +703,7 @@
       let html = '';
       lista.forEach((item, index) => {
         const cod = item.codigo ? `[${item.codigo}] ` : '';
-        const dataStr = item.dataNascimento ? new Date(item.dataNascimento).toLocaleDateString('pt-BR') : "Data n/i";
+        const dataStr = item.dataNascimento || "Data n/i";
         const cidStr = item.cidade || "Local n/i";
         html += `
           <div class="client-card-item" id="card-item-${index}" onclick="selecionarRegistro(${index})">
@@ -723,17 +741,28 @@
       statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
 
       try {
-        const res = await fetch(`${SCRIPT_URL_CENTRAL}?codigo=${encodeURIComponent(query)}&busca=${encodeURIComponent(query)}&pasta=${encodeURIComponent(activeFolder)}`);
-        const json = await res.json();
+        const { data, error } = await _supabase
+          .from('mapas')
+          .select('*')
+          .or(`nome.ilike.%${query}%,codigo.eq.${query}`)
+          .limit(1);
 
-        if (json.status === "sucesso" && json.cliente) {
-          const c = json.cliente;
+        if (!error && data && data.length > 0) {
+          const c = {
+            codigo: data[0].codigo || String(data[0].id).padStart(4, '0'),
+            nome: data[0].nome,
+            dataNascimento: data[0].data_nascimento,
+            horaNascimento: data[0].hora_nascimento,
+            cidade: data[0].cidade,
+            latitude: data[0].latitude,
+            longitude: data[0].longitude
+          };
           aplicarDadosDoPerfilNoMapa(c);
           statusEl.style.color = "#16a34a";
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(c.nome || query)}`;
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(c.nome)}`;
         } else {
           statusEl.style.color = "#dc2626";
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${json.message || "Não localizado"}`;
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Não localizado`;
         }
       } catch (err) {
         statusEl.style.color = "#dc2626";
@@ -751,20 +780,20 @@
 
       let ano = 2000, mes = 1, dia = 1;
       if (c.dataNascimento) {
-        const dObj = new Date(c.dataNascimento);
-        if (!isNaN(dObj.getTime())) {
-          ano = dObj.getFullYear();
-          mes = dObj.getMonth() + 1;
-          dia = dObj.getDate();
+        const partes = c.dataNascimento.split('/');
+        if (partes.length === 3) {
+          dia = parseInt(partes[0]);
+          mes = parseInt(partes[1]);
+          ano = parseInt(partes[2]);
         }
       }
 
       let hora = 12, min = 0;
       if (c.horaNascimento) {
-        const hObj = new Date(c.horaNascimento);
-        if (!isNaN(hObj.getTime())) {
-          hora = hObj.getUTCHours();
-          min = hObj.getUTCMinutes();
+        const partesH = c.horaNascimento.split(':');
+        if (partesH.length >= 2) {
+          hora = parseInt(partesH[0]);
+          min = parseInt(partesH[1]);
         }
       }
 
@@ -855,6 +884,7 @@
       executarCalculo();
     }
 
+    // SALVAR MAPA DIRETO NO SUPABASE
     async function salvarMapaNaPlanilha() {
       if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
         alert("Gere um Mapa Natal antes de salvar.");
@@ -874,34 +904,29 @@
       const hora = String(currentMoment.getHours()).padStart(2, '0');
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-      const payload = {
-        pasta: pastaAlvo,
-        nome: currentSubjectName,
-        dataNascimento: `${dia}/${mes}/${ano}`,
-        horaNascimento: `${hora}:${min}`,
-        cidade: currentGeo.city,
-        latitude: currentGeo.lat,
-        longitude: currentGeo.lon
-      };
-
       try {
-        const res = await fetch(SCRIPT_URL_CENTRAL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
-        });
-        const json = await res.json();
+        const { data, error } = await _supabase
+          .from('mapas')
+          .insert([{
+            pasta: pastaAlvo,
+            nome: currentSubjectName,
+            data_nascimento: `${dia}/${mes}/${ano}`,
+            hora_nascimento: `${hora}:${min}`,
+            cidade: currentGeo.city,
+            latitude: currentGeo.lat,
+            longitude: currentGeo.lon
+          }]);
 
-        if (json.status === "sucesso") {
+        if (!error) {
           alert(`Mapa salvo com sucesso na pasta "${pastaAlvo}"!`);
           if (activeFolder === pastaAlvo) {
             carregarConteudoPastaAtual();
           }
         } else {
-          alert("Erro ao salvar: " + json.message);
+          alert("Erro ao salvar no banco: " + error.message);
         }
       } catch (err) {
-        alert("Erro de conexão ao salvar mapa.");
+        alert("Erro de conexão ao salvar o mapa.");
       }
     }
 
@@ -1050,9 +1075,6 @@
       const hora = String(currentMoment.getHours()).padStart(2, '0');
       const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-      // CORREÇÃO:
-      // O centro vertical cy foi movido para 680 para empurrar o círculo da mandala bem para baixo.
-      // As coordenadas y do texto começam em 120, ficando MUITO abaixo da barra superior fixa.
       const width = 960, height = 1150, cx = 480, cy = 680;
       const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262, Scale: 280 };
       const R_OuterLine = 399;
@@ -1061,7 +1083,6 @@
       let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="#ffffff"/>`;
 
-      // TEXTO COM COORDENADAS AUMENTADAS PARA DESCER NA TELA
       svg += `<g id="png-discreet-header">
         <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${currentSubjectName}</text>
         <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
