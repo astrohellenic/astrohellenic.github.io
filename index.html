@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
     
+    <!-- FAVICON -->
+    <link rel="icon" type="image/png" href="favicon.png">
+
     <!-- FONTES E ÍCONES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,7 +93,7 @@
         }
 
         .favorites-section {
-            padding: 12px 16px;
+            padding: 16px;
             flex: 1;
             overflow-y: auto;
         }
@@ -110,7 +113,6 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 12px;
-            margin-bottom: 12px;
             outline: none;
         }
 
@@ -176,7 +178,7 @@
             cursor: pointer;
         }
 
-        /* PALCO DA MANDALA (SEM BORDAS OU QUADRADOS SEPARADOS) */
+        /* PALCO DA MANDALA */
         #mandala-container {
             flex: 1;
             display: flex;
@@ -224,11 +226,14 @@
         </ul>
 
         <div class="favorites-section">
-            <div class="section-label">Clientes / Planilha</div>
-            <input type="text" class="client-search-input" placeholder="Buscar cliente..." onkeyup="filtrarClientes(this.value)">
-            <div id="client-list-placeholder" style="font-size: 12px; color: #94a3b8; text-align: center; padding-top: 20px;">
-                Conecte sua planilha para carregar os mapas salvos.
+            <div class="section-label">Buscar na Planilha</div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <input type="text" id="input_codigo_cliente" class="client-search-input" placeholder="Cód. Cliente (Ex: 0001)">
+                <button type="button" onclick="buscarClientePlanilha()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar Cliente">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
             </div>
+            <div id="sheetSearchStatus" style="font-size: 11px; font-weight: 600; min-height: 18px;"></div>
         </div>
     </aside>
 
@@ -272,6 +277,8 @@
     </main>
 
 <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOpR-AKFTRLD_3Zd1gE6mGtKn9rCfJ4FSH8nwWwKT9u4g0sqosT2YmHLga04EqI0GgJg/exec";
+
     const SIGNS = [
       { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
       { name: "Câncer", ruler: "Lua" }, { name: "Leão", ruler: "Sol" }, { name: "Virgem", ruler: "Mercúrio" },
@@ -386,6 +393,70 @@
         case 2: return 150;
         case 3: return 126;
         default: return 198 - (level * 24);
+      }
+    }
+
+    /* BUSCA CLIENTE NA PLANILHA GOOGLE */
+    async function buscarClientePlanilha() {
+      const codigoInput = document.getElementById('input_codigo_cliente').value.trim();
+      const statusEl = document.getElementById('sheetSearchStatus');
+
+      if (!codigoInput) {
+        statusEl.style.color = "#dc2626";
+        statusEl.innerText = "Digite o código.";
+        return;
+      }
+
+      statusEl.style.color = "#0284c7";
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?codigo=${encodeURIComponent(codigoInput)}`);
+        const json = await res.json();
+
+        if (json.status === "sucesso") {
+          const c = json.cliente;
+
+          let ano = 2000, mes = 1, dia = 1;
+          if (c.dataNascimento) {
+            const rawData = String(c.dataNascimento).trim();
+            if (rawData.includes('/')) {
+              const p = rawData.split('/');
+              if (p.length === 3) { dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10); }
+            } else if (rawData.includes('-')) {
+              const p = rawData.split('-');
+              if (p.length === 3) { ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10); }
+            }
+          }
+
+          let hora = 12, min = 0;
+          if (c.horaNascimento) {
+            const rawHora = String(c.horaNascimento).trim();
+            const p = rawHora.split(':');
+            if (p.length >= 2) { hora = parseInt(p[0], 10); min = parseInt(p[1], 10); }
+          }
+
+          currentSubjectName = c.nome || `Cliente ${codigoInput}`;
+          currentMoment = new Date(ano, mes - 1, dia, hora, min);
+
+          const lat = parseFloat(c.latitude) || -23.5505;
+          const lon = parseFloat(c.longitude) || -46.6333;
+          const cidade = c.cidade || "Localidade não informada";
+
+          currentGeo = { lat, lon, city: cidade };
+
+          statusEl.style.color = "#16a34a";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${currentSubjectName}`;
+
+          executarCalculo();
+
+        } else {
+          statusEl.style.color = "#dc2626";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${json.message || "Não encontrado"}`;
+        }
+      } catch (err) {
+        statusEl.style.color = "#dc2626";
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro de conexão`;
       }
     }
 
@@ -540,7 +611,7 @@
       let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${size}" height="${size}" fill="#ffffff"/>`;
 
-      // CABEÇALHO DISCRETO EMBUTIDO NA PRÓPRIA IMAGEM DO PNG
+      // CABEÇALHO DISCRETO EMBUTIDO NO PNG
       svg += `<g id="png-discreet-header">
         <text x="35" y="52" font-family="'Cinzel', serif" font-size="22" font-weight="800" fill="#103b70">${currentSubjectName}</text>
         <text x="35" y="74" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
@@ -594,7 +665,7 @@
         svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
       }
 
-      // ELEMENTOS INTERNOS (PRESERVANDO 100% O ÍCONE DA SÍZIGIA)
+      // ELEMENTOS INTERNOS (ÍCONES PRESERVADOS)
       const allRingItems = [
         { label: "ASC", deg: ascAbs, color: "#000000", itemType: "axis" },
         { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", itemType: "axis" },
@@ -792,10 +863,6 @@
 
       currentMoment = new Date(ano, mes - 1, dia, h, m);
       executarCalculo();
-    }
-
-    function filtrarClientes(termo) {
-      // Reservado para integração com planilha
     }
 
     window.onload = carregarCeuDoMomento;
