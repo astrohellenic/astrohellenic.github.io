@@ -413,11 +413,6 @@ async function buscarDiretoPorCodigoOuNome() {
 }
 
 async function salvarMapaNaPlanilha() {
-  if (!currentSubjectName || currentSubjectName === "Céu do Momento") {
-    alert("Gere um Mapa Natal antes de salvar.");
-    return;
-  }
-
   let opcoes = customFolders.map((f, i) => `${i + 1}. ${f}`).join("\n");
   let escolha = prompt(`Escolha o número da pasta para salvar:\n\n${opcoes}`, "1");
   if (!escolha) return;
@@ -431,13 +426,15 @@ async function salvarMapaNaPlanilha() {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
+  const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
+
   try {
     const { data, error } = await _supabase
       .from('mapas')
       .insert([{
         pasta: pastaAlvo,
         codigo: currentCustomCode,
-        nome: currentSubjectName,
+        nome: nomeParaSalvar,
         data_nascimento: `${dia}/${mes}/${ano}`,
         hora_nascimento: `${hora}:${min}`,
         cidade: currentGeo.city,
@@ -446,7 +443,7 @@ async function salvarMapaNaPlanilha() {
       }]);
 
     if (!error) {
-      alert(`Mapa salvo com sucesso na pasta "${pastaAlvo}"!`);
+      alert(`Mapa "${nomeParaSalvar}" salvo com sucesso na pasta "${pastaAlvo}"!`);
       if (activeFolder === pastaAlvo) {
         carregarConteudoPastaAtual();
       }
