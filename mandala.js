@@ -118,21 +118,18 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   ];
 }
 
-function resolverSobreposicaoLateral(items, minDist = 8.5) {
-  items.sort((a, b) => a.deg - b.deg);
-  items.forEach(it => it.aShift = it.aScreen);
+function angleDist(a1, a2) {
+  let diff = Math.abs(a1 - a2) % 360;
+  return diff > 180 ? 360 - diff : diff;
+}
 
-  for (let iter = 0; iter < 12; iter++) {
-    for (let i = 0; i < items.length - 1; i++) {
-      let curr = items[i];
-      let next = items[i + 1];
-      let diff = next.aShift - curr.aShift;
-      if (diff < minDist) {
-        let overlap = (minDist - diff) / 2;
-        curr.aShift -= overlap;
-        next.aShift += overlap;
-      }
-    }
+function getRadiusForLevel(level) {
+  switch(level) {
+    case 0: return 198;
+    case 1: return 174;
+    case 2: return 150;
+    case 3: return 126;
+    default: return 198 - (level * 24);
   }
 }
 
@@ -482,17 +479,29 @@ function renderMandala() {
   });
 
   allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
-  resolverSobreposicaoLateral(allRingItems, 9.0);
+  allRingItems.sort((a, b) => a.aScreen - b.aScreen);
+
+  allRingItems.forEach((item, idx) => {
+    let usedLevels = new Set();
+    for (let j = 0; j < allRingItems.length; j++) {
+      if (idx !== j && angleDist(item.aScreen, allRingItems[j].aScreen) < 10.5) {
+        if (allRingItems[j].level !== undefined) usedLevels.add(allRingItems[j].level);
+      }
+    }
+    let lvl = 0;
+    while (usedLevels.has(lvl)) lvl++;
+    item.level = lvl;
+  });
 
   allRingItems.forEach(item => {
-    const itemR = 185; // Altura fixa para todos os itens do anel
+    const itemR = getRadiusForLevel(item.level);
     if (item.itemType !== "axis") {
-      const p1 = polarToCart(cx, cy, itemR + 10, item.aShift);
+      const p1 = polarToCart(cx, cy, itemR + 12, item.aScreen);
       const p2 = polarToCart(cx, cy, R.SignSector, item.aScreen);
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.itemType === 'lot' ? goldColor : item.color}" stroke-width="1.5"/>`;
     }
 
-    const pTxt = polarToCart(cx, cy, itemR, item.aShift);
+    const pTxt = polarToCart(cx, cy, itemR, item.aScreen);
 
     if (item.itemType === "syzygy") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
@@ -576,23 +585,34 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  /* PLANETAS COM ANTICOLISÃO LATERAL NA MESMA ALTURA (CIRCULAR) */
+  /* PLANETAS */
   const planetList = PLANETS_DEF.map(p => ({
     ...p,
     deg: pObj[p.id].abs,
     retro: pObj[p.id].retro,
     aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs)
   }));
-  
-  resolverSobreposicaoLateral(planetList, 8.5);
+  planetList.sort((a, b) => a.aScreen - b.aScreen);
 
-  const pR = 300; // Raio fixo para todos os planetas ficarem na mesma linha
+  planetList.forEach((p, idx) => {
+    let usedLevels = new Set();
+    for (let j = 0; j < planetList.length; j++) {
+      if (idx !== j && angleDist(p.aScreen, planetList[j].aScreen) < 9.5) {
+        if (planetList[j].level !== undefined) usedLevels.add(planetList[j].level);
+      }
+    }
+    let lvl = 0;
+    while (usedLevels.has(lvl)) lvl++;
+    p.level = lvl;
+  });
+
   planetList.forEach(p => {
-    const p1 = polarToCart(cx, cy, R.Termos, p.aScreen); // Origem no grau real
-    const p2 = polarToCart(cx, cy, pR - 12, p.aShift);   // Fim na posição desviasse de lado
+    const pR = 295 + (p.level * 25);
+    const p1 = polarToCart(cx, cy, R.Termos, p.aScreen);
+    const p2 = polarToCart(cx, cy, pR - 10, p.aScreen);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#1d5fa8" stroke-width="1.5"/>`;
 
-    const pPos = polarToCart(cx, cy, pR, p.aShift);
+    const pPos = polarToCart(cx, cy, pR, p.aScreen);
     let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
