@@ -59,7 +59,7 @@ const EGYPTIAN_TERMS = [
 let currentCalculatedData = null;
 let currentMoment = new Date();
 let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
-let currentSubjectName = "Here & Now";
+let currentSubjectName = "Agora";
 let currentCustomCode = null;
 let lastRenderedPngUrl = "";
 
