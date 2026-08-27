@@ -123,6 +123,25 @@ function angleDist(a1, a2) {
   return diff > 180 ? 360 - diff : diff;
 }
 
+function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
+  if (!items || items.length === 0) return;
+  items.sort((a, b) => a.aScreen - b.aScreen);
+  items.forEach(it => it.aShift = it.aScreen);
+
+  for (let pass = 0; pass < 12; pass++) {
+    for (let i = 0; i < items.length - 1; i++) {
+      let atual = items[i];
+      let proximo = items[i + 1];
+      let diff = proximo.aShift - atual.aShift;
+      if (diff < distMinimaGraus) {
+        let overlap = (distMinimaGraus - diff) / 2;
+        atual.aShift -= overlap;
+        proximo.aShift += overlap;
+      }
+    }
+  }
+}
+
 function getRadiusForLevel(level) {
   switch(level) {
     case 0: return 198;
@@ -478,30 +497,19 @@ function renderMandala() {
     allRingItems.push({ label: lot.label, deg: lot.deg, color: goldColor, itemType: "lot", lotType: lot.type, sym: lot.sym });
   });
 
-  allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
-  allRingItems.sort((a, b) => a.aScreen - b.aScreen);
+    allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
+  aplicarDesvioLateralArco(allRingItems, 7.0);
 
-  allRingItems.forEach((item, idx) => {
-    let usedLevels = new Set();
-    for (let j = 0; j < allRingItems.length; j++) {
-      if (idx !== j && angleDist(item.aScreen, allRingItems[j].aScreen) < 10.5) {
-        if (allRingItems[j].level !== undefined) usedLevels.add(allRingItems[j].level);
-      }
-    }
-    let lvl = 0;
-    while (usedLevels.has(lvl)) lvl++;
-    item.level = lvl;
-  });
+  const raioFixoAnel = 185;
 
   allRingItems.forEach(item => {
-    const itemR = getRadiusForLevel(item.level);
     if (item.itemType !== "axis") {
-      const p1 = polarToCart(cx, cy, itemR + 12, item.aScreen);
+      const p1 = polarToCart(cx, cy, raioFixoAnel + 12, item.aShift);
       const p2 = polarToCart(cx, cy, R.SignSector, item.aScreen);
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.itemType === 'lot' ? goldColor : item.color}" stroke-width="1.5"/>`;
     }
 
-    const pTxt = polarToCart(cx, cy, itemR, item.aScreen);
+    const pTxt = polarToCart(cx, cy, raioFixoAnel, item.aShift);
 
     if (item.itemType === "syzygy") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
@@ -534,6 +542,7 @@ function renderMandala() {
       svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
+
 
   const ascSignIdx = Math.floor(ascAbs / 30);
   for (let i = 0; i < 12; i++) {
