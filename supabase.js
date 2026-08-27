@@ -37,7 +37,7 @@ async function carregarPastasSalvas() {
   renderMenuPrincipal();
 }
 
-/* NÍVEL 1: MENU PRINCIPAL (COM TÉCNICAS DE TEMPO) */
+/* NÍVEL 1: MENU PRINCIPAL */
 function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -52,7 +52,7 @@ function renderMenuPrincipal() {
         <i class="fa-solid fa-clock"></i>
       </li>
       <li class="menu-item" onclick="abrirModalNovoMapa()">
-        <span>Novo Mapa Natal</span>
+        <span>Novo Mapa Astral</span>
         <i class="fa-solid fa-user-plus"></i>
       </li>
       <li class="menu-item" onclick="abrirModalImportacaoTexto()">
@@ -65,6 +65,10 @@ function renderMenuPrincipal() {
       </li>
       <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
         <span>Técnicas de Tempo</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </li>
+      <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
+        <span>Ferramentas Auxiliares</span>
         <i class="fa-solid fa-chevron-right"></i>
       </li>
     </ul>
@@ -120,7 +124,48 @@ function abrirNavegacaoTecnicasTempo() {
   `;
 }
 
-/* NÍVEL 3A: ABRE CADA UMA DAS FERRAMENTAS */
+/* NÍVEL 2B: TELA DE FERRAMENTAS AUXILIARES */
+function abrirNavegacaoFerramentasAuxiliares() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #f8fafc;">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
+        <i class="fa-solid fa-chevron-left"></i> Voltar
+      </button>
+      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">FERRAMENTAS AUXILIARES</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('katarche')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-circle-question" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Katarche (Perguntas)</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('horas')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-business-time" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Horas Planetárias</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('isopsefia')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-calculator" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Isopsefia</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+    </div>
+  `;
+}
+
+/* CHAMA OS MÓDULOS TÉCNICOS */
 function abrirModuloTecnica(modulo) {
   const container = document.getElementById('mandala-container');
   if (!container) return;
@@ -144,7 +189,25 @@ function abrirModuloTecnica(modulo) {
   }
 }
 
-/* NÍVEL 2B: TELA DE PASTAS (ORDEM ALFABÉTICA + EDITAR + APAGAR) */
+/* CHAMA OS MÓDULOS AUXILIARES */
+function abrirModuloAuxiliar(modulo) {
+  const container = document.getElementById('mandala-container');
+  if (!container) return;
+
+  if (modulo === 'katarche') {
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Katarche / Perguntas (Em breve)</div>`;
+  } else if (modulo === 'horas') {
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Horas Planetárias (Em breve)</div>`;
+  } else if (modulo === 'isopsefia') {
+    if (typeof iniciarModuloIsopsefia === 'function') {
+      iniciarModuloIsopsefia();
+    } else {
+      container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Isopsefia pronto para integração.</div>`;
+    }
+  }
+}
+
+/* NÍVEL 2C: TELA DE PASTAS */
 function abrirNavegacaoPastas() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -182,7 +245,7 @@ function abrirNavegacaoPastas() {
   sidebar.innerHTML = html;
 }
 
-/* NÍVEL 3B: TELA DE MAPAS DA PASTA */
+/* NÍVEL 3C: TELA DE MAPAS DA PASTA */
 async function abrirConteudoPasta(nomePasta) {
   activeFolder = nomePasta;
   selectedMapIds.clear();
