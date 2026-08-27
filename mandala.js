@@ -142,16 +142,6 @@ function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
   }
 }
 
-function getRadiusForLevel(level) {
-  switch(level) {
-    case 0: return 198;
-    case 1: return 174;
-    case 2: return 150;
-    case 3: return 126;
-    default: return 198 - (level * 24);
-  }
-}
-
 function selecionarRegistro(index) {
   if (typeof cachedFolderData !== 'undefined' && cachedFolderData[index]) {
     aplicarDadosDoPerfilNoMapa(cachedFolderData[index]);
@@ -497,7 +487,7 @@ function renderMandala() {
     allRingItems.push({ label: lot.label, deg: lot.deg, color: goldColor, itemType: "lot", lotType: lot.type, sym: lot.sym });
   });
 
-    allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
+  allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
   aplicarDesvioLateralArco(allRingItems, 7.0);
 
   const raioFixoAnel = 185;
@@ -542,7 +532,6 @@ function renderMandala() {
       svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
-
 
   const ascSignIdx = Math.floor(ascAbs / 30);
   for (let i = 0; i < 12; i++) {
@@ -594,7 +583,7 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-   /* PLANETAS COM DESVIO LATERAL FIXO */
+  /* PLANETAS COM DESVIO LATERAL FIXO */
   const planetList = PLANETS_DEF.map(p => ({
     ...p,
     deg: pObj[p.id].abs,
@@ -602,27 +591,16 @@ function renderMandala() {
     aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs)
   }));
 
-  // Aplica o anticolisão lateral nos planetas (mesma função usada no anel interno)
   aplicarDesvioLateralArco(planetList, 8.5);
 
-  const pR = 295; // Raio fixo para todos os planetas ficarem exatamente na mesma linha e irem para o lado
+  const pR = 295;
 
   planetList.forEach(p => {
-    // Linha sai do grau exato na borda dos termos e vai até o planeta deslocado ao lado
     const p1 = polarToCart(cx, cy, R.Termos, p.aScreen);
     const p2 = polarToCart(cx, cy, pR - 10, p.aShift);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#1d5fa8" stroke-width="1.5"/>`;
 
     const pPos = polarToCart(cx, cy, pR, p.aShift);
-    let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
-
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <text x="0" y="4" font-size="21" font-weight="bold" fill="#103b70" text-anchor="middle">${p.symbol}</text>
-      <text x="0" y="19" font-size="10" font-weight="bold" fill="#334155" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(p.deg)}${retroSymbol}</text>
-    </g>`;
-  });
-
-    const pPos = polarToCart(cx, cy, pR, p.aScreen);
     let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
