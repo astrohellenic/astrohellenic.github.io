@@ -15,13 +15,13 @@ function escapeHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/* CARREGA AS PASTAS DIRETAMENTE DO SUPABASE */
+/* CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
 async function carregarPastasSalvas() {
   try {
     const { data, error } = await _supabase
       .from('pastas')
       .select('nome')
-      .order('id', { ascending: true });
+      .order('nome', { ascending: true });
 
     if (!error && Array.isArray(data) && data.length > 0) {
       customFolders = data.map(p => p.nome);
@@ -32,10 +32,115 @@ async function carregarPastasSalvas() {
   } catch (e) {
     console.error("Erro ao carregar pastas do banco:", e);
   }
-  renderBarraDePastas();
+  renderMenuSelecionarMapa();
 }
 
-/* CRIA UMA NOVA PASTA NO SUPABASE */
+function renderMenuSelecionarMapa() {
+  const container = document.getElementById('foldersBarContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="menu-item-btn" onclick="abrirNavegacaoPastas()" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #1e293b;">
+      <div><i class="fa-solid fa-folder-open" style="margin-right: 8px; color: #0284c7;"></i> Selecionar Mapa</div>
+      <i class="fa-solid fa-chevron-right" style="font-size: 12px; color: #94a3b8;"></i>
+    </div>
+  `;
+  document.getElementById('clientsListContainer').innerHTML = '';
+}
+
+/* EXIBE AS PASTAS EM ORDEM ALFABÉTICA */
+function abrirNavegacaoPastas() {
+  const container = document.getElementById('clientsListContainer');
+  if (!container) return;
+
+  let html = `
+    <div style="padding: 8px 12px; background: #f8fafc; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+      <span>PASTAS</span>
+      <button onclick="criarNovaPasta()" style="background: none; border: none; color: #0284c7; cursor: pointer; font-size: 11px; font-weight: bold;">+ Nova Pasta</button>
+    </div>
+  `;
+
+  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  pastasOrdenadas.forEach(pasta => {
+    html += `
+      <div class="folder-row-item" onclick="abrirConteudoPasta('${pasta}')" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-folder" style="color: #cbd5e1;"></i>
+          <span style="font-size: 13px; font-weight: 500; color: #334155;">${escapeHtml(pasta)}</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #cbd5e1;"></i>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+/* CARREGA OS MAPAS DA PASTA EM ORDEM ALFABÉTICA */
+async function abrirConteudoPasta(nomePasta) {
+  activeFolder = nomePasta;
+  const container = document.getElementById('clientsListContainer');
+  if (!container) return;
+
+  container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mapas...</div>`;
+
+  try {
+    const { data, error } = await _supabase
+      .from('mapas')
+      .select('*')
+      .eq('pasta', nomePasta)
+      .order('nome', { ascending: true });
+
+    if (!error && Array.isArray(data)) {
+      cachedFolderData = data.map(item => ({
+        id: item.id,
+        codigo: (item.codigo && String(item.codigo).trim() !== '') ? item.codigo : null,
+        nome: item.nome,
+        dataNascimento: item.data_nascimento,
+        horaNascimento: item.hora_nascimento,
+        cidade: item.cidade,
+        latitude: item.latitude,
+        longitude: item.longitude
+      }));
+
+      let html = `
+        <div style="padding: 8px 12px; background: #f8fafc; font-size: 12px; font-weight: bold; color: #1e293b; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-chevron-left" onclick="abrirNavegacaoPastas()" style="cursor: pointer; padding: 4px; color: #0284c7;" title="Voltar para pastas"></i>
+          <span>${escapeHtml(nomePasta)}</span>
+        </div>
+      `;
+
+      if (cachedFolderData.length === 0) {
+        html += `<div style="padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">Nenhum mapa nesta pasta.</div>`;
+      } else {
+        cachedFolderData.forEach((item, index) => {
+          const cod = item.codigo ? `${item.codigo} - ` : '';
+          const dataStr = item.dataNascimento || "Data n/i";
+          const cidStr = item.cidade || "Local n/i";
+          html += `
+            <div class="client-card-item" id="card-item-${index}" style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+              <div style="flex: 1; cursor: pointer;" onclick="selecionarRegistro(${index})">
+                <div class="client-name" style="font-size: 13px; font-weight: 600; color: #1e293b;">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+                <div class="client-meta" style="font-size: 11px; color: #64748b;">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+              </div>
+              <div class="card-actions" style="display: flex; gap: 8px;">
+                <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar" style="background: none; border: none; color: #64748b; cursor: pointer;"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar" style="background: none; border: none; color: #ef4444; cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      container.innerHTML = html;
+    }
+  } catch (err) {
+    container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #ef4444;">Erro ao carregar mapas.</div>`;
+  }
+}
+
+/* CRIA PASTA NO SUPABASE */
 async function criarNovaPasta() {
   const nome = prompt("Nome da nova pasta:");
   if (!nome || !nome.trim()) return;
@@ -46,20 +151,17 @@ async function criarNovaPasta() {
       const { error } = await _supabase.from('pastas').insert([{ nome: limpo }]);
       if (!error) {
         customFolders.push(limpo);
-        renderBarraDePastas();
-        selecionarPasta(limpo);
+        abrirNavegacaoPastas();
       } else {
         alert("Erro ao criar pasta no banco: " + error.message);
       }
     } catch (e) {
       alert("Erro de conexão ao criar pasta.");
     }
-  } else {
-    selecionarPasta(limpo);
   }
 }
 
-/* EDITA O NOME DA PASTA NO SUPABASE (TABELA PASTAS E TABELA MAPAS) */
+/* EDITA PASTA NO SUPABASE */
 async function editarNomePasta(event, pastaAntiga) {
   event.stopPropagation();
   const novoNome = prompt(`Novo nome para a pasta "${pastaAntiga}":`, pastaAntiga);
@@ -68,24 +170,21 @@ async function editarNomePasta(event, pastaAntiga) {
   const nomeLimpo = novoNome.trim();
 
   try {
-    // Atualiza os mapas associados à pasta
     await _supabase.from('mapas').update({ pasta: nomeLimpo }).eq('pasta', pastaAntiga);
-    // Atualiza o registro na tabela de pastas
     await _supabase.from('pastas').update({ nome: nomeLimpo }).eq('nome', pastaAntiga);
     
     const index = customFolders.indexOf(pastaAntiga);
     if (index !== -1) {
       customFolders[index] = nomeLimpo;
       if (activeFolder === pastaAntiga) activeFolder = nomeLimpo;
-      renderBarraDePastas();
-      carregarConteudoPastaAtual();
+      abrirNavegacaoPastas();
     }
   } catch (e) {
     alert("Erro ao renomear pasta no banco de dados.");
   }
 }
 
-/* REMOVE A PASTA E SEUS MAPAS DO SUPABASE */
+/* DELETA PASTA E MAPAS DO SUPABASE */
 async function apagarPasta(event, pastaParaDeletar) {
   event.stopPropagation();
 
@@ -105,108 +204,11 @@ async function apagarPasta(event, pastaParaDeletar) {
         activeFolder = customFolders[0];
       }
 
-      renderBarraDePastas();
-      carregarConteudoPastaAtual();
+      abrirNavegacaoPastas();
     } catch (e) {
       alert("Erro ao apagar pasta do banco de dados.");
     }
   }
-}
-
-function renderBarraDePastas() {
-  const container = document.getElementById('foldersBarContainer');
-  if (!container) return;
-  let html = '';
-  customFolders.forEach(pasta => {
-    const activeClass = pasta === activeFolder ? 'active' : '';
-    html += `
-      <div class="folder-tab-btn ${activeClass}" id="folder-tab-${pasta}" onclick="selecionarPasta('${pasta}')" ondblclick="editarNomePasta(event, '${pasta}')">
-        <i class="fa-solid fa-folder"></i> 
-        <span>${escapeHtml(pasta)}</span>
-        <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Editar nome da pasta"></i>
-        <i class="fa-solid fa-xmark folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta"></i>
-      </div>
-    `;
-  });
-  html += `
-    <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
-        <i class="fa-solid fa-plus"></i> Pasta
-    </button>
-  `;
-  container.innerHTML = html;
-}
-
-function selecionarPasta(pasta) {
-  activeFolder = pasta;
-  renderBarraDePastas();
-  carregarConteudoPastaAtual();
-}
-
-async function carregarConteudoPastaAtual() {
-  const container = document.getElementById('clientsListContainer');
-  const statusEl = document.getElementById('searchStatusFeedback');
-  if (!container) return;
-  container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...</div>`;
-  if (statusEl) statusEl.innerText = '';
-
-  try {
-    const { data, error } = await _supabase
-      .from('mapas')
-      .select('*')
-      .eq('pasta', activeFolder)
-      .order('id', { ascending: true });
-
-    if (!error && Array.isArray(data)) {
-      cachedFolderData = data.map(item => ({
-        id: item.id,
-        codigo: (item.codigo && String(item.codigo).trim() !== '') ? item.codigo : null,
-        nome: item.nome,
-        dataNascimento: item.data_nascimento,
-        horaNascimento: item.hora_nascimento,
-        cidade: item.cidade,
-        latitude: item.latitude,
-        longitude: item.longitude
-      }));
-      renderListaPasta(cachedFolderData);
-    } else {
-      container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Pasta vazia.</div>`;
-    }
-  } catch (err) {
-    container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Erro ao carregar dados.</div>`;
-  }
-}
-
-function renderListaPasta(lista) {
-  const container = document.getElementById('clientsListContainer');
-  if (!container) return;
-  if (!lista || lista.length === 0) {
-    container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">Nenhum registro.</div>`;
-    return;
-  }
-
-  let html = '';
-  lista.forEach((item, index) => {
-    const cod = item.codigo ? `${item.codigo} ` : '';
-    const dataStr = item.dataNascimento || "Data n/i";
-    const cidStr = item.cidade || "Local n/i";
-    html += `
-      <div class="client-card-item" id="card-item-${index}">
-        <div style="flex: 1; cursor: pointer;" onclick="selecionarRegistro(${index})">
-          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
-          <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
-        </div>
-        <div class="card-actions">
-          <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar este mapa">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar este mapa">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-      </div>
-    `;
-  });
-  container.innerHTML = html;
 }
 
 function abrirModalEdicao(event, index) {
@@ -262,7 +264,7 @@ async function salvarEdicaoMapaModal() {
 
     if (!error) {
       fecharModalEdicao();
-      carregarConteudoPastaAtual();
+      abrirConteudoPasta(activeFolder);
     } else {
       alert("Erro ao atualizar o mapa: " + error.message);
     }
@@ -325,7 +327,7 @@ async function processarImportacaoTextoEmMassa() {
     if (!error) {
       alert(`Sucesso! ${registros.length} clientes importados para a pasta "${activeFolder}".`);
       fecharModalImportacaoTexto();
-      carregarConteudoPastaAtual();
+      abrirConteudoPasta(activeFolder);
     } else {
       alert("Erro ao salvar importação: " + error.message);
     }
@@ -341,91 +343,12 @@ async function deletarRegistroUnico(event, idMapa) {
   try {
     const { error } = await _supabase.from('mapas').delete().eq('id', idMapa);
     if (!error) {
-      carregarConteudoPastaAtual();
+      abrirConteudoPasta(activeFolder);
     } else {
       alert("Erro ao deletar registro.");
     }
   } catch (e) {
     alert("Erro de conexão.");
-  }
-}
-
-async function limparPastaAtualSupabase() {
-  if (!confirm(`ATENÇÃO: Deseja apagar TODOS os mapas da pasta "${activeFolder}"? Esta ação é definitiva.`)) return;
-
-  try {
-    const { error } = await _supabase.from('mapas').delete().eq('pasta', activeFolder);
-    if (!error) {
-      alert(`Pasta "${activeFolder}" limpa com sucesso!`);
-      carregarConteudoPastaAtual();
-    } else {
-      alert("Erro ao limpar a pasta.");
-    }
-  } catch (e) {
-    alert("Erro de conexão.");
-  }
-}
-
-function executarBuscaLocalOuRemota(termo) {
-  const q = termo.toLowerCase().trim();
-  if (!q) {
-    renderListaPasta(cachedFolderData);
-    return;
-  }
-  if (cachedFolderData.length > 0) {
-    const filtrados = cachedFolderData.filter(item => 
-      (item.nome && item.nome.toLowerCase().includes(q)) || 
-      (item.codigo && String(item.codigo).toLowerCase().includes(q)) ||
-      (item.cidade && item.cidade.toLowerCase().includes(q))
-    );
-    renderListaPasta(filtrados);
-  }
-}
-
-async function buscarDiretoPorCodigoOuNome() {
-  const query = document.getElementById('filterClientsInput').value.trim();
-  const statusEl = document.getElementById('searchStatusFeedback');
-
-  if (!query) return;
-
-  if (statusEl) {
-    statusEl.style.color = "#0284c7";
-    statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
-  }
-
-  try {
-    const { data, error } = await _supabase
-      .from('mapas')
-      .select('*')
-      .or(`nome.ilike.%${query}%,codigo.ilike.%${query}%`)
-      .limit(1);
-
-    if (!error && data && data.length > 0) {
-      const c = {
-        codigo: data[0].codigo || null,
-        nome: data[0].nome,
-        dataNascimento: data[0].data_nascimento,
-        horaNascimento: data[0].hora_nascimento,
-        cidade: data[0].cidade,
-        latitude: data[0].latitude,
-        longitude: data[0].longitude
-      };
-      aplicarDadosDoPerfilNoMapa(c);
-      if (statusEl) {
-        statusEl.style.color = "#16a34a";
-        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(c.nome)}`;
-      }
-    } else {
-      if (statusEl) {
-        statusEl.style.color = "#dc2626";
-        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Não localizado`;
-      }
-    }
-  } catch (err) {
-    if (statusEl) {
-      statusEl.style.color = "#dc2626";
-      statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro de conexão`;
-    }
   }
 }
 
@@ -462,7 +385,7 @@ async function salvarMapaNaPlanilha() {
     if (!error) {
       alert(`Mapa "${nomeParaSalvar}" salvo com sucesso na pasta "${pastaAlvo}"!`);
       if (activeFolder === pastaAlvo) {
-        carregarConteudoPastaAtual();
+        abrirConteudoPasta(pastaAlvo);
       }
     } else {
       alert("Erro ao salvar no banco: " + error.message);
