@@ -389,21 +389,27 @@ async function executarCalculo() {
   }
 }
 
-/* ATUALIZA O SELETOR DE ROTACÃO COMPACTO NA BARRA SUPERIOR */
+/* INJEÇÃO DIRETA DO BOTÃO NA BARRA DE AÇÕES DO TOPO */
 function injetarBotaoRotacaoNaBarraSuperior() {
-  const controlBar = document.querySelector('.time-control-bar') || document.querySelector('.top-control-bar');
-  if (!controlBar) return;
+  // Procura os botões de ação na barra do topo (ex: botão de recarregar, salvar ou importar)
+  const refBtn = document.querySelector('button[onclick*="salvarMapaNaPlanilha"]') || 
+                 document.querySelector('button[onclick*="carregarCeuDoMomento"]') ||
+                 document.querySelector('.header-actions') ||
+                 document.querySelector('header');
+
+  if (!refBtn) return;
+  const parentContainer = refBtn.parentElement || refBtn;
 
   let btnContainer = document.getElementById('lotRotationBtnContainer');
   if (!btnContainer) {
     btnContainer = document.createElement('div');
     btnContainer.id = 'lotRotationBtnContainer';
-    btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative;";
-    controlBar.appendChild(btnContainer);
+    btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-left: 6px;";
+    parentContainer.appendChild(btnContainer);
   }
 
   btnContainer.innerHTML = `
-    <div style="position: relative; width: 32px; height: 32px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+    <div style="position: relative; width: 32px; height: 32px; background: #ffffff; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
       <span style="font-size: 11px; font-weight: 800; color: #103b70; pointer-events: none;">
         ${selectedHouse1Lot === 'ASC' ? 'ASC' : (selectedHouse1Lot === 'fortune' ? '⊗' : (selectedHouse1Lot === 'spirit' ? 'Φ' : (selectedHouse1Lot === 'venus' ? '♀' : (selectedHouse1Lot === 'mercury' ? '☿' : (selectedHouse1Lot === 'mars' ? '♂' : (selectedHouse1Lot === 'jupiter' ? '♃' : '♄'))))))}
       </span>
@@ -420,6 +426,7 @@ function injetarBotaoRotacaoNaBarraSuperior() {
     </div>
   `;
 }
+
 
 function alternarRotacaoCasa1(val) {
   selectedHouse1Lot = val;
