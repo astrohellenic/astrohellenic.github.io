@@ -30,7 +30,7 @@ async function buscarFusoPorCoordenadas(lat, lon, dateObj = new Date()) {
   } catch (e) {
     console.error("Erro ao buscar fuso:", e);
   }
-  return -3; // Padrão
+  return -3;
 }
 
 /* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
@@ -322,8 +322,7 @@ async function carregarMapasDoBanco(nomePasta) {
         horaNascimento: item.hora_nascimento,
         cidade: item.cidade,
         latitude: item.latitude,
-        longitude: item.longitude,
-        fuso: item.fuso !== undefined && item.fuso !== null ? item.fuso : -3
+        longitude: item.longitude
       }));
       renderListaMapas(cachedFolderData);
     }
@@ -530,7 +529,6 @@ function abrirModalEdicao(event, index) {
   editSelectedCityGeo = {
     lat: parseFloat(item.latitude) || -23.5505,
     lon: parseFloat(item.longitude) || -46.6333,
-    fuso: item.fuso !== undefined ? parseFloat(item.fuso) : -3,
     name: item.cidade || 'São Paulo, SP'
   };
 
@@ -553,12 +551,8 @@ async function salvarEdicaoMapaModal() {
   if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
   if (!horaStr) { alert("Informe o horário."); return; }
 
-  const partesData = dataStr.split('/');
-  const dateObj = new Date(parseInt(partesData[2]), parseInt(partesData[1]) - 1, parseInt(partesData[0]));
-
   let lat = editSelectedCityGeo ? editSelectedCityGeo.lat : -23.5505;
   let lon = editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333;
-  let fusoCalculado = await buscarFusoPorCoordenadas(lat, lon, dateObj);
 
   try {
     const { error } = await _supabase
@@ -570,8 +564,7 @@ async function salvarEdicaoMapaModal() {
         hora_nascimento: horaStr,
         cidade: editSelectedCityGeo ? editSelectedCityGeo.name : document.getElementById('editModalCidadeInput').value,
         latitude: lat,
-        longitude: lon,
-        fuso: fusoCalculado
+        longitude: lon
       })
       .eq('id', idMapa);
 
@@ -629,8 +622,7 @@ async function processarImportacaoTextoEmMassa() {
       hora_nascimento: horaStr,
       cidade: cidadeStr,
       latitude: -23.5505,
-      longitude: -46.6333,
-      fuso: -3
+      longitude: -46.6333
     });
   });
 
@@ -680,7 +672,6 @@ async function salvarMapaNaPlanilha() {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  const fusoVal = await buscarFusoPorCoordenadas(currentGeo.lat, currentGeo.lon, currentMoment);
   const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
 
   try {
@@ -694,8 +685,7 @@ async function salvarMapaNaPlanilha() {
         hora_nascimento: `${hora}:${min}`,
         cidade: currentGeo.city,
         latitude: currentGeo.lat,
-        longitude: currentGeo.lon,
-        fuso: fusoVal
+        longitude: currentGeo.lon
       }]);
 
     if (!error) {
