@@ -12,7 +12,13 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-let selectedCityGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, name: "São Paulo, SP" };
+/* CÁLCULO EXATO DO FUSO BASEADO NA LONGITUDE (SEM FALLBACK FIXO) */
+function calcularFusoPorLongitude(lon) {
+  if (lon === undefined || lon === null || isNaN(lon)) return -3;
+  return Math.round(lon / 15);
+}
+
+let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
 let editSelectedCityGeo = null;
 
 /* PONTO SELECIONADO PARA A CASA 1 ('ASC' OU CHAVE DO LOTE) */
@@ -71,7 +77,7 @@ const EGYPTIAN_TERMS = [
 
 let currentCalculatedData = null;
 let currentMoment = new Date();
-let currentGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, city: "São Paulo, SP" };
+let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
 let currentSubjectName = "Agora";
 let currentCustomCode = null;
 let lastRenderedPngUrl = "";
@@ -180,10 +186,10 @@ function aplicarDadosDoPerfilNoMapa(c) {
 
   const lat = parseFloat(c.latitude) || -23.5505;
   const lon = parseFloat(c.longitude) || -46.6333;
-  const fuso = c.fuso !== undefined ? parseFloat(c.fuso) : -3;
+  const fusoCalc = c.fuso !== undefined ? parseFloat(c.fuso) : calcularFusoPorLongitude(lon);
   const cidade = c.cidade || "Localidade não informada";
 
-  currentGeo = { lat, lon, fuso, city: cidade };
+  currentGeo = { lat, lon, fuso: fusoCalc, city: cidade };
   executarCalculo();
 }
 
@@ -235,11 +241,12 @@ async function pesquisarCidadesAutocomplete(query, containerId, isEdit = false) 
 }
 
 function selecionarCidadeModal(nomeFormatado, lat, lon, containerId, isEdit) {
+  const fusoCalculado = calcularFusoPorLongitude(parseFloat(lon));
   if (isEdit) {
-    editSelectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), fuso: -3, name: nomeFormatado };
+    editSelectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), fuso: fusoCalculado, name: nomeFormatado };
     document.getElementById('editModalCidadeInput').value = nomeFormatado;
   } else {
-    selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), fuso: -3, name: nomeFormatado };
+    selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), fuso: fusoCalculado, name: nomeFormatado };
     document.getElementById('modalCidadeInput').value = nomeFormatado;
   }
   document.getElementById(containerId).style.display = "none";
@@ -262,10 +269,12 @@ function confirmarNovoMapaModal() {
   const partesHora = horaStr.split(':');
   const h = partesHora[0] || 12, m = partesHora[1] || 0;
 
+  const fusoReal = selectedCityGeo.fuso !== undefined ? selectedCityGeo.fuso : calcularFusoPorLongitude(selectedCityGeo.lon);
+
   currentSubjectName = nome;
   currentCustomCode = codDigitado !== "" ? codDigitado : null;
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
-  currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, fuso: selectedCityGeo.fuso || -3, city: selectedCityGeo.name };
+  currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, fuso: fusoReal, city: selectedCityGeo.name };
 
   fecharModalNovoMapa();
   executarCalculo();
@@ -297,7 +306,7 @@ function carregarCeuDoMomento() {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         const nomeCidade = await obterNomeCidade(lat, lon);
-        currentGeo = { lat, lon, fuso: -3, city: nomeCidade };
+        currentGeo = { lat, lon, fuso: calcularFusoPorLongitude(lon), city: nomeCidade };
         executarCalculo();
       },
       () => {
@@ -338,7 +347,8 @@ async function executarCalculo() {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
   const horaStr = `${hora}:${min}`;
 
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+  /* CÁLCULO EXATO DO FUSO DE ACORDO COM A LONGITUDE REAL */
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
 
   try {
     const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=${fusoVal}&lat=${currentGeo.lat}&lon=${currentGeo.lon}`;
@@ -391,7 +401,6 @@ async function executarCalculo() {
 
 /* INJEÇÃO DIRETA DO BOTÃO NA BARRA DE AÇÕES DO TOPO */
 function injetarBotaoRotacaoNaBarraSuperior() {
-  // Procura os botões de ação na barra do topo (ex: botão de recarregar, salvar ou importar)
   const refBtn = document.querySelector('button[onclick*="salvarMapaNaPlanilha"]') || 
                  document.querySelector('button[onclick*="carregarCeuDoMomento"]') ||
                  document.querySelector('.header-actions') ||
@@ -414,19 +423,18 @@ function injetarBotaoRotacaoNaBarraSuperior() {
         ${selectedHouse1Lot === 'ASC' ? 'ASC' : (selectedHouse1Lot === 'fortune' ? '⊗' : (selectedHouse1Lot === 'spirit' ? 'Φ' : (selectedHouse1Lot === 'venus' ? '♀' : (selectedHouse1Lot === 'mercury' ? '☿' : (selectedHouse1Lot === 'mars' ? '♂' : (selectedHouse1Lot === 'jupiter' ? '♃' : '♄'))))))}
       </span>
       <select onchange="alternarRotacaoCasa1(this.value)" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0; cursor: pointer;">
-        <option value="ASC" ${selectedHouse1Lot === 'ASC' ? 'selected' : ''}>ASC (Ascendente)</option>
-        <option value="fortune" ${selectedHouse1Lot === 'fortune' ? 'selected' : ''}>⊗ Fortuna (Lua)</option>
-        <option value="spirit" ${selectedHouse1Lot === 'spirit' ? 'selected' : ''}>Φ Espírito (Sol)</option>
-        <option value="mercury" ${selectedHouse1Lot === 'mercury' ? 'selected' : ''}>☿ Necessidade (Mercúrio)</option>
-        <option value="venus" ${selectedHouse1Lot === 'venus' ? 'selected' : ''}>♀ Eros (Vênus)</option>
-        <option value="mars" ${selectedHouse1Lot === 'mars' ? 'selected' : ''}>♂ Audácia (Marte)</option>
-        <option value="jupiter" ${selectedHouse1Lot === 'jupiter' ? 'selected' : ''}>♃ Vitória (Júpiter)</option>
-        <option value="saturn" ${selectedHouse1Lot === 'saturn' ? 'selected' : ''}>♄ Nêmesis (Saturno)</option>
+        <option value="ASC" ${selectedHouse1Lot === 'ASC' ? 'selected' : ''}>ASC</option>
+        <option value="fortune" ${selectedHouse1Lot === 'fortune' ? 'selected' : ''}>⊗ Fortuna</option>
+        <option value="spirit" ${selectedHouse1Lot === 'spirit' ? 'selected' : ''}>Φ Espírito</option>
+        <option value="mercury" ${selectedHouse1Lot === 'mercury' ? 'selected' : ''}>☿ Necessidade</option>
+        <option value="venus" ${selectedHouse1Lot === 'venus' ? 'selected' : ''}>♀ Eros</option>
+        <option value="mars" ${selectedHouse1Lot === 'mars' ? 'selected' : ''}>♂ Audácia</option>
+        <option value="jupiter" ${selectedHouse1Lot === 'jupiter' ? 'selected' : ''}>♃ Vitória</option>
+        <option value="saturn" ${selectedHouse1Lot === 'saturn' ? 'selected' : ''}>♄ Nêmesis</option>
       </select>
     </div>
   `;
 }
-
 
 function alternarRotacaoCasa1(val) {
   selectedHouse1Lot = val;
@@ -456,7 +464,7 @@ function renderMandala() {
 
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
 
-  /* DETERMINA O PONTO DA CASA 1 (ASC OU LOTE) */
+  /* DETERMINA O PONTO DA CASA 1 ('ASC' OU LOTE) */
   let house1RefAbs = ascAbs;
   if (selectedHouse1Lot !== "ASC") {
     const targetLot = lotes.find(l => l.key === selectedHouse1Lot);
@@ -476,7 +484,7 @@ function renderMandala() {
   const dayInfo = diasSemanaMap[currentMoment.getDay()];
   const diaSemanaFormatted = `${dayInfo.text} ${dayInfo.sym}`;
 
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
   const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
 
   const ano = currentMoment.getFullYear();
