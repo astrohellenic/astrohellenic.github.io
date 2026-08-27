@@ -2,6 +2,16 @@
    MÓDULO DE CÁLCULO E DESENHO DA MANDALA
    ========================================== */
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
 let editSelectedCityGeo = null;
 
@@ -124,8 +134,9 @@ function getRadiusForLevel(level) {
 }
 
 function selecionarRegistro(index) {
-  const c = cachedFolderData[index];
-  if (c) aplicarDadosDoPerfilNoMapa(c);
+  if (typeof cachedFolderData !== 'undefined' && cachedFolderData[index]) {
+    aplicarDadosDoPerfilNoMapa(cachedFolderData[index]);
+  }
 }
 
 function aplicarDadosDoPerfilNoMapa(c) {
@@ -400,7 +411,7 @@ function renderMandala() {
 
   svg += `<g id="png-discreet-header">
     <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
-    <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
+    <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city)}</text>
     <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
     <text x="50" y="194" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
   </g>`;
@@ -637,7 +648,11 @@ function salvarImagemMandala() {
 }
 
 window.onload = function() {
-  if (typeof carregarPastasSalvas === 'function') carregarPastasSalvas();
+  if (typeof carregarPastasSalvas === 'function') {
+    try { carregarPastasSalvas(); } catch(e) { console.error(e); }
+  }
   carregarCeuDoMomento();
-  if (typeof carregarConteudoPastaAtual === 'function') carregarConteudoPastaAtual();
+  if (typeof carregarConteudoPastaAtual === 'function') {
+    try { carregarConteudoPastaAtual(); } catch(e) { console.error(e); }
+  }
 };
