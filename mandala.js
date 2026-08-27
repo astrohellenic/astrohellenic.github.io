@@ -389,7 +389,7 @@ function renderMandala() {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
   const width = 960, height = 1150, cx = 480, cy = 680;
-  const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262, Scale: 280 };
+  const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
   const goldColor = "#c59b27";
 
@@ -399,7 +399,6 @@ function renderMandala() {
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
   svg += `<g id="png-discreet-header">
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
     <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
     <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
     <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
@@ -429,9 +428,10 @@ function renderMandala() {
     }
   }
 
+  /* CÍRCULOS E DIVISÓRIAS DA MANDALA */
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Scale}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
 
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, ascAbs));
   const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, ascAbs) + 180) % 360);
@@ -557,6 +557,7 @@ function renderMandala() {
     });
   }
 
+  /* DENTINHOS DOS TERMOS (APONTANDO PARA DENTRO) */
   for (let deg = 0; deg < 360; deg++) {
     const aScreen = eclToScreenAngle(deg, ascAbs);
     const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
@@ -565,14 +566,16 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
   }
    
-for (let deg = 0; deg < 360; deg++) {
-  const aScreen = eclToScreenAngle(deg, ascAbs);
-  const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-  const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-  const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-  svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
-}
+  /* DENTINHOS INTERNOS DA BORDA DOS SIGNOS (APONTANDO PARA DENTRO) */
+  for (let deg = 0; deg < 360; deg++) {
+    const aScreen = eclToScreenAngle(deg, ascAbs);
+    const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
+    const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
+    const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
+  }
 
+  /* LINHAS AZUIS DOS PLANETAS ENCOSTANDO NA BORDA EXTERNA DOS TERMOS */
   const planetList = PLANETS_DEF.map(p => ({ ...p, deg: pObj[p.id].abs, retro: pObj[p.id].retro, aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs) }));
   planetList.sort((a, b) => a.aScreen - b.aScreen);
 
