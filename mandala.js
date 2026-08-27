@@ -399,6 +399,7 @@ function renderMandala() {
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
   svg += `<g id="png-discreet-header">
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
     <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
     <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${currentGeo.city}</text>
     <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
@@ -567,8 +568,8 @@ function renderMandala() {
 for (let deg = 0; deg < 360; deg++) {
   const aScreen = eclToScreenAngle(deg, ascAbs);
   const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-  const p1 = polarToCart(cx, cy, R.Dodec, aScreen);
-  const p2 = polarToCart(cx, cy, R.Dodec - tickLen, aScreen);
+  const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
+  const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
   svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
 }
 
