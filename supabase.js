@@ -1,5 +1,5 @@
 /* ==========================================
-   MÓDULO DE BANCO DE DADOS (SUPABASE)
+   MÓDULO DE BANCO DE DADOS E NAVEGAÇÃO (SUPABASE)
    ========================================== */
 
 const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
@@ -37,7 +37,7 @@ async function carregarPastasSalvas() {
   renderMenuPrincipal();
 }
 
-/* NÍVEL 1: MENU PRINCIPAL */
+/* NÍVEL 1: MENU PRINCIPAL (COM TÉCNICAS DE TEMPO) */
 function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -63,11 +63,88 @@ function renderMenuPrincipal() {
         <span>Selecionar Mapa</span>
         <i class="fa-solid fa-chevron-right"></i>
       </li>
+      <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
+        <span>Técnicas de Tempo</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </li>
     </ul>
   `;
 }
 
-/* NÍVEL 2: TELA DE PASTAS (ORDEM ALFABÉTICA + EDITAR + APAGAR) */
+/* NÍVEL 2A: TELA DE TÉCNICAS DE TEMPO */
+function abrirNavegacaoTecnicasTempo() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #f8fafc;">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
+        <i class="fa-solid fa-chevron-left"></i> Voltar
+      </button>
+      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">TÉCNICAS DE TEMPO</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('revolucao')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-sun" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Revolução Solar</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('decenios')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-hourglass-half" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Decênios</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('liberacao')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-dharmachakra" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Liberação Zodiacal</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('direcoes')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-compass" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Direções Primárias</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+    </div>
+  `;
+}
+
+/* NÍVEL 3A: ABRE CADA UMA DAS FERRAMENTAS */
+function abrirModuloTecnica(modulo) {
+  const container = document.getElementById('mandala-container');
+  if (!container) return;
+
+  if (modulo === 'revolucao') {
+    if (typeof iniciarModuloRevolucao === 'function') {
+      iniciarModuloRevolucao();
+    } else {
+      container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Revolução Solar pronto para ser estruturado no revolucao.js</div>`;
+    }
+  } else if (modulo === 'decenios') {
+    if (typeof iniciarModuloDecenios === 'function') {
+      iniciarModuloDecenios();
+    } else {
+      container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Decênios aguardando vinculação.</div>`;
+    }
+  } else if (modulo === 'liberacao') {
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Liberação Zodiacal (Em breve)</div>`;
+  } else if (modulo === 'direcoes') {
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Direções Primárias (Em breve)</div>`;
+  }
+}
+
+/* NÍVEL 2B: TELA DE PASTAS (ORDEM ALFABÉTICA + EDITAR + APAGAR) */
 function abrirNavegacaoPastas() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -105,7 +182,7 @@ function abrirNavegacaoPastas() {
   sidebar.innerHTML = html;
 }
 
-/* NÍVEL 3: TELA DE MAPAS DA PASTA (COM BUSCA E LIXEIRA DE SELEÇÃO MÚLTIPLA) */
+/* NÍVEL 3B: TELA DE MAPAS DA PASTA */
 async function abrirConteudoPasta(nomePasta) {
   activeFolder = nomePasta;
   selectedMapIds.clear();
