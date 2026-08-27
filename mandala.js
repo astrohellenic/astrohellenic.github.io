@@ -12,7 +12,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
+let selectedCityGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, name: "São Paulo, SP" };
 let editSelectedCityGeo = null;
 
 const SIGNS = [
@@ -68,7 +68,7 @@ const EGYPTIAN_TERMS = [
 
 let currentCalculatedData = null;
 let currentMoment = new Date();
-let currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
+let currentGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, city: "São Paulo, SP" };
 let currentSubjectName = "Agora";
 let currentCustomCode = null;
 let lastRenderedPngUrl = "";
@@ -177,9 +177,10 @@ function aplicarDadosDoPerfilNoMapa(c) {
 
   const lat = parseFloat(c.latitude) || -23.5505;
   const lon = parseFloat(c.longitude) || -46.6333;
+  const fuso = c.fuso !== undefined ? parseFloat(c.fuso) : -3;
   const cidade = c.cidade || "Localidade não informada";
 
-  currentGeo = { lat, lon, city: cidade };
+  currentGeo = { lat, lon, fuso, city: cidade };
   executarCalculo();
 }
 
@@ -232,10 +233,10 @@ async function pesquisarCidadesAutocomplete(query, containerId, isEdit = false) 
 
 function selecionarCidadeModal(nomeFormatado, lat, lon, containerId, isEdit) {
   if (isEdit) {
-    editSelectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
+    editSelectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), fuso: -3, name: nomeFormatado };
     document.getElementById('editModalCidadeInput').value = nomeFormatado;
   } else {
-    selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeFormatado };
+    selectedCityGeo = { lat: parseFloat(lat), lon: parseFloat(lon), fuso: -3, name: nomeFormatado };
     document.getElementById('modalCidadeInput').value = nomeFormatado;
   }
   document.getElementById(containerId).style.display = "none";
@@ -261,7 +262,7 @@ function confirmarNovoMapaModal() {
   currentSubjectName = nome;
   currentCustomCode = codDigitado !== "" ? codDigitado : null;
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
-  currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, city: selectedCityGeo.name };
+  currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, fuso: selectedCityGeo.fuso || -3, city: selectedCityGeo.name };
 
   fecharModalNovoMapa();
   executarCalculo();
@@ -293,17 +294,17 @@ function carregarCeuDoMomento() {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         const nomeCidade = await obterNomeCidade(lat, lon);
-        currentGeo = { lat, lon, city: nomeCidade };
+        currentGeo = { lat, lon, fuso: -3, city: nomeCidade };
         executarCalculo();
       },
       () => {
-        currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
+        currentGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, city: "São Paulo, SP" };
         executarCalculo();
       },
       { timeout: 4000 }
     );
   } else {
-    currentGeo = { lat: -23.5505, lon: -46.6333, city: "São Paulo, SP" };
+    currentGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, city: "São Paulo, SP" };
     executarCalculo();
   }
 }
@@ -334,8 +335,10 @@ async function executarCalculo() {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
   const horaStr = `${hora}:${min}`;
 
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+
   try {
-    const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=-3&lat=${currentGeo.lat}&lon=${currentGeo.lon}`;
+    const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=${fusoVal}&lat=${currentGeo.lat}&lon=${currentGeo.lon}`;
     const res = await fetch(urlApi);
     if (!res.ok) throw new Error("Erro na API");
 
