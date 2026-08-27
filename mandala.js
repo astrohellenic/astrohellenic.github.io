@@ -118,18 +118,21 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   ];
 }
 
-function angleDist(a1, a2) {
-  let diff = Math.abs(a1 - a2) % 360;
-  return diff > 180 ? 360 - diff : diff;
-}
+function resolverSobreposicaoLateral(items, minDist = 8.5) {
+  items.sort((a, b) => a.deg - b.deg);
+  items.forEach(it => it.aShift = it.aScreen);
 
-function getRadiusForLevel(level) {
-  switch(level) {
-    case 0: return 198;
-    case 1: return 174;
-    case 2: return 150;
-    case 3: return 126;
-    default: return 198 - (level * 24);
+  for (let iter = 0; iter < 12; iter++) {
+    for (let i = 0; i < items.length - 1; i++) {
+      let curr = items[i];
+      let next = items[i + 1];
+      let diff = next.aShift - curr.aShift;
+      if (diff < minDist) {
+        let overlap = (minDist - diff) / 2;
+        curr.aShift -= overlap;
+        next.aShift += overlap;
+      }
+    }
   }
 }
 
@@ -479,30 +482,17 @@ function renderMandala() {
   });
 
   allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
-  allRingItems.sort((a, b) => a.aScreen - b.aScreen);
-
-  allRingItems.forEach((item, idx) => {
-    let usedLevels = new Set();
-    for (let j = 0; j < allRingItems.length; j++) {
-      if (idx !== j && angleDist(item.aScreen, allRingItems[j].aScreen) < 10.5) {
-        if (allRingItems[j].level !== undefined) usedLevels.add(allRingItems[j].level);
-      }
-    }
-    let lvl = 0;
-    while (usedLevels.has(lvl)) lvl++;
-    item.level = lvl;
-  });
+  resolverSobreposicaoLateral(allRingItems, 9.0);
 
   allRingItems.forEach(item => {
+    const itemR = 185; // Altura fixa para todos os itens do anel
     if (item.itemType !== "axis") {
-      const itemR = getRadiusForLevel(item.level);
-      const p1 = polarToCart(cx, cy, itemR + 12, item.aScreen);
+      const p1 = polarToCart(cx, cy, itemR + 10, item.aShift);
       const p2 = polarToCart(cx, cy, R.SignSector, item.aScreen);
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.itemType === 'lot' ? goldColor : item.color}" stroke-width="1.5"/>`;
     }
 
-    const itemR = getRadiusForLevel(item.level);
-    const pTxt = polarToCart(cx, cy, itemR, item.aScreen);
+    const pTxt = polarToCart(cx, cy, itemR, item.aShift);
 
     if (item.itemType === "syzygy") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
@@ -519,9 +509,9 @@ function renderMandala() {
       </g>`;
     } else if (item.itemType === "axis") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
-        <rect x="-22" y="-12" width="44" height="24" rx="5" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
-        <text x="0" y="4" font-size="14" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
+        <text x="0" y="3.5" font-size="9" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.itemType === "lot") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">`;
@@ -586,29 +576,23 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  /* LINHAS AZUIS DOS PLANETAS ENCOSTANDO NA BORDA EXTERNA DOS TERMOS */
-  const planetList = PLANETS_DEF.map(p => ({ ...p, deg: pObj[p.id].abs, retro: pObj[p.id].retro, aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs) }));
-  planetList.sort((a, b) => a.aScreen - b.aScreen);
+  /* PLANETAS COM ANTICOLISÃO LATERAL NA MESMA ALTURA (CIRCULAR) */
+  const planetList = PLANETS_DEF.map(p => ({
+    ...p,
+    deg: pObj[p.id].abs,
+    retro: pObj[p.id].retro,
+    aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs)
+  }));
+  
+  resolverSobreposicaoLateral(planetList, 8.5);
 
-  planetList.forEach((p, idx) => {
-    let usedLevels = new Set();
-    for (let j = 0; j < planetList.length; j++) {
-      if (idx !== j && angleDist(p.aScreen, planetList[j].aScreen) < 9.5) {
-        if (planetList[j].level !== undefined) usedLevels.add(planetList[j].level);
-      }
-    }
-    let lvl = 0;
-    while (usedLevels.has(lvl)) lvl++;
-    p.level = lvl;
-  });
-
+  const pR = 300; // Raio fixo para todos os planetas ficarem na mesma linha
   planetList.forEach(p => {
-    const pR = 295 + (p.level * 25);
-    const p1 = polarToCart(cx, cy, R.Termos, p.aScreen);
-    const p2 = polarToCart(cx, cy, pR - 10, p.aScreen);
+    const p1 = polarToCart(cx, cy, R.Termos, p.aScreen); // Origem no grau real
+    const p2 = polarToCart(cx, cy, pR - 12, p.aShift);   // Fim na posição desviasse de lado
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#1d5fa8" stroke-width="1.5"/>`;
 
-    const pPos = polarToCart(cx, cy, pR, p.aScreen);
+    const pPos = polarToCart(cx, cy, pR, p.aShift);
     let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
