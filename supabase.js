@@ -15,37 +15,51 @@ function escapeHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function carregarPastasSalvas() {
+/* CARREGA AS PASTAS DIRETAMENTE DO SUPABASE */
+async function carregarPastasSalvas() {
   try {
-    const saved = localStorage.getItem('astro_custom_folders');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) customFolders = parsed;
+    const { data, error } = await _supabase
+      .from('pastas')
+      .select('nome')
+      .order('id', { ascending: true });
+
+    if (!error && Array.isArray(data) && data.length > 0) {
+      customFolders = data.map(p => p.nome);
+    } else if (data && data.length === 0) {
+      await _supabase.from('pastas').insert([{ nome: 'Clientes' }]);
+      customFolders = ['Clientes'];
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("Erro ao carregar pastas do banco:", e);
+  }
   renderBarraDePastas();
 }
 
-function salvarPastasStorage() {
-  try {
-    localStorage.setItem('astro_custom_folders', JSON.stringify(customFolders));
-  } catch (e) {}
-}
-
-function criarNovaPasta() {
+/* CRIA UMA NOVA PASTA NO SUPABASE */
+async function criarNovaPasta() {
   const nome = prompt("Nome da nova pasta:");
   if (!nome || !nome.trim()) return;
   const limpo = nome.trim();
+
   if (!customFolders.includes(limpo)) {
-    customFolders.push(limpo);
-    salvarPastasStorage();
-    renderBarraDePastas();
-    selecionarPasta(limpo);
+    try {
+      const { error } = await _supabase.from('pastas').insert([{ nome: limpo }]);
+      if (!error) {
+        customFolders.push(limpo);
+        renderBarraDePastas();
+        selecionarPasta(limpo);
+      } else {
+        alert("Erro ao criar pasta no banco: " + error.message);
+      }
+    } catch (e) {
+      alert("Erro de conexão ao criar pasta.");
+    }
   } else {
     selecionarPasta(limpo);
   }
 }
 
+/* EDITA O NOME DA PASTA NO SUPABASE (TABELA PASTAS E TABELA MAPAS) */
 async function editarNomePasta(event, pastaAntiga) {
   event.stopPropagation();
   const novoNome = prompt(`Novo nome para a pasta "${pastaAntiga}":`, pastaAntiga);
@@ -54,21 +68,24 @@ async function editarNomePasta(event, pastaAntiga) {
   const nomeLimpo = novoNome.trim();
 
   try {
+    // Atualiza os mapas associados à pasta
     await _supabase.from('mapas').update({ pasta: nomeLimpo }).eq('pasta', pastaAntiga);
+    // Atualiza o registro na tabela de pastas
+    await _supabase.from('pastas').update({ nome: nomeLimpo }).eq('nome', pastaAntiga);
     
     const index = customFolders.indexOf(pastaAntiga);
     if (index !== -1) {
       customFolders[index] = nomeLimpo;
-      salvarPastasStorage();
       if (activeFolder === pastaAntiga) activeFolder = nomeLimpo;
       renderBarraDePastas();
       carregarConteudoPastaAtual();
     }
   } catch (e) {
-    alert("Erro ao renomear pasta.");
+    alert("Erro ao renomear pasta no banco de dados.");
   }
 }
 
+/* REMOVE A PASTA E SEUS MAPAS DO SUPABASE */
 async function apagarPasta(event, pastaParaDeletar) {
   event.stopPropagation();
 
@@ -80,9 +97,9 @@ async function apagarPasta(event, pastaParaDeletar) {
   if (confirm(`Deseja remover a pasta "${pastaParaDeletar}"?\n\nOs mapas salvos nela no banco de dados também serão apagados.`)) {
     try {
       await _supabase.from('mapas').delete().eq('pasta', pastaParaDeletar);
+      await _supabase.from('pastas').delete().eq('nome', pastaParaDeletar);
       
       customFolders = customFolders.filter(p => p !== pastaParaDeletar);
-      salvarPastasStorage();
 
       if (activeFolder === pastaParaDeletar) {
         activeFolder = customFolders[0];
