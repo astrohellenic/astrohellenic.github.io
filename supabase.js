@@ -17,6 +17,22 @@ function escapeHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/* BUSCA AUTOMÁTICA DE FUSO POR LATITUDE E LONGITUDE */
+async function buscarFusoPorCoordenadas(lat, lon, dateObj = new Date()) {
+  try {
+    const isoDate = dateObj.toISOString().split('T')[0];
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=utc_offset_seconds&start_date=${isoDate}&end_date=${isoDate}&timezone=auto`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data.utc_offset_seconds !== undefined) {
+      return data.utc_offset_seconds / 3600;
+    }
+  } catch (e) {
+    console.error("Erro ao buscar fuso:", e);
+  }
+  return -3; // Padrão
+}
+
 /* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
 async function carregarPastasSalvas() {
   try {
@@ -306,7 +322,8 @@ async function carregarMapasDoBanco(nomePasta) {
         horaNascimento: item.hora_nascimento,
         cidade: item.cidade,
         latitude: item.latitude,
-        longitude: item.longitude
+        longitude: item.longitude,
+        fuso: item.fuso !== undefined && item.fuso !== null ? item.fuso : -3
       }));
       renderListaMapas(cachedFolderData);
     }
@@ -513,6 +530,7 @@ function abrirModalEdicao(event, index) {
   editSelectedCityGeo = {
     lat: parseFloat(item.latitude) || -23.5505,
     lon: parseFloat(item.longitude) || -46.6333,
+    fuso: item.fuso !== undefined ? parseFloat(item.fuso) : -3,
     name: item.cidade || 'São Paulo, SP'
   };
 
@@ -535,6 +553,13 @@ async function salvarEdicaoMapaModal() {
   if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
   if (!horaStr) { alert("Informe o horário."); return; }
 
+  const partesData = dataStr.split('/');
+  const dateObj = new Date(parseInt(partesData[2]), parseInt(partesData[1]) - 1, parseInt(partesData[0]));
+
+  let lat = editSelectedCityGeo ? editSelectedCityGeo.lat : -23.5505;
+  let lon = editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333;
+  let fusoCalculado = await buscarFusoPorCoordenadas(lat, lon, dateObj);
+
   try {
     const { error } = await _supabase
       .from('mapas')
@@ -544,8 +569,9 @@ async function salvarEdicaoMapaModal() {
         data_nascimento: dataStr,
         hora_nascimento: horaStr,
         cidade: editSelectedCityGeo ? editSelectedCityGeo.name : document.getElementById('editModalCidadeInput').value,
-        latitude: editSelectedCityGeo ? editSelectedCityGeo.lat : -23.5505,
-        longitude: editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333
+        latitude: lat,
+        longitude: lon,
+        fuso: fusoCalculado
       })
       .eq('id', idMapa);
 
@@ -603,7 +629,8 @@ async function processarImportacaoTextoEmMassa() {
       hora_nascimento: horaStr,
       cidade: cidadeStr,
       latitude: -23.5505,
-      longitude: -46.6333
+      longitude: -46.6333,
+      fuso: -3
     });
   });
 
@@ -653,6 +680,7 @@ async function salvarMapaNaPlanilha() {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
+  const fusoVal = await buscarFusoPorCoordenadas(currentGeo.lat, currentGeo.lon, currentMoment);
   const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
 
   try {
@@ -666,7 +694,8 @@ async function salvarMapaNaPlanilha() {
         hora_nascimento: `${hora}:${min}`,
         cidade: currentGeo.city,
         latitude: currentGeo.lat,
-        longitude: currentGeo.lon
+        longitude: currentGeo.lon,
+        fuso: fusoVal
       }]);
 
     if (!error) {
