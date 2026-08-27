@@ -594,32 +594,33 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  /* PLANETAS */
+   /* PLANETAS COM DESVIO LATERAL FIXO */
   const planetList = PLANETS_DEF.map(p => ({
     ...p,
     deg: pObj[p.id].abs,
     retro: pObj[p.id].retro,
     aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs)
   }));
-  planetList.sort((a, b) => a.aScreen - b.aScreen);
 
-  planetList.forEach((p, idx) => {
-    let usedLevels = new Set();
-    for (let j = 0; j < planetList.length; j++) {
-      if (idx !== j && angleDist(p.aScreen, planetList[j].aScreen) < 9.5) {
-        if (planetList[j].level !== undefined) usedLevels.add(planetList[j].level);
-      }
-    }
-    let lvl = 0;
-    while (usedLevels.has(lvl)) lvl++;
-    p.level = lvl;
-  });
+  // Aplica o anticolisão lateral nos planetas (mesma função usada no anel interno)
+  aplicarDesvioLateralArco(planetList, 8.5);
+
+  const pR = 295; // Raio fixo para todos os planetas ficarem exatamente na mesma linha e irem para o lado
 
   planetList.forEach(p => {
-    const pR = 295 + (p.level * 25);
+    // Linha sai do grau exato na borda dos termos e vai até o planeta deslocado ao lado
     const p1 = polarToCart(cx, cy, R.Termos, p.aScreen);
-    const p2 = polarToCart(cx, cy, pR - 10, p.aScreen);
+    const p2 = polarToCart(cx, cy, pR - 10, p.aShift);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#1d5fa8" stroke-width="1.5"/>`;
+
+    const pPos = polarToCart(cx, cy, pR, p.aShift);
+    let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+
+    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+      <text x="0" y="4" font-size="21" font-weight="bold" fill="#103b70" text-anchor="middle">${p.symbol}</text>
+      <text x="0" y="19" font-size="10" font-weight="bold" fill="#334155" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(p.deg)}${retroSymbol}</text>
+    </g>`;
+  });
 
     const pPos = polarToCart(cx, cy, pR, p.aScreen);
     let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
