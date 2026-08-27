@@ -1,5 +1,5 @@
 /* ==========================================
-   MÓDULO DE DECÊNIOS HELENÍSTICOS
+   MÓDULO DE DECÊNIOS HELENÍSTICOS (AUTOMAÇÃO)
    ========================================== */
 
 const ZODIACO_DECENIOS = [
@@ -8,30 +8,17 @@ const ZODIACO_DECENIOS = [
 ];
 
 const PLANETS_DECENIOS = [
-  { id: 'sun', name: 'Sol', minorYears: 19, days: 570 },
-  { id: 'moon', name: 'Lua', minorYears: 25, days: 750 },
-  { id: 'mercury', name: 'Mercúrio', minorYears: 20, days: 600 },
-  { id: 'venus', name: 'Vênus', minorYears: 8, days: 240 },
-  { id: 'mars', name: 'Marte', minorYears: 15, days: 450 },
-  { id: 'jupiter', name: 'Júpiter', minorYears: 12, days: 360 },
-  { id: 'saturn', name: 'Saturno', minorYears: 30, days: 900 }
+  { id: 'Sun', name: 'Sol', minorYears: 19, days: 570, symbol: '☉' },
+  { id: 'Moon', name: 'Lua', minorYears: 25, days: 750, symbol: '☽' },
+  { id: 'Mercury', name: 'Mercúrio', minorYears: 20, days: 600, symbol: '☿' },
+  { id: 'Venus', name: 'Vênus', minorYears: 8, days: 240, symbol: '♀' },
+  { id: 'Mars', name: 'Marte', minorYears: 15, days: 450, symbol: '♂' },
+  { id: 'Jupiter', name: 'Júpiter', minorYears: 12, days: 360, symbol: '♃' },
+  { id: 'Saturn', name: 'Saturno', minorYears: 30, days: 900, symbol: '♄' }
 ];
 
 const SIGN_ELEMENTS_DEC = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
 const ELEMENT_SIGN_COLORS_DEC = { fire: "#e84118", earth: "#8b4513", air: "#0ea5e9", water: "#1d4ed8" };
-
-function getPlanetSymbolDec(planetId) {
-  const codePoints = {
-    sun: 0x2609,     // ☉
-    moon: 0x263D,    // ☽
-    mercury: 0x263F, // ☿
-    venus: 0x2640,   // ♀
-    mars: 0x2642,    // ♂
-    jupiter: 0x2643, // ♃
-    saturn: 0x2644   // ♄
-  };
-  return String.fromCodePoint(codePoints[planetId] || 0x2609);
-}
 
 const MONOLINE_ZODIAC_SVGS_DEC = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
@@ -54,131 +41,99 @@ function getSignSvgHtmlDec(signIdx, size = 18) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; overflow: visible; display: inline-block; vertical-align: middle; flex-shrink: 0; margin: 0 2px;" title="${ZODIACO_DECENIOS[signIdx]}">${MONOLINE_ZODIAC_SVGS_DEC[signIdx]}</svg>`;
 }
 
-let decState = {
-  birthDate: "",
-  birthTime: "",
-  startPlanet: "sun",
-  planets: {
-    sun: { sign: 0, deg: 0, min: 0 },
-    moon: { sign: 0, deg: 0, min: 0 },
-    mercury: { sign: 0, deg: 0, min: 0 },
-    venus: { sign: 0, deg: 0, min: 0 },
-    mars: { sign: 0, deg: 0, min: 0 },
-    jupiter: { sign: 0, deg: 0, min: 0 },
-    saturn: { sign: 0, deg: 0, min: 0 }
-  },
-  calculatedResult: null
-};
+let overrideStartPlanet = null;
 
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS */
 function iniciarModuloDecenios() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar os Decênios.</div>`;
+    return;
+  }
+
   renderDeceniosUI(container);
 }
 
 function renderDeceniosUI(container) {
+  const data = currentCalculatedData;
+  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+  const sunAbs = data.Sol ? data.Sol.grau_absoluto : 0;
+
+  // DETECTA A SEITA AUTOMATICAMENTE
+  const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
+  const detectedStartPlanet = isDay ? 'Sun' : 'Moon';
+  const startPlanetKey = overrideStartPlanet || detectedStartPlanet;
+
+  // PROCESSA O CÁLCULO INSTANTANEAMENTE
+  const result = calcularDeceniosAutomatico(startPlanetKey);
+
+  const ano = currentMoment.getFullYear();
+  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const dia = String(currentMoment.getDate()).padStart(2, '0');
+  const hora = String(currentMoment.getHours()).padStart(2, '0');
+  const min = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
+
   container.innerHTML = `
     <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
       
-      <!-- CABEÇALHO -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 16px 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+      <!-- CABEÇALHO COMPACTO DA FERRAMENTA -->
+      <div style="background: #ffffff; padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
         <div>
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; margin: 0;">Calculadora de Decênios</h2>
-          <span style="font-size: 11px; color: #64748b; font-weight: 500;">Liberação dos Períodos de Vida e Cronocracias (Vettius Valens)</span>
+          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
+          <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
+            ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")} • 
+            <strong style="color: var(--gold-dark);">${isDay ? 'Natividade Diurna' : 'Natividade Noturna'}</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); font-family: 'Cinzel', serif;">Planeta Inicial:</label>
+          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
+            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>☉ Sol (Diurno)</option>
+            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>☽ Lua (Noturno)</option>
+          </select>
         </div>
       </div>
 
-      <!-- FORMULÁRIO DE ENTRADA -->
-      <div style="background: #ffffff; border: 2px solid #d4af37; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.15);">
-        <form id="decennialsModuleForm" onsubmit="event.preventDefault(); executarCalculoDecenios();">
-          
-          <div style="display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-              <label style="font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #78350f; text-transform: uppercase; display: block; margin-bottom: 6px;">Data de Nascimento *</label>
-              <input type="date" id="decBirthDate" value="${decState.birthDate}" required style="width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; outline: none; background: #fff;">
-            </div>
-            <div style="flex: 1; min-width: 200px;">
-              <label style="font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #78350f; text-transform: uppercase; display: block; margin-bottom: 6px;">Hora de Nascimento *</label>
-              <input type="time" id="decBirthTime" value="${decState.birthTime}" required style="width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; outline: none; background: #fff;">
-            </div>
-          </div>
-
-          <!-- PLANETAS -->
-          <div style="margin-bottom: 16px;">
-            <label style="font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; display: block; margin-bottom: 10px;">Posição dos 7 Planetas Clássicos:</label>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 12px;">
-              ${PLANETS_DECENIOS.map(p => `
-                <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
-                  <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); display: flex; align-items: center; gap: 6px;">
-                    <span style="font-size: 16px;">${getPlanetSymbolDec(p.id)}</span>
-                    <span>${p.name}</span>
-                  </div>
-                  <select id="decSign_${p.id}" style="width: 100%; height: 36px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 12px; font-weight: 600; padding: 0 8px; background: #fff;">
-                    ${ZODIACO_DECENIOS.map((s, sIdx) => `<option value="${sIdx}" ${decState.planets[p.id].sign === sIdx ? 'selected' : ''}>${s}</option>`).join('')}
-                  </select>
-                  <div style="display: flex; gap: 4px;">
-                    <input type="number" id="decDeg_${p.id}" min="0" max="29" value="${decState.planets[p.id].deg}" placeholder="0°" style="width: 50%; height: 34px; text-align: center; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-                    <input type="number" id="decMin_${p.id}" min="0" max="59" value="${decState.planets[p.id].min}" placeholder="0'" style="width: 50%; height: 34px; text-align: center; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- LUMINAR DA SEITA -->
-          <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px;">
-            <div>
-              <label style="font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; display: block; margin-bottom: 2px;">Luminar da Seita / Planeta Inicial *</label>
-              <span style="font-size: 11px; color: #64748b;">Sol (Diurno) ou Lua (Noturno)</span>
-            </div>
-            <select id="decStartPlanet" style="width: 180px; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 700; color: var(--primary-blue); padding: 0 12px; background: #fff;">
-              <option value="sun" ${decState.startPlanet === 'sun' ? 'selected' : ''}>☉ Sol (Diurno)</option>
-              <option value="moon" ${decState.startPlanet === 'moon' ? 'selected' : ''}>☽ Lua (Noturno)</option>
-            </select>
-          </div>
-
-          <div style="text-align: center;">
-            <button type="submit" style="background: linear-gradient(180deg, #2b70c4 0%, #1d5fa8 50%, #12437b 100%); color: #fff; font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; text-transform: uppercase; border: none; border-radius: 10px; padding: 14px 28px; cursor: pointer; box-shadow: 0 4px 14px rgba(29, 95, 168, 0.3);">
-              <i class="fa-solid fa-calculator"></i> Calcular Decênios
-            </button>
-          </div>
-
-        </form>
-      </div>
-
-      <!-- RESULTADOS -->
-      <div id="decennialsResultsArea" style="display: ${decState.calculatedResult ? 'block' : 'none'};">
-        ${decState.calculatedResult ? renderizarResultadosHTML(decState.calculatedResult) : ''}
+      <!-- EXIBIÇÃO DOS RESULTADOS DOS DECÊNIOS -->
+      <div id="decennialsResultsArea">
+        ${renderizarResultadosHTML(result)}
       </div>
 
     </div>
   `;
 }
 
-function executarCalculoDecenios() {
-  decState.birthDate = document.getElementById('decBirthDate').value;
-  decState.birthTime = document.getElementById('decBirthTime').value;
-  decState.startPlanet = document.getElementById('decStartPlanet').value;
+function alternarSeitaManual(val) {
+  overrideStartPlanet = val;
+  iniciarModuloDecenios();
+}
 
-  PLANETS_DECENIOS.forEach(p => {
-    decState.planets[p.id] = {
-      sign: parseInt(document.getElementById(`decSign_${p.id}`).value) || 0,
-      deg: parseInt(document.getElementById(`decDeg_${p.id}`).value) || 0,
-      min: parseInt(document.getElementById(`decMin_${p.id}`).value) || 0
-    };
-  });
+function calcularDeceniosAutomatico(startPlanetId) {
+  const data = currentCalculatedData;
+  const birthDateTime = new Date(currentMoment);
 
-  const birthDateTime = new Date(`${decState.birthDate}T${decState.birthTime}:00`);
+  const planetKeys = {
+    Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio',
+    Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno'
+  };
 
   const planetChart = PLANETS_DECENIOS.map((p, originalIndex) => {
-    const dataP = decState.planets[p.id];
-    const absDeg = dataP.sign * 30 + dataP.deg + (dataP.min / 60);
-    return { ...p, signIdx: dataP.sign, degree: dataP.deg, minute: dataP.min, absDeg, originalIndex };
+    const key = planetKeys[p.id];
+    const item = data[key];
+    const absDeg = item ? item.grau_absoluto : 0;
+    const signIdx = Math.floor(absDeg / 30);
+    const degInSign = Math.floor(absDeg % 30);
+    const minInSign = Math.round((absDeg % 1) * 60);
+
+    return { ...p, signIdx, degree: degInSign, minute: minInSign, absDeg, originalIndex };
   });
 
-  const startPlanet = planetChart.find(p => p.id === decState.startPlanet);
+  const startPlanet = planetChart.find(p => p.id === startPlanetId);
   const startAbsDeg = startPlanet ? startPlanet.absDeg : 0;
 
   const sortedPlanets = [...planetChart].sort((a, b) => {
@@ -243,13 +198,7 @@ function executarCalculoDecenios() {
     currentPointer = new Date(l1End);
   }
 
-  decState.calculatedResult = { activeL1, activeL2, timelineL1 };
-  
-  const resultsArea = document.getElementById('decennialsResultsArea');
-  if (resultsArea) {
-    resultsArea.style.display = 'block';
-    resultsArea.innerHTML = renderizarResultadosHTML(decState.calculatedResult);
-  }
+  return { activeL1, activeL2, timelineL1 };
 }
 
 function addDaysDec(date, days) {
@@ -268,16 +217,18 @@ function formatDateDec(date) {
 
 function renderizarResultadosHTML(res) {
   const { activeL1, activeL2, timelineL1 } = res;
-  if (!activeL1 || !activeL2) return '<div style="text-align:center; padding:20px; color:#64748b;">Nenhum período ativo encontrado.</div>';
+  if (!activeL1 || !activeL2) {
+    return `<div style="background: #ffffff; border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; text-align: center; color: #64748b; font-size: 13px;">A idade atual do nativo está fora da janela dos 10 primeiros ciclos de Decênios.</div>`;
+  }
 
   const formatMin = m => String(m || 0).padStart(2, '0');
 
   return `
     <!-- PERÍODO ATIVO -->
-    <div style="background: linear-gradient(145deg, #ffffff 0%, #f4f8ff 100%); border: 2px solid #1d5fa8; border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+    <div style="background: linear-gradient(145deg, #ffffff 0%, #f4f8ff 100%); border: 2px solid #1d5fa8; border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(29, 95, 168, 0.08);">
       <div style="border-bottom: 1px solid #bfdbfe; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
         <span style="width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; display: inline-block;"></span>
-        <h3 style="font-family: 'Cinzel', serif; font-size: 16px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Período Ativo</h3>
+        <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Período Ativo</h3>
       </div>
 
       <div style="display: flex; flex-wrap: wrap; gap: 14px;">
@@ -286,15 +237,15 @@ function renderizarResultadosHTML(res) {
           <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase;">Nível 1 (L1) - Regente da Era</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 28px; color: #d4af37; font-weight: bold; line-height: 1;">${getPlanetSymbolDec(activeL1.planet.id)}</span>
+              <span style="font-size: 28px; color: #d4af37; font-weight: bold; line-height: 1;">${activeL1.planet.symbol}</span>
               <div>
-                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0;">${activeL1.planet.name}</h4>
+                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL1.planet.name}</h4>
                 <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL1.planet.signIdx]}</strong> (${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}')</div>
               </div>
             </div>
             <span style="background: #fefce8; border: 1px solid #fde047; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #854d0e;">129 Meses</span>
           </div>
-          <div style="font-size: 11px; color: #475569; border-top: 1px solid #f1f5f9; paddingTop: 8px;">
+          <div style="font-size: 11px; color: #475569; border-top: 1px solid #f1f5f9; padding-top: 8px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Início do L1:</span><strong>${formatDateDec(activeL1.startDate)}</strong></div>
             <div style="display: flex; justify-content: space-between;"><span>Término do L1:</span><strong>${formatDateDec(activeL1.endDate)}</strong></div>
           </div>
@@ -305,15 +256,15 @@ function renderizarResultadosHTML(res) {
           <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #1d5fa8; text-transform: uppercase;">Nível 2 (L2) - Executor do Momento</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 28px; color: #1d5fa8; font-weight: bold; line-height: 1;">${getPlanetSymbolDec(activeL2.planet.id)}</span>
+              <span style="font-size: 28px; color: #1d5fa8; font-weight: bold; line-height: 1;">${activeL2.planet.symbol}</span>
               <div>
-                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0;">${activeL2.planet.name}</h4>
+                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL2.planet.name}</h4>
                 <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL2.planet.signIdx]}</strong> (${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}')</div>
               </div>
             </div>
             <span style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #1e40af;">${activeL2.months} Meses</span>
           </div>
-          <div style="font-size: 11px; color: #475569; border-top: 1px solid #f1f5f9; paddingTop: 8px;">
+          <div style="font-size: 11px; color: #475569; border-top: 1px solid #f1f5f9; padding-top: 8px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Início do L2:</span><strong>${formatDateDec(activeL2.startDate)}</strong></div>
             <div style="display: flex; justify-content: space-between;"><span>Término do L2:</span><strong>${formatDateDec(activeL2.endDate)}</strong></div>
           </div>
@@ -324,8 +275,8 @@ function renderizarResultadosHTML(res) {
       <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden; margin-top: 14px;">
         <div style="padding: 10px 14px; background: #fffdf5; border-bottom: 1px solid #fef08a; display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px; color: #103b70; font-weight: bold;">${getPlanetSymbolDec(activeL1.planet.id)}</span>
-            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1: ${activeL1.planet.name.toUpperCase()}</strong>
+            <span style="font-size: 20px; color: #103b70; font-weight: bold;">${activeL1.planet.symbol}</span>
+            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1 ATIVO: ${activeL1.planet.name.toUpperCase()}</strong>
           </div>
           <span style="font-size: 11px; color: #475569;"><strong>${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong></span>
         </div>
@@ -333,7 +284,7 @@ function renderizarResultadosHTML(res) {
           <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
             <thead>
               <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                <th style="padding: 10px 12px; text-align: left;">L2</th>
+                <th style="padding: 10px 12px; text-align: left;">L2 (Subperíodo)</th>
                 <th style="padding: 10px 12px; text-align: left;">Duração</th>
                 <th style="padding: 10px 12px; text-align: left;">Início</th>
                 <th style="padding: 10px 12px; text-align: left;">Término</th>
@@ -342,7 +293,7 @@ function renderizarResultadosHTML(res) {
             <tbody>
               ${activeL1.subperiods.map(sub => `
                 <tr style="border-bottom: 1px solid #e2e8f0; ${sub.isActive ? 'background: #fffbf0; border-left: 4px solid #d4af37;' : ''}">
-                  <td style="padding: 10px 12px;"><strong>${getPlanetSymbolDec(sub.planet.id)} ${sub.planet.name}</strong></td>
+                  <td style="padding: 10px 12px;"><strong>${sub.planet.symbol} ${sub.planet.name}</strong></td>
                   <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days}d)</td>
                   <td style="padding: 10px 12px;">${formatDateDec(sub.startDate)}</td>
                   <td style="padding: 10px 12px;">${formatDateDec(sub.endDate)}</td>
@@ -357,7 +308,7 @@ function renderizarResultadosHTML(res) {
     <!-- CRONOGRAMA DA LINHA DO TEMPO -->
     <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px;">
       <div style="border-bottom: 1px solid #fef08a; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-        <h3 style="font-family: 'Cinzel', serif; font-size: 16px; color: #1e293b; font-weight: 800; margin: 0; text-transform: uppercase;">Linha do Tempo dos Decênios</h3>
+        <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #1e293b; font-weight: 800; margin: 0; text-transform: uppercase;">Linha do Tempo dos Decênios</h3>
         <span style="font-size: 11px; color: #64748b;">Calendário Egípcio = 360 Dias/Ano</span>
       </div>
 
@@ -366,7 +317,7 @@ function renderizarResultadosHTML(res) {
           <div style="background: #ffffff; border: 1px solid ${l1.isActive ? '#d4af37' : '#e2e8f0'}; border-radius: 10px; margin-bottom: 8px; overflow: hidden;">
             <div style="padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="document.getElementById('dec_l1_details_${idx}').style.display = document.getElementById('dec_l1_details_${idx}').style.display === 'none' ? 'block' : 'none'">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 22px; color: #103b70; font-weight: bold;">${getPlanetSymbolDec(l1.planet.id)}</span>
+                <span style="font-size: 22px; color: #103b70; font-weight: bold;">${l1.planet.symbol}</span>
                 <div>
                   <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1: ${l1.planet.name.toUpperCase()}</strong>
                   <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${ZODIACO_DECENIOS[l1.planet.signIdx]} (${l1.planet.degree}°${formatMin(l1.planet.minute)}') • 129 Meses</div>
@@ -379,7 +330,7 @@ function renderizarResultadosHTML(res) {
               <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
                 <thead>
                   <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                    <th style="padding: 8px 10px; text-align: left;">L2</th>
+                    <th style="padding: 8px 10px; text-align: left;">L2 (Subperíodo)</th>
                     <th style="padding: 8px 10px; text-align: left;">Duração</th>
                     <th style="padding: 8px 10px; text-align: left;">Início</th>
                     <th style="padding: 8px 10px; text-align: left;">Término</th>
@@ -388,7 +339,7 @@ function renderizarResultadosHTML(res) {
                 <tbody>
                   ${l1.subperiods.map(l2 => `
                     <tr style="border-bottom: 1px solid #e2e8f0; ${l2.isActive ? 'background: #fffbf0; border-left: 4px solid #d4af37;' : ''}">
-                      <td style="padding: 8px 10px;"><strong>${getPlanetSymbolDec(l2.planet.id)} ${l2.planet.name}</strong></td>
+                      <td style="padding: 8px 10px;"><strong>${l2.planet.symbol} ${l2.planet.name}</strong></td>
                       <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days}d)</td>
                       <td style="padding: 8px 10px;">${formatDateDec(l2.startDate)}</td>
                       <td style="padding: 8px 10px;">${formatDateDec(l2.endDate)}</td>
