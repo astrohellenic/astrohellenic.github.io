@@ -429,7 +429,6 @@ function renderMandala() {
   }
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Scale}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
 
@@ -561,9 +560,17 @@ function renderMandala() {
     const aScreen = eclToScreenAngle(deg, ascAbs);
     const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
     const p1 = polarToCart(cx, cy, R.Termos, aScreen);
-    const p2 = polarToCart(cx, cy, R.Termos + tickLen, aScreen);
+    const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
   }
+   
+for (let deg = 0; deg < 360; deg++) {
+  const aScreen = eclToScreenAngle(deg, ascAbs);
+  const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
+  const p1 = polarToCart(cx, cy, R.Dodec, aScreen);
+  const p2 = polarToCart(cx, cy, R.Dodec - tickLen, aScreen);
+  svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
+}
 
   const planetList = PLANETS_DEF.map(p => ({ ...p, deg: pObj[p.id].abs, retro: pObj[p.id].retro, aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs) }));
   planetList.sort((a, b) => a.aScreen - b.aScreen);
@@ -582,7 +589,7 @@ function renderMandala() {
 
   planetList.forEach(p => {
     const pR = 295 + (p.level * 25);
-    const p1 = polarToCart(cx, cy, R.Scale, p.aScreen);
+    const p1 = polarToCart(cx, cy, R.Termos, p.aScreen);
     const p2 = polarToCart(cx, cy, pR - 10, p.aScreen);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#1d5fa8" stroke-width="1.5"/>`;
 
