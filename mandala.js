@@ -15,6 +15,9 @@ function escapeHtml(str) {
 let selectedCityGeo = { lat: -23.5505, lon: -46.6333, fuso: -3, name: "São Paulo, SP" };
 let editSelectedCityGeo = null;
 
+/* PONTO SELECIONADO PARA A CASA 1 ('ASC' OU CHAVE DO LOTE) */
+let selectedHouse1Lot = "ASC";
+
 const SIGNS = [
   { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
   { name: "Câncer", ruler: "Lua" }, { name: "Leão", ruler: "Sol" }, { name: "Virgem", ruler: "Mercúrio" },
@@ -81,8 +84,8 @@ function formatDegMin(absDeg) {
   return `${degrees}°${minStr}′`;
 }
 
-function eclToScreenAngle(eclDeg, ascAbs) {
-  return (180 - (eclDeg - ascAbs) + 36000) % 360;
+function eclToScreenAngle(eclDeg, refAbs) {
+  return (180 - (eclDeg - refAbs) + 36000) % 360;
 }
 
 function polarToCart(cx, cy, r, angleDeg) {
@@ -108,13 +111,13 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
 
   return [
-    { label: "FORT", type: "fortune", deg: fortAbs },
-    { label: "ESP", type: "spirit", deg: spirAbs },
-    { label: "EROS", type: "venus", sym: "♀", deg: erosAbs },
-    { label: "NEC", type: "mercury", sym: "☿", deg: necAbs },
-    { label: "AUD", type: "mars", sym: "♂", deg: courAbs },
-    { label: "VIT", type: "jupiter", sym: "♃", deg: vicAbs },
-    { label: "NÊM", type: "saturn", sym: "♄", deg: nemAbs }
+    { key: "fortune", label: "FORT", type: "fortune", deg: fortAbs },
+    { key: "spirit", label: "ESP", type: "spirit", deg: spirAbs },
+    { key: "venus", label: "EROS", type: "venus", sym: "♀", deg: erosAbs },
+    { key: "mercury", label: "NEC", type: "mercury", sym: "☿", deg: necAbs },
+    { key: "mars", label: "AUD", type: "mars", sym: "♂", deg: courAbs },
+    { key: "jupiter", label: "VIT", type: "jupiter", sym: "♃", deg: vicAbs },
+    { key: "saturn", label: "NÊM", type: "saturn", sym: "♄", deg: nemAbs }
   ];
 }
 
@@ -386,9 +389,48 @@ async function executarCalculo() {
   }
 }
 
+/* ATUALIZA O SELETOR DE ROTACÃO COMPACTO NA BARRA SUPERIOR */
+function injetarBotaoRotacaoNaBarraSuperior() {
+  const controlBar = document.querySelector('.time-control-bar') || document.querySelector('.top-control-bar');
+  if (!controlBar) return;
+
+  let btnContainer = document.getElementById('lotRotationBtnContainer');
+  if (!btnContainer) {
+    btnContainer = document.createElement('div');
+    btnContainer.id = 'lotRotationBtnContainer';
+    btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative;";
+    controlBar.appendChild(btnContainer);
+  }
+
+  btnContainer.innerHTML = `
+    <div style="position: relative; width: 32px; height: 32px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; pointer-events: none;">
+        ${selectedHouse1Lot === 'ASC' ? 'ASC' : (selectedHouse1Lot === 'fortune' ? '⊗' : (selectedHouse1Lot === 'spirit' ? 'Φ' : (selectedHouse1Lot === 'venus' ? '♀' : (selectedHouse1Lot === 'mercury' ? '☿' : (selectedHouse1Lot === 'mars' ? '♂' : (selectedHouse1Lot === 'jupiter' ? '♃' : '♄'))))))}
+      </span>
+      <select onchange="alternarRotacaoCasa1(this.value)" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0; cursor: pointer;">
+        <option value="ASC" ${selectedHouse1Lot === 'ASC' ? 'selected' : ''}>ASC (Ascendente)</option>
+        <option value="fortune" ${selectedHouse1Lot === 'fortune' ? 'selected' : ''}>⊗ Fortuna (Lua)</option>
+        <option value="spirit" ${selectedHouse1Lot === 'spirit' ? 'selected' : ''}>Φ Espírito (Sol)</option>
+        <option value="mercury" ${selectedHouse1Lot === 'mercury' ? 'selected' : ''}>☿ Necessidade (Mercúrio)</option>
+        <option value="venus" ${selectedHouse1Lot === 'venus' ? 'selected' : ''}>♀ Eros (Vênus)</option>
+        <option value="mars" ${selectedHouse1Lot === 'mars' ? 'selected' : ''}>♂ Audácia (Marte)</option>
+        <option value="jupiter" ${selectedHouse1Lot === 'jupiter' ? 'selected' : ''}>♃ Vitória (Júpiter)</option>
+        <option value="saturn" ${selectedHouse1Lot === 'saturn' ? 'selected' : ''}>♄ Nêmesis (Saturno)</option>
+      </select>
+    </div>
+  `;
+}
+
+function alternarRotacaoCasa1(val) {
+  selectedHouse1Lot = val;
+  renderMandala();
+}
+
 function renderMandala() {
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
+
+  injetarBotaoRotacaoNaBarraSuperior();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
@@ -404,6 +446,31 @@ function renderMandala() {
 
   const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
   const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+
+  const lotes = calculateSevenLots(ascAbs, isDay, pObj);
+
+  /* DETERMINA O PONTO DA CASA 1 (ASC OU LOTE) */
+  let house1RefAbs = ascAbs;
+  if (selectedHouse1Lot !== "ASC") {
+    const targetLot = lotes.find(l => l.key === selectedHouse1Lot);
+    if (targetLot) house1RefAbs = targetLot.deg;
+  }
+
+  /* FORMATAÇÃO DO DIA DA SEMANA E SÍMBOLO SEM PARÊNTESES (EX: Seg ☽) */
+  const diasSemanaMap = [
+    { text: "Dom", sym: "☉" },
+    { text: "Seg", sym: "☽" },
+    { text: "Ter", sym: "♂" },
+    { text: "Qua", sym: "☿" },
+    { text: "Qui", sym: "♃" },
+    { text: "Sex", sym: "♀" },
+    { text: "Sáb", sym: "♄" }
+  ];
+  const dayInfo = diasSemanaMap[currentMoment.getDay()];
+  const diaSemanaFormatted = `${dayInfo.text} ${dayInfo.sym}`;
+
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
 
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
@@ -423,7 +490,7 @@ function renderMandala() {
 
   svg += `<g id="png-discreet-header">
     <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
-    <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city)}</text>
+    <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
     <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
     <text x="50" y="194" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
   </g>`;
@@ -444,8 +511,8 @@ function renderMandala() {
       else if (diff === 2) col = "#2563eb";
 
       if (col) {
-        const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, ascAbs));
-        const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, ascAbs));
+        const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
+        const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
         svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${col}" stroke-width="1.8" opacity="0.9"/>`;
       }
     }
@@ -456,17 +523,17 @@ function renderMandala() {
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
 
-  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, ascAbs));
-  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, ascAbs) + 180) % 360);
+  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
+  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
 
-  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, ascAbs));
-  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, ascAbs) + 180) % 360);
+  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
+  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
 
   for (let i = 0; i < 12; i++) {
-    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, ascAbs));
-    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, ascAbs));
+    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
+    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
   }
 
@@ -485,12 +552,11 @@ function renderMandala() {
     allRingItems.push({ label: "SIZ", deg: syzAbs, color: "#103b70", itemType: "syzygy" });
   }
 
-  const lotes = calculateSevenLots(ascAbs, isDay, pObj);
   lotes.forEach(lot => {
     allRingItems.push({ label: lot.label, deg: lot.deg, color: goldColor, itemType: "lot", lotType: lot.type, sym: lot.sym });
   });
 
-  allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
+  allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, house1RefAbs));
   aplicarDesvioLateralArco(allRingItems, 7.0);
 
   const raioFixoAnel = 185;
@@ -536,11 +602,11 @@ function renderMandala() {
     }
   });
 
-  const ascSignIdx = Math.floor(ascAbs / 30);
+  const refSignIdx = Math.floor(house1RefAbs / 30);
   for (let i = 0; i < 12; i++) {
-    const aMid = eclToScreenAngle((i * 30) + 15, ascAbs);
+    const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - ascSignIdx + 12) % 12) + 1}</text>`;
+    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
     const pSym = polarToCart(cx, cy, 156, aMid);
     svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
@@ -548,10 +614,10 @@ function renderMandala() {
 
   for (let i = 0; i < 12; i++) {
     for (let d = 0; d < 12; d++) {
-      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), ascAbs));
-      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), ascAbs));
+      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
       svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
-      const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, ascAbs));
+      const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
       svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
     }
   }
@@ -559,10 +625,10 @@ function renderMandala() {
   for (let s = 0; s < 12; s++) {
     let prev = 0;
     EGYPTIAN_TERMS[s].forEach(term => {
-      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, ascAbs));
-      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, ascAbs));
+      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
       svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
-      const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, ascAbs));
+      const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
       svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="#103b70" text-anchor="middle">${term.p}</text>`;
       prev = term.deg;
     });
@@ -570,7 +636,7 @@ function renderMandala() {
 
   /* DENTINHOS DOS TERMOS (APONTANDO PARA DENTRO) */
   for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, ascAbs);
+    const aScreen = eclToScreenAngle(deg, house1RefAbs);
     const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
     const p1 = polarToCart(cx, cy, R.Termos, aScreen);
     const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
@@ -579,7 +645,7 @@ function renderMandala() {
    
   /* DENTINHOS INTERNOS DA BORDA DOS SIGNOS (APONTANDO PARA DENTRO) */
   for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, ascAbs);
+    const aScreen = eclToScreenAngle(deg, house1RefAbs);
     const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
     const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
     const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
@@ -591,7 +657,7 @@ function renderMandala() {
     ...p,
     deg: pObj[p.id].abs,
     retro: pObj[p.id].retro,
-    aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs)
+    aScreen: eclToScreenAngle(pObj[p.id].abs, house1RefAbs)
   }));
 
   aplicarDesvioLateralArco(planetList, 8.5);
