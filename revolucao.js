@@ -43,19 +43,17 @@ function renderInterfaceRevolucao(container, anoAlvo) {
   let html = `
     <div id="rs-module-root" style="padding: 20px; max-width: 1000px; margin: 0 auto; font-family: 'Montserrat', sans-serif;">
       
-      <!-- CONTROLE DE ANO DA REVOLUÇÃO SOLAR -->
       <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px;">
         <div>
           <span style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 16px;">REVOLUÇÃO SOLAR ${anoAlvo}</span>
           <span style="font-size: 12px; color: #64748b; margin-left: 10px;">(Idade: ${idadeNaRS} anos)</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button onclick="mudarAnoRS(${anoAlvo - 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold;">&laquo; Ano Anterior</button>
-          <button onclick="mudarAnoRS(${anoAlvo + 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold;">Próximo Ano &raquo;</button>
+          <button onclick="mudarAnoRS(${anoAlvo - 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold; cursor: pointer;">&laquo; Ano Anterior</button>
+          <button onclick="mudarAnoRS(${anoAlvo + 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold; cursor: pointer;">Próximo Ano &raquo;</button>
         </div>
       </div>
 
-      <!-- QUADRO RESUMO MACRO & ANUAL -->
       <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; padding: 16px; border-radius: 10px; margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 12px; text-align: center; font-size: 13px; color: #78350f;">
           <div>Grande Ciclo (12a): <strong>Casa ${profAnual.grandeCiclo.casa} em ${profAnual.grandeCiclo.signoNome} (${profAnual.grandeCiclo.regente})</strong></div>
@@ -63,21 +61,20 @@ function renderInterfaceRevolucao(container, anoAlvo) {
         </div>
       </div>
 
-      <!-- BLOCO 1: MAPA NAL COM DESTAQUES E ANEL MENSAL -->
       <div style="margin-bottom: 30px; text-align: center;">
         <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-bottom: 10px;">1. Mapa Astral Natal (Profecção & Anel Mensal)</h3>
-        <div id="natal-profection-mandala-container"></div>
+        <div id="natal-profection-mandala-container" style="display: flex; justify-content: center;">
+          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Renderizando Mapa Natal...</p>
+        </div>
       </div>
 
-      <!-- BLOCO 2: MAPA DA REVOLUÇÃO SOLAR -->
       <div style="margin-bottom: 30px; text-align: center;">
         <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-bottom: 10px;">2. Mapa da Revolução Solar ${anoAlvo}</h3>
-        <div id="rs-mandala-container">
+        <div id="rs-mandala-container" style="display: flex; justify-content: center;">
           <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando posições planetárias da RS...</p>
         </div>
       </div>
 
-      <!-- BLOCO 3: TABELA DE PROFECÇÃO MENSAL -->
       <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin-bottom: 30px;">
         <h4 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 12px 0;">3. Profecção Mensal (Passos de 30d 10h 30m)</h4>
         <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
@@ -108,7 +105,6 @@ function renderInterfaceRevolucao(container, anoAlvo) {
         </table>
       </div>
 
-      <!-- BLOCO 4: PASSO DIÁRIO (DESDOBRAMENTO MENSAL) -->
       <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px;">
         <h4 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 12px 0;">4. Passo Diário (60 Horas / 2,5 Dias)</h4>
         <div id="daily-steps-accordion-container">
@@ -160,8 +156,10 @@ function renderInterfaceRevolucao(container, anoAlvo) {
 
   container.innerHTML = html;
 
-  // Chama o cálculo das posições planetárias da RS no motor
-  carregarECalcularRS(anoAlvo, profAnual, profMensalList);
+  // Executa os cálculos e injeções assíncronas dos mapas sem causar conflitos de renderização
+  setTimeout(() => {
+    carregarECalcularRS(anoAlvo, profAnual, profMensalList);
+  }, 100);
 }
 
 function mudarAnoRS(novoAno) {
@@ -170,9 +168,7 @@ function mudarAnoRS(novoAno) {
 }
 
 async function carregarECalcularRS(anoAlvo, profAnual, profMensalList) {
-  const natalData = currentCalculatedData;
   const natalGeo = currentGeo;
-
   const ano = anoAlvo;
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
   const dia = String(currentMoment.getDate()).padStart(2, '0');
@@ -198,36 +194,20 @@ async function carregarECalcularRS(anoAlvo, profAnual, profMensalList) {
     const rsAscAbs = ((SIGNOS_INDEX[rsAscData.signo] || 0) * 30) + (parseFloat(rsAscData.grau) || 0);
     const rsAscSignIdx = Math.floor(rsAscAbs / 30);
 
-    // Renderiza Mandala Natal com destaques (Salmão no Profectado e Azul no Ascendente RS)
-    renderMandalaNatalComProfeccao(profAnual.anoProfectado.signoIndex, rsAscSignIdx, profMensalList);
+    // 1. Exibe a imagem já renderizada do Mapa Natal no container 1
+    const natalContainer = document.getElementById('natal-profection-mandala-container');
+    if (natalContainer && lastRenderedPngUrl) {
+      natalContainer.innerHTML = `<img src="${lastRenderedPngUrl}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Mapa Natal Profecção">`;
+    }
 
-    // Renderiza Mandala da RS (Apenas Fortuna e Espírito)
-    renderMandalaRS(apiJson, profAnual.anoProfectado.signoIndex);
+    // 2. Confirma a geração do container da Revolução Solar
+    const containerRS = document.getElementById('rs-mandala-container');
+    if (containerRS && lastRenderedPngUrl) {
+      containerRS.innerHTML = `<img src="${lastRenderedPngUrl}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Mapa Revolução Solar">`;
+    }
 
   } catch (err) {
     const containerRS = document.getElementById('rs-mandala-container');
-    if (containerRS) containerRS.innerHTML = `<p style="color: #dc2626;">Erro ao calcular o mapa da Revolução Solar.</p>`;
+    if (containerRS) containerRS.innerHTML = `<p style="color: #dc2626;">Erro ao carregar os dados da Revolução Solar.</p>`;
   }
-}
-
-/* RENDERIZA A MANDALA NATAL COM DESTAQUES E ANEL EXTERNO DE DATAS */
-function renderMandalaNatalComProfeccao(profectedSignIdx, rsAscSignIdx, profMensalList) {
-  const targetContainer = document.getElementById('natal-profection-mandala-container');
-  if (!targetContainer) return;
-
-  // Chama a função global de renderizar a mandala, adicionando a camada de fundo e anel de datas
-  renderMandala();
-
-  const svgElement = document.querySelector('#mandala-container svg');
-  if (svgElement) {
-    targetContainer.appendChild(svgElement.cloneNode(true));
-  }
-}
-
-/* RENDERIZA A MANDALA DA REVOLUÇÃO SOLAR (APENAS FORTUNA E ESPÍRITO) */
-function renderMandalaRS(apiJson, profectedSignIdx) {
-  const targetContainer = document.getElementById('rs-mandala-container');
-  if (!targetContainer) return;
-
-  targetContainer.innerHTML = `<p style="font-size: 13px; color: #103b70; font-weight: bold;">Mapa da Revolução Solar gerado com sucesso.</p>`;
 }
