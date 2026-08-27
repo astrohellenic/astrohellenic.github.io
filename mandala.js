@@ -256,14 +256,14 @@ async function obterNomeCidade(lat, lon) {
     const estado = addr.state ? `, ${addr.state}` : "";
     return `${cidade}${estado}`;
   } catch (e) {
-    return "Jacareí, SP";
+    return "São Paulo, SP";
   }
 }
 
 function carregarCeuDoMomento() {
   const menuHere = document.getElementById('menu-here-now');
   if (menuHere) menuHere.classList.add('active');
-  currentSubjectName = "Here & Now";
+  currentSubjectName = "Agora";
   currentCustomCode = null;
   currentMoment = new Date();
 
