@@ -17,20 +17,10 @@ function escapeHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/* BUSCA AUTOMÁTICA DE FUSO POR LATITUDE E LONGITUDE */
-async function buscarFusoPorCoordenadas(lat, lon, dateObj = new Date()) {
-  try {
-    const isoDate = dateObj.toISOString().split('T')[0];
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=utc_offset_seconds&start_date=${isoDate}&end_date=${isoDate}&timezone=auto`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data && data.utc_offset_seconds !== undefined) {
-      return data.utc_offset_seconds / 3600;
-    }
-  } catch (e) {
-    console.error("Erro ao buscar fuso:", e);
-  }
-  return -3;
+/* BUSCA AUTOMÁTICA DE FUSO POR LONGITUDE */
+function calcularFusoPorLongitude(lon) {
+  if (lon === undefined || lon === null || isNaN(lon)) return -3;
+  return Math.round(lon / 15);
 }
 
 /* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
@@ -53,7 +43,7 @@ async function carregarPastasSalvas() {
   renderMenuPrincipal();
 }
 
-/* NÍVEL 1: MENU PRINCIPAL */
+/* NÍVEL 1: MENU PRINCIPAL LIMPO */
 function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -70,10 +60,6 @@ function renderMenuPrincipal() {
       <li class="menu-item" onclick="abrirModalNovoMapa()">
         <span>Novo Mapa Astral</span>
         <i class="fa-solid fa-user-plus"></i>
-      </li>
-      <li class="menu-item" onclick="abrirModalImportacaoTexto()">
-        <span>Importar Lista em Massa</span>
-        <i class="fa-solid fa-file-import"></i>
       </li>
       <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
         <span>Selecionar Mapa</span>
@@ -187,17 +173,11 @@ function abrirModuloTecnica(modulo) {
   if (!container) return;
 
   if (modulo === 'revolucao') {
-    if (typeof iniciarModuloRevolucao === 'function') {
-      iniciarModuloRevolucao();
-    } else {
-      container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Revolução Solar pronto para ser estruturado no revolucao.js</div>`;
-    }
+    if (typeof iniciarModuloRevolucao === 'function') iniciarModuloRevolucao();
+    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Revolução Solar pronto.</div>`;
   } else if (modulo === 'decenios') {
-    if (typeof iniciarModuloDecenios === 'function') {
-      iniciarModuloDecenios();
-    } else {
-      container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Decênios aguardando vinculação.</div>`;
-    }
+    if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
+    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Decênios aguardando vinculação.</div>`;
   } else if (modulo === 'liberacao') {
     container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Liberação Zodiacal (Em breve)</div>`;
   } else if (modulo === 'direcoes') {
@@ -215,15 +195,12 @@ function abrirModuloAuxiliar(modulo) {
   } else if (modulo === 'horas') {
     container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Horas Planetárias (Em breve)</div>`;
   } else if (modulo === 'isopsefia') {
-    if (typeof iniciarModuloIsopsefia === 'function') {
-      iniciarModuloIsopsefia();
-    } else {
-      container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Isopsefia pronto para integração.</div>`;
-    }
+    if (typeof iniciarModuloIsopsefia === 'function') iniciarModuloIsopsefia();
+    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Isopsefia.</div>`;
   }
 }
 
-/* NÍVEL 2C: TELA DE PASTAS */
+/* NÍVEL 2C: TELA DE PASTAS COM "IMPORTAR EM MASSA" NO TOPO */
 function abrirNavegacaoPastas() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -239,6 +216,14 @@ function abrirNavegacaoPastas() {
       <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
     </div>
     <div style="flex: 1; overflow-y: auto;">
+      <!-- BOTAO IMPORTAR EM MASSA INJETADO NO TOPO DAS PASTAS -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
+          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #103b70;"></i>
+      </div>
   `;
 
   pastasOrdenadas.forEach(pasta => {
@@ -304,16 +289,30 @@ async function abrirConteudoPasta(nomePasta) {
   await carregarMapasDoBanco(nomePasta);
 }
 
-/* CARREGA E RENDERIZA MAPAS EM ORDEM ALFABÉTICA */
+/* CARREGA MAPAS E ORDENA PRIORIZANDO O CÓDIGO NUMÉRICO */
 async function carregarMapasDoBanco(nomePasta) {
   try {
     const { data, error } = await _supabase
       .from('mapas')
       .select('*')
-      .eq('pasta', nomePasta)
-      .order('nome', { ascending: true });
+      .eq('pasta', nomePasta);
 
     if (!error && Array.isArray(data)) {
+      // Ordenação Híbrida: Código numérico primeiro (0001, 0002, 0012), depois nome alfabético
+      data.sort((a, b) => {
+        const codA = parseInt(a.codigo, 10);
+        const codB = parseInt(b.codigo, 10);
+
+        const temCodA = !isNaN(codA);
+        const temCodB = !isNaN(codB);
+
+        if (temCodA && temCodB) return codA - codB;
+        if (temCodA) return -1;
+        if (temCodB) return 1;
+
+        return (a.nome || '').localeCompare(b.nome || '', 'pt-BR');
+      });
+
       cachedFolderData = data.map(item => ({
         id: item.id,
         codigo: (item.codigo && String(item.codigo).trim() !== '') ? item.codigo : null,
@@ -658,13 +657,45 @@ async function deletarRegistroUnico(event, idMapa) {
   }
 }
 
-async function salvarMapaNaPlanilha() {
-  let opcoes = customFolders.map((f, i) => `${i + 1}. ${f}`).join("\n");
-  let escolha = prompt(`Escolha o número da pasta para salvar:\n\n${opcoes}`, "1");
-  if (!escolha) return;
+/* SALVAR MAPA DIRETO CLICANDO NA PASTA (SEM JANELA NUMÉRICA) */
+function salvarMapaNaPlanilha() {
+  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
-  let idx = parseInt(escolha, 10) - 1;
-  let pastaAlvo = customFolders[idx] || customFolders[0];
+  let modal = document.getElementById('modalSaveFolderSelector');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalSaveFolderSelector';
+    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999;";
+    document.body.appendChild(modal);
+  }
+
+  let htmlPastas = '';
+  pastasOrdenadas.forEach(p => {
+    htmlPastas += `
+      <div onclick="confirmarSalvamentoEmPasta('${p}')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; cursor: pointer; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+        <i class="fa-solid fa-folder" style="color: #c59b27; font-size: 18px;"></i>
+        <span style="font-size: 14px; font-weight: 600; color: #1e293b;">${escapeHtml(p)}</span>
+      </div>
+    `;
+  });
+
+  modal.innerHTML = `
+    <div style="background: #ffffff; width: 90%; max-width: 380px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin:0; font-size: 16px; font-weight: 700; color: #103b70;">Salvar Mapa em...</h3>
+        <button onclick="document.getElementById('modalSaveFolderSelector').style.display='none'" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer;">&times;</button>
+      </div>
+      <div style="max-height: 280px; overflow-y: auto;">
+        ${htmlPastas}
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
+async function confirmarSalvamentoEmPasta(pastaAlvo) {
+  document.getElementById('modalSaveFolderSelector').style.display = 'none';
 
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
@@ -675,7 +706,7 @@ async function salvarMapaNaPlanilha() {
   const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
 
   try {
-    const { data, error } = await _supabase
+    const { error } = await _supabase
       .from('mapas')
       .insert([{
         pasta: pastaAlvo,
