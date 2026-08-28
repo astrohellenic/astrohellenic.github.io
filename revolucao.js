@@ -11,7 +11,7 @@ function iniciarModuloRevolucao() {
       <div style="padding: 30px; text-align: center; color: #475569;">
         <i class="fa-solid fa-circle-info" style="font-size: 24px; color: #103b70; margin-bottom: 12px;"></i>
         <h3 style="margin: 0 0 8px 0; font-family: 'Cinzel', serif; color: #103b70;">Selecione um Cliente</h3>
-        <p style="margin: 0; font-size: 13px;">Abra uma pasta no menu lateral e selecione o mapa natal do cliente para gerar a Revolução Solar e as Profecções.</p>
+        <p style="margin: 0; font-size: 13px;">Abra uma pasta no menu lateral e selecione o mapa natal do cliente.</p>
       </div>
     `;
     return;
@@ -31,9 +31,7 @@ function renderInterfaceRevolucao(container, anoAlvo) {
   const idadeNaRS = anoAlvo - anoNasc;
 
   const profAnual = PROFECCAO_ENGINE.calcularProfeccaoAnual(natalAscSignIdx, idadeNaRS);
-
   const dataRS = new Date(anoAlvo, dataNascPartes.getMonth(), dataNascPartes.getDate(), dataNascPartes.getHours(), dataNascPartes.getMinutes());
-
   const profMensalList = PROFECCAO_ENGINE.calcularProfeccaoMensal(dataRS, profAnual.anoProfectado.signoIndex);
 
   let html = `
@@ -58,14 +56,12 @@ function renderInterfaceRevolucao(container, anoAlvo) {
       </div>
 
       <div style="margin-bottom: 30px; text-align: center;">
-        <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-bottom: 10px;">Comparativo Lado a Lado (Natal vs Revolução Solar)</h3>
-        <div id="rs-mandala-container" style="display: flex; justify-content: center;">
-          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando e renderizando mandalas lado a lado...</p>
+        <div id="rs-mandala-container" style="display: flex; justify-content: center; min-height: 400px; align-items: center;">
+          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mandalas...</p>
         </div>
       </div>
 
       <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin-bottom: 30px;">
-        <h4 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 12px 0;">3. Profecção Mensal (Passos de 30d 10h 30m)</h4>
         <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
           <thead>
             <tr style="background: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-align: left;">
@@ -95,7 +91,6 @@ function renderInterfaceRevolucao(container, anoAlvo) {
       </div>
 
       <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px;">
-        <h4 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 12px 0;">4. Passo Diário (60 Horas / 2,5 Dias)</h4>
         <div id="daily-steps-accordion-container">
   `;
 
@@ -209,9 +204,13 @@ async function carregarECalcularRS(anoAlvo, profAnual, profMensalList) {
       Saturno: { grau_absoluto: rsPlanetas.Saturno ? rsPlanetas.Saturno.grau_absoluto : 0, retro: checkRetro(rsPlanetas.Saturno) }
     };
 
-    // Chamada do renderizador dual do mandalaRS.js
+    const natalFormattedData = {
+      ...currentCalculatedData,
+      dataFormatada: PROFECCAO_ENGINE.formatarDataExtenso(currentMoment)
+    };
+
     if (typeof renderDualMandalaRS === 'function') {
-      renderDualMandalaRS(currentCalculatedData, rsCalculatedData, 'rs-mandala-container');
+      renderDualMandalaRS(natalFormattedData, rsCalculatedData, 'rs-mandala-container');
     }
 
   } catch (err) {
