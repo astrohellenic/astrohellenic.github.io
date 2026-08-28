@@ -320,15 +320,17 @@ function abrirNavegacaoPastas() {
   `;
 
   pastasOrdenadas.forEach(pasta => {
+    const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
+
     html += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConteudoPasta('${pasta}')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-folder" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta"></i>
+          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta"></i>
+          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta"></i>
           <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8; margin-left: 4px;"></i>
         </div>
       </div>
@@ -763,8 +765,9 @@ function salvarMapaNaPlanilha() {
 
   let htmlPastas = '';
   pastasOrdenadas.forEach(p => {
+    const pAttrEscapada = escapeHtml(p).replace(/'/g, "&#39;");
     htmlPastas += `
-      <div onclick="confirmarSalvamentoEmPasta('${p}')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; cursor: pointer; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+      <div onclick="confirmarSalvamentoEmPasta('${pAttrEscapada}')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; cursor: pointer; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
         <i class="fa-solid fa-folder" style="color: #c59b27; font-size: 18px;"></i>
         <span style="font-size: 14px; font-weight: 600; color: #1e293b;">${escapeHtml(p)}</span>
       </div>
