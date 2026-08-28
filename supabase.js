@@ -4,7 +4,8 @@
 
 const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var supabaseClient = window.supabaseClient;
 
 let activeFolder = "Clientes";
 let customFolders = ["Clientes"];
