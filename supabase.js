@@ -4,7 +4,7 @@
 
 const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let activeFolder = "Clientes";
 let customFolders = ["Clientes"];
@@ -26,7 +26,7 @@ function calcularFusoPorLongitude(lon) {
 /* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
 async function carregarPastasSalvas() {
   try {
-    const { data, error } = await _supabase
+    const { data, error } = await supabaseClient
       .from('pastas')
       .select('nome')
       .order('nome', { ascending: true });
@@ -34,7 +34,7 @@ async function carregarPastasSalvas() {
     if (!error && Array.isArray(data) && data.length > 0) {
       customFolders = data.map(p => p.nome);
     } else if (data && data.length === 0) {
-      await _supabase.from('pastas').insert([{ nome: 'Clientes' }]);
+      await supabaseClient.from('pastas').insert([{ nome: 'Clientes' }]);
       customFolders = ['Clientes'];
     }
   } catch (e) {
@@ -182,7 +182,7 @@ async function abrirNavegacaoConfiguracoes() {
 
   let userEmail = "Carregando...";
   try {
-    const { data: { user } } = await _supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (user && user.email) {
       userEmail = user.email;
     } else {
@@ -243,7 +243,7 @@ async function trocarSenhaUsuario() {
   }
 
   try {
-    const { error } = await _supabase.auth.updateUser({ password: newPass });
+    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
     if (!error) {
       alert("Senha alterada com sucesso!");
       document.getElementById('cfgNewPassword').value = '';
@@ -384,7 +384,7 @@ async function abrirConteudoPasta(nomePasta) {
 /* CARREGA MAPAS E ORDENA PRIORIZANDO O CÓDIGO NUMÉRICO */
 async function carregarMapasDoBanco(nomePasta) {
   try {
-    const { data, error } = await _supabase
+    const { data, error } = await supabaseClient
       .from('mapas')
       .select('*')
       .eq('pasta', nomePasta);
@@ -509,7 +509,7 @@ async function confirmarExclusaoSelecionados() {
   if (confirm(`Deseja realmente apagar os ${selectedMapIds.size} mapas selecionados?`)) {
     try {
       const idsArray = Array.from(selectedMapIds);
-      const { error } = await _supabase.from('mapas').delete().in('id', idsArray);
+      const { error } = await supabaseClient.from('mapas').delete().in('id', idsArray);
 
       if (!error) {
         alert("Mapas apagados com sucesso!");
@@ -547,7 +547,7 @@ async function criarNovaPasta() {
 
   if (!customFolders.includes(limpo)) {
     try {
-      const { error } = await _supabase.from('pastas').insert([{ nome: limpo }]);
+      const { error } = await supabaseClient.from('pastas').insert([{ nome: limpo }]);
       if (!error) {
         customFolders.push(limpo);
         abrirNavegacaoPastas();
@@ -568,8 +568,8 @@ async function editarNomePasta(event, pastaAntiga) {
   const nomeLimpo = novoNome.trim();
 
   try {
-    await _supabase.from('mapas').update({ pasta: nomeLimpo }).eq('pasta', pastaAntiga);
-    await _supabase.from('pastas').update({ nome: nomeLimpo }).eq('nome', pastaAntiga);
+    await supabaseClient.from('mapas').update({ pasta: nomeLimpo }).eq('pasta', pastaAntiga);
+    await supabaseClient.from('pastas').update({ nome: nomeLimpo }).eq('nome', pastaAntiga);
     
     const index = customFolders.indexOf(pastaAntiga);
     if (index !== -1) {
@@ -592,8 +592,8 @@ async function apagarPasta(event, pastaParaDeletar) {
 
   if (confirm(`Deseja remover a pasta "${pastaParaDeletar}" e todos os mapas gravados nela?`)) {
     try {
-      await _supabase.from('mapas').delete().eq('pasta', pastaParaDeletar);
-      await _supabase.from('pastas').delete().eq('nome', pastaParaDeletar);
+      await supabaseClient.from('mapas').delete().eq('pasta', pastaParaDeletar);
+      await supabaseClient.from('pastas').delete().eq('nome', pastaParaDeletar);
       
       customFolders = customFolders.filter(p => p !== pastaParaDeletar);
       abrirNavegacaoPastas();
@@ -645,7 +645,7 @@ async function salvarEdicaoMapaModal() {
   let lon = editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333;
 
   try {
-    const { error } = await _supabase
+    const { error } = await supabaseClient
       .from('mapas')
       .update({
         codigo: codDigitado !== "" ? codDigitado : null,
@@ -719,7 +719,7 @@ async function processarImportacaoTextoEmMassa() {
   if (registros.length === 0) { alert("Nenhum registro legível encontrado."); return; }
 
   try {
-    const { error } = await _supabase.from('mapas').insert(registros);
+    const { error } = await supabaseClient.from('mapas').insert(registros);
     if (!error) {
       alert(`Sucesso! ${registros.length} clientes importados para a pasta "${activeFolder}".`);
       fecharModalImportacaoTexto();
@@ -737,7 +737,7 @@ async function deletarRegistroUnico(event, idMapa) {
   if (!confirm("Deseja realmente apagar este mapa?")) return;
 
   try {
-    const { error } = await _supabase.from('mapas').delete().eq('id', idMapa);
+    const { error } = await supabaseClient.from('mapas').delete().eq('id', idMapa);
     if (!error) {
       carregarMapasDoBanco(activeFolder);
     } else {
@@ -797,7 +797,7 @@ async function confirmarSalvamentoEmPasta(pastaAlvo) {
   const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
 
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('mapas')
       .insert([{
         pasta: pastaAlvo,
