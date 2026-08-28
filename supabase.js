@@ -797,7 +797,7 @@ async function confirmarSalvamentoEmPasta(pastaAlvo) {
   const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
 
   try {
-    const { error } = await _supabase
+    const { error } = await supabase
       .from('mapas')
       .insert([{
         pasta: pastaAlvo,
