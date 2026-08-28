@@ -762,83 +762,6 @@ async function deletarRegistroUnico(event, idMapa) {
 }
 
 /* SALVAR MAPA DA BARRA SUPERIOR (PERMITE NOMEAR, TIPO E CIDADE ANTES DE GRAVAR) */
-function salvarMapaNaPlanilha() {
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-
-  const nomePadrao = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Céu do Momento";
-
-  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  let optionsPastas = '';
-  pastasOrdenadas.forEach(p => {
-    optionsPastas += `<option value="${escapeHtml(p)}" ${p === activeFolder ? 'selected' : ''}>${escapeHtml(p)}</option>`;
-  });
-
-  let modal = document.getElementById('modalSaveCurrentMap');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'modalSaveCurrentMap';
-    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999;";
-    document.body.appendChild(modal);
-  }
-
-  modal.innerHTML = `
-    <div style="background: #ffffff; width: 90%; max-width: 420px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin:0; font-size: 16px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif;">Salvar Mapa Atual</h3>
-        <button onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer;">&times;</button>
-      </div>
-
-      <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Salvar na Pasta</label>
-        <select id="saveMapFolderSelect" class="modal-select">${optionsPastas}</select>
-      </div>
-
-      <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
-        <select id="saveMapTipoSelect" class="modal-select">
-          <option value="Trânsito" selected>Trânsito</option>
-          <option value="Pergunta">Pergunta</option>
-          <option value="Evento">Evento</option>
-          <option value="Eleição">Eleição</option>
-          <option value="Natal">Natal</option>
-        </select>
-      </div>
-
-      <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Título da Pergunta</label>
-        <input type="text" id="saveMapNameInput" class="modal-input" value="${escapeHtml(nomePadrao)}">
-      </div>
-
-      <div style="display: flex; gap: 8px;">
-        <div style="flex: 1;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data</label>
-          <input type="text" id="saveMapDataInput" class="modal-input" value="${dia}/${mes}/${ano}">
-        </div>
-        <div style="flex: 1;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário</label>
-          <input type="text" id="saveMapHoraInput" class="modal-input" value="${hora}:${min}">
-        </div>
-      </div>
-
-      <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Local</label>
-        <input type="text" id="saveMapCidadeInput" class="modal-input" value="${escapeHtml(currentGeo.city)}">
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'">Cancelar</button>
-        <button type="button" class="btn-primary" onclick="executarSalvarMapaAtual()">Salvar Registro</button>
-      </div>
-    </div>
-  `;
-
-  modal.style.display = 'flex';
-}
-
 async function executarSalvarMapaAtual() {
   const pastaAlvo = document.getElementById('saveMapFolderSelect').value;
   const tipo = document.getElementById('saveMapTipoSelect').value;
@@ -850,6 +773,10 @@ async function executarSalvarMapaAtual() {
   if (!nome) { alert("Informe o nome do mapa."); return; }
 
   try {
+    let userId = null;
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) userId = user.id;
+
     const { error } = await supabaseClient
       .from('mapas')
       .insert([{
@@ -861,7 +788,8 @@ async function executarSalvarMapaAtual() {
         hora_nascimento: horaStr,
         cidade: cidStr,
         latitude: currentGeo.lat,
-        longitude: currentGeo.lon
+        longitude: currentGeo.lon,
+        user_id: userId
       }]);
 
     if (!error) {
@@ -872,32 +800,5 @@ async function executarSalvarMapaAtual() {
     }
   } catch (err) {
     alert("Erro de conexão ao salvar o mapa.");
-  }
-}
-
-/* FUNÇÃO EXCLUSIVA PARA SALVAR MAPA GERADO PELA REVOLUÇÃO SOLAR */
-async function salvarRevolucaoSolarNoBanco(pastaAlvo, dadosRS) {
-  try {
-    const { error } = await supabaseClient
-      .from('mapas')
-      .insert([{
-        pasta: pastaAlvo || activeFolder,
-        tipo: 'Revolução Solar',
-        codigo: dadosRS.codigo || null,
-        nome: `${dadosRS.nome} - RS ${dadosRS.anoRS}`,
-        data_nascimento: dadosRS.dataRS,
-        hora_nascimento: dadosRS.horaRS,
-        cidade: dadosRS.cidade,
-        latitude: dadosRS.lat,
-        longitude: dadosRS.lon
-      }]);
-
-    if (!error) {
-      alert(`Revolução Solar de ${dadosRS.anoRS} salva com sucesso na pasta "${pastaAlvo || activeFolder}"!`);
-    } else {
-      alert("Erro ao salvar Revolução Solar: " + error.message);
-    }
-  } catch (err) {
-    alert("Erro de conexão ao salvar Revolução Solar.");
   }
 }
