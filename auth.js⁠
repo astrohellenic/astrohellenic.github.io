@@ -1,42 +1,48 @@
 // 1. Função de Login
 async function fazerLogin(email, password) {
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
+  const { data, error } = await _supabase.auth.signInWithPassword({
     email: email,
     password: password
   });
 
   if (error) {
-    alert("Erro ao entrar: " + error.message);
-    return null;
+    const errorEl = document.getElementById('loginErrorMsg');
+    if (errorEl) {
+      errorEl.innerText = "Erro ao entrar: " + error.message;
+      errorEl.style.display = 'block';
+    } else {
+      alert("Erro ao entrar: " + error.message);
+    }
+    return false;
   }
   
-  window.location.reload(); // Recarrega para carregar os dados do usuário
+  return true;
 }
 
 // 2. Função de Cadastro
 async function criarConta(email, password) {
-  const { data, error } = await supabaseClient.auth.signUp({
+  const { data, error } = await _supabase.auth.signUp({
     email: email,
     password: password
   });
 
   if (error) {
-    alert("Erro ao cadastrar: " + error.message);
-    return null;
+    const errorEl = document.getElementById('loginErrorMsg');
+    if (errorEl) {
+      errorEl.innerText = "Erro ao cadastrar: " + error.message;
+      errorEl.style.display = 'block';
+    } else {
+      alert("Erro ao cadastrar: " + error.message);
+    }
+    return false;
   }
 
   alert("Conta criada com sucesso!");
-  window.location.reload();
+  return true;
 }
 
 // 3. Função de Logout
 async function fazerLogout() {
-  await supabaseClient.auth.signOut();
+  await _supabase.auth.signOut();
   window.location.reload();
-}
-
-// 4. Checar usuário atual
-async function obterUsuarioAtual() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  return user;
 }
