@@ -448,7 +448,7 @@ function renderListaMapas(lista) {
   let html = '';
   lista.forEach((item, index) => {
     const cod = item.codigo ? `${item.codigo} - ` : '';
-    const tipoStr = item.tipo ? ` [${item.tipo}]` : '';
+    const tipoStr = item.tipo ? ` ${item.tipo}` : '';
     const dataStr = item.dataNascimento || "Data n/i";
     const cidStr = item.cidade || "Local n/i";
     const isChecked = selectedMapIds.has(item.id) ? 'checked' : '';
