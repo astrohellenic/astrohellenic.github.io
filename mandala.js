@@ -24,6 +24,9 @@ let editSelectedCityGeo = null;
 /* PONTO SELECIONADO PARA A CASA 1 ('ASC' OU CHAVE DO LOTE) */
 let selectedHouse1Lot = "ASC";
 
+/* VARIÁVEL GLOBAL PARA O TIPO DO MAPA ATIVO NO CABEÇALHO */
+window.currentMapType = "Natal";
+
 const SIGNS = [
   { name: "Áries", ruler: "Marte" }, { name: "Touro", ruler: "Vênus" }, { name: "Gêmeos", ruler: "Mercúrio" },
   { name: "Câncer", ruler: "Lua" }, { name: "Leão", ruler: "Sol" }, { name: "Virgem", ruler: "Mercúrio" },
@@ -182,6 +185,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
 
   currentSubjectName = c.nome || "Nativo";
   currentCustomCode = c.codigo || null;
+  window.currentMapType = c.tipo || "Natal";
   currentMoment = new Date(ano, mes - 1, dia, hora, min);
 
   const lat = parseFloat(c.latitude) || -23.5505;
@@ -273,6 +277,7 @@ function confirmarNovoMapaModal() {
 
   currentSubjectName = nome;
   currentCustomCode = codDigitado !== "" ? codDigitado : null;
+  window.currentMapType = "Natal";
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
   currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, fuso: fusoReal, city: selectedCityGeo.name };
 
@@ -298,6 +303,7 @@ function carregarCeuDoMomento() {
   if (menuHere) menuHere.classList.add('active');
   currentSubjectName = "Agora";
   currentCustomCode = null;
+  window.currentMapType = "Trânsito";
   currentMoment = new Date();
 
   if (navigator.geolocation) {
@@ -503,10 +509,14 @@ function renderMandala() {
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
+  /* RÓTULO DO TIPO DO MAPA NO CABEÇALHO */
+  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
+  const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
+
   svg += `<g id="png-discreet-header">
     <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
     <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-    <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros</text>
+    <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}</text>
     <text x="50" y="194" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
   </g>`;
 
@@ -649,7 +659,6 @@ function renderMandala() {
     });
   }
 
-  /* DENTINHOS DOS TERMOS (APONTANDO PARA DENTRO) */
   for (let deg = 0; deg < 360; deg++) {
     const aScreen = eclToScreenAngle(deg, house1RefAbs);
     const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
@@ -658,7 +667,6 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
   }
    
-  /* DENTINHOS INTERNOS DA BORDA DOS SIGNOS (APONTANDO PARA DENTRO) */
   for (let deg = 0; deg < 360; deg++) {
     const aScreen = eclToScreenAngle(deg, house1RefAbs);
     const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
@@ -667,7 +675,6 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  /* PLANETAS COM DESVIO LATERAL FIXO */
   const planetList = PLANETS_DEF.map(p => ({
     ...p,
     deg: pObj[p.id].abs,
