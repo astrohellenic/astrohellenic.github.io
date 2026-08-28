@@ -787,7 +787,7 @@
   window.addEventListener('DOMContentLoaded', async () => {
     setTimeout(async () => {
       if (typeof _supabase !== 'undefined') {
-        const { data: { user } } = await _supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           fecharTelaLogin();
         }
