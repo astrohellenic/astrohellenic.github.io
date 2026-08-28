@@ -1,0 +1,42 @@
+// 1. Função de Login
+async function fazerLogin(email, password) {
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert("Erro ao entrar: " + error.message);
+    return null;
+  }
+  
+  window.location.reload(); // Recarrega para carregar os dados do usuário
+}
+
+// 2. Função de Cadastro
+async function criarConta(email, password) {
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert("Erro ao cadastrar: " + error.message);
+    return null;
+  }
+
+  alert("Conta criada com sucesso!");
+  window.location.reload();
+}
+
+// 3. Função de Logout
+async function fazerLogout() {
+  await supabaseClient.auth.signOut();
+  window.location.reload();
+}
+
+// 4. Checar usuário atual
+async function obterUsuarioAtual() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  return user;
+}
