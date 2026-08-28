@@ -43,7 +43,7 @@ async function carregarPastasSalvas() {
   renderMenuPrincipal();
 }
 
-/* NÍVEL 1: MENU PRINCIPAL LIMPO */
+/* NÍVEL 1: MENU PRINCIPAL LIMPO (COM RODAPÉ DE CONFIGURAÇÕES) */
 function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -52,28 +52,36 @@ function renderMenuPrincipal() {
     <div class="sidebar-header">
       <h1 class="sidebar-title">Astro Hellenic</h1>
     </div>
-    <ul class="menu-list">
-      <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento()">
-        <span>Agora</span>
-        <i class="fa-solid fa-clock"></i>
-      </li>
-      <li class="menu-item" onclick="abrirModalNovoMapa()">
-        <span>Novo Mapa Astral</span>
-        <i class="fa-solid fa-user-plus"></i>
-      </li>
-      <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
-        <span>Selecionar Mapa</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </li>
-      <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
-        <span>Técnicas de Tempo</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </li>
-      <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
-        <span>Ferramentas Auxiliares</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </li>
-    </ul>
+    <div style="flex: 1; overflow-y: auto;">
+      <ul class="menu-list">
+        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento()">
+          <span>Agora</span>
+          <i class="fa-solid fa-clock"></i>
+        </li>
+        <li class="menu-item" onclick="abrirModalNovoMapa()">
+          <span>Novo Mapa Astral</span>
+          <i class="fa-solid fa-user-plus"></i>
+        </li>
+        <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
+          <span>Selecionar Mapa</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+        <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
+          <span>Técnicas de Tempo</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+        <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
+          <span>Ferramentas Auxiliares</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+      </ul>
+    </div>
+    
+    <!-- RODAPÉ FIXO: CONFIGURAÇÕES -->
+    <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Configurações</span>
+      <i class="fa-solid fa-gear" style="font-size: 16px; color: #64748b;"></i>
+    </div>
   `;
 }
 
@@ -165,6 +173,90 @@ function abrirNavegacaoFerramentasAuxiliares() {
       </div>
     </div>
   `;
+}
+
+/* NÍVEL 2D: TELA DE CONFIGURAÇÕES */
+async function abrirNavegacaoConfiguracoes() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  let userEmail = "Carregando...";
+  try {
+    const { data: { user } } = await _supabase.auth.getUser();
+    if (user && user.email) {
+      userEmail = user.email;
+    } else {
+      userEmail = "Usuário Desconectado";
+    }
+  } catch (e) {
+    userEmail = "Sessão não identificada";
+  }
+
+  const manterLogado = localStorage.getItem('astro_keep_logged') === 'true';
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #f8fafc;">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
+        <i class="fa-solid fa-chevron-left"></i> Voltar
+      </button>
+      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">CONFIGURAÇÕES</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+      
+      <!-- USUÁRIO CONECTADO -->
+      <div style="margin-bottom: 20px; background: #f1f5f9; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Conta Conectada</div>
+        <div style="font-size: 13px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtml(userEmail)}</div>
+      </div>
+
+      <!-- OPCÃO MANTER LOGADO -->
+      <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <span style="font-size: 13px; font-weight: 600; color: #334155;">Manter-se logado</span>
+        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+      </div>
+
+      <!-- ALTERAR SENHA -->
+      <div style="margin-bottom: 24px;">
+        <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">Alterar Senha</div>
+        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; box-sizing: border-box;">
+        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+          Atualizar Senha
+        </button>
+      </div>
+
+      <!-- LOGOUT (SAIR) -->
+      <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
+      </button>
+
+    </div>
+  `;
+}
+
+/* FUNÇÕES AUXILIARES DE GERENCIAMENTO DE CONTA */
+async function trocarSenhaUsuario() {
+  const newPass = document.getElementById('cfgNewPassword').value.trim();
+  if (!newPass || newPass.length < 6) {
+    alert("A nova senha deve ter pelo menos 6 caracteres.");
+    return;
+  }
+
+  try {
+    const { error } = await _supabase.auth.updateUser({ password: newPass });
+    if (!error) {
+      alert("Senha alterada com sucesso!");
+      document.getElementById('cfgNewPassword').value = '';
+    } else {
+      alert("Erro ao alterar senha: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao alterar senha.");
+  }
+}
+
+function alternarManterLogado(status) {
+  localStorage.setItem('astro_keep_logged', status);
 }
 
 /* CHAMA OS MÓDULOS TÉCNICOS */
@@ -298,7 +390,6 @@ async function carregarMapasDoBanco(nomePasta) {
       .eq('pasta', nomePasta);
 
     if (!error && Array.isArray(data)) {
-      // Ordenação Híbrida: Código numérico primeiro (0001, 0002, 0012), depois nome alfabético
       data.sort((a, b) => {
         const codA = parseInt(a.codigo, 10);
         const codB = parseInt(b.codigo, 10);
