@@ -580,21 +580,21 @@
         </div>
     </div>
 
-        <!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase.js"></script>
-    <script src="auth.js"></script>
-    <script src="mandala.js"></script>
-    <script src="isopsefia.js"></script>
-    <script src="revolucao.js"></script>
-    <script src="profeccao.js"></script>
-    <script src="decenios.js"></script>
-    <script src="direcoes.js"></script>
-    <script src="liberacao.js"></script>
-    <script src="horas.js"></script>
-    <script src="perguntas.js"></script>
-    
-    <!-- ESTILOS E ESTRUTURA DA TELA DE LOGIN -->
+<!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="auth.js"></script>
+<script src="mandala.js"></script>
+<script src="isopsefia.js"></script>
+<script src="revolucao.js"></script>
+<script src="profeccao.js"></script>
+<script src="decenios.js"></script>
+<script src="direcoes.js"></script>
+<script src="liberacao.js"></script>
+<script src="horas.js"></script>
+<script src="perguntas.js"></script>
+
+<!-- ESTILOS E ESTRUTURA DA TELA DE LOGIN -->
 <style>
   #loginOverlay {
     position: fixed;
@@ -744,7 +744,7 @@
     const link = document.getElementById('loginToggleMode');
     const errorEl = document.getElementById('loginErrorMsg');
     
-    errorEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
 
     if (isCadastroMode) {
       btn.innerText = 'Criar Conta';
@@ -755,38 +755,95 @@
     }
   }
 
-    async function executarAcaoAuth() {
-    alert("1. Clique detectado!");
+  async function fazerLogin(email, password) {
+    const errorEl = document.getElementById('loginErrorMsg');
+    const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    
+    if (!client) {
+      if (errorEl) {
+        errorEl.innerText = "Erro: Conexão com o Supabase não foi iniciada.";
+        errorEl.style.display = 'block';
+      }
+      return false;
+    }
+
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (errorEl) {
+        errorEl.innerText = "Erro ao entrar: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        alert("Erro ao entrar: " + error.message);
+      }
+      return false;
+    }
+    return true;
+  }
+
+  async function criarConta(email, password) {
+    const errorEl = document.getElementById('loginErrorMsg');
+    const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    
+    if (!client) {
+      if (errorEl) {
+        errorEl.innerText = "Erro: Conexão com o Supabase não foi iniciada.";
+        errorEl.style.display = 'block';
+      }
+      return false;
+    }
+
+    const { data, error } = await client.auth.signUp({ email, password });
+    if (error) {
+      if (errorEl) {
+        errorEl.innerText = "Erro ao cadastrar: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        alert("Erro ao cadastrar: " + error.message);
+      }
+      return false;
+    }
+    alert("Conta criada com sucesso!");
+    return true;
+  }
+
+  async function executarAcaoAuth() {
     const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
     const errorEl = document.getElementById('loginErrorMsg');
     const keepLogged = document.getElementById('loginKeepLogged').checked;
 
+    if (errorEl) errorEl.style.display = 'none';
+
     if (!email || !pass) {
-      alert("Preencha e-mail e senha.");
+      if (errorEl) {
+        errorEl.innerText = 'Preencha o e-mail e a senha.';
+        errorEl.style.display = 'block';
+      }
       return;
     }
 
+    localStorage.setItem('astro_keep_logged', keepLogged);
+
     try {
-      alert("2. Tentando conectar ao Supabase...");
       const res = isCadastroMode ? await criarConta(email, pass) : await fazerLogin(email, pass);
-      alert("3. Resposta do banco: " + res);
       if (res) fecharTelaLogin();
     } catch (err) {
-      alert("ERRO NO SCRIPT: " + err.message);
+      if (errorEl) {
+        errorEl.innerText = "Erro de execução: " + err.message;
+        errorEl.style.display = 'block';
+      }
     }
   }
-
 
   function fecharTelaLogin() {
     document.getElementById('loginOverlay').style.display = 'none';
   }
 
-  // Checagem automática ao abrir o app
   window.addEventListener('DOMContentLoaded', async () => {
     setTimeout(async () => {
-      if (typeof supabaseClient !== 'undefined') {
-        const { data: { user } } = await supabaseClient.auth.getUser();
+      const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+      if (client) {
+        const { data: { user } } = await client.auth.getUser();
         if (user) {
           fecharTelaLogin();
         }
@@ -794,6 +851,6 @@
     }, 500);
   });
 </script>
-
+        
 </body>
 </html>
