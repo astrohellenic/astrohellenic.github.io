@@ -755,30 +755,28 @@
     }
   }
 
-  async function executarAcaoAuth() {
+    async function executarAcaoAuth() {
+    alert("1. Clique detectado!");
     const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
     const errorEl = document.getElementById('loginErrorMsg');
     const keepLogged = document.getElementById('loginKeepLogged').checked;
 
-    errorEl.style.display = 'none';
-
     if (!email || !pass) {
-      errorEl.innerText = 'Preencha o e-mail e a senha.';
-      errorEl.style.display = 'block';
+      alert("Preencha e-mail e senha.");
       return;
     }
 
-    localStorage.setItem('astro_keep_logged', keepLogged);
-
-    if (isCadastroMode) {
-      const res = await criarConta(email, pass);
+    try {
+      alert("2. Tentando conectar ao Supabase...");
+      const res = isCadastroMode ? await criarConta(email, pass) : await fazerLogin(email, pass);
+      alert("3. Resposta do banco: " + res);
       if (res) fecharTelaLogin();
-    } else {
-      const res = await fazerLogin(email, pass);
-      if (res) fecharTelaLogin();
+    } catch (err) {
+      alert("ERRO NO SCRIPT: " + err.message);
     }
   }
+
 
   function fecharTelaLogin() {
     document.getElementById('loginOverlay').style.display = 'none';
