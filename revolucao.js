@@ -26,22 +26,18 @@ function renderInterfaceRevolucao(container, anoAlvo) {
   const natalAscAbs = natalData.Ascendente.grau_absoluto;
   const natalAscSignIdx = Math.floor(natalAscAbs / 30);
 
-  // Cálculo da idade na RS
   const dataNascPartes = currentMoment; 
   const anoNasc = dataNascPartes.getFullYear();
   const idadeNaRS = anoAlvo - anoNasc;
 
-  // Profecção Anual via profeccao.js
   const profAnual = PROFECCAO_ENGINE.calcularProfeccaoAnual(natalAscSignIdx, idadeNaRS);
 
-  // Data estimada da RS
   const dataRS = new Date(anoAlvo, dataNascPartes.getMonth(), dataNascPartes.getDate(), dataNascPartes.getHours(), dataNascPartes.getMinutes());
 
-  // Profecção Mensal (12 passos)
   const profMensalList = PROFECCAO_ENGINE.calcularProfeccaoMensal(dataRS, profAnual.anoProfectado.signoIndex);
 
   let html = `
-    <div id="rs-module-root" style="padding: 20px; max-width: 1000px; margin: 0 auto; font-family: 'Montserrat', sans-serif;">
+    <div id="rs-module-root" style="padding: 20px; max-width: 1200px; margin: 0 auto; font-family: 'Montserrat', sans-serif;">
       
       <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px;">
         <div>
@@ -62,16 +58,9 @@ function renderInterfaceRevolucao(container, anoAlvo) {
       </div>
 
       <div style="margin-bottom: 30px; text-align: center;">
-        <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-bottom: 10px;">1. Mapa Astral Natal (Profecção & Anel Mensal)</h3>
-        <div id="natal-profection-mandala-container" style="display: flex; justify-content: center;">
-          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Renderizando Mapa Natal...</p>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 30px; text-align: center;">
-        <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-bottom: 10px;">2. Mapa da Revolução Solar ${anoAlvo}</h3>
+        <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-bottom: 10px;">Comparativo Lado a Lado (Natal vs Revolução Solar)</h3>
         <div id="rs-mandala-container" style="display: flex; justify-content: center;">
-          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando posições planetárias da RS...</p>
+          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando e renderizando mandalas lado a lado...</p>
         </div>
       </div>
 
@@ -156,7 +145,6 @@ function renderInterfaceRevolucao(container, anoAlvo) {
 
   container.innerHTML = html;
 
-  // Executa os cálculos e injeções assíncronas dos mapas sem causar conflitos de renderização
   setTimeout(() => {
     carregarECalcularRS(anoAlvo, profAnual, profMensalList);
   }, 100);
@@ -191,19 +179,39 @@ async function carregarECalcularRS(anoAlvo, profAnual, profMensalList) {
     };
 
     const rsAscData = apiJson.ascendente || {};
+    const rsMcData = apiJson.meio_ceu || {};
+    const rsSizigiaData = apiJson.sizigia || {};
+    const rsPlanetas = apiJson.planetas || {};
+
     const rsAscAbs = ((SIGNOS_INDEX[rsAscData.signo] || 0) * 30) + (parseFloat(rsAscData.grau) || 0);
-    const rsAscSignIdx = Math.floor(rsAscAbs / 30);
+    const rsMcAbs = ((SIGNOS_INDEX[rsMcData.signo] || 0) * 30) + (parseFloat(rsMcData.grau) || 0);
 
-    // 1. Exibe a imagem já renderizada do Mapa Natal no container 1
-    const natalContainer = document.getElementById('natal-profection-mandala-container');
-    if (natalContainer && lastRenderedPngUrl) {
-      natalContainer.innerHTML = `<img src="${lastRenderedPngUrl}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Mapa Natal Profecção">`;
-    }
+    const checkRetro = (pObj) => {
+      if (!pObj) return false;
+      if (pObj.retrogrado !== undefined) return Boolean(pObj.retrogrado);
+      if (pObj.velocidade !== undefined) return parseFloat(pObj.velocidade) < 0;
+      return false;
+    };
 
-    // 2. Confirma a geração do container da Revolução Solar
-    const containerRS = document.getElementById('rs-mandala-container');
-    if (containerRS && lastRenderedPngUrl) {
-      containerRS.innerHTML = `<img src="${lastRenderedPngUrl}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Mapa Revolução Solar">`;
+    const rsCalculatedData = {
+      anoAlvo: anoAlvo,
+      dataFormatada: `${dia}/${mes}/${ano} às ${hora}:${min}`,
+      Ascendente: { grau_absoluto: rsAscAbs },
+      MC: { grau_absoluto: rsMcAbs },
+      Nodo_Norte: { grau_absoluto: rsPlanetas.NodoNorte ? rsPlanetas.NodoNorte.grau_absoluto : 0, retro: checkRetro(rsPlanetas.NodoNorte) },
+      Sizigia: { grau_absoluto: rsSizigiaData.grau_absoluto !== undefined ? parseFloat(rsSizigiaData.grau_absoluto) : 0 },
+      Sol: { grau_absoluto: rsPlanetas.Sol ? rsPlanetas.Sol.grau_absoluto : 0, retro: false },
+      Lua: { grau_absoluto: rsPlanetas.Lua ? rsPlanetas.Lua.grau_absoluto : 0, retro: false },
+      Mercúrio: { grau_absoluto: rsPlanetas.Mercurio ? rsPlanetas.Mercurio.grau_absoluto : 0, retro: checkRetro(rsPlanetas.Mercurio) },
+      Vênus: { grau_absoluto: rsPlanetas.Venus ? rsPlanetas.Venus.grau_absoluto : 0, retro: checkRetro(rsPlanetas.Venus) },
+      Marte: { grau_absoluto: rsPlanetas.Marte ? rsPlanetas.Marte.grau_absoluto : 0, retro: checkRetro(rsPlanetas.Marte) },
+      Júpiter: { grau_absoluto: rsPlanetas.Jupiter ? rsPlanetas.Jupiter.grau_absoluto : 0, retro: checkRetro(rsPlanetas.Jupiter) },
+      Saturno: { grau_absoluto: rsPlanetas.Saturno ? rsPlanetas.Saturno.grau_absoluto : 0, retro: checkRetro(rsPlanetas.Saturno) }
+    };
+
+    // Chamada do renderizador dual do mandalaRS.js
+    if (typeof renderDualMandalaRS === 'function') {
+      renderDualMandalaRS(currentCalculatedData, rsCalculatedData, 'rs-mandala-container');
     }
 
   } catch (err) {
