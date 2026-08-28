@@ -628,10 +628,15 @@
     text-transform: uppercase;
   }
 
+  .login-field-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
   .login-field {
     width: 100%;
     padding: 12px;
-    margin-bottom: 12px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     font-size: 14px;
@@ -641,6 +646,16 @@
 
   .login-field:focus {
     border-color: #103b70;
+  }
+
+  .password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    cursor: pointer;
+    font-size: 14px;
   }
 
   .login-options {
@@ -684,12 +699,18 @@
     
     <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
 
-    <input type="email" id="loginEmail" class="login-field" placeholder="Seu e-mail">
-    <input type="password" id="loginPassword" class="login-field" placeholder="Sua senha">
+    <div class="login-field-container">
+      <input type="email" id="loginEmail" class="login-field" placeholder="Seu e-mail">
+    </div>
+
+    <div class="login-field-container">
+      <input type="password" id="loginPassword" class="login-field" placeholder="Sua senha">
+      <i class="fa-solid fa-eye password-toggle-icon" id="togglePasswordBtn" onclick="alternarVisibilidadeSenha()"></i>
+    </div>
 
     <div class="login-options">
       <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-        <input type="checkbox" id="loginKeepLogged" checked> Manter-se logado
+        <input type="checkbox" id="loginKeepLogged"> Manter-se logado
       </label>
     </div>
 
@@ -701,6 +722,20 @@
 
 <script>
   let isCadastroMode = false;
+
+  function alternarVisibilidadeSenha() {
+    const input = document.getElementById('loginPassword');
+    const icon = document.getElementById('togglePasswordBtn');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
 
   function alternarModoAuth() {
     isCadastroMode = !isCadastroMode;
@@ -750,7 +785,6 @@
 
   // Checagem automática ao abrir o app
   window.addEventListener('DOMContentLoaded', async () => {
-    // Aguarda o Supabase carregar
     setTimeout(async () => {
       if (typeof _supabase !== 'undefined') {
         const { data: { user } } = await _supabase.auth.getUser();
