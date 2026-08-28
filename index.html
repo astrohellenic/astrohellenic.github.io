@@ -62,20 +62,24 @@
             display: none;
         }
 
-        /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL) */
+        /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL COM ROLAGEM E RODAPÉ CORRIGIDOS) */
         #sidebar {
             width: 320px;
             height: 100vh;
+            height: 100dvh;
             background: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
             z-index: 100;
             position: fixed;
             top: 0;
             left: -320px;
             transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         #sidebar.open {
