@@ -55,12 +55,12 @@ function renderMenuPrincipal() {
     </div>
     <div style="flex: 1; overflow-y: auto;">
       <ul class="menu-list">
-        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento()">
+        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento(); fecharSidebar();">
           <span>Agora</span>
           <i class="fa-solid fa-clock"></i>
         </li>
-        <li class="menu-item" onclick="abrirModalNovoMapa()">
-          <span>Novo Mapa Astral</span>
+        <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
+          <span>Novo Mapa</span>
           <i class="fa-solid fa-user-plus"></i>
         </li>
         <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
@@ -100,7 +100,7 @@ function abrirNavegacaoTecnicasTempo() {
       <div style="width: 24px;"></div>
     </div>
     <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('revolucao')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('revolucao'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-sun" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Revolução Solar</span>
@@ -108,7 +108,7 @@ function abrirNavegacaoTecnicasTempo() {
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('decenios')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('decenios'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-hourglass-half" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Decênios</span>
@@ -116,7 +116,7 @@ function abrirNavegacaoTecnicasTempo() {
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('liberacao')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('liberacao'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-dharmachakra" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Liberação Zodiacal</span>
@@ -124,7 +124,7 @@ function abrirNavegacaoTecnicasTempo() {
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('direcoes')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('direcoes'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-compass" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Direções Primárias</span>
@@ -149,7 +149,7 @@ function abrirNavegacaoFerramentasAuxiliares() {
       <div style="width: 24px;"></div>
     </div>
     <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('katarche')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('katarche'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-circle-question" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Katarche (Perguntas)</span>
@@ -157,7 +157,7 @@ function abrirNavegacaoFerramentasAuxiliares() {
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('horas')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('horas'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-business-time" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Horas Planetárias</span>
@@ -165,7 +165,7 @@ function abrirNavegacaoFerramentasAuxiliares() {
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('isopsefia')">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('isopsefia'); fecharSidebar();">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-calculator" style="color: var(--gold-dark);"></i>
           <span style="font-size: 13px; font-weight: 600; color: #334155;">Isopsefia</span>
@@ -235,7 +235,10 @@ async function abrirNavegacaoConfiguracoes() {
   `;
 }
 
-/* FUNÇÕES AUXILIARES DE GERENCIAMENTO DE CONTA */
+function alternarManterLogado(status) {
+  localStorage.setItem('astro_keep_logged', status);
+}
+
 async function trocarSenhaUsuario() {
   const newPass = document.getElementById('cfgNewPassword').value.trim();
   if (!newPass || newPass.length < 6) {
@@ -256,8 +259,13 @@ async function trocarSenhaUsuario() {
   }
 }
 
-function alternarManterLogado(status) {
-  localStorage.setItem('astro_keep_logged', status);
+async function fazerLogout() {
+  try {
+    await supabaseClient.auth.signOut();
+    location.reload();
+  } catch (e) {
+    location.reload();
+  }
 }
 
 /* CHAMA OS MÓDULOS TÉCNICOS */
@@ -309,7 +317,6 @@ function abrirNavegacaoPastas() {
       <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
     </div>
     <div style="flex: 1; overflow-y: auto;">
-      <!-- BOTAO IMPORTAR EM MASSA INJETADO NO TOPO DAS PASTAS -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
@@ -411,6 +418,7 @@ async function carregarMapasDoBanco(nomePasta) {
         id: item.id,
         codigo: (item.codigo && String(item.codigo).trim() !== '') ? item.codigo : null,
         nome: item.nome,
+        tipo: item.tipo || 'Natal',
         dataNascimento: item.data_nascimento,
         horaNascimento: item.hora_nascimento,
         cidade: item.cidade,
@@ -436,6 +444,7 @@ function renderListaMapas(lista) {
   let html = '';
   lista.forEach((item, index) => {
     const cod = item.codigo ? `${item.codigo} - ` : '';
+    const tipoStr = item.tipo ? ` [${item.tipo}]` : '';
     const dataStr = item.dataNascimento || "Data n/i";
     const cidStr = item.cidade || "Local n/i";
     const isChecked = selectedMapIds.has(item.id) ? 'checked' : '';
@@ -443,8 +452,8 @@ function renderListaMapas(lista) {
     html += `
       <div class="client-card-item" id="card-item-${index}">
         ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer;">` : ''}
-        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index})`}">
-          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
+          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #64748b; margin-left: 4px;">${escapeHtml(tipoStr)}</span></div>
           <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
@@ -527,7 +536,6 @@ async function confirmarExclusaoSelecionados() {
   }
 }
 
-/* BUSCA LOCAL DENTRO DA PASTA ATUAL */
 function executarBuscaLocal(termo) {
   const q = termo.toLowerCase().trim();
   if (!q) {
@@ -542,7 +550,6 @@ function executarBuscaLocal(termo) {
   renderListaMapas(filtrados);
 }
 
-/* GERENCIAMENTO DE PASTAS NO SUPABASE */
 async function criarNovaPasta() {
   const nome = prompt("Nome da nova pasta:");
   if (!nome || !nome.trim()) return;
@@ -606,17 +613,18 @@ async function apagarPasta(event, pastaParaDeletar) {
   }
 }
 
-/* MODAL DE EDIÇÃO E IMPORTAÇÃO */
+/* MODAL DE EDIÇÃO E IMPORTAÇÃO DE MAPAS */
 function abrirModalEdicao(event, index) {
   event.stopPropagation();
   const item = cachedFolderData[index];
   if (!item) return;
 
   document.getElementById('editModalId').value = item.id;
+  document.getElementById('editModalTipoMapa').value = item.tipo || 'Natal';
   document.getElementById('editModalCodigo').value = item.codigo || '';
   document.getElementById('editModalNome').value = item.nome || '';
   document.getElementById('editModalData').value = item.dataNascimento || '';
-  document.getElementById('editModalHora').value = item.horaNascimento || '12:00';
+  document.getElementById('editModalHora').value = item.horaNascimento || '';
   document.getElementById('editModalCidadeInput').value = item.cidade || '';
   
   editSelectedCityGeo = {
@@ -635,6 +643,7 @@ function fecharModalEdicao() {
 
 async function salvarEdicaoMapaModal() {
   const idMapa = document.getElementById('editModalId').value;
+  const tipo = document.getElementById('editModalTipoMapa').value;
   const codDigitado = document.getElementById('editModalCodigo').value.trim();
   const nome = document.getElementById('editModalNome').value.trim();
   const dataStr = document.getElementById('editModalData').value.trim();
@@ -642,7 +651,6 @@ async function salvarEdicaoMapaModal() {
 
   if (!nome) { alert("Informe o nome."); return; }
   if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
-  if (!horaStr) { alert("Informe o horário."); return; }
 
   let lat = editSelectedCityGeo ? editSelectedCityGeo.lat : -23.5505;
   let lon = editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333;
@@ -651,6 +659,7 @@ async function salvarEdicaoMapaModal() {
     const { error } = await supabaseClient
       .from('mapas')
       .update({
+        tipo: tipo,
         codigo: codDigitado !== "" ? codDigitado : null,
         nome: nome,
         data_nascimento: dataStr,
@@ -704,11 +713,12 @@ async function processarImportacaoTextoEmMassa() {
     }
 
     let dataStr = partes[1] ? partes[1].trim() : "01/01/2000";
-    let horaStr = partes[2] ? partes[2].trim() : "12:00";
+    let horaStr = partes[2] ? partes[2].trim() : "";
     let cidadeStr = partes[3] ? partes[3].trim() : "Brasil";
 
     registros.push({
       pasta: activeFolder,
+      tipo: 'Natal',
       codigo: codigo,
       nome: nome,
       data_nascimento: dataStr,
@@ -751,37 +761,77 @@ async function deletarRegistroUnico(event, idMapa) {
   }
 }
 
-/* SALVAR MAPA DIRETO CLICANDO NA PASTA (SEM JANELA NUMÉRICA) */
+/* SALVAR MAPA DA BARRA SUPERIOR (PERMITE NOMEAR, TIPO E CIDADE ANTES DE GRAVAR) */
 function salvarMapaNaPlanilha() {
-  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const ano = currentMoment.getFullYear();
+  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const dia = String(currentMoment.getDate()).padStart(2, '0');
+  const hora = String(currentMoment.getHours()).padStart(2, '0');
+  const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  let modal = document.getElementById('modalSaveFolderSelector');
+  const nomePadrao = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Céu do Momento";
+
+  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  let optionsPastas = '';
+  pastasOrdenadas.forEach(p => {
+    optionsPastas += `<option value="${escapeHtml(p)}" ${p === activeFolder ? 'selected' : ''}>${escapeHtml(p)}</option>`;
+  });
+
+  let modal = document.getElementById('modalSaveCurrentMap');
   if (!modal) {
     modal = document.createElement('div');
-    modal.id = 'modalSaveFolderSelector';
-    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999;";
+    modal.id = 'modalSaveCurrentMap';
+    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999;";
     document.body.appendChild(modal);
   }
 
-  let htmlPastas = '';
-  pastasOrdenadas.forEach(p => {
-    const pAttrEscapada = escapeHtml(p).replace(/'/g, "&#39;");
-    htmlPastas += `
-      <div onclick="confirmarSalvamentoEmPasta('${pAttrEscapada}')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; cursor: pointer; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-        <i class="fa-solid fa-folder" style="color: #c59b27; font-size: 18px;"></i>
-        <span style="font-size: 14px; font-weight: 600; color: #1e293b;">${escapeHtml(p)}</span>
-      </div>
-    `;
-  });
-
   modal.innerHTML = `
-    <div style="background: #ffffff; width: 90%; max-width: 380px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin:0; font-size: 16px; font-weight: 700; color: #103b70;">Salvar Mapa em...</h3>
-        <button onclick="document.getElementById('modalSaveFolderSelector').style.display='none'" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer;">&times;</button>
+    <div style="background: #ffffff; width: 90%; max-width: 420px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin:0; font-size: 16px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif;">Salvar Mapa Atual</h3>
+        <button onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer;">&times;</button>
       </div>
-      <div style="max-height: 280px; overflow-y: auto;">
-        ${htmlPastas}
+
+      <div>
+        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Salvar na Pasta</label>
+        <select id="saveMapFolderSelect" class="modal-select">${optionsPastas}</select>
+      </div>
+
+      <div>
+        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
+        <select id="saveMapTipoSelect" class="modal-select">
+          <option value="Trânsito" selected>Trânsito</option>
+          <option value="Pergunta">Pergunta</option>
+          <option value="Evento">Evento</option>
+          <option value="Eleição">Eleição</option>
+          <option value="Natal">Natal</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Título da Pergunta</label>
+        <input type="text" id="saveMapNameInput" class="modal-input" value="${escapeHtml(nomePadrao)}">
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 1;">
+          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data</label>
+          <input type="text" id="saveMapDataInput" class="modal-input" value="${dia}/${mes}/${ano}">
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário</label>
+          <input type="text" id="saveMapHoraInput" class="modal-input" value="${hora}:${min}">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Local</label>
+        <input type="text" id="saveMapCidadeInput" class="modal-input" value="${escapeHtml(currentGeo.city)}">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'">Cancelar</button>
+        <button type="button" class="btn-primary" onclick="executarSalvarMapaAtual()">Salvar Registro</button>
       </div>
     </div>
   `;
@@ -789,37 +839,65 @@ function salvarMapaNaPlanilha() {
   modal.style.display = 'flex';
 }
 
-async function confirmarSalvamentoEmPasta(pastaAlvo) {
-  document.getElementById('modalSaveFolderSelector').style.display = 'none';
+async function executarSalvarMapaAtual() {
+  const pastaAlvo = document.getElementById('saveMapFolderSelect').value;
+  const tipo = document.getElementById('saveMapTipoSelect').value;
+  const nome = document.getElementById('saveMapNameInput').value.trim();
+  const dataStr = document.getElementById('saveMapDataInput').value.trim();
+  const horaStr = document.getElementById('saveMapHoraInput').value.trim();
+  const cidStr = document.getElementById('saveMapCidadeInput').value.trim();
 
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-
-  const nomeParaSalvar = (currentSubjectName && currentSubjectName !== "") ? currentSubjectName : "Here & Now";
+  if (!nome) { alert("Informe o nome do mapa."); return; }
 
   try {
     const { error } = await supabaseClient
       .from('mapas')
       .insert([{
         pasta: pastaAlvo,
-        codigo: currentCustomCode,
-        nome: nomeParaSalvar,
-        data_nascimento: `${dia}/${mes}/${ano}`,
-        hora_nascimento: `${hora}:${min}`,
-        cidade: currentGeo.city,
+        tipo: tipo,
+        codigo: currentCustomCode || null,
+        nome: nome,
+        data_nascimento: dataStr,
+        hora_nascimento: horaStr,
+        cidade: cidStr,
         latitude: currentGeo.lat,
         longitude: currentGeo.lon
       }]);
 
     if (!error) {
-      alert(`Mapa "${nomeParaSalvar}" salvo com sucesso na pasta "${pastaAlvo}"!`);
+      alert(`Mapa "${nome}" salvo como [${tipo}] com sucesso na pasta "${pastaAlvo}"!`);
+      document.getElementById('modalSaveCurrentMap').style.display = 'none';
     } else {
       alert("Erro ao salvar no banco: " + error.message);
     }
   } catch (err) {
     alert("Erro de conexão ao salvar o mapa.");
+  }
+}
+
+/* FUNÇÃO EXCLUSIVA PARA SALVAR MAPA GERADO PELA REVOLUÇÃO SOLAR */
+async function salvarRevolucaoSolarNoBanco(pastaAlvo, dadosRS) {
+  try {
+    const { error } = await supabaseClient
+      .from('mapas')
+      .insert([{
+        pasta: pastaAlvo || activeFolder,
+        tipo: 'Revolução Solar',
+        codigo: dadosRS.codigo || null,
+        nome: `${dadosRS.nome} - RS ${dadosRS.anoRS}`,
+        data_nascimento: dadosRS.dataRS,
+        hora_nascimento: dadosRS.horaRS,
+        cidade: dadosRS.cidade,
+        latitude: dadosRS.lat,
+        longitude: dadosRS.lon
+      }]);
+
+    if (!error) {
+      alert(`Revolução Solar de ${dadosRS.anoRS} salva com sucesso na pasta "${pastaAlvo || activeFolder}"!`);
+    } else {
+      alert("Erro ao salvar Revolução Solar: " + error.message);
+    }
+  } catch (err) {
+    alert("Erro de conexão ao salvar Revolução Solar.");
   }
 }
