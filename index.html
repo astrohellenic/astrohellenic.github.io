@@ -592,5 +592,175 @@
     <script src="liberacao.js"></script>
     <script src="horas.js"></script>
     <script src="perguntas.js"></script>
+    
+    <!-- ESTILOS E ESTRUTURA DA TELA DE LOGIN -->
+<style>
+  #loginOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .login-card {
+    background: #ffffff;
+    width: 90%;
+    max-width: 380px;
+    padding: 32px 28px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+
+  .login-brand {
+    font-size: 20px;
+    font-weight: 800;
+    color: #103b70;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+
+  .login-field {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+  }
+
+  .login-field:focus {
+    border-color: #103b70;
+  }
+
+  .login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .login-btn {
+    width: 100%;
+    background: #103b70;
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .login-btn:hover {
+    background: #0d2f5a;
+  }
+
+  .login-toggle-link {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #64748b;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
+
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-brand">Astro Hellenic</div>
+    
+    <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
+
+    <input type="email" id="loginEmail" class="login-field" placeholder="Seu e-mail">
+    <input type="password" id="loginPassword" class="login-field" placeholder="Sua senha">
+
+    <div class="login-options">
+      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="loginKeepLogged" checked> Manter-se logado
+      </label>
+    </div>
+
+    <button type="button" class="login-btn" id="loginSubmitBtn" onclick="executarAcaoAuth()">Entrar</button>
+
+    <div class="login-toggle-link" id="loginToggleMode" onclick="alternarModoAuth()">Não tem uma conta? Criar nova conta</div>
+  </div>
+</div>
+
+<script>
+  let isCadastroMode = false;
+
+  function alternarModoAuth() {
+    isCadastroMode = !isCadastroMode;
+    const btn = document.getElementById('loginSubmitBtn');
+    const link = document.getElementById('loginToggleMode');
+    const errorEl = document.getElementById('loginErrorMsg');
+    
+    errorEl.style.display = 'none';
+
+    if (isCadastroMode) {
+      btn.innerText = 'Criar Conta';
+      link.innerText = 'Já tem uma conta? Fazer login';
+    } else {
+      btn.innerText = 'Entrar';
+      link.innerText = 'Não tem uma conta? Criar nova conta';
+    }
+  }
+
+  async function executarAcaoAuth() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPassword').value.trim();
+    const errorEl = document.getElementById('loginErrorMsg');
+    const keepLogged = document.getElementById('loginKeepLogged').checked;
+
+    errorEl.style.display = 'none';
+
+    if (!email || !pass) {
+      errorEl.innerText = 'Preencha o e-mail e a senha.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    localStorage.setItem('astro_keep_logged', keepLogged);
+
+    if (isCadastroMode) {
+      const res = await criarConta(email, pass);
+      if (res) fecharTelaLogin();
+    } else {
+      const res = await fazerLogin(email, pass);
+      if (res) fecharTelaLogin();
+    }
+  }
+
+  function fecharTelaLogin() {
+    document.getElementById('loginOverlay').style.display = 'none';
+  }
+
+  // Checagem automática ao abrir o app
+  window.addEventListener('DOMContentLoaded', async () => {
+    // Aguarda o Supabase carregar
+    setTimeout(async () => {
+      if (typeof _supabase !== 'undefined') {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) {
+          fecharTelaLogin();
+        }
+      }
+    }, 500);
+  });
+</script>
+
 </body>
 </html>
