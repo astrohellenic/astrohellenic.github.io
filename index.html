@@ -62,7 +62,7 @@
             display: none;
         }
 
-        /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL COM ROLAGEM E RODAPÉ CORRIGIDOS) */
+        /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL) */
         #sidebar {
             width: 320px;
             height: 100vh;
@@ -270,7 +270,7 @@
         .edit-btn { color: var(--primary-blue); }
         .delete-btn { color: #dc2626; }
 
-        /* ÁREA PRINCIPAL DA MANDALA (OCUPA 100% DA TELA) */
+        /* ÁREA PRINCIPAL DA MANDALA */
         #main-stage {
             flex: 1;
             display: flex;
@@ -304,7 +304,6 @@
             gap: 6px;
         }
 
-        /* BOTÃO HAMBÚRGUER ESTILO GEMINI */
         .menu-toggle-btn {
             background: #f1f5f9;
             border: 1px solid var(--border-color);
@@ -360,7 +359,7 @@
             cursor: pointer;
         }
 
-        /* PALCO DA MANDALA COM ROLAGEM DESTRAVADA */
+        /* PALCO DA MANDALA */
         #mandala-container {
             flex: 1;
             display: flex;
@@ -406,13 +405,14 @@
             font-weight: 800;
             color: var(--primary-blue);
         }
-        .modal-input {
+        .modal-input, .modal-select {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 13px;
             outline: none;
+            background: #fff;
         }
         .modal-textarea {
             width: 100%;
@@ -471,7 +471,7 @@
                 <i class="fa-solid fa-clock"></i>
             </li>
             <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
-                <span>Novo Mapa Natal</span>
+                <span>Novo Mapa</span>
                 <i class="fa-solid fa-user-plus"></i>
             </li>
             <li class="menu-item" onclick="abrirModalImportacaoTexto(); fecharSidebar();">
@@ -514,7 +514,6 @@
         <!-- BARRA SUPERIOR -->
         <div id="top-bar">
             <div class="top-bar-controls">
-                <!-- BOTÃO MENU HAMBÚRGUER ESTILO GEMINI -->
                 <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Abrir Menu Lateral">
                     <i class="fa-solid fa-bars"></i>
                 </button>
@@ -555,10 +554,22 @@
 
     </main>
 
-    <!-- MODAL DE NOVO MAPA NATAL -->
+    <!-- MODAL DE NOVO MAPA -->
     <div id="modalOverlay">
         <div class="modal-box">
-            <div class="modal-title">Novo Mapa Natal</div>
+            <div class="modal-title">Novo Mapa</div>
+            
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
+                <select id="modalTipoMapa" class="modal-select">
+                    <option value="Natal" selected>Natal</option>
+                    <option value="Pergunta">Pergunta</option>
+                    <option value="Evento">Evento</option>
+                    <option value="Eleição">Eleição</option>
+                    <option value="Trânsito">Trânsito</option>
+                </select>
+            </div>
+
             <div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
                 <input type="text" id="modalCodigo" class="modal-input" placeholder="Ex: 0011 (deixe em branco se não tiver)">
@@ -570,15 +581,15 @@
             <div style="display: flex; gap: 8px;">
                 <div style="flex: 1;">
                     <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
-                    <input type="text" id="modalData" class="modal-input" placeholder="11/06/1999">
+                    <input type="text" id="modalData" class="modal-input" placeholder="Ex: 11/06/1999">
                 </div>
                 <div style="flex: 1;">
                     <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
-                    <input type="text" id="modalHora" class="modal-input" placeholder="18:28" value="12:00">
+                    <input type="text" id="modalHora" class="modal-input" placeholder="Ex: 18:28">
                 </div>
             </div>
             <div style="position: relative;">
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento / Evento</label>
                 <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Mauá, SP)..." oninput="pesquisarCidadesAutocomplete(this.value, 'cityResultsList')">
                 <div id="cityResultsList" class="city-results"></div>
             </div>
@@ -594,6 +605,18 @@
         <div class="modal-box">
             <div class="modal-title">Editar Mapa</div>
             <input type="hidden" id="editModalId">
+            
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
+                <select id="editModalTipoMapa" class="modal-select">
+                    <option value="Natal">Natal</option>
+                    <option value="Pergunta">Pergunta</option>
+                    <option value="Evento">Evento</option>
+                    <option value="Eleição">Eleição</option>
+                    <option value="Trânsito">Trânsito</option>
+                </select>
+            </div>
+
             <div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
                 <input type="text" id="editModalCodigo" class="modal-input">
@@ -609,11 +632,11 @@
                 </div>
                 <div style="flex: 1;">
                     <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
-                    <input type="text" id="editModalHora" class="modal-input">
+                    <input type="text" id="editModalHora" class="modal-input" placeholder="Ex: 18:28">
                 </div>
             </div>
             <div style="position: relative;">
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento</label>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento / Evento</label>
                 <input type="text" id="editModalCidadeInput" class="modal-input" oninput="pesquisarCidadesAutocomplete(this.value, 'editCityResultsList', true)">
                 <div id="editCityResultsList" class="city-results"></div>
             </div>
