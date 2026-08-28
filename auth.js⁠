@@ -1,48 +1,85 @@
 // 1. Função de Login
 async function fazerLogin(email, password) {
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+  const errorEl = document.getElementById('loginErrorMsg');
+  try {
+    const client = window.supabaseClient || supabaseClient;
+    if (!client) {
+      throw new Error("Conexão com o Supabase não encontrada.");
+    }
 
-  if (error) {
-    const errorEl = document.getElementById('loginErrorMsg');
+    const { data, error } = await client.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      if (errorEl) {
+        errorEl.innerText = "Erro ao entrar: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        alert("Erro ao entrar: " + error.message);
+      }
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
     if (errorEl) {
-      errorEl.innerText = "Erro ao entrar: " + error.message;
+      errorEl.innerText = "Erro de execução: " + err.message;
       errorEl.style.display = 'block';
     } else {
-      alert("Erro ao entrar: " + error.message);
+      alert("Erro de execução: " + err.message);
     }
     return false;
   }
-  
-  return true;
 }
 
 // 2. Função de Cadastro
 async function criarConta(email, password) {
-  const { data, error } = await supabaseClient.auth.signUp({
-    email: email,
-    password: password
-  });
+  const errorEl = document.getElementById('loginErrorMsg');
+  try {
+    const client = window.supabaseClient || supabaseClient;
+    if (!client) {
+      throw new Error("Conexão com o Supabase não encontrada.");
+    }
 
-  if (error) {
-    const errorEl = document.getElementById('loginErrorMsg');
+    const { data, error } = await client.auth.signUp({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      if (errorEl) {
+        errorEl.innerText = "Erro ao cadastrar: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        alert("Erro ao cadastrar: " + error.message);
+      }
+      return false;
+    }
+
+    alert("Conta criada com sucesso!");
+    return true;
+  } catch (err) {
     if (errorEl) {
-      errorEl.innerText = "Erro ao cadastrar: " + error.message;
+      errorEl.innerText = "Erro de execução: " + err.message;
       errorEl.style.display = 'block';
     } else {
-      alert("Erro ao cadastrar: " + error.message);
+      alert("Erro de execução: " + err.message);
     }
     return false;
   }
-
-  alert("Conta criada com sucesso!");
-  return true;
 }
 
 // 3. Função de Logout
 async function fazerLogout() {
-  await supabaseClient.auth.signOut();
+  try {
+    const client = window.supabaseClient || supabaseClient;
+    if (client) {
+      await client.auth.signOut();
+    }
+  } catch (e) {
+    console.error(e);
+  }
   window.location.reload();
 }
