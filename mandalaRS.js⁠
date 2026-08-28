@@ -1,0 +1,264 @@
+/* ==========================================
+   MÓDULO DEDICADO: DUAL MANDALA REVOLUÇÃO SOLAR
+   Exibição lado a lado (Natal vs. Revolução Solar)
+   ========================================== */
+
+function renderDualMandalaRS(natalData, rsData, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container || !natalData || !rsData) return;
+
+  const width = 1920, height = 1150;
+  const cxNatal = 480, cxRS = 1440, cy = 680;
+  const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
+  const R_OuterLine = 399;
+  const goldColor = "#c59b27";
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${width}" height="${height}" fill="#ffffff"/>`;
+
+  // --- CABEÇALHO DUAL ---
+  svg += `<g id="dual-header">
+    <text x="50" y="100" font-family="'Cinzel', serif" font-size="28" font-weight="800" fill="#103b70">${escapeHtml(currentSubjectName)}</text>
+    <text x="50" y="130" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#64748b">Comparativo Lado a Lado • Zodíaco Tropical • Signos Inteiros</text>
+  </g>`;
+
+  // FUNÇÃO INTERNA PARA DESENHAR CADA MANDALA INDIVIDUALMENTE
+  function desenharMandalaUnica(dData, cxCenter, tituloMapa, subTituloData) {
+    let subSvg = '';
+
+    const ascAbs = dData.Ascendente.grau_absoluto;
+    const mcAbs = dData.MC ? dData.MC.grau_absoluto : (ascAbs + 270) % 360;
+    const nodeAbs = dData.Nodo_Norte ? dData.Nodo_Norte.grau_absoluto : 0;
+    const syzAbs = dData.Sizigia ? dData.Sizigia.grau_absoluto : 0;
+
+    const pObj = {};
+    PLANETS_DEF.forEach(p => {
+      const item = dData[p.key];
+      pObj[p.id] = { abs: item ? item.grau_absoluto : 0, symbol: p.symbol, name: p.name, retro: item ? Boolean(item.retro) : false };
+    });
+
+    const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
+    const sectText = isDay ? "Natividade Diurna" : "Natividade Noturna";
+    const lotes = calculateSevenLots(ascAbs, isDay, pObj);
+
+    // Rótulo da Mandala
+    subSvg += `<g transform="translate(${cxCenter}, 170)">
+      <text x="0" y="0" font-family="'Cinzel', serif" font-size="22" font-weight="800" fill="#103b70" text-anchor="middle">${escapeHtml(tituloMapa)}</text>
+      <text x="0" y="24" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#475569" text-anchor="middle">${escapeHtml(subTituloData)}</text>
+      <text x="0" y="44" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#9a6d18" text-anchor="middle">${sectText}</text>
+    </g>`;
+
+    // Centro / Aspectos
+    subSvg += `<circle cx="${cxCenter}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
+
+    const occupiedSigns = new Set();
+    PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
+    const occupiedArray = Array.from(occupiedSigns);
+    for (let i = 0; i < occupiedArray.length; i++) {
+      for (let j = i + 1; j < occupiedArray.length; j++) {
+        let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
+        if (diff > 6) diff = 12 - diff;
+        let col = null;
+        if (diff === 6) col = "#8b0000";
+        else if (diff === 4) col = "#0b2545";
+        else if (diff === 3) col = "#dc2626";
+        else if (diff === 2) col = "#2563eb";
+
+        if (col) {
+          const pt1 = polarToCart(cxCenter, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, ascAbs));
+          const pt2 = polarToCart(cxCenter, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, ascAbs));
+          subSvg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${col}" stroke-width="1.8" opacity="0.9"/>`;
+        }
+      }
+    }
+
+    // Círculos da estrutura
+    subSvg += `<circle cx="${cxCenter}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
+    subSvg += `<circle cx="${cxCenter}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
+    subSvg += `<circle cx="${cxCenter}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
+
+    // Eixos da Mandala
+    const ascPt = polarToCart(cxCenter, cy, R_OuterLine, eclToScreenAngle(ascAbs, ascAbs));
+    const dscPt = polarToCart(cxCenter, cy, R_OuterLine, (eclToScreenAngle(ascAbs, ascAbs) + 180) % 360);
+    subSvg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+
+    const mcPt = polarToCart(cxCenter, cy, R_OuterLine, eclToScreenAngle(mcAbs, ascAbs));
+    const icPt = polarToCart(cxCenter, cy, R_OuterLine, (eclToScreenAngle(mcAbs, ascAbs) + 180) % 360);
+    subSvg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+
+    for (let i = 0; i < 12; i++) {
+      const pt1 = polarToCart(cxCenter, cy, R.Aspects, eclToScreenAngle(i * 30, ascAbs));
+      const pt2 = polarToCart(cxCenter, cy, R_OuterLine, eclToScreenAngle(i * 30, ascAbs));
+      subSvg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
+    }
+
+    // Anel de Lotes e Pontos
+    const allRingItems = [
+      { label: "ASC", deg: ascAbs, color: "#000000", itemType: "axis" },
+      { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", itemType: "axis" },
+      { label: "MC", deg: mcAbs, color: "#000000", itemType: "axis" },
+      { label: "IC", deg: (mcAbs + 180) % 360, color: "#000000", itemType: "axis" }
+    ];
+
+    if (nodeAbs > 0) {
+      allRingItems.push({ label: "☊", deg: nodeAbs, color: "#0d9488", itemType: "node" });
+      allRingItems.push({ label: "☋", deg: (nodeAbs + 180) % 360, color: "#0d9488", itemType: "node" });
+    }
+    if (syzAbs > 0) {
+      allRingItems.push({ label: "SIZ", deg: syzAbs, color: "#103b70", itemType: "syzygy" });
+    }
+
+    lotes.forEach(lot => {
+      allRingItems.push({ label: lot.label, deg: lot.deg, color: goldColor, itemType: "lot", lotType: lot.type, sym: lot.sym });
+    });
+
+    allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, ascAbs));
+    aplicarDesvioLateralArco(allRingItems, 7.0);
+
+    const raioFixoAnel = 185;
+    allRingItems.forEach(item => {
+      if (item.itemType !== "axis") {
+        const p1 = polarToCart(cxCenter, cy, raioFixoAnel + 12, item.aShift);
+        const p2 = polarToCart(cxCenter, cy, R.SignSector, item.aScreen);
+        subSvg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.itemType === 'lot' ? goldColor : item.color}" stroke-width="1.5"/>`;
+      }
+
+      const pTxt = polarToCart(cxCenter, cy, raioFixoAnel, item.aShift);
+
+      if (item.itemType === "syzygy") {
+        subSvg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
+          <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+          <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
+          <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
+          <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
+          <text x="0" y="21" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        </g>`;
+      } else if (item.itemType === "node") {
+        subSvg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
+          <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+          <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        </g>`;
+      } else if (item.itemType === "axis") {
+        subSvg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
+          <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
+          <text x="0" y="3.5" font-size="9" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
+          <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        </g>`;
+      } else if (item.itemType === "lot") {
+        subSvg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">`;
+        if (item.lotType === "fortune") {
+          subSvg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
+        } else if (item.lotType === "spirit") {
+          subSvg += `<text x="0" y="7" font-size="22" font-weight="700" font-family="'Cinzel', serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">&#x03A6;</text>`;
+        } else {
+          subSvg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
+        }
+        subSvg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      }
+    });
+
+    // Signos e Números das Casas
+    const refSignIdx = Math.floor(ascAbs / 30);
+    for (let i = 0; i < 12; i++) {
+      const aMid = eclToScreenAngle((i * 30) + 15, ascAbs);
+      const pNum = polarToCart(cxCenter, cy, 122, aMid);
+      subSvg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+
+      const pSym = polarToCart(cxCenter, cy, 156, aMid);
+      subSvg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
+    }
+
+    // Dodecatemórias
+    for (let i = 0; i < 12; i++) {
+      for (let d = 0; d < 12; d++) {
+        const pt1 = polarToCart(cxCenter, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), ascAbs));
+        const pt2 = polarToCart(cxCenter, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), ascAbs));
+        subSvg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
+        const pDod = polarToCart(cxCenter, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, ascAbs));
+        subSvg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
+      }
+    }
+
+    // Termos Egípcios
+    for (let s = 0; s < 12; s++) {
+      let prev = 0;
+      EGYPTIAN_TERMS[s].forEach(term => {
+        const pt1 = polarToCart(cxCenter, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, ascAbs));
+        const pt2 = polarToCart(cxCenter, cy, R.Termos, eclToScreenAngle((s * 30) + prev, ascAbs));
+        subSvg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
+        const pTerm = polarToCart(cxCenter, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, ascAbs));
+        subSvg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="#103b70" text-anchor="middle">${term.p}</text>`;
+        prev = term.deg;
+      });
+    }
+
+    // Dentes de Graus
+    for (let deg = 0; deg < 360; deg++) {
+      const aScreen = eclToScreenAngle(deg, ascAbs);
+      const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
+      const p1 = polarToCart(cxCenter, cy, R.Termos, aScreen);
+      const p2 = polarToCart(cxCenter, cy, R.Termos - tickLen, aScreen);
+      subSvg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
+    }
+
+    // Planetas
+    const planetList = PLANETS_DEF.map(p => ({
+      ...p,
+      deg: pObj[p.id].abs,
+      retro: pObj[p.id].retro,
+      aScreen: eclToScreenAngle(pObj[p.id].abs, ascAbs)
+    }));
+
+    aplicarDesvioLateralArco(planetList, 8.5);
+    const pR = 295;
+
+    planetList.forEach(p => {
+      const p1 = polarToCart(cxCenter, cy, R.Termos, p.aScreen);
+      const p2 = polarToCart(cxCenter, cy, pR - 10, p.aShift);
+      subSvg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#1d5fa8" stroke-width="1.5"/>`;
+
+      const pPos = polarToCart(cxCenter, cy, pR, p.aShift);
+      let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+
+      subSvg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <text x="0" y="4" font-size="21" font-weight="bold" fill="#103b70" text-anchor="middle">${p.symbol}</text>
+        <text x="0" y="19" font-size="10" font-weight="bold" fill="#334155" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(p.deg)}${retroSymbol}</text>
+      </g>`;
+    });
+
+    return subSvg;
+  }
+
+  // DESENHA A MANDALA 1 (NATAL - ESQUERDA)
+  svg += desenharMandalaUnica(natalData, cxNatal, "Mapa Natal", natalData.dataFormatada || "Nascimento");
+
+  // DESENHA A MANDALA 2 (REVOLUÇÃO SOLAR - DIREITA)
+  svg += desenharMandalaUnica(rsData, cxRS, `Revolução Solar ${rsData.anoAlvo || ''}`, rsData.dataFormatada || "Retorno Solar Exato");
+
+  svg += `</svg>`;
+
+  // RENDERIZAÇÃO NO CANVAS DE ALTA RESOLUÇÃO
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const blobURL = URL.createObjectURL(svgBlob);
+
+  const imgLoader = new Image();
+  imgLoader.onload = function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1920;
+    canvas.height = 1150;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1920, 1150);
+    ctx.drawImage(imgLoader, 0, 0, 1920, 1150);
+
+    const pngUrl = canvas.toDataURL('image/png');
+    container.innerHTML = `<img src="${pngUrl}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);" alt="Mandala Dupla RS">`;
+    URL.revokeObjectURL(blobURL);
+  };
+  imgLoader.src = blobURL;
+}
+
+/* EXPOSIÇÃO GLOBAL DO RENDERIZADOR DUAL */
+if (typeof window !== 'undefined') {
+  window.renderDualMandalaRS = renderDualMandalaRS;
+}
