@@ -570,11 +570,11 @@ function renderMandala() {
   ];
 
   if (nodeAbs > 0) {
-    allRingItems.push({ label: "☊", deg: nodeAbs, color: "#0d9488", itemType: "node" });
-    allRingItems.push({ label: "☋", deg: (nodeAbs + 180) % 360, color: "#0d9488", itemType: "node" });
+    allRingItems.push({ label: "☊", deg: nodeAbs, color: "#000000", itemType: "node" });
+    allRingItems.push({ label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", itemType: "node" });
   }
   if (syzAbs > 0) {
-    allRingItems.push({ label: "SIZ", deg: syzAbs, color: "#103b70", itemType: "syzygy" });
+    allRingItems.push({ label: "SIZ", deg: syzAbs, color: "#000000", itemType: "syzygy" });
   }
 
   lotes.forEach(lot => {
@@ -601,12 +601,12 @@ function renderMandala() {
         <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
         <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
         <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.itemType === "node") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.itemType === "axis") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
@@ -617,13 +617,13 @@ function renderMandala() {
     } else if (item.itemType === "lot") {
       svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">`;
       if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="7" font-size="22" font-weight="700" font-family="'Cinzel', serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">&#x03A6;</text>`;
+        svg += `<text x="0" y="7" font-size="22" font-weight="700" font-family="'Cinzel', serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">&#x03A6;</text>`;
       } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
       }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
 
@@ -654,7 +654,7 @@ function renderMandala() {
       const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
       svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
       const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-      svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="#103b70" text-anchor="middle">${term.p}</text>`;
+      svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.p}</text>`;
       prev = term.deg;
     });
   }
