@@ -63,7 +63,7 @@ const PLANETS_DEF = [
   { id: "Saturn", name: "Saturno", symbol: "♄", key: "Saturno" }
 ];
 
-/* DEFINIÇÕES VETORIAIS 3D DOS 7 PLANETAS TRADICIONAIS */
+/* DEFINIÇÕES VETORIAIS 3D DOS 7 PLANETAS */
 const PLANET_3D_SVGS = {
   Sun: `
     <g>
@@ -206,11 +206,6 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
     { key: "jupiter", label: "VIT", type: "jupiter", sym: "♃", deg: vicAbs },
     { key: "saturn", label: "NÊM", type: "saturn", sym: "♄", deg: nemAbs }
   ];
-}
-
-function angleDist(a1, a2) {
-  let diff = Math.abs(a1 - a2) % 360;
-  return diff > 180 ? 360 - diff : diff;
 }
 
 function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
@@ -724,71 +719,6 @@ function renderMandala() {
     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
   }
 
-  const allRingItems = [
-    { label: "ASC", deg: ascAbs, color: "#000000", itemType: "axis" },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", itemType: "axis" },
-    { label: "MC", deg: mcAbs, color: "#000000", itemType: "axis" },
-    { label: "IC", deg: (mcAbs + 180) % 360, color: "#000000", itemType: "axis" }
-  ];
-
-  if (nodeAbs > 0) {
-    allRingItems.push({ label: "☊", deg: nodeAbs, color: "#000000", itemType: "node" });
-    allRingItems.push({ label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", itemType: "node" });
-  }
-  if (syzAbs > 0) {
-    allRingItems.push({ label: "SIZ", deg: syzAbs, color: "#000000", itemType: "syzygy" });
-  }
-
-  lotes.forEach(lot => {
-    allRingItems.push({ label: lot.label, deg: lot.deg, color: goldColor, itemType: "lot", lotType: lot.type, sym: lot.sym });
-  });
-
-  allRingItems.forEach(item => item.aScreen = eclToScreenAngle(item.deg, house1RefAbs));
-  aplicarDesvioLateralArco(allRingItems, 7.0);
-
-  const raioFixoAnel = 185;
-
-  allRingItems.forEach(item => {
-    if (item.itemType !== "axis") {
-      const p1 = polarToCart(cx, cy, raioFixoAnel + 12, item.aShift);
-      const p2 = polarToCart(cx, cy, R.SignSector, item.aScreen);
-      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.itemType === 'lot' ? goldColor : item.color}" stroke-width="1.5"/>`;
-    }
-
-    const pTxt = polarToCart(cx, cy, raioFixoAnel, item.aShift);
-
-    if (item.itemType === "syzygy") {
-      svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
-        <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
-        <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
-        <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
-        <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.itemType === "node") {
-      svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
-        <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.itemType === "axis") {
-      svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">
-        <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
-        <text x="0" y="3.5" font-size="9" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.itemType === "lot") {
-      svg += `<g transform="translate(${pTxt.x}, ${pTxt.y})">`;
-      if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
-      } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="7" font-size="22" font-weight="700" font-family="'Cinzel', serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">&#x03A6;</text>`;
-      } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
-      }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
-    }
-  });
-
   const refSignIdx = Math.floor(house1RefAbs / 30);
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
@@ -803,7 +733,7 @@ function renderMandala() {
     for (let d = 0; d < 12; d++) {
       const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
+      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
       const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
       svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
     }
@@ -837,35 +767,104 @@ function renderMandala() {
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  const planetList = PLANETS_DEF.map(p => ({
-    ...p,
-    deg: pObj[p.id].abs,
-    retro: pObj[p.id].retro,
-    aScreen: eclToScreenAngle(pObj[p.id].abs, house1RefAbs)
-  }));
+  /* UNIFICANDO TODOS OS ITENS DA ÓRBITA EXTERNA (Planetas + Eixos + Nodos + Sizígia + Lotes) */
+  const outerRingItems = [];
 
-  aplicarDesvioLateralArco(planetList, 8.5);
+  /* 1. Adiciona os 7 Planetas */
+  PLANETS_DEF.forEach(p => {
+    const item = data[p.key];
+    const absDeg = item ? item.grau_absoluto : 0;
+    outerRingItems.push({
+      type: "planet",
+      id: p.id,
+      symbol: p.symbol,
+      deg: absDeg,
+      retro: item ? Boolean(item.retro) : false,
+      aScreen: eclToScreenAngle(absDeg, house1RefAbs)
+    });
+  });
+
+  /* 2. Adiciona os Ângulos */
+  outerRingItems.push({ type: "axis", label: "ASC", deg: ascAbs, color: "#000000", aScreen: eclToScreenAngle(ascAbs, house1RefAbs) });
+  outerRingItems.push({ type: "axis", label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((ascAbs + 180) % 360, house1RefAbs) });
+  outerRingItems.push({ type: "axis", label: "MC", deg: mcAbs, color: "#000000", aScreen: eclToScreenAngle(mcAbs, house1RefAbs) });
+  outerRingItems.push({ type: "axis", label: "IC", deg: (mcAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((mcAbs + 180) % 360, house1RefAbs) });
+
+  /* 3. Adiciona Nodos */
+  if (nodeAbs > 0) {
+    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+  }
+
+  /* 4. Adiciona Sizígia */
+  if (syzAbs > 0) {
+    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+  }
+
+  /* 5. Adiciona os 7 Lotes */
+  lotes.forEach(lot => {
+    outerRingItems.push({
+      type: "lot",
+      label: lot.label,
+      lotType: lot.type,
+      sym: lot.sym,
+      deg: lot.deg,
+      color: goldColor,
+      aScreen: eclToScreenAngle(lot.deg, house1RefAbs)
+    });
+  });
+
+  /* APLICA O DESVIO LATERAL GLOBAL PARA EVITAR QUALQUER SOBREPOSIÇÃO NA BORDA */
+  aplicarDesvioLateralArco(outerRingItems, 7.5);
 
   const pR = 300;
 
-  planetList.forEach(p => {
-    /* Linha conectora suave entre o anel dos termos e o planeta */
-    const p1 = polarToCart(cx, cy, R.Termos, p.aScreen);
-    const p2 = polarToCart(cx, cy, pR - 19, p.aShift);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+  /* RENDERIZAÇÃO DE TODOS OS ITENS NA ÓRBITA EXTERNA */
+  outerRingItems.forEach(item => {
+    const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
+    const p2 = polarToCart(cx, cy, pR - 19, item.aShift);
+    const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
 
-    const pPos = polarToCart(cx, cy, pR, p.aShift);
-    let retroSymbol = p.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+    const pPos = polarToCart(cx, cy, pR, item.aShift);
 
-    /* Injeção da esfera 3D vetorial com escala otimizada para o anel */
-    const planetSvgContent = PLANET_3D_SVGS[p.id] || '';
-
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <g transform="scale(0.36) translate(-50, -50)">
-        ${planetSvgContent}
-      </g>
-      <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(p.deg)}${retroSymbol}</text>
-    </g>`;
+    if (item.type === "planet") {
+      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
+      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
+        <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+      </g>`;
+    } else if (item.type === "axis") {
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
+        <text x="0" y="3.5" font-size="9" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+      </g>`;
+    } else if (item.type === "node") {
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+      </g>`;
+    } else if (item.type === "syzygy") {
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+        <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
+        <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
+        <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
+        <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+      </g>`;
+    } else if (item.type === "lot") {
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
+      if (item.lotType === "fortune") {
+        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
+      } else if (item.lotType === "spirit") {
+        svg += `<text x="0" y="7" font-size="22" font-weight="700" font-family="'Cinzel', serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">&#x03A6;</text>`;
+      } else {
+        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
+      }
+      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+    }
   });
 
   svg += `</svg>`;
