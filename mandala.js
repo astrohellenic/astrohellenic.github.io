@@ -274,7 +274,7 @@ function abrirModalNovoMapa() {
   document.getElementById('modalCodigo').value = "";
   document.getElementById('modalNome').value = "";
   document.getElementById('modalData').value = "";
-  document.getElementById('modalHora').value = "12:00";
+  document.getElementById('modalHora').value = "";
   document.getElementById('modalCidadeInput').value = "";
   document.getElementById('cityResultsList').style.display = "none";
   document.getElementById('modalOverlay').style.display = "flex";
