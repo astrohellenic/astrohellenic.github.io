@@ -515,21 +515,21 @@ function injetarBotaoRotacaoNaBarraSuperior() {
     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${symbol}</text></svg>`;
   }
 
-  btnContainer.innerHTML = `
-    <div style="position: relative; width: 32px; height: 32px; background: #ffffff; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
-      <div style="pointer-events: none; display: flex; align-items: center; justify-content: center;">
+    btnContainer.innerHTML = `
+    <div style="position: relative; display: inline-block;">
+      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 32px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
         ${iconContent}
+      </button>
+      <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
+        <div onclick="alternarRotacaoCasa1('ASC')" style="padding: 6px 0; cursor: pointer; text-align: center; font-size: 11px; font-weight: 800; color: #103b70;">ASC</div>
+        <div onclick="alternarRotacaoCasa1('fortune')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg></div>
+        <div onclick="alternarRotacaoCasa1('spirit')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg></div>
+        <div onclick="alternarRotacaoCasa1('mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">☿</text></svg></div>
+        <div onclick="alternarRotacaoCasa1('venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♀</text></svg></div>
+        <div onclick="alternarRotacaoCasa1('mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♂</text></svg></div>
+        <div onclick="alternarRotacaoCasa1('jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♃</text></svg></div>
+        <div onclick="alternarRotacaoCasa1('saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♄</text></svg></div>
       </div>
-      <select onchange="alternarRotacaoCasa1(this.value)" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0; cursor: pointer;">
-        <option value="ASC" ${selectedHouse1Lot === 'ASC' ? 'selected' : ''}>ASC</option>
-        <option value="fortune" ${selectedHouse1Lot === 'fortune' ? 'selected' : ''}>⊗</option>
-        <option value="spirit" ${selectedHouse1Lot === 'spirit' ? 'selected' : ''}>Φ</option>
-        <option value="mercury" ${selectedHouse1Lot === 'mercury' ? 'selected' : ''}>☿</option>
-        <option value="venus" ${selectedHouse1Lot === 'venus' ? 'selected' : ''}>♀</option>
-        <option value="mars" ${selectedHouse1Lot === 'mars' ? 'selected' : ''}>♂</option>
-        <option value="jupiter" ${selectedHouse1Lot === 'jupiter' ? 'selected' : ''}>♃</option>
-        <option value="saturn" ${selectedHouse1Lot === 'saturn' ? 'selected' : ''}>♄</option>
-      </select>
     </div>
   `;
 }
@@ -879,7 +879,7 @@ function renderMandala() {
       if (item.lotType === "fortune") {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+        svg += `<text x="0" y="5" font-size="40" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
       }
