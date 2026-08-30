@@ -859,7 +859,7 @@ function renderMandala() {
       if (item.lotType === "fortune") {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="7" font-size="22" font-weight="700" font-family="'Cinzel', serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">Φ</text>`;
+        svg += `<text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
       }
