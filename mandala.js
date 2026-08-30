@@ -471,7 +471,7 @@ async function executarCalculo() {
     };
 
     renderMandala();
-
+renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
   } catch (err) {
     document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
   }
