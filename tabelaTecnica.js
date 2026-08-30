@@ -1,5 +1,5 @@
 /* ==========================================
-   PAINEL TÉCNICO: POSIÇÕES E ASPECTOS
+   PAINEL TÉCNICO: POSIÇÕES E ASPECTOS (OTIMIZADO)
    ========================================== */
 
 function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-container") {
@@ -9,7 +9,6 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
   const ascAbs = dataCalculada.Ascendente.grau_absoluto;
   const isDay = (((dataCalculada.Sol ? dataCalculada.Sol.grau_absoluto : 0) - ascAbs + 360) % 360) >= 180;
 
-  // Reconstrução rápida das posições para os Lotes
   const pObj = {
     Sun: { abs: dataCalculada.Sol ? dataCalculada.Sol.grau_absoluto : 0 },
     Moon: { abs: dataCalculada.Lua ? dataCalculada.Lua.grau_absoluto : 0 },
@@ -22,26 +21,24 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
 
   const lotesCalculados = calculateSevenLots(ascAbs, isDay, pObj);
 
-  // Lista consolidada de todos os elementos do Painel
   const elementos = [
-    { id: "Sun", nome: "Sol", tipo: "planet", deg: pObj.Sun.abs, retro: false },
-    { id: "Moon", nome: "Lua", tipo: "planet", deg: pObj.Moon.abs, retro: false },
-    { id: "Mercury", nome: "Mercúrio", tipo: "planet", deg: pObj.Mercury.abs, retro: Boolean(dataCalculada.Mercúrio?.retro) },
-    { id: "Venus", nome: "Vênus", tipo: "planet", deg: pObj.Venus.abs, retro: Boolean(dataCalculada.Vênus?.retro) },
-    { id: "Mars", nome: "Marte", tipo: "planet", deg: pObj.Mars.abs, retro: Boolean(dataCalculada.Marte?.retro) },
-    { id: "Jupiter", nome: "Júpiter", tipo: "planet", deg: pObj.Jupiter.abs, retro: Boolean(dataCalculada.Jupiter?.retro) },
-    { id: "Saturn", nome: "Saturno", tipo: "planet", deg: pObj.Saturn.abs, retro: Boolean(dataCalculada.Saturno?.retro) },
-    { id: "NodeN", nome: "Nodo Norte", tipo: "node", sym: "☊", deg: dataCalculada.Nodo_Norte ? dataCalculada.Nodo_Norte.grau_absoluto : 0 },
-    { id: "Syzygy", nome: "Sizígia", tipo: "syzygy", sym: "SIZ", deg: dataCalculada.Sizigia ? dataCalculada.Sizigia.grau_absoluto : 0 }
+    { id: "Sun", nome: "Sol", tipo: "planet", sym: "☉", color: "#d97706", deg: pObj.Sun.abs, retro: false },
+    { id: "Moon", nome: "Lua", tipo: "planet", sym: "☽", color: "#475569", deg: pObj.Moon.abs, retro: false },
+    { id: "Mercury", nome: "Mercúrio", tipo: "planet", sym: "☿", color: "#92400e", deg: pObj.Mercury.abs, retro: Boolean(dataCalculada.Mercúrio?.retro) },
+    { id: "Venus", nome: "Vênus", tipo: "planet", sym: "♀", color: "#b45309", deg: pObj.Venus.abs, retro: Boolean(dataCalculada.Vênus?.retro) },
+    { id: "Mars", nome: "Marte", tipo: "planet", sym: "♂", color: "#b91c1c", deg: pObj.Mars.abs, retro: Boolean(dataCalculada.Marte?.retro) },
+    { id: "Jupiter", nome: "Júpiter", tipo: "planet", sym: "♃", color: "#a97142", deg: pObj.Jupiter.abs, retro: Boolean(dataCalculada.Jupiter?.retro) },
+    { id: "Saturn", nome: "Saturno", tipo: "planet", sym: "♄", color: "#422006", deg: pObj.Saturn.abs, retro: Boolean(dataCalculada.Saturno?.retro) },
+    { id: "NodeN", nome: "Nodo Norte", tipo: "node", sym: "☊", color: "#000000", deg: dataCalculada.Nodo_Norte ? dataCalculada.Nodo_Norte.grau_absoluto : 0 },
+    { id: "Syzygy", nome: "Sizígia", tipo: "syzygy", sym: "SIZ", color: "#000000", deg: dataCalculada.Sizigia ? dataCalculada.Sizigia.grau_absoluto : 0 }
   ];
 
   lotesCalculados.forEach(l => {
-    elementos.push({ id: l.key, nome: l.label, tipo: "lot", lotType: l.type, sym: l.sym, deg: l.deg });
+    elementos.push({ id: l.key, nome: l.label, tipo: "lot", lotType: l.type, sym: l.sym, color: "#c59b27", deg: l.deg });
   });
 
-  // 1. Tabela de Posições Detalhada
   let html = `
-  <div style="max-width: 960px; margin: 0 auto; font-family: 'Montserrat', sans-serif; color: #0f172a;">
+  <div style="max-width: 960px; margin: 40px auto; font-family: 'Montserrat', sans-serif; color: #0f172a; padding: 0 10px;">
     <h3 style="font-family: 'Cinzel', serif; color: #103b70; font-size: 18px; font-weight: 700; margin-bottom: 12px; border-bottom: 2px solid #c59b27; padding-bottom: 4px;">
       Posicionamentos e Micro-domínios
     </h3>
@@ -62,7 +59,6 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
     const degInSign = el.deg % 30;
     const signName = SIGNS[signIdx].name;
 
-    // Regente do Termo Egípcio
     let termoRegente = "-";
     const termosDoSigno = EGYPTIAN_TERMS[signIdx];
     for (let t of termosDoSigno) {
@@ -72,7 +68,6 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
       }
     }
 
-    // Cálculo exato da Dodecatemória
     const dodecAbs = (el.deg * 12) % 360;
     const dodecSignIdx = Math.floor(dodecAbs / 30);
     const dodecSignName = SIGNS[dodecSignIdx].name;
@@ -81,8 +76,8 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
 
     html += `
       <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-          ${renderIconePonto(el)}
+        <td style="padding: 10px; font-weight: 700;">
+          <span style="color: ${el.color}; font-size: 16px; margin-right: 6px;">${getSimboloExibicao(el)}</span>
           <span>${el.nome}</span>
         </td>
         <td style="padding: 10px;">${signName} ${formatDegMin(el.deg)}${retroTag}</td>
@@ -96,7 +91,6 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
       </table>
     </div>
 
-    <!-- 2. Matriz de Aspectos / Visibilidade por Signo Inteiro -->
     <h3 style="font-family: 'Cinzel', serif; color: #103b70; font-size: 18px; font-weight: 700; margin-bottom: 12px; border-bottom: 2px solid #c59b27; padding-bottom: 4px;">
       Matriz de Visibilidade (*Theoria*)
     </h3>
@@ -107,7 +101,7 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
             <th style="padding: 6px; background: #f8fafc; border: 1px solid #cbd5e1;"></th>`;
 
   elementos.forEach(el => {
-    html += `<th style="padding: 6px; background: #f8fafc; border: 1px solid #cbd5e1;" title="${el.nome}">${renderIconePonto(el, 18)}</th>`;
+    html += `<th style="padding: 6px; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 14px; color: ${el.color};" title="${el.nome}">${getSimboloExibicao(el)}</th>`;
   });
 
   html += `</tr>
@@ -116,8 +110,8 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
 
   elementos.forEach((elLinha, i) => {
     html += `<tr>
-      <td style="padding: 6px; background: #f8fafc; border: 1px solid #cbd5e1; font-weight: 700;" title="${elLinha.nome}">
-        ${renderIconePonto(elLinha, 18)}
+      <td style="padding: 6px; background: #f8fafc; border: 1px solid #cbd5e1; font-weight: 700; font-size: 14px; color: ${elLinha.color};" title="${elLinha.nome}">
+        ${getSimboloExibicao(elLinha)}
       </td>`;
 
     elementos.forEach((elColuna, j) => {
@@ -156,22 +150,11 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
   container.innerHTML = html;
 }
 
-// Auxiliar para desenhar os ícones da tabela com o mesmo SVG da mandala
-function renderIconePonto(el, size = 22) {
-  if (el.tipo === "planet") {
-    const svgContent = PLANET_3D_SVGS[el.id] || "";
-    return `<div style="width: ${size}px; height: ${size}px; display: inline-block;">
-      <svg viewBox="0 0 100 100" width="${size}" height="${size}">${svgContent}</svg>
-    </div>`;
-  } else if (el.tipo === "lot") {
-    if (el.lotType === "fortune") {
-      return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg>`;
-    } else if (el.lotType === "spirit") {
-      return `<span style="font-family: 'Montserrat', sans-serif; font-size: ${size - 2}px; font-weight: bold;">Φ</span>`;
-    } else {
-      return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${el.sym}</text></svg>`;
-    }
-  } else {
-    return `<span style="font-size: ${size - 4}px; font-weight: bold;">${el.sym || el.nome}</span>`;
+function getSimboloExibicao(el) {
+  if (el.tipo === "lot") {
+    if (el.lotType === "fortune") return "⊗";
+    if (el.lotType === "spirit") return "Φ";
+    return el.sym || "⊗";
   }
+  return el.sym || "•";
 }
