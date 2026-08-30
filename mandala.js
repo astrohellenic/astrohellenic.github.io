@@ -495,11 +495,24 @@ function injetarBotaoRotacaoNaBarraSuperior() {
     parentContainer.appendChild(btnContainer);
   }
 
+  /* RENDERIZA O MINI-SVG EXATAMENTE IGUAL AO DESENHO DO LOTE NA MANDALA */
+  let iconContent = '';
+  if (selectedHouse1Lot === 'ASC') {
+    iconContent = `<span style="font-size: 11px; font-weight: 800; color: #103b70;">ASC</span>`;
+  } else if (selectedHouse1Lot === 'fortune') {
+    iconContent = `<svg width="22" height="22" viewBox="-11 -11 22 22"><circle cx="0" cy="0" r="9" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-6" y1="-6" x2="6" y2="6" stroke="#000000" stroke-width="1.5"/><line x1="6" y1="-6" x2="-6" y2="6" stroke="#000000" stroke-width="1.5"/></svg>`;
+  } else if (selectedHouse1Lot === 'spirit') {
+    iconContent = `<svg width="22" height="22" viewBox="-11 -11 22 22"><text x="0" y="5" font-size="16" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle">Φ</text></svg>`;
+  } else {
+    const syms = { mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃', saturn: '♄' };
+    iconContent = `<svg width="22" height="22" viewBox="-11 -11 22 22"><circle cx="0" cy="0" r="9" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" font-family="sans-serif" fill="#000000" text-anchor="middle">${syms[selectedHouse1Lot] || ''}</text></svg>`;
+  }
+
   btnContainer.innerHTML = `
     <div style="position: relative; width: 32px; height: 32px; background: #ffffff; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
-      <span style="font-size: 11px; font-weight: 800; color: #103b70; pointer-events: none;">
-        ${selectedHouse1Lot === 'ASC' ? 'ASC' : (selectedHouse1Lot === 'fortune' ? '⊗' : (selectedHouse1Lot === 'spirit' ? 'Φ' : (selectedHouse1Lot === 'venus' ? '♀' : (selectedHouse1Lot === 'mercury' ? '☿' : (selectedHouse1Lot === 'mars' ? '♂' : (selectedHouse1Lot === 'jupiter' ? '♃' : '♄'))))))}
-      </span>
+      <div style="pointer-events: none; display: flex; align-items: center; justify-content: center;">
+        ${iconContent}
+      </div>
       <select onchange="alternarRotacaoCasa1(this.value)" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0; cursor: pointer;">
         <option value="ASC" ${selectedHouse1Lot === 'ASC' ? 'selected' : ''}>ASC</option>
         <option value="fortune" ${selectedHouse1Lot === 'fortune' ? 'selected' : ''}>⊗ Fortuna</option>
@@ -513,6 +526,7 @@ function injetarBotaoRotacaoNaBarraSuperior() {
     </div>
   `;
 }
+
 
 function alternarRotacaoCasa1(val) {
   selectedHouse1Lot = val;
@@ -859,7 +873,7 @@ function renderMandala() {
       if (item.lotType === "fortune") {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+        svg += `<text x="0" y="5" font-size="22" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
       }
