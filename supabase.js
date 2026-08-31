@@ -427,7 +427,9 @@ async function carregarMapasDoBanco(nomePasta) {
         horaNascimento: item.hora_nascimento,
         cidade: item.cidade,
         latitude: item.latitude,
-        longitude: item.longitude
+        longitude: item.longitude,
+        whatsapp: item.whatsapp || null,
+        email: item.email || null
       }));
       renderListaMapas(cachedFolderData);
     }
