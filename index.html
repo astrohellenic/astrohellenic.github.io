@@ -21,27 +21,63 @@
     <style>
 
 @media print {
-  /* Oculta elementos desnecessários na impressão, como o botão superior */
-  header, button, .no-print {
+  /* Oculta elementos de navegação e botões da interface na hora de imprimir */
+  header, button, .no-print, nav, aside, #top-bar, #loginOverlay {
     display: none !important;
   }
 
-  /* Força o corpo da página a ocupar largura total e remove margens excessivas */
-  body {
+  /* Reseta fundo e margens para A4 limpo */
+  body, html {
     background: #ffffff !important;
     color: #000000 !important;
-    font-size: 11pt;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10pt;
   }
 
-  /* Evita que blocos importantes e tabelas sejam cortados no meio por uma quebra de página */
+  /* Isola e centraliza a mandala na primeira página, limitando o tamanho para não estourar */
+  #mandala-container {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    max-height: 18cm !important;
+    margin: 0 auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+  }
+
+  #mandala-container img, #mandala-container svg {
+    max-width: 100% !important;
+    max-height: 17cm !important;
+    object-fit: contain !important;
+  }
+
+  #loadingSpinner {
+    display: none !important;
+  }
+
+  /* Garante que o painel técnico comece limpo na segunda página */
+  #painel-tecnico-container {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  /* Evita que linhas de tabelas ou títulos fiquem retalhados entre páginas */
   table, tr, td, th, .tabela-enxuta, h3 {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-  }
-
-  /* Força a mandala e as tabelas a iniciarem em uma página limpa se necessário */
-  .mandala-container {
-    page-break-after: auto;
   }
 }
         
