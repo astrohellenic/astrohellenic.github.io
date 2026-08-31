@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* TESTE DE LIBERAÇÃO DE ALTURA E ROLAGEM */
+ /* TESTE DE FORÇAMENTO DE COLUNA ÚNICA */
 html, body {
   height: auto !important;
   min-height: 100% !important;
@@ -27,29 +27,27 @@ html, body {
   overflow-x: auto !important;
 }
 
+/* Força o container principal a empilhar os elementos em linha vertical */
+main, body, .app-container, .content-container {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
 #mandala-container {
   display: block !important;
-  min-height: 500px !important;
   width: 100% !important;
-  margin-bottom: 20px !important;
+  max-width: 960px !important;
+  margin: 0 auto 20px auto !important;
 }
 
 #painel-tecnico-container {
   display: block !important;
   width: 100% !important;
+  max-width: 960px !important;
+  margin: 0 auto !important;
   clear: both !important;
 }
-
-@media print {
-  html, body {
-    height: auto !important;
-    overflow: visible !important;
-  }
-  #mandala-container, #painel-tecnico-container {
-    page-break-inside: avoid;
-  }
-}
-
         :root {
             --bg-main: #f8fafc;
             --bg-sidebar: #ffffff;
