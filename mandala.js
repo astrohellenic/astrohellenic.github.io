@@ -906,21 +906,33 @@ function renderMandala() {
     container.innerHTML = `<img src="${lastRenderedPngUrl}" alt="Mandala Astrológica">`;
     URL.revokeObjectURL(blobURL);
      
-       try {
-      console.log("Iniciando renderização do painel técnico...");
-      let containerTest = document.getElementById('painel-tecnico-container');
-      if (!containerTest) {
-        containerTest = document.createElement('div');
-        containerTest.id = 'painel-tecnico-container';
-        document.body.appendChild(containerTest);
+           try {
+      // Localiza o container da mandala
+      const mandalaElem = document.getElementById('mandala-container');
+      
+      // Procura o container da tabela técnica
+      let painelElem = document.getElementById('painel-tecnico-container');
+      
+      // Se não existir, cria o container LOGO ABAIXO da mandala
+      if (!painelElem) {
+        painelElem = document.createElement('div');
+        painelElem.id = 'painel-tecnico-container';
+        if (mandalaElem && mandalaElem.parentNode) {
+          mandalaElem.parentNode.insertBefore(painelElem, mandalaElem.nextSibling);
+        } else {
+          document.body.appendChild(painelElem);
+        }
       }
+
+      // Garante que a rolagem da página não seja bloqueada por CSS
+      document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "auto";
+
       if (typeof renderPainelTecnico === 'function') {
         renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
-      } else {
-        containerTest.innerHTML = "<p style='color:red; text-align:center;'>Erro: Função renderPainelTecnico não encontrada no escopo.</p>";
       }
     } catch (err) {
-      alert("Erro ao chamar painel: " + err.message);
+      console.error("Erro ao renderizar painel técnico:", err);
     }
   };
   imgLoader.src = blobURL;
