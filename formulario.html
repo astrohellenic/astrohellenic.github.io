@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro para Mapa Astral</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    .form-card { background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 420px; border: 1px solid #e2e8f0; }
+    h2 { margin: 0 0 20px 0; font-size: 18px; color: #103b70; text-align: center; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
+    input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; }
+    input:focus { border-color: #103b70; }
+    .row { display: flex; gap: 10px; }
+    .row .form-group { flex: 1; }
+    button { width: 100%; background: #103b70; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:disabled { background: #94a3b8; }
+  </style>
+</head>
+<body>
+
+<div class="form-card">
+  <h2>Dados para o Atendimento</h2>
+  <form id="clientForm">
+    <div class="form-group">
+      <label for="nome">Nome Completo</label>
+      <input type="text" id="nome" required placeholder="Seu nome completo">
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="data">Data de Nascimento</label>
+        <input type="text" id="data" required placeholder="DD/MM/AAAA">
+      </div>
+      <div class="form-group">
+        <label for="hora">Horário</label>
+        <input type="text" id="hora" placeholder="Ex: 14:30">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="cidade">Cidade / Estado de Nascimento</label>
+      <input type="text" id="cidade" required placeholder="Ex: São Paulo, SP">
+    </div>
+
+    <div class="form-group">
+      <label for="whatsapp">WhatsApp</label>
+      <input type="tel" id="whatsapp" required placeholder="(11) 99999-9999">
+    </div>
+
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" required placeholder="seu@email.com">
+    </div>
+
+    <button type="submit" id="btnSubmit">Enviar Informações</button>
+  </form>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const ownerId = urlParams.get('owner') || null;
+
+  document.getElementById('clientForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.innerText = 'Enviando...';
+
+    const payload = {
+      pasta: 'Clientes',
+      tipo: 'Natal',
+      nome: document.getElementById('nome').value.trim(),
+      data_nascimento: document.getElementById('data').value.trim(),
+      hora_nascimento: document.getElementById('hora').value.trim(),
+      cidade: document.getElementById('cidade').value.trim(),
+      whatsapp: document.getElementById('whatsapp').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      user_id: ownerId
+    };
+
+    try {
+      const { error } = await supabaseClient.from('mapas').insert([payload]);
+      if (!error) {
+        alert('Dados enviados com sucesso!');
+        document.getElementById('clientForm').reset();
+      } else {
+        alert('Erro ao enviar dados: ' + error.message);
+      }
+    } catch (err) {
+      alert('Erro de conexão ao enviar formulário.');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Enviar Informações';
+    }
+  });
+</script>
+</body>
+</html>
