@@ -19,45 +19,44 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-/* TESTE DE ISOLAMENTO DE ALTURA DA MANDALA */
+        
+/* TESTE DE FLUXO REAL DA PÁGINA */
 html, body {
   height: auto !important;
   min-height: 100% !important;
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Tira qualquer posição absoluta ou fixa dos containers principais */
+main, #app, .app-container, .main-content {
+  display: block !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
 }
 
 #mandala-container {
   display: block !important;
-  width: 100% !important;
-  min-height: 600px !important;
   position: relative !important;
-  margin: 0 auto 20px auto !important;
-}
-
-#mandala-container canvas, 
-#mandala-container img, 
-#mandala-container svg {
-  display: block !important;
-  max-width: 100% !important;
-  height: auto !important;
+  width: 100% !important;
+  max-width: 960px !important;
   margin: 0 auto !important;
+  z-index: 1 !important;
 }
 
 #painel-tecnico-container {
   display: block !important;
+  position: relative !important;
   width: 100% !important;
   max-width: 960px !important;
-  margin: 0 auto !important;
+  margin: 20px auto 50px auto !important;
   clear: both !important;
+  z-index: 2 !important;
+  background: #ffffff !important;
 }
-
-/* Remove a sombra do menu para não sair na impressão */
-@media print {
-  .sidebar, nav, #menu-lateral, [class*="shadow"] {
-    box-shadow: none !important;
-  }
-}
-        
+      
         :root {
             --bg-main: #f8fafc;
             --bg-sidebar: #ffffff;
