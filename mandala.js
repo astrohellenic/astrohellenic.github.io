@@ -955,3 +955,30 @@ window.onload = function() {
     try { carregarConteudoPastaAtual(); } catch(e) { console.error(e); }
   }
 };
+
+/* CONTROLE DE ALTERNÂNCIA (MANDALA / TABELA TÉCNICA) */
+window.currentViewMode = "mandala";
+
+function alternarVisaoMapaTabela() {
+  const containerMandala = document.getElementById('mandala-container');
+  const containerTabela = document.getElementById('painel-tecnico-container');
+  const btn = document.getElementById('btnToggleVisao');
+
+  if (window.currentViewMode === "mandala") {
+    window.currentViewMode = "tabela";
+    if (containerMandala) containerMandala.style.display = "none";
+    if (containerTabela) {
+      containerTabela.style.display = "block";
+      if (typeof renderPainelTecnico === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) {
+        renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
+      }
+    }
+    if (btn) btn.innerHTML = `<span>☸</span> Alternar para Mandala`;
+  } else {
+    window.currentViewMode = "mandala";
+    if (containerTabela) containerTabela.style.display = "none";
+    if (containerMandala) containerMandala.style.display = "block";
+    if (btn) btn.innerHTML = `<span>📋</span> Alternar para Tabela`;
+  }
+}
+
