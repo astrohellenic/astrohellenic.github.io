@@ -21,43 +21,45 @@
     <style>
 
 @media print {
-  /* Oculta elementos de navegação e cabeçalhos da interface */
-  header, button, .no-print, nav, aside {
+  /* Oculta elementos desnecessários na impressão, como o botão superior */
+  header, button, .no-print {
     display: none !important;
   }
 
-  /* Reseta fundo e margens para impressão limpa */
+  /* Força o corpo da página a ocupar largura total e remove margens excessivas */
   body {
     background: #ffffff !important;
     color: #000000 !important;
-    margin: 0 !important;
-    padding: 10mm !important;
-    font-size: 10pt;
+    font-size: 11pt;
   }
 
-  /* Garante que o container da mandala fique centralizado e caiba bem na primeira página */
-  #mandala-container {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-    max-height: 100vh !important;
-    page-break-after: always !important;
-    break-after: page !important;
-    page-break-inside: avoid !important;
-  }
-
-  /* Força a tabela técnica e a matriz a começarem limpas na página seguinte */
-  #painel-tecnico, .tabela-enxuta {
-    page-break-before: always !important;
-    break-before: page !important;
-  }
-
-  /* Evita que linhas de tabelas ou títulos fiquem quebrados entre uma página e outra */
-  table, tr, td, th, h3 {
+  /* Evita que blocos importantes e tabelas sejam cortados no meio por uma quebra de página */
+  table, tr, td, th, .tabela-enxuta, h3 {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
+
+  /* Força a mandala e as tabelas a iniciarem em uma página limpa se necessário */
+  .mandala-container {
+    page-break-after: auto;
+  }
+}
+        
+/* TESTE DE FLUXO REAL DA PÁGINA */
+html, body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Tira qualquer posição absoluta ou fixa dos containers principais */
+main, #app, .app-container, .main-content {
+  display: block !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
 }
 
 #mandala-container {
