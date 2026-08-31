@@ -402,9 +402,7 @@ function renderPainelTecnico(data, containerId) {
       </table>
     `;
 
-    // Concatena a Matriz de Visibilidade logo abaixo da primeira tabela
     html += renderMatrizVisibilidadeHTML(data);
-
     container.innerHTML = html;
   } catch (err) {
     const container = document.getElementById(containerId);
