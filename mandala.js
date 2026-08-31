@@ -966,19 +966,35 @@ function alternarVisaoMapaTabela() {
 
   if (window.currentViewMode === "mandala") {
     window.currentViewMode = "tabela";
+    
+    // Esconde a mandala
     if (containerMandala) containerMandala.style.display = "none";
+    
+    // Exibe a tabela e força a renderização
     if (containerTabela) {
       containerTabela.style.display = "block";
       if (typeof renderPainelTecnico === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) {
         renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
       }
     }
-    if (btn) btn.innerHTML = `<span>☸</span> Alternar para Mandala`;
+    
+    // Altera o ícone do botão para a Mandala (sem texto)
+    if (btn) {
+      btn.innerHTML = `<i class="fa-solid fa-chart-pie"></i>`;
+      btn.title = "Alternar para Mandala";
+    }
+
   } else {
     window.currentViewMode = "mandala";
+    
+    // Esconde a tabela e exibe a mandala
     if (containerTabela) containerTabela.style.display = "none";
     if (containerMandala) containerMandala.style.display = "block";
-    if (btn) btn.innerHTML = `<span>📋</span> Alternar para Tabela`;
+    
+    // Altera o ícone do botão para a Tabela (sem texto)
+    if (btn) {
+      btn.innerHTML = `<i class="fa-solid fa-table-list"></i>`;
+      btn.title = "Alternar para Tabela Técnica";
+    }
   }
 }
-
