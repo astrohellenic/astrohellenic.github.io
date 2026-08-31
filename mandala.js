@@ -906,10 +906,21 @@ function renderMandala() {
     container.innerHTML = `<img src="${lastRenderedPngUrl}" alt="Mandala Astrológica">`;
     URL.revokeObjectURL(blobURL);
      
-   try {
-      renderPainelTecnico(data, 'painel-tecnico-container');
+       try {
+      console.log("Iniciando renderização do painel técnico...");
+      let containerTest = document.getElementById('painel-tecnico-container');
+      if (!containerTest) {
+        containerTest = document.createElement('div');
+        containerTest.id = 'painel-tecnico-container';
+        document.body.appendChild(containerTest);
+      }
+      if (typeof renderPainelTecnico === 'function') {
+        renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
+      } else {
+        containerTest.innerHTML = "<p style='color:red; text-align:center;'>Erro: Função renderPainelTecnico não encontrada no escopo.</p>";
+      }
     } catch (err) {
-      console.error("Erro no painel técnico:", err);
+      alert("Erro ao chamar painel: " + err.message);
     }
   };
   imgLoader.src = blobURL;
