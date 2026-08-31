@@ -41,13 +41,144 @@ function getSignSVG(signIndex, size = 20) {
 
 function getPlanet3DSVG(planetId) {
   const planetSVGs = {
-    Sun: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25"/><circle cx="50" cy="50" r="42" fill="url(#gradSunTab)"/><ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☉</text></svg>`,
-    Moon: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradMoonTab)"/><circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/><circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/><circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/><circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/><ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/><path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/></svg>`,
-    Mercury: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradMercuryTab)"/><ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/><circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☿</text></svg>`,
-    Venus: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradVenusTab)"/><ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/><circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♀</text></svg>`,
-    Mars: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradMarsTab)"/><ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/><ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/><circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♂</text></svg>`,
-    Jupiter: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradJupiterTab)"/><g clip-path="url(#jupiterClipTab)" opacity="0.45"><rect x="0" y="24" width="100" height="6" fill="#8c531b" /><rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" /><rect x="0" y="49" width="100" height="11" fill="#783d19" /><rect x="0" y="64" width="100" height="6" fill="#8c531b" /><rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" /></g><ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♃</text></svg>`,
-    Saturn: `<svg width="38" height="34" viewBox="-15 0 130 100" style="display: block; margin: 0 auto;"><g transform="rotate(-22 50 50)"><ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRingsTab)" stroke-width="5.5" opacity="0.95" /><ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/></g><circle cx="50" cy="50" r="36" fill="url(#gradSaturnTab)"/><g transform="rotate(-22 50 50)"><path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRingsTab)" stroke-width="5.5" /><path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/></g><ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/><text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text></svg>`
+    Sun: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineSun" cx="35%" cy="32%" r="68%">
+          <stop offset="0%" stop-color="#fffbeb" />
+          <stop offset="25%" stop-color="#fde047" />
+          <stop offset="60%" stop-color="#f59e0b" />
+          <stop offset="88%" stop-color="#d97706" />
+          <stop offset="100%" stop-color="#92400e" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25"/>
+      <circle cx="50" cy="50" r="42" fill="url(#inlineSun)"/>
+      <ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/>
+      <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☉</text>
+    </svg>`,
+
+    Moon: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineMoon" cx="32%" cy="28%" r="70%">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="30%" stop-color="#e2e8f0" />
+          <stop offset="65%" stop-color="#94a3b8" />
+          <stop offset="90%" stop-color="#475569" />
+          <stop offset="100%" stop-color="#1e293b" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#inlineMoon)"/>
+      <circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/>
+      <circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/>
+      <circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/>
+      <circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/>
+      <ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/>
+      <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☽</text>
+    </svg>`,
+
+    Mercury: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineMerc" cx="35%" cy="30%" r="68%">
+          <stop offset="0%" stop-color="#fef08a" />
+          <stop offset="28%" stop-color="#d97706" />
+          <stop offset="65%" stop-color="#92400e" />
+          <stop offset="92%" stop-color="#451a03" />
+          <stop offset="100%" stop-color="#270e02" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#inlineMerc)"/>
+      <ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/>
+      <circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/>
+      <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☿</text>
+    </svg>`,
+
+    Venus: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineVen" cx="34%" cy="30%" r="68%">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="30%" stop-color="#fef3c7" />
+          <stop offset="65%" stop-color="#f59e0b" />
+          <stop offset="90%" stop-color="#b45309" />
+          <stop offset="100%" stop-color="#78350f" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#inlineVen)"/>
+      <ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/>
+      <circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/>
+      <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♀</text>
+    </svg>`,
+
+    Mars: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineMars" cx="35%" cy="30%" r="68%">
+          <stop offset="0%" stop-color="#fca5a5" />
+          <stop offset="25%" stop-color="#ef4444" />
+          <stop offset="60%" stop-color="#b91c1c" />
+          <stop offset="88%" stop-color="#7f1d1d" />
+          <stop offset="100%" stop-color="#450a0a" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#inlineMars)"/>
+      <ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/>
+      <ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/>
+      <circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/>
+      <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♂</text>
+    </svg>`,
+
+    Jupiter: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineJup" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#fffbeb" />
+          <stop offset="30%" stop-color="#fef3c7" />
+          <stop offset="58%" stop-color="#d4a373" />
+          <stop offset="82%" stop-color="#a97142" />
+          <stop offset="100%" stop-color="#6f4518" />
+        </radialGradient>
+        <clipPath id="clipJup">
+          <circle cx="50" cy="50" r="42" />
+        </clipPath>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#inlineJup)"/>
+      <g clip-path="url(#clipJup)" opacity="0.45">
+        <rect x="0" y="24" width="100" height="6" fill="#8c531b" />
+        <rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" />
+        <rect x="0" y="49" width="100" height="11" fill="#783d19" />
+        <rect x="0" y="64" width="100" height="6" fill="#8c531b" />
+        <rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" />
+      </g>
+      <ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/>
+      <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♃</text>
+    </svg>`,
+
+    Saturn: `<svg width="38" height="34" viewBox="-15 0 130 100" style="display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="inlineSat" cx="35%" cy="30%" r="68%">
+          <stop offset="0%" stop-color="#fef9c3" />
+          <stop offset="35%" stop-color="#fde047" />
+          <stop offset="70%" stop-color="#ca8a04" />
+          <stop offset="92%" stop-color="#854d0e" />
+          <stop offset="100%" stop-color="#422006" />
+        </radialGradient>
+        <linearGradient id="inlineRings" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95" />
+          <stop offset="25%" stop-color="#cbd5e1" stop-opacity="0.9" />
+          <stop offset="60%" stop-color="#94a3b8" stop-opacity="0.85" />
+          <stop offset="85%" stop-color="#64748b" stop-opacity="0.9" />
+          <stop offset="100%" stop-color="#334155" stop-opacity="0.95" />
+        </linearGradient>
+      </defs>
+      <g transform="rotate(-22 50 50)">
+        <ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#inlineRings)" stroke-width="5.5" opacity="0.95" />
+        <ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/>
+      </g>
+      <circle cx="50" cy="50" r="36" fill="url(#inlineSat)"/>
+      <g transform="rotate(-22 50 50)">
+        <path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#inlineRings)" stroke-width="5.5" />
+        <path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/>
+      </g>
+      <ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/>
+      <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text>
+    </svg>`
   };
   return planetSVGs[planetId] || '';
 }
