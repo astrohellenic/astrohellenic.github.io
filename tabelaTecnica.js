@@ -226,17 +226,10 @@ function calcEgyptianTermTabela(absDeg) {
 
 function calcDodecatemoriaTabela(absDeg) {
   if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return { signIdx: -1, degFormatted: '-' };
-  
-  // Signo original e deslocamento dentro dele (0° a 30°)
   const signIdxInicial = Math.floor(absDeg / 30);
   const degInSign = absDeg % 30;
-  
-  // Projeção Dodecatemória: multiplica o grau do signo por 12
   const projecaoGraus = degInSign * 12;
-  
-  // Posição absoluta final exata
   const dodecAbs = ((signIdxInicial * 30) + projecaoGraus) % 360;
-  
   return {
     signIdx: Math.floor(dodecAbs / 30),
     degFormatted: formatDegMinTabela(dodecAbs)
@@ -245,295 +238,6 @@ function calcDodecatemoriaTabela(absDeg) {
 
 /* RENDERIZADOR DA MATRIZ DE VISIBILIDADE (THEORIA) */
 function renderMatrizVisibilidadeHTML(data) {
-  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
-  const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
-  const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
-
-  const pObj = {};
-  const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
-  ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
-    const item = data[mapKeys[id]];
-    pObj[id] = item ? item.grau_absoluto : 0;
-  });
-
-  const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
-  const sun = pObj.Sun, moon = pObj.Moon, merc = pObj.Mercury, ven = pObj.Venus, mars = pObj.Mars, jup = pObj.Jupiter, sat = pObj.Saturn;
-
-  const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
-  const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
-  const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
-  const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
-  const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
-  const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
-  const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
-
-  const colunas = [
-    { key: 'Sun', label: '☉' }, { key: 'Moon', label: '☽' }, { key: 'Mercury', label: '☿' },
-    { key: 'Venus', label: '♀' }, { key: 'Mars', label: '♂' }, { key: 'Jupiter', label: '♃' },
-    { key: 'Saturn', label: '♄' }, { key: 'NodeN', label: '☊' }, { key: 'NodeS', label: '☋' },
-    { key: 'Syz', label: 'SIZ' }, { key: 'FORT', label: '⊗' }, { key: 'ESP', label: 'Φ' },
-    { key: 'EROS', label: '♀' }, { key: 'NEC', label: '☿' }, { key: 'AUD', label: '♂' },
-    { key: 'VIT', label: '♃' }, { key: 'NÊM', label: '♄' }
-  ];
-
-  const posicoes = {
-    Sun: pObj.Sun, Moon: pObj.Moon, Mercury: pObj.Mercury, Venus: pObj.Venus, Mars: pObj.Mars, Jupiter: pObj.Jupiter, Saturn: pObj.Saturn,
-    NodeN: nodeAbs, NodeS: (nodeAbs + 180) % 360, Syz: syzAbs, FORT: fortAbs, ESP: spirAbs, EROS: erosAbs, NEC: necAbs, AUD: courAbs, VIT: vicAbs, NÊM: nemAbs
-  };
-
-  function getAspecto(deg1, deg2) {
-    if (deg1 === undefined || deg2 === undefined) return '';
-    const s1 = Math.floor(deg1 / 30);
-    const s2 = Math.floor(deg2 / 30);
-    let diff = Math.abs(s1 - s2);
-    if (diff > 6) diff = 12 - diff;
-
-    if (diff === 0) return 'σ';
-    if (diff === 2) return '*';
-    if (diff === 3) return '☐';
-    if (diff === 4) return 'Δ';
-    if (diff === 6) return '☍';
-    return '';
-  }
-
-  let h = `
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; margin: 30px 0 10px 0; text-transform: uppercase;">Matriz de Visibilidade (Theoria)</h3>
-    <table class="tabela-enxuta" style="font-size: 11px;">
-      <thead>
-        <tr>
-          <th style="width: 5%;"></th>
-  `;
-
-  colunas.forEach(c => {
-    h += `<th style="padding: 3px;">${c.label}</th>`;
-  });
-  h += `</tr></thead><tbody>`;
-
-  colunas.forEach((row, i) => {
-    h += `<tr><td style="font-weight: bold; background: #f8fafc;">${row.label}</td>`;
-    colunas.forEach((col, j) => {
-      if (j <= i) {
-        h += `<td style="background: #f1f5f9; color: #94a3b8;">-</td>`;
-      } else {
-        const asp = getAspecto(posicoes[row.key], posicoes[col.key]);
-        let colorStyle = '#0f172a';
-        if (asp === 'σ') colorStyle = '#000000';
-        else if (asp === '☐' || asp === '☍') colorStyle = '#dc2626';
-        else if (asp === 'Δ' || asp === '*') colorStyle = '#2563eb';
-        h += `<td style="font-weight: bold; color: ${colorStyle};">${asp}</td>`;
-      }
-    });
-    h += `</tr>`;
-  });
-
-  h += `</tbody></table>`;
-  return h;
-}
-
-function renderPainelTecnico(data, containerId) {
-  try {
-    const container = document.getElementById(containerId);
-    if (!container || !data) return;
-
-    const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
-    const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
-    const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
-    const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
-
-    const pObj = {};
-    const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
-    ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
-      const item = data[mapKeys[id]];
-      pObj[id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false };
-    });
-
-    const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-
-    const sun = pObj.Sun.abs, moon = pObj.Moon.abs, merc = pObj.Mercury.abs, ven = pObj.Venus.abs, mars = pObj.Mars.abs, jup = pObj.Jupiter.abs, sat = pObj.Saturn.abs;
-    const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
-    const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
-    const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
-    const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
-    const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
-    const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
-    const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
-
-    const listaElementos = [
-      { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false },
-      { type: 'planet', pId: 'Moon', abs: pObj.Moon.abs, retro: false },
-      { type: 'planet', pId: 'Mercury', abs: pObj.Mercury.abs, retro: pObj.Mercury.retro },
-      { type: 'planet', pId: 'Venus', abs: pObj.Venus.abs, retro: pObj.Venus.retro },
-      { type: 'planet', pId: 'Mars', abs: pObj.Mars.abs, retro: pObj.Mars.retro },
-      { type: 'planet', pId: 'Jupiter', abs: pObj.Jupiter.abs, retro: pObj.Jupiter.retro },
-      { type: 'planet', pId: 'Saturn', abs: pObj.Saturn.abs, retro: pObj.Saturn.retro },
-      { type: 'item', key: 'Nodo Norte', abs: nodeAbs },
-      { type: 'item', key: 'Nodo Sul', abs: (nodeAbs + 180) % 360 },
-      { type: 'item', key: 'Sizígia', abs: syzAbs },
-      { type: 'item', key: 'fortune', abs: fortAbs },
-      { type: 'item', key: 'spirit', abs: spirAbs },
-      { type: 'item', key: 'venus', abs: erosAbs },
-      { type: 'item', key: 'mercury', abs: necAbs },
-      { type: 'item', key: 'mars', abs: courAbs },
-      { type: 'item', key: 'jupiter', abs: vicAbs },
-      { type: 'item', key: 'saturn', abs: nemAbs },
-      { type: 'item', key: 'ASC', abs: ascAbs },
-      { type: 'item', key: 'DSC', abs: (ascAbs + 180) % 360 },
-      { type: 'item', key: 'MC', abs: mcAbs },
-      { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
-    ];
-
-    let html = `
-      <svg width="0" height="0" style="position: absolute; display: none;">
-        <defs>
-          <radialGradient id="gradSunTab" cx="35%" cy="32%" r="68%">
-            <stop offset="0%" stop-color="#fffbeb" />
-            <stop offset="25%" stop-color="#fde047" />
-            <stop offset="60%" stop-color="#f59e0b" />
-            <stop offset="88%" stop-color="#d97706" />
-            <stop offset="100%" stop-color="#92400e" />
-          </radialGradient>
-          <radialGradient id="gradMoonTab" cx="32%" cy="28%" r="70%">
-            <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="30%" stop-color="#e2e8f0" />
-            <stop offset="65%" stop-color="#94a3b8" />
-            <stop offset="90%" stop-color="#475569" />
-            <stop offset="100%" stop-color="#1e293b" />
-          </radialGradient>
-          <radialGradient id="gradMercuryTab" cx="35%" cy="30%" r="68%">
-            <stop offset="0%" stop-color="#fef08a" />
-            <stop offset="28%" stop-color="#d97706" />
-            <stop offset="65%" stop-color="#92400e" />
-            <stop offset="92%" stop-color="#451a03" />
-            <stop offset="100%" stop-color="#270e02" />
-          </radialGradient>
-          <radialGradient id="gradVenusTab" cx="34%" cy="30%" r="68%">
-            <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="30%" stop-color="#fef3c7" />
-            <stop offset="65%" stop-color="#f59e0b" />
-            <stop offset="90%" stop-color="#b45309" />
-            <stop offset="100%" stop-color="#78350f" />
-          </radialGradient>
-          <radialGradient id="gradMarsTab" cx="35%" cy="30%" r="68%">
-            <stop offset="0%" stop-color="#fca5a5" />
-            <stop offset="25%" stop-color="#ef4444" />
-            <stop offset="60%" stop-color="#b91c1c" />
-            <stop offset="88%" stop-color="#7f1d1d" />
-            <stop offset="100%" stop-color="#450a0a" />
-          </radialGradient>
-          <radialGradient id="gradJupiterTab" cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stop-color="#fffbeb" />
-            <stop offset="30%" stop-color="#fef3c7" />
-            <stop offset="58%" stop-color="#d4a373" />
-            <stop offset="82%" stop-color="#a97142" />
-            <stop offset="100%" stop-color="#6f4518" />
-          </radialGradient>
-          <radialGradient id="gradSaturnTab" cx="35%" cy="30%" r="68%">
-            <stop offset="0%" stop-color="#fef9c3" />
-            <stop offset="35%" stop-color="#fde047" />
-            <stop offset="70%" stop-color="#ca8a04" />
-            <stop offset="92%" stop-color="#854d0e" />
-            <stop offset="100%" stop-color="#422006" />
-          </radialGradient>
-          <linearGradient id="gradRingsTab" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95" />
-            <stop offset="25%" stop-color="#cbd5e1" stop-opacity="0.9" />
-            <stop offset="60%" stop-color="#94a3b8" stop-opacity="0.85" />
-            <stop offset="85%" stop-color="#64748b" stop-opacity="0.9" />
-            <stop offset="100%" stop-color="#334155" stop-opacity="0.95" />
-          </linearGradient>
-          <clipPath id="jupiterClipTab">
-            <circle cx="50" cy="50" r="42" />
-          </clipPath>
-        </defs>
-      </svg>
-
-      <style>
-        .tabela-enxuta {
-          width: 100%;
-          max-width: 960px;
-          margin: 0 auto 30px auto;
-          border-collapse: collapse;
-          font-family: 'Montserrat', sans-serif;
-          background: #ffffff;
-          font-size: 12px;
-          color: #0f172a;
-        }
-        .tabela-enxuta th, .tabela-enxuta td {
-          border: 1px solid #cbd5e1;
-          padding: 6px 8px;
-          text-align: center;
-          vertical-align: middle;
-        }
-        .tabela-enxuta th {
-          background-color: #f8fafc;
-          font-weight: 700;
-          color: #103b70;
-          text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 0.5px;
-        }
-        .col-ponto { width: 16%; }
-        .col-signo { width: 12%; }
-        .col-grau { width: 20%; font-weight: 600; }
-        .col-termo { width: 12%; font-weight: bold; color: #c59b27; font-size: 14px; }
-        .col-dodec-signo { width: 12%; }
-        .col-dodec-grau { width: 28%; font-weight: 600; }
-      </style>
-
-      <table class="tabela-enxuta">
-        <thead>
-          <tr>
-            <th rowspan="2" class="col-ponto">Ponto</th>
-            <th rowspan="2" class="col-signo">Signo</th>
-            <th rowspan="2" class="col-grau">Grau</th>
-            <th rowspan="2" class="col-termo">Termo</th>
-            <th colspan="2">Dodecatemória</th>
-          </tr>
-          <tr>
-            <th class="col-dodec-signo">Signo</th>
-            <th class="col-dodec-grau">Grau</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    listaElementos.forEach(el => {
-      let iconHTML = '';
-      let absDeg = el.abs;
-      let retroSymbol = el.retro ? `<span style="color: #dc2626; font-weight: 900; margin-left: 2px;">℞</span>` : '';
-
-      if (el.type === 'planet') {
-        iconHTML = getPlanet3DSVG(el.pId);
-      } else {
-        iconHTML = getItemSVG(el.key);
-      }
-
-      const signIdx = Math.floor(absDeg / 30);
-      const signoSVG = getSignSVG(signIdx, 18);
-      const grauFormatted = `${formatDegMinTabela(absDeg)}${retroSymbol}`;
-      const termo = calcEgyptianTermTabela(absDeg);
-
-      const dodec = calcDodecatemoriaTabela(absDeg);
-      const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
-
-      html += `
-        <tr>
-          <td class="col-ponto">${iconHTML}</td>
-          <td class="col-signo">${signoSVG}</td>
-          <td class="col-grau">${grauFormatted}</td>
-          <td class="col-termo">${termo}</td>
-          <td class="col-dodec-signo">${dodecSignoSVG}</td>
-          <td class="col-dodec-grau">${dodec.degFormatted}</td>
-        </tr>
-      `;
-    });
-
-    html += `
-        </tbody>
-      </table>
-    `;
-
-    function renderMatrizVisibilidadeHTML(data) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
   const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
@@ -633,4 +337,153 @@ function renderPainelTecnico(data, containerId) {
 
   h += `</tbody></table>`;
   return h;
+}
+
+function renderPainelTecnico(data, containerId) {
+  try {
+    const container = document.getElementById(containerId);
+    if (!container || !data) return;
+
+    const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+    const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
+    const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
+    const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
+
+    const pObj = {};
+    const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
+    ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
+      const item = data[mapKeys[id]];
+      pObj[id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false };
+    });
+
+    const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
+
+    const sun = pObj.Sun.abs, moon = pObj.Moon.abs, merc = pObj.Mercury.abs, ven = pObj.Venus.abs, mars = pObj.Mars.abs, jup = pObj.Jupiter.abs, sat = pObj.Saturn.abs;
+    const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
+    const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
+    const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
+    const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
+    const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
+    const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
+    const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
+
+    const listaElementos = [
+      { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false },
+      { type: 'planet', pId: 'Moon', abs: pObj.Moon.abs, retro: false },
+      { type: 'planet', pId: 'Mercury', abs: pObj.Mercury.abs, retro: pObj.Mercury.retro },
+      { type: 'planet', pId: 'Venus', abs: pObj.Venus.abs, retro: pObj.Venus.retro },
+      { type: 'planet', pId: 'Mars', abs: pObj.Mars.abs, retro: pObj.Mars.retro },
+      { type: 'planet', pId: 'Jupiter', abs: pObj.Jupiter.abs, retro: pObj.Jupiter.retro },
+      { type: 'planet', pId: 'Saturn', abs: pObj.Saturn.abs, retro: pObj.Saturn.retro },
+      { type: 'item', key: 'Nodo Norte', abs: nodeAbs },
+      { type: 'item', key: 'Nodo Sul', abs: (nodeAbs + 180) % 360 },
+      { type: 'item', key: 'Sizígia', abs: syzAbs },
+      { type: 'item', key: 'fortune', abs: fortAbs },
+      { type: 'item', key: 'spirit', abs: spirAbs },
+      { type: 'item', key: 'venus', abs: erosAbs },
+      { type: 'item', key: 'mercury', abs: necAbs },
+      { type: 'item', key: 'mars', abs: courAbs },
+      { type: 'item', key: 'jupiter', abs: vicAbs },
+      { type: 'item', key: 'saturn', abs: nemAbs },
+      { type: 'item', key: 'ASC', abs: ascAbs },
+      { type: 'item', key: 'DSC', abs: (ascAbs + 180) % 360 },
+      { type: 'item', key: 'MC', abs: mcAbs },
+      { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
+    ];
+
+    let html = `
+      <style>
+        .tabela-enxuta {
+          width: 100%;
+          max-width: 960px;
+          margin: 0 auto 30px auto;
+          border-collapse: collapse;
+          font-family: 'Montserrat', sans-serif;
+          background: #ffffff;
+          font-size: 12px;
+          color: #0f172a;
+        }
+        .tabela-enxuta th, .tabela-enxuta td {
+          border: 1px solid #cbd5e1;
+          padding: 6px 8px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .tabela-enxuta th {
+          background-color: #f8fafc;
+          font-weight: 700;
+          color: #103b70;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+        }
+        .col-ponto { width: 16%; }
+        .col-signo { width: 12%; }
+        .col-grau { width: 20%; font-weight: 600; }
+        .col-termo { width: 12%; font-weight: bold; color: #c59b27; font-size: 14px; }
+        .col-dodec-signo { width: 12%; }
+        .col-dodec-grau { width: 28%; font-weight: 600; }
+      </style>
+
+      <table class="tabela-enxuta">
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-ponto">Ponto</th>
+            <th rowspan="2" class="col-signo">Signo</th>
+            <th rowspan="2" class="col-grau">Grau</th>
+            <th rowspan="2" class="col-termo">Termo</th>
+            <th colspan="2">Dodecatemória</th>
+          </tr>
+          <tr>
+            <th class="col-dodec-signo">Signo</th>
+            <th class="col-dodec-grau">Grau</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    listaElementos.forEach(el => {
+      let iconHTML = '';
+      let absDeg = el.abs;
+      let retroSymbol = el.retro ? `<span style="color: #dc2626; font-weight: 900; margin-left: 2px;">℞</span>` : '';
+
+      if (el.type === 'planet') {
+        iconHTML = getPlanet3DSVG(el.pId);
+      } else {
+        iconHTML = getItemSVG(el.key);
+      }
+
+      const signIdx = Math.floor(absDeg / 30);
+      const signoSVG = getSignSVG(signIdx, 18);
+      const grauFormatted = `${formatDegMinTabela(absDeg)}${retroSymbol}`;
+      const termo = calcEgyptianTermTabela(absDeg);
+
+      const dodec = calcDodecatemoriaTabela(absDeg);
+      const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
+
+      html += `
+        <tr>
+          <td class="col-ponto">${iconHTML}</td>
+          <td class="col-signo">${signoSVG}</td>
+          <td class="col-grau">${grauFormatted}</td>
+          <td class="col-termo">${termo}</td>
+          <td class="col-dodec-signo">${dodecSignoSVG}</td>
+          <td class="col-dodec-grau">${dodec.degFormatted}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    html += renderMatrizVisibilidadeHTML(data);
+    container.innerHTML = html;
+  } catch (err) {
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = `<div style="padding: 15px; color: #dc2626; text-align: center; font-weight: bold; background: #fef2f2; border: 1px solid #fca5a5; margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro no Painel Técnico: ${err.message}</div>`;
+    }
+  }
 }
