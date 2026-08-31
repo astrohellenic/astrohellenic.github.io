@@ -239,6 +239,9 @@ function calcDodecatemoriaTabela(absDeg) {
 /* RENDERIZADOR DA MATRIZ DE VISIBILIDADE (THEORIA) */
 function renderMatrizVisibilidadeHTML(data) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+  const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
+  const dscAbs = (ascAbs + 180) % 360;
+  const icAbs = (mcAbs + 180) % 360;
   const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
   const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
 
@@ -268,6 +271,10 @@ function renderMatrizVisibilidadeHTML(data) {
     { key: 'Mars', type: 'planet', id: 'Mars' },
     { key: 'Jupiter', type: 'planet', id: 'Jupiter' },
     { key: 'Saturn', type: 'planet', id: 'Saturn' },
+    { key: 'ASC', type: 'item', name: 'ASC' },
+    { key: 'DSC', type: 'item', name: 'DSC' },
+    { key: 'MC', type: 'item', name: 'MC' },
+    { key: 'IC', type: 'item', name: 'IC' },
     { key: 'NodeN', type: 'item', name: 'Nodo Norte' },
     { key: 'NodeS', type: 'item', name: 'Nodo Sul' },
     { key: 'Syz', type: 'item', name: 'Sizígia' },
@@ -282,6 +289,7 @@ function renderMatrizVisibilidadeHTML(data) {
 
   const posicoes = {
     Sun: pObj.Sun, Moon: pObj.Moon, Mercury: pObj.Mercury, Venus: pObj.Venus, Mars: pObj.Mars, Jupiter: pObj.Jupiter, Saturn: pObj.Saturn,
+    ASC: ascAbs, DSC: dscAbs, MC: mcAbs, IC: icAbs,
     NodeN: nodeAbs, NodeS: (nodeAbs + 180) % 360, Syz: syzAbs, FORT: fortAbs, ESP: spirAbs, EROS: erosAbs, NEC: necAbs, AUD: courAbs, VIT: vicAbs, NÊM: nemAbs
   };
 
