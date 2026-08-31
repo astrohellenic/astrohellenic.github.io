@@ -905,6 +905,12 @@ function renderMandala() {
     lastRenderedPngUrl = canvas.toDataURL('image/png');
     container.innerHTML = `<img src="${lastRenderedPngUrl}" alt="Mandala Astrológica">`;
     URL.revokeObjectURL(blobURL);
+     
+   try {
+      renderPainelTecnico(data, 'painel-tecnico-container');
+    } catch (err) {
+      console.error("Erro no painel técnico:", err);
+    }
   };
   imgLoader.src = blobURL;
 }
