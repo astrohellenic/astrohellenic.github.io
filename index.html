@@ -19,26 +19,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
- /* TESTE DE FORÇAMENTO DE COLUNA ÚNICA */
+/* TESTE DE ISOLAMENTO DE ALTURA DA MANDALA */
 html, body {
   height: auto !important;
   min-height: 100% !important;
   overflow-y: auto !important;
-  overflow-x: auto !important;
-}
-
-/* Força o container principal a empilhar os elementos em linha vertical */
-main, body, .app-container, .content-container {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
 }
 
 #mandala-container {
   display: block !important;
   width: 100% !important;
-  max-width: 960px !important;
+  min-height: 600px !important;
+  position: relative !important;
   margin: 0 auto 20px auto !important;
+}
+
+#mandala-container canvas, 
+#mandala-container img, 
+#mandala-container svg {
+  display: block !important;
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0 auto !important;
 }
 
 #painel-tecnico-container {
@@ -48,6 +50,14 @@ main, body, .app-container, .content-container {
   margin: 0 auto !important;
   clear: both !important;
 }
+
+/* Remove a sombra do menu para não sair na impressão */
+@media print {
+  .sidebar, nav, #menu-lateral, [class*="shadow"] {
+    box-shadow: none !important;
+  }
+}
+        
         :root {
             --bg-main: #f8fafc;
             --bg-sidebar: #ffffff;
