@@ -636,7 +636,9 @@ function abrirModalEdicao(event, index) {
   document.getElementById('editModalData').value = item.dataNascimento || '';
   document.getElementById('editModalHora').value = item.horaNascimento || '';
   document.getElementById('editModalCidadeInput').value = item.cidade || '';
-  
+  document.getElementById('editModalWhatsapp').value = item.whatsapp || '';
+  document.getElementById('editModalEmail').value = item.email || '';
+
   editSelectedCityGeo = {
     lat: parseFloat(item.latitude) || -23.5505,
     lon: parseFloat(item.longitude) || -46.6333,
@@ -659,6 +661,9 @@ async function salvarEdicaoMapaModal() {
   const dataStr = document.getElementById('editModalData').value.trim();
   const horaStr = document.getElementById('editModalHora').value.trim();
 
+  const whatsappVal = document.getElementById('editModalWhatsapp') ? document.getElementById('editModalWhatsapp').value.trim() : null;
+  const emailVal = document.getElementById('editModalEmail') ? document.getElementById('editModalEmail').value.trim() : null;
+
   if (!nome) { alert("Informe o nome."); return; }
   if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
 
@@ -676,7 +681,9 @@ async function salvarEdicaoMapaModal() {
         hora_nascimento: horaStr,
         cidade: editSelectedCityGeo ? editSelectedCityGeo.name : document.getElementById('editModalCidadeInput').value,
         latitude: lat,
-        longitude: lon
+        longitude: lon,
+        whatsapp: whatsappVal || null,
+        email: emailVal || null
       })
       .eq('id', idMapa);
 
