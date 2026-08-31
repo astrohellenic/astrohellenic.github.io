@@ -1,8 +1,8 @@
 /* ==========================================
-   TABELA TÉCNICA ENXUTA E MATRIZ DE VISIBILIDADE
+   MÓDULO DA TABELA TÉCNICA (RENDERIZADOR VETORIAL)
    ========================================== */
 
-const SVG_SIGNOS_TABELA = [
+const MONOLINE_ZODIAC_SVGS_TABELA = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
   `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="32" cy="43" r="18"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,3c14,0,15,12,15,12s0,10,17,10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,3C50,3,49,15,49,15s0,10-17,10"></path>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,8c0,0,16,4,32,4s32-4,32-4"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,56c0,0-16-4-32-4S0,56,0,56"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="21" y1="12" x2="21" y2="52"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="43" y1="12" x2="43" y2="52"></line>`,
@@ -19,42 +19,57 @@ const SVG_SIGNOS_TABELA = [
 
 const SIGN_COLORS_TABELA = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
 
+const EGYPTIAN_TERMS_TABELA = [
+  [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
+  [{ p: "♀", deg: 8 }, { p: "☿", deg: 14 }, { p: "♃", deg: 22 }, { p: "♄", deg: 27 }, { p: "♂", deg: 30 }],
+  [{ p: "☿", deg: 6 }, { p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "♂", deg: 24 }, { p: "♄", deg: 30 }],
+  [{ p: "♂", deg: 7 }, { p: "♀", deg: 13 }, { p: "☿", deg: 19 }, { p: "♃", deg: 26 }, { p: "♄", deg: 30 }],
+  [{ p: "♃", deg: 6 }, { p: "♀", deg: 11 }, { p: "♄", deg: 18 }, { p: "☿", deg: 24 }, { p: "♂", deg: 30 }],
+  [{ p: "☿", deg: 7 }, { p: "♀", deg: 17 }, { p: "♃", deg: 21 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }],
+  [{ p: "♄", deg: 6 }, { p: "☿", deg: 14 }, { p: "♃", deg: 21 }, { p: "♀", deg: 28 }, { p: "♂", deg: 30 }],
+  [{ p: "♂", deg: 7 }, { p: "♀", deg: 11 }, { p: "☿", deg: 19 }, { p: "♃", deg: 24 }, { p: "♄", deg: 30 }],
+  [{ p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "☿", deg: 21 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
+  [{ p: "☿", deg: 7 }, { p: "♃", deg: 14 }, { p: "♀", deg: 22 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
+  [{ p: "♄", deg: 7 }, { p: "☿", deg: 13 }, { p: "♀", deg: 20 }, { p: "♃", deg: 25 }, { p: "♂", deg: 30 }],
+  [{ p: "♀", deg: 12 }, { p: "♃", deg: 16 }, { p: "☿", deg: 19 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }]
+];
+
 function getSignSVG(signIndex, size = 20) {
   if (signIndex < 0 || signIndex > 11) return '';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_TABELA[signIndex]}; display: block; margin: 0 auto;">${SVG_SIGNOS_TABELA[signIndex]}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_TABELA[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_TABELA[signIndex]}</svg>`;
 }
 
 function getPlanet3DSVG(planetId) {
-  const svgs = {
-    Sun: `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25"/><circle cx="50" cy="50" r="42" fill="url(#gradSun)"/><ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☉</text></svg>`,
-    Moon: `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="url(#gradMoon)"/><circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/><circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/><circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/><circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/><ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/><path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/></svg>`,
-    Mercury: `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="url(#gradMercury)"/><ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/><circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☿</text></svg>`,
-    Venus: `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="url(#gradVenus)"/><ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/><circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♀</text></svg>`,
-    Mars: `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="url(#gradMars)"/><ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/><ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/><circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♂</text></svg>`,
-    Jupiter: `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="url(#gradJupiter)"/><g clip-path="url(#jupiterClip)" opacity="0.45"><rect x="0" y="24" width="100" height="6" fill="#8c531b" /><rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" /><rect x="0" y="49" width="100" height="11" fill="#783d19" /><rect x="0" y="64" width="100" height="6" fill="#8c531b" /><rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" /></g><ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♃</text></svg>`,
-    Saturn: `<svg width="26" height="24" viewBox="-15 0 130 100"><g transform="rotate(-22 50 50)"><ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRings)" stroke-width="5.5" opacity="0.95" /><ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/></g><circle cx="50" cy="50" r="36" fill="url(#gradSaturn)"/><g transform="rotate(-22 50 50)"><path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRings)" stroke-width="5.5" /><path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/></g><ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/><text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text></svg>`
+  const planetSVGs = {
+    Sun: `<svg width="24" height="24" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25"/><circle cx="50" cy="50" r="42" fill="url(#gradSunTab)"/><ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☉</text></svg>`,
+    Moon: `<svg width="24" height="24" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradMoonTab)"/><circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/><circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/><circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/><circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/><ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/><path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    Mercury: `<svg width="24" height="24" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradMercuryTab)"/><ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/><circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☿</text></svg>`,
+    Venus: `<svg width="24" height="24" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradVenusTab)"/><ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/><circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♀</text></svg>`,
+    Mars: `<svg width="24" height="24" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradMarsTab)"/><ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/><ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/><circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♂</text></svg>`,
+    Jupiter: `<svg width="24" height="24" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><circle cx="50" cy="50" r="42" fill="url(#gradJupiterTab)"/><g clip-path="url(#jupiterClipTab)" opacity="0.45"><rect x="0" y="24" width="100" height="6" fill="#8c531b" /><rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" /><rect x="0" y="49" width="100" height="11" fill="#783d19" /><rect x="0" y="64" width="100" height="6" fill="#8c531b" /><rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" /></g><ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♃</text></svg>`,
+    Saturn: `<svg width="26" height="24" viewBox="-15 0 130 100" style="display: block; margin: 0 auto;"><g transform="rotate(-22 50 50)"><ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRingsTab)" stroke-width="5.5" opacity="0.95" /><ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/></g><circle cx="50" cy="50" r="36" fill="url(#gradSaturnTab)"/><g transform="rotate(-22 50 50)"><path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRingsTab)" stroke-width="5.5" /><path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/></g><ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/><text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text></svg>`
   };
-  return svgs[planetId] || '';
+  return planetSVGs[planetId] || '';
 }
 
 function getItemSVG(key) {
-  const lotSVGs = {
-    'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg>`,
-    'spirit': `<svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`,
-    'venus': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♀</text></svg>`,
-    'mercury': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">☿</text></svg>`,
-    'mars': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♂</text></svg>`,
-    'jupiter': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♃</text></svg>`,
-    'saturn': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♄</text></svg>`,
+  const itemSVGs = {
+    'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg>`,
+    'spirit': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`,
+    'venus': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♀</text></svg>`,
+    'mercury': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">☿</text></svg>`,
+    'mars': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♂</text></svg>`,
+    'jupiter': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♃</text></svg>`,
+    'saturn': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♄</text></svg>`,
     'Nodo Norte': `<span style="font-size: 18px; font-weight: bold; color: #000000;">☊</span>`,
     'Nodo Sul': `<span style="font-size: 18px; font-weight: bold; color: #000000;">☋</span>`,
-    'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" stroke="#000000" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#000000"/><circle cx="0" cy="0" r="2.3" fill="#000000"/></svg>`,
+    'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#000000" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#000000"/><circle cx="0" cy="0" r="2.3" fill="#000000"/></svg>`,
     'ASC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">ASC</span>`,
     'DSC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">DSC</span>`,
     'MC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">MC</span>`,
     'IC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">IC</span>`
   };
-  return lotSVGs[key] || `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
+  return itemSVGs[key] || `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
 
 function formatDegMinTabela(absDeg) {
@@ -70,22 +85,8 @@ function calcEgyptianTermTabela(absDeg) {
   if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return '-';
   const signIdx = Math.floor(absDeg / 30);
   const degInSign = absDeg % 30;
-  const terms = [
-    [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
-    [{ p: "♀", deg: 8 }, { p: "☿", deg: 14 }, { p: "♃", deg: 22 }, { p: "♄", deg: 27 }, { p: "♂", deg: 30 }],
-    [{ p: "☿", deg: 6 }, { p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "♂", deg: 24 }, { p: "♄", deg: 30 }],
-    [{ p: "♂", deg: 7 }, { p: "♀", deg: 13 }, { p: "☿", deg: 19 }, { p: "♃", deg: 26 }, { p: "♄", deg: 30 }],
-    [{ p: "♃", deg: 6 }, { p: "♀", deg: 11 }, { p: "♄", deg: 18 }, { p: "☿", deg: 24 }, { p: "♂", deg: 30 }],
-    [{ p: "☿", deg: 7 }, { p: "♀", deg: 17 }, { p: "♃", deg: 21 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }],
-    [{ p: "♄", deg: 6 }, { p: "☿", deg: 14 }, { p: "♃", deg: 21 }, { p: "♀", deg: 28 }, { p: "♂", deg: 30 }],
-    [{ p: "♂", deg: 7 }, { p: "♀", deg: 11 }, { p: "☿", deg: 19 }, { p: "♃", deg: 24 }, { p: "♄", deg: 30 }],
-    [{ p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "☿", deg: 21 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
-    [{ p: "☿", deg: 7 }, { p: "♃", deg: 14 }, { p: "♀", deg: 22 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
-    [{ p: "♄", deg: 7 }, { p: "☿", deg: 13 }, { p: "♀", deg: 20 }, { p: "♃", deg: 25 }, { p: "♂", deg: 30 }],
-    [{ p: "♀", deg: 12 }, { p: "♃", deg: 16 }, { p: "☿", deg: 19 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }]
-  ];
-  
-  const signTerms = terms[signIdx];
+  const signTerms = EGYPTIAN_TERMS_TABELA[signIdx];
+  if (!signTerms) return '-';
   for (let t of signTerms) {
     if (degInSign < t.deg) return t.p;
   }
@@ -94,7 +95,6 @@ function calcEgyptianTermTabela(absDeg) {
 
 function calcDodecatemoriaTabela(absDeg) {
   if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return { signIdx: -1, degFormatted: '-' };
-  const signIdx = Math.floor(absDeg / 30);
   const degInSign = absDeg % 30;
   const dodecAbs = (absDeg + (degInSign * 12)) % 360;
   return {
@@ -104,143 +104,213 @@ function calcDodecatemoriaTabela(absDeg) {
 }
 
 function renderPainelTecnico(data, containerId) {
-  const container = document.getElementById(containerId);
-  if (!container || !data) return;
+  try {
+    const container = document.getElementById(containerId);
+    if (!container || !data) return;
 
-  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
-  const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
-  const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
-  const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
+    const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+    const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
+    const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
+    const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
 
-  const pObj = {};
-  ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
+    const pObj = {};
     const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
-    const item = data[mapKeys[id]];
-    pObj[id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false };
-  });
+    ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
+      const item = data[mapKeys[id]];
+      pObj[id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false };
+    });
 
-  const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-  
-  const sun = pObj.Sun.abs, moon = pObj.Moon.abs, merc = pObj.Mercury.abs, ven = pObj.Venus.abs, mars = pObj.Mars.abs, jup = pObj.Jupiter.abs, sat = pObj.Saturn.abs;
-  const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
-  const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
-  const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
-  const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
-  const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
-  const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
-  const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
+    const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
 
-  const listaElementos = [
-    { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false },
-    { type: 'planet', pId: 'Moon', abs: pObj.Moon.abs, retro: false },
-    { type: 'planet', pId: 'Mercury', abs: pObj.Mercury.abs, retro: pObj.Mercury.retro },
-    { type: 'planet', pId: 'Venus', abs: pObj.Venus.abs, retro: pObj.Venus.retro },
-    { type: 'planet', pId: 'Mars', abs: pObj.Mars.abs, retro: pObj.Mars.retro },
-    { type: 'planet', pId: 'Jupiter', abs: pObj.Jupiter.abs, retro: pObj.Jupiter.retro },
-    { type: 'planet', pId: 'Saturn', abs: pObj.Saturn.abs, retro: pObj.Saturn.retro },
-    { type: 'item', key: 'Nodo Norte', abs: nodeAbs },
-    { type: 'item', key: 'Nodo Sul', abs: (nodeAbs + 180) % 360 },
-    { type: 'item', key: 'Sizígia', abs: syzAbs },
-    { type: 'item', key: 'fortune', abs: fortAbs },
-    { type: 'item', key: 'spirit', abs: spirAbs },
-    { type: 'item', key: 'venus', abs: erosAbs },
-    { type: 'item', key: 'mercury', abs: necAbs },
-    { type: 'item', key: 'mars', abs: courAbs },
-    { type: 'item', key: 'jupiter', abs: vicAbs },
-    { type: 'item', key: 'saturn', abs: nemAbs },
-    { type: 'item', key: 'ASC', abs: ascAbs },
-    { type: 'item', key: 'DSC', abs: (ascAbs + 180) % 360 },
-    { type: 'item', key: 'MC', abs: mcAbs },
-    { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
-  ];
+    const sun = pObj.Sun.abs, moon = pObj.Moon.abs, merc = pObj.Mercury.abs, ven = pObj.Venus.abs, mars = pObj.Mars.abs, jup = pObj.Jupiter.abs, sat = pObj.Saturn.abs;
+    const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
+    const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
+    const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
+    const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
+    const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
+    const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
+    const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
 
-  let html = `
-    <style>
-      .tabela-enxuta {
-        width: 100%;
-        max-width: 960px;
-        margin: 0 auto 30px auto;
-        border-collapse: collapse;
-        font-family: 'Montserrat', sans-serif;
-        background: #ffffff;
-        font-size: 12px;
-        color: #0f172a;
+    const listaElementos = [
+      { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false },
+      { type: 'planet', pId: 'Moon', abs: pObj.Moon.abs, retro: false },
+      { type: 'planet', pId: 'Mercury', abs: pObj.Mercury.abs, retro: pObj.Mercury.retro },
+      { type: 'planet', pId: 'Venus', abs: pObj.Venus.abs, retro: pObj.Venus.retro },
+      { type: 'planet', pId: 'Mars', abs: pObj.Mars.abs, retro: pObj.Mars.retro },
+      { type: 'planet', pId: 'Jupiter', abs: pObj.Jupiter.abs, retro: pObj.Jupiter.retro },
+      { type: 'planet', pId: 'Saturn', abs: pObj.Saturn.abs, retro: pObj.Saturn.retro },
+      { type: 'item', key: 'Nodo Norte', abs: nodeAbs },
+      { type: 'item', key: 'Nodo Sul', abs: (nodeAbs + 180) % 360 },
+      { type: 'item', key: 'Sizígia', abs: syzAbs },
+      { type: 'item', key: 'fortune', abs: fortAbs },
+      { type: 'item', key: 'spirit', abs: spirAbs },
+      { type: 'item', key: 'venus', abs: erosAbs },
+      { type: 'item', key: 'mercury', abs: necAbs },
+      { type: 'item', key: 'mars', abs: courAbs },
+      { type: 'item', key: 'jupiter', abs: vicAbs },
+      { type: 'item', key: 'saturn', abs: nemAbs },
+      { type: 'item', key: 'ASC', abs: ascAbs },
+      { type: 'item', key: 'DSC', abs: (ascAbs + 180) % 360 },
+      { type: 'item', key: 'MC', abs: mcAbs },
+      { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
+    ];
+
+    let html = `
+      <svg width="0" height="0" style="position: absolute; display: none;">
+        <defs>
+          <radialGradient id="gradSunTab" cx="35%" cy="32%" r="68%">
+            <stop offset="0%" stop-color="#fffbeb" />
+            <stop offset="25%" stop-color="#fde047" />
+            <stop offset="60%" stop-color="#f59e0b" />
+            <stop offset="88%" stop-color="#d97706" />
+            <stop offset="100%" stop-color="#92400e" />
+          </radialGradient>
+          <radialGradient id="gradMoonTab" cx="32%" cy="28%" r="70%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="30%" stop-color="#e2e8f0" />
+            <stop offset="65%" stop-color="#94a3b8" />
+            <stop offset="90%" stop-color="#475569" />
+            <stop offset="100%" stop-color="#1e293b" />
+          </radialGradient>
+          <radialGradient id="gradMercuryTab" cx="35%" cy="30%" r="68%">
+            <stop offset="0%" stop-color="#fef08a" />
+            <stop offset="28%" stop-color="#d97706" />
+            <stop offset="65%" stop-color="#92400e" />
+            <stop offset="92%" stop-color="#451a03" />
+            <stop offset="100%" stop-color="#270e02" />
+          </radialGradient>
+          <radialGradient id="gradVenusTab" cx="34%" cy="30%" r="68%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="30%" stop-color="#fef3c7" />
+            <stop offset="65%" stop-color="#f59e0b" />
+            <stop offset="90%" stop-color="#b45309" />
+            <stop offset="100%" stop-color="#78350f" />
+          </radialGradient>
+          <radialGradient id="gradMarsTab" cx="35%" cy="30%" r="68%">
+            <stop offset="0%" stop-color="#fca5a5" />
+            <stop offset="25%" stop-color="#ef4444" />
+            <stop offset="60%" stop-color="#b91c1c" />
+            <stop offset="88%" stop-color="#7f1d1d" />
+            <stop offset="100%" stop-color="#450a0a" />
+          </radialGradient>
+          <radialGradient id="gradJupiterTab" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#fffbeb" />
+            <stop offset="30%" stop-color="#fef3c7" />
+            <stop offset="58%" stop-color="#d4a373" />
+            <stop offset="82%" stop-color="#a97142" />
+            <stop offset="100%" stop-color="#6f4518" />
+          </radialGradient>
+          <radialGradient id="gradSaturnTab" cx="35%" cy="30%" r="68%">
+            <stop offset="0%" stop-color="#fef9c3" />
+            <stop offset="35%" stop-color="#fde047" />
+            <stop offset="70%" stop-color="#ca8a04" />
+            <stop offset="92%" stop-color="#854d0e" />
+            <stop offset="100%" stop-color="#422006" />
+          </radialGradient>
+          <linearGradient id="gradRingsTab" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95" />
+            <stop offset="25%" stop-color="#cbd5e1" stop-opacity="0.9" />
+            <stop offset="60%" stop-color="#94a3b8" stop-opacity="0.85" />
+            <stop offset="85%" stop-color="#64748b" stop-opacity="0.9" />
+            <stop offset="100%" stop-color="#334155" stop-opacity="0.95" />
+          </linearGradient>
+          <clipPath id="jupiterClipTab">
+            <circle cx="50" cy="50" r="42" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      <style>
+        .tabela-enxuta {
+          width: 100%;
+          max-width: 960px;
+          margin: 0 auto 30px auto;
+          border-collapse: collapse;
+          font-family: 'Montserrat', sans-serif;
+          background: #ffffff;
+          font-size: 12px;
+          color: #0f172a;
+        }
+        .tabela-enxuta th, .tabela-enxuta td {
+          border: 1px solid #cbd5e1;
+          padding: 4px 6px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .tabela-enxuta th {
+          background-color: #f8fafc;
+          font-weight: 700;
+          color: #103b70;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+        }
+        .col-ponto { width: 12%; }
+        .col-signo { width: 12%; }
+        .col-grau { width: 22%; font-weight: 600; }
+        .col-termo { width: 14%; font-weight: bold; color: #c59b27; font-size: 14px; }
+        .col-dodec-signo { width: 12%; }
+        .col-dodec-grau { width: 28%; font-weight: 600; }
+      </style>
+
+      <table class="tabela-enxuta">
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-ponto">Ponto</th>
+            <th rowspan="2" class="col-signo">Signo</th>
+            <th rowspan="2" class="col-grau">Grau</th>
+            <th rowspan="2" class="col-termo">Termo</th>
+            <th colspan="2">Dodecatemória</th>
+          </tr>
+          <tr>
+            <th class="col-dodec-signo">Signo</th>
+            <th class="col-dodec-grau">Grau</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    listaElementos.forEach(el => {
+      let iconHTML = '';
+      let absDeg = el.abs;
+      let retroSymbol = el.retro ? `<span style="color: #dc2626; font-weight: 900; margin-left: 2px;">℞</span>` : '';
+
+      if (el.type === 'planet') {
+        iconHTML = getPlanet3DSVG(el.pId);
+      } else {
+        iconHTML = getItemSVG(el.key);
       }
-      .tabela-enxuta th, .tabela-enxuta td {
-        border: 1px solid #cbd5e1;
-        padding: 4px 6px;
-        text-align: center;
-        vertical-align: middle;
-      }
-      .tabela-enxuta th {
-        background-color: #f8fafc;
-        font-weight: 700;
-        color: #103b70;
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.5px;
-      }
-      .col-ponto { width: 12%; }
-      .col-signo { width: 12%; }
-      .col-grau { width: 22%; font-weight: 600; }
-      .col-termo { width: 14%; font-weight: bold; color: #c59b27; font-size: 14px; }
-      .col-dodec-signo { width: 12%; }
-      .col-dodec-grau { width: 28%; font-weight: 600; }
-    </style>
 
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 20px 0 10px 0; text-transform: uppercase;">Posicionamentos e Micro-Domínios</h3>
-    <table class="tabela-enxuta">
-      <thead>
+      const signIdx = Math.floor(absDeg / 30);
+      const signoSVG = getSignSVG(signIdx, 18);
+      const grauFormatted = `${formatDegMinTabela(absDeg)}${retroSymbol}`;
+      const termo = calcEgyptianTermTabela(absDeg);
+
+      const dodec = calcDodecatemoriaTabela(absDeg);
+      const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
+
+      html += `
         <tr>
-          <th rowspan="2" class="col-ponto">Ponto</th>
-          <th rowspan="2" class="col-signo">Signo</th>
-          <th rowspan="2" class="col-grau">Grau</th>
-          <th rowspan="2" class="col-termo">Termo</th>
-          <th colspan="2">Dodecatemória</th>
+          <td class="col-ponto">${iconHTML}</td>
+          <td class="col-signo">${signoSVG}</td>
+          <td class="col-grau">${grauFormatted}</td>
+          <td class="col-termo">${termo}</td>
+          <td class="col-dodec-signo">${dodecSignoSVG}</td>
+          <td class="col-dodec-grau">${dodec.degFormatted}</td>
         </tr>
-        <tr>
-          <th class="col-dodec-signo">Signo</th>
-          <th class="col-dodec-grau">Grau</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  listaElementos.forEach(el => {
-    let iconHTML = '';
-    let absDeg = el.abs;
-    let retroSymbol = el.retro ? `<span style="color: #dc2626; font-weight: 900; margin-left: 2px;">℞</span>` : '';
-
-    if (el.type === 'planet') {
-      iconHTML = getPlanet3DSVG(el.pId);
-    } else {
-      iconHTML = getItemSVG(el.key);
-    }
-
-    const signIdx = Math.floor(absDeg / 30);
-    const signoSVG = getSignSVG(signIdx, 18);
-    const grauFormatted = `${formatDegMinTabela(absDeg)}${retroSymbol}`;
-    const termo = calcEgyptianTermTabela(absDeg);
-    
-    const dodec = calcDodecatemoriaTabela(absDeg);
-    const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
+      `;
+    });
 
     html += `
-      <tr>
-        <td class="col-ponto">${iconHTML}</td>
-        <td class="col-signo">${signoSVG}</td>
-        <td class="col-grau">${grauFormatted}</td>
-        <td class="col-termo">${termo}</td>
-        <td class="col-dodec-signo">${dodecSignoSVG}</td>
-        <td class="col-dodec-grau">${dodec.degFormatted}</td>
-      </tr>
+        </tbody>
+      </table>
     `;
-  });
 
-  html += `
-      </tbody>
-    </table>
-  `;
-
-  container.innerHTML = html;
+    container.innerHTML = html;
+  } catch (err) {
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = `<div style="padding: 15px; color: #dc2626; text-align: center; font-weight: bold; background: #fef2f2; border: 1px solid #fca5a5; margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro na Tabela Técnica: ${err.message}</div>`;
+    }
+  }
 }
