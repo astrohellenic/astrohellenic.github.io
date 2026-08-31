@@ -681,6 +681,14 @@ main, #app, .app-container, .main-content {
                 <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Mauá, SP)..." oninput="pesquisarCidadesAutocomplete(this.value, 'cityResultsList')">
                 <div id="cityResultsList" class="city-results"></div>
             </div>
+            <div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
+    <input type="text" id="modalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
+</div>
+<div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
+    <input type="email" id="modalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
+</div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalNovoMapa()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="confirmarNovoMapaModal()">Gerar Mapa</button>
@@ -728,6 +736,14 @@ main, #app, .app-container, .main-content {
                 <input type="text" id="editModalCidadeInput" class="modal-input" oninput="pesquisarCidadesAutocomplete(this.value, 'editCityResultsList', true)">
                 <div id="editCityResultsList" class="city-results"></div>
             </div>
+            <div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
+    <input type="text" id="editModalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
+</div>
+<div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
+    <input type="email" id="editModalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
+</div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalEdicao()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="salvarEdicaoMapaModal()">Salvar Alterações</button>
