@@ -52,9 +52,6 @@ function getPlanet3DSVG(planetId) {
   return planetSVGs[planetId] || '';
 }
 
-  return planetSVGs[planetId] || '';
-}
-
 function getItemSVG(key) {
   const itemSVGs = {
     'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg>`,
