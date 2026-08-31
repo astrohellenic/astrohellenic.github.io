@@ -565,6 +565,10 @@ main, #app, .app-container, .main-content {
                 <button class="icon-btn" onclick="salvarImagemMandala()" title="Exportar Imagem PNG">
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
+                <!-- BOTÃO DE ALTERNÂNCIA DE VISÃO (MANDALA / TABELA) -->
+<button type="button" id="btnToggleVisao" onclick="alternarVisaoMapaTabela()" style="padding: 6px 12px; font-weight: 700; font-size: 12px; color: #103b70; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+  <span>📋</span> Alternar para Tabela
+</button>
             </div>
 
             <!-- NAVEGADOR TEMPORAL (STEPPER) -->
@@ -590,7 +594,7 @@ main, #app, .app-container, .main-content {
             </div>
         </div>
         
-<div id="painel-tecnico-container" style="margin-top: 30px;"></div>
+<div id="painel-tecnico-container" style="display: none; margin-top: 30px;"></div>
 
     </main>
 
