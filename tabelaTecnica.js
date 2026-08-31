@@ -533,12 +533,104 @@ function renderPainelTecnico(data, containerId) {
       </table>
     `;
 
-    html += renderMatrizVisibilidadeHTML(data);
-    container.innerHTML = html;
-  } catch (err) {
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = `<div style="padding: 15px; color: #dc2626; text-align: center; font-weight: bold; background: #fef2f2; border: 1px solid #fca5a5; margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro no Painel Técnico: ${err.message}</div>`;
-    }
+    function renderMatrizVisibilidadeHTML(data) {
+  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+  const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
+  const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
+
+  const pObj = {};
+  const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
+  ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
+    const item = data[mapKeys[id]];
+    pObj[id] = item ? item.grau_absoluto : 0;
+  });
+
+  const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
+  const sun = pObj.Sun, moon = pObj.Moon, merc = pObj.Mercury, ven = pObj.Venus, mars = pObj.Mars, jup = pObj.Jupiter, sat = pObj.Saturn;
+
+  const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
+  const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
+  const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
+  const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
+  const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
+  const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
+  const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
+
+  const colunas = [
+    { key: 'Sun', type: 'planet', id: 'Sun' },
+    { key: 'Moon', type: 'planet', id: 'Moon' },
+    { key: 'Mercury', type: 'planet', id: 'Mercury' },
+    { key: 'Venus', type: 'planet', id: 'Venus' },
+    { key: 'Mars', type: 'planet', id: 'Mars' },
+    { key: 'Jupiter', type: 'planet', id: 'Jupiter' },
+    { key: 'Saturn', type: 'planet', id: 'Saturn' },
+    { key: 'NodeN', type: 'item', name: 'Nodo Norte' },
+    { key: 'NodeS', type: 'item', name: 'Nodo Sul' },
+    { key: 'Syz', type: 'item', name: 'Sizígia' },
+    { key: 'FORT', type: 'item', name: 'fortune' },
+    { key: 'ESP', type: 'item', name: 'spirit' },
+    { key: 'EROS', type: 'item', name: 'venus' },
+    { key: 'NEC', type: 'item', name: 'mercury' },
+    { key: 'AUD', type: 'item', name: 'mars' },
+    { key: 'VIT', type: 'item', name: 'jupiter' },
+    { key: 'NÊM', type: 'item', name: 'saturn' }
+  ];
+
+  const posicoes = {
+    Sun: pObj.Sun, Moon: pObj.Moon, Mercury: pObj.Mercury, Venus: pObj.Venus, Mars: pObj.Mars, Jupiter: pObj.Jupiter, Saturn: pObj.Saturn,
+    NodeN: nodeAbs, NodeS: (nodeAbs + 180) % 360, Syz: syzAbs, FORT: fortAbs, ESP: spirAbs, EROS: erosAbs, NEC: necAbs, AUD: courAbs, VIT: vicAbs, NÊM: nemAbs
+  };
+
+  function getMatrixIcon(col) {
+    if (col.type === 'planet') return getPlanet3DSVG(col.id);
+    return getItemSVG(col.name);
   }
+
+  function getAspecto(deg1, deg2) {
+    if (deg1 === undefined || deg2 === undefined) return '';
+    const s1 = Math.floor(deg1 / 30);
+    const s2 = Math.floor(deg2 / 30);
+    let diff = Math.abs(s1 - s2);
+    if (diff > 6) diff = 12 - diff;
+
+    if (diff === 0) return 'σ';
+    if (diff === 2) return '*';
+    if (diff === 3) return '☐';
+    if (diff === 4) return 'Δ';
+    if (diff === 6) return '☍';
+    return '';
+  }
+
+  let h = `
+    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; margin: 30px 0 10px 0; text-transform: uppercase;">Matriz de Visibilidade (Theoria)</h3>
+    <table class="tabela-enxuta" style="font-size: 11px;">
+      <thead>
+        <tr>
+          <th style="width: 5%;"></th>
+  `;
+
+  colunas.forEach(c => {
+    h += `<th style="padding: 4px; vertical-align: middle;">${getMatrixIcon(c)}</th>`;
+  });
+  h += `</tr></thead><tbody>`;
+
+  colunas.forEach((row, i) => {
+    h += `<tr><td style="font-weight: bold; background: #f8fafc; vertical-align: middle;">${getMatrixIcon(row)}</td>`;
+    colunas.forEach((col, j) => {
+      if (j <= i) {
+        h += `<td style="background: #f1f5f9; color: #94a3b8;">-</td>`;
+      } else {
+        const asp = getAspecto(posicoes[row.key], posicoes[col.key]);
+        let colorStyle = '#0f172a';
+        if (asp === 'σ') colorStyle = '#000000';
+        else if (asp === '☐' || asp === '☍') colorStyle = '#dc2626';
+        else if (asp === 'Δ' || asp === '*') colorStyle = '#2563eb';
+        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle;">${asp}</td>`;
+      }
+    });
+    h += `</tr>`;
+  });
+
+  h += `</tbody></table>`;
+  return h;
 }
