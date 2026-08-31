@@ -115,7 +115,6 @@ main, #app, .app-container, .main-content {
             top: 0;
             left: -320px;
             transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -566,8 +565,8 @@ main, #app, .app-container, .main-content {
                     <i class="fa-solid fa-share-from-square"></i>
                 </button>
                 <!-- BOTÃO DE ALTERNÂNCIA DE VISÃO (MANDALA / TABELA) -->
-<button type="button" id="btnToggleVisao" onclick="alternarVisaoMapaTabela()" style="padding: 6px 12px; font-weight: 700; font-size: 12px; color: #103b70; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-  <span>📋</span> Alternar para Tabela
+<button class="icon-btn" id="btnToggleVisao" onclick="alternarVisaoMapaTabela()" title="Alternar para Tabela Técnica">
+  <i class="fa-solid fa-table-list"></i>
 </button>
             </div>
 
