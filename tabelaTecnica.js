@@ -95,8 +95,17 @@ function calcEgyptianTermTabela(absDeg) {
 
 function calcDodecatemoriaTabela(absDeg) {
   if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return { signIdx: -1, degFormatted: '-' };
+  
+  // Signo original e deslocamento dentro dele (0° a 30°)
+  const signIdxInicial = Math.floor(absDeg / 30);
   const degInSign = absDeg % 30;
-  const dodecAbs = (absDeg + (degInSign * 12)) % 360;
+  
+  // Projeção Dodecatemória: multiplica o grau do signo por 12
+  const projecaoGraus = degInSign * 12;
+  
+  // Posição absoluta final exata
+  const dodecAbs = ((signIdxInicial * 30) + projecaoGraus) % 360;
+  
   return {
     signIdx: Math.floor(dodecAbs / 30),
     degFormatted: formatDegMinTabela(dodecAbs)
