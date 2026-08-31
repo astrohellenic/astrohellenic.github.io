@@ -1,16 +1,40 @@
 /* ==========================================
-   PAINEL TÉCNICO: POSIÇÕES E ASPECTOS (OTIMIZADO)
+   PAINEL TÉCNICO: POSIÇÕES E ASPECTOS (CORRIGIDO)
    ========================================== */
 
 function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-container") {
   const container = document.getElementById(containerId);
   if (!container || !dataCalculada) return;
 
-  const ascAbs = dataCalculada.Ascendente.grau_absoluto;
-  const isDay = (((dataCalculada.Sol ? dataCalculada.Sol.grau_absoluto : 0) - ascAbs + 360) % 360) >= 180;
+  // Lista local de signos para evitar dependência de constantes externas
+  const NOMBRES_SIGNOS = [
+    "Áries", "Touro", "Gêmeos", "Câncer",
+    "Leão", "Virgem", "Libra", "Escorpião",
+    "Sagitário", "Capricórnio", "Aquário", "Peixes"
+  ];
+
+  // Matriz local de Termos Egípcios
+  const TERMOS_LOCAL = [
+    [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
+    [{ p: "♀", deg: 8 }, { p: "☿", deg: 14 }, { p: "♃", deg: 22 }, { p: "♄", deg: 27 }, { p: "♂", deg: 30 }],
+    [{ p: "☿", deg: 6 }, { p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "♂", deg: 24 }, { p: "♄", deg: 30 }],
+    [{ p: "♂", deg: 7 }, { p: "♀", deg: 13 }, { p: "☿", deg: 19 }, { p: "♃", deg: 26 }, { p: "♄", deg: 30 }],
+    [{ p: "♃", deg: 6 }, { p: "♀", deg: 11 }, { p: "♄", deg: 18 }, { p: "☿", deg: 24 }, { p: "♂", deg: 30 }],
+    [{ p: "☿", deg: 7 }, { p: "♀", deg: 17 }, { p: "♃", deg: 21 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }],
+    [{ p: "♄", deg: 6 }, { p: "☿", deg: 14 }, { p: "♃", deg: 21 }, { p: "♀", deg: 28 }, { p: "♂", deg: 30 }],
+    [{ p: "♂", deg: 7 }, { p: "♀", deg: 11 }, { p: "☿", deg: 19 }, { p: "♃", deg: 24 }, { p: "♄", deg: 30 }],
+    [{ p: "♃", deg: 12 }, { p: "♀", deg: 17 }, { p: "☿", deg: 21 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
+    [{ p: "☿", deg: 7 }, { p: "♃", deg: 14 }, { p: "♀", deg: 22 }, { p: "♄", deg: 26 }, { p: "♂", deg: 30 }],
+    [{ p: "♄", deg: 7 }, { p: "☿", deg: 13 }, { p: "♀", deg: 20 }, { p: "♃", deg: 25 }, { p: "♂", deg: 30 }],
+    [{ p: "♀", deg: 12 }, { p: "♃", deg: 16 }, { p: "☿", deg: 19 }, { p: "♂", deg: 28 }, { p: "♄", deg: 30 }]
+  ];
+
+  const ascAbs = dataCalculada.Ascendente ? dataCalculada.Ascendente.grau_absoluto : 0;
+  const solAbs = dataCalculada.Sol ? dataCalculada.Sol.grau_absoluto : 0;
+  const isDay = (((solAbs - ascAbs + 360) % 360) >= 180);
 
   const pObj = {
-    Sun: { abs: dataCalculada.Sol ? dataCalculada.Sol.grau_absoluto : 0 },
+    Sun: { abs: solAbs },
     Moon: { abs: dataCalculada.Lua ? dataCalculada.Lua.grau_absoluto : 0 },
     Mercury: { abs: dataCalculada.Mercúrio ? dataCalculada.Mercúrio.grau_absoluto : 0 },
     Venus: { abs: dataCalculada.Vênus ? dataCalculada.Vênus.grau_absoluto : 0 },
@@ -19,7 +43,10 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
     Saturn: { abs: dataCalculada.Saturno ? dataCalculada.Saturno.grau_absoluto : 0 }
   };
 
-  const lotesCalculados = calculateSevenLots(ascAbs, isDay, pObj);
+  let lotesCalculados = [];
+  if (typeof calculateSevenLots === 'function') {
+    lotesCalculados = calculateSevenLots(ascAbs, isDay, pObj);
+  }
 
   const elementos = [
     { id: "Sun", nome: "Sol", tipo: "planet", sym: "☉", color: "#d97706", deg: pObj.Sun.abs, retro: false },
@@ -55,12 +82,13 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
         <tbody>`;
 
   elementos.forEach(el => {
-    const signIdx = Math.floor(el.deg / 30);
-    const degInSign = el.deg % 30;
-    const signName = SIGNS[signIdx].name;
+    const degVal = (isNaN(el.deg) || el.deg === undefined) ? 0 : el.deg;
+    const signIdx = Math.floor(degVal / 30) % 12;
+    const degInSign = degVal % 30;
+    const signName = NOMBRES_SIGNOS[signIdx] || "Desconhecido";
 
     let termoRegente = "-";
-    const termosDoSigno = EGYPTIAN_TERMS[signIdx];
+    const termosDoSigno = TERMOS_LOCAL[signIdx] || [];
     for (let t of termosDoSigno) {
       if (degInSign < t.deg) {
         termoRegente = `Termo de ${t.p}`;
@@ -68,10 +96,12 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
       }
     }
 
-    const dodecAbs = (el.deg * 12) % 360;
-    const dodecSignIdx = Math.floor(dodecAbs / 30);
-    const dodecSignName = SIGNS[dodecSignIdx].name;
+    const dodecAbs = (degVal * 12) % 360;
+    const dodecSignIdx = Math.floor(dodecAbs / 30) % 12;
+    const dodecSignName = NOMBRES_SIGNOS[dodecSignIdx] || "Desconhecido";
 
+    const formatDeg = typeof formatDegMin === 'function' ? formatDegMin(degVal) : `${Math.floor(degInSign)}°`;
+    const formatDodec = typeof formatDegMin === 'function' ? formatDegMin(dodecAbs) : `${Math.floor(dodecAbs % 30)}°`;
     const retroTag = el.retro ? `<span style="color: #dc2626; font-weight: 800; margin-left: 4px;">℞</span>` : "";
 
     html += `
@@ -80,9 +110,9 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
           <span style="color: ${el.color}; font-size: 16px; margin-right: 6px;">${getSimboloExibicao(el)}</span>
           <span>${el.nome}</span>
         </td>
-        <td style="padding: 10px;">${signName} ${formatDegMin(el.deg)}${retroTag}</td>
+        <td style="padding: 10px;">${signName} ${formatDeg}${retroTag}</td>
         <td style="padding: 10px; font-weight: 600; color: #b45309;">${termoRegente}</td>
-        <td style="padding: 10px;">${dodecSignName} ${formatDegMin(dodecAbs)}</td>
+        <td style="padding: 10px;">${dodecSignName} ${formatDodec}</td>
       </tr>`;
   });
 
@@ -118,8 +148,10 @@ function renderPainelTecnico(dataCalculada, containerId = "painel-tecnico-contai
       if (i === j) {
         html += `<td style="padding: 6px; background: #e2e8f0; border: 1px solid #cbd5e1;">-</td>`;
       } else {
-        const signA = Math.floor(elLinha.deg / 30);
-        const signB = Math.floor(elColuna.deg / 30);
+        const degA = isNaN(elLinha.deg) ? 0 : elLinha.deg;
+        const degB = isNaN(elColuna.deg) ? 0 : elColuna.deg;
+        const signA = Math.floor(degA / 30) % 12;
+        const signB = Math.floor(degB / 30) % 12;
         let dist = Math.abs(signA - signB);
         if (dist > 6) dist = 12 - dist;
 
