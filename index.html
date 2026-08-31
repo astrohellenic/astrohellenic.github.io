@@ -19,6 +19,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+
+@media print {
+  /* Oculta elementos desnecessários na impressão, como o botão superior */
+  header, button, .no-print {
+    display: none !important;
+  }
+
+  /* Força o corpo da página a ocupar largura total e remove margens excessivas */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+
+  /* Evita que blocos importantes e tabelas sejam cortados no meio por uma quebra de página */
+  table, tr, td, th, .tabela-enxuta, h3 {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Força a mandala e as tabelas a iniciarem em uma página limpa se necessário */
+  .mandala-container {
+    page-break-after: auto;
+  }
+}
         
 /* TESTE DE FLUXO REAL DA PÁGINA */
 html, body {
