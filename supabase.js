@@ -455,6 +455,10 @@ function renderListaMapas(lista) {
     const cidStr = item.cidade || "Local n/i";
     const isChecked = selectedMapIds.has(item.id) ? 'checked' : '';
 
+    // Trata o número do WhatsApp para o link direto
+    const numWhats = item.whatsapp ? item.whatsapp.replace(/\D/g, '') : '';
+    const linkWhats = numWhats ? (numWhats.length <= 11 ? `55${numWhats}` : numWhats) : '';
+
     html += `
       <div class="client-card-item" id="card-item-${index}">
         ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer;">` : ''}
@@ -463,7 +467,17 @@ function renderListaMapas(lista) {
           <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
-          <div class="card-actions">
+          <div class="card-actions" style="display: flex; gap: 6px; align-items: center;">
+            ${linkWhats ? `
+              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp" style="color: #25d366;">
+                <i class="fa-brands fa-whatsapp"></i>
+              </button>
+            ` : ''}
+            ${item.email ? `
+              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail" style="color: #0284c7;">
+                <i class="fa-solid fa-envelope"></i>
+              </button>
+            ` : ''}
             <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar">
               <i class="fa-solid fa-pen"></i>
             </button>
