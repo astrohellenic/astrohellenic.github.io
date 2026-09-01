@@ -98,6 +98,27 @@
   const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  /* CARREGA O LOGO PERSONALIZADO AO ABRIR A PÁGINA */
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const { data } = await supabaseClient
+      .from('configuracoes')
+      .select('logo_url')
+      .limit(1)
+      .maybeSingle();
+
+    if (data && data.logo_url) {
+      const logoImg = document.getElementById('formLogoImg');
+      if (logoImg) {
+        logoImg.src = data.logo_url;
+        logoImg.style.display = 'block';
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao carregar logo:", e);
+  }
+});
+
   const urlParams = new URLSearchParams(window.location.search);
   const ownerId = urlParams.get('owner') || null;
 
@@ -192,16 +213,53 @@
       user_id: ownerId
     };
 
-    try {
-      const { error } = await supabaseClient.from('mapas').insert([payload]);
-      if (!error) {
-        alert('Dados enviados com sucesso!');
-        fecharConfirmacao();
-        document.getElementById('clientForm').reset();
-        selectedGeo = { lat: -23.5505, lon: -46.6333, name: '' };
-      } else {
-        alert('Erro ao enviar dados: ' + error.message);
+      try {
+    const { error } = await supabaseClient.from('mapas').insert([payload]);
+    if (!error) {
+      
+      // Busca webhook e link de redirecionamento
+      let cfgData = null;
+      try {
+        const { data } = await supabaseClient
+          .from('configuracoes')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+        cfgData = data;
+      } catch (e) {
+        console.error("Erro ao ler configuracoes:", e);
       }
+
+      // Dispara o Webhook caso configurado
+      if (cfgData && cfgData.webhook_url) {
+        try {
+          await fetch(cfgData.webhook_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...payload,
+              data_envio: new Date().toISOString()
+            })
+          });
+        } catch (webErr) {
+          console.error("Erro no Webhook:", webErr);
+        }
+      }
+
+      alert('Dados enviados com sucesso!');
+      fecharConfirmacao();
+      document.getElementById('clientForm').reset();
+      selectedGeo = { lat: -23.5505, lon: -46.6333, name: '' };
+
+      // Redireciona se houver link cadastrado
+      if (cfgData && cfgData.redirect_url) {
+        window.location.href = cfgData.redirect_url;
+      }
+
+    } else {
+      alert('Erro ao enviar dados: ' + error.message);
+    }
+
     } catch (err) {
       alert('Erro de conexão ao enviar formulário.');
     } finally {
