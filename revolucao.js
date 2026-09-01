@@ -2,67 +2,69 @@
    MÓDULO DE REVOLUÇÃO SOLAR & PROFECÇÕES (VALENS)
    ========================================== */
 
+let clienteAtivoRS = null;
+let anoAlvoRS = new Date().getFullYear();
+
+/* INICIALIZAÇÃO DO MÓDULO AO ABRIR A ABA */
 function iniciarModuloRevolucao() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  // Garante que existe um cliente selecionado
-  if (typeof currentPerfilSelecionado === 'undefined' || !currentPerfilSelecionado) {
+  // Se já houver um cliente carregado no estado global, aproveita os dados cadastrais
+  if (!clienteAtivoRS && typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado) {
+    clienteAtivoRS = currentPerfilSelecionado;
+  }
+
+  // Se ainda não houver nenhum cliente selecionado, avisa na tela
+  if (!clienteAtivoRS) {
     container.innerHTML = `
-      <div style="padding: 30px; text-align: center; color: #475569;">
-        <i class="fa-solid fa-circle-info" style="font-size: 24px; color: #103b70; margin-bottom: 12px;"></i>
-        <h3 style="margin: 0 0 8px 0; font-family: 'Cinzel', serif; color: #103b70;">Selecione um Cliente</h3>
-        <p style="margin: 0; font-size: 13px;">Abra uma pasta no menu lateral e selecione o mapa natal do cliente.</p>
+      <div style="padding: 40px; text-align: center; color: #475569;">
+        <i class="fa-solid fa-folder-open" style="font-size: 32px; color: #103b70; margin-bottom: 12px;"></i>
+        <h3 style="margin: 0 0 8px 0; font-family: 'Cinzel', serif; color: #103b70;">Selecione um Mapa</h3>
+        <p style="margin: 0; font-size: 13px;">Abra o menu lateral (≡) e clique no cliente desejado para carregar a Revolução Solar.</p>
       </div>
     `;
     return;
   }
 
-  const anoAtual = new Date().getFullYear();
-  renderInterfaceRevolucao(container, anoAtual);
+  renderInterfaceRevolucao(container);
 }
 
-function renderInterfaceRevolucao(container, anoAlvo) {
-  const perfil = currentPerfilSelecionado;
-  const partesData = perfil.dataNascimento.split('/');
-  const anoNasc = parseInt(partesData[2]);
-  const idadeNaRS = anoAlvo - anoNasc;
+/* CARREGA A ESTRUTURA DA TELA DE RS */
+function renderInterfaceRevolucao(container) {
+  if (!clienteAtivoRS) return;
+
+  const partesData = clienteAtivoRS.dataNascimento.split('/');
+  const anoNasc = parseInt(partesData[2]) || 1990;
+  const idadeNaRS = anoAlvoRS - anoNasc;
 
   let html = `
     <div id="rs-module-root" style="padding: 20px; max-width: 1200px; margin: 0 auto; font-family: 'Montserrat', sans-serif;">
       
-      <!-- NAVEGAÇÃO DE ANO DA RS -->
+      <!-- CONTROLE DE ANO E NOME DO CLIENTE -->
       <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px;">
         <div>
-          <span style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 16px;">REVOLUÇÃO SOLAR ${anoAlvo}</span>
-          <span style="font-size: 12px; color: #64748b; margin-left: 10px;">(${perfil.nome} — Idade: ${idadeNaRS} anos)</span>
+          <span style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 16px;">REVOLUÇÃO SOLAR ${anoAlvoRS}</span>
+          <span style="font-size: 13px; color: #64748b; margin-left: 10px; font-weight: 600;">(${clienteAtivoRS.nome || 'Cliente'} — ${idadeNaRS} anos)</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button onclick="mudarAnoRS(${anoAlvo - 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold; cursor: pointer;">&laquo; Ano Anterior</button>
-          <button onclick="mudarAnoRS(${anoAlvo + 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold; cursor: pointer;">Próximo Ano &raquo;</button>
+          <button onclick="mudarAnoRS(${anoAlvoRS - 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold; cursor: pointer;">&laquo; Ano Anterior</button>
+          <button onclick="mudarAnoRS(${anoAlvoRS + 1})" class="icon-btn" style="padding: 6px 12px; font-weight: bold; cursor: pointer;">Próximo Ano &raquo;</button>
         </div>
       </div>
 
-      <!-- PAINEL DE CABEÇALHO DA PROFECÇÃO -->
+      <!-- CABEÇALHO DA PROFECÇÃO -->
       <div id="painel-profecacao-header" style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; padding: 16px; border-radius: 10px; margin-bottom: 24px;">
         <div style="text-align: center; font-size: 13px; color: #78350f;">
           Calculando regentes e Senhor do Ano...
         </div>
       </div>
 
-      <!-- CONTAINER ONDE A MANDALARS.JS RENDERIZA AS DUAS MANDALAS -->
+      <!-- ÁREA ONDE A MANDALARS.JS DESENHA OS MAPAS -->
       <div style="margin-bottom: 30px; text-align: center;">
         <div id="rs-mandala-container" style="display: flex; justify-content: center; min-height: 400px; align-items: center;">
-          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mandalas...</p>
+          <p style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Buscando dados e desenhando mandalas...</p>
         </div>
-      </div>
-
-      <!-- TABELA DOS 12 MESES PROFECTADOS -->
-      <div id="container-tabela-meses" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin-bottom: 30px;">
-      </div>
-
-      <!-- PASSOS DIÁRIOS (60 HORAS) -->
-      <div id="container-passos-diarios" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px;">
       </div>
 
     </div>
@@ -70,18 +72,31 @@ function renderInterfaceRevolucao(container, anoAlvo) {
 
   container.innerHTML = html;
 
-  // Chama a mandalaRS.js autônoma para calcular e desenhar tudo
+  // Dispara a busca independente na API através da mandalaRS.js
   if (typeof window.executarCalculoRS === 'function') {
-    window.executarCalculoRS(perfil, anoAlvo);
+    window.executarCalculoRS(clienteAtivoRS, anoAlvoRS);
   }
 }
 
+/* TROCA O ANO DA REVOLUÇÃO SOLAR */
 function mudarAnoRS(novoAno) {
+  anoAlvoRS = novoAno;
   const container = document.getElementById('mandala-container');
-  if (container) renderInterfaceRevolucao(container, novoAno);
+  if (container) renderInterfaceRevolucao(container);
 }
 
-/* FUNÇÃO QUE A PROFECCAO.JS CHAMA PARA PREENCHER AS TABELAS */
+/* RECEPTOR GLOBAL: DISPARADO QUANDO QUALQUER CLIENTE É CLICADO NO MENU LATERAL */
+window.carregarClienteNaRS = function(perfilCliente) {
+  clienteAtivoRS = perfilCliente;
+  const container = document.getElementById('mandala-container');
+  
+  // Se a aba da RS estiver visível na tela, atualiza imediatamente
+  if (container) {
+    renderInterfaceRevolucao(container);
+  }
+};
+
+/* RECEBE DADOS DA PROFECCAO.JS PARA EXIBIR NO CABEÇALHO */
 window.renderizarTabelaProfeccao = function(profAnual, dadosSolar) {
   const headerDiv = document.getElementById('painel-profecacao-header');
   if (headerDiv && profAnual) {
