@@ -297,7 +297,8 @@ async function carregarConfiguracoesCaptacao() {
 
     if (!error && data) {
       if (document.getElementById('cfgLogoUrl')) {
-        document.getElementById('cfgLogoUrl').value = data.logo_url || '';
+        const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
+document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
         
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
@@ -305,7 +306,7 @@ async function carregarConfiguracoesCaptacao() {
           const previewContainer = document.getElementById('logoPreviewContainer');
           const btnText = document.getElementById('btnUploadText');
           if (previewImg && previewContainer) {
-            previewImg.src = data.logo_url;
+            previewImg.src = logoUrlAntiCache;
             previewContainer.style.display = 'block';
           }
           if (btnText) btnText.innerText = 'Alterar Imagem do Logo';
@@ -355,7 +356,7 @@ async function fazerUploadLogo(inputElement) {
       .from('logos')
       .getPublicUrl(filePath);
 
-    const publicUrl = publicUrlData.publicUrl;
+    const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
     // Atualiza o campo oculto e a interface com a prévia
     document.getElementById('cfgLogoUrl').value = publicUrl;
