@@ -101,16 +101,20 @@
   /* CARREGA O LOGO PERSONALIZADO AO ABRIR A PÁGINA */
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const { data } = await supabaseClient
-      .from('configuracoes')
-      .select('logo_url')
-      .limit(1)
-      .maybeSingle();
+        const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('u');
+
+    let query = supabaseClient.from('configuracoes').select('logo_url, redirect_url');
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data } = await query.maybeSingle();
 
     if (data && data.logo_url) {
       const logoImg = document.getElementById('formLogoImg');
       if (logoImg) {
-        logoImg.src = data.logo_url;
+              logoImg.src = `${data.logo_url.split('?')[0]}?t=${Date.now()}`;
         logoImg.style.display = 'block';
       }
     }
