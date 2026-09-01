@@ -131,7 +131,33 @@ const PROFECCAO_ENGINE = (function() {
 
 })();
 
-/* EXPOSIÇÃO GLOBAL PARA O REVOLUCAO.JS */
+/* ==========================================
+   INTEGRAÇÃO REATIVA COM A MANDALARS.JS
+   ========================================== */
+
 if (typeof window !== 'undefined') {
   window.PROFECCAO_ENGINE = PROFECCAO_ENGINE;
+
+  /* PONTO DE ENTRADA DISPARADO DIRETO PELA MANDALARS.JS */
+  window.atualizarProfeccaoComDadosRS = function(dadosNatal, dadosSolar, anoRevolucao, anoNascimento) {
+    if (!dadosNatal || !dadosNatal.Ascendente) return;
+
+    // 1. Extrai o índice do signo do Ascendente Natal (0 = Áries, 1 = Touro...)
+    const ascSignoNome = dadosNatal.Ascendente.signo;
+    const SIGNOS_INDEX = {
+      "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
+      "Leao": 4, "Virgem": 5, "Libra": 6, "Escorpiao": 7,
+      "Sagitario": 8, "Capricornio": 9, "Aquario": 10, "Peixes": 11
+    };
+    const ascSignIdx = SIGNOS_INDEX[ascSignoNome] !== undefined ? SIGNOS_INDEX[ascSignoNome] : Math.floor(dadosNatal.Ascendente.grau_absoluto / 30);
+
+    // 2. Calcula a idade na Revolução Solar e executa a matemática helenística
+    const idade = parseInt(anoRevolucao) - parseInt(anoNascimento);
+    const resultadoAnual = PROFECCAO_ENGINE.calcularProfeccaoAnual(ascSignIdx, idade);
+
+    // 3. Notifica o sistema ou renderiza as tabelas de profecção na interface
+    if (typeof window.renderizarTabelaProfeccao === 'function') {
+      window.renderizarTabelaProfeccao(resultadoAnual, dadosSolar);
+    }
+  };
 }
