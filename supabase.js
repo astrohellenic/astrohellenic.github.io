@@ -46,6 +46,15 @@ async function carregarPastasSalvas() {
     console.error("Erro ao carregar pastas:", e);
   }
   renderMenuPrincipal();
+
+  /* PREENCHE O SELECT DE PASTAS DO NOVO MAPA AUTOMATICAMENTE */
+  const selectPastaModal = document.getElementById('modalPasta');
+  if (selectPastaModal && Array.isArray(customFolders)) {
+    const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    selectPastaModal.innerHTML = pastasOrdenadas.map(p => 
+      `<option value="${escapeHtml(p)}" ${p === activeFolder ? 'selected' : ''}>${escapeHtml(p)}</option>`
+    ).join('');
+  }
 }
 
 /* NÍVEL 1: MENU PRINCIPAL LIMPO (COM RODAPÉ DE CONFIGURAÇÕES) */
@@ -645,7 +654,7 @@ function abrirModalEdicao(event, index) {
   if (!item) return;
 
   document.getElementById('editModalId').value = item.id;
-     const selectPasta = document.getElementById('editModalPasta');
+  const selectPasta = document.getElementById('editModalPasta');
   if (selectPasta) {
     const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
     selectPasta.innerHTML = pastasOrdenadas.map(p => 
