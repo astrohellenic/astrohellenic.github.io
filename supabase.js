@@ -420,6 +420,7 @@ async function carregarMapasDoBanco(nomePasta) {
 
       cachedFolderData = data.map(item => ({
         id: item.id,
+        pasta: item.pasta || activeFolder,
         codigo: (item.codigo && String(item.codigo).trim() !== '') ? item.codigo : null,
         nome: item.nome,
         tipo: item.tipo || 'Natal',
@@ -644,6 +645,14 @@ function abrirModalEdicao(event, index) {
   if (!item) return;
 
   document.getElementById('editModalId').value = item.id;
+     const selectPasta = document.getElementById('editModalPasta');
+  if (selectPasta) {
+    const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    selectPasta.innerHTML = pastasOrdenadas.map(p => 
+      `<option value="${escapeHtml(p)}" ${p === (item.pasta || activeFolder) ? 'selected' : ''}>${escapeHtml(p)}</option>`
+    ).join('');
+  }
+
   document.getElementById('editModalTipoMapa').value = item.tipo || 'Natal';
   document.getElementById('editModalCodigo').value = item.codigo || '';
   document.getElementById('editModalNome').value = item.nome || '';
@@ -669,6 +678,7 @@ function fecharModalEdicao() {
 
 async function salvarEdicaoMapaModal() {
   const idMapa = document.getElementById('editModalId').value;
+  const pastaVal = document.getElementById('editModalPasta') ? document.getElementById('editModalPasta').value : activeFolder;
   const tipo = document.getElementById('editModalTipoMapa').value;
   const codDigitado = document.getElementById('editModalCodigo').value.trim();
   const nome = document.getElementById('editModalNome').value.trim();
@@ -688,6 +698,7 @@ async function salvarEdicaoMapaModal() {
     const { error } = await supabaseClient
       .from('mapas')
       .update({
+        pasta: pastaVal,
         tipo: tipo,
         codigo: codDigitado !== "" ? codDigitado : null,
         nome: nome,
