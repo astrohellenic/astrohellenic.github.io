@@ -37,6 +37,9 @@
 <body>
 
 <div class="form-card">
+  <div id="formLogoContainer" style="text-align: center; margin-bottom: 16px;">
+    <img id="formLogoImg" src="" alt="Logo" style="max-height: 70px; max-width: 100%; display: none; margin: 0 auto;" />
+  </div>
   <h2>Dados para o Atendimento</h2>
   <form id="clientForm" onsubmit="event.preventDefault(); abrirConfirmacao();">
     <div class="form-group">
@@ -99,38 +102,39 @@
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   /* CARREGA O LOGO PERSONALIZADO AO ABRIR A PÁGINA */
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-        const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('u');
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('u');
 
-    let query = supabaseClient.from('configuracoes').select('logo_url, redirect_url');
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
-
-    const { data } = await query.maybeSingle();
-
-    if (data && data.logo_url) {
-      const logoImg = document.getElementById('formLogoImg');
-      if (logoImg) {
-              logoImg.src = `${data.logo_url.split('?')[0]}?t=${Date.now()}`;
-        logoImg.style.display = 'block';
+      let query = supabaseClient.from('configuracoes').select('logo_url, redirect_url');
+      if (userId) {
+        query = query.eq('user_id', userId);
       }
+
+      const { data } = await query.maybeSingle();
+
+      if (data && data.logo_url) {
+        const logoImg = document.getElementById('formLogoImg');
+        if (logoImg) {
+          logoImg.src = `${data.logo_url.split('?')[0]}?t=${Date.now()}`;
+          logoImg.style.display = 'block';
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao carregar logo:", e);
     }
-  } catch (e) {
-    console.error("Erro ao carregar logo:", e);
-  }
-});
+  });
 
   const urlParams = new URLSearchParams(window.location.search);
-  const ownerId = urlParams.get('owner') || null;
+  const ownerId = urlParams.get('u') || null;
 
-  let selectedGeo = { lat: -23.5505, lon: -46.6333, name: '' };
+  let selectedGeo = { lat: null, lon: null, name: '' };
   let citySearchTimeout = null;
 
   function pesquisarCidade(termo) {
     clearTimeout(citySearchTimeout);
+    selectedGeo = { lat: null, lon: null, name: '' }; // Limpa a seleção ao digitar novo texto
     const resultsList = document.getElementById('cityResultsList');
     if (!termo || termo.trim().length < 3) {
       resultsList.style.display = 'none';
@@ -177,17 +181,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nome = document.getElementById('nome').value.trim();
     const data = document.getElementById('data').value.trim();
     const hora = document.getElementById('hora').value.trim() || 'Não informada';
-    const cidade = document.getElementById('cidade').value.trim();
+    const cidadeInput = document.getElementById('cidade').value.trim();
     const whatsapp = document.getElementById('whatsapp').value.trim();
     const email = document.getElementById('email').value.trim();
 
-    if (!selectedGeo.name || selectedGeo.name !== cidade) {
-      selectedGeo.name = cidade;
+    // TRAVA: Exige que a cidade tenha sido selecionada da lista
+    if (!selectedGeo.name || selectedGeo.name !== cidadeInput || !selectedGeo.lat || !selectedGeo.lon) {
+      alert('Por favor, selecione a cidade clicando em uma das opções da lista sugerida.');
+      return;
     }
 
     document.getElementById('sumNome').innerText = nome;
     document.getElementById('sumDataHora').innerText = `${data} às ${hora}`;
-    document.getElementById('sumCidade').innerText = cidade;
+    document.getElementById('sumCidade').innerText = selectedGeo.name;
     document.getElementById('sumWhatsapp').innerText = whatsapp;
     document.getElementById('sumEmail').innerText = email;
 
@@ -209,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       nome: document.getElementById('nome').value.trim(),
       data_nascimento: document.getElementById('data').value.trim(),
       hora_nascimento: document.getElementById('hora').value.trim(),
-      cidade: selectedGeo.name || document.getElementById('cidade').value.trim(),
+      cidade: selectedGeo.name,
       latitude: selectedGeo.lat,
       longitude: selectedGeo.lon,
       whatsapp: document.getElementById('whatsapp').value.trim(),
@@ -217,52 +223,52 @@ document.addEventListener('DOMContentLoaded', async () => {
       user_id: ownerId
     };
 
-      try {
-    const { error } = await supabaseClient.from('mapas').insert([payload]);
-    if (!error) {
-      
-      // Busca webhook e link de redirecionamento
-      let cfgData = null;
-      try {
-        const { data } = await supabaseClient
-          .from('configuracoes')
-          .select('*')
-          .limit(1)
-          .maybeSingle();
-        cfgData = data;
-      } catch (e) {
-        console.error("Erro ao ler configuracoes:", e);
-      }
-
-      // Dispara o Webhook caso configurado
-      if (cfgData && cfgData.webhook_url) {
+    try {
+      const { error } = await supabaseClient.from('mapas').insert([payload]);
+      if (!error) {
+        
+        // Busca webhook e link de redirecionamento do dono do formulário
+        let cfgData = null;
         try {
-          await fetch(cfgData.webhook_url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...payload,
-              data_envio: new Date().toISOString()
-            })
-          });
-        } catch (webErr) {
-          console.error("Erro no Webhook:", webErr);
+          let queryCfg = supabaseClient.from('configuracoes').select('*');
+          if (ownerId) {
+            queryCfg = queryCfg.eq('user_id', ownerId);
+          }
+          const { data } = await queryCfg.maybeSingle();
+          cfgData = data;
+        } catch (e) {
+          console.error("Erro ao ler configuracoes:", e);
         }
+
+        // Dispara o Webhook caso configurado
+        if (cfgData && cfgData.webhook_url) {
+          try {
+            await fetch(cfgData.webhook_url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...payload,
+                data_envio: new Date().toISOString()
+              })
+            });
+          } catch (webErr) {
+            console.error("Erro no Webhook:", webErr);
+          }
+        }
+
+        alert('Dados enviados com sucesso!');
+        fecharConfirmacao();
+        document.getElementById('clientForm').reset();
+        selectedGeo = { lat: null, lon: null, name: '' };
+
+        // Redireciona se houver link cadastrado
+        if (cfgData && cfgData.redirect_url) {
+          window.location.href = cfgData.redirect_url;
+        }
+
+      } else {
+        alert('Erro ao enviar dados: ' + error.message);
       }
-
-      alert('Dados enviados com sucesso!');
-      fecharConfirmacao();
-      document.getElementById('clientForm').reset();
-      selectedGeo = { lat: -23.5505, lon: -46.6333, name: '' };
-
-      // Redireciona se houver link cadastrado
-      if (cfgData && cfgData.redirect_url) {
-        window.location.href = cfgData.redirect_url;
-      }
-
-    } else {
-      alert('Erro ao enviar dados: ' + error.message);
-    }
 
     } catch (err) {
       alert('Erro de conexão ao enviar formulário.');
