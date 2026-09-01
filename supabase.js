@@ -259,6 +259,19 @@ async function abrirConfiguracoesCaptacao() {
         </button>
         <input type="hidden" id="cfgLogoUrl">
       </div>
+      
+      <!-- LINK DO FORMULÁRIO PÚBLICO -->
+<div style="margin-bottom: 16px;">
+  <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">
+    Seu Link Exclusivo do Formulário
+  </label>
+  <div style="display: flex; gap: 8px;">
+    <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background-color: #f8fafc; color: #475569;" />
+    <button type="button" onclick="copiarLinkFormulario()" style="padding: 8px 16px; background-color: var(--primary-blue, #1e3a8a); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; whitespace: nowrap;">
+      Copiar
+    </button>
+  </div>
+</div>
 
       <!-- WEBHOOK -->
       <div style="margin-bottom: 16px;">
@@ -299,7 +312,10 @@ async function carregarConfiguracoesCaptacao() {
       if (document.getElementById('cfgLogoUrl')) {
         const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
 document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
-        
+const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
+if (document.getElementById('cfgPublicFormUrl')) {
+  document.getElementById('cfgPublicFormUrl').value = publicLink;
+}        
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
@@ -1231,4 +1247,18 @@ async function salvarRevolucaoSolarNoBanco(pastaAlvo, dadosRS) {
   } catch (err) {
     alert("Erro de conexão ao salvar Revolução Solar.");
   }
+}
+
+/* COPIA O LINK DO FORMULÁRIO PARA A ÁREA DE TRANSFERÊNCIA */
+function copiarLinkFormulario() {
+  const input = document.getElementById('cfgPublicFormUrl');
+  if (!input || !input.value) return;
+  
+  navigator.clipboard.writeText(input.value).then(() => {
+    alert('Link copiado com sucesso!');
+  }).catch(() => {
+    input.select();
+    document.execCommand('copy');
+    alert('Link copiado com sucesso!');
+  });
 }
