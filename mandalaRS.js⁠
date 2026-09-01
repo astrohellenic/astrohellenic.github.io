@@ -1,5 +1,6 @@
 /* ==========================================
-   MÓDULO DE MANDALAS DUPLAS (REVOLUÇÃO SOLAR)
+   MÓDULO DE MANDALAS DUPLAS E API (REVOLUÇÃO SOLAR)
+   Arquivo 100% autônomo e independente
    ========================================== */
 
 (function() {
@@ -22,7 +23,7 @@
     `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
     `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
     `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="0" y1="55" x2="64" y2="55"></line>`,
-    `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" stroke-miterlimit="10" points="52,53 57,58 52,63 "></polyline>`,
+    `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,52V12c0,0,0-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" stroke-miterlimit="10" points="52,53 57,58 52,63 "></polyline>`,
     `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="1" y1="28" x2="36" y2="63"></line>`,
     `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
     `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
@@ -340,7 +341,7 @@
     return svg;
   }
 
-  /* FUNÇÃO PRINCIPAL CHAMADA PELA PROFECÇÃO */
+  /* RENDERIZADOR DAS DUAS MANDALAS LADO A LADO */
   window.renderizarMandalasDuplasRS = function(containerId, dadosNatal, dadosSolar) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -353,7 +354,6 @@
     const svgSolar = gerarSvgMandala(dadosSolar, "Revolução Solar");
     const svgNatal = gerarSvgMandala(dadosNatal, "Mapa Natal (Radix)");
 
-    /* Ordem garantida no DOM: Revolução Solar na Esquerda (1º), Mapa Natal na Direita (2º) */
     container.innerHTML = `
       <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start; width: 100%; max-width: 1200px; margin: 20px auto;">
         <div style="flex: 1; min-width: 320px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; box-sizing: border-box;">
@@ -364,6 +364,90 @@
         </div>
       </div>
     `;
+  };
+
+  /* CÁLCULO E REQUISIÇÃO INDEPENDENTE À API */
+  let dadosAtuaisNatal = null;
+  let dadosAtuaisSolar = null;
+
+  async function buscarDadosAPI(dataStr, horaStr, fusoVal, latVal, lonVal) {
+    const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=${fusoVal}&lat=${latVal}&lon=${lonVal}`;
+    const res = await fetch(urlApi);
+    if (!res.ok) throw new Error("Erro na API ao buscar dados");
+    const apiJson = await res.json();
+
+    const SIGNOS_INDEX = {
+      "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
+      "Leao": 4, "Virgem": 5, "Libra": 6, "Escorpiao": 7,
+      "Sagitario": 8, "Capricornio": 9, "Aquario": 10, "Peixes": 11
+    };
+
+    const planetas = apiJson.planetas || {};
+    const ascData = apiJson.ascendente || {};
+    const mcData = apiJson.meio_ceu || {};
+    const sizigiaData = apiJson.sizigia || {};
+
+    const ascAbs = ((SIGNOS_INDEX[ascData.signo] || 0) * 30) + (parseFloat(ascData.grau) || 0);
+    const mcAbs = ((SIGNOS_INDEX[mcData.signo] || 0) * 30) + (parseFloat(mcData.grau) || 0);
+
+    const checkRetro = (pObj) => {
+      if (!pObj) return false;
+      if (pObj.retrogrado !== undefined) return Boolean(pObj.retrogrado);
+      if (pObj.velocidade !== undefined) return parseFloat(pObj.velocidade) < 0;
+      return false;
+    };
+
+    return {
+      Ascendente: { grau_absoluto: ascAbs, signo: ascData.signo },
+      MC: { grau_absoluto: mcAbs },
+      Nodo_Norte: { grau_absoluto: planetas.NodoNorte ? planetas.NodoNorte.grau_absoluto : 0, retro: checkRetro(planetas.NodoNorte) },
+      Sizigia: { grau_absoluto: sizigiaData.grau_absoluto !== undefined ? parseFloat(sizigiaData.grau_absoluto) : 0 },
+      Sol: { grau_absoluto: planetas.Sol ? planetas.Sol.grau_absoluto : 0, retro: false },
+      Lua: { grau_absoluto: planetas.Lua ? planetas.Lua.grau_absoluto : 0, retro: false },
+      Mercúrio: { grau_absoluto: planetas.Mercurio ? planetas.Mercurio.grau_absoluto : 0, retro: checkRetro(planetas.Mercurio) },
+      Vênus: { grau_absoluto: planetas.Venus ? planetas.Venus.grau_absoluto : 0, retro: checkRetro(planetas.Venus) },
+      Marte: { grau_absoluto: planetas.Marte ? planetas.Marte.grau_absoluto : 0, retro: checkRetro(planetas.Marte) },
+      Júpiter: { grau_absoluto: planetas.Jupiter ? planetas.Jupiter.grau_absoluto : 0, retro: checkRetro(planetas.Jupiter) },
+      Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno) }
+    };
+  }
+
+  /* EXECUTA O CÁLCULO COMPLETO DA REVOLUÇÃO SOLAR */
+  window.executarCalculoRS = async function(dadosPerfil, anoRevolucao) {
+    const container = document.getElementById('mandala-container');
+    if (container) {
+      container.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando Revolução Solar...</p>`;
+    }
+
+    try {
+      const partesData = dadosPerfil.dataNascimento.split('/');
+      const diaNasc = partesData[0], mesNasc = partesData[1], anoNasc = partesData[2];
+      const partesHora = (dadosPerfil.horaNascimento || "12:00").split(':');
+      const horaNasc = partesHora[0], minNasc = partesHora[1];
+
+      const lat = parseFloat(dadosPerfil.latitude) || -23.5505;
+      const lon = parseFloat(dadosPerfil.longitude) || -46.6333;
+      const fuso = dadosPerfil.fuso !== undefined ? parseFloat(dadosPerfil.fuso) : -3;
+
+      const dataNatalStr = `${anoNasc}-${mesNasc.padStart(2,'0')}-${diaNasc.padStart(2,'0')}`;
+      const horaNatalStr = `${horaNasc.padStart(2,'0')}:${minNasc.padStart(2,'0')}`;
+      dadosAtuaisNatal = await buscarDadosAPI(dataNatalStr, horaNatalStr, fuso, lat, lon);
+
+      const dataSolarStr = `${anoRevolucao}-${mesNasc.padStart(2,'0')}-${diaNasc.padStart(2,'0')}`;
+      dadosAtuaisSolar = await buscarDadosAPI(dataSolarStr, horaNatalStr, fuso, lat, lon);
+
+      window.renderizarMandalasDuplasRS('mandala-container', dadosAtuaisNatal, dadosAtuaisSolar);
+
+      if (typeof window.atualizarProfeccaoComDadosRS === 'function') {
+        window.atualizarProfeccaoComDadosRS(dadosAtuaisNatal, dadosAtuaisSolar, anoRevolucao, parseInt(anoNasc));
+      }
+
+    } catch (err) {
+      console.error("Erro ao calcular RS:", err);
+      if (container) {
+        container.innerHTML = `<p style="color: #dc2626; text-align: center; padding: 20px;">Erro ao carregar dados da Revolução Solar.</p>`;
+      }
+    }
   };
 
 })();
