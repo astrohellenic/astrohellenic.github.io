@@ -226,7 +226,7 @@ function abrirNavegacaoConfiguracoes() {
   `;
 }
 
-/* SUB-TELA: CAPTAÇÃO DE CLIENTES */
+/* SUB-TELA: CAPTAÇÃO DE CLIENTES COM UPLOAD DIRETO */
 async function abrirConfiguracoesCaptacao() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -245,10 +245,19 @@ async function abrirConfiguracoesCaptacao() {
         Configure o formulário externo de coleta de dados dos seus clientes.
       </div>
 
-      <!-- URL DO LOGO -->
+      <!-- LOGOTIPO (UPLOAD DIRETO + PREVIEW) -->
       <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Logotipo</label>
-        <input type="url" id="cfgLogoUrl" placeholder="https://exemplo.com/logo.png" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
+        
+        <div id="logoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
+          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px;">
+        </div>
+
+        <input type="file" id="cfgLogoFile" accept="image/*" onchange="fazerUploadLogo(this)" style="display: none;">
+        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #f1f5f9; color: #334155; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i class="fa-solid fa-upload"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
+        </button>
+        <input type="hidden" id="cfgLogoUrl">
       </div>
 
       <!-- WEBHOOK -->
@@ -274,7 +283,7 @@ async function abrirConfiguracoesCaptacao() {
   await carregarConfiguracoesCaptacao();
 }
 
-/* CARREGA AS CONFIGURAÇÕES DE CAPTAÇÃO DO SUPABASE */
+/* CARREGA AS CONFIGURAÇÕES DE CAPTAÇÃO DO SUPABASE E EXIBE PREVIEW */
 async function carregarConfiguracoesCaptacao() {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -287,7 +296,21 @@ async function carregarConfiguracoesCaptacao() {
       .maybeSingle();
 
     if (!error && data) {
-      if (document.getElementById('cfgLogoUrl')) document.getElementById('cfgLogoUrl').value = data.logo_url || '';
+      if (document.getElementById('cfgLogoUrl')) {
+        document.getElementById('cfgLogoUrl').value = data.logo_url || '';
+        
+        // Atualiza a prévia do logo e o texto do botão se houver URL salva
+        if (data.logo_url) {
+          const previewImg = document.getElementById('cfgLogoPreview');
+          const previewContainer = document.getElementById('logoPreviewContainer');
+          const btnText = document.getElementById('btnUploadText');
+          if (previewImg && previewContainer) {
+            previewImg.src = data.logo_url;
+            previewContainer.style.display = 'block';
+          }
+          if (btnText) btnText.innerText = 'Alterar Imagem do Logo';
+        }
+      }
       if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
       if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
     }
@@ -295,6 +318,63 @@ async function carregarConfiguracoesCaptacao() {
     console.error("Erro ao carregar configurações de captação:", e);
   }
 }
+
+/* PROCESSA O UPLOAD DIRETO DA IMAGEM PARA O BUCKET 'LOGOS' */
+async function fazerUploadLogo(inputElement) {
+  const file = inputElement.files[0];
+  if (!file) return;
+
+  const btnText = document.getElementById('btnUploadText');
+  if (btnText) btnText.innerText = "Enviando imagem...";
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+      alert("Sessão não encontrada.");
+      if (btnText) btnText.innerText = "Selecionar Imagem do Logo";
+      return;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-logo.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Upload do arquivo para o bucket 'logos' no Supabase Storage
+    const { error: uploadError } = await supabaseClient.storage
+      .from('logos')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      alert("Erro ao enviar imagem: " + uploadError.message);
+      if (btnText) btnText.innerText = "Selecionar Imagem do Logo";
+      return;
+    }
+
+    // Pega a URL pública gerada pelo Supabase
+    const { data: publicUrlData } = supabaseClient.storage
+      .from('logos')
+      .getPublicUrl(filePath);
+
+    const publicUrl = publicUrlData.publicUrl;
+
+    // Atualiza o campo oculto e a interface com a prévia
+    document.getElementById('cfgLogoUrl').value = publicUrl;
+    
+    const previewImg = document.getElementById('cfgLogoPreview');
+    const previewContainer = document.getElementById('logoPreviewContainer');
+    if (previewImg && previewContainer) {
+      previewImg.src = publicUrl;
+      previewContainer.style.display = 'block';
+    }
+
+    if (btnText) btnText.innerText = "Alterar Imagem do Logo";
+
+  } catch (e) {
+    alert("Erro ao processar arquivo de imagem.");
+    if (btnText) btnText.innerText = "Selecionar Imagem do Logo";
+  }
+}
+
 
 /* SALVA AS CONFIGURAÇÕES DE CAPTAÇÃO NO SUPABASE */
 async function salvarConfiguracoesCaptacao() {
