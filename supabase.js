@@ -189,8 +189,144 @@ function abrirNavegacaoFerramentasAuxiliares() {
   `;
 }
 
-/* NÍVEL 2D: TELA DE CONFIGURAÇÕES */
-async function abrirNavegacaoConfiguracoes() {
+/* NÍVEL 2D: TELA PRINCIPAL DE CONFIGURAÇÕES (SUB-MENU) */
+function abrirNavegacaoConfiguracoes() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #f8fafc;">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
+        <i class="fa-solid fa-chevron-left"></i> Voltar
+      </button>
+      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">CONFIGURAÇÕES</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      
+      <!-- OPÇÃO: CAPTAÇÃO DE CLIENTES -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesCaptacao()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-bullhorn" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Captação de Clientes</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+      <!-- OPÇÃO: SEGURANÇA E CONTA -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesSeguranca()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-shield-halved" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">Segurança e Conta</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+      </div>
+
+    </div>
+  `;
+}
+
+/* SUB-TELA: CAPTAÇÃO DE CLIENTES */
+async function abrirConfiguracoesCaptacao() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #f8fafc;">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
+        <i class="fa-solid fa-chevron-left"></i> Voltar
+      </button>
+      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">CAPTAÇÃO DE CLIENTES</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+      
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 16px; line-height: 1.4;">
+        Configure o formulário externo de coleta de dados dos seus clientes.
+      </div>
+
+      <!-- URL DO LOGO -->
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Logotipo</label>
+        <input type="url" id="cfgLogoUrl" placeholder="https://exemplo.com/logo.png" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+      </div>
+
+      <!-- WEBHOOK -->
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Webhook (Integração)</label>
+        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+      </div>
+
+      <!-- REDIRECIONAMENTO -->
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
+        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+      </div>
+
+      <!-- BOTÃO SALVAR -->
+      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        Salvar Configurações
+      </button>
+
+    </div>
+  `;
+
+  await carregarConfiguracoesCaptacao();
+}
+
+/* CARREGA AS CONFIGURAÇÕES DE CAPTAÇÃO DO SUPABASE */
+async function carregarConfiguracoesCaptacao() {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      if (document.getElementById('cfgLogoUrl')) document.getElementById('cfgLogoUrl').value = data.logo_url || '';
+      if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
+      if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
+    }
+  } catch (e) {
+    console.error("Erro ao carregar configurações de captação:", e);
+  }
+}
+
+/* SALVA AS CONFIGURAÇÕES DE CAPTAÇÃO NO SUPABASE */
+async function salvarConfiguracoesCaptacao() {
+  const logoUrl = document.getElementById('cfgLogoUrl').value.trim();
+  const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
+  const redirectUrl = document.getElementById('cfgRedirectUrl').value.trim();
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({
+        user_id: user.id,
+        logo_url: logoUrl,
+        webhook_url: webhookUrl,
+        redirect_url: redirectUrl
+      }, { onConflict: 'user_id' });
+
+    if (!error) {
+      alert("Configurações salvas com sucesso!");
+    } else {
+      alert("Erro ao salvar configurações: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar configurações.");
+  }
+}
+
+/* SUB-TELA: SEGURANÇA E CONTA */
+async function abrirConfiguracoesSeguranca() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
@@ -210,10 +346,10 @@ async function abrirNavegacaoConfiguracoes() {
 
   sidebar.innerHTML = `
     <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
         <i class="fa-solid fa-chevron-left"></i> Voltar
       </button>
-      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">CONFIGURAÇÕES</span>
+      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">SEGURANÇA E CONTA</span>
       <div style="width: 24px;"></div>
     </div>
     <div style="flex: 1; overflow-y: auto; padding: 16px;">
@@ -247,6 +383,7 @@ async function abrirNavegacaoConfiguracoes() {
     </div>
   `;
 }
+
 
 function alternarManterLogado(status) {
   localStorage.setItem('astro_keep_logged', status);
