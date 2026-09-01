@@ -7,23 +7,38 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-    .form-card { background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 420px; border: 1px solid #e2e8f0; }
+    .form-card { background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 420px; border: 1px solid #e2e8f0; position: relative; }
     h2 { margin: 0 0 20px 0; font-size: 18px; color: #103b70; text-align: center; }
-    .form-group { margin-bottom: 14px; }
+    .form-group { margin-bottom: 14px; position: relative; }
     label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
     input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; }
     input:focus { border-color: #103b70; }
     .row { display: flex; gap: 10px; }
     .row .form-group { flex: 1; }
-    button { width: 100%; background: #103b70; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    button:disabled { background: #94a3b8; }
+    .btn-submit { width: 100%; background: #103b70; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+    /* Autocomplete de Cidade */
+    .city-results { position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
+    .city-item { padding: 10px; font-size: 13px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+    .city-item:hover { background: #f8fafc; color: #103b70; }
+
+    /* Modal de Confirmação */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; box-sizing: border-box; }
+    .modal-card { background: #ffffff; padding: 24px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-card h3 { margin: 0 0 16px 0; color: #103b70; font-size: 16px; text-align: center; }
+    .summary-list { font-size: 13px; color: #334155; margin-bottom: 20px; line-height: 1.6; }
+    .summary-item { margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+    .summary-item strong { color: #64748b; font-size: 11px; text-transform: uppercase; display: block; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-secondary { flex: 1; background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-primary { flex: 1; background: #103b70; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div class="form-card">
   <h2>Dados para o Atendimento</h2>
-  <form id="clientForm">
+  <form id="clientForm" onsubmit="event.preventDefault(); abrirConfirmacao();">
     <div class="form-group">
       <label for="nome">Nome Completo</label>
       <input type="text" id="nome" required placeholder="Seu nome completo">
@@ -42,7 +57,8 @@
 
     <div class="form-group">
       <label for="cidade">Cidade / Estado de Nascimento</label>
-      <input type="text" id="cidade" required placeholder="Ex: São Paulo, SP">
+      <input type="text" id="cidade" required placeholder="Digite a cidade..." autocomplete="off" oninput="pesquisarCidade(this.value)">
+      <div id="cityResultsList" class="city-results"></div>
     </div>
 
     <div class="form-group">
@@ -55,8 +71,26 @@
       <input type="email" id="email" required placeholder="seu@email.com">
     </div>
 
-    <button type="submit" id="btnSubmit">Enviar Informações</button>
+    <button type="submit" class="btn-submit">Enviar Informações</button>
   </form>
+</div>
+
+<!-- MODAL DE CONFIRMAÇÃO DADOS -->
+<div id="confirmModal" class="modal-overlay">
+  <div class="modal-card">
+    <h3>Confirme seus dados</h3>
+    <div class="summary-list">
+      <div class="summary-item"><strong>Nome:</strong> <span id="sumNome"></span></div>
+      <div class="summary-item"><strong>Data e Horário:</strong> <span id="sumDataHora"></span></div>
+      <div class="summary-item"><strong>Cidade:</strong> <span id="sumCidade"></span></div>
+      <div class="summary-item"><strong>WhatsApp:</strong> <span id="sumWhatsapp"></span></div>
+      <div class="summary-item"><strong>E-mail:</strong> <span id="sumEmail"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" onclick="fecharConfirmacao()">Corrigir</button>
+      <button type="button" class="btn-primary" id="btnFinalSubmit" onclick="enviarParaSupabase()">Confirmar e Enviar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -67,9 +101,80 @@
   const urlParams = new URLSearchParams(window.location.search);
   const ownerId = urlParams.get('owner') || null;
 
-  document.getElementById('clientForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btnSubmit');
+  let selectedGeo = { lat: -23.5505, lon: -46.6333, name: '' };
+  let citySearchTimeout = null;
+
+  function pesquisarCidade(termo) {
+    clearTimeout(citySearchTimeout);
+    const resultsList = document.getElementById('cityResultsList');
+    if (!termo || termo.trim().length < 3) {
+      resultsList.style.display = 'none';
+      return;
+    }
+
+    citySearchTimeout = setTimeout(async () => {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(termo)}&limit=5&accept-language=pt-br`);
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          resultsList.innerHTML = '';
+          data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'city-item';
+            div.innerText = item.display_name;
+            div.onclick = () => selecionarCidade(item.display_name, item.lat, item.lon);
+            resultsList.appendChild(div);
+          });
+          resultsList.style.display = 'block';
+        } else {
+          resultsList.style.display = 'none';
+        }
+      } catch (e) {
+        resultsList.style.display = 'none';
+      }
+    }, 400);
+  }
+
+  function selecionarCidade(nomeExibicao, lat, lon) {
+    document.getElementById('cidade').value = nomeExibicao;
+    selectedGeo = { lat: parseFloat(lat), lon: parseFloat(lon), name: nomeExibicao };
+    document.getElementById('cityResultsList').style.display = 'none';
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#cidade') && !e.target.closest('#cityResultsList')) {
+      document.getElementById('cityResultsList').style.display = 'none';
+    }
+  });
+
+  function abrirConfirmacao() {
+    const nome = document.getElementById('nome').value.trim();
+    const data = document.getElementById('data').value.trim();
+    const hora = document.getElementById('hora').value.trim() || 'Não informada';
+    const cidade = document.getElementById('cidade').value.trim();
+    const whatsapp = document.getElementById('whatsapp').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    if (!selectedGeo.name || selectedGeo.name !== cidade) {
+      selectedGeo.name = cidade;
+    }
+
+    document.getElementById('sumNome').innerText = nome;
+    document.getElementById('sumDataHora').innerText = `${data} às ${hora}`;
+    document.getElementById('sumCidade').innerText = cidade;
+    document.getElementById('sumWhatsapp').innerText = whatsapp;
+    document.getElementById('sumEmail').innerText = email;
+
+    document.getElementById('confirmModal').style.display = 'flex';
+  }
+
+  function fecharConfirmacao() {
+    document.getElementById('confirmModal').style.display = 'none';
+  }
+
+  async function enviarParaSupabase() {
+    const btn = document.getElementById('btnFinalSubmit');
     btn.disabled = true;
     btn.innerText = 'Enviando...';
 
@@ -79,7 +184,9 @@
       nome: document.getElementById('nome').value.trim(),
       data_nascimento: document.getElementById('data').value.trim(),
       hora_nascimento: document.getElementById('hora').value.trim(),
-      cidade: document.getElementById('cidade').value.trim(),
+      cidade: selectedGeo.name || document.getElementById('cidade').value.trim(),
+      latitude: selectedGeo.lat,
+      longitude: selectedGeo.lon,
       whatsapp: document.getElementById('whatsapp').value.trim(),
       email: document.getElementById('email').value.trim(),
       user_id: ownerId
@@ -89,7 +196,9 @@
       const { error } = await supabaseClient.from('mapas').insert([payload]);
       if (!error) {
         alert('Dados enviados com sucesso!');
+        fecharConfirmacao();
         document.getElementById('clientForm').reset();
+        selectedGeo = { lat: -23.5505, lon: -46.6333, name: '' };
       } else {
         alert('Erro ao enviar dados: ' + error.message);
       }
@@ -97,9 +206,9 @@
       alert('Erro de conexão ao enviar formulário.');
     } finally {
       btn.disabled = false;
-      btn.innerText = 'Enviar Informações';
+      btn.innerText = 'Confirmar e Enviar';
     }
-  });
+  }
 </script>
 </body>
 </html>
