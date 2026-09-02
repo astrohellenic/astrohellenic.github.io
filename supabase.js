@@ -520,11 +520,13 @@ function abrirModuloTecnica(modulo) {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  if (modulo === 'revolucao') {
-    if (typeof iniciarModuloRevolucao === 'function') iniciarModuloRevolucao();
-    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Revolução Solar pronto.</div>`;
-  } else if (modulo === 'decenios') {
-    if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
+    if (modulo === 'revolucao') {
+    if (typeof window.renderizarRevolucaoSolar === 'function') {
+      window.renderizarRevolucaoSolar(container);
+    } else if (typeof iniciarModuloRevolucao === 'function') {
+      iniciarModuloRevolucao();
+    } else if (modulo === 'decenios') {
+      if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
     else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Decênios aguardando vinculação.</div>`;
   } else if (modulo === 'liberacao') {
     container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Liberação Zodiacal (Em breve)</div>`;
