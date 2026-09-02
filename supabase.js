@@ -99,55 +99,6 @@ function renderMenuPrincipal() {
   `;
 }
 
-/* NÍVEL 2A: TELA DE TÉCNICAS DE TEMPO */
-function abrirNavegacaoTecnicasTempo() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
-      </button>
-      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">TÉCNICAS DE TEMPO</span>
-      <div style="width: 24px;"></div>
-    </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('revolucao'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-sun" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Revolução Solar</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('decenios'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-hourglass-half" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Decênios</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('liberacao'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-dharmachakra" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Liberação Zodiacal</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloTecnica('direcoes'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-compass" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Direções Primárias</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-    </div>
-  `;
-}
-
 /* NÍVEL 2B: TELA DE FERRAMENTAS AUXILIARES */
 function abrirNavegacaoFerramentasAuxiliares() {
   const sidebar = document.getElementById('sidebar');
@@ -515,13 +466,17 @@ async function fazerLogout() {
   }
 }
 
-/* CHAMA OS MÓDULOS TÉCNICOS */
+/* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo) {
   const cRadix = document.getElementById('mandala-container');
   const cRev = document.getElementById('revolucao-container');
 
-  if (modulo === 'revolucao') {
-    if (cRadix) cRadix.style.display = 'none';
+  if (cRadix) cRadix.style.display = 'none';
+  if (cRev) cRev.style.display = 'none';
+
+  if (modulo === 'radix') {
+    if (cRadix) cRadix.style.display = 'block';
+  } else if (modulo === 'revolucao') {
     if (cRev) {
       cRev.style.display = 'block';
       if (typeof window.renderizarRevolucaoSolar === 'function') {
@@ -530,8 +485,12 @@ function abrirModuloTecnica(modulo) {
         iniciarModuloRevolucao();
       }
     }
+  } else {
+    if (cRadix) cRadix.style.display = 'block';
+    alert('Módulo ' + modulo.toUpperCase() + ' em sincronização.');
   }
 }
+
 
 /* CHAMA OS MÓDULOS AUXILIARES */
 function abrirModuloAuxiliar(modulo) {
