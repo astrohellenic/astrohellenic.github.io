@@ -3,7 +3,7 @@
    ========================================== */
 
 window.renderizarRevolucaoSolar = function(container) {
-  const target = container || document.getElementById('mandala-container');
+  const target = container || document.getElementById('revolucao-container');
   if (target) {
     renderInterfaceRevolucao(target);
   }
@@ -14,7 +14,7 @@ let anoAlvoRS = new Date().getFullYear();
 
 /* INICIALIZAÇÃO DO MÓDULO AO ABRIR A ABA */
 function iniciarModuloRevolucao() {
-  const container = document.getElementById('mandala-container');
+  const container = document.getElementById('revolucao-container');
   if (!container) return;
 
   // 1. Tenta pegar do perfil selecionado no Supabase
