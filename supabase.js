@@ -517,22 +517,19 @@ async function fazerLogout() {
 
 /* CHAMA OS MÓDULOS TÉCNICOS */
 function abrirModuloTecnica(modulo) {
-  const container = document.getElementById('mandala-container');
-  if (!container) return;
+  const cRadix = document.getElementById('mandala-container');
+  const cRev = document.getElementById('revolucao-container');
 
-    if (modulo === 'revolucao') {
-    if (typeof window.renderizarRevolucaoSolar === 'function') {
-      window.renderizarRevolucaoSolar(container);
-    } else if (typeof iniciarModuloRevolucao === 'function') {
-      iniciarModuloRevolucao();
+  if (modulo === 'revolucao') {
+    if (cRadix) cRadix.style.display = 'none';
+    if (cRev) {
+      cRev.style.display = 'block';
+      if (typeof window.renderizarRevolucaoSolar === 'function') {
+        window.renderizarRevolucaoSolar(cRev);
+      } else if (typeof iniciarModuloRevolucao === 'function') {
+        iniciarModuloRevolucao();
+      }
     }
- } else if (modulo === 'decenios') {
-   if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
-    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Decênios aguardando vinculação.</div>`;
-  } else if (modulo === 'liberacao') {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Liberação Zodiacal (Em breve)</div>`;
-  } else if (modulo === 'direcoes') {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Direções Primárias (Em breve)</div>`;
   }
 }
 
