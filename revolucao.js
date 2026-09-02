@@ -2,6 +2,13 @@
    MÓDULO DE REVOLUÇÃO SOLAR & PROFECÇÕES (VALENS)
    ========================================== */
 
+window.renderizarRevolucaoSolar = function(container) {
+  const target = container || document.getElementById('mandala-container');
+  if (target) {
+    renderInterfaceRevolucao(target);
+  }
+};
+
 let clienteAtivoRS = null;
 let anoAlvoRS = new Date().getFullYear();
 
