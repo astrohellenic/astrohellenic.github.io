@@ -10,12 +10,29 @@ function iniciarModuloRevolucao() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  // Se já houver um cliente carregado no estado global, aproveita os dados cadastrais
-  if (!clienteAtivoRS && typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado) {
+  // 1. Tenta pegar do perfil selecionado no Supabase
+  if (typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado) {
     clienteAtivoRS = currentPerfilSelecionado;
+  } 
+  // 2. Se não existir, monta o perfil com o mapa que JÁ ESTÁ aberto na tela principal
+  else if (typeof currentSubjectName !== 'undefined' && currentSubjectName && currentSubjectName !== "Agora") {
+    const dataRef = (typeof currentMoment !== 'undefined') ? currentMoment : new Date();
+    const diaStr = String(dataRef.getDate()).padStart(2, '0');
+    const mesStr = String(dataRef.getMonth() + 1).padStart(2, '0');
+    const anoStr = dataRef.getFullYear();
+    const horaStr = String(dataRef.getHours()).padStart(2, '0') + ":" + String(dataRef.getMinutes()).padStart(2, '0');
+
+    clienteAtivoRS = {
+      nome: currentSubjectName,
+      dataNascimento: diaStr + "/" + mesStr + "/" + anoStr,
+      horaNascimento: horaStr,
+      latitude: (typeof currentGeo !== 'undefined' && currentGeo.lat) ? currentGeo.lat : -23.5505,
+      longitude: (typeof currentGeo !== 'undefined' && currentGeo.lon) ? currentGeo.lon : -46.6333,
+      fuso: (typeof currentGeo !== 'undefined' && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3
+    };
   }
 
-  // Se ainda não houver nenhum cliente selecionado, avisa na tela
+  // Se mesmo assim não houver nada aberto no sistema inteiro, aí sim pede para abrir um cliente
   if (!clienteAtivoRS) {
     container.innerHTML = `
       <div style="padding: 40px; text-align: center; color: #475569;">
