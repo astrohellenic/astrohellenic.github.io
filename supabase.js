@@ -68,33 +68,27 @@ function renderMenuPrincipal() {
     </div>
     <div style="flex: 1; overflow-y: auto;">
       <ul class="menu-list">
+        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento(); fecharSidebar();">
+          <span>Agora</span>
+          <i class="fa-solid fa-clock"></i>
+        </li>
         <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
           <span>Novo Mapa</span>
           <i class="fa-solid fa-user-plus"></i>
         </li>
-                <!-- SELEÇÃO DE PASTAS E BUSCA DIRETAS -->
-        <div id="foldersBarContainer" class="folders-container" style="display: flex; gap: 4px; align-items: center; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color);">
-            <button type="button" class="folder-tab-btn active" id="folder-tab-Clientes" onclick="selecionarPasta('Clientes')">
-                <i class="fa-solid fa-folder"></i> Clientes
-            </button>
-            <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
-                <i class="fa-solid fa-plus"></i> Pasta
-            </button>
-        </div>
-
-        <div class="search-box-container" style="display: flex; gap: 6px; margin-bottom: 8px;">
-            <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar por código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
-            <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-        </div>
-        
-        <div id="searchStatusFeedback" style="font-size: 10px; font-weight: 600; min-height: 14px; margin-bottom: 4px;"></div>
-
-        <div id="clientsListContainer" class="client-list-container" style="max-height: calc(100vh - 280px); overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; background: #fafafa;">
-            <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
-                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...
-            </div>
+        <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
+          <span>Selecionar Mapa</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+        <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
+          <span>Técnicas de Tempo</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+        <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
+          <span>Ferramentas Auxiliares</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+      </ul>
     </div>
     
     <!-- RODAPÉ FIXO: CONFIGURAÇÕES -->
