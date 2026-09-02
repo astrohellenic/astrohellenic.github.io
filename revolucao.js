@@ -98,15 +98,15 @@ function renderInterfaceRevolucao(container) {
 /* TROCA O ANO DA REVOLUÇÃO SOLAR */
 function mudarAnoRS(novoAno) {
   anoAlvoRS = novoAno;
-  const container = document.getElementById('mandala-container');
+  const container = document.getElementById('rs-module-root')?.parentElement || document.getElementById('mandala-container');
   if (container) renderInterfaceRevolucao(container);
 }
 
 /* RECEPTOR GLOBAL: DISPARADO QUANDO QUALQUER CLIENTE É CLICADO NO MENU LATERAL */
 window.carregarClienteNaRS = function(perfilCliente) {
   clienteAtivoRS = perfilCliente;
-  const container = document.getElementById('mandala-container');
-  
+  const container = document.getElementById('rs-module-root')?.parentElement || document.getElementById('mandala-container');
+
   // Se a aba da RS estiver visível na tela, atualiza imediatamente
   if (container) {
     renderInterfaceRevolucao(container);
