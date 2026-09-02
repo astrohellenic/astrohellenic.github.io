@@ -470,10 +470,13 @@ async function fazerLogout() {
 function abrirModuloTecnica(modulo) {
   const cRadix = document.getElementById('mandala-container');
   const cRev = document.getElementById('revolucao-container');
+  const cOutros = document.getElementById('tecnica-container') || cRadix; // Fallback se houver container específico
 
+  // 1. Esconde tudo primeiro
   if (cRadix) cRadix.style.display = 'none';
   if (cRev) cRev.style.display = 'none';
 
+  // 2. Abre o módulo correspondente
   if (modulo === 'radix') {
     if (cRadix) cRadix.style.display = 'block';
   } else if (modulo === 'revolucao') {
@@ -486,8 +489,18 @@ function abrirModuloTecnica(modulo) {
       }
     }
   } else {
+    // Para as demais ferramentas (decenios, liberacao, direcoes, isopsefia, horas, perguntas, profeccao)
     if (cRadix) cRadix.style.display = 'block';
-    alert('Módulo ' + modulo.toUpperCase() + ' em sincronização.');
+    
+    // Dispara a função global correspondente se ela existir no escopo
+    const nomeFuncao = 'abrir' + modulo.charAt(0).toUpperCase() + modulo.slice(1) || 'iniciar' + modulo;
+    if (typeof window[modulo] === 'function') {
+      window[modulo]();
+    } else if (typeof window['renderizar' + modulo] === 'function') {
+      window['renderizar' + modulo]();
+    } else {
+      console.info('Módulo chamado:', modulo);
+    }
   }
 }
 
