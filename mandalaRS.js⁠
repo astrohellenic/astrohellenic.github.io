@@ -11,48 +11,32 @@
     { name: "Capricórnio", ruler: "Saturno" }, { name: "Aquário", ruler: "Saturno" }, { name: "Peixes", ruler: "Júpiter" }
   ];
 
-  const SIGN_ELEMENTS = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
-  const ELEMENT_SIGN_COLORS = { fire: "#e84118", earth: "#8b4513", air: "#0ea5e9", water: "#1d4ed8" };
-
-  const PLANETS_DEF = [
-    { id: "Sun", name: "Sol", symbol: "☉", key: "Sol" },
-    { id: "Moon", name: "Lua", symbol: "☽", key: "Lua" },
-    { id: "Mercury", name: "Mercúrio", symbol: "☿", key: "Mercúrio" },
-    { id: "Venus", name: "Vênus", symbol: "♀", key: "Vênus" },
-    { id: "Mars", name: "Marte", symbol: "♂", key: "Marte" },
-    { id: "Jupiter", name: "Júpiter", symbol: "♃", key: "Júpiter" },
-    { id: "Saturn", name: "Saturno", symbol: "♄", key: "Saturno" }
-  ];
-
-  function formatDegMin(absDeg) {
-    const degInSign = absDeg % 30;
-    const degrees = Math.floor(degInSign);
-    const minutes = Math.round((degInSign - degrees) * 60);
-    return `${degrees}°${minutes < 10 ? '0' + minutes : minutes}′`;
-  }
-
-  function eclToScreenAngle(eclDeg, refAbs) {
-    return (180 - (eclDeg - refAbs) + 36000) % 360;
-  }
-
-  function polarToCart(cx, cy, r, angleDeg) {
-    const rad = angleDeg * Math.PI / 180.0;
-    return { x: cx + (r * Math.cos(rad)), y: cy + (r * Math.sin(rad)) };
-  }
-
+  /* FUNÇÃO QUE DESENHA CADA MANDALA EM SVG */
   function gerarSvgMandala(mapData, titulo) {
-    const ascAbs = mapData.Ascendente.grau_absoluto;
-    const width = 960, height = 1100, cx = 480, cy = 600;
+    if (!mapData || !mapData.Ascendente) {
+      return `<p style="color: #dc2626; text-align: center;">Dados insuficientes para ${titulo}</p>`;
+    }
+
+    const width = 480, height = 520, cx = 240, cy = 270;
     const goldColor = "#c59b27";
 
-    let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
+    let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; max-width: 480px;">
       <rect width="${width}" height="${height}" fill="#ffffff"/>
-      <text x="480" y="60" font-family="'Cinzel', serif" font-size="28" font-weight="800" fill="#103b70" text-anchor="middle">${titulo}</text>
-      <circle cx="${cx}" cy="${cy}" r="215" fill="none" stroke="${goldColor}" stroke-width="2"/>
+      <text x="240" y="35" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70" text-anchor="middle">${titulo}</text>
+      
+      <!-- CÍRCULOS DA MANDALA -->
+      <circle cx="${cx}" cy="${cy}" r="200" fill="none" stroke="#cbd5e1" stroke-width="2"/>
+      <circle cx="${cx}" cy="${cy}" r="160" fill="none" stroke="${goldColor}" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="100" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="40" fill="#f8fafc" stroke="${goldColor}" stroke-width="1"/>
+
+      <text x="${cx}" y="${cy + 5}" font-family="'Cinzel', serif" font-size="12" fill="#64748b" text-anchor="middle">AstroHellenic</text>
     </svg>`;
+
     return svg;
   }
 
+  /* RENDERIZA AS DUAS MANDALAS LADO A LADO */
   window.renderizarMandalasDuplasRS = function(containerId, dadosNatal, dadosSolar) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -66,28 +50,64 @@
     const svgNatal = gerarSvgMandala(dadosNatal, "Mapa Natal (Radix)");
 
     container.innerHTML = `
-      <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start; width: 100%; max-width: 1200px; margin: 20px auto;">
-        <div style="flex: 1; min-width: 320px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; box-sizing: border-box;">
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start; width: 100%; max-width: 1100px; margin: 10px auto;">
+        <div style="flex: 1; min-width: 300px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
           ${svgSolar}
         </div>
-        <div style="flex: 1; min-width: 320px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; box-sizing: border-box;">
+        <div style="flex: 1; min-width: 300px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
           ${svgNatal}
         </div>
       </div>
     `;
   };
 
-  async function buscarDadosAPI(dataStr, horaStr, fusoVal, latVal, lonVal) {
-    const urlApi = `https://motor-astrologia.vercel.app/api/index?data=${dataStr}&hora=${horaStr}&fuso=${fusoVal}&lat=${latVal}&lon=${lonVal}`;
-    const res = await fetch(urlApi);
-    if (!res.ok) throw new Error("Erro na API ao buscar dados");
-    return await res.json();
-  }
-
-  window.executarCalculoRS = async function(dadosPerfil, anoRevolucao) {
-    const container = document.getElementById('mandala-container');
+  /* CONTROLLER PRINCIPAL DA RS: BUSCA API E DISPARA A PROFECCAO */
+  window.executarCalculoRS = async function(perfilCliente, anoAlvo) {
+    const container = document.getElementById('rs-mandala-container');
     if (container) {
-      container.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">Calculando Revolução Solar...</p>`;
+      container.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Buscando dados e gerando mandalas...</p>`;
+    }
+
+    try {
+      // Extrai data e hora do perfil
+      let dataPartes = perfilCliente.dataNascimento ? perfilCliente.dataNascimento.split('/') : ["01", "01", "1990"];
+      let dia = dataPartes[0].padStart(2, '0');
+      let mes = dataPartes[1].padStart(2, '0');
+      let anoNasc = dataPartes[2];
+      
+      let hora = perfilCliente.horaNascimento || "12:00";
+      let lat = perfilCliente.latitude || -23.5505;
+      let lon = perfilCliente.longitude || -46.6333;
+      let fuso = perfilCliente.fuso !== undefined ? perfilCliente.fuso : -3;
+
+      // 1. Fetch da API para a Revolução Solar no ano alvo
+      const urlSolar = `https://motor-astrologia.vercel.app/api/index?data=${anoAlvo}-${mes}-${dia}&hora=${hora}&fuso=${fuso}&lat=${lat}&lon=${lon}`;
+      const resSolar = await fetch(urlSolar);
+      if (!resSolar.ok) throw new Error("Erro na API Solar");
+      const dadosSolar = await resSolar.json();
+
+      // 2. Fetch da API para o Mapa Natal
+      const urlNatal = `https://motor-astrologia.vercel.app/api/index?data=${anoNasc}-${mes}-${dia}&hora=${hora}&fuso=${fuso}&lat=${lat}&lon=${lon}`;
+      const resNatal = await fetch(urlNatal);
+      if (!resNatal.ok) throw new Error("Erro na API Natal");
+      const dadosNatal = await resNatal.json();
+
+      // Ajusta estrutura mínima para renderizar
+      const mapSolar = { Ascendente: { grau_absoluto: dadosSolar.ascendente ? dadosSolar.ascendente.grau || 0 : 0 } };
+      const mapNatal = { Ascendente: { grau_absoluto: dadosNatal.ascendente ? dadosNatal.ascendente.grau || 0 : 0 } };
+
+      // 3. Desenha as duas mandalas lado a lado na tela
+      window.renderizarMandalasDuplasRS('rs-mandala-container', mapNatal, mapSolar);
+
+      // 4. Notifica o módulo de profecção
+      if (typeof window.atualizarProfeccaoComDadosRS === 'function') {
+        window.atualizarProfeccaoComDadosRS(dadosNatal, dadosSolar, anoAlvo, anoNasc);
+      }
+
+    } catch (err) {
+      if (container) {
+        container.innerHTML = `<p style="color: #dc2626; text-align: center; padding: 20px;">Erro ao carregar mandalas da RS: ${err.message}</p>`;
+      }
     }
   };
 
