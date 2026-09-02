@@ -56,7 +56,14 @@ function iniciarModuloRevolucao() {
 
 /* CARREGA A ESTRUTURA DA TELA DE RS */
 function renderInterfaceRevolucao(container) {
-  if (!clienteAtivoRS) return;
+    if (!clienteAtivoRS && typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado) {
+    clienteAtivoRS = currentPerfilSelecionado;
+  }
+
+  if (!clienteAtivoRS) {
+    container.innerHTML = '<p style="text-align:center; padding:20px; color:#64748b;">Selecione um cliente no menu lateral para calcular a Revolução Solar.</p>';
+    return;
+  }
 
   const partesData = clienteAtivoRS.dataNascimento.split('/');
   const anoNasc = parseInt(partesData[2]) || 1990;
