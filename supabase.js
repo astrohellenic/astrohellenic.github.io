@@ -525,8 +525,9 @@ function abrirModuloTecnica(modulo) {
       window.renderizarRevolucaoSolar(container);
     } else if (typeof iniciarModuloRevolucao === 'function') {
       iniciarModuloRevolucao();
-    } else if (modulo === 'decenios') {
-      if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
+    }
+ } else if (modulo === 'decenios') {
+   if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
     else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Decênios aguardando vinculação.</div>`;
   } else if (modulo === 'liberacao') {
     container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Liberação Zodiacal (Em breve)</div>`;
