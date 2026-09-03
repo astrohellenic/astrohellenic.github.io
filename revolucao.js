@@ -18,9 +18,15 @@ function extrairPartesDataRS(dataStr) {
   return { dia: '01', mes: '01', ano: 1990 };
 }
 
+function obterContainerRS() {
+  return document.getElementById('dropdown-rs-container') || 
+         document.getElementById('dropdown-rs') || 
+         document.querySelector('own-rs-container');
+}
+
 window.toggleJanelaRS = function(event) {
   if (event) event.stopPropagation();
-  const dropdown = document.getElementById('dropdown-rs-container');
+  const dropdown = obterContainerRS();
   if (!dropdown) return;
 
   const estaAberto = dropdown.style.display === 'block';
@@ -244,7 +250,6 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     
     const dadosBrutos = await resSolar.json();
 
-    // Converte minúsculas para o padrão da mandala
     const dadosSolar = normalizarDadosRS(dadosBrutos);
 
     window.currentCalculatedData = dadosSolar;
@@ -255,7 +260,7 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       renderMandala(dadosSolar);
     }
 
-    const dropdown = document.getElementById('dropdown-rs-container');
+    const dropdown = obterContainerRS();
     if (dropdown) dropdown.style.display = 'none';
 
   } catch (err) {
@@ -264,7 +269,7 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
 };
 
 document.addEventListener('click', function(e) {
-  const dropdown = document.getElementById('dropdown-rs-container');
+  const dropdown = obterContainerRS();
   if (dropdown && dropdown.style.display === 'block') {
     if (!dropdown.contains(e.target) && !e.target.closest('button[onclick*="toggleJanelaRS"]')) {
       dropdown.style.display = 'none';
