@@ -4,7 +4,6 @@
 
 let anoAlvoRS = new Date().getFullYear();
 
-/* EXTRAI DIA, MÊS E ANO INDEPENDENTE DO FORMATO */
 function extrairPartesDataRS(dataStr) {
   if (!dataStr) return { dia: '01', mes: '01', ano: 1990 };
   if (dataStr.includes('-')) {
@@ -19,7 +18,6 @@ function extrairPartesDataRS(dataStr) {
   return { dia: '01', mes: '01', ano: 1990 };
 }
 
-/* ABRE OU FECHA A JANELA FLUTUANTE DO SOLZINHO */
 window.toggleJanelaRS = function(event) {
   if (event) event.stopPropagation();
   const dropdown = document.getElementById('dropdown-rs-container');
@@ -33,7 +31,6 @@ window.toggleJanelaRS = function(event) {
   }
 };
 
-/* MOSTRA OU ESCONDE A LISTA DE ANOS E ROLA ATÉ O SELECIONADO */
 window.toggleListaAnosRS = function() {
   const lista = document.getElementById('rs-lista-anos');
   const icon = document.getElementById('rs-chevron-icon');
@@ -43,7 +40,6 @@ window.toggleListaAnosRS = function() {
   lista.style.display = aberta ? 'none' : 'block';
   if (icon) icon.className = aberta ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down';
 
-  // Rola a lista automaticamente para o ano selecionado
   if (!aberta) {
     setTimeout(() => {
       const itemSelecionado = lista.querySelector('.ano-item-selecionado');
@@ -54,7 +50,6 @@ window.toggleListaAnosRS = function() {
   }
 };
 
-/* PREENCHE OS DADOS E A LISTA DE ANOS USANDO O MAPA DA TELA */
 function atualizarJanelaRS() {
   let nomeMapa = typeof currentSubjectName !== 'undefined' && currentSubjectName ? currentSubjectName : "Mapa Atual";
   
@@ -100,7 +95,6 @@ function atualizarJanelaRS() {
   }
 }
 
-/* AO CLICAR EM UM ANO, EXECUTA O CÁLCULO E ATUALIZA O MAPA */
 window.selecionarAnoRS = function(ano) {
   anoAlvoRS = ano;
   toggleListaAnosRS();
@@ -109,7 +103,6 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* BUSCA OS DADOS DA RS NA API E DESENHA NA MANDALA VIA renderMandala */
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -150,34 +143,38 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
   }
 
   const dataInfo = extrairPartesDataRS(dataStr);
-  if (!hora) hora = "12:00";
-  if (!lat) lat = -23.5505;
-  if (!lon) lon = -46.6333;
+  if (!hora) hora = "11:11";
+  if (!lat) lat = -23.4331; // Guarulhos fallback
+  if (!lon) lon = -46.5325;
   if (fuso === null || fuso === undefined) fuso = -3;
 
-  try {
-    const urlSolar = `https://motor-astrologia.vercel.app/api/index?data=${anoCalculo}-${dataInfo.mes}-${dataInfo.dia}&hora=${hora}&lat=${lat}&lon=${lon}&fuso=${fuso}`;
+  const urlSolar = `https://motor-astrologia.vercel.app/api/index?data=${anoCalculo}-${dataInfo.mes}-${dataInfo.dia}&hora=${hora}&lat=${lat}&lon=${lon}&fuso=${fuso}`;
 
+  try {
     const resSolar = await fetch(urlSolar);
-    if (!resSolar.ok) throw new Error("Erro na API Solar");
+    if (!resSolar.ok) {
+      alert(`Erro na resposta da API (${resSolar.status}). URL: ${urlSolar}`);
+      return;
+    }
+    
     const dadosSolar = await resSolar.json();
 
-    // Chama diretamente a função oficial do seu mandala.js
     if (typeof window.renderMandala === 'function') {
       window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
       renderMandala(dadosSolar);
+    } else {
+      alert("A função renderMandala não foi encontrada no escopo global.");
     }
 
     const dropdown = document.getElementById('dropdown-rs-container');
     if (dropdown) dropdown.style.display = 'none';
 
   } catch (err) {
-    console.error("Erro ao calcular a RS:", err);
+    alert(`Falha ao conectar na API: ${err.message}\nURL tentada: ${urlSolar}`);
   }
 };
 
-/* FECHA A JANELA SE CLICAR FORA DELA */
 document.addEventListener('click', function(e) {
   const dropdown = document.getElementById('dropdown-rs-container');
   if (dropdown && dropdown.style.display === 'block') {
