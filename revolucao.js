@@ -115,7 +115,7 @@ function normalizarDadosRS(dados) {
 
   function obterGrauAbsoluto(obj) {
     if (!obj) return 0;
-    if (obj.grau_absoluto !== undefined) return obj.grau_absoluto;
+    if (obj.grau_absoluto !== undefined && obj.grau_absoluto !== null) return obj.grau_absoluto;
     const base = inicioSigno[obj.signo] !== undefined ? inicioSigno[obj.signo] : 0;
     const grauRelativo = obj.grau !== undefined ? obj.grau : (obj.grau_no_signo || 0);
     return base + grauRelativo;
@@ -153,10 +153,13 @@ function normalizarDadosRS(dados) {
     Object.keys(dados.planetas).forEach(chave => {
       if (mapaSetenario[chave]) {
         const p = dados.planetas[chave];
+        const gAbs = p.grau_absoluto !== undefined ? p.grau_absoluto : obterGrauAbsoluto(p);
+        const gSigno = p.grau_no_signo !== undefined ? p.grau_no_signo : (p.grau !== undefined ? p.grau : 0);
+
         normalizado[mapaSetenario[chave]] = {
-          grau_absoluto: p.grau_absoluto !== undefined ? p.grau_absoluto : 0,⁠
-          grau_no_signo: p.grau_no_signo !== undefined ? p.grau_no_signo : 0,⁠
-          signo: p.signo,
+          grau_absoluto: gAbs,
+          grau_no_signo: gSigno,
+          signo: p.signo || '',
           retrogrado: Boolean(p.retrogrado)
         };
       }
@@ -168,7 +171,7 @@ function normalizarDadosRS(dados) {
     const nodo = dados.planetas.NodoNorte;
     normalizado.Nodo_Norte = {
       grau_absoluto: obterGrauAbsoluto(nodo),
-      signo: nodo.signo
+      signo: nodo.signo || ''
     };
   }
 
