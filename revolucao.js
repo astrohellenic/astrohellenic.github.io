@@ -18,15 +18,9 @@ function extrairPartesDataRS(dataStr) {
   return { dia: '01', mes: '01', ano: 1990 };
 }
 
-function obterContainerRS() {
-  return document.getElementById('dropdown-rs-container') || 
-         document.getElementById('dropdown-rs') || 
-         document.querySelector('own-rs-container');
-}
-
 window.toggleJanelaRS = function(event) {
   if (event) event.stopPropagation();
-  const dropdown = obterContainerRS();
+  const dropdown = document.getElementById('dropdown-rs');
   if (!dropdown) return;
 
   const estaAberto = dropdown.style.display === 'block';
@@ -109,89 +103,6 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* FORMATADOR RS PARA O MOTOR DA MANDALA */
-function normalizarDadosRS(dados) {
-  if (!dados) return dados;
-
-  const inicioSigno = {
-    'Aries': 0, 'Touro': 30, 'Gemeos': 60, 'Cancer': 90,
-    'Leao': 120, 'Virgem': 150, 'Libra': 180, 'Escorpiao': 210,
-    'Sagitario': 240, 'Capricornio': 270, 'Aquario': 300, 'Peixes': 330
-  };
-
-  function obterGrauAbsoluto(obj) {
-    if (!obj) return 0;
-    if (obj.grau_absoluto !== undefined && obj.grau_absoluto !== null) return obj.grau_absoluto;
-    const base = inicioSigno[obj.signo] !== undefined ? inicioSigno[obj.signo] : 0;
-    const grauRelativo = obj.grau !== undefined ? obj.grau : (obj.grau_no_signo || 0);
-    return base + grauRelativo;
-  }
-
-  const normalizado = { ...dados };
-
-  // 1. ÂNGULOS
-  if (dados.ascendente) {
-    normalizado.Ascendente = {
-      grau_absoluto: obterGrauAbsoluto(dados.ascendente),
-      signo: dados.ascendente.signo || ''
-    };
-  }
-
-  if (dados.meio_ceu) {
-    normalizado.MC = {
-      grau_absoluto: obterGrauAbsoluto(dados.meio_ceu),
-      signo: dados.meio_ceu.signo || ''
-    };
-  }
-
-  // 2. PLANETAS SETENÁRIOS
-  if (dados.planetas) {
-    const mapaSetenario = {
-      'Sol': 'Sol',
-      'Lua': 'Lua',
-      'Mercurio': 'Mercurio',
-      'Venus': 'Venus',
-      'Marte': 'Marte',
-      'Jupiter': 'Jupiter',
-      'Saturno': 'Saturno'
-    };
-
-    Object.keys(dados.planetas).forEach(chave => {
-      if (mapaSetenario[chave]) {
-        const p = dados.planetas[chave];
-        const gAbs = p.grau_absoluto !== undefined ? p.grau_absoluto : obterGrauAbsoluto(p);
-        const gSigno = p.grau_no_signo !== undefined ? p.grau_no_signo : (p.grau !== undefined ? p.grau : 0);
-
-        normalizado[mapaSetenario[chave]] = {
-          grau_absoluto: gAbs,
-          grau_no_signo: gSigno,
-          signo: p.signo || '',
-          retrogrado: Boolean(p.retrogrado)
-        };
-      }
-    });
-  }
-
-  // 3. NODO NORTE E SIZÍGIA
-  if (dados.planetas && dados.planetas.NodoNorte) {
-    const nodo = dados.planetas.NodoNorte;
-    normalizado.Nodo_Norte = {
-      grau_absoluto: obterGrauAbsoluto(nodo),
-      signo: nodo.signo || ''
-    };
-  }
-
-  if (dados.sizigia) {
-    normalizado.Sizigia = {
-      grau_absoluto: obterGrauAbsoluto(dados.sizigia),
-      signo: dados.sizigia.signo || '',
-      tipo: dados.sizigia.tipo || ''
-    };
-  }
-
-  return normalizado;
-}
-
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -248,19 +159,29 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       return;
     }
     
-    const dadosBrutos = await resSolar.json();
+    const dadosSolar = await resSolar.json();
 
-    const dadosSolar = normalizarDadosRS(dadosBrutos);
+    // Define explicitamente o tipo de mapa para os cabeçalhos/rótulos
+    dadosSolar.tipo_mapa = "Revolução Solar";
+    dadosSolar.tipo = "Revolução Solar";
+    dadosSolar.ano_revolucao = anoCalculo;
 
     window.currentCalculatedData = dadosSolar;
 
+    // Atualiza elementos de texto do cabeçalho caso existam na página
+    const elTipoMapa = document.getElementById('tipo-mapa-label') || document.getElementById('mapa-tipo');
+    if (elTipoMapa) {
+      elTipoMapa.innerText = `Revolução Solar (${anoCalculo})`;
+    }
+
+    // Entrega direto para o motor da mandala
     if (typeof window.renderMandala === 'function') {
       window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
       renderMandala(dadosSolar);
     }
 
-    const dropdown = obterContainerRS();
+    const dropdown = document.getElementById('dropdown-rs');
     if (dropdown) dropdown.style.display = 'none';
 
   } catch (err) {
@@ -269,7 +190,7 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
 };
 
 document.addEventListener('click', function(e) {
-  const dropdown = obterContainerRS();
+  const dropdown = document.getElementById('dropdown-rs');
   if (dropdown && dropdown.style.display === 'block') {
     if (!dropdown.contains(e.target) && !e.target.closest('button[onclick*="toggleJanelaRS"]')) {
       dropdown.style.display = 'none';
