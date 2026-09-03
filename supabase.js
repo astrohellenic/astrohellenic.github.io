@@ -68,26 +68,14 @@ function renderMenuPrincipal() {
     </div>
     <div style="flex: 1; overflow-y: auto;">
       <ul class="menu-list">
-        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento(); fecharSidebar();">
-          <span>Agora</span>
-          <i class="fa-solid fa-clock"></i>
-        </li>
         <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
           <span>Novo Mapa</span>
           <i class="fa-solid fa-user-plus"></i>
         </li>
         <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
-          <span>Selecionar Mapa</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-        <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
-          <span>Técnicas de Tempo</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-        <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
-          <span>Ferramentas Auxiliares</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
+        <span>Selecionar Mapa</span>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+    </li>
       </ul>
     </div>
     
@@ -95,47 +83,6 @@ function renderMenuPrincipal() {
     <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Configurações</span>
       <i class="fa-solid fa-gear" style="font-size: 16px; color: #64748b;"></i>
-    </div>
-  `;
-}
-
-/* NÍVEL 2B: TELA DE FERRAMENTAS AUXILIARES */
-function abrirNavegacaoFerramentasAuxiliares() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
-      </button>
-      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">FERRAMENTAS AUXILIARES</span>
-      <div style="width: 24px;"></div>
-    </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('katarche'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-circle-question" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Katarche (Perguntas)</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('horas'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-business-time" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Horas Planetárias</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('isopsefia'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-calculator" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Isopsefia</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
     </div>
   `;
 }
@@ -477,11 +424,23 @@ function abrirModuloTecnica(modulo) {
   if (modulo === 'radix') {
     if (cRadix) cRadix.style.display = 'block';
   } 
+     
+ else if (modulo === 'tabelaTecnica') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloTabelaTecnica === 'function') iniciarModuloTabelaTecnica();
+    }
+
   else if (modulo === 'revolucao') {
     if (cRev) {
       cRev.style.display = 'block';
       if (typeof iniciarModuloRevolucao === 'function') iniciarModuloRevolucao();
     }
+     
+  else if (modulo === 'profeccao') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloProfeccao === 'function') iniciarModuloProfeccao();
+  } 
+     
   } 
   else if (modulo === 'decenios') {
     if (cRadix) cRadix.style.display = 'block';
@@ -517,9 +476,6 @@ function abrirNavegacaoPastas() {
 
   let html = `
     <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
-      </button>
       <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">PASTAS</span>
       <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
     </div>
