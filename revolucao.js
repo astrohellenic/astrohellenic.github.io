@@ -44,12 +44,12 @@ window.toggleListaAnosRS = function() {
   if (icon) icon.className = aberta ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down';
 };
 
-/* PREENCHE OS DADOS DO CLIENTE E A LISTA DE ANOS NA JANELA */
+/* PREENCHE OS DADOS E A LISTA DE ANOS NA JANELA */
 function atualizarJanelaRS() {
-  // 1. Tenta pegar o perfil do Supabase ou extrai os dados do mapa já aberto na tela
   let cliente = typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado ? currentPerfilSelecionado : null;
 
-  if (!cliente && typeof currentSubjectName !== 'undefined' && currentSubjectName && currentSubjectName !== "Agora") {
+  // Se não tem Supabase, monta com os dados do mapa atual na tela (inclusive "Agora")
+  if (!cliente && typeof currentSubjectName !== 'undefined' && currentSubjectName) {
     const dataRef = (typeof currentMoment !== 'undefined') ? currentMoment : new Date();
     const diaStr = String(dataRef.getDate()).padStart(2, '0');
     const mesStr = String(dataRef.getMonth() + 1).padStart(2, '0');
@@ -79,11 +79,11 @@ function atualizarJanelaRS() {
   if (nomeEl) nomeEl.innerText = cliente.nome || "Cliente";
   if (labelAno) labelAno.innerText = `${anoAlvoRS}, ${idadeAtual} anos`;
 
-  // 2. Gera a lista de anos e idades
+  // Gera até 120 anos
   if (listaDiv) {
     let htmlLista = '';
 
-    for (let a = anoNasc; a <= anoNasc + 90; a++) {
+    for (let a = anoNasc; a <= anoNasc + 120; a++) {
       const idade = a - anoNasc;
       const selecionado = a === anoAlvoRS;
       const bg = selecionado ? '#f1f5f9' : '#ffffff';
@@ -100,7 +100,7 @@ function atualizarJanelaRS() {
   }
 }
 
-/* AO CLICAR EM UM ANO, BUSCA NA API E ATUALIZA A MANDALA */
+/* AO CLICAR EM UM ANO, EXECUTA O CÁLCULO E RECONSTRÓI A MANDALA */
 window.selecionarAnoRS = function(ano) {
   anoAlvoRS = ano;
   toggleListaAnosRS();
@@ -112,24 +112,45 @@ window.selecionarAnoRS = function(ano) {
 
 /* BUSCA OS DADOS DA RS NA API E ATUALIZA A MANDALA PRINCIPAL */
 window.executarCalculoRS = async function(perfilCliente, ano) {
-  const cliente = perfilCliente || (typeof currentPerfilSelecionado !== 'undefined' ? currentPerfilSelecionado : null);
-  if (!cliente) return;
-
   const anoCalculo = ano || anoAlvoRS;
-  const dataInfo = extrairPartesDataRS(cliente.dataNascimento);
 
-  let hora = cliente.horaNascimento || "12:00";
-  let lat = cliente.latitude || -23.5505;
-  let lon = cliente.longitude || -46.6333;
-  let fuso = cliente.fuso !== undefined ? cliente.fuso : -3;
+  // Garante a extração de dados do perfil ou das variáveis globais do mapa ativo
+  let dataStr = perfilCliente ? perfilCliente.dataNascimento : "";
+  let hora = perfilCliente ? perfilCliente.horaNascimento : "";
+  let lat = perfilCliente ? perfilCliente.latitude : null;
+  let lon = perfilCliente ? perfilCliente.longitude : null;
+  let fuso = perfilCliente ? perfilCliente.fuso : null;
+
+  if (!dataStr && typeof currentMoment !== 'undefined') {
+    const diaStr = String(currentMoment.getDate()).padStart(2, '0');
+    const mesStr = String(currentMoment.getMonth() + 1).padStart(2, '0');
+    dataStr = `${diaStr}/${mesStr}/${currentMoment.getFullYear()}`;
+    hora = String(currentMoment.getHours()).padStart(2, '0') + ":" + String(currentMoment.getMinutes()).padStart(2, '0');
+  }
+
+  if (lat === null && typeof currentGeo !== 'undefined') {
+    lat = currentGeo.lat;
+    lon = currentGeo.lon;
+    fuso = currentGeo.fuso !== undefined ? currentGeo.fuso : -3;
+  }
+
+  // Valores padrão se ainda faltar algo
+  const dataInfo = extrairPartesDataRS(dataStr);
+  if (!hora) hora = "12:00";
+  if (!lat) lat = -23.5505;
+  if (!lon) lon = -46.6333;
+  if (fuso === null) fuso = -3;
 
   try {
     const urlSolar = `https://motor-astrologia.vercel.app/api/index?data=${anoCalculo}-${dataInfo.mes}-${dataInfo.dia}&hora=${hora}&lat=${lat}&lon=${lon}&fuso=${fuso}`;
+    
+    console.log("Chamando API da Revolução Solar:", urlSolar);
+
     const resSolar = await fetch(urlSolar);
     if (!resSolar.ok) throw new Error("Erro na API Solar");
     const dadosSolar = await resSolar.json();
 
-    // Desenha direto na mandala principal que já está aberta na tela
+    // Desenha direto na mandala principal da tela
     if (typeof window.desenharMapaPrincipal === 'function') {
       window.desenharMapaPrincipal(dadosSolar);
     } else if (typeof window.renderizarMapa === 'function') {
@@ -138,7 +159,7 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       window.desenharMandala(dadosSolar);
     }
 
-    // Fecha a janelinha flutuante
+    // Fecha a janela
     const dropdown = document.getElementById('dropdown-rs-container');
     if (dropdown) dropdown.style.display = 'none';
 
