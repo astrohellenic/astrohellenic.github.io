@@ -109,7 +109,7 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* BUSCA OS DADOS DA RS NA API E DESENHA NA MANDALA */
+/* BUSCA OS DADOS DA RS NA API E DESENHA NA MANDALA VIA renderMandala */
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -162,15 +162,11 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     if (!resSolar.ok) throw new Error("Erro na API Solar");
     const dadosSolar = await resSolar.json();
 
-    // Tenta atualizar a mandala por qualquer uma das funções de renderização do sistema
-    if (typeof window.desenharMapaPrincipal === 'function') {
-      window.desenharMapaPrincipal(dadosSolar);
-    } else if (typeof window.renderizarMapa === 'function') {
-      window.renderizarMapa(dadosSolar);
-    } else if (typeof window.desenharMandala === 'function') {
-      window.desenharMandala(dadosSolar);
-    } else if (typeof window.atualizarMapaComDados === 'function') {
-      window.atualizarMapaComDados(dadosSolar);
+    // Chama diretamente a função oficial do seu mandala.js
+    if (typeof window.renderMandala === 'function') {
+      window.renderMandala(dadosSolar);
+    } else if (typeof renderMandala === 'function') {
+      renderMandala(dadosSolar);
     }
 
     const dropdown = document.getElementById('dropdown-rs-container');
