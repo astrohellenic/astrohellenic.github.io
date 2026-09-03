@@ -103,54 +103,76 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* FORMATADOR COMPLETO PARA A MANDALA */
+/* FORMATADOR HELENÍSTICO PARA A MANDALA */
 function normalizarDadosRS(dados) {
   if (!dados) return dados;
 
   const normalizado = { ...dados };
 
-  // 1. Ângulos e PONTOS PRINCIPAIS
-  if (dados.ascendente && !dados.Ascendente) {
+  // 1. ÂNGULOS (Ascendente e Meio do Céu)
+  if (dados.ascendente) {
     normalizado.Ascendente = {
-      grau_absoluto: dados.ascendente.grau_absoluto !== undefined ? dados.ascendente.grau_absoluto : dados.ascendente.grau,
-      signo: dados.ascendente.signo
+      grau_absoluto: dados.ascendente.grau_absoluto !== undefined ? dados.ascendente.grau_absoluto : (dados.ascendente.grau !== undefined ? dados.ascendente.grau : 0),
+      signo: dados.ascendente.signo || ''
     };
   }
 
-  if (dados.meio_ceu && !dados.MC) {
+  if (dados.meio_ceu) {
     normalizado.MC = {
-      grau_absoluto: dados.meio_ceu.grau_absoluto !== undefined ? dados.meio_ceu.grau_absoluto : dados.meio_ceu.grau,
-      signo: dados.meio_ceu.signo
+      grau_absoluto: dados.meio_ceu.grau_absoluto !== undefined ? dados.meio_ceu.grau_absoluto : (dados.meio_ceu.grau !== undefined ? dados.meio_ceu.grau : 0),
+      signo: dados.meio_ceu.signo || ''
     };
   }
 
-  // 2. PLANETAS (Mapeia a estrutura 'planetas' para a raiz)
+  // 2. PLANETAS TRADICIONAIS (Apenas os 7 astros visíveis)
   if (dados.planetas) {
+    const mapaSetenario = {
+      'sol': 'Sol', 'Sol': 'Sol',
+      'lua': 'Lua', 'Lua': 'Lua',
+      'mercurio': 'Mercurio', 'Mercurio': 'Mercurio', 'Mercúrio': 'Mercurio',
+      'venus': 'Venus', 'Venus': 'Venus', 'Vênus': 'Venus',
+      'marte': 'Marte', 'Marte': 'Marte',
+      'jupiter': 'Jupiter', 'Jupiter': 'Jupiter', 'Júpiter': 'Jupiter',
+      'saturno': 'Saturno', 'Saturno': 'Saturno'
+    };
+
     Object.keys(dados.planetas).forEach(chave => {
-      const p = dados.planetas[chave];
-      normalizado[chave] = {
-        grau_absoluto: p.grau_absoluto !== undefined ? p.grau_absoluto : p.grau,
-        grau_no_signo: p.grau_no_signo,
-        signo: p.signo,
-        retrogrado: p.retrogrado || false
-      };
+      const nomeLimpo = mapaSetenario[chave] || mapaSetenario[chave.toLowerCase()];
+      if (nomeLimpo) {
+        const p = dados.planetas[chave];
+        normalizado[nomeLimpo] = {
+          grau_absoluto: p.grau_absoluto !== undefined ? p.grau_absoluto : (p.grau !== undefined ? p.grau : 0),
+          grau_no_signo: p.grau_no_signo,
+          signo: p.signo,
+          retrogrado: Boolean(p.retrogrado || p.retrogado)
+        };
+      }
     });
   }
 
-  // 3. NODO NORTE E SIZIGIA
+  // 3. NODO NORTE E SIZÍGIA
   if (dados.planetas && dados.planetas.NodoNorte) {
-    normalizado.Nodo_Norte = dados.planetas.NodoNorte;
+    normalizado.Nodo_Norte = {
+      grau_absoluto: dados.planetas.NodoNorte.grau_absoluto !== undefined ? dados.planetas.NodoNorte.grau_absoluto : dados.planetas.NodoNorte.grau,
+      signo: dados.planetas.NodoNorte.signo
+    };
   } else if (dados.nodo_norte) {
-    normalizado.Nodo_Norte = dados.nodo_norte;
+    normalizado.Nodo_Norte = {
+      grau_absoluto: dados.nodo_norte.grau_absoluto !== undefined ? dados.nodo_norte.grau_absoluto : dados.nodo_norte.grau,
+      signo: dados.nodo_norte.signo
+    };
   }
 
   if (dados.sizigia) {
-    normalizado.Sizigia = dados.sizigia;
+    normalizado.Sizigia = {
+      grau_absoluto: dados.sizigia.grau_absoluto !== undefined ? dados.sizigia.grau_absoluto : (dados.sizigia.grau !== undefined ? dados.sizigia.grau : 0),
+      signo: dados.sizigia.signo || '',
+      tipo: dados.sizigia.tipo || ''
+    };
   }
 
   return normalizado;
 }
-
 
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
