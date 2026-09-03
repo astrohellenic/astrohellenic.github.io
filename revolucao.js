@@ -103,7 +103,7 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* CHAMA A ROTA OFICIAL DE REVOLUÇÃO SOLAR (/api/revolucao) */
+/* CHAMA A ROTA OFICIAL DE REVOLUÇÃO SOLAR (/api/revolucao) COM ALERTA DE ERRO */
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -151,29 +151,32 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
   if (!lon) lon = -46.6333;
   if (fuso === null || fuso === undefined) fuso = -3;
 
-  // Chama a rota /api/revolucao passando data natal, hora natal e o ano da RS
   const urlSolar = `https://motor-astrologia.vercel.app/api/revolucao?data=${dataFormatada}&hora=${hora}&lat=${lat}&lon=${lon}&fuso=${fuso}&ano=${anoCalculo}`;
 
   try {
     const resSolar = await fetch(urlSolar);
-    if (!resSolar.ok) throw new Error(`Erro na API (${resSolar.status})`);
+    if (!resSolar.ok) {
+      alert(`Erro na API (${resSolar.status})\nURL: ${urlSolar}`);
+      return;
+    }
     
     const dadosSolar = await resSolar.json();
 
-    // Atualiza o estado global e renderiza a mandala
     window.currentCalculatedData = dadosSolar;
 
     if (typeof window.renderMandala === 'function') {
-      window.renderMandala();
+      window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
-      renderMandala();
+      renderMandala(dadosSolar);
+    } else {
+      alert("A função renderMandala não foi encontrada.");
     }
 
     const dropdown = document.getElementById('dropdown-rs-container');
     if (dropdown) dropdown.style.display = 'none';
 
   } catch (err) {
-    alert("Falha ao calcular Revolução Solar: " + err.message);
+    alert(`Falha no calculo RS: ${err.message}\nURL tentada: ${urlSolar}`);
   }
 };
 
