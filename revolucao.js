@@ -167,6 +167,26 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     
     const apiJson = await resSolar.json();
 
+    // ==========================================
+    // AJUSTE DE CABEÇALHO PARA A REVOLUÇÃO SOLAR
+    // ==========================================
+    window.currentMapType = "Revolução Solar";
+
+    // Tenta obter a data e hora exatas do retorno do Sol fornecidas pela API
+    let dataHoraRetornoStr = apiJson.data_retorno || apiJson.data_revolucao || apiJson.data_retorno_solar;
+    
+    if (dataHoraRetornoStr) {
+      currentMoment = new Date(dataHoraRetornoStr);
+    } else if (apiJson.data && apiJson.hora) {
+      const pData = extrairPartesDataRS(apiJson.data);
+      const pHora = apiJson.hora.split(':');
+      currentMoment = new Date(pData.ano, parseInt(pData.mes) - 1, parseInt(pData.dia), parseInt(pHora[0]) || 0, parseInt(pHora[1]) || 0);
+    } else {
+      // Fallback: usa o dia/mês natal no ano da Revolução Solar com o horário aproximado
+      const pHora = hora.split(':');
+      currentMoment = new Date(anoCalculo, parseInt(dataInfo.mes) - 1, parseInt(dataInfo.dia), parseInt(pHora[0]) || 12, parseInt(pHora[1]) || 0);
+    }
+
     const SIGNOS_INDEX = {
       "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
       "Leao": 4, "Virgem": 5, "Libra": 6, "Escorpiao": 7,
