@@ -103,13 +103,13 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* FORMATADOR DE CHAVES PARA PADRÃO DA MANDALA */
+/* FORMATADOR COMPLETO PARA A MANDALA */
 function normalizarDadosRS(dados) {
   if (!dados) return dados;
 
   const normalizado = { ...dados };
 
-  // Ascendente
+  // 1. Ângulos e PONTOS PRINCIPAIS
   if (dados.ascendente && !dados.Ascendente) {
     normalizado.Ascendente = {
       grau_absoluto: dados.ascendente.grau_absoluto !== undefined ? dados.ascendente.grau_absoluto : dados.ascendente.grau,
@@ -117,7 +117,6 @@ function normalizarDadosRS(dados) {
     };
   }
 
-  // Meio do Céu / MC
   if (dados.meio_ceu && !dados.MC) {
     normalizado.MC = {
       grau_absoluto: dados.meio_ceu.grau_absoluto !== undefined ? dados.meio_ceu.grau_absoluto : dados.meio_ceu.grau,
@@ -125,20 +124,33 @@ function normalizarDadosRS(dados) {
     };
   }
 
-  // Nodo Norte
-  if (dados.planetas && dados.planetas.NodoNorte && !dados.Nodo_Norte) {
+  // 2. PLANETAS (Mapeia a estrutura 'planetas' para a raiz)
+  if (dados.planetas) {
+    Object.keys(dados.planetas).forEach(chave => {
+      const p = dados.planetas[chave];
+      normalizado[chave] = {
+        grau_absoluto: p.grau_absoluto !== undefined ? p.grau_absoluto : p.grau,
+        grau_no_signo: p.grau_no_signo,
+        signo: p.signo,
+        retrogrado: p.retrogrado || false
+      };
+    });
+  }
+
+  // 3. NODO NORTE E SIZIGIA
+  if (dados.planetas && dados.planetas.NodoNorte) {
     normalizado.Nodo_Norte = dados.planetas.NodoNorte;
-  } else if (dados.nodo_norte && !dados.Nodo_Norte) {
+  } else if (dados.nodo_norte) {
     normalizado.Nodo_Norte = dados.nodo_norte;
   }
 
-  // Sizigia
-  if (dados.sizigia && !dados.Sizigia) {
+  if (dados.sizigia) {
     normalizado.Sizigia = dados.sizigia;
   }
 
   return normalizado;
 }
+
 
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
