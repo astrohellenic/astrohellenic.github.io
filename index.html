@@ -610,7 +610,7 @@ main, #app, .app-container, .main-content {
                 
                            <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
                 <button class="icon-btn" onclick="abrirModuloTecnica('radix')" title="Natal"><i class="fa-solid fa-globe"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('revolucao')" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
+                <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
                 <button class="icon-btn" onclick="abrirModuloTecnica('profeccao')" title="Profecção"><i class="fa-solid fa-arrow-trend-up"></i></button>
                 <button class="icon-btn" onclick="abrirModuloTecnica('decenios')" title="Decênios"><i class="fa-solid fa-hourglass-half"></i></button>
                 <button class="icon-btn" onclick="abrirModuloTecnica('liberacao')" title="Liberação Zodiacal"><i class="fa-solid fa-dharmachakra"></i></button>
@@ -619,6 +619,28 @@ main, #app, .app-container, .main-content {
                 <button class="icon-btn" onclick="abrirModuloTecnica('horas')" title="Horas Planetárias"><i class="fa-solid fa-clock"></i></button>
 
             </div>
+            
+            <!-- JANELA FLUTUANTE DE SELEÇÃO DE ANO DA REVOLUÇÃO SOLAR -->
+<div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 220px; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
+  
+  <div style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+    <span style="font-size: 10px; text-transform: uppercase; color: #c59b27; font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
+    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
+  </div>
+
+  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff;">
+    <div>
+      <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">Retorno Solar</span>
+      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: #103b70;">Selecione...</span>
+    </div>
+    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: #64748b;"></i>
+  </div>
+
+  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid #e2e8f0; background: #ffffff; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+  </div>
+
+</div>
+
 
             <!-- NAVEGADOR TEMPORAL (STEPPER) -->
             <div class="time-stepper">
