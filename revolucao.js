@@ -46,7 +46,21 @@ window.toggleListaAnosRS = function() {
 
 /* PREENCHE OS DADOS DO CLIENTE E A LISTA DE ANOS NA JANELA */
 function atualizarJanelaRS() {
-  const cliente = typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado ? currentPerfilSelecionado : null;
+  // 1. Tenta pegar o perfil do Supabase ou extrai os dados do mapa já aberto na tela
+  let cliente = typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado ? currentPerfilSelecionado : null;
+
+  if (!cliente && typeof currentSubjectName !== 'undefined' && currentSubjectName && currentSubjectName !== "Agora") {
+    const dataRef = (typeof currentMoment !== 'undefined') ? currentMoment : new Date();
+    const diaStr = String(dataRef.getDate()).padStart(2, '0');
+    const mesStr = String(dataRef.getMonth() + 1).padStart(2, '0');
+    const anoStr = dataRef.getFullYear();
+
+    cliente = {
+      nome: currentSubjectName,
+      dataNascimento: `${diaStr}/${mesStr}/${anoStr}`
+    };
+  }
+
   const nomeEl = document.getElementById('rs-nome-cliente');
   const labelAno = document.getElementById('rs-ano-atual-label');
   const listaDiv = document.getElementById('rs-lista-anos');
@@ -65,6 +79,7 @@ function atualizarJanelaRS() {
   if (nomeEl) nomeEl.innerText = cliente.nome || "Cliente";
   if (labelAno) labelAno.innerText = `${anoAlvoRS}, ${idadeAtual} anos`;
 
+  // 2. Gera a lista de anos e idades
   if (listaDiv) {
     let htmlLista = '';
 
