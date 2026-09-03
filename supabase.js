@@ -24,6 +24,17 @@ function calcularFusoPorLongitude(lon) {
   return Math.round(lon / 15);
 }
 
+/* FUNÇÕES DE AUXÍLIO PARA FECHAR POPOVERS FLUTUANTES */
+function fecharPopoverPastas() {
+  const p = document.getElementById('modal-pastas-popover');
+  if (p) p.style.display = 'none';
+}
+
+function fecharPopoverConfig() {
+  const c = document.getElementById('modal-config-popover');
+  if (c) c.style.display = 'none';
+}
+
 /* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
 async function carregarPastasSalvas() {
   try {
@@ -45,7 +56,6 @@ async function carregarPastasSalvas() {
   } catch (e) {
     console.error("Erro ao carregar pastas:", e);
   }
-  renderMenuPrincipal();
 
   /* PREENCHE O SELECT DE PASTAS DO NOVO MAPA AUTOMATICAMENTE */
   const selectPastaModal = document.getElementById('modalPasta');
@@ -57,187 +67,96 @@ async function carregarPastasSalvas() {
   }
 }
 
-/* NÍVEL 1: MENU PRINCIPAL LIMPO (COM RODAPÉ DE CONFIGURAÇÕES) */
-function renderMenuPrincipal() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-
-  sidebar.innerHTML = `
-    <div class="sidebar-header">
-      <h1 class="sidebar-title">Astro Hellenic</h1>
-    </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <ul class="menu-list">
-        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento(); fecharSidebar();">
-          <span>Agora</span>
-          <i class="fa-solid fa-clock"></i>
-        </li>
-        <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
-          <span>Novo Mapa</span>
-          <i class="fa-solid fa-user-plus"></i>
-        </li>
-        <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
-          <span>Selecionar Mapa</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-        <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()">
-          <span>Técnicas de Tempo</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-        <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
-          <span>Ferramentas Auxiliares</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-      </ul>
-    </div>
-    
-    <!-- RODAPÉ FIXO: CONFIGURAÇÕES -->
-    <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
-      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Configurações</span>
-      <i class="fa-solid fa-gear" style="font-size: 16px; color: #64748b;"></i>
-    </div>
-  `;
-}
-
-/* NÍVEL 2B: TELA DE FERRAMENTAS AUXILIARES */
-function abrirNavegacaoFerramentasAuxiliares() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
-      </button>
-      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">FERRAMENTAS AUXILIARES</span>
-      <div style="width: 24px;"></div>
-    </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('katarche'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-circle-question" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Katarche (Perguntas)</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('horas'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-business-time" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Horas Planetárias</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirModuloAuxiliar('isopsefia'); fecharSidebar();">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-calculator" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Isopsefia</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-      </div>
-    </div>
-  `;
-}
-
-/* NÍVEL 2D: TELA PRINCIPAL DE CONFIGURAÇÕES (SUB-MENU) */
+/* GERENCIADOR FLUTUANTE DE CONFIGURAÇÕES */
 function abrirNavegacaoConfiguracoes() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
+  const popover = document.getElementById('modal-config-popover');
+  if (!popover) return;
 
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
-      </button>
-      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">CONFIGURAÇÕES</span>
-      <div style="width: 24px;"></div>
+  popover.innerHTML = `
+    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Configurações</span>
+      <button class="icon-btn" onclick="fecharPopoverConfig()" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div style="flex: 1; overflow-y: auto;">
-      
+    <div style="max-height: 400px; overflow-y: auto;">
       <!-- OPÇÃO: CAPTAÇÃO DE CLIENTES -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesCaptacao()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesCaptacao()">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-bullhorn" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Captação de Clientes</span>
+          <span style="font-size: 12px; font-weight: 600; color: #334155;">Captação de Clientes</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
       <!-- OPÇÃO: SEGURANÇA E CONTA -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesSeguranca()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesSeguranca()">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-shield-halved" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Segurança e Conta</span>
+          <span style="font-size: 12px; font-weight: 600; color: #334155;">Segurança e Conta</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
-
     </div>
   `;
 }
 
-/* SUB-TELA: CAPTAÇÃO DE CLIENTES COM UPLOAD DIRETO */
+/* SUB-TELA: CAPTAÇÃO DE CLIENTES FLUTUANTE */
 async function abrirConfiguracoesCaptacao() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
+  const popover = document.getElementById('modal-config-popover');
+  if (!popover) return;
 
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
+  popover.innerHTML = `
+    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; background: #f8fafc;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
+        <i class="fa-solid fa-chevron-left"></i>
       </button>
       <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">CAPTAÇÃO DE CLIENTES</span>
-      <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+    <div style="max-height: 420px; overflow-y: auto; padding: 14px;">
       
-      <div style="font-size: 11px; color: #64748b; margin-bottom: 16px; line-height: 1.4;">
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
         Configure o formulário externo de coleta de dados dos seus clientes.
       </div>
 
-      <!-- LOGOTIPO (UPLOAD DIRETO + PREVIEW) -->
-      <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
+      <!-- LOGOTIPO -->
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
         
         <div id="logoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
-          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px;">
+          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 50px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px;">
         </div>
 
         <input type="file" id="cfgLogoFile" accept="image/*" onchange="fazerUploadLogo(this)" style="display: none;">
-        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #f1f5f9; color: #334155; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #f1f5f9; color: #334155; border: 1px dashed #cbd5e1; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
           <i class="fa-solid fa-upload"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
         </button>
         <input type="hidden" id="cfgLogoUrl">
       </div>
       
       <!-- LINK DO FORMULÁRIO PÚBLICO -->
-<div style="margin-bottom: 16px;">
-  <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">
-    Seu Link Exclusivo do Formulário
-  </label>
-  <div style="display: flex; gap: 8px;">
-    <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background-color: #f8fafc; color: #475569;" />
-    <button type="button" onclick="copiarLinkFormulario()" style="padding: 8px 16px; background-color: var(--primary-blue, #1e3a8a); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; whitespace: nowrap;">
-      Copiar
-    </button>
-  </div>
-</div>
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Seu Link Exclusivo</label>
+        <div style="display: flex; gap: 6px;">
+          <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; background-color: #f8fafc; color: #475569;" />
+          <button type="button" onclick="copiarLinkFormulario()" style="padding: 6px 12px; background-color: var(--primary-blue, #103b70); color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+            Copiar
+          </button>
+        </div>
+      </div>
 
       <!-- WEBHOOK -->
-      <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Webhook (Integração)</label>
-        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Webhook</label>
+        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; box-sizing: border-box;">
       </div>
 
       <!-- REDIRECIONAMENTO -->
-      <div style="margin-bottom: 20px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
-        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
+        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; box-sizing: border-box;">
       </div>
 
       <!-- BOTÃO SALVAR -->
-      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
         Salvar Configurações
       </button>
 
@@ -262,12 +181,11 @@ async function carregarConfiguracoesCaptacao() {
     if (!error && data) {
       if (document.getElementById('cfgLogoUrl')) {
         const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
-document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
-const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
-if (document.getElementById('cfgPublicFormUrl')) {
-  document.getElementById('cfgPublicFormUrl').value = publicLink;
-}        
-        // Atualiza a prévia do logo e o texto do botão se houver URL salva
+        document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
+        const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
+        if (document.getElementById('cfgPublicFormUrl')) {
+          document.getElementById('cfgPublicFormUrl').value = publicLink;
+        }        
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
           const previewContainer = document.getElementById('logoPreviewContainer');
@@ -307,7 +225,6 @@ async function fazerUploadLogo(inputElement) {
     const fileName = `${user.id}-logo.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // Upload do arquivo para o bucket 'logos' no Supabase Storage
     const { error: uploadError } = await supabaseClient.storage
       .from('logos')
       .upload(filePath, file, { upsert: true });
@@ -318,14 +235,12 @@ async function fazerUploadLogo(inputElement) {
       return;
     }
 
-    // Pega a URL pública gerada pelo Supabase
     const { data: publicUrlData } = supabaseClient.storage
       .from('logos')
       .getPublicUrl(filePath);
 
     const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
-    // Atualiza o campo oculto e a interface com a prévia
     document.getElementById('cfgLogoUrl').value = publicUrl;
     
     const previewImg = document.getElementById('cfgLogoPreview');
@@ -342,7 +257,6 @@ async function fazerUploadLogo(inputElement) {
     if (btnText) btnText.innerText = "Selecionar Imagem do Logo";
   }
 }
-
 
 /* SALVA AS CONFIGURAÇÕES DE CAPTAÇÃO NO SUPABASE */
 async function salvarConfiguracoesCaptacao() {
@@ -373,10 +287,10 @@ async function salvarConfiguracoesCaptacao() {
   }
 }
 
-/* SUB-TELA: SEGURANÇA E CONTA */
+/* SUB-TELA: SEGURANÇA E CONTA FLUTUANTE */
 async function abrirConfiguracoesSeguranca() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
+  const popover = document.getElementById('modal-config-popover');
+  if (!popover) return;
 
   let userEmail = "Carregando...";
   try {
@@ -392,46 +306,44 @@ async function abrirConfiguracoesSeguranca() {
 
   const manterLogado = localStorage.getItem('astro_keep_logged') === 'true';
 
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
+  popover.innerHTML = `
+    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; background: #f8fafc;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
+        <i class="fa-solid fa-chevron-left"></i>
       </button>
       <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">SEGURANÇA E CONTA</span>
-      <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+    <div style="max-height: 400px; overflow-y: auto; padding: 14px;">
       
       <!-- USUÁRIO CONECTADO -->
-      <div style="margin-bottom: 20px; background: #f1f5f9; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Conta Conectada</div>
-        <div style="font-size: 13px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtml(userEmail)}</div>
+      <div style="margin-bottom: 14px; background: #f1f5f9; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+        <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">Conta Conectada</div>
+        <div style="font-size: 11px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtml(userEmail)}</div>
       </div>
 
-      <!-- OPCÃO MANTER LOGADO -->
-      <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-        <span style="font-size: 13px; font-weight: 600; color: #334155;">Manter-se logado</span>
-        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+      <!-- OPÇÃO MANTER LOGADO -->
+      <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        <span style="font-size: 11px; font-weight: 600; color: #334155;">Manter-se logado</span>
+        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 16px; height: 16px; cursor: pointer;">
       </div>
 
       <!-- ALTERAR SENHA -->
-      <div style="margin-bottom: 24px;">
-        <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">Alterar Senha</div>
-        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; box-sizing: border-box;">
-        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+      <div style="margin-bottom: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 6px;">Alterar Senha</div>
+        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; margin-bottom: 6px; box-sizing: border-box;">
+        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
           Atualizar Senha
         </button>
       </div>
 
-      <!-- LOGOUT (SAIR) -->
-      <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <!-- LOGOUT -->
+      <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
         <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
       </button>
 
     </div>
   `;
 }
-
 
 function alternarManterLogado(status) {
   localStorage.setItem('astro_keep_logged', status);
@@ -466,7 +378,7 @@ async function fazerLogout() {
   }
 }
 
-/* Abrir módulo técnicas */
+/* ABRIR MÓDULOS TÉCNICOS */
 function abrirModuloTecnica(modulo) {
   const cRadix = document.getElementById('mandala-container');
   const cRev = document.getElementById('revolucao-container');
@@ -493,41 +405,26 @@ function abrirModuloTecnica(modulo) {
   }
 }
 
-/* CHAMA OS MÓDULOS AUXILIARES */
-function abrirModuloAuxiliar(modulo) {
-  const container = document.getElementById('mandala-container');
-  if (!container) return;
-
-  if (modulo === 'katarche') {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Katarche / Perguntas (Em breve)</div>`;
-  } else if (modulo === 'horas') {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Horas Planetárias (Em breve)</div>`;
-  } else if (modulo === 'isopsefia') {
-    if (typeof iniciarModuloIsopsefia === 'function') iniciarModuloIsopsefia();
-    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Isopsefia.</div>`;
-  }
-}
-
-/* NÍVEL 2C: TELA DE PASTAS COM "IMPORTAR EM MASSA" NO TOPO */
+/* GERENCIADOR FLUTUANTE DE PASTAS */
 function abrirNavegacaoPastas() {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
+  const popover = document.getElementById('modal-pastas-popover');
+  if (!popover) return;
 
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   let html = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
-      </button>
-      <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">PASTAS</span>
-      <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
+    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Gerenciador de Pastas</span>
+      <div style="display: flex; gap: 6px;">
+        <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
+        <button class="icon-btn" onclick="fecharPopoverPastas()" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
     </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
-        <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="max-height: 380px; overflow-y: auto;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
+        <div style="display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
-          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
+          <span style="font-size: 12px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #103b70;"></i>
       </div>
@@ -537,12 +434,12 @@ function abrirNavegacaoPastas() {
     const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
 
     html += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
-        <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
+        <div style="display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-folder" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
+          <span style="font-size: 12px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: center; gap: 6px;" onclick="event.stopPropagation()">
           <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta"></i>
           <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta"></i>
           <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8; margin-left: 4px;"></i>
@@ -552,46 +449,49 @@ function abrirNavegacaoPastas() {
   });
 
   html += `</div>`;
-  sidebar.innerHTML = html;
+  popover.innerHTML = html;
 }
 
-/* NÍVEL 3C: TELA DE MAPAS DA PASTA */
+/* LISTAGEM DE MAPAS DENTRO DE UMA PASTA NO POPOVER */
 async function abrirConteudoPasta(nomePasta) {
   activeFolder = nomePasta;
   selectedMapIds.clear();
   isSelectionMode = false;
 
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
+  const popover = document.getElementById('modal-pastas-popover');
+  if (!popover) return;
 
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
+  popover.innerHTML = `
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
       <button class="icon-btn" onclick="abrirNavegacaoPastas()" title="Voltar às pastas">
         <i class="fa-solid fa-chevron-left"></i>
       </button>
-      <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(nomePasta)}</span>
-      <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: #dc2626;">
-        <i class="fa-solid fa-trash-can"></i>
-      </button>
+      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(nomePasta)}</span>
+      <div style="display: flex; gap: 4px;">
+        <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: #dc2626;">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button class="icon-btn" onclick="fecharPopoverPastas()" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
     </div>
 
-    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); background: #ffffff;">
+    <div style="padding: 8px 12px; border-bottom: 1px solid var(--border-color); background: #ffffff;">
       <div class="search-box-container" style="margin-bottom: 0;">
         <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)">
       </div>
     </div>
 
-    <div id="selectionActionBar" style="display: none; padding: 8px 12px; background: #fee2e2; border-bottom: 1px solid #fca5a5; justify-content: space-between; align-items: center;">
-      <label style="font-size: 11px; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+    <div id="selectionActionBar" style="display: none; padding: 6px 12px; background: #fee2e2; border-bottom: 1px solid #fca5a5; justify-content: space-between; align-items: center;">
+      <label style="font-size: 10px; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 4px; cursor: pointer;">
         <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)"> Selecionar Todos
       </label>
-      <button onclick="confirmarExclusaoSelecionados()" style="background: #dc2626; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">
+      <button onclick="confirmarExclusaoSelecionados()" style="background: #dc2626; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">
         Apagar (<span id="selectedCount">0</span>)
       </button>
     </div>
 
-    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0;">
-      <div style="padding: 16px; text-align: center; font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mapas...</div>
+    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0; max-height: 320px;">
+      <div style="padding: 16px; text-align: center; font-size: 11px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mapas...</div>
     </div>
   `;
 
@@ -647,7 +547,7 @@ function renderListaMapas(lista) {
   if (!container) return;
 
   if (!lista || lista.length === 0) {
-    container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">Nenhum mapa encontrado.</div>`;
+    container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 11px; color: #94a3b8;">Nenhum mapa encontrado.</div>`;
     return;
   }
 
@@ -659,19 +559,18 @@ function renderListaMapas(lista) {
     const cidStr = item.cidade || "Local n/i";
     const isChecked = selectedMapIds.has(item.id) ? 'checked' : '';
 
-    // Trata o número do WhatsApp para o link direto
     const numWhats = item.whatsapp ? item.whatsapp.replace(/\D/g, '') : '';
     const linkWhats = numWhats ? (numWhats.length <= 11 ? `55${numWhats}` : numWhats) : '';
 
     html += `
       <div class="client-card-item" id="card-item-${index}">
-        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer;">` : ''}
-        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
+        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 8px; cursor: pointer;">` : ''}
+        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharPopoverPastas();`}">
           <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #64748b; margin-left: 4px;">${escapeHtml(tipoStr)}</span></div>
           <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
-          <div class="card-actions" style="display: flex; gap: 6px; align-items: center;">
+          <div class="card-actions" style="display: flex; gap: 4px; align-items: center;">
             ${linkWhats ? `
               <button type="button" class="action-record-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp" style="color: #25d366;">
                 <i class="fa-brands fa-whatsapp"></i>
@@ -1012,7 +911,7 @@ async function deletarRegistroUnico(event, idMapa) {
   }
 }
 
-/* SALVAR MAPA DA BARRA SUPERIOR (COM OPÇÃO DE CRIAR PASTA DIRETAMENTE) */
+/* SALVAR MAPA DA BARRA SUPERIOR */
 function salvarMapaNaPlanilha() {
   if (!customFolders || customFolders.length === 0) {
     customFolders = ["Clientes"];
@@ -1067,7 +966,7 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
           <option value="Evento">Evento</option>
           <option value="Eleição">Eleição</option>
           <option value="Natal">Natal</option>
-          ⁠<option value="Revolução Solar">Revolução Solar</option>
+          <option value="Revolução Solar">Revolução Solar</option>
         </select>
       </div>
 
