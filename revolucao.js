@@ -228,7 +228,7 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       Ascendente: { grau_absoluto: calcularAbsoluto(ascData) },
       MC: { grau_absoluto: calcularAbsoluto(mcData) },
       Nodo_Norte: { grau_absoluto: calcularAbsoluto(planetas.NodoNorte), retro: checkRetro(planetas.NodoNorte) },
-      Sizigia: { grau_absoluto: sizigiaData && sizigiaData.grau_absoluto !== undefined ? parseFloat(sizigiaData.grau_absoluto) : 0 },
+      Sizigia: { grau_absoluto: (typeof sizigiaData !== 'undefined' && sizigiaData && sizigiaData.grau_absoluto !== undefined) ? parseFloat(sizigiaData.grau_absoluto) : 0 },
       Sol: { grau_absoluto: calcularAbsoluto(planetas.Sol), retro: false },
       Lua: { grau_absoluto: calcularAbsoluto(planetas.Lua), retro: false },
       Mercúrio: { grau_absoluto: calcularAbsoluto(planetas.Mercurio), retro: checkRetro(planetas.Mercurio) },
