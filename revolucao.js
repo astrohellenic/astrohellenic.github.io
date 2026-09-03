@@ -33,7 +33,7 @@ window.toggleJanelaRS = function(event) {
   }
 };
 
-/* MOSTRA OU ESCONDE A LISTA DE ANOS */
+/* MOSTRA OU ESCONDE A LISTA DE ANOS E ROLA ATÉ O SELECIONADO */
 window.toggleListaAnosRS = function() {
   const lista = document.getElementById('rs-lista-anos');
   const icon = document.getElementById('rs-chevron-icon');
@@ -42,14 +42,22 @@ window.toggleListaAnosRS = function() {
   const aberta = lista.style.display === 'block';
   lista.style.display = aberta ? 'none' : 'block';
   if (icon) icon.className = aberta ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down';
+
+  // Rola a lista automaticamente para o ano selecionado
+  if (!aberta) {
+    setTimeout(() => {
+      const itemSelecionado = lista.querySelector('.ano-item-selecionado');
+      if (itemSelecionado) {
+        itemSelecionado.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    }, 50);
+  }
 };
 
 /* PREENCHE OS DADOS E A LISTA DE ANOS USANDO O MAPA DA TELA */
 function atualizarJanelaRS() {
-  // Pega o nome do mapa carregado na tela
   let nomeMapa = typeof currentSubjectName !== 'undefined' && currentSubjectName ? currentSubjectName : "Mapa Atual";
   
-  // Pega a data de nascimento ou a data de referência do mapa
   let dataStr = "";
   if (typeof currentPerfilSelecionado !== 'undefined' && currentPerfilSelecionado && currentPerfilSelecionado.dataNascimento) {
     dataStr = currentPerfilSelecionado.dataNascimento;
@@ -71,7 +79,6 @@ function atualizarJanelaRS() {
   if (nomeEl) nomeEl.innerText = nomeMapa;
   if (labelAno) labelAno.innerText = `${anoAlvoRS}, ${idadeAtual} anos`;
 
-  // Gera a lista de idades (até 120 anos)
   if (listaDiv) {
     let htmlLista = '';
 
@@ -79,10 +86,11 @@ function atualizarJanelaRS() {
       const idade = a - anoNasc;
       const selecionado = a === anoAlvoRS;
       const bg = selecionado ? '#f1f5f9' : '#ffffff';
+      const classeSel = selecionado ? 'ano-item-selecionado' : '';
       const check = selecionado ? '<i class="fa-solid fa-check" style="color: #103b70;"></i>' : '';
 
       htmlLista += `
-        <div onclick="selecionarAnoRS(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${bg}; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155;">
+        <div class="${classeSel}" onclick="selecionarAnoRS(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${bg}; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155;">
           <span><strong>${a}</strong>, ${idade} anos</span>
           ${check}
         </div>
@@ -105,7 +113,6 @@ window.selecionarAnoRS = function(ano) {
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
-  // Extrai dados sempre do mapa ativo na tela
   let dataStr = "";
   let hora = "";
   let lat = null;
@@ -128,7 +135,6 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     fuso = currentPerfilSelecionado.fuso;
   }
 
-  // Fallback para as variáveis do mapa desenhado no momento
   if (!dataStr && typeof currentMoment !== 'undefined' && currentMoment) {
     const dataRef = currentMoment;
     const diaStr = String(dataRef.getDate()).padStart(2, '0');
@@ -143,7 +149,6 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     fuso = currentGeo.fuso !== undefined ? currentGeo.fuso : -3;
   }
 
-  // Garantia final das variáveis
   const dataInfo = extrairPartesDataRS(dataStr);
   if (!hora) hora = "12:00";
   if (!lat) lat = -23.5505;
@@ -157,16 +162,17 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     if (!resSolar.ok) throw new Error("Erro na API Solar");
     const dadosSolar = await resSolar.json();
 
-    // Redesenha a mandala aberta na tela
+    // Tenta atualizar a mandala por qualquer uma das funções de renderização do sistema
     if (typeof window.desenharMapaPrincipal === 'function') {
       window.desenharMapaPrincipal(dadosSolar);
     } else if (typeof window.renderizarMapa === 'function') {
       window.renderizarMapa(dadosSolar);
     } else if (typeof window.desenharMandala === 'function') {
       window.desenharMandala(dadosSolar);
+    } else if (typeof window.atualizarMapaComDados === 'function') {
+      window.atualizarMapaComDados(dadosSolar);
     }
 
-    // Fecha o dropdown flutuante
     const dropdown = document.getElementById('dropdown-rs-container');
     if (dropdown) dropdown.style.display = 'none';
 
