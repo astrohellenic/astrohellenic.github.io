@@ -600,6 +600,8 @@ main, #app, .app-container, .main-content {
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 
+                <button class="icon-btn" onclick="abrirNavegacaoPastas(); abrirSidebar();" title="Selecionar Mapa"><i class="fa-solid fa-folder-open"></i></button>
+
                 <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa no Banco">
                     <i class="fa-solid fa-floppy-disk"></i>
                 </button>
@@ -656,7 +658,9 @@ main, #app, .app-container, .main-content {
                 </select>
                 <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
             </div>
+            <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes(); abrirSidebar();" title="Configurações"><i class="fa-solid fa-gear"></i></button>
         </div>
+        
 
         <!-- RENDERIZADOR DA MANDALA -->
         <div id="mandala-container">
@@ -685,6 +689,7 @@ main, #app, .app-container, .main-content {
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
                 <select id="modalTipoMapa" class="modal-select">
                     <option value="Natal" selected>Natal</option>
+                    <option value="Revolução Solar">Revolução Solar</option>
                     <option value="Pergunta">Pergunta</option>
                     <option value="Evento">Evento</option>
                     <option value="Eleição">Eleição</option>
@@ -744,6 +749,7 @@ main, #app, .app-container, .main-content {
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
                 <select id="editModalTipoMapa" class="modal-select">
                     <option value="Natal">Natal</option>
+                    <option value="Revolução Solar">Revolução Solar</option>
                     <option value="Pergunta">Pergunta</option>
                     <option value="Evento">Evento</option>
                     <option value="Eleição">Eleição</option>
