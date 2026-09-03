@@ -154,8 +154,8 @@ function normalizarDadosRS(dados) {
       if (mapaSetenario[chave]) {
         const p = dados.planetas[chave];
         normalizado[mapaSetenario[chave]] = {
-          grau_absoluto: p.grau_absoluto,⁠
-          grau_no_signo: p.grau_no_signo !== undefined ? p.grau_no_signo : p.grau,
+          grau_absoluto: p.grau_absoluto !== undefined ? p.grau_absoluto : 0,⁠
+          grau_no_signo: p.grau_no_signo !== undefined ? p.grau_no_signo : 0,⁠
           signo: p.signo,
           retrogrado: Boolean(p.retrogrado)
         };
