@@ -103,6 +103,7 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
+/* CHAMA A ROTA OFICIAL DE REVOLUÇÃO SOLAR (/api/revolucao) */
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -143,35 +144,36 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
   }
 
   const dataInfo = extrairPartesDataRS(dataStr);
-  if (!hora) hora = "11:11";
-  if (!lat) lat = -23.4331; // Guarulhos fallback
-  if (!lon) lon = -46.5325;
+  const dataFormatada = `${dataInfo.ano}-${dataInfo.mes}-${dataInfo.dia}`;
+
+  if (!hora) hora = "12:00";
+  if (!lat) lat = -23.5505;
+  if (!lon) lon = -46.6333;
   if (fuso === null || fuso === undefined) fuso = -3;
 
-  const urlSolar = `https://motor-astrologia.vercel.app/api/index?data=${anoCalculo}-${dataInfo.mes}-${dataInfo.dia}&hora=${hora}&lat=${lat}&lon=${lon}&fuso=${fuso}`;
+  // Chama a rota /api/revolucao passando data natal, hora natal e o ano da RS
+  const urlSolar = `https://motor-astrologia.vercel.app/api/revolucao?data=${dataFormatada}&hora=${hora}&lat=${lat}&lon=${lon}&fuso=${fuso}&ano=${anoCalculo}`;
 
   try {
     const resSolar = await fetch(urlSolar);
-    if (!resSolar.ok) {
-      alert(`Erro na resposta da API (${resSolar.status}). URL: ${urlSolar}`);
-      return;
-    }
+    if (!resSolar.ok) throw new Error(`Erro na API (${resSolar.status})`);
     
     const dadosSolar = await resSolar.json();
 
+    // Atualiza o estado global e renderiza a mandala
+    window.currentCalculatedData = dadosSolar;
+
     if (typeof window.renderMandala === 'function') {
-      window.renderMandala(dadosSolar);
+      window.renderMandala();
     } else if (typeof renderMandala === 'function') {
-      renderMandala(dadosSolar);
-    } else {
-      alert("A função renderMandala não foi encontrada no escopo global.");
+      renderMandala();
     }
 
     const dropdown = document.getElementById('dropdown-rs-container');
     if (dropdown) dropdown.style.display = 'none';
 
   } catch (err) {
-    alert(`Falha ao conectar na API: ${err.message}\nURL tentada: ${urlSolar}`);
+    alert("Falha ao calcular Revolução Solar: " + err.message);
   }
 };
 
