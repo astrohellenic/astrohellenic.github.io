@@ -161,20 +161,17 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     
     const dadosSolar = await resSolar.json();
 
-    // Define explicitamente o tipo de mapa para os cabeçalhos/rótulos
     dadosSolar.tipo_mapa = "Revolução Solar";
     dadosSolar.tipo = "Revolução Solar";
     dadosSolar.ano_revolucao = anoCalculo;
 
     window.currentCalculatedData = dadosSolar;
 
-    // Atualiza elementos de texto do cabeçalho caso existam na página
     const elTipoMapa = document.getElementById('tipo-mapa-label') || document.getElementById('mapa-tipo');
     if (elTipoMapa) {
       elTipoMapa.innerText = `Revolução Solar (${anoCalculo})`;
     }
 
-    // Entrega direto para o motor da mandala
     if (typeof window.renderMandala === 'function') {
       window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
