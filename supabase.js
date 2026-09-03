@@ -35,7 +35,7 @@ function fecharPopoverConfig() {
   if (c) c.style.display = 'none';
 }
 
-/* 1. CARREGA AS PASTAS DO SUPABASE */
+/* 1. CARREGA AS PASTAS DO SUPABASE E INICIA O ESTADO */
 async function carregarPastasSalvas() {
   try {
     const { data, error } = await supabaseClient
@@ -384,7 +384,7 @@ function abrirModuloTecnica(modulo) {
   }
 }
 
-/* TELA INICIAL DE PASTAS */
+/* TELA INICIAL DE PASTAS FLUTUANTE */
 function abrirNavegacaoPastas() {
   const popover = document.getElementById('modal-pastas-popover');
   if (!popover) return;
@@ -574,7 +574,7 @@ function renderListaMapas(lista) {
   container.innerHTML = html;
 }
 
-/* CARREGA O MAPA SELECIONADO E FECHA O MODAL */
+/* CARREGA O MAPA NA TELA E FECHA O POPOVER */
 function carregarMapaNaTela(index) {
   if (typeof selecionarRegistro === 'function') {
     selecionarRegistro(index);
@@ -1103,3 +1103,6 @@ function copiarLinkFormulario() {
     alert('Link copiado com sucesso!');
   });
 }
+
+/* CARREGA AS PASTAS INICIAIS AO CARREGAR O ARQUIVO */
+carregarPastasSalvas();
