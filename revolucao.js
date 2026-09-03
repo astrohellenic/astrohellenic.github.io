@@ -172,20 +172,29 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     // ==========================================
     window.currentMapType = "Revolução Solar";
 
-    // Tenta obter a data e hora exatas do retorno do Sol fornecidas pela API
-    let dataHoraRetornoStr = apiJson.data_retorno || apiJson.data_revolucao || apiJson.data_retorno_solar;
-    
-    if (dataHoraRetornoStr) {
-      currentMoment = new Date(dataHoraRetornoStr);
-    } else if (apiJson.data && apiJson.hora) {
-      const pData = extrairPartesDataRS(apiJson.data);
-      const pHora = apiJson.hora.split(':');
-      currentMoment = new Date(pData.ano, parseInt(pData.mes) - 1, parseInt(pData.dia), parseInt(pHora[0]) || 0, parseInt(pHora[1]) || 0);
-    } else {
-      // Fallback: usa o dia/mês natal no ano da Revolução Solar com o horário aproximado
-      const pHora = hora.split(':');
-      currentMoment = new Date(anoCalculo, parseInt(dataInfo.mes) - 1, parseInt(dataInfo.dia), parseInt(pHora[0]) || 12, parseInt(pHora[1]) || 0);
+    let horaExataRS = apiJson.hora_revolucao || apiJson.hora_retorno || apiJson.hora_retorno_solar || apiJson.hora_exata || apiJson.hora;
+    let dataExataRS = apiJson.data_revolucao || apiJson.data_retorno || apiJson.data_retorno_solar || apiJson.data_exata || apiJson.data;
+
+    let anoR = anoCalculo;
+    let mesR = parseInt(dataInfo.mes) - 1;
+    let diaR = parseInt(dataInfo.dia);
+    let horaR = 12;
+    let minR = 0;
+
+    if (dataExataRS) {
+      const pD = extrairPartesDataRS(dataExataRS);
+      anoR = pD.ano;
+      mesR = parseInt(pD.mes) - 1;
+      diaR = parseInt(pD.dia);
     }
+
+    if (horaExataRS && horaExataRS.includes(':')) {
+      const pH = horaExataRS.split(':');
+      horaR = parseInt(pH[0]) || 0;
+      minR = parseInt(pH[1]) || 0;
+    }
+
+    currentMoment = new Date(anoR, mesR, diaR, horaR, minR);
 
     const SIGNOS_INDEX = {
       "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
