@@ -24,7 +24,7 @@ function calcularFusoPorLongitude(lon) {
   return Math.round(lon / 15);
 }
 
-/* FUNÇÕES DE AUXÍLIO PARA FECHAR POPOVERS FLUTUANTES */
+/* AUXILIARES DE FECHAMENTO */
 function fecharPopoverPastas() {
   const p = document.getElementById('modal-pastas-popover');
   if (p) p.style.display = 'none';
@@ -35,7 +35,7 @@ function fecharPopoverConfig() {
   if (c) c.style.display = 'none';
 }
 
-/* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
+/* 1. CARREGA AS PASTAS DO SUPABASE */
 async function carregarPastasSalvas() {
   try {
     const { data, error } = await supabaseClient
@@ -57,7 +57,6 @@ async function carregarPastasSalvas() {
     console.error("Erro ao carregar pastas:", e);
   }
 
-  /* PREENCHE O SELECT DE PASTAS DO NOVO MAPA AUTOMATICAMENTE */
   const selectPastaModal = document.getElementById('modalPasta');
   if (selectPastaModal && Array.isArray(customFolders)) {
     const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
@@ -67,18 +66,17 @@ async function carregarPastasSalvas() {
   }
 }
 
-/* GERENCIADOR FLUTUANTE DE CONFIGURAÇÕES */
+/* TELA DE CONFIGURAÇÕES (MENU) */
 function abrirNavegacaoConfiguracoes() {
   const popover = document.getElementById('modal-config-popover');
   if (!popover) return;
 
   popover.innerHTML = `
-    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
       <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Configurações</span>
       <button class="icon-btn" onclick="fecharPopoverConfig()" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div style="max-height: 400px; overflow-y: auto;">
-      <!-- OPÇÃO: CAPTAÇÃO DE CLIENTES -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesCaptacao()">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-bullhorn" style="color: var(--gold-dark);"></i>
@@ -87,7 +85,6 @@ function abrirNavegacaoConfiguracoes() {
         <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
       </div>
 
-      <!-- OPÇÃO: SEGURANÇA E CONTA -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesSeguranca()">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-shield-halved" style="color: var(--gold-dark);"></i>
@@ -99,32 +96,28 @@ function abrirNavegacaoConfiguracoes() {
   `;
 }
 
-/* SUB-TELA: CAPTAÇÃO DE CLIENTES FLUTUANTE */
+/* SUB-TELA: CAPTAÇÃO DE CLIENTES */
 async function abrirConfiguracoesCaptacao() {
   const popover = document.getElementById('modal-config-popover');
   if (!popover) return;
 
   popover.innerHTML = `
-    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; background: #f8fafc;">
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; background: #f8fafc;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
         <i class="fa-solid fa-chevron-left"></i>
       </button>
       <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">CAPTAÇÃO DE CLIENTES</span>
     </div>
     <div style="max-height: 420px; overflow-y: auto; padding: 14px;">
-      
       <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
         Configure o formulário externo de coleta de dados dos seus clientes.
       </div>
 
-      <!-- LOGOTIPO -->
       <div style="margin-bottom: 12px;">
         <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
-        
         <div id="logoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
           <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 50px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px;">
         </div>
-
         <input type="file" id="cfgLogoFile" accept="image/*" onchange="fazerUploadLogo(this)" style="display: none;">
         <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #f1f5f9; color: #334155; border: 1px dashed #cbd5e1; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
           <i class="fa-solid fa-upload"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
@@ -132,7 +125,6 @@ async function abrirConfiguracoesCaptacao() {
         <input type="hidden" id="cfgLogoUrl">
       </div>
       
-      <!-- LINK DO FORMULÁRIO PÚBLICO -->
       <div style="margin-bottom: 12px;">
         <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Seu Link Exclusivo</label>
         <div style="display: flex; gap: 6px;">
@@ -143,34 +135,34 @@ async function abrirConfiguracoesCaptacao() {
         </div>
       </div>
 
-      <!-- WEBHOOK -->
       <div style="margin-bottom: 12px;">
         <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Webhook</label>
         <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; box-sizing: border-box;">
       </div>
 
-      <!-- REDIRECIONAMENTO -->
       <div style="margin-bottom: 16px;">
         <label style="font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
         <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; box-sizing: border-box;">
       </div>
 
-      <!-- BOTÃO SALVAR -->
       <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
         Salvar Configurações
       </button>
-
     </div>
   `;
 
   await carregarConfiguracoesCaptacao();
 }
 
-/* CARREGA AS CONFIGURAÇÕES DE CAPTAÇÃO DO SUPABASE E EXIBE PREVIEW */
 async function carregarConfiguracoesCaptacao() {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
+
+    const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
+    if (document.getElementById('cfgPublicFormUrl')) {
+      document.getElementById('cfgPublicFormUrl').value = publicLink;
+    }
 
     const { data, error } = await supabaseClient
       .from('configuracoes')
@@ -182,10 +174,6 @@ async function carregarConfiguracoesCaptacao() {
       if (document.getElementById('cfgLogoUrl')) {
         const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
         document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
-        const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
-        if (document.getElementById('cfgPublicFormUrl')) {
-          document.getElementById('cfgPublicFormUrl').value = publicLink;
-        }        
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
           const previewContainer = document.getElementById('logoPreviewContainer');
@@ -205,7 +193,6 @@ async function carregarConfiguracoesCaptacao() {
   }
 }
 
-/* PROCESSA O UPLOAD DIRETO DA IMAGEM PARA O BUCKET 'LOGOS' */
 async function fazerUploadLogo(inputElement) {
   const file = inputElement.files[0];
   if (!file) return;
@@ -240,7 +227,6 @@ async function fazerUploadLogo(inputElement) {
       .getPublicUrl(filePath);
 
     const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
-
     document.getElementById('cfgLogoUrl').value = publicUrl;
     
     const previewImg = document.getElementById('cfgLogoPreview');
@@ -258,7 +244,6 @@ async function fazerUploadLogo(inputElement) {
   }
 }
 
-/* SALVA AS CONFIGURAÇÕES DE CAPTAÇÃO NO SUPABASE */
 async function salvarConfiguracoesCaptacao() {
   const logoUrl = document.getElementById('cfgLogoUrl').value.trim();
   const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
@@ -287,7 +272,7 @@ async function salvarConfiguracoesCaptacao() {
   }
 }
 
-/* SUB-TELA: SEGURANÇA E CONTA FLUTUANTE */
+/* SUB-TELA: SEGURANÇA E CONTA */
 async function abrirConfiguracoesSeguranca() {
   const popover = document.getElementById('modal-config-popover');
   if (!popover) return;
@@ -307,27 +292,23 @@ async function abrirConfiguracoesSeguranca() {
   const manterLogado = localStorage.getItem('astro_keep_logged') === 'true';
 
   popover.innerHTML = `
-    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; background: #f8fafc;">
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; background: #f8fafc;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
         <i class="fa-solid fa-chevron-left"></i>
       </button>
       <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">SEGURANÇA E CONTA</span>
     </div>
     <div style="max-height: 400px; overflow-y: auto; padding: 14px;">
-      
-      <!-- USUÁRIO CONECTADO -->
       <div style="margin-bottom: 14px; background: #f1f5f9; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
         <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">Conta Conectada</div>
         <div style="font-size: 11px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtml(userEmail)}</div>
       </div>
 
-      <!-- OPÇÃO MANTER LOGADO -->
       <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
         <span style="font-size: 11px; font-weight: 600; color: #334155;">Manter-se logado</span>
         <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 16px; height: 16px; cursor: pointer;">
       </div>
 
-      <!-- ALTERAR SENHA -->
       <div style="margin-bottom: 16px;">
         <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 6px;">Alterar Senha</div>
         <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; margin-bottom: 6px; box-sizing: border-box;">
@@ -336,11 +317,9 @@ async function abrirConfiguracoesSeguranca() {
         </button>
       </div>
 
-      <!-- LOGOUT -->
       <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
         <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
       </button>
-
     </div>
   `;
 }
@@ -405,7 +384,7 @@ function abrirModuloTecnica(modulo) {
   }
 }
 
-/* GERENCIADOR FLUTUANTE DE PASTAS */
+/* TELA INICIAL DE PASTAS */
 function abrirNavegacaoPastas() {
   const popover = document.getElementById('modal-pastas-popover');
   if (!popover) return;
@@ -413,7 +392,7 @@ function abrirNavegacaoPastas() {
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   let html = `
-    <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
       <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Gerenciador de Pastas</span>
       <div style="display: flex; gap: 6px;">
         <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
@@ -452,7 +431,7 @@ function abrirNavegacaoPastas() {
   popover.innerHTML = html;
 }
 
-/* LISTAGEM DE MAPAS DENTRO DE UMA PASTA NO POPOVER */
+/* LISTAGEM DE MAPAS DA PASTA */
 async function abrirConteudoPasta(nomePasta) {
   activeFolder = nomePasta;
   selectedMapIds.clear();
@@ -498,7 +477,6 @@ async function abrirConteudoPasta(nomePasta) {
   await carregarMapasDoBanco(nomePasta);
 }
 
-/* CARREGA MAPAS E ORDENA PRIORIZANDO O CÓDIGO NUMÉRICO */
 async function carregarMapasDoBanco(nomePasta) {
   try {
     const { data, error } = await supabaseClient
@@ -565,7 +543,7 @@ function renderListaMapas(lista) {
     html += `
       <div class="client-card-item" id="card-item-${index}">
         ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 8px; cursor: pointer;">` : ''}
-        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharPopoverPastas();`}">
+        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `carregarMapaNaTela(${index});`}">
           <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #64748b; margin-left: 4px;">${escapeHtml(tipoStr)}</span></div>
           <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
         </div>
@@ -596,7 +574,14 @@ function renderListaMapas(lista) {
   container.innerHTML = html;
 }
 
-/* MODO DE SELEÇÃO MÚLTIPLA E EXCLUSÃO */
+/* CARREGA O MAPA SELECIONADO E FECHA O MODAL */
+function carregarMapaNaTela(index) {
+  if (typeof selecionarRegistro === 'function') {
+    selecionarRegistro(index);
+  }
+  fecharPopoverPastas();
+}
+
 function alternarModoSelecao() {
   isSelectionMode = !isSelectionMode;
   selectedMapIds.clear();
@@ -740,7 +725,6 @@ async function apagarPasta(event, pastaParaDeletar) {
   }
 }
 
-/* MODAL DE EDIÇÃO E IMPORTAÇÃO DE MAPAS */
 function abrirModalEdicao(event, index) {
   event.stopPropagation();
   const item = cachedFolderData[index];
@@ -911,7 +895,6 @@ async function deletarRegistroUnico(event, idMapa) {
   }
 }
 
-/* SALVAR MAPA DA BARRA SUPERIOR */
 function salvarMapaNaPlanilha() {
   if (!customFolders || customFolders.length === 0) {
     customFolders = ["Clientes"];
@@ -1077,7 +1060,6 @@ async function executarSalvarMapaAtual() {
   }
 }
 
-/* FUNÇÃO EXCLUSIVA PARA SALVAR MAPA GERADO PELA REVOLUÇÃO SOLAR */
 async function salvarRevolucaoSolarNoBanco(pastaAlvo, dadosRS) {
   try {
     let userId = null;
@@ -1109,7 +1091,6 @@ async function salvarRevolucaoSolarNoBanco(pastaAlvo, dadosRS) {
   }
 }
 
-/* COPIA O LINK DO FORMULÁRIO PARA A ÁREA DE TRANSFERÊNCIA */
 function copiarLinkFormulario() {
   const input = document.getElementById('cfgPublicFormUrl');
   if (!input || !input.value) return;
