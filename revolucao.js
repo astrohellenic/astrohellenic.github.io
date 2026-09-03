@@ -103,49 +103,59 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* FORMATADOR HELENÍSTICO FLEXÍVEL PARA A MANDALA */
+/* FORMATADOR RS PARA O MOTOR DA MANDALA */
 function normalizarDadosRS(dados) {
   if (!dados) return dados;
+
+  const inicioSigno = {
+    'Aries': 0, 'Touro': 30, 'Gemeos': 60, 'Cancer': 90,
+    'Leao': 120, 'Virgem': 150, 'Libra': 180, 'Escorpiao': 210,
+    'Sagitario': 240, 'Capricornio': 270, 'Aquario': 300, 'Peixes': 330
+  };
+
+  function obterGrauAbsoluto(obj) {
+    if (!obj) return 0;
+    if (obj.grau_absoluto !== undefined) return obj.grau_absoluto;
+    const base = inicioSigno[obj.signo] !== undefined ? inicioSigno[obj.signo] : 0;
+    const grauRelativo = obj.grau !== undefined ? obj.grau : (obj.grau_no_signo || 0);
+    return base + grauRelativo;
+  }
 
   const normalizado = { ...dados };
 
   // 1. ÂNGULOS
   if (dados.ascendente) {
     normalizado.Ascendente = {
-      grau_absoluto: dados.ascendente.grau !== undefined ? dados.ascendente.grau : (dados.ascendente.grau_absoluto || 0),
+      grau_absoluto: obterGrauAbsoluto(dados.ascendente),
       signo: dados.ascendente.signo || ''
     };
   }
 
   if (dados.meio_ceu) {
     normalizado.MC = {
-      grau_absoluto: dados.meio_ceu.grau !== undefined ? dados.meio_ceu.grau : (dados.meio_ceu.grau_absoluto || 0),
+      grau_absoluto: obterGrauAbsoluto(dados.meio_ceu),
       signo: dados.meio_ceu.signo || ''
     };
   }
 
-  // 2. PLANETAS TRADICIONAIS (Trata acentos e variação de maiúsculas/minúsculas)
+  // 2. PLANETAS SETENÁRIOS
   if (dados.planetas) {
-    const mapaLimpo = {
-      'sol': 'Sol',
-      'lua': 'Lua',
-      'mercurio': 'Mercurio',
-      'venus': 'Venus',
-      'marte': 'Marte',
-      'jupiter': 'Jupiter',
-      'saturno': 'Saturno'
+    const mapaSetenario = {
+      'Sol': 'Sol',
+      'Lua': 'Lua',
+      'Mercurio': 'Mercurio',
+      'Venus': 'Venus',
+      'Marte': 'Marte',
+      'Jupiter': 'Jupiter',
+      'Saturno': 'Saturno'
     };
 
     Object.keys(dados.planetas).forEach(chave => {
-      // Remove acentos e converte para minúsculas
-      const chaveNormalizada = chave.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-      const nomeDestino = mapaLimpo[chaveNormalizada];
-
-      if (nomeDestino) {
+      if (mapaSetenario[chave]) {
         const p = dados.planetas[chave];
-        normalizado[nomeDestino] = {
-          grau_absoluto: p.grau_absoluto !== undefined ? p.grau_absoluto : (p.grau !== undefined ? p.grau : 0),
-          grau_no_signo: p.grau_no_signo,
+        normalizado[mapaSetenario[chave]] = {
+          grau_absoluto: obterGrauAbsoluto(p),
+          grau_no_signo: p.grau_no_signo !== undefined ? p.grau_no_signo : p.grau,
           signo: p.signo,
           retrogrado: Boolean(p.retrogrado)
         };
@@ -154,17 +164,17 @@ function normalizarDadosRS(dados) {
   }
 
   // 3. NODO NORTE E SIZÍGIA
-  const nodo = (dados.planetas && (dados.planetas.NodoNorte || dados.planetas.nodo_norte)) || dados.nodo_norte;
-  if (nodo) {
+  if (dados.planetas && dados.planetas.NodoNorte) {
+    const nodo = dados.planetas.NodoNorte;
     normalizado.Nodo_Norte = {
-      grau_absoluto: nodo.grau_absoluto !== undefined ? nodo.grau_absoluto : (nodo.grau || 0),
-      signo: nodo.signo || ''
+      grau_absoluto: obterGrauAbsoluto(nodo),
+      signo: nodo.signo
     };
   }
 
   if (dados.sizigia) {
     normalizado.Sizigia = {
-      grau_absoluto: dados.sizigia.grau_absoluto !== undefined ? dados.sizigia.grau_absoluto : (dados.sizigia.grau || 0),
+      grau_absoluto: obterGrauAbsoluto(dados.sizigia),
       signo: dados.sizigia.signo || '',
       tipo: dados.sizigia.tipo || ''
     };
