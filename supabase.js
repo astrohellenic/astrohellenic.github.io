@@ -62,10 +62,8 @@ function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
-  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-  let html = `
-    <div class="sidebar-header" style="background: #f8fafc;">
+  sidebar.innerHTML = `
+    <div class="sidebar-header">
       <h1 class="sidebar-title">Astro Hellenic</h1>
     </div>
     <div style="flex: 1; overflow-y: auto;">
@@ -74,47 +72,15 @@ function renderMenuPrincipal() {
           <span>Novo Mapa</span>
           <i class="fa-solid fa-user-plus"></i>
         </li>
+        <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
+        <span>Selecionar Mapa</span>
+        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+    </li>
       </ul>
-
-      <!-- Bloco de Importar em Massa direto no menu principal -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border-color); border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer; margin-top: 4px;" onclick="abrirModalImportacaoTexto()">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
-          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #103b70;"></i>
-      </div>
-
-      <!-- Cabeçalho das Pastas com o botão Criar Pasta -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid var(--border-color);">
-        <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">PASTAS</span>
-        <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
-      </div>
-  `;
-
-  // Listagem de todas as pastas logo abaixo
-  pastasOrdenadas.forEach(pasta => {
-    const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
-
-    html += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-folder" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta"></i>
-          <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8; margin-left: 4px;"></i>
-        </div>
-      </div>
-    `;
-  });
-
-  html += `
     </div>
+    
     <!-- RODAPÉ FIXO: CONFIGURAÇÕES -->
-    <div onclick="abrirConfiguracoes()" style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+    <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Configurações</span>
       <i class="fa-solid fa-gear" style="font-size: 16px; color: #64748b;"></i>
     </div>
