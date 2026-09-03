@@ -103,7 +103,43 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* CHAMA A ROTA OFICIAL DE REVOLUÇÃO SOLAR (/api/revolucao) COM ALERTA DE ERRO */
+/* FORMATADOR DE CHAVES PARA PADRÃO DA MANDALA */
+function normalizarDadosRS(dados) {
+  if (!dados) return dados;
+
+  const normalizado = { ...dados };
+
+  // Ascendente
+  if (dados.ascendente && !dados.Ascendente) {
+    normalizado.Ascendente = {
+      grau_absoluto: dados.ascendente.grau_absoluto !== undefined ? dados.ascendente.grau_absoluto : dados.ascendente.grau,
+      signo: dados.ascendente.signo
+    };
+  }
+
+  // Meio do Céu / MC
+  if (dados.meio_ceu && !dados.MC) {
+    normalizado.MC = {
+      grau_absoluto: dados.meio_ceu.grau_absoluto !== undefined ? dados.meio_ceu.grau_absoluto : dados.meio_ceu.grau,
+      signo: dados.meio_ceu.signo
+    };
+  }
+
+  // Nodo Norte
+  if (dados.planetas && dados.planetas.NodoNorte && !dados.Nodo_Norte) {
+    normalizado.Nodo_Norte = dados.planetas.NodoNorte;
+  } else if (dados.nodo_norte && !dados.Nodo_Norte) {
+    normalizado.Nodo_Norte = dados.nodo_norte;
+  }
+
+  // Sizigia
+  if (dados.sizigia && !dados.Sizigia) {
+    normalizado.Sizigia = dados.sizigia;
+  }
+
+  return normalizado;
+}
+
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -160,7 +196,10 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       return;
     }
     
-    const dadosSolar = await resSolar.json();
+    const dadosBrutos = await resSolar.json();
+
+    // Converte minúsculas para o padrão da mandala
+    const dadosSolar = normalizarDadosRS(dadosBrutos);
 
     window.currentCalculatedData = dadosSolar;
 
@@ -168,15 +207,13 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
       renderMandala(dadosSolar);
-    } else {
-      alert("A função renderMandala não foi encontrada.");
     }
 
     const dropdown = document.getElementById('dropdown-rs-container');
     if (dropdown) dropdown.style.display = 'none';
 
   } catch (err) {
-    alert(`Falha no calculo RS: ${err.message}\nURL tentada: ${urlSolar}`);
+    alert(`Falha no calculo RS: ${err.message}`);
   }
 };
 
