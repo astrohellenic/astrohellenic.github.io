@@ -109,89 +109,6 @@ window.selecionarAnoRS = function(ano) {
   window.executarCalculoRS(null, anoAlvoRS);
 };
 
-/* FORMATADOR RS PARA O MOTOR DA MANDALA */
-function normalizarDadosRS(dados) {
-  if (!dados) return dados;
-
-  const inicioSigno = {
-    'Aries': 0, 'Touro': 30, 'Gemeos': 60, 'Cancer': 90,
-    'Leao': 120, 'Virgem': 150, 'Libra': 180, 'Escorpiao': 210,
-    'Sagitario': 240, 'Capricornio': 270, 'Aquario': 300, 'Peixes': 330
-  };
-
-  function obterGrauAbsoluto(obj) {
-    if (!obj) return 0;
-    if (obj.grau_absoluto !== undefined && obj.grau_absoluto !== null) return obj.grau_absoluto;
-    const base = inicioSigno[obj.signo] !== undefined ? inicioSigno[obj.signo] : 0;
-    const grauRelativo = obj.grau !== undefined ? obj.grau : (obj.grau_no_signo || 0);
-    return base + grauRelativo;
-  }
-
-  const normalizado = { ...dados };
-
-  // 1. ÂNGULOS
-  if (dados.ascendente) {
-    normalizado.Ascendente = {
-      grau_absoluto: obterGrauAbsoluto(dados.ascendente),
-      signo: dados.ascendente.signo || ''
-    };
-  }
-
-  if (dados.meio_ceu) {
-    normalizado.MC = {
-      grau_absoluto: obterGrauAbsoluto(dados.meio_ceu),
-      signo: dados.meio_ceu.signo || ''
-    };
-  }
-
-  // 2. PLANETAS SETENÁRIOS
-  if (dados.planetas) {
-    const mapaSetenario = {
-      'Sol': 'Sol',
-      'Lua': 'Lua',
-      'Mercurio': 'Mercurio',
-      'Venus': 'Venus',
-      'Marte': 'Marte',
-      'Jupiter': 'Jupiter',
-      'Saturno': 'Saturno'
-    };
-
-    Object.keys(dados.planetas).forEach(chave => {
-      if (mapaSetenario[chave]) {
-        const p = dados.planetas[chave];
-        const gAbs = p.grau_absoluto !== undefined ? p.grau_absoluto : obterGrauAbsoluto(p);
-        const gSigno = p.grau_no_signo !== undefined ? p.grau_no_signo : (p.grau !== undefined ? p.grau : 0);
-
-        normalizado[mapaSetenario[chave]] = {
-          grau_absoluto: gAbs,
-          grau_no_signo: gSigno,
-          signo: p.signo || '',
-          retrogrado: Boolean(p.retrogrado)
-        };
-      }
-    });
-  }
-
-  // 3. NODO NORTE E SIZÍGIA
-  if (dados.planetas && dados.planetas.NodoNorte) {
-    const nodo = dados.planetas.NodoNorte;
-    normalizado.Nodo_Norte = {
-      grau_absoluto: obterGrauAbsoluto(nodo),
-      signo: nodo.signo || ''
-    };
-  }
-
-  if (dados.sizigia) {
-    normalizado.Sizigia = {
-      grau_absoluto: obterGrauAbsoluto(dados.sizigia),
-      signo: dados.sizigia.signo || '',
-      tipo: dados.sizigia.tipo || ''
-    };
-  }
-
-  return normalizado;
-}
-
 window.executarCalculoRS = async function(perfilCliente, ano) {
   const anoCalculo = ano || anoAlvoRS;
 
@@ -248,12 +165,12 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       return;
     }
     
-    const dadosBrutos = await resSolar.json();
-
-    const dadosSolar = normalizarDadosRS(dadosBrutos);
+    // Pega o JSON limpo direto da API
+    const dadosSolar = await resSolar.json();
 
     window.currentCalculatedData = dadosSolar;
 
+    // Envia a resposta bruta direto para a renderizacao da mandala
     if (typeof window.renderMandala === 'function') {
       window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
