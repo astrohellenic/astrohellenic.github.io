@@ -172,8 +172,8 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     // ==========================================
     window.currentMapType = "Revolução Solar";
 
-    let horaExataRS = apiJson.hora_revolucao || apiJson.hora_retorno || apiJson.hora_retorno_solar || apiJson.hora_exata || apiJson.hora;
-    let dataExataRS = apiJson.data_revolucao || apiJson.data_retorno || apiJson.data_retorno_solar || apiJson.data_exata || apiJson.data;
+    let horaExataRS = apiJson.momento_exato ? apiJson.momento_exato.hora_local : "";
+    let dataExataRS = apiJson.momento_exato ? apiJson.momento_exato.data_utc : "";
 
     let anoR = anoCalculo;
     let mesR = parseInt(dataInfo.mes) - 1;
