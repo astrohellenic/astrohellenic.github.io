@@ -539,7 +539,8 @@ function alternarRotacaoCasa1(val) {
   renderMandala();
 }
 
-function renderMandala() {
+function renderMandala(dadosNovos) {
+  if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
 
