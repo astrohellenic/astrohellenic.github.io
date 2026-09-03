@@ -165,12 +165,52 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       return;
     }
     
-    // Pega o JSON limpo direto da API
-    const dadosSolar = await resSolar.json();
+    const apiJson = await resSolar.json();
+
+    const SIGNOS_INDEX = {
+      "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
+      "Leao": 4, "Virgem": 5, "Libra": 6, "Escorpiao": 7,
+      "Sagitario": 8, "Capricornio": 9, "Aquario": 10, "Peixes": 11
+    };
+
+    const planetas = apiJson.planetas || {};
+    const ascData = apiJson.ascendente || {};
+    const mcData = apiJson.meio_ceu || {};
+    const sizigiaData = apiJson.sizigia || {};
+
+    function calcularAbsoluto(obj) {
+      if (!obj) return 0;
+      if (obj.grau_absoluto !== undefined && obj.grau_absoluto !== null && obj.grau_absoluto !== 0) {
+        return parseFloat(obj.grau_absoluto);
+      }
+      const idxSigno = SIGNOS_INDEX[obj.signo] !== undefined ? SIGNOS_INDEX[obj.signo] : 0;
+      const grauRel = parseFloat(obj.grau_no_signo !== undefined ? obj.grau_no_signo : (obj.grau || 0));
+      return (idxSigno * 30) + grauRel;
+    }
+
+    const checkRetro = (pObj) => {
+      if (!pObj) return false;
+      if (pObj.retrogrado !== undefined) return Boolean(pObj.retrogrado);
+      if (pObj.velocidade !== undefined) return parseFloat(pObj.velocidade) < 0;
+      return false;
+    };
+
+    const dadosSolar = {
+      Ascendente: { grau_absoluto: calcularAbsoluto(ascData) },
+      MC: { grau_absoluto: calcularAbsoluto(mcData) },
+      Nodo_Norte: { grau_absoluto: calcularAbsoluto(planetas.NodoNorte), retro: checkRetro(planetas.NodoNorte) },
+      Sizigia: { grau_absoluto: calcularAbsoluto(sizigiaData) },
+      Sol: { grau_absoluto: calcularAbsoluto(planetas.Sol), retro: false },
+      Lua: { grau_absoluto: calcularAbsoluto(planetas.Lua), retro: false },
+      Mercúrio: { grau_absoluto: calcularAbsoluto(planetas.Mercurio), retro: checkRetro(planetas.Mercurio) },
+      Vênus: { grau_absoluto: calcularAbsoluto(planetas.Venus), retro: checkRetro(planetas.Venus) },
+      Marte: { grau_absoluto: calcularAbsoluto(planetas.Marte), retro: checkRetro(planetas.Marte) },
+      Júpiter: { grau_absoluto: calcularAbsoluto(planetas.Jupiter), retro: checkRetro(planetas.Jupiter) },
+      Saturno: { grau_absoluto: calcularAbsoluto(planetas.Saturno), retro: checkRetro(planetas.Saturno) }
+    };
 
     window.currentCalculatedData = dadosSolar;
 
-    // Envia a resposta bruta direto para a renderizacao da mandala
     if (typeof window.renderMandala === 'function') {
       window.renderMandala(dadosSolar);
     } else if (typeof renderMandala === 'function') {
