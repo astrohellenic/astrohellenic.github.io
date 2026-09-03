@@ -77,6 +77,7 @@ html, body {
   -webkit-overflow-scrolling: touch !important;
 }
 
+/* Tira qualquer posição absoluta ou fixa dos containers principais */
 main, #app, .app-container, .main-content {
   display: block !important;
   position: relative !important;
@@ -107,6 +108,7 @@ main, #app, .app-container, .main-content {
       
         :root {
             --bg-main: #f8fafc;
+            --bg-sidebar: #ffffff;
             --primary-blue: #103b70;
             --gold-primary: #d4af37;
             --gold-dark: #9a6d18;
@@ -134,12 +136,93 @@ main, #app, .app-container, .main-content {
             position: relative;
         }
 
+        /* FUNDO ESCURO AO ABRIR MENU RETRÁTIL */
+        #sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 99;
+            display: none;
+        }
+
+        /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL) */
+        #sidebar {
+            width: 320px;
+            height: 100vh;
+            height: 100dvh;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            left: -320px;
+            transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-title {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.15s ease;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #f1f5f9;
+            color: var(--primary-blue);
+        }
+
+        .menu-item i {
+            color: var(--gold-dark);
+        }
+
         .database-section {
-            padding: 12px;
+            padding: 12px 16px;
+            flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            height: 100%;
         }
 
         .folders-container {
@@ -168,7 +251,9 @@ main, #app, .app-container, .main-content {
             transition: all 0.15s ease;
         }
 
-        .folder-tab-btn:hover { background: #f1f5f9; }
+        .folder-tab-btn:hover {
+            background: #f1f5f9;
+        }
 
         .folder-tab-btn.active {
             background: #e0f2fe;
@@ -214,7 +299,6 @@ main, #app, .app-container, .main-content {
 
         .client-list-container {
             flex: 1;
-            max-height: 320px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -231,7 +315,9 @@ main, #app, .app-container, .main-content {
             transition: background 0.15s ease;
         }
 
-        .client-card-item:hover { background: #f1f5f9; }
+        .client-card-item:hover {
+            background: #f1f5f9;
+        }
 
         .client-card-item.selected {
             background: #e0f2fe;
@@ -270,6 +356,7 @@ main, #app, .app-container, .main-content {
         .edit-btn { color: var(--primary-blue); }
         .delete-btn { color: #dc2626; }
 
+        /* ÁREA PRINCIPAL DA MANDALA */
         #main-stage {
             flex: 1;
             display: flex;
@@ -281,6 +368,7 @@ main, #app, .app-container, .main-content {
             overflow: hidden;
         }
 
+        /* BARRA SUPERIOR FIXA */
         #top-bar {
             height: 52px;
             min-height: 52px;
@@ -302,6 +390,25 @@ main, #app, .app-container, .main-content {
             gap: 6px;
         }
 
+        .menu-toggle-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            color: var(--primary-blue);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            margin-right: 4px;
+        }
+
+        .menu-toggle-btn:hover {
+            background: #e2e8f0;
+        }
+
         .icon-btn {
             background: transparent;
             border: none;
@@ -313,7 +420,9 @@ main, #app, .app-container, .main-content {
             transition: background 0.15s ease;
         }
 
-        .icon-btn:hover { background: #f1f5f9; }
+        .icon-btn:hover {
+            background: #f1f5f9;
+        }
 
         .time-stepper {
             display: flex;
@@ -336,6 +445,7 @@ main, #app, .app-container, .main-content {
             cursor: pointer;
         }
 
+        /* PALCO DA MANDALA */
         #mandala-container {
             flex: 1;
             display: flex;
@@ -355,6 +465,7 @@ main, #app, .app-container, .main-content {
             display: block;
         }
 
+        /* MODAIS PERSONALIZADOS */
         #modalOverlay, #modalEditOverlay, #modalImportOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -364,19 +475,6 @@ main, #app, .app-container, .main-content {
             justify-content: center;
             z-index: 1000;
         }
-        
-        .popover-container {
-            display: none;
-            position: absolute;
-            top: 54px;
-            z-index: 9999;
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            font-family: inherit;
-        }
-
         .modal-box {
             background: #ffffff;
             width: 460px;
@@ -441,15 +539,68 @@ main, #app, .app-container, .main-content {
 </head>
 <body>
 
+    <!-- FUNDO ESCURO AO ABRIR O MENU -->
+    <div id="sidebar-overlay" onclick="fecharSidebar()"></div>
+
+    <!-- PAINEL LATERAL DE NAVEGAÇÃO RETRÁTIL -->
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">Astro Hellenic</h1>
+            <button class="icon-btn" onclick="fecharSidebar()" title="Fechar Menu">
+                <i class="fa-solid fa-xmark" style="font-size: 18px;"></i>
+            </button>
+        </div>
+
+        <ul class="menu-list">
+        <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
+                <span>Novo Mapa</span>
+                <i class="fa-solid fa-user-plus"></i>
+            </li>
+            <li class="menu-item" onclick="abrirModalImportacaoTexto(); fecharSidebar();">
+                <span>Importar Lista em Massa</span>
+                <i class="fa-solid fa-file-import"></i>
+            </li>
+        </ul>
+
+        <!-- SELEÇÃO DE PASTAS E BUSCA -->
+        <div class="database-section">
+            <div id="foldersBarContainer" class="folders-container">
+                <button type="button" class="folder-tab-btn active" id="folder-tab-Clientes" onclick="selecionarPasta('Clientes')">
+                    <i class="fa-solid fa-folder"></i> Clientes
+                </button>
+                <button type="button" onclick="criarNovaPasta()" class="add-folder-btn" title="Criar Nova Pasta">
+                    <i class="fa-solid fa-plus"></i> Pasta
+                </button>
+            </div>
+
+            <div class="search-box-container">
+                <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar por código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
+                <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+            
+            <div id="searchStatusFeedback" style="font-size: 10px; font-weight: 600; min-height: 14px; margin-bottom: 4px;"></div>
+
+            <div id="clientsListContainer" class="client-list-container">
+                <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...
+                </div>
+            </div>
+        </div>
+    </aside>
+
     <!-- ÁREA PRINCIPAL -->
     <main id="main-stage">
         
         <!-- BARRA SUPERIOR -->
         <div id="top-bar">
             <div class="top-bar-controls">
+                <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Abrir Menu Lateral">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 
-                <!-- BOTÃO FLUTUANTE DE PASTAS -->
-                <button class="icon-btn" onclick="togglePopoverPastas(event)" title="Selecionar Mapa"><i class="fa-solid fa-folder-open"></i></button>
+                <button class="icon-btn" onclick="abrirNavegacaoPastas(); abrirSidebar();" title="Selecionar Mapa"><i class="fa-solid fa-folder-open"></i></button>
 
                 <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa no Banco">
                     <i class="fa-solid fa-floppy-disk"></i>
@@ -459,7 +610,7 @@ main, #app, .app-container, .main-content {
                     <i class="fa-solid fa-rotate"></i>
                 </button>
                 
-                <!-- BOTÕES DE MÓDULOS -->
+                           <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
                 <button class="icon-btn" onclick="abrirModuloTecnica('radix')" title="Natal"><i class="fa-solid fa-globe"></i></button>
                 <button class="icon-btn" onclick="abrirModuloTecnica('tabela')" title="Tabela Técnica"><i class="fa-solid fa-table"></i></button>
                 <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
@@ -472,57 +623,44 @@ main, #app, .app-container, .main-content {
 
             </div>
             
-            <!-- BOTÃO DE CONFIGURAÇÕES -->
-            <button class="icon-btn" onclick="togglePopoverConfig(event)" title="Configurações"><i class="fa-solid fa-gear"></i></button>
-        </div>
+            <!-- JANELA FLUTUANTE DE SELEÇÃO DE ANO DA REVOLUÇÃO SOLAR -->
+<div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 220px; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
+  
+  <div style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+    <span style="font-size: 10px; text-transform: uppercase; color: #c59b27; font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
+    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
+  </div>
 
-        <!-- JANELA FLUTUANTE DE PASTAS E SELEÇÃO DE MAPAS -->
-        <div id="modal-pastas-popover" class="popover-container" style="left: 16px; width: 340px;"></div>
+  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff;">
+    <div>
+      <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">Retorno Solar</span>
+      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: #103b70;">Selecione...</span>
+    </div>
+    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: #64748b;"></i>
+  </div>
 
-        <!-- JANELA FLUTUANTE DE CONFIGURAÇÕES -->
-        <div id="modal-config-popover" class="popover-container" style="right: 16px; width: 280px; padding: 12px;"></div>
+  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid #e2e8f0; background: #ffffff; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+  </div>
 
-        <!-- JANELA FLUTUANTE DE SELEÇÃO DE ANO DA REVOLUÇÃO SOLAR -->
-        <div id="dropdown-rs-container" style="display: none; position: absolute; top: 54px; left: 160px; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
-            <div style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                <span style="font-size: 10px; text-transform: uppercase; color: #c59b27; font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
-                <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
+</div>
+
+
+            <!-- NAVEGADOR TEMPORAL (STEPPER) -->
+            <div class="time-stepper">
+                <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
+                <select id="stepUnit" class="time-select">
+                    <option value="second">Segundo</option>
+                    <option value="minute">Minuto</option>
+                    <option value="hour">Hora</option>
+                    <option value="day" selected>Dia</option>
+                    <option value="month">Mês</option>
+                    <option value="year">Ano</option>
+                </select>
+                <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
             </div>
-
-            <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff;">
-                <div>
-                    <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">Retorno Solar</span>
-                    <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: #103b70;">Selecione...</span>
-                </div>
-                <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: #64748b;"></i>
-            </div>
-
-            <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid #e2e8f0; background: #ffffff; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
+            <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes(); abrirSidebar();" title="Configurações"><i class="fa-solid fa-gear"></i></button>
         </div>
-
-        <!-- BARRA DO CABEÇALHO DO MAPA (CONTROLES DE TEMPO + ASC + DADOS DO MAPA) -->
-        <div id="map-header-bar" style="width: 100%; max-width: 960px; margin: 12px auto 0 auto; padding: 0 16px 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
-            <div id="map-info-details"></div>
-
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <!-- BOTÃO ASCENDENTE -->
-                <button class="icon-btn" onclick="toggleTecnicaAsc()" title="Alternar Ascendente" style="font-weight: 700; border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px;">ASC</button>
-
-                <!-- STEPPER DE TEMPO -->
-                <div class="time-stepper">
-                    <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
-                    <select id="stepUnit" class="time-select">
-                        <option value="second">Segundo</option>
-                        <option value="minute">Minuto</option>
-                        <option value="hour">Hora</option>
-                        <option value="day" selected>Dia</option>
-                        <option value="month">Mês</option>
-                        <option value="year">Ano</option>
-                    </select>
-                    <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
-                </div>
-            </div>
-        </div>
+        
 
         <!-- RENDERIZADOR DA MANDALA -->
         <div id="mandala-container">
@@ -534,19 +672,20 @@ main, #app, .app-container, .main-content {
         
         <div id="revolucao-container" style="display: none;"></div>
         
-        <div id="painel-tecnico-container" style="display: none; margin-top: 30px;"></div>
+<div id="painel-tecnico-container" style="display: none; margin-top: 30px;"></div>
 
     </main>
 
-    <!-- MODAIS DE AÇÃO -->
+    <!-- MODAL DE NOVO MAPA -->
     <div id="modalOverlay">
         <div class="modal-box">
             <div class="modal-title">Novo Mapa</div>
+            
             <div>
                 <div style="margin-bottom: 12px;">
-                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Salvar na Pasta</label>
-                    <select id="modalPasta" class="modal-select"></select>
-                </div>
+  <label style="font-size: 11px; font-weight: 600; color: #64748b;">Salvar na Pasta</label>
+  <select id="modalPasta" class="modal-select"></select>
+</div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
                 <select id="modalTipoMapa" class="modal-select">
                     <option value="Natal" selected>Natal</option>
@@ -557,6 +696,7 @@ main, #app, .app-container, .main-content {
                     <option value="Trânsito">Trânsito</option>
                 </select>
             </div>
+
             <div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
                 <input type="text" id="modalCodigo" class="modal-input" placeholder="Ex: 0011 (deixe em branco se não tiver)">
@@ -581,13 +721,13 @@ main, #app, .app-container, .main-content {
                 <div id="cityResultsList" class="city-results"></div>
             </div>
             <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
-                <input type="text" id="modalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
-            </div>
-            <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
-                <input type="email" id="modalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
-            </div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
+    <input type="text" id="modalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
+</div>
+<div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
+    <input type="email" id="modalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
+</div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalNovoMapa()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="confirmarNovoMapaModal()">Gerar Mapa</button>
@@ -595,15 +735,17 @@ main, #app, .app-container, .main-content {
         </div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO DE MAPA -->
     <div id="modalEditOverlay">
         <div class="modal-box">
             <div class="modal-title">Editar Mapa</div>
             <input type="hidden" id="editModalId">
+            
             <div>
                 <div style="margin-bottom: 12px;">
-                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Pasta</label>
-                    <select id="editModalPasta" class="modal-select"></select>
-                </div>
+  <label style="font-size: 11px; font-weight: 600; color: #64748b;">Pasta</label>
+  <select id="editModalPasta" class="modal-select"></select>
+</div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
                 <select id="editModalTipoMapa" class="modal-select">
                     <option value="Natal">Natal</option>
@@ -614,6 +756,7 @@ main, #app, .app-container, .main-content {
                     <option value="Trânsito">Trânsito</option>
                 </select>
             </div>
+
             <div>
                 <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
                 <input type="text" id="editModalCodigo" class="modal-input">
@@ -638,13 +781,13 @@ main, #app, .app-container, .main-content {
                 <div id="editCityResultsList" class="city-results"></div>
             </div>
             <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
-                <input type="text" id="editModalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
-            </div>
-            <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
-                <input type="email" id="editModalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
-            </div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
+    <input type="text" id="editModalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
+</div>
+<div>
+    <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
+    <input type="email" id="editModalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
+</div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalEdicao()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="salvarEdicaoMapaModal()">Salvar Alterações</button>
@@ -652,6 +795,7 @@ main, #app, .app-container, .main-content {
         </div>
     </div>
 
+    <!-- MODAL DE IMPORTAÇÃO EM MASSA POR TEXTO -->
     <div id="modalImportOverlay">
         <div class="modal-box">
             <div class="modal-title">Importar Lista de Clientes em Massa</div>
@@ -666,45 +810,28 @@ main, #app, .app-container, .main-content {
         </div>
     </div>
 
-<!-- CONTROLE DOS POPOVERS (DADOS DINÂMICOS AUTOMÁTICOS) -->
+<!-- FUNÇÕES DO MENU LATERAL RETRÁTIL -->
 <script>
-    function togglePopoverPastas(e) {
-        if (e) e.stopPropagation();
-        const p = document.getElementById('modal-pastas-popover');
-        const c = document.getElementById('modal-config-popover');
-        if (c) c.style.display = 'none';
-        
-        if (p.style.display === 'block') {
-            p.style.display = 'none';
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (sidebar.classList.contains('open')) {
+            fecharSidebar();
         } else {
-            p.style.display = 'block';
-            if (typeof abrirNavegacaoPastas === 'function') abrirNavegacaoPastas();
+            sidebar.classList.add('open');
+            overlay.style.display = 'block';
         }
     }
 
-    function togglePopoverConfig(e) {
-        if (e) e.stopPropagation();
-        const c = document.getElementById('modal-config-popover');
-        const p = document.getElementById('modal-pastas-popover');
-        if (p) p.style.display = 'none';
-        
-        if (c.style.display === 'block') {
-            c.style.display = 'none';
-        } else {
-            c.style.display = 'block';
-            if (typeof abrirNavegacaoConfiguracoes === 'function') abrirNavegacaoConfiguracoes();
-        }
+    function fecharSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (sidebar) sidebar.classList.remove('open');
+        if (overlay) overlay.style.display = 'none';
     }
-
-    document.addEventListener('click', function(e) {
-        const popoverPastas = document.getElementById('modal-pastas-popover');
-        const popoverConfig = document.getElementById('modal-config-popover');
-        if (popoverPastas && !popoverPastas.contains(e.target)) popoverPastas.style.display = 'none';
-        if (popoverConfig && !popoverConfig.contains(e.target)) popoverConfig.style.display = 'none';
-    });
 </script>
 
-<!-- CARREGAMENTO DOS SCRIPTS -->
+<!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="tabelaTecnica.js"></script>
@@ -718,51 +845,129 @@ main, #app, .app-container, .main-content {
 <script src="horas.js"></script>
 <script src="perguntas.js"></script>
 
-<!-- TELA DE LOGIN -->
+<!-- ESTILOS E ESTRUTURA DA TELA DE LOGIN -->
 <style>
   #loginOverlay {
     position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     background: #0f172a;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 999999;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
+
   .login-card {
-    background: #ffffff; width: 90%; max-width: 380px; padding: 32px 28px;
-    border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); text-align: center;
+    background: #ffffff;
+    width: 90%;
+    max-width: 380px;
+    padding: 32px 28px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    text-align: center;
   }
+
   .login-brand {
-    font-size: 20px; font-weight: 800; color: #103b70;
-    letter-spacing: 1px; margin-bottom: 24px; text-transform: uppercase;
+    font-size: 20px;
+    font-weight: 800;
+    color: #103b70;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
   }
-  .login-field-container { position: relative; width: 100%; margin-bottom: 12px; }
-  .login-field { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; }
-  .login-field:focus { border-color: #103b70; }
-  .password-toggle-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #64748b; cursor: pointer; font-size: 14px; }
-  .login-options { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 20px; }
-  .login-btn { width: 100%; background: #103b70; color: #ffffff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-  .login-btn:hover { background: #0d2f5a; }
-  .login-toggle-link { margin-top: 16px; font-size: 12px; color: #64748b; cursor: pointer; text-decoration: underline; }
+
+  .login-field-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .login-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+  }
+
+  .login-field:focus {
+    border-color: #103b70;
+  }
+
+  .password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .login-btn {
+    width: 100%;
+    background: #103b70;
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .login-btn:hover {
+    background: #0d2f5a;
+  }
+
+  .login-toggle-link {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #64748b;
+    cursor: pointer;
+    text-decoration: underline;
+  }
 </style>
 
 <div id="loginOverlay">
   <div class="login-card">
     <div class="login-brand">Astro Hellenic</div>
+    
     <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
+
     <div class="login-field-container">
       <input type="email" id="loginEmail" class="login-field" placeholder="Seu e-mail">
     </div>
+
     <div class="login-field-container">
       <input type="password" id="loginPassword" class="login-field" placeholder="Sua senha">
       <i class="fa-solid fa-eye password-toggle-icon" id="togglePasswordBtn" onclick="alternarVisibilidadeSenha()"></i>
     </div>
+
     <div class="login-options">
       <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
         <input type="checkbox" id="loginKeepLogged"> Manter-se logado
       </label>
     </div>
+
     <button type="button" class="login-btn" id="loginSubmitBtn" onclick="executarAcaoAuth()">Entrar</button>
+
     <div class="login-toggle-link" id="loginToggleMode" onclick="alternarModoAuth()">Não tem uma conta? Criar nova conta</div>
   </div>
 </div>
@@ -789,7 +994,9 @@ main, #app, .app-container, .main-content {
     const btn = document.getElementById('loginSubmitBtn');
     const link = document.getElementById('loginToggleMode');
     const errorEl = document.getElementById('loginErrorMsg');
+    
     if (errorEl) errorEl.style.display = 'none';
+
     if (isCadastroMode) {
       btn.innerText = 'Criar Conta';
       link.innerText = 'Já tem uma conta? Fazer login';
@@ -802,14 +1009,23 @@ main, #app, .app-container, .main-content {
   async function fazerLogin(email, password) {
     const errorEl = document.getElementById('loginErrorMsg');
     const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    
     if (!client) {
-      if (errorEl) { errorEl.innerText = "Erro: Conexão com o Supabase não foi iniciada."; errorEl.style.display = 'block'; }
+      if (errorEl) {
+        errorEl.innerText = "Erro: Conexão com o Supabase não foi iniciada.";
+        errorEl.style.display = 'block';
+      }
       return false;
     }
+
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
-      if (errorEl) { errorEl.innerText = "Erro ao entrar: " + error.message; errorEl.style.display = 'block'; }
-      else { alert("Erro ao entrar: " + error.message); }
+      if (errorEl) {
+        errorEl.innerText = "Erro ao entrar: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        alert("Erro ao entrar: " + error.message);
+      }
       return false;
     }
     return true;
@@ -818,14 +1034,23 @@ main, #app, .app-container, .main-content {
   async function criarConta(email, password) {
     const errorEl = document.getElementById('loginErrorMsg');
     const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    
     if (!client) {
-      if (errorEl) { errorEl.innerText = "Erro: Conexão com o Supabase não foi iniciada."; errorEl.style.display = 'block'; }
+      if (errorEl) {
+        errorEl.innerText = "Erro: Conexão com o Supabase não foi iniciada.";
+        errorEl.style.display = 'block';
+      }
       return false;
     }
+
     const { data, error } = await client.auth.signUp({ email, password });
     if (error) {
-      if (errorEl) { errorEl.innerText = "Erro ao cadastrar: " + error.message; errorEl.style.display = 'block'; }
-      else { alert("Erro ao cadastrar: " + error.message); }
+      if (errorEl) {
+        errorEl.innerText = "Erro ao cadastrar: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        alert("Erro ao cadastrar: " + error.message);
+      }
       return false;
     }
     alert("Conta criada com sucesso!");
@@ -839,16 +1064,25 @@ main, #app, .app-container, .main-content {
     const keepLogged = document.getElementById('loginKeepLogged').checked;
 
     if (errorEl) errorEl.style.display = 'none';
+
     if (!email || !pass) {
-      if (errorEl) { errorEl.innerText = 'Preencha o e-mail e a senha.'; errorEl.style.display = 'block'; }
+      if (errorEl) {
+        errorEl.innerText = 'Preencha o e-mail e a senha.';
+        errorEl.style.display = 'block';
+      }
       return;
     }
+
     localStorage.setItem('astro_keep_logged', keepLogged);
+
     try {
       const res = isCadastroMode ? await criarConta(email, pass) : await fazerLogin(email, pass);
       if (res) fecharTelaLogin();
     } catch (err) {
-      if (errorEl) { errorEl.innerText = "Erro de execução: " + err.message; errorEl.style.display = 'block'; }
+      if (errorEl) {
+        errorEl.innerText = "Erro de execução: " + err.message;
+        errorEl.style.display = 'block';
+      }
     }
   }
 
@@ -861,7 +1095,9 @@ main, #app, .app-container, .main-content {
       const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
       if (client) {
         const { data: { user } } = await client.auth.getUser();
-        if (user) { fecharTelaLogin(); }
+        if (user) {
+          fecharTelaLogin();
+        }
       }
     }, 500);
   });
