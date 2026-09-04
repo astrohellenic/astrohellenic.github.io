@@ -695,12 +695,12 @@ function renderMandala(dadosNovos) {
   /* CARD DO CABEÇALHO NOVO COMPACTO (LARGURA TOTAL E ALTURA REDUZIDA) */
   svg += `<g id="png-discreet-header">
     <!-- Fundo Creme e Borda Dourada Justa -->
-    <rect x="15" y="15" width="930" height="90" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
+    <rect x="15" y="15" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
     
     <!-- Textos das 3 Linhas Mantidos com Espaçamento Compacto -->
-    <text x="30" y="42" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="65" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-    <text x="30" y="86" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
+    <text x="30" y="38" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
+    <text x="30" y="56" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
+    <text x="30" y="72" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
   </g>`;
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
