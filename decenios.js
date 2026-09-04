@@ -8,13 +8,13 @@ const ZODIACO_DECENIOS = [
 ];
 
 const PLANETS_DECENIOS = [
-  { id: 'Sun', name: 'Sol', minorYears: 19, days: 570, symbol: '☉' },
-  { id: 'Moon', name: 'Lua', minorYears: 25, days: 750, symbol: '☽' },
-  { id: 'Mercury', name: 'Mercúrio', minorYears: 20, days: 600, symbol: '☿' },
-  { id: 'Venus', name: 'Vênus', minorYears: 8, days: 240, symbol: '♀' },
-  { id: 'Mars', name: 'Marte', minorYears: 15, days: 450, symbol: '♂' },
-  { id: 'Jupiter', name: 'Júpiter', minorYears: 12, days: 360, symbol: '♃' },
-  { id: 'Saturn', name: 'Saturno', minorYears: 30, days: 900, symbol: '♄' }
+  { id: 'Sun', name: 'Sol', minorYears: 19, days: 570 },
+  { id: 'Moon', name: 'Lua', minorYears: 25, days: 750 },
+  { id: 'Mercury', name: 'Mercúrio', minorYears: 20, days: 600 },
+  { id: 'Venus', name: 'Vênus', minorYears: 8, days: 240 },
+  { id: 'Mars', name: 'Marte', minorYears: 15, days: 450 },
+  { id: 'Jupiter', name: 'Júpiter', minorYears: 12, days: 360 },
+  { id: 'Saturn', name: 'Saturno', minorYears: 30, days: 900 }
 ];
 
 const SIGN_ELEMENTS_DEC = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
@@ -28,7 +28,7 @@ const MONOLINE_ZODIAC_SVGS_DEC = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="0" y1="55" x2="64" y2="55"></line>`,
-  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" stroke-miterlimit="10" points="52,53 57,58 52,63 "></polyline>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,52V12c0,0,0-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" stroke-miterlimit="10" points="52,53 57,58 52,63 "></polyline>`,
   `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="1" y1="28" x2="36" y2="63"></line>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
   `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
@@ -39,6 +39,40 @@ function getSignSvgHtmlDec(signIdx, size = 18) {
   const elem = SIGN_ELEMENTS_DEC[signIdx];
   const color = ELEMENT_SIGN_COLORS_DEC[elem];
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; overflow: visible; display: inline-block; vertical-align: middle; flex-shrink: 0; margin: 0 2px;" title="${ZODIACO_DECENIOS[signIdx]}">${MONOLINE_ZODIAC_SVGS_DEC[signIdx]}</svg>`;
+}
+
+function getPlanet3DSVG(planetId, size = 34) {
+  const planetSVGs = {
+    Sun: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decSun" cx="35%" cy="32%" r="68%"><stop offset="0%" stop-color="#fffbeb" /><stop offset="25%" stop-color="#fde047" /><stop offset="60%" stop-color="#f59e0b" /><stop offset="88%" stop-color="#d97706" /><stop offset="100%" stop-color="#92400e" /></radialGradient></defs>
+      <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25"/><circle cx="50" cy="50" r="42" fill="url(#decSun)"/><ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☉</text>
+    </svg>`,
+    Moon: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decMoon" cx="32%" cy="28%" r="70%"><stop offset="0%" stop-color="#ffffff" /><stop offset="30%" stop-color="#e2e8f0" /><stop offset="65%" stop-color="#94a3b8" /><stop offset="90%" stop-color="#475569" /><stop offset="100%" stop-color="#1e293b" /></radialGradient></defs>
+      <circle cx="50" cy="50" r="42" fill="url(#decMoon)"/><circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/><circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/><circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/><circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/><ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☽</text>
+    </svg>`,
+    Mercury: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decMerc" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#fef08a" /><stop offset="28%" stop-color="#d97706" /><stop offset="65%" stop-color="#92400e" /><stop offset="92%" stop-color="#451a03" /><stop offset="100%" stop-color="#270e02" /></radialGradient></defs>
+      <circle cx="50" cy="50" r="42" fill="url(#decMerc)"/><ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/><circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☿</text>
+    </svg>`,
+    Venus: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decVen" cx="34%" cy="30%" r="68%"><stop offset="0%" stop-color="#ffffff" /><stop offset="30%" stop-color="#fef3c7" /><stop offset="65%" stop-color="#f59e0b" /><stop offset="90%" stop-color="#b45309" /><stop offset="100%" stop-color="#78350f" /></radialGradient></defs>
+      <circle cx="50" cy="50" r="42" fill="url(#decVen)"/><ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/><circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♀</text>
+    </svg>`,
+    Mars: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decMars" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#fca5a5" /><stop offset="25%" stop-color="#ef4444" /><stop offset="60%" stop-color="#b91c1c" /><stop offset="88%" stop-color="#7f1d1d" /><stop offset="100%" stop-color="#450a0a" /></radialGradient></defs>
+      <circle cx="50" cy="50" r="42" fill="url(#decMars)"/><ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/><ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/><circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♂</text>
+    </svg>`,
+    Jupiter: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decJup" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fffbeb" /><stop offset="30%" stop-color="#fef3c7" /><stop offset="58%" stop-color="#d4a373" /><stop offset="82%" stop-color="#a97142" /><stop offset="100%" stop-color="#6f4518" /></radialGradient><clipPath id="clipJupDec"><circle cx="50" cy="50" r="42" /></clipPath></defs>
+      <circle cx="50" cy="50" r="42" fill="url(#decJup)"/><g clip-path="url(#clipJupDec)" opacity="0.45"><rect x="0" y="24" width="100" height="6" fill="#8c531b" /><rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" /><rect x="0" y="49" width="100" height="11" fill="#783d19" /><rect x="0" y="64" width="100" height="6" fill="#8c531b" /><rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" /></g><ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♃</text>
+    </svg>`,
+    Saturn: `<svg width="${Math.round(size * 1.11)}" height="${size}" viewBox="-15 0 130 100" style="display: inline-block; vertical-align: middle;">
+      <defs><radialGradient id="decSat" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#fef9c3" /><stop offset="35%" stop-color="#fde047" /><stop offset="70%" stop-color="#ca8a04" /><stop offset="92%" stop-color="#854d0e" /><stop offset="100%" stop-color="#422006" /></radialGradient><linearGradient id="decRings" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95" /><stop offset="25%" stop-color="#cbd5e1" stop-opacity="0.9" /><stop offset="60%" stop-color="#94a3b8" stop-opacity="0.85" /><stop offset="85%" stop-color="#64748b" stop-opacity="0.9" /><stop offset="100%" stop-color="#334155" stop-opacity="0.95" /></linearGradient></defs>
+      <g transform="rotate(-22 50 50)"><ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#decRings)" stroke-width="5.5" opacity="0.95" /><ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/></g><circle cx="50" cy="50" r="36" fill="url(#decSat)"/><g transform="rotate(-22 50 50)"><path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#decRings)" stroke-width="5.5" /><path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/></g><ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/><text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text>
+    </svg>`
+  };
+  return planetSVGs[planetId] || '';
 }
 
 let overrideStartPlanet = null;
@@ -93,8 +127,8 @@ function renderDeceniosUI(container) {
         <div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
           <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); font-family: 'Cinzel', serif;">Planeta Inicial:</label>
           <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
-            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>☉ Sol (Diurno)</option>
-            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>☽ Lua (Noturno)</option>
+            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol (Diurno)</option>
+            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua (Noturno)</option>
           </select>
         </div>
       </div>
@@ -237,7 +271,7 @@ function renderizarResultadosHTML(res) {
           <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase;">Nível 1 (L1) - Regente da Era</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 28px; color: #d4af37; font-weight: bold; line-height: 1;">${activeL1.planet.symbol}</span>
+              ${getPlanet3DSVG(activeL1.planet.id, 42)}
               <div>
                 <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL1.planet.name}</h4>
                 <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL1.planet.signIdx]}</strong> (${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}')</div>
@@ -256,7 +290,7 @@ function renderizarResultadosHTML(res) {
           <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #1d5fa8; text-transform: uppercase;">Nível 2 (L2) - Executor do Momento</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 28px; color: #1d5fa8; font-weight: bold; line-height: 1;">${activeL2.planet.symbol}</span>
+              ${getPlanet3DSVG(activeL2.planet.id, 42)}
               <div>
                 <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL2.planet.name}</h4>
                 <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL2.planet.signIdx]}</strong> (${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}')</div>
@@ -275,7 +309,7 @@ function renderizarResultadosHTML(res) {
       <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden; margin-top: 14px;">
         <div style="padding: 10px 14px; background: #fffdf5; border-bottom: 1px solid #fef08a; display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px; color: #103b70; font-weight: bold;">${activeL1.planet.symbol}</span>
+            ${getPlanet3DSVG(activeL1.planet.id, 28)}
             <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1 ATIVO: ${activeL1.planet.name.toUpperCase()}</strong>
           </div>
           <span style="font-size: 11px; color: #475569;"><strong>${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong></span>
@@ -284,7 +318,7 @@ function renderizarResultadosHTML(res) {
           <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
             <thead>
               <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                <th style="padding: 10px 12px; text-align: left;">L2 (Subperíodo)</th>
+                <th style="padding: 10px 12px; text-align: center;">L2 (Subperíodo)</th>
                 <th style="padding: 10px 12px; text-align: left;">Duração</th>
                 <th style="padding: 10px 12px; text-align: left;">Início</th>
                 <th style="padding: 10px 12px; text-align: left;">Término</th>
@@ -293,7 +327,7 @@ function renderizarResultadosHTML(res) {
             <tbody>
               ${activeL1.subperiods.map(sub => `
                 <tr style="border-bottom: 1px solid #e2e8f0; ${sub.isActive ? 'background: #fffbf0; border-left: 4px solid #d4af37;' : ''}">
-                  <td style="padding: 10px 12px;"><strong>${sub.planet.symbol} ${sub.planet.name}</strong></td>
+                  <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(sub.planet.id, 32)}</td>
                   <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days}d)</td>
                   <td style="padding: 10px 12px;">${formatDateDec(sub.startDate)}</td>
                   <td style="padding: 10px 12px;">${formatDateDec(sub.endDate)}</td>
@@ -317,7 +351,7 @@ function renderizarResultadosHTML(res) {
           <div style="background: #ffffff; border: 1px solid ${l1.isActive ? '#d4af37' : '#e2e8f0'}; border-radius: 10px; margin-bottom: 8px; overflow: hidden;">
             <div style="padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="document.getElementById('dec_l1_details_${idx}').style.display = document.getElementById('dec_l1_details_${idx}').style.display === 'none' ? 'block' : 'none'">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 22px; color: #103b70; font-weight: bold;">${l1.planet.symbol}</span>
+                ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
                   <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1: ${l1.planet.name.toUpperCase()}</strong>
                   <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${ZODIACO_DECENIOS[l1.planet.signIdx]} (${l1.planet.degree}°${formatMin(l1.planet.minute)}') • 129 Meses</div>
@@ -330,7 +364,7 @@ function renderizarResultadosHTML(res) {
               <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
                 <thead>
                   <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                    <th style="padding: 8px 10px; text-align: left;">L2 (Subperíodo)</th>
+                    <th style="padding: 8px 10px; text-align: center;">L2 (Subperíodo)</th>
                     <th style="padding: 8px 10px; text-align: left;">Duração</th>
                     <th style="padding: 8px 10px; text-align: left;">Início</th>
                     <th style="padding: 8px 10px; text-align: left;">Término</th>
@@ -339,7 +373,7 @@ function renderizarResultadosHTML(res) {
                 <tbody>
                   ${l1.subperiods.map(l2 => `
                     <tr style="border-bottom: 1px solid #e2e8f0; ${l2.isActive ? 'background: #fffbf0; border-left: 4px solid #d4af37;' : ''}">
-                      <td style="padding: 8px 10px;"><strong>${l2.planet.symbol} ${l2.planet.name}</strong></td>
+                      <td style="padding: 8px 10px; text-align: center;">${getPlanet3DSVG(l2.planet.id, 28)}</td>
                       <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days}d)</td>
                       <td style="padding: 8px 10px;">${formatDateDec(l2.startDate)}</td>
                       <td style="padding: 8px 10px;">${formatDateDec(l2.endDate)}</td>
