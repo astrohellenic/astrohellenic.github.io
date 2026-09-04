@@ -446,49 +446,56 @@ function abrirModuloTecnica(modulo) {
   if (cRadix) cRadix.style.display = 'none';
   if (cRev) cRev.style.display = 'none';
 
-  if (modulo === 'radix') {
+  // 1. MANDALA / MAPA NATAL (Globinho)
+  if (modulo === 'mandala' || modulo === 'radix') {
     if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloMandala === 'function') {
+      iniciarModuloMandala();
+    } else if (typeof desenharMandala === 'function') {
+      desenharMandala();
+    }
   } 
-     
- else if (modulo === 'tabelaTecnica') {
+  // 2. TABELA TÉCNICA
+  else if (modulo === 'tabelaTecnica') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloTabelaTecnica === 'function') iniciarModuloTabelaTecnica();
-    }
-
+  }
+  // 3. REVOLUÇÃO SOLAR (Solzinho)
   else if (modulo === 'revolucao') {
     if (cRev) {
       cRev.style.display = 'block';
       if (typeof iniciarModuloRevolucao === 'function') iniciarModuloRevolucao();
     }
-     
+  } 
+  // 4. PROFECÇÃO (Setinha)
   else if (modulo === 'profeccao') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloProfeccao === 'function') iniciarModuloProfeccao();
   } 
-     
-  } 
+  // 5. DECÊNIOS (Ampulheta)
   else if (modulo === 'decenios') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloDecenios === 'function') iniciarModuloDecenios();
   } 
+  // 6. ISOPSEFIA (Calculadora)
   else if (modulo === 'isopsefia') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloIsopsefia === 'function') iniciarModuloIsopsefia();
   }
-}
-
-/* CHAMA OS MÓDULOS AUXILIARES */
-function abrirModuloAuxiliar(modulo) {
-  const container = document.getElementById('mandala-container');
-  if (!container) return;
-
-  if (modulo === 'katarche') {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Katarche / Perguntas (Em breve)</div>`;
-  } else if (modulo === 'horas') {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Horas Planetárias (Em breve)</div>`;
-  } else if (modulo === 'isopsefia') {
-    if (typeof iniciarModuloIsopsefia === 'function') iniciarModuloIsopsefia();
-    else container.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Módulo de Isopsefia.</div>`;
+  // 7. LIBERAÇÃO ZODIACAL
+  else if (modulo === 'liberacao') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloLiberacao === 'function') iniciarModuloLiberacao();
+  }
+  // 8. DIREÇÕES PRIMÁRIAS
+  else if (modulo === 'direcoes') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloDirecoes === 'function') iniciarModuloDirecoes();
+  }
+  // 9. HORAS PLANETÁRIAS
+  else if (modulo === 'horas') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloHoras === 'function') iniciarModuloHoras();
   }
 }
 
