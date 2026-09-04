@@ -495,3 +495,11 @@ function renderPainelTecnico(data, containerId) {
     }
   }
 }
+
+/* FUNÇÃO DE INICIALIZAÇÃO CHAMADA PELO BOTÃO DA BARRA */
+function iniciarModuloTabelaTecnica() {
+  if (typeof renderPainelTecnico === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) {
+    renderPainelTecnico(currentCalculatedData, 'mandala-container');
+  }
+}
+
