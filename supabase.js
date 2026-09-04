@@ -86,10 +86,6 @@ function renderMenuPrincipal() {
     </div>
     <div style="flex: 1; overflow-y: auto;">
       <ul class="menu-list">
-        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento()">
-          <span>Agora</span>
-          <i class="fa-solid fa-clock"></i>
-        </li>
         <li class="menu-item" onclick="abrirModalNovoMapa()">
           <span>Novo Mapa Astral</span>
           <i class="fa-solid fa-user-plus"></i>
@@ -107,17 +103,6 @@ function renderMenuPrincipal() {
         </div>
       </div>
       ${htmlPastas}
-
-      <ul class="menu-list">
-        <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
-          <span>Técnicas de Tempo</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-        <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
-          <span>Ferramentas Auxiliares</span>
-          <i class="fa-solid fa-chevron-right"></i>
-        </li>
-      </ul>
     </div>
     
     <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
@@ -562,7 +547,7 @@ async function abrirConteudoPasta(nomePasta) {
 
   sidebar.innerHTML = `
     <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="abrirNavegacaoPastas()" title="Voltar às pastas">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas">
         <i class="fa-solid fa-chevron-left"></i>
       </button>
       <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(nomePasta)}</span>
