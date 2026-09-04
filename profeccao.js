@@ -133,8 +133,8 @@
                 <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center;">
                     <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 10px 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
                     <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center;">
-                        <div><strong>Grande Ciclo (12a):</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
-                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} (Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)})</div>
+                        <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
+                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
                     </div>
                 </div>
 
