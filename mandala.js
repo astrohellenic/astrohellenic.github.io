@@ -695,7 +695,7 @@ function renderMandala(dadosNovos) {
   /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
   svg += `<g id="png-discreet-header">
     <!-- Fundo Creme e Borda Dourada Estendidos quase até o fim -->
-    <rect x="15" y="15" width="1450" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
+    <rect x="15" y="15" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
     
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="38" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
