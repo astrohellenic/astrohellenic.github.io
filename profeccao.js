@@ -161,3 +161,23 @@ if (typeof window !== 'undefined') {
     }
   };
 }
+/* FUNÇÃO DE INICIALIZAÇÃO CHAMADA PELO BOTÃO DA BARRA */
+function iniciarModuloProfeccao() {
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
+
+  const dadosNatal = currentCalculatedData;
+
+  // Descobre o ano de nascimento do mapa
+  let anoNascimento = new Date().getFullYear();
+  if (dadosNatal.data_nascimento) {
+    anoNascimento = new Date(dadosNatal.data_nascimento).getFullYear();
+  } else if (dadosNatal.ano) {
+    anoNascimento = parseInt(dadosNatal.ano);
+  }
+
+  const anoAtual = new Date().getFullYear();
+
+  if (typeof window.atualizarProfeccaoComDadosRS === 'function') {
+    window.atualizarProfeccaoComDadosRS(dadosNatal, null, anoAtual, anoNascimento);
+  }
+}
