@@ -167,11 +167,6 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     
     const apiJson = await resSolar.json();
 
-    // ==========================================
-    // AJUSTE DE CABEÇALHO PARA A REVOLUÇÃO SOLAR
-    // ==========================================
-    window.currentMapType = "Revolução Solar";
-
     let horaExataRS = apiJson.momento_exato ? apiJson.momento_exato.hora_local : "";
     let dataExataRS = apiJson.momento_exato ? apiJson.momento_exato.data_utc : "";
 
@@ -194,7 +189,25 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       minR = parseInt(pH[1]) || 0;
     }
 
-    currentMoment = new Date(anoR, mesR, diaR, horaR, minR);
+    const dataHoraExataObjeto = new Date(anoR, mesR, diaR, horaR, minR);
+
+    // GUARDA A DATA EXATA DA RS PARA A PROFECÇÃO USAR
+    window.currentSolarReturnDate = dataHoraExataObjeto;
+
+    // CONDIÇÃO DE TELA ATIVA: SE ESTIVER NA PROFECÇÃO, NÃO ALTERA A MANDALA
+    if (window.currentViewMode === "tabela" || window.currentViewMode === "profeccao") {
+      const dropdown = obterContainerRS();
+      if (dropdown) dropdown.style.display = 'none';
+
+      if (typeof window.iniciarModuloProfeccao === 'function') {
+        window.iniciarModuloProfeccao();
+      }
+      return;
+    }
+
+    // FLUXO PADRÃO (SE ESTIVER NA TELA DA MANDALA)
+    window.currentMapType = "Revolução Solar";
+    currentMoment = dataHoraExataObjeto;
 
     const SIGNOS_INDEX = {
       "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
