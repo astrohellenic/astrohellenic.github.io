@@ -590,7 +590,7 @@ function renderMandala(dadosNovos) {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  const width = 960, height = 960, cx = 480, cy = 540;
+  const width = 960, height = 1100, cx = 480, cy = 630;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
   const goldColor = "#c59b27";
@@ -901,10 +901,10 @@ function renderMandala(dadosNovos) {
   imgLoader.onload = function() {
     const canvas = document.createElement('canvas');
     canvas.width = 1920;
-    canvas.height = 2300;
+    canvas.height = 2200;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 1920, 2300);
-ctx.drawImage(imgLoader, 0, 0, 1920, 2300);
+    ctx.clearRect(0, 0, 1920, 2200);
+ctx.drawImage(imgLoader, 0, 0, 1920, 2200);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
 
