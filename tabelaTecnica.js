@@ -185,20 +185,20 @@ function getPlanet3DSVG(planetId) {
 
 function getItemSVG(key) {
   const itemSVGs = {
-    'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg>`,
-    'spirit': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`,
-    'venus': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♀</text></svg>`,
-    'mercury': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">☿</text></svg>`,
-    'mars': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♂</text></svg>`,
-    'jupiter': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♃</text></svg>`,
-    'saturn': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">♄</text></svg>`,
-    'Nodo Norte': `<span style="font-size: 18px; font-weight: bold; color: #000000;">☊</span>`,
-    'Nodo Sul': `<span style="font-size: 18px; font-weight: bold; color: #000000;">☋</span>`,
-    'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#000000" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#000000"/><circle cx="0" cy="0" r="2.3" fill="#000000"/></svg>`,
-    'ASC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">ASC</span>`,
-    'DSC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">DSC</span>`,
-    'MC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">MC</span>`,
-    'IC': `<span style="font-size: 11px; font-weight: 900; color: #000000;">IC</span>`
+    'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`,
+    'spirit': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#fffdf5" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`,
+    'venus': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♀</text></svg>`,
+    'mercury': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">☿</text></svg>`,
+    'mars': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♂</text></svg>`,
+    'jupiter': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♃</text></svg>`,
+    'saturn': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♄</text></svg>`,
+    'Nodo Norte': `<span style="font-size: 16px; font-weight: bold; color: #103b70;">☊</span>`,
+    'Nodo Sul': `<span style="font-size: 16px; font-weight: bold; color: #103b70;">☋</span>`,
+    'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#103b70" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#103b70"/><circle cx="0" cy="0" r="2.3" fill="#103b70"/></svg>`,
+    'ASC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">ASC</span>`,
+    'DSC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">DSC</span>`,
+    'MC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">MC</span>`,
+    'IC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">IC</span>`
   };
   return itemSVGs[key] || `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
@@ -314,36 +314,38 @@ function renderMatrizVisibilidadeHTML(data) {
   }
 
   let h = `
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; margin: 30px 0 10px 0; text-transform: uppercase;">Matriz de Visibilidade (Theoria)</h3>
-    <table class="tabela-enxuta" style="font-size: 11px;">
-      <thead>
-        <tr>
-          <th style="width: 5%;"></th>
+    <div style="max-width: 960px; margin: 40px auto 20px auto; background: #fffdf5; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+      <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+      <div style="overflow-x: auto;">
+        <table class="tabela-enxuta" style="font-size: 11px; margin: 0 auto; background: #ffffff;">
+          <thead>
+            <tr>
+              <th style="width: 40px; background-color: #fffdf5;"></th>
   `;
 
   colunas.forEach(c => {
-    h += `<th style="padding: 4px; vertical-align: middle;">${getMatrixIcon(c)}</th>`;
+    h += `<th style="padding: 6px 4px; vertical-align: middle; border: 1px solid #e2d9c2; background-color: #fffdf5;">${getMatrixIcon(c)}</th>`;
   });
   h += `</tr></thead><tbody>`;
 
   colunas.forEach((row, i) => {
-    h += `<tr><td style="font-weight: bold; background: #f8fafc; vertical-align: middle;">${getMatrixIcon(row)}</td>`;
+    h += `<tr><td style="font-weight: bold; background: #fffdf5; vertical-align: middle; border: 1px solid #e2d9c2; text-align: center; padding: 6px 4px;">${getMatrixIcon(row)}</td>`;
     colunas.forEach((col, j) => {
       if (j <= i) {
-        h += `<td style="background: #f1f5f9; color: #94a3b8;">-</td>`;
+        h += `<td style="background: #f7f5ed; color: #b5aea2; border: 1px solid #e2d9c2;">-</td>`;
       } else {
         const asp = getAspecto(posicoes[row.key], posicoes[col.key]);
         let colorStyle = '#0f172a';
-        if (asp === 'σ') colorStyle = '#000000';
+        if (asp === 'σ') colorStyle = '#103b70';
         else if (asp === '☐' || asp === '☍') colorStyle = '#dc2626';
         else if (asp === 'Δ' || asp === '*') colorStyle = '#2563eb';
-        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle;">${asp}</td>`;
+        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle; border: 1px solid #e2d9c2; text-align: center;">${asp}</td>`;
       }
     });
     h += `</tr>`;
   });
 
-  h += `</tbody></table>`;
+  h += `</tbody></table></div></div>`;
   return h;
 }
 
@@ -401,10 +403,17 @@ function renderPainelTecnico(data, containerId) {
 
     let html = `
       <style>
+        .tabela-enxuta-wrapper {
+          max-width: 960px;
+          margin: 30px auto;
+          background: #fffdf5;
+          border: 2px solid #c59b27;
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
         .tabela-enxuta {
           width: 100%;
-          max-width: 960px;
-          margin: 0 auto 30px auto;
           border-collapse: collapse;
           font-family: 'Montserrat', sans-serif;
           background: #ffffff;
@@ -412,13 +421,13 @@ function renderPainelTecnico(data, containerId) {
           color: #0f172a;
         }
         .tabela-enxuta th, .tabela-enxuta td {
-          border: 1px solid #cbd5e1;
-          padding: 6px 8px;
+          border: 1px solid #e2d9c2;
+          padding: 8px 10px;
           text-align: center;
           vertical-align: middle;
         }
         .tabela-enxuta th {
-          background-color: #f8fafc;
+          background-color: #fffdf5;
           font-weight: 700;
           color: #103b70;
           text-transform: uppercase;
@@ -433,21 +442,23 @@ function renderPainelTecnico(data, containerId) {
         .col-dodec-grau { width: 28%; font-weight: 600; }
       </style>
 
-      <table class="tabela-enxuta">
-        <thead>
-          <tr>
-            <th rowspan="2" class="col-ponto">Ponto</th>
-            <th rowspan="2" class="col-signo">Signo</th>
-            <th rowspan="2" class="col-grau">Grau</th>
-            <th rowspan="2" class="col-termo">Termo</th>
-            <th colspan="2">Dodecatemória</th>
-          </tr>
-          <tr>
-            <th class="col-dodec-signo">Signo</th>
-            <th class="col-dodec-grau">Grau</th>
-          </tr>
-        </thead>
-        <tbody>
+      <div class="tabela-enxuta-wrapper">
+        <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Painel Técnico de Natividades</h3>
+        <table class="tabela-enxuta">
+          <thead>
+            <tr>
+              <th rowspan="2" class="col-ponto">Ponto</th>
+              <th rowspan="2" class="col-signo">Signo</th>
+              <th rowspan="2" class="col-grau">Grau</th>
+              <th rowspan="2" class="col-termo">Termo</th>
+              <th colspan="2">Dodecatemória</th>
+            </tr>
+            <tr>
+              <th class="col-dodec-signo">Signo</th>
+              <th class="col-dodec-grau">Grau</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
 
     listaElementos.forEach(el => {
@@ -482,8 +493,9 @@ function renderPainelTecnico(data, containerId) {
     });
 
     html += `
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     `;
 
     html += renderMatrizVisibilidadeHTML(data);
@@ -502,4 +514,3 @@ function iniciarModuloTabelaTecnica() {
     renderPainelTecnico(currentCalculatedData, 'mandala-container');
   }
 }
-
