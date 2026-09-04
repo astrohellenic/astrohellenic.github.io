@@ -903,15 +903,14 @@ function renderMandala(dadosNovos) {
     canvas.width = 1920;
     canvas.height = 2300;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1920, 2300);
-    ctx.drawImage(imgLoader, 0, 0, 1920, 2300);
+    ctx.clearRect(0, 0, 1920, 2300);
+ctx.drawImage(imgLoader, 0, 0, 1920, 2300);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
 
-    container.innerHTML = `
-      <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 10px;">
-        <img src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+     container.innerHTML = `
+      <div style="width: 100%; height: 100%; display: flex; justify-content: flex-start; align-items: flex-start; overflow: hidden; padding: 0;">
+        <img src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; background: transparent;">
       </div>
     `;
 
