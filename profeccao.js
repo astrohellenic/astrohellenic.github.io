@@ -1,17 +1,17 @@
 (function() {
     const SIGNS = [
-        { name: "Áries", ruler: "Marte" },
-        { name: "Touro", ruler: "Vênus" },
-        { name: "Gêmeos", ruler: "Mercúrio" },
-        { name: "Câncer", ruler: "Lua" },
-        { name: "Leão", ruler: "Sol" },
-        { name: "Virgem", ruler: "Mercúrio" },
-        { name: "Libra", ruler: "Vênus" },
-        { name: "Escorpião", ruler: "Marte" },
-        { name: "Sagitário", ruler: "Júpiter" },
-        { name: "Capricórnio", ruler: "Saturno" },
-        { name: "Aquário", ruler: "Saturno" },
-        { name: "Peixes", ruler: "Júpiter" }
+        { ruler: "Marte" },
+        { ruler: "Vênus" },
+        { ruler: "Mercúrio" },
+        { ruler: "Lua" },
+        { ruler: "Sol" },
+        { ruler: "Mercúrio" },
+        { ruler: "Vênus" },
+        { ruler: "Marte" },
+        { ruler: "Júpiter" },
+        { ruler: "Saturno" },
+        { ruler: "Saturno" },
+        { ruler: "Júpiter" }
     ];
 
     const SIGN_ELEMENTS = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
@@ -53,6 +53,25 @@
         return `${diasSemana[d.getDay()]}, ${dia}/${mes}/${ano} às ${hora}:${min}`;
     }
 
+    function obterInicioRevolucaoSolar(dataNasc) {
+        // Se a Revolução Solar tiver sido calculada e guardada no ambiente global, usa ela
+        if (typeof window.currentSolarReturnDate !== 'undefined' && window.currentSolarReturnDate) {
+            const rsCalculada = new Date(window.currentSolarReturnDate);
+            if (!isNaN(rsCalculada.getTime())) return rsCalculada.getTime();
+        }
+        if (typeof window.dadosSolar !== 'undefined' && window.dadosSolar && window.dadosSolar.dataHora) {
+            const rsCalculada = new Date(window.dadosSolar.dataHora);
+            if (!isNaN(rsCalculada.getTime())) return rsCalculada.getTime();
+        }
+
+        // Caso contrário, calcula a data do aniversário no ano atual
+        const hoje = new Date();
+        let rsAno = hoje.getFullYear();
+        const dataAnivEsteAno = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
+        if (hoje < dataAnivEsteAno) rsAno--;
+        return new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+    }
+
     function iniciarModuloProfeccao() {
         const container = document.getElementById('mandala-container');
         if (!container) return;
@@ -66,7 +85,7 @@
         const ascAbs = currentCalculatedData.Ascendente.grau_absoluto;
         const ascIdx = Math.floor(ascAbs / 30);
 
-        // 2. Pega a data do mapa da variável global currentMoment
+        // 2. Pega a data de nascimento do mapa da variável global currentMoment
         let dataNasc = (typeof currentMoment !== 'undefined' && currentMoment instanceof Date) ? currentMoment : new Date();
 
         const hoje = new Date();
@@ -82,11 +101,8 @@
         const houseNumber = (idade % 12) + 1;
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
-        // 4. Data do aniversário do ano atual
-        let rsAno = hoje.getFullYear();
-        const dataAnivEsteAno = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
-        if (hoje < dataAnivEsteAno) rsAno--;
-        const rsDate = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
+        // 4. Determina o timestamp inicial (RS calculada ou Aniversário)
+        let currentMonthStart = obterInicioRevolucaoSolar(dataNasc);
 
         // 5. Interface
         let html = `
@@ -95,8 +111,8 @@
                 <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center;">
                     <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 10px 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
                     <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px;">
-                        <div><strong>Grande Ciclo (12a):</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 16)} ${SIGNS[grandCycleSignIdx].name}</div>
-                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 16)} ${SIGNS[profectedSignIdx].name} (Senhor: ${SIGNS[profectedSignIdx].ruler})</div>
+                        <div><strong>Grande Ciclo (12a):</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
+                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} (Senhor: ${SIGNS[profectedSignIdx].ruler})</div>
                     </div>
                 </div>
 
@@ -113,7 +129,6 @@
                     <tbody>
         `;
 
-        let currentMonthStart = rsDate.getTime();
         const monthlyCache = [];
 
         for (let i = 0; i < 12; i++) {
@@ -124,7 +139,7 @@
             html += `
                 <tr>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;"><strong>Mês ${i + 1}</strong></td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(mSignIdx, 16)} ${mSign.name}</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(mSignIdx, 20)}</td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; color: #1d5fa8; font-weight: bold;">${mSign.ruler}</td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(currentMonthStart)}</td>
                 </tr>
@@ -139,8 +154,8 @@
         monthlyCache.forEach(m => {
             html += `
                 <details style="margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #f8fafc;">
-                    <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px;">
-                        Mês ${m.monthNum}: ${SIGNS[m.signIdx].name} (${formatarData(m.start)})
+                    <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
                     </summary>
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; background: #ffffff;">
                         <thead>
@@ -158,7 +173,7 @@
                 html += `
                     <tr>
                         <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">Passo ${d + 1}</td>
-                        <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(dSignIdx, 14)} ${SIGNS[dSignIdx].name}</td>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
                         <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(dailyStart)}</td>
                     </tr>
                 `;
