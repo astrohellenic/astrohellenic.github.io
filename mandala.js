@@ -915,13 +915,11 @@ function renderMandala(dadosNovos) {
       let painelElem = document.getElementById('painel-tecnico-container');
       
       // Se não existir, cria o container LOGO ABAIXO da mandala
-      if (!painelElem) {
+            if (!painelElem) {
         painelElem = document.createElement('div');
         painelElem.id = 'painel-tecnico-container';
-        if (mandalaElem && mandalaElem.parentNode) {
-          mandalaElem.parentNode.insertBefore(painelElem, mandalaElem.nextSibling);
-        } else {
-          document.body.appendChild(painelElem);
+        if (mandalaElem) {
+          mandalaElem.appendChild(painelElem);
         }
       }
 
@@ -929,8 +927,8 @@ function renderMandala(dadosNovos) {
       document.body.style.overflow = "auto";
       document.documentElement.style.overflow = "auto";
 
-      if (typeof renderPainelTecnico === 'function') {
-        renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
+      if (painelElem) {
+        painelElem.innerHTML = '';
       }
     } catch (err) {
       console.error("Erro ao renderizar painel técnico:", err);
