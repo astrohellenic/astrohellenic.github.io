@@ -194,8 +194,11 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
     // GUARDA A DATA EXATA DA RS PARA A PROFECÇÃO USAR
     window.currentSolarReturnDate = dataHoraExataObjeto;
 
-    // CONDIÇÃO DE TELA ATIVA: SE ESTIVER NA PROFECÇÃO, NÃO ALTERA A MANDALA
-    if (window.currentViewMode === "tabela" || window.currentViewMode === "profeccao") {
+    // VERIFICA SE O PAINEL DE PROFECÇÃO ESTÁ ATIVO NA TELA
+    const containerMandala = document.getElementById('mandala-container');
+    const estaNaProfeccao = containerMandala && containerMandala.querySelector('h2') && containerMandala.querySelector('h2').innerText.includes('PROFECÇÃO');
+
+    if (estaNaProfeccao) {
       const dropdown = obterContainerRS();
       if (dropdown) dropdown.style.display = 'none';
 
