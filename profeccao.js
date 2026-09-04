@@ -62,30 +62,12 @@
             return;
         }
 
-        const dadosNatal = currentCalculatedData;
+        // 1. Pega o grau absoluto do Ascendente e calcula o signo
+        const ascAbs = currentCalculatedData.Ascendente.grau_absoluto;
+        const ascIdx = Math.floor(ascAbs / 30);
 
-        // 1. Identifica o signo do Ascendente
-        const SIGNOS_INDEX = {
-            "Aries": 0, "Áries": 0, "Touro": 1, "Gemeos": 2, "Gêmeos": 2,
-            "Cancer": 3, "Câncer": 3, "Leao": 4, "Leão": 4, "Virgem": 5,
-            "Libra": 6, "Escorpiao": 7, "Escorpião": 7, "Sagitario": 8, "Sagitário": 8,
-            "Capricornio": 9, "Capricórnio": 9, "Aquario": 10, "Aquário": 10, "Peixes": 11
-        };
-
-        let ascIdx = 0;
-        if (dadosNatal.Ascendente && dadosNatal.Ascendente.signo) {
-            ascIdx = SIGNOS_INDEX[dadosNatal.Ascendente.signo] ?? Math.floor(dadosNatal.Ascendente.grau_absoluto / 30);
-        }
-
-        // 2. Determina data de nascimento e idade
-        let dataNasc = null;
-        if (dadosNatal.data_nascimento) {
-            dataNasc = new Date(dadosNatal.data_nascimento);
-        } else if (dadosNatal.ano && dadosNatal.mes && dadosNatal.dia) {
-            dataNasc = new Date(dadosNatal.ano, dadosNatal.mes - 1, dadosNatal.dia, dadosNatal.hora || 12, dadosNatal.minuto || 0);
-        } else {
-            dataNasc = new Date();
-        }
+        // 2. Pega a data do mapa da variável global currentMoment
+        let dataNasc = (typeof currentMoment !== 'undefined' && currentMoment instanceof Date) ? currentMoment : new Date();
 
         const hoje = new Date();
         let idade = hoje.getFullYear() - dataNasc.getFullYear();
@@ -93,19 +75,20 @@
         if (m < 0 || (m === 0 && hoje.getDate() < dataNasc.getDate())) idade--;
         if (idade < 0) idade = 0;
 
-        // 3. Cálculos da Profecção
+        // 3. Cálculos de Profecção de Valens
         const grandCycleHouse = Math.floor(idade / 12) + 1;
         const grandCycleSignIdx = (ascIdx + (grandCycleHouse - 1)) % 12;
 
         const houseNumber = (idade % 12) + 1;
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
+        // 4. Data do aniversário do ano atual
         let rsAno = hoje.getFullYear();
         const dataAnivEsteAno = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
         if (hoje < dataAnivEsteAno) rsAno--;
         const rsDate = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
 
-        // 4. Interface limpa dentro do container principal
+        // 5. Interface
         let html = `
             <div style="max-width: 900px; margin: 0 auto; font-family: 'Montserrat', sans-serif; color: #0f172a; padding: 15px;">
                 
@@ -151,7 +134,6 @@
 
         html += `</tbody></table>`;
 
-        // 5. Passos Diários retráteis (não poluem a tela)
         html += `<h3 style="font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; text-transform: uppercase; margin-bottom: 10px;">Passos Diários (60 Horas)</h3>`;
         
         monthlyCache.forEach(m => {
