@@ -62,24 +62,64 @@ function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
+  const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  let htmlPastas = '';
+  pastasOrdenadas.forEach(pasta => {
+    htmlPastas += `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color);">
+        <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="abrirConteudoPasta('${pasta}')">
+          <i class="fa-solid fa-folder" style="color: var(--gold-dark);"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
+          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta"></i>
+          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta"></i>
+        </div>
+      </div>
+    `;
+  });
+
   sidebar.innerHTML = `
     <div class="sidebar-header">
       <h1 class="sidebar-title">Astro Hellenic</h1>
     </div>
     <div style="flex: 1; overflow-y: auto;">
       <ul class="menu-list">
-        <li class="menu-item" onclick="abrirModalNovoMapa(); fecharSidebar();">
-          <span>Novo Mapa</span>
+        <li class="menu-item active" id="menu-here-now" onclick="carregarCeuDoMomento()">
+          <span>Agora</span>
+          <i class="fa-solid fa-clock"></i>
+        </li>
+        <li class="menu-item" onclick="abrirModalNovoMapa()">
+          <span>Novo Mapa Astral</span>
           <i class="fa-solid fa-user-plus"></i>
         </li>
-        <li class="menu-item" onclick="abrirNavegacaoPastas()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
-        <span>Selecionar Mapa</span>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
-    </li>
+      </ul>
+
+      <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); background: #f8fafc; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Pastas</span>
+        <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
+          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
+        </div>
+      </div>
+      ${htmlPastas}
+
+      <ul class="menu-list">
+        <li class="menu-item" onclick="abrirNavegacaoTecnicasTempo()" style="border-top: 1px solid var(--border-color); margin-top: 4px;">
+          <span>Técnicas de Tempo</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
+        <li class="menu-item" onclick="abrirNavegacaoFerramentasAuxiliares()">
+          <span>Ferramentas Auxiliares</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </li>
       </ul>
     </div>
     
-    <!-- RODAPÉ FIXO: CONFIGURAÇÕES -->
     <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Configurações</span>
       <i class="fa-solid fa-gear" style="font-size: 16px; color: #64748b;"></i>
