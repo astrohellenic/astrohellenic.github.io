@@ -692,12 +692,14 @@ function renderMandala(dadosNovos) {
   const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
 
+  /*
   svg += `<g id="png-discreet-header">
     <text x="50" y="120" font-family="'Cinzel', serif" font-size="26" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
     <text x="50" y="150" font-family="'Montserrat', sans-serif" font-size="14" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
     <text x="50" y="172" font-family="'Montserrat', sans-serif" font-size="13" font-weight="500" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}</text>
     <text x="50" y="194" font-family="'Montserrat', sans-serif" font-size="13" font-weight="700" fill="#9a6d18">${sectText}</text>
   </g>`;
+  */
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
