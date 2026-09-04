@@ -57,12 +57,20 @@ const DIGRAMAS_ISO = {
 };
 
 let isoState = {
-  ascendente: "Capricórnio",
   activeTab: "planilha",
   rows: [],
   novoTermo: "",
   singleInput: ""
 };
+
+function obterAscendenteMandala() {
+  if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && currentCalculatedData.Ascendente) {
+    const absDeg = currentCalculatedData.Ascendente.grau_absoluto;
+    const signIdx = Math.floor(absDeg / 30);
+    return ZODIACO_ISOPSEFIA[signIdx] || "Áries";
+  }
+  return "Áries";
+}
 
 function calcularIsopsefiaData(texto) {
   if (!texto) return { bruto: 0, resto: 0, grego: '', passos: [], divisaoInteira: 0 };
@@ -109,38 +117,46 @@ function obterAtivacaoAstrologica(resto, ascendente) {
   return { casa: resto, signo: ZODIACO_ISOPSEFIA[indexSigno] };
 }
 
-/* FUNÇÃO CHAMADA PELO SUPABASE.JS AO CLICAR NO MENU */
+/* FUNÇÃO CHAMADA PELO SUPABASE.JS AL CLICAR NO MENU */
 function iniciarModuloIsopsefia() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
+
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: #dc2626; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Isopsefia.</div>`;
+    return;
+  }
 
   renderIsopsefiaUI(container);
 }
 
 function renderIsopsefiaUI(container) {
+  const ascAtual = obterAscendenteMandala();
+  const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : (typeof currentSubjectName !== 'undefined' ? currentSubjectName : 'Mapa Ativo');
+
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
       
-      <!-- CABEÇALHO DA FERRAMENTA -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 16px 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+      <!-- CABEÇALHO PADRONIZADO (ESTILO PROFECÇÃO/DECÊNIOS) -->
+      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <div>
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; margin: 0;">Isopsefia Helenística</h2>
-          <span style="font-size: 11px; color: #64748b; font-weight: 500;">Cálculo do valor numérico e do Topos ativado conforme Vettius Valens</span>
+          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
+          <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
+            Isopsefia Helenística • Vettius Valens
+          </div>
         </div>
-        
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">Ascendente:</label>
-          <select id="isoAscSelect" onchange="alterarAscendenteIsopsefia(this.value)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 600; color: #334155; outline: none; background: #fafafa; cursor: pointer;">
-            ${ZODIACO_ISOPSEFIA.map(s => `<option value="${s}" ${s === isoState.ascendente ? 'selected' : ''}>${s}</option>`).join('')}
-          </select>
+
+        <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #d4af37;">
+          <span style="font-size: 11px; font-weight: 700; color: #103b70; font-family: 'Cinzel', serif;">ASCENDENTE:</span>
+          <strong style="font-size: 12px; color: #1e293b;">${ascAtual}</strong>
         </div>
       </div>
 
       <!-- ABAS INTERNAS -->
-      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px;">
-        <button onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: var(--primary-blue); color: #fff;' : 'background: #e2e8f0; color: #475569;'}">Planilha Dinâmica</button>
-        <button onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: var(--primary-blue); color: #fff;' : 'background: #e2e8f0; color: #475569;'}">Análise Passo a Passo</button>
-        <button onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: var(--primary-blue); color: #fff;' : 'background: #e2e8f0; color: #475569;'}">Tabela Jônica Clássica</button>
+      <div style="display: flex; gap: 8px; border-bottom: 1px solid #cbd5e1; margin-bottom: 20px;">
+        <button onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: #103b70; color: #fcf6ba;' : 'background: #e2e8f0; color: #475569;'}">Planilha Dinâmica</button>
+        <button onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: #103b70; color: #fcf6ba;' : 'background: #e2e8f0; color: #475569;'}">Análise Passo a Passo</button>
+        <button onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: #103b70; color: #fcf6ba;' : 'background: #e2e8f0; color: #475569;'}">Tabela Jônica Clássica</button>
       </div>
 
       <!-- CONTEÚDO DAS ABAS -->
@@ -153,17 +169,19 @@ function renderIsopsefiaUI(container) {
 }
 
 function renderConteudoAbaAtual() {
+  const ascAtual = obterAscendenteMandala();
+
   if (isoState.activeTab === 'planilha') {
     return `
-      <div style="background: #ffffff; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; gap: 8px;">
-        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none;" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
-        <button onclick="adicionarTermoPlanilha()" style="background: var(--gold-dark); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Adicionar</button>
+      <div style="background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #d4af37; margin-bottom: 16px; display: flex; gap: 8px;">
+        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none;" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
+        <button onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Adicionar</button>
       </div>
 
-      <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; overflow-x: auto;">
+      <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
           <thead>
-            <tr style="background: var(--primary-blue); color: #ffffff; font-family: 'Cinzel', serif;">
+            <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
               <th style="padding: 12px;">Termo / Nome</th>
               <th style="padding: 12px;">Transliteração Grega</th>
               <th style="padding: 12px; text-align: right;">Soma Bruta</th>
@@ -178,15 +196,15 @@ function renderConteudoAbaAtual() {
               <tr><td colSpan="7" style="padding: 24px; text-align: center; color: #94a3b8;">Nenhum termo na planilha. Digite acima para começar.</td></tr>
             ` : isoState.rows.map((r, idx) => {
               const calc = calcularIsopsefiaData(r);
-              const ativ = obterAtivacaoAstrologica(calc.resto, isoState.ascendente);
+              const ativ = obterAtivacaoAstrologica(calc.resto, ascAtual);
               return `
-                <tr style="border-bottom: 1px solid var(--border-color);">
+                <tr style="border-bottom: 1px solid #e2e8f0;">
                   <td style="padding: 10px 12px; font-weight: 600; color: #1e293b;">${escapeHtml(r)}</td>
-                  <td style="padding: 10px 12px; font-size: 16px; font-family: serif; color: var(--primary-blue);">${calc.grego || '-'}</td>
+                  <td style="padding: 10px 12px; font-size: 16px; font-family: serif; color: #103b70;">${calc.grego || '-'}</td>
                   <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #0284c7;">${calc.bruto}</td>
                   <td style="padding: 10px 12px; text-align: center; color: #64748b; font-family: monospace;">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
                   <td style="padding: 10px 12px; text-align: center;"><span style="background: #fef08a; color: #854d0e; padding: 2px 8px; border-radius: 12px; font-weight: 700;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</span></td>
-                  <td style="padding: 10px 12px; text-align: center;"><span style="background: #e0f2fe; color: var(--primary-blue); padding: 2px 8px; border-radius: 6px; font-weight: 700;">${ativ.signo}</span></td>
+                  <td style="padding: 10px 12px; text-align: center;"><span style="background: #e0f2fe; color: #103b70; padding: 2px 8px; border-radius: 6px; font-weight: 700;">${ativ.signo}</span></td>
                   <td style="padding: 10px 12px; text-align: center;"><button onclick="removerTermoPlanilha(${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold;">Excluir</button></td>
                 </tr>
               `;
@@ -199,43 +217,43 @@ function renderConteudoAbaAtual() {
 
   if (isoState.activeTab === 'calculadora') {
     const calc = calcularIsopsefiaData(isoState.singleInput);
-    const ativ = obterAtivacaoAstrologica(calc.resto, isoState.ascendente);
+    const ativ = obterAtivacaoAstrologica(calc.resto, ascAtual);
     return `
-      <div style="display: flex; gap: 20px;">
-        <div style="flex: 2; background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
-          <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 6px;">DIGITE O NOME PARA DECOMPOSIÇÃO DETALHADA:</label>
-          <input type="text" value="${escapeHtml(isoState.singleInput)}" oninput="atualizarSingleInput(this.value)" placeholder="Ex: Alexandros" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; margin-bottom: 20px;">
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 280px; background: #ffffff; padding: 20px; border-radius: 10px; border: 1px solid #d4af37;">
+          <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 6px; font-family: 'Cinzel', serif;">DIGITE O NOME PARA DECOMPOSIÇÃO DETALHADA:</label>
+          <input type="text" value="${escapeHtml(isoState.singleInput)}" oninput="atualizarSingleInput(this.value)" placeholder="Ex: Alexandros" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; margin-bottom: 20px;">
 
-          <div style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden;">
-            <div style="background: #f8fafc; padding: 10px 14px; font-weight: 700; font-size: 12px; border-bottom: 1px solid var(--border-color); color: #334155;">Decomposição Letra por Letra</div>
+          <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+            <div style="background: #f8fafc; padding: 10px 14px; font-weight: 700; font-size: 12px; border-bottom: 1px solid #cbd5e1; color: #334155; font-family: 'Cinzel', serif;">Decomposição Letra por Letra</div>
             ${calc.passos.length === 0 ? '<div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 12px;">Digite um nome para ver a análise.</div>' : calc.passos.map(p => `
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
-                <div><strong>${p.letra}</strong> → <span style="font-size: 16px; color: var(--primary-blue); font-family: serif; font-weight: bold;">${p.grego}</span> <small style="color: #64748b;">(${p.nome})</small></div>
+                <div><strong>${p.letra}</strong> → <span style="font-size: 16px; color: #103b70; font-family: serif; font-weight: bold;">${p.grego}</span> <small style="color: #64748b;">(${p.nome})</small></div>
                 <div style="font-family: monospace; font-weight: 700; color: #1e293b;">+ ${p.valor}</div>
               </div>
             `).join('')}
           </div>
         </div>
 
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
-          <div style="background: var(--primary-blue); color: #ffffff; padding: 20px; border-radius: 8px; text-align: center;">
-            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;">Palavra em Grego</span>
-            <div style="font-size: 28px; font-family: serif; font-weight: bold; margin: 8px 0; color: var(--gold-primary);">${calc.grego || '-'}</div>
+        <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="background: #103b70; color: #ffffff; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #d4af37;">
+            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-family: 'Cinzel', serif;">Palavra em Grego</span>
+            <div style="font-size: 28px; font-family: serif; font-weight: bold; margin: 8px 0; color: #fcf6ba;">${calc.grego || '-'}</div>
             <div style="display: flex; justify-content: space-around; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
               <div><small style="display:block; opacity:0.8; font-size:10px;">SOMA</small><strong style="font-size:18px;">${calc.bruto}</strong></div>
-              <div><small style="display:block; opacity:0.8; font-size:10px;">RESTO</small><strong style="font-size:18px; color: var(--gold-primary);">${calc.resto}</strong></div>
+              <div><small style="display:block; opacity:0.8; font-size:10px;">RESTO</small><strong style="font-size:18px; color: #fcf6ba;">${calc.resto}</strong></div>
             </div>
           </div>
 
-          <div style="background: #ffffff; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px;">
+          <div style="background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #d4af37; font-size: 12px;">
             <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-              <span style="color: #64748b;">Ascendente:</span><strong>${isoState.ascendente}</strong>
+              <span style="color: #64748b;">Ascendente:</span><strong>${ascAtual}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-              <span style="color: #64748b;">Topos Ativado:</span><strong style="color: var(--gold-dark);">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong>
+              <span style="color: #64748b;">Topos Ativado:</span><strong style="color: #854d0e;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 6px 0;">
-              <span style="color: #64748b;">Signo Ativado:</span><strong style="color: var(--primary-blue);">${ativ.signo}</strong>
+              <span style="color: #64748b;">Signo Ativado:</span><strong style="color: #103b70;">${ativ.signo}</strong>
             </div>
           </div>
         </div>
@@ -250,10 +268,10 @@ function renderConteudoAbaAtual() {
           if (!acc.find(item => item.grego === dados.grego)) acc.push({ ...dados, latino: latino.toUpperCase() });
           return acc;
         }, []).map(item => `
-          <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+          <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #d4af37; display: flex; align-items: center; justify-content: space-between;">
             <div>
               <strong style="font-size: 14px; color: #1e293b;">${item.latino}</strong>
-              <div style="font-size: 18px; color: var(--primary-blue); font-family: serif;">${item.grego}</div>
+              <div style="font-size: 18px; color: #103b70; font-family: serif;">${item.grego}</div>
               <small style="font-size: 10px; color: #64748b;">${item.nome}</small>
             </div>
             <div style="background: #fef08a; color: #854d0e; font-family: monospace; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 12px;">${item.valor}</div>
@@ -267,11 +285,6 @@ function renderConteudoAbaAtual() {
 /* EVENTOS E INTERAÇÕES DA ISOPSEFIA */
 function mudarAbaIsopsefia(aba) {
   isoState.activeTab = aba;
-  iniciarModuloIsopsefia();
-}
-
-function alterarAscendenteIsopsefia(asc) {
-  isoState.ascendente = asc;
   iniciarModuloIsopsefia();
 }
 
