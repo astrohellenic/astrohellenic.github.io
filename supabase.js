@@ -446,15 +446,13 @@ function abrirModuloTecnica(modulo) {
   if (cRadix) cRadix.style.display = 'none';
   if (cRev) cRev.style.display = 'none';
 
-  // 1. MANDALA / MAPA NATAL (Globinho)
-  if (modulo === 'mandala' || modulo === 'radix') {
-    if (cRadix) cRadix.style.display = 'block';
-    if (typeof iniciarModuloMandala === 'function') {
-      iniciarModuloMandala();
-    } else if (typeof desenharMandala === 'function') {
-      desenharMandala();
-    }
-  } 
+// 1. MANDALA / MAPA NATAL (Globinho)
+if (modulo === 'mandala' || modulo === 'radix') {
+  if (cRadix) cRadix.style.display = 'block';
+  if (typeof renderMandala === 'function') {
+    renderMandala();
+  }
+}
   // 2. TABELA TÉCNICA
   else if (modulo === 'tabelaTecnica') {
     if (cRadix) cRadix.style.display = 'block';
