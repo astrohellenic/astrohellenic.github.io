@@ -907,35 +907,6 @@ function renderMandala(dadosNovos) {
     container.innerHTML = `<img src="${lastRenderedPngUrl}" alt="Mandala Astrológica">`;
     URL.revokeObjectURL(blobURL);
      
-           try {
-      // Localiza o container da mandala
-      const mandalaElem = document.getElementById('mandala-container');
-      
-      // Procura o container da tabela técnica
-      let painelElem = document.getElementById('painel-tecnico-container');
-      
-      // Se não existir, cria o container LOGO ABAIXO da mandala
-      if (!painelElem) {
-        painelElem = document.createElement('div');
-        painelElem.id = 'painel-tecnico-container';
-        if (mandalaElem && mandalaElem.parentNode) {
-          mandalaElem.parentNode.insertBefore(painelElem, mandalaElem.nextSibling);
-        } else {
-          document.body.appendChild(painelElem);
-        }
-      }
-
-      // Garante que a rolagem da página não seja bloqueada por CSS
-      document.body.style.overflow = "auto";
-      document.documentElement.style.overflow = "auto";
-
-      if (typeof renderPainelTecnico === 'function') {
-        renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
-      }
-    } catch (err) {
-      console.error("Erro ao renderizar painel técnico:", err);
-    }
-  };
   imgLoader.src = blobURL;
 }
 
