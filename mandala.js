@@ -590,7 +590,7 @@ function renderMandala(dadosNovos) {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  const width = 960, height = 1100, cx = 480, cy = 630;
+  const width = 960, height = 960, cx = 480, cy = 520;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
   const goldColor = "#c59b27";
@@ -692,12 +692,12 @@ function renderMandala(dadosNovos) {
   const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
 
-  /* CARD DO CABEÇALHO NOVO COMPACTO (LARGURA TOTAL E ALTURA REDUZIDA) */
+  /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
   svg += `<g id="png-discreet-header">
-    <!-- Fundo Creme e Borda Dourada Justa -->
-    <rect x="15" y="15" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
+    <!-- Fundo Creme e Borda Dourada Estendidos quase até o fim -->
+    <rect x="15" y="15" width="1450" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
     
-    <!-- Textos das 3 Linhas Mantidos com Espaçamento Compacto -->
+    <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="38" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
     <text x="30" y="56" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
     <text x="30" y="72" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
@@ -901,10 +901,10 @@ function renderMandala(dadosNovos) {
   imgLoader.onload = function() {
     const canvas = document.createElement('canvas');
     canvas.width = 1920;
-    canvas.height = 2200;
+    canvas.height = 1920;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 1920, 2200);
-ctx.drawImage(imgLoader, 0, 0, 1920, 2200);
+    ctx.clearRect(0, 0, 1920, 1920);
+ctx.drawImage(imgLoader, 0, 0, 1920, 1920);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
 
@@ -913,7 +913,7 @@ ctx.drawImage(imgLoader, 0, 0, 1920, 2200);
     <img src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
   </div>
 `;
-
+     
     URL.revokeObjectURL(blobURL);     
 
            try {
