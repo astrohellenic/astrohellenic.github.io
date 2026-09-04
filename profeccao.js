@@ -53,8 +53,7 @@
         return `${diasSemana[d.getDay()]}, ${dia}/${mes}/${ano} às ${hora}:${min}`;
     }
 
-    function obterInicioRevolucaoSolar(dataNasc) {
-        // Se a Revolução Solar tiver sido calculada e guardada no ambiente global, usa ela
+    function obterTimestampRevolucaoSolar() {
         if (typeof window.currentSolarReturnDate !== 'undefined' && window.currentSolarReturnDate) {
             const rsCalculada = new Date(window.currentSolarReturnDate);
             if (!isNaN(rsCalculada.getTime())) return rsCalculada.getTime();
@@ -63,13 +62,7 @@
             const rsCalculada = new Date(window.dadosSolar.dataHora);
             if (!isNaN(rsCalculada.getTime())) return rsCalculada.getTime();
         }
-
-        // Caso contrário, calcula a data do aniversário no ano atual
-        const hoje = new Date();
-        let rsAno = hoje.getFullYear();
-        const dataAnivEsteAno = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
-        if (hoje < dataAnivEsteAno) rsAno--;
-        return new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+        return null;
     }
 
     function iniciarModuloProfeccao() {
@@ -81,11 +74,9 @@
             return;
         }
 
-        // 1. Pega o grau absoluto do Ascendente e calcula o signo
         const ascAbs = currentCalculatedData.Ascendente.grau_absoluto;
         const ascIdx = Math.floor(ascAbs / 30);
 
-        // 2. Pega a data de nascimento do mapa da variável global currentMoment
         let dataNasc = (typeof currentMoment !== 'undefined' && currentMoment instanceof Date) ? currentMoment : new Date();
 
         const hoje = new Date();
@@ -94,17 +85,14 @@
         if (m < 0 || (m === 0 && hoje.getDate() < dataNasc.getDate())) idade--;
         if (idade < 0) idade = 0;
 
-        // 3. Cálculos de Profecção de Valens
         const grandCycleHouse = Math.floor(idade / 12) + 1;
         const grandCycleSignIdx = (ascIdx + (grandCycleHouse - 1)) % 12;
 
         const houseNumber = (idade % 12) + 1;
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
-        // 4. Determina o timestamp inicial (RS calculada ou Aniversário)
-        let currentMonthStart = obterInicioRevolucaoSolar(dataNasc);
+        const rsTimestamp = obterTimestampRevolucaoSolar();
 
-        // 5. Interface
         let html = `
             <div style="max-width: 900px; margin: 0 auto; font-family: 'Montserrat', sans-serif; color: #0f172a; padding: 15px;">
                 
@@ -129,6 +117,15 @@
                     <tbody>
         `;
 
+        let baseMonthStart = rsTimestamp;
+        if (!baseMonthStart) {
+            let rsAno = hoje.getFullYear();
+            const dataAnivEsteAno = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
+            if (hoje < dataAnivEsteAno) rsAno--;
+            baseMonthStart = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+        }
+
+        let currentMonthStart = baseMonthStart;
         const monthlyCache = [];
 
         for (let i = 0; i < 12; i++) {
@@ -150,37 +147,45 @@
         html += `</tbody></table>`;
 
         html += `<h3 style="font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; text-transform: uppercase; margin-bottom: 10px;">Passos Diários (60 Horas)</h3>`;
-        
-        monthlyCache.forEach(m => {
+
+        if (!rsTimestamp) {
             html += `
-                <details style="margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #f8fafc;">
-                    <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                        Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
-                    </summary>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; background: #ffffff;">
-                        <thead>
-                            <tr style="background: #f1f5f9; color: #103b70;">
-                                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Passo</th>
-                                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Signo</th>
-                                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Início (60h)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px; text-align: center; color: #991b1b; font-size: 13px; font-weight: 600; margin-bottom: 20px;">
+                    Calcule a Revolução Solar do ano profectado para obter os dados do passo diário.
+                </div>
             `;
-            let dailyStart = m.start;
-            for (let d = 0; d < 12; d++) {
-                const dSignIdx = (m.signIdx + d) % 12;
+        } else {
+            monthlyCache.forEach(m => {
                 html += `
-                    <tr>
-                        <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">Passo ${d + 1}</td>
-                        <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
-                        <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(dailyStart)}</td>
-                    </tr>
+                    <details style="margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #f8fafc;">
+                        <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                            Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
+                        </summary>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; background: #ffffff;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #103b70;">
+                                    <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Passo</th>
+                                    <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Signo</th>
+                                    <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Início (60h)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                 `;
-                dailyStart += DAILY_STEP_MS;
-            }
-            html += `</tbody></table></details>`;
-        });
+                let dailyStart = m.start;
+                for (let d = 0; d < 12; d++) {
+                    const dSignIdx = (m.signIdx + d) % 12;
+                    html += `
+                        <tr>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">Passo ${d + 1}</td>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(dailyStart)}</td>
+                        </tr>
+                    `;
+                    dailyStart += DAILY_STEP_MS;
+                }
+                html += `</tbody></table></details>`;
+            });
+        }
 
         html += `</div>`;
         container.innerHTML = html;
