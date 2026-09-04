@@ -25,7 +25,7 @@
         `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
         `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
         `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="55" x2="64" y2="55"></line>`,
-        `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" points="52,53 57,58 52,63 "></polyline>`,
+        `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,52V12c0,0,0-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" points="52,53 57,58 52,63 "></polyline>`,
         `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="1" y1="28" x2="36" y2="63"></line>`,
         `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
         `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
@@ -128,9 +128,9 @@
         const rsTimestamp = obterTimestampRevolucaoSolar();
 
         let html = `
-            <div style="max-width: 900px; margin: 0 auto; font-family: 'Montserrat', sans-serif; color: #0f172a; padding: 15px;">
+            <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
                 
-                <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                     <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 10px 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
                     <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center;">
                         <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
@@ -138,17 +138,22 @@
                     </div>
                 </div>
 
-                <h3 style="font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; text-transform: uppercase; margin-bottom: 10px;">Profecção Mensal (30d 10h 30m)</h3>
-                <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #cbd5e1; font-size: 13px; margin-bottom: 25px;">
-                    <thead>
-                        <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                            <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Mês</th>
-                            <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Signo</th>
-                            <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Regente</th>
-                            <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Início do Período</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.08);">
+                    <div style="border-bottom: 1px solid #fef08a; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                        <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal (30d 10h 30m)</h3>
+                    </div>
+
+                    <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                        <table style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
+                                    <th style="padding: 10px 12px; text-align: center;">Mês</th>
+                                    <th style="padding: 10px 12px; text-align: center;">Signo</th>
+                                    <th style="padding: 10px 12px; text-align: center;">Regente</th>
+                                    <th style="padding: 10px 12px; text-align: left;">Início do Período</th>
+                                </tr>
+                            </thead>
+                            <tbody>
         `;
 
         let baseMonthStart = rsTimestamp;
@@ -168,60 +173,66 @@
             monthlyCache.push({ monthNum: i + 1, signIdx: mSignIdx, start: currentMonthStart });
 
             html += `
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;"><strong>Mês ${i + 1}</strong></td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(mSignIdx, 20)}</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(currentMonthStart)}</td>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px 12px; text-align: center;"><strong>Mês ${i + 1}</strong></td>
+                    <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtml(mSignIdx, 20)}</td>
+                    <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
+                    <td style="padding: 10px 12px; text-align: left;">${formatarData(currentMonthStart)}</td>
                 </tr>
             `;
             currentMonthStart += MONTH_MS;
         }
 
-        html += `</tbody></table>`;
+        html += `</tbody></table></div></div>`;
 
-        html += `<h3 style="font-family: 'Cinzel', serif; color: #103b70; font-size: 15px; text-transform: uppercase; margin-bottom: 10px;">Passos Diários (60 Horas)</h3>`;
+        html += `
+            <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px; margin-top: 25px; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.08);">
+                <div style="border-bottom: 1px solid #fef08a; padding-bottom: 8px; margin-bottom: 14px;">
+                    <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Passos Diários (60 Horas)</h3>
+                </div>
+        `;
 
         if (!rsTimestamp) {
             html += `
-                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px; text-align: center; color: #991b1b; font-size: 13px; font-weight: 600; margin-bottom: 20px;">
+                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px; text-align: center; color: #991b1b; font-size: 13px; font-weight: 600;">
                     Calcule a Revolução Solar do ano profectado para obter os dados do passo diário.
                 </div>
             `;
         } else {
             monthlyCache.forEach(m => {
                 html += `
-                    <details style="margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #f8fafc;">
+                    <details style="margin-bottom: 8px; border: 1px solid #d4af37; border-radius: 8px; padding: 10px; background: #ffffff;">
                         <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
                             Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
                         </summary>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; background: #ffffff;">
-                            <thead>
-                                <tr style="background: #f1f5f9; color: #103b70;">
-                                    <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Passo</th>
-                                    <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Signo</th>
-                                    <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: center;">Início (60h)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-top: 8px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                <thead>
+                                    <tr style="background: #f1f5f9; color: #103b70;">
+                                        <th style="padding: 8px; text-align: center;">Passo</th>
+                                        <th style="padding: 8px; text-align: center;">Signo</th>
+                                        <th style="padding: 8px; text-align: left;">Início (60h)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                 `;
                 let dailyStart = m.start;
                 for (let d = 0; d < 12; d++) {
                     const dSignIdx = (m.signIdx + d) % 12;
                     html += `
-                        <tr>
-                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">Passo ${d + 1}</td>
-                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
-                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(dailyStart)}</td>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 6px; text-align: center;">Passo ${d + 1}</td>
+                            <td style="padding: 6px; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
+                            <td style="padding: 6px; text-align: left;">${formatarData(dailyStart)}</td>
                         </tr>
                     `;
                     dailyStart += DAILY_STEP_MS;
                 }
-                html += `</tbody></table></details>`;
+                html += `</tbody></table></div></details>`;
             });
         }
 
-        html += `</div>`;
+        html += `</div></div>`;
         container.innerHTML = html;
     }
 
