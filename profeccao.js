@@ -108,7 +108,7 @@
         return null;
     }
 
-    function iniciarModuloProfeccao() {
+        async function iniciarModuloProfeccao() {
         const container = document.getElementById('mandala-container');
         if (!container) return;
 
@@ -136,7 +136,51 @@
         const houseNumber = (idade % 12) + 1;
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
-        const rsTimestamp = obterTimestampRevolucaoSolar();
+        // BUSCA AUTOMÁTICA DA REVOLUÇÃO SOLAR CASO NÃO EXISTA
+        let rsTimestamp = obterTimestampRevolucaoSolar();
+        const anoAlvoRS = dataNasc.getFullYear() + idade;
+
+        if (!rsTimestamp || (new Date(rsTimestamp).getFullYear() !== anoAlvoRS && new Date(rsTimestamp).getFullYear() !== anoAlvoRS + 1)) {
+            try {
+                const diaStr = String(dataNasc.getDate()).padStart(2, '0');
+                const mesStr = String(dataNasc.getMonth() + 1).padStart(2, '0');
+                const dataFormatada = `${dataNasc.getFullYear()}-${mesStr}-${diaStr}`;
+                const horaStr = String(dataNasc.getHours()).padStart(2, '0') + ":" + String(dataNasc.getMinutes()).padStart(2, '0');
+                
+                const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat) ? currentGeo.lat : -23.5505;
+                const lon = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lon) ? currentGeo.lon : -46.6333;
+                const fuso = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+
+                const urlSolar = `https://motor-astrologia.vercel.app/api/revolucao?data=${dataFormatada}&hora=${horaStr}&lat=${lat}&lon=${lon}&fuso=${fuso}&ano=${anoAlvoRS}`;
+                
+                const resSolar = await fetch(urlSolar);
+                if (resSolar.ok) {
+                    const apiJson = await resSolar.json();
+                    let horaExataRS = apiJson.momento_exato ? apiJson.momento_exato.hora_local : "";
+                    let dataExataRS = apiJson.momento_exato ? apiJson.momento_exato.data_utc : "";
+
+                    let anoR = anoAlvoRS, mesR = dataNasc.getMonth(), diaR = dataNasc.getDate(), horaR = 12, minR = 0;
+
+                    if (dataExataRS && dataExataRS.includes('-')) {
+                        const pD = dataExataRS.split('-');
+                        anoR = parseInt(pD[0]) || anoAlvoRS;
+                        mesR = (parseInt(pD[1]) || 1) - 1;
+                        diaR = parseInt(pD[2]) || dataNasc.getDate();
+                    }
+
+                    if (horaExataRS && horaExataRS.includes(':')) {
+                        const pH = horaExataRS.split(':');
+                        horaR = parseInt(pH[0]) || 0;
+                        minR = parseInt(pH[1]) || 0;
+                    }
+
+                    window.currentSolarReturnDate = new Date(anoR, mesR, diaR, horaR, minR);
+                    rsTimestamp = window.currentSolarReturnDate.getTime();
+                }
+            } catch (err) {
+                console.warn("Falha na busca automática da RS para Profecção:", err);
+            }
+        }
 
         let html = `
             <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
@@ -211,45 +255,37 @@
                 </div>
         `;
 
-        if (!rsTimestamp) {
+        monthlyCache.forEach(m => {
             html += `
-                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px; text-align: center; color: #991b1b; font-size: 13px; font-weight: 600;">
-                    Calcule a Revolução Solar do ano profectado para obter os dados do passo diário.
-                </div>
+                <details style="margin-bottom: 8px; border: 1px solid #d4af37; border-radius: 8px; padding: 10px; background: #ffffff;">
+                    <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
+                    </summary>
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-top: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #103b70;">
+                                    <th style="padding: 8px; text-align: center;">Passo</th>
+                                    <th style="padding: 8px; text-align: center;">Signo</th>
+                                    <th style="padding: 8px; text-align: left;">Início (60h)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
             `;
-        } else {
-            monthlyCache.forEach(m => {
+            let dailyStart = m.start;
+            for (let d = 0; d < 12; d++) {
+                const dSignIdx = (m.signIdx + d) % 12;
                 html += `
-                    <details style="margin-bottom: 8px; border: 1px solid #d4af37; border-radius: 8px; padding: 10px; background: #ffffff;">
-                        <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                            Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
-                        </summary>
-                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-top: 8px;">
-                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                <thead>
-                                    <tr style="background: #f1f5f9; color: #103b70;">
-                                        <th style="padding: 8px; text-align: center;">Passo</th>
-                                        <th style="padding: 8px; text-align: center;">Signo</th>
-                                        <th style="padding: 8px; text-align: left;">Início (60h)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 6px; text-align: center;">Passo ${d + 1}</td>
+                        <td style="padding: 6px; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
+                        <td style="padding: 6px; text-align: left;">${formatarData(dailyStart)}</td>
+                    </tr>
                 `;
-                let dailyStart = m.start;
-                for (let d = 0; d < 12; d++) {
-                    const dSignIdx = (m.signIdx + d) % 12;
-                    html += `
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 6px; text-align: center;">Passo ${d + 1}</td>
-                            <td style="padding: 6px; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
-                            <td style="padding: 6px; text-align: left;">${formatarData(dailyStart)}</td>
-                        </tr>
-                    `;
-                    dailyStart += DAILY_STEP_MS;
-                }
-                html += `</tbody></table></div></details>`;
-            });
-        }
+                dailyStart += DAILY_STEP_MS;
+            }
+            html += `</tbody></table></div></details>`;
+        });
 
         html += `</div></div>`;
         container.innerHTML = html;
