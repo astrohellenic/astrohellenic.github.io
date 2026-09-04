@@ -457,7 +457,9 @@ if (modulo === 'mandala' || modulo === 'radix') {
   else if (modulo === 'tabelaTecnica') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloTabelaTecnica === 'function') iniciarModuloTabelaTecnica();
-  }
+    const cPainel = document.getElementById('painel-tecnico-container');
+if (cPainel) cPainel.style.display = 'none'; 
+  }  
   // 3. REVOLUÇÃO SOLAR (Solzinho)
   else if (modulo === 'revolucao') {
     if (cRev) {
