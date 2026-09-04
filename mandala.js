@@ -903,10 +903,42 @@ function renderMandala(dadosNovos) {
     ctx.fillRect(0, 0, 1920, 2300);
     ctx.drawImage(imgLoader, 0, 0, 1920, 2300);
 
-    lastRenderedPngUrl = canvas.toDataURL('image/png');
-    container.innerHTML = `<img src="${lastRenderedPngUrl}" alt="Mandala Astrológica">`;
+        lastRenderedPngUrl = canvas.toDataURL('image/png');
+
+    const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
+    const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
+    const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+
+    container.innerHTML = `
+      <div style="width: 100%; max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 12px; height: 100%;">
+        
+        <!-- CABEÇALHO PADRONIZADO (CREME / DOURADO) -->
+        <div style="width: 100%; background: #fffdf5; padding: 14px 18px; border-radius: 12px; border: 1.5px solid #d4af37; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
+          <div style="text-align: left;">
+            <h2 style="font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
+            <div style="font-size: 11px; color: #475569; font-weight: 500; margin-top: 2px;">
+              ${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 600; margin-top: 1px;">
+              Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <span style="color: #9a6d18; margin-left: 4px;">${sectText}</span>
+            </div>
+          </div>
+
+          <!-- LADO DIREITO DO CABEÇALHO (LIVRE PARA O FUTURO) -->
+          <div id="mandala-header-right-slot" style="display: flex; align-items: center; gap: 8px;">
+          </div>
+        </div>
+
+        <!-- CONTAINER DA MANDALA CENTRALIZADA E AJUSTADA À TELA -->
+        <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; min-height: 0; overflow: hidden;">
+          <img src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; border-radius: 8px;">
+        </div>
+
+      </div>
+    `;
+
     URL.revokeObjectURL(blobURL);
-     
+
            try {
       // Localiza o container da mandala
       const mandalaElem = document.getElementById('mandala-container');
