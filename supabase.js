@@ -449,10 +449,8 @@ function abrirModuloTecnica(modulo) {
 // 1. MANDALA / MAPA NATAL (Globinho)
 if (modulo === 'mandala' || modulo === 'radix') {
   if (cRadix) cRadix.style.display = 'block';
-  if (typeof renderMandala === 'function') {
-    renderMandala();
+  if (typeof renderMandala === 'function') renderMandala();
   }
-}
   // 2. TABELA TÉCNICA
     else if (modulo === 'tabelaTecnica') {
     if (cRadix) cRadix.style.display = 'block';
@@ -460,11 +458,9 @@ if (modulo === 'mandala' || modulo === 'radix') {
   }  
   // 3. REVOLUÇÃO SOLAR (Solzinho)
   else if (modulo === 'revolucao') {
-    if (cRev) {
-      cRev.style.display = 'block';
+    if (cRev) cRev.style.display = 'block';
       if (typeof iniciarModuloRevolucao === 'function') iniciarModuloRevolucao();
-    }
-  } 
+    } 
   // 4. PROFECÇÃO (Setinha)
   else if (modulo === 'profeccao') {
     if (cRadix) cRadix.style.display = 'block';
