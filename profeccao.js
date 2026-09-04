@@ -1,17 +1,17 @@
 (function() {
     const SIGNS = [
-        { ruler: "Marte" },
-        { ruler: "Vênus" },
-        { ruler: "Mercúrio" },
-        { ruler: "Lua" },
-        { ruler: "Sol" },
-        { ruler: "Mercúrio" },
-        { ruler: "Vênus" },
-        { ruler: "Marte" },
-        { ruler: "Júpiter" },
-        { ruler: "Saturno" },
-        { ruler: "Saturno" },
-        { ruler: "Júpiter" }
+        { ruler: "Mars", rulerName: "Marte" },
+        { ruler: "Venus", rulerName: "Vênus" },
+        { ruler: "Mercury", rulerName: "Mercúrio" },
+        { ruler: "Moon", rulerName: "Lua" },
+        { ruler: "Sun", rulerName: "Sol" },
+        { ruler: "Mercury", rulerName: "Mercúrio" },
+        { ruler: "Venus", rulerName: "Vênus" },
+        { ruler: "Mars", rulerName: "Marte" },
+        { ruler: "Jupiter", rulerName: "Júpiter" },
+        { ruler: "Saturn", rulerName: "Saturno" },
+        { ruler: "Saturn", rulerName: "Saturno" },
+        { ruler: "Jupiter", rulerName: "Júpiter" }
     ];
 
     const SIGN_ELEMENTS = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
@@ -39,6 +39,40 @@
     function getSignSvgHtml(signIdx, size = 18) {
         const color = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[signIdx]];
         return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; display: inline-block; vertical-align: middle;">${MONOLINE_ZODIAC_SVGS[signIdx]}</svg>`;
+    }
+
+    function getPlanet3DSVG(planetId, size = 34) {
+        const planetSVGs = {
+            Sun: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pSun" cx="35%" cy="32%" r="68%"><stop offset="0%" stop-color="#fffbeb" /><stop offset="25%" stop-color="#fde047" /><stop offset="60%" stop-color="#f59e0b" /><stop offset="88%" stop-color="#d97706" /><stop offset="100%" stop-color="#92400e" /></radialGradient></defs>
+                <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25"/><circle cx="50" cy="50" r="42" fill="url(#pSun)"/><ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☉</text>
+            </svg>`,
+            Moon: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pMoon" cx="32%" cy="28%" r="70%"><stop offset="0%" stop-color="#ffffff" /><stop offset="30%" stop-color="#e2e8f0" /><stop offset="65%" stop-color="#94a3b8" /><stop offset="90%" stop-color="#475569" /><stop offset="100%" stop-color="#1e293b" /></radialGradient></defs>
+                <circle cx="50" cy="50" r="42" fill="url(#pMoon)"/><circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/><circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/><circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/><circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/><ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☽</text>
+            </svg>`,
+            Mercury: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pMerc" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#fef08a" /><stop offset="28%" stop-color="#d97706" /><stop offset="65%" stop-color="#92400e" /><stop offset="92%" stop-color="#451a03" /><stop offset="100%" stop-color="#270e02" /></radialGradient></defs>
+                <circle cx="50" cy="50" r="42" fill="url(#pMerc)"/><ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/><circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">☿</text>
+            </svg>`,
+            Venus: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pVen" cx="34%" cy="30%" r="68%"><stop offset="0%" stop-color="#ffffff" /><stop offset="30%" stop-color="#fef3c7" /><stop offset="65%" stop-color="#f59e0b" /><stop offset="90%" stop-color="#b45309" /><stop offset="100%" stop-color="#78350f" /></radialGradient></defs>
+                <circle cx="50" cy="50" r="42" fill="url(#pVen)"/><ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/><circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/><text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♀</text>
+            </svg>`,
+            Mars: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pMars" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#fca5a5" /><stop offset="25%" stop-color="#ef4444" /><stop offset="60%" stop-color="#b91c1c" /><stop offset="88%" stop-color="#7f1d1d" /><stop offset="100%" stop-color="#450a0a" /></radialGradient></defs>
+                <circle cx="50" cy="50" r="42" fill="url(#pMars)"/><ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/><ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/><circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♂</text>
+            </svg>`,
+            Jupiter: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pJup" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fffbeb" /><stop offset="30%" stop-color="#fef3c7" /><stop offset="58%" stop-color="#d4a373" /><stop offset="82%" stop-color="#a97142" /><stop offset="100%" stop-color="#6f4518" /></radialGradient><clipPath id="clipJupP"><circle cx="50" cy="50" r="42" /></clipPath></defs>
+                <circle cx="50" cy="50" r="42" fill="url(#pJup)"/><g clip-path="url(#clipJupP)" opacity="0.45"><rect x="0" y="24" width="100" height="6" fill="#8c531b" /><rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" /><rect x="0" y="49" width="100" height="11" fill="#783d19" /><rect x="0" y="64" width="100" height="6" fill="#8c531b" /><rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" /></g><ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/><text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♃</text>
+            </svg>`,
+            Saturn: `<svg width="${Math.round(size * 1.11)}" height="${size}" viewBox="-15 0 130 100" style="display: inline-block; vertical-align: middle;">
+                <defs><radialGradient id="pSat" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#fef9c3" /><stop offset="35%" stop-color="#fde047" /><stop offset="70%" stop-color="#ca8a04" /><stop offset="92%" stop-color="#854d0e" /><stop offset="100%" stop-color="#422006" /></radialGradient><linearGradient id="pRings" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95" /><stop offset="25%" stop-color="#cbd5e1" stop-opacity="0.9" /><stop offset="60%" stop-color="#94a3b8" stop-opacity="0.85" /><stop offset="85%" stop-color="#64748b" stop-opacity="0.9" /><stop offset="100%" stop-color="#334155" stop-opacity="0.95" /></linearGradient></defs>
+                <g transform="rotate(-22 50 50)"><ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#pRings)" stroke-width="5.5" opacity="0.95" /><ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/></g><circle cx="50" cy="50" r="36" fill="url(#pSat)"/><g transform="rotate(-22 50 50)"><path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#pRings)" stroke-width="5.5" /><path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/></g><ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/><text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text>
+            </svg>`
+        };
+        return planetSVGs[planetId] || '';
     }
 
     function formatarData(time) {
@@ -98,9 +132,9 @@
                 
                 <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center;">
                     <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 10px 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
-                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px;">
+                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center;">
                         <div><strong>Grande Ciclo (12a):</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
-                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} (Senhor: ${SIGNS[profectedSignIdx].ruler})</div>
+                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} (Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)})</div>
                     </div>
                 </div>
 
@@ -137,7 +171,7 @@
                 <tr>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;"><strong>Mês ${i + 1}</strong></td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${getSignSvgHtml(mSignIdx, 20)}</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; color: #1d5fa8; font-weight: bold;">${mSign.ruler}</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${formatarData(currentMonthStart)}</td>
                 </tr>
             `;
