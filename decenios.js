@@ -112,21 +112,21 @@ function renderDeceniosUI(container) {
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
       
-      <!-- CABEÇALHO COMPACTO DA FERRAMENTA -->
-      <div style="background: #ffffff; padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+      <!-- CABEÇALHO PADRONIZADO (ESTILO PROFECÇÃO) -->
+      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <div>
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
+          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
           <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
             ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")} • 
-            <strong style="color: var(--gold-dark);">${isDay ? 'Natividade Diurna' : 'Natividade Noturna'}</strong>
+            <strong style="color: #b45309;">${isDay ? 'Natividade Diurna' : 'Natividade Noturna'}</strong>
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-          <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); font-family: 'Cinzel', serif;">Planeta Inicial:</label>
-          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
+        <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #d4af37;">
+          <label style="font-size: 11px; font-weight: 700; color: #103b70; font-family: 'Cinzel', serif;">PLANETA INICIAL:</label>
+          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
             <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol (Diurno)</option>
             <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua (Noturno)</option>
           </select>
