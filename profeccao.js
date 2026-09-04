@@ -1,4 +1,13 @@
 (function() {
+    window.profeccaoOffsetAnos = 0;
+
+    window.mudarAnoProfeccao = function(delta) {
+        window.profeccaoOffsetAnos += delta;
+        if (typeof window.iniciarModuloProfeccao === 'function') {
+            window.iniciarModuloProfeccao();
+        }
+    };
+
     const SIGNS = [
         { ruler: "Mars", rulerName: "Marte" },
         { ruler: "Venus", rulerName: "Vênus" },
@@ -119,6 +128,8 @@
         if (m < 0 || (m === 0 && hoje.getDate() < dataNasc.getDate())) idade--;
         if (idade < 0) idade = 0;
 
+        idade += window.profeccaoOffsetAnos;
+
         const grandCycleHouse = Math.floor(idade / 12) + 1;
         const grandCycleSignIdx = (ascIdx + (grandCycleHouse - 1)) % 12;
 
@@ -131,7 +142,15 @@
             <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
                 
                 <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0 0 10px 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #d4af37; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
+                        
+                        <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
+                        
+                        <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #d4af37; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
+                    </div>
+
                     <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center;">
                         <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
                         <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
