@@ -67,47 +67,47 @@ function renderMenuPrincipal() {
   let htmlPastas = '';
   pastasOrdenadas.forEach(pasta => {
     htmlPastas += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color);">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
         <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="abrirConteudoPasta('${pasta}')">
-          <i class="fa-solid fa-folder" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
+          <i class="fa-solid fa-folder" style="color: #c59b27;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta"></i>
+          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta" style="color: #103b70; cursor: pointer;"></i>
+          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta" style="color: #dc2626; cursor: pointer;"></i>
         </div>
       </div>
     `;
   });
 
   sidebar.innerHTML = `
-    <div class="sidebar-header">
-      <h1 class="sidebar-title">Astro Hellenic</h1>
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <h1 class="sidebar-title" style="color: #103b70; font-family: 'Cinzel', serif; font-weight: 800;">Astro Hellenic</h1>
     </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <ul class="menu-list">
-        <li class="menu-item" onclick="abrirModalNovoMapa()">
+    <div style="flex: 1; overflow-y: auto; background: #fffdf5;">
+      <ul class="menu-list" style="border-bottom: 1px solid #e2d9c2;">
+        <li class="menu-item" onclick="abrirModalNovoMapa()" style="border-radius: 8px; margin: 4px 8px;">
           <span>Novo Mapa Astral</span>
-          <i class="fa-solid fa-user-plus"></i>
+          <i class="fa-solid fa-user-plus" style="color: #c59b27;"></i>
         </li>
       </ul>
 
-      <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); background: #f8fafc; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Pastas</span>
-        <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
+      <div style="padding: 8px 16px; border-top: 1px solid #e2d9c2; background: #fffdf5; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase;">Pastas</span>
+        <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-weight: 700; cursor: pointer;">+ Pasta</button>
       </div>
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; margin: 6px 8px; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
+          <i class="fa-solid fa-file-import" style="color: #c59b27;"></i>
           <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
         </div>
       </div>
       ${htmlPastas}
     </div>
     
-    <div style="padding: 16px; border-top: 2px solid var(--border-color); background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
-      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Configurações</span>
-      <i class="fa-solid fa-gear" style="font-size: 16px; color: #64748b;"></i>
+    <div style="padding: 16px; border-top: 2px solid #c59b27; background: #fffdf5; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
+      <span style="font-size: 14px; font-weight: 700; color: #103b70;">Configurações</span>
+      <i class="fa-solid fa-gear" style="font-size: 16px; color: #c59b27;"></i>
     </div>
   `;
 }
@@ -118,31 +118,31 @@ function abrirNavegacaoConfiguracoes() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
-      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">CONFIGURAÇÕES</span>
+      <span style="font-size: 12px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">CONFIGURAÇÕES</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto;">
+    <div style="flex: 1; overflow-y: auto; background: #fffdf5; padding: 8px 0;">
       
       <!-- OPÇÃO: CAPTAÇÃO DE CLIENTES -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesCaptacao()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesCaptacao()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-bullhorn" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Captação de Clientes</span>
+          <i class="fa-solid fa-bullhorn" style="color: #c59b27;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Captação de Clientes</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
       </div>
 
       <!-- OPÇÃO: SEGURANÇA E CONTA -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConfiguracoesSeguranca()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesSeguranca()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-shield-halved" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">Segurança e Conta</span>
+          <i class="fa-solid fa-shield-halved" style="color: #c59b27;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Segurança e Conta</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
       </div>
 
     </div>
@@ -155,14 +155,14 @@ async function abrirConfiguracoesCaptacao() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">CAPTAÇÃO DE CLIENTES</span>
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">CAPTAÇÃO DE CLIENTES</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
       
       <div style="font-size: 11px; color: #64748b; margin-bottom: 16px; line-height: 1.4;">
         Configure o formulário externo de coleta de dados dos seus clientes.
@@ -170,46 +170,46 @@ async function abrirConfiguracoesCaptacao() {
 
       <!-- LOGOTIPO (UPLOAD DIRETO + PREVIEW) -->
       <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
+        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
         
         <div id="logoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
-          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px;">
+          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #c59b27; border-radius: 8px; padding: 4px; background: #ffffff;">
         </div>
 
         <input type="file" id="cfgLogoFile" accept="image/*" onchange="fazerUploadLogo(this)" style="display: none;">
-        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #f1f5f9; color: #334155; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <i class="fa-solid fa-upload"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
+        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #ffffff; color: #103b70; border: 1px dashed #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i class="fa-solid fa-upload" style="color: #c59b27;"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
         </button>
         <input type="hidden" id="cfgLogoUrl">
       </div>
       
       <!-- LINK DO FORMULÁRIO PÚBLICO -->
-<div style="margin-bottom: 16px;">
-  <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">
-    Seu Link Exclusivo do Formulário
-  </label>
-  <div style="display: flex; gap: 8px;">
-    <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background-color: #f8fafc; color: #475569;" />
-    <button type="button" onclick="copiarLinkFormulario()" style="padding: 8px 16px; background-color: var(--primary-blue, #1e3a8a); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; whitespace: nowrap;">
-      Copiar
-    </button>
-  </div>
-</div>
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 6px;">
+          Seu Link Exclusivo do Formulário
+        </label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background-color: #ffffff; color: #103b70;" />
+          <button type="button" onclick="copiarLinkFormulario()" style="padding: 8px 16px; background-color: #103b70; color: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            Copiar
+          </button>
+        </div>
+      </div>
 
       <!-- WEBHOOK -->
       <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">URL do Webhook (Integração)</label>
-        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">URL do Webhook (Integração)</label>
+        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
       </div>
 
       <!-- REDIRECIONAMENTO -->
       <div style="margin-bottom: 20px;">
-        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
-        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
+        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
       </div>
 
       <!-- BOTÃO SALVAR -->
-      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
         Salvar Configurações
       </button>
 
@@ -365,45 +365,44 @@ async function abrirConfiguracoesSeguranca() {
   const manterLogado = localStorage.getItem('astro_keep_logged') === 'true';
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar">
-        <i class="fa-solid fa-chevron-left"></i> Voltar
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">SEGURANÇA E CONTA</span>
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">SEGURANÇA E CONTA</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
       
       <!-- USUÁRIO CONECTADO -->
-      <div style="margin-bottom: 20px; background: #f1f5f9; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Conta Conectada</div>
-        <div style="font-size: 13px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtml(userEmail)}</div>
+      <div style="margin-bottom: 20px; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #c59b27;">
+        <div style="font-size: 11px; font-weight: 700; color: #c59b27; text-transform: uppercase; margin-bottom: 4px;">Conta Conectada</div>
+        <div style="font-size: 13px; font-weight: 600; color: #103b70; word-break: break-all;">${escapeHtml(userEmail)}</div>
       </div>
 
-      <!-- OPCÃO MANTER LOGADO -->
-      <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-        <span style="font-size: 13px; font-weight: 600; color: #334155;">Manter-se logado</span>
-        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+      <!-- OPÇÃO MANTER LOGADO -->
+      <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2d9c2; padding-bottom: 12px;">
+        <span style="font-size: 13px; font-weight: 600; color: #103b70;">Manter-se logado</span>
+        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #103b70;">
       </div>
 
       <!-- ALTERAR SENHA -->
       <div style="margin-bottom: 24px;">
-        <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">Alterar Senha</div>
-        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; box-sizing: border-box;">
-        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: #103b70; color: #ffffff; border: none; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 8px;">Alterar Senha</div>
+        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 13px; margin-bottom: 8px; box-sizing: border-box; background: #ffffff; color: #103b70;">
+        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
           Atualizar Senha
         </button>
       </div>
 
       <!-- LOGOUT (SAIR) -->
-      <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
         <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
       </button>
 
     </div>
   `;
 }
-
 
 function alternarManterLogado(status) {
   localStorage.setItem('astro_keep_logged', status);
@@ -501,17 +500,17 @@ function abrirNavegacaoPastas() {
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   let html = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">PASTAS</span>
-      <button class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
+     <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <span style="font-size: 13px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">PASTAS</span>
+      <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 10px; font-weight: 700; cursor: pointer;">+ Pasta</button>
     </div>
-    <div style="flex: 1; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 2px solid var(--border-color); background: #f1f5f9; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
+    <div style="flex: 1; overflow-y: auto; background: #fffdf5; padding: 4px 0;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: #103b70;"></i>
+          <i class="fa-solid fa-file-import" style="color: #c59b27;"></i>
           <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #103b70;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
       </div>
   `;
 
@@ -519,15 +518,15 @@ function abrirNavegacaoPastas() {
     const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
 
     html += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
+       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-folder" style="color: var(--gold-dark);"></i>
-          <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(pasta)}</span>
+          <i class="fa-solid fa-folder" style="color: #c59b27;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta"></i>
-          <i class="fa-solid fa-chevron-right" style="font-size: 10px; color: #94a3b8; margin-left: 4px;"></i>
+          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta" style="color: #103b70; cursor: pointer;"></i>
+          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta" style="color: #dc2626; cursor: pointer;"></i>
+          <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27; margin-left: 4px;"></i>
         </div>
       </div>
     `;
@@ -546,34 +545,34 @@ async function abrirConteudoPasta(nomePasta) {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
-  sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #f8fafc;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas">
-        <i class="fa-solid fa-chevron-left"></i>
+    sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i>
       </button>
-      <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(nomePasta)}</span>
-      <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: #dc2626;">
+      <span style="font-size: 13px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">${escapeHtml(nomePasta)}</span>
+      <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px; background: #fee2e2; padding: 4px 8px; cursor: pointer;">
         <i class="fa-solid fa-trash-can"></i>
       </button>
     </div>
 
-    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); background: #ffffff;">
+    <div style="padding: 10px 12px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
       <div class="search-box-container" style="margin-bottom: 0;">
-        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)">
+        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)" style="border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
       </div>
     </div>
 
-    <div id="selectionActionBar" style="display: none; padding: 8px 12px; background: #fee2e2; border-bottom: 1px solid #fca5a5; justify-content: space-between; align-items: center;">
+    <div id="selectionActionBar" style="display: none; padding: 8px 12px; background: #fee2e2; border-bottom: 1px solid #fca5a5; justify-content: space-between; align-items: center; margin: 4px 8px; border-radius: 8px;">
       <label style="font-size: 11px; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-        <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)"> Selecionar Todos
+        <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)" style="accent-color: #dc2626;"> Selecionar Todos
       </label>
-      <button onclick="confirmarExclusaoSelecionados()" style="background: #dc2626; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">
+      <button onclick="confirmarExclusaoSelecionados()" style="background: #dc2626; color: #fff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
         Apagar (<span id="selectedCount">0</span>)
       </button>
     </div>
 
-    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0;">
-      <div style="padding: 16px; text-align: center; font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mapas...</div>
+    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0; background: #fffdf5;">
+      <div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Carregando mapas...</div>
     </div>
   `;
 
@@ -641,33 +640,33 @@ function renderListaMapas(lista) {
     const cidStr = item.cidade || "Local n/i";
     const isChecked = selectedMapIds.has(item.id) ? 'checked' : '';
 
-    // Trata o número do WhatsApp para o link direto
+ // Trata o número do WhatsApp para o link direto
     const numWhats = item.whatsapp ? item.whatsapp.replace(/\D/g, '') : '';
     const linkWhats = numWhats ? (numWhats.length <= 11 ? `55${numWhats}` : numWhats) : '';
 
     html += `
-      <div class="client-card-item" id="card-item-${index}">
-        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer;">` : ''}
+      <div class="client-card-item" id="card-item-${index}" style="margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; padding: 10px 12px; transition: all 0.15s ease;">
+        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer; accent-color: #103b70;">` : ''}
         <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
-          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #64748b; margin-left: 4px;">${escapeHtml(tipoStr)}</span></div>
-          <div class="client-meta">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+          <div class="client-name" style="color: #103b70; font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #c59b27; margin-left: 6px;">${escapeHtml(tipoStr)}</span></div>
+          <div class="client-meta" style="color: #64748b; font-size: 10px; margin-top: 2px;">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
           <div class="card-actions" style="display: flex; gap: 6px; align-items: center;">
             ${linkWhats ? `
-              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp" style="color: #25d366;">
+              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp" style="color: #25d366; background: transparent; border: none; cursor: pointer;">
                 <i class="fa-brands fa-whatsapp"></i>
               </button>
             ` : ''}
             ${item.email ? `
-              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail" style="color: #0284c7;">
+              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail" style="color: #c59b27; background: transparent; border: none; cursor: pointer;">
                 <i class="fa-solid fa-envelope"></i>
               </button>
             ` : ''}
-            <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar">
+            <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar" style="color: #103b70; background: transparent; border: none; cursor: pointer;">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar">
+            <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar" style="color: #dc2626; background: transparent; border: none; cursor: pointer;">
               <i class="fa-solid fa-trash"></i>
             </button>
           </div>
@@ -1026,57 +1025,57 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
     document.body.appendChild(modal);
   }
 
-  modal.innerHTML = `
-    <div style="background: #ffffff; width: 90%; max-width: 420px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+    modal.innerHTML = `
+    <div style="background: #fffdf5; width: 90%; max-width: 420px; border-radius: 12px; border: 2px solid #c59b27; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2d9c2; padding-bottom: 8px;">
         <h3 style="margin:0; font-size: 16px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif;">Salvar Mapa Atual</h3>
-        <button onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer;">&times;</button>
+        <button onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="background: none; border: none; font-size: 20px; color: #c59b27; cursor: pointer; font-weight: bold;">&times;</button>
       </div>
 
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Salvar na Pasta</label>
-          <span onclick="criarPastaDiretoNoModalSalvamento()" style="font-size: 11px; font-weight: 700; color: var(--primary-blue); cursor: pointer; text-decoration: underline;">+ Criar Nova Pasta</span>
+          <label style="font-size: 11px; font-weight: 700; color: #103b70;">Salvar na Pasta</label>
+          <span onclick="criarPastaDiretoNoModalSalvamento()" style="font-size: 11px; font-weight: 700; color: #c59b27; cursor: pointer; text-decoration: underline;">+ Criar Nova Pasta</span>
         </div>
-        <select id="saveMapFolderSelect" class="modal-select">${optionsPastas}</select>
+        <select id="saveMapFolderSelect" class="modal-select" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70;">${optionsPastas}</select>
       </div>
 
       <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
-        <select id="saveMapTipoSelect" class="modal-select">
+        <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Tipo de Mapa</label>
+        <select id="saveMapTipoSelect" class="modal-select" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70;">
           <option value="Trânsito" selected>Trânsito</option>
           <option value="Pergunta">Pergunta</option>
           <option value="Evento">Evento</option>
           <option value="Eleição">Eleição</option>
           <option value="Natal">Natal</option>
-          ⁠<option value="Revolução Solar">Revolução Solar</option>
+          <option value="Revolução Solar">Revolução Solar</option>
         </select>
       </div>
 
       <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Título da Pergunta</label>
-        <input type="text" id="saveMapNameInput" class="modal-input" value="${escapeHtml(nomePadrao)}">
+        <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Nome Completo / Título da Pergunta</label>
+        <input type="text" id="saveMapNameInput" class="modal-input" value="${escapeHtml(nomePadrao)}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
       </div>
 
       <div style="display: flex; gap: 8px;">
         <div style="flex: 1;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data</label>
-          <input type="text" id="saveMapDataInput" class="modal-input" value="${dia}/${mes}/${ano}">
+          <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Data</label>
+          <input type="text" id="saveMapDataInput" class="modal-input" value="${dia}/${mes}/${ano}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
         </div>
         <div style="flex: 1;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário</label>
-          <input type="text" id="saveMapHoraInput" class="modal-input" value="${hora}:${min}">
+          <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Horário</label>
+          <input type="text" id="saveMapHoraInput" class="modal-input" value="${hora}:${min}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
         </div>
       </div>
 
       <div>
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Local</label>
-        <input type="text" id="saveMapCidadeInput" class="modal-input" value="${escapeHtml(currentGeo.city)}">
+        <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Local</label>
+        <input type="text" id="saveMapCidadeInput" class="modal-input" value="${escapeHtml(currentGeo.city)}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
       </div>
 
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'">Cancelar</button>
-        <button type="button" class="btn-primary" onclick="executarSalvarMapaAtual()">Salvar Registro</button>
+      <div class="modal-actions" style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="padding: 8px 16px; background: #ffffff; color: #103b70; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">Cancelar</button>
+        <button type="button" class="btn-primary" onclick="executarSalvarMapaAtual()" style="padding: 8px 16px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">Salvar Registro</button>
       </div>
     </div>
   `;
