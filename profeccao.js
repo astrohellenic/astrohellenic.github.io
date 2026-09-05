@@ -183,41 +183,43 @@
         }
 
         let html = `
-            <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div id="profeccao-container" 
+         oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
+         style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
+        
+        <div style="background: #fffdf5; border: 1.5px solid #c59b27; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
                 
-                <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                        <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #d4af37; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
-                        
-                        <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
-                        
-                        <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #d4af37; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
-                    </div>
+                <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
+                
+                <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
+            </div>
 
-                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center;">
-                        <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
-                        <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
-                    </div>
-                </div>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center; color: #103b70;">
+                <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
+                <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
+            </div>
+        </div>
 
-                <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.08);">
-                    <div style="border-bottom: 1px solid #fef08a; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                        <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal (30d 10h 30m)</h3>
-                    </div>
+        <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
+            <div style="border-bottom: 1px solid #e2d9c2; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal (30d 10h 30m)</h3>
+            </div>
 
-                    <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden; margin-top: 10px;">
-                        <table style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
-                            <thead>
-                                <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                                    <th style="padding: 10px 12px; text-align: center;">Mês</th>
-                                    <th style="padding: 10px 12px; text-align: center;">Signo</th>
-                                    <th style="padding: 10px 12px; text-align: center;">Regente</th>
-                                    <th style="padding: 10px 12px; text-align: left;">Início do Período</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-        `;
+            <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                <table style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
+                    <thead>
+                        <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
+                            <th style="padding: 10px 12px; text-align: center;">Mês</th>
+                            <th style="padding: 10px 12px; text-align: center;">Signo</th>
+                            <th style="padding: 10px 12px; text-align: center;">Regente</th>
+                            <th style="padding: 10px 12px; text-align: left;">Início do Período</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+`;
 
         let baseMonthStart = rsTimestamp;
         if (!baseMonthStart) {
