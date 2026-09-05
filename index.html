@@ -149,13 +149,13 @@ main, #app, .app-container, .main-content {
             display: none;
         }
 
-        /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL) */
+            /* PAINEL LATERAL FLUTUANTE (DRAWER RETRÁTIL) */
         #sidebar {
             width: 320px;
             height: 100vh;
             height: 100dvh;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
+            background: #fffdf5;
+            border-right: 2px solid #c59b27;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -174,8 +174,8 @@ main, #app, .app-container, .main-content {
 
         .sidebar-header {
             padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-            background: #fafafa;
+            border-bottom: 1px solid #e2d9c2;
+            background: #fffdf5;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -185,7 +185,7 @@ main, #app, .app-container, .main-content {
             font-family: 'Cinzel', serif;
             font-size: 18px;
             font-weight: 800;
-            color: var(--primary-blue);
+            color: #103b70;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -193,14 +193,14 @@ main, #app, .app-container, .main-content {
         .menu-list {
             list-style: none;
             padding: 8px 0;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e2d9c2;
         }
 
         .menu-item {
             padding: 12px 16px;
             font-size: 13px;
             font-weight: 600;
-            color: #334155;
+            color: #103b70;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -209,12 +209,12 @@ main, #app, .app-container, .main-content {
         }
 
         .menu-item:hover, .menu-item.active {
-            background: #f1f5f9;
-            color: var(--primary-blue);
+            background: #f7f5ed;
+            color: #9a6d18;
         }
 
         .menu-item i {
-            color: var(--gold-dark);
+            color: #9a6d18;
         }
 
         .database-section {
@@ -223,6 +223,7 @@ main, #app, .app-container, .main-content {
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            background: #fffdf5;
         }
 
         .folders-container {
@@ -232,17 +233,17 @@ main, #app, .app-container, .main-content {
             overflow-x: auto;
             padding-bottom: 8px;
             margin-bottom: 8px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e2d9c2;
         }
 
         .folder-tab-btn {
-            background: #fafafa;
-            border: 1px solid var(--border-color);
+            background: #ffffff;
+            border: 1px solid #c59b27;
             border-radius: 6px;
             padding: 6px 8px;
             font-size: 11px;
             font-weight: 700;
-            color: #475569;
+            color: #103b70;
             cursor: pointer;
             white-space: nowrap;
             display: flex;
@@ -252,13 +253,13 @@ main, #app, .app-container, .main-content {
         }
 
         .folder-tab-btn:hover {
-            background: #f1f5f9;
+            background: #f7f5ed;
         }
 
         .folder-tab-btn.active {
-            background: #e0f2fe;
-            color: var(--primary-blue);
-            border-color: #93c5fd;
+            background: #103b70;
+            color: #fffdf5;
+            border-color: #103b70;
         }
 
         .folder-action-icon {
@@ -273,11 +274,11 @@ main, #app, .app-container, .main-content {
         .add-folder-btn {
             font-size: 11px;
             font-weight: 700;
-            color: var(--primary-blue);
+            color: #103b70;
             padding: 6px 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #c59b27;
             border-radius: 6px;
-            background: #fafafa;
+            background: #ffffff;
             cursor: pointer;
             white-space: nowrap;
         }
@@ -291,23 +292,24 @@ main, #app, .app-container, .main-content {
         .client-search-input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #c59b27;
             border-radius: 6px;
             font-size: 12px;
             outline: none;
+            background: #ffffff;
         }
 
         .client-list-container {
             flex: 1;
             overflow-y: auto;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2d9c2;
             border-radius: 6px;
-            background: #fafafa;
+            background: #ffffff;
         }
 
         .client-card-item {
             padding: 10px 12px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e2d9c2;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -316,18 +318,18 @@ main, #app, .app-container, .main-content {
         }
 
         .client-card-item:hover {
-            background: #f1f5f9;
+            background: #f7f5ed;
         }
 
         .client-card-item.selected {
-            background: #e0f2fe;
-            border-left: 4px solid var(--primary-blue);
+            background: #fdf6e2;
+            border-left: 4px solid #103b70;
         }
 
         .client-name {
             font-size: 12px;
             font-weight: 700;
-            color: var(--primary-blue);
+            color: #103b70;
         }
 
         .client-meta {
@@ -353,7 +355,7 @@ main, #app, .app-container, .main-content {
             transition: opacity 0.15s;
         }
         .action-record-btn:hover { opacity: 1; }
-        .edit-btn { color: var(--primary-blue); }
+        .edit-btn { color: #103b70; }
         .delete-btn { color: #dc2626; }
 
         /* ÁREA PRINCIPAL DA MANDALA */
