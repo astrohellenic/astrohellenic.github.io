@@ -96,19 +96,23 @@
         return `${diasSemana[d.getDay()]}, ${dia}/${mes}/${ano} às ${hora}:${min}`;
     }
 
-    function obterTimestampRevolucaoSolar() {
+    function obterTimestampRevolucaoSolar(anoAlvo) {
         if (typeof window.currentSolarReturnDate !== 'undefined' && window.currentSolarReturnDate) {
             const rsCalculada = new Date(window.currentSolarReturnDate);
-            if (!isNaN(rsCalculada.getTime())) return rsCalculada.getTime();
+            if (!isNaN(rsCalculada.getTime()) && rsCalculada.getFullYear() === anoAlvo) {
+                return rsCalculada.getTime();
+            }
         }
         if (typeof window.dadosSolar !== 'undefined' && window.dadosSolar && window.dadosSolar.dataHora) {
             const rsCalculada = new Date(window.dadosSolar.dataHora);
-            if (!isNaN(rsCalculada.getTime())) return rsCalculada.getTime();
+            if (!isNaN(rsCalculada.getTime()) && rsCalculada.getFullYear() === anoAlvo) {
+                return rsCalculada.getTime();
+            }
         }
         return null;
     }
 
-        async function iniciarModuloProfeccao() {
+    async function iniciarModuloProfeccao() {
         const container = document.getElementById('mandala-container');
         if (!container) return;
 
@@ -136,11 +140,10 @@
         const houseNumber = (idade % 12) + 1;
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
-        // BUSCA AUTOMÁTICA DA REVOLUÇÃO SOLAR CASO NÃO EXISTA
-        let rsTimestamp = obterTimestampRevolucaoSolar();
         const anoAlvoRS = dataNasc.getFullYear() + idade;
+        let rsTimestamp = obterTimestampRevolucaoSolar(anoAlvoRS);
 
-        if (!rsTimestamp || (new Date(rsTimestamp).getFullYear() !== anoAlvoRS && new Date(rsTimestamp).getFullYear() !== anoAlvoRS + 1)) {
+        if (!rsTimestamp) {
             try {
                 const diaStr = String(dataNasc.getDate()).padStart(2, '0');
                 const mesStr = String(dataNasc.getMonth() + 1).padStart(2, '0');
@@ -223,10 +226,7 @@
 
         let baseMonthStart = rsTimestamp;
         if (!baseMonthStart) {
-            let rsAno = hoje.getFullYear();
-            const dataAnivEsteAno = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes());
-            if (hoje < dataAnivEsteAno) rsAno--;
-            baseMonthStart = new Date(rsAno, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+            baseMonthStart = new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
         }
 
         let currentMonthStart = baseMonthStart;
@@ -251,15 +251,15 @@
         html += `</tbody></table></div></div>`;
 
         html += `
-            <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px; margin-top: 25px; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.08);">
-                <div style="border-bottom: 1px solid #fef08a; padding-bottom: 8px; margin-bottom: 14px;">
+            <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; border-radius: 14px; padding: 18px; margin-top: 25px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
+                <div style="border-bottom: 1px solid #e2d9c2; padding-bottom: 8px; margin-bottom: 14px;">
                     <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Passos Diários (60 Horas)</h3>
                 </div>
         `;
 
         monthlyCache.forEach(m => {
             html += `
-                <details style="margin-bottom: 8px; border: 1px solid #d4af37; border-radius: 8px; padding: 10px; background: #ffffff;">
+                <details style="margin-bottom: 8px; border: 1px solid #c59b27; border-radius: 8px; padding: 10px; background: #ffffff;">
                     <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
                         Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
                     </summary>
