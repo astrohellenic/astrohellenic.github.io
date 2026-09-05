@@ -1053,6 +1053,80 @@ body {
       }
     }, 500);
   });
+    /* FUNÇÃO GLOBAL PARA EXPORTAR QUALQUER TABELA EM PNG SEM QUEBRAR OS CLIQUES */
+function salvarModuloEmPNG(containerId, nomeArquivo) {
+  const elementoOriginal = document.getElementById(containerId);
+  if (!elementoOriginal) {
+    alert("Conteúdo não encontrado para exportar.");
+    return;
+  }
+
+  // Cria uma cópia invisível em memória para tirar a foto sem tocar na tela
+  const clone = elementoOriginal.cloneNode(true);
+  clone.style.position = 'absolute';
+  clone.style.left = '-9999px';
+  clone.style.top = '-9999px';
+  clone.style.width = elementoOriginal.offsetWidth + 'px';
+  document.body.appendChild(clone);
+
+  if (typeof html2canvas === 'function') {
+    html2canvas(clone, {
+      backgroundColor: '#ffffff',
+      scale: 2
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `${nomeArquivo || 'tabela-astrologica'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      document.body.removeChild(clone);
+    }).catch(err => {
+      console.error("Erro ao gerar PNG:", err);
+      if (document.body.contains(clone)) document.body.removeChild(clone);
+    });
+  } else {
+    alert("Biblioteca de exportação não encontrada.");
+    if (document.body.contains(clone)) document.body.removeChild(clone);
+  }
+}
+    
+/* FUNÇÃO GLOBAL PARA EXPORTAR QUALQUER TABELA EM PNG SEM QUEBRAR OS CLIQUES */
+function salvarModuloEmPNG(containerId, nomeArquivo) {
+  const elementoOriginal = document.getElementById(containerId);
+  if (!elementoOriginal) {
+    alert("Conteúdo não encontrado para exportar.");
+    return;
+  }
+
+  // Cria uma cópia invisível em memória para tirar a foto sem tocar na tela
+  const clone = elementoOriginal.cloneNode(true);
+  clone.style.position = 'absolute';
+  clone.style.left = '-9999px';
+  clone.style.top = '-9999px';
+  clone.style.width = elementoOriginal.offsetWidth + 'px';
+  document.body.appendChild(clone);
+
+  if (typeof html2canvas === 'function') {
+    html2canvas(clone, {
+      backgroundColor: '#ffffff',
+      scale: 2
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `${nomeArquivo || 'tabela-astrologica'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      document.body.removeChild(clone);
+    }).catch(err => {
+      console.error("Erro ao gerar PNG:", err);
+      if (document.body.contains(clone)) document.body.removeChild(clone);
+    });
+  } else {
+    alert("Biblioteca de exportação não encontrada.");
+    if (document.body.contains(clone)) document.body.removeChild(clone);
+  }
+}
+
 </script>
         
 </body>
