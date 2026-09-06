@@ -401,8 +401,8 @@ function carregarCeuDoMomento() {
 }
 
 function ajustarTempo(direcao) {
-  const unit = document.getElementById('stepUnit').value;
-  const amount = direcao;
+  const unitEl = document.getElementById('stepUnit');
+  const unit = unitEl ? unitEl.value : 'day';
 
   switch(unit) {
     case 'second': currentMoment.setSeconds(currentMoment.getSeconds() + amount); break;
