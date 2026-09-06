@@ -903,8 +903,8 @@ ctx.drawImage(imgLoader, 0, 0, 1920, 1920);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
 
-     container.innerHTML = `
-  <div style="width: 100%; height: calc(100vh - 70px); display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; position: relative;">
+          container.innerHTML = `
+  <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; position: relative;">
     <img src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
   </div>
 `;
