@@ -598,28 +598,34 @@ body {
               </div>
 
             </div>
+            
+        <!-- TELA DA MANDALA: agrupa o desenho + os controles exclusivos dela -->
+        <div id="mandala-screen" style="position: relative; flex: 1; display: flex; overflow: hidden;">
 
-            <!-- NAVEGADOR TEMPORAL (STEPPER) -->
-            <div class="time-stepper">
-                <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
-                <select id="stepUnit" class="time-select">
-                    <option value="second">Segundo</option>
-                    <option value="minute">Minuto</option>
-                    <option value="hour">Hora</option>
-                    <option value="day" selected>Dia</option>
-                    <option value="month">Mês</option>
-                    <option value="year">Ano</option>
-                </select>
-                <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
+            <!-- RENDERIZADOR DA MANDALA -->
+            <div id="mandala-container">
+                <div id="loadingSpinner" style="color: #64748b; font-size: 13px; font-weight: 600; text-align: center;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #103b70; margin-bottom: 8px; display: block;"></i>
+                    Gerando mapa...
+                </div>
             </div>
-        </div>
 
-        <!-- RENDERIZADOR DA MANDALA -->
-        <div id="mandala-container">
-            <div id="loadingSpinner" style="color: #64748b; font-size: 13px; font-weight: 600; text-align: center;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #103b70; margin-bottom: 8px; display: block;"></i>
-                Gerando mapa...
+            <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
+            <div id="mandala-controls-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; align-items: center; gap: 8px;">
+                <div class="time-stepper">
+                    <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
+                    <select id="stepUnit" class="time-select">
+                        <option value="second">Segundo</option>
+                        <option value="minute">Minuto</option>
+                        <option value="hour">Hora</option>
+                        <option value="day" selected>Dia</option>
+                        <option value="month">Mês</option>
+                        <option value="year">Ano</option>
+                    </select>
+                    <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
             </div>
+
         </div>
         
         <div id="revolucao-container" style="display: none;"></div>
