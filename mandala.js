@@ -1001,19 +1001,3 @@ function alternarVisaoMapaTabela() {
     }
   }
 }
-
-/* SINCRONIZA OS CONTROLES DA MANDALA: eles só aparecem quando a mandala aparece */
-(function sincronizarVisibilidadeControlesDaMandala() {
-  const mandalaEl = document.getElementById('mandala-container');
-  const overlayEl = document.getElementById('mandala-controls-overlay');
-  if (!mandalaEl || !overlayEl) return;
-
-  function sincronizar() {
-    const escondida = mandalaEl.style.display === 'none';
-    overlayEl.style.display = escondida ? 'none' : 'flex';
-  }
-
-  sincronizar();
-  const observer = new MutationObserver(sincronizar);
-  observer.observe(mandalaEl, { attributes: true, attributeFilter: ['style'] });
-})();
