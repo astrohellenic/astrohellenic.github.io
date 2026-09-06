@@ -401,8 +401,8 @@ function carregarCeuDoMomento() {
 }
 
 function ajustarTempo(direcao) {
-  const unitEl = document.getElementById('stepUnit');
-  const unit = unitEl ? unitEl.value : 'day';
+  const unit = document.getElementById('stepUnit').value;
+  const amount = direcao;
 
   switch(unit) {
     case 'second': currentMoment.setSeconds(currentMoment.getSeconds() + amount); break;
@@ -479,7 +479,7 @@ async function executarCalculo() {
 
 /* Injetar botão no cabeçalio */
 function injetarBotaoRotacaoNaBarraSuperior() {
-    const parentContainer = document.querySelector('.nav-bar') || document.querySelector('.top-bar') || document.getElementById('mandala-container');
+  const parentContainer = document.querySelector('.header-actions') || document.querySelector('header');
   if (!parentContainer || document.getElementById('wrapper-botoes-topo')) return;
 
   const wrapper = document.createElement('div');
@@ -557,11 +557,11 @@ function alternarRotacaoCasa1(val) {
 }
 
 function renderMandala(dadosNovos) {
-  injetarBotaoRotacaoNaBarraSuperior();
-
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
+
+  injetarBotaoRotacaoNaBarraSuperior();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
