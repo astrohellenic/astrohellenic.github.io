@@ -479,13 +479,8 @@ async function executarCalculo() {
 
 /* INJEÇÃO DO BOTÃO DE ROTAÇÃO NA BARRA SUPERIOR */
 function injetarBotaoRotacaoNaBarraSuperior() {
-  const refBtn = document.querySelector('button[onclick*="salvarMapaNaPlanilha"]') || 
-                 document.querySelector('button[onclick*="carregarCeuDoMomento"]') ||
-                 document.querySelector('.header-actions') ||
-                 document.querySelector('header');
-
-  if (!refBtn) return;
-  const parentContainer = refBtn.parentElement || refBtn;
+  const parentContainer = document.getElementById('mandala-controls-overlay');
+  if (!parentContainer) return;
 
   let btnContainer = document.getElementById('lotRotationBtnContainer');
   if (!btnContainer) {
@@ -1006,3 +1001,19 @@ function alternarVisaoMapaTabela() {
     }
   }
 }
+
+/* SINCRONIZA OS CONTROLES DA MANDALA: eles só aparecem quando a mandala aparece */
+(function sincronizarVisibilidadeControlesDaMandala() {
+  const mandalaEl = document.getElementById('mandala-container');
+  const overlayEl = document.getElementById('mandala-controls-overlay');
+  if (!mandalaEl || !overlayEl) return;
+
+  function sincronizar() {
+    const escondida = mandalaEl.style.display === 'none';
+    overlayEl.style.display = escondida ? 'none' : 'flex';
+  }
+
+  sincronizar();
+  const observer = new MutationObserver(sincronizar);
+  observer.observe(mandalaEl, { attributes: true, attributeFilter: ['style'] });
+})();
