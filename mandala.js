@@ -477,23 +477,40 @@ async function executarCalculo() {
   }
 }
 
-/* INJEÇÃO DO BOTÃO DE ROTAÇÃO NA BARRA SUPERIOR */
+/* Injetar botão no cabeçalio */
 function injetarBotaoRotacaoNaBarraSuperior() {
-  const refBtn = document.querySelector('button[onclick*="salvarMapaNaPlanilha"]') || 
-                 document.querySelector('button[onclick*="carregarCeuDoMomento"]') ||
-                 document.querySelector('.header-actions') ||
-                 document.querySelector('header');
+  const parentContainer = document.querySelector('.header-actions') || document.querySelector('header');
+  if (!parentContainer || document.getElementById('wrapper-botoes-topo')) return;
 
-  if (!refBtn) return;
-  const parentContainer = refBtn.parentElement || refBtn;
+  const wrapper = document.createElement('div');
+  wrapper.id = 'wrapper-botoes-topo';
+  wrapper.style.display = 'flex';
+  wrapper.style.alignItems = 'center';
+  wrapper.style.gap = '8px';
 
-  let btnContainer = document.getElementById('lotRotationBtnContainer');
-  if (!btnContainer) {
-    btnContainer = document.createElement('div');
-    btnContainer.id = 'lotRotationBtnContainer';
-    btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-left: 6px;";
-    parentContainer.appendChild(btnContainer);
-  }
+  wrapper.innerHTML = `
+    <!-- BOTÃO DO ASC / LOTES (PARA DENTRO) -->
+    <button class="icon-btn" id="btn-rotacao-asc" onclick="rotacionarCasasASC()" title="Rotacionar por ASC/Lote">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+
+    <!-- STEPPER (NO CANTO MAIS EXTERNO À DIREITA) -->
+    <div class="time-stepper">
+      <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
+      <select id="stepUnit" class="time-select">
+        <option value="second">Segundo</option>
+        <option value="minute">Minuto</option>
+        <option value="hour">Hora</option>
+        <option value="day" selected>Dia</option>
+        <option value="month">Mês</option>
+        <option value="year">Ano</option>
+      </select>
+      <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
+    </div>
+  `;
+
+  parentContainer.appendChild(wrapper);
+}
 
   const syms = {
     mercury: '☿',
