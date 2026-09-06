@@ -599,7 +599,6 @@ body {
 
             </div>
 
-
             <!-- NAVEGADOR TEMPORAL (STEPPER) -->
             <div class="time-stepper">
                 <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
@@ -615,6 +614,23 @@ body {
             </div>
         </div>
         
+        <!-- NOVO STEPPER NO CABEÇALHO (PARALELO) -->
+<div class="time-stepper-topo">
+  <button class="icon-btn" onclick="ajustarTempoNovo(-1)">
+    <i class="fa-solid fa-backward-step"></i>
+  </button>
+  <select id="stepUnitNovo" class="time-select">
+    <option value="second">Segundo</option>
+    <option value="minute">Minuto</option>
+    <option value="hour">Hora</option>
+    <option value="day" selected>Dia</option>
+    <option value="month">Mês</option>
+    <option value="year">Ano</option>
+  </select>
+  <button class="icon-btn" onclick="ajustarTempoNovo(1)">
+    <i class="fa-solid fa-forward-step"></i>
+  </button>
+</div>
 
         <!-- RENDERIZADOR DA MANDALA -->
         <div id="mandala-container">
