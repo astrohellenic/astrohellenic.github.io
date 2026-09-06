@@ -479,7 +479,7 @@ async function executarCalculo() {
 
 /* Injetar botão no cabeçalio */
 function injetarBotaoRotacaoNaBarraSuperior() {
-  const parentContainer = document.querySelector('.header-actions') || document.querySelector('header');
+    const parentContainer = document.querySelector('.nav-bar') || document.querySelector('.top-bar') || document.getElementById('mandala-container');
   if (!parentContainer || document.getElementById('wrapper-botoes-topo')) return;
 
   const wrapper = document.createElement('div');
