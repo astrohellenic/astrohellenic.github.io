@@ -545,7 +545,6 @@ function renderMandala(dadosNovos) {
   if (!container || !currentCalculatedData) return;
 
   injetarBotaoRotacaoNaBarraSuperior();
-  injetarStepperNaMandala();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
