@@ -3,44 +3,267 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro para Mapa Astral</title>
+  <title>Cadastro para Atendimento Astrológico</title>
+  
+  <!-- FONTES DO SOFTWARE (Cinzel e Montserrat) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-    .form-card { background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 420px; border: 1px solid #e2e8f0; position: relative; }
-    h2 { margin: 0 0 20px 0; font-size: 18px; color: #103b70; text-align: center; }
-    .form-group { margin-bottom: 14px; position: relative; }
-    label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
-    input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; }
-    input:focus { border-color: #103b70; }
-    .row { display: flex; gap: 10px; }
-    .row .form-group { flex: 1; }
-    .btn-submit { width: 100%; background: #103b70; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    :root {
+      --bg-main: #fffdf5;
+      --card-bg: #ffffff;
+      --primary-blue: #103b70;
+      --gold: #c59b27;
+      --gold-hover: #a8821e;
+      --border-color: #e2d9c2;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: 'Montserrat', sans-serif; 
+      background-color: var(--bg-main); 
+      color: var(--text-main); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      margin: 0; 
+      padding: 20px; 
+    }
+
+    .form-card { 
+      background: var(--card-bg); 
+      padding: 32px 28px; 
+      border-radius: 14px; 
+      box-shadow: 0 4px 20px rgba(197, 155, 39, 0.08); 
+      width: 100%; 
+      max-width: 440px; 
+      border: 1.5px solid var(--gold); 
+      position: relative; 
+    }
+
+    h2 { 
+      margin: 0 0 24px 0; 
+      font-family: 'Cinzel', serif;
+      font-size: 20px; 
+      font-weight: 700;
+      color: var(--primary-blue); 
+      text-align: center; 
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group { 
+      margin-bottom: 16px; 
+      position: relative; 
+    }
+
+    label { 
+      display: block; 
+      font-size: 11px; 
+      font-weight: 700; 
+      color: var(--primary-blue); 
+      margin-bottom: 6px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px;
+    }
+
+    input { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 8px; 
+      font-size: 14px; 
+      font-family: 'Montserrat', sans-serif;
+      background: #ffffff;
+      color: var(--text-main);
+      outline: none; 
+      transition: all 0.2s ease;
+    }
+
+    input:focus { 
+      border-color: var(--gold); 
+      box-shadow: 0 0 0 3px rgba(197, 155, 39, 0.15);
+    }
+
+    .row { 
+      display: flex; 
+      gap: 12px; 
+    }
+
+    .row .form-group { 
+      flex: 1; 
+    }
+
+    .btn-submit { 
+      width: 100%; 
+      background: var(--primary-blue); 
+      color: #fcf6ba; 
+      border: 1px solid var(--gold); 
+      padding: 14px; 
+      border-radius: 8px; 
+      font-family: 'Cinzel', serif;
+      font-size: 15px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      margin-top: 12px; 
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(16, 59, 112, 0.15);
+    }
+
+    .btn-submit:hover {
+      background: #0d2f5a;
+      border-color: #fcf6ba;
+    }
 
     /* Autocomplete de Cidade */
-    .city-results { position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
-    .city-item { padding: 10px; font-size: 13px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-    .city-item:hover { background: #f8fafc; color: #103b70; }
+    .city-results { 
+      position: absolute; 
+      top: 100%; 
+      left: 0; 
+      right: 0; 
+      background: #ffffff; 
+      border: 1px solid var(--gold); 
+      border-radius: 8px; 
+      max-height: 180px; 
+      overflow-y: auto; 
+      z-index: 1000; 
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12); 
+      display: none; 
+      margin-top: 4px;
+    }
+
+    .city-item { 
+      padding: 10px 12px; 
+      font-size: 13px; 
+      border-bottom: 1px solid #f1f5f9; 
+      cursor: pointer; 
+      color: var(--text-main);
+    }
+
+    .city-item:hover { 
+      background: var(--bg-main); 
+      color: var(--primary-blue); 
+      font-weight: 600;
+    }
 
     /* Modal de Confirmação */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; box-sizing: border-box; }
-    .modal-card { background: #ffffff; padding: 24px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-card h3 { margin: 0 0 16px 0; color: #103b70; font-size: 16px; text-align: center; }
-    .summary-list { font-size: 13px; color: #334155; margin-bottom: 20px; line-height: 1.6; }
-    .summary-item { margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
-    .summary-item strong { color: #64748b; font-size: 11px; text-transform: uppercase; display: block; }
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-secondary { flex: 1; background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    .btn-primary { flex: 1; background: #103b70; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .modal-overlay { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100vw; 
+      height: 100vh; 
+      background: rgba(16, 59, 112, 0.5); 
+      backdrop-filter: blur(2px);
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 9999; 
+      padding: 20px; 
+    }
+
+    .modal-card { 
+      background: var(--card-bg); 
+      padding: 28px; 
+      border-radius: 14px; 
+      width: 100%; 
+      max-width: 420px; 
+      border: 1.5px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+    }
+
+    .modal-card h3 { 
+      margin: 0 0 20px 0; 
+      font-family: 'Cinzel', serif;
+      color: var(--primary-blue); 
+      font-size: 17px; 
+      font-weight: 700;
+      text-align: center; 
+      text-transform: uppercase;
+    }
+
+    .summary-list { 
+      font-size: 13px; 
+      color: var(--text-main); 
+      margin-bottom: 24px; 
+      line-height: 1.6; 
+    }
+
+    .summary-item { 
+      margin-bottom: 10px; 
+      border-bottom: 1px solid #f1f5f9; 
+      padding-bottom: 6px; 
+    }
+
+    .summary-item strong { 
+      color: var(--primary-blue); 
+      font-size: 11px; 
+      text-transform: uppercase; 
+      display: block; 
+      letter-spacing: 0.5px;
+    }
+
+    .modal-actions { 
+      display: flex; 
+      gap: 12px; 
+    }
+
+    .btn-secondary { 
+      flex: 1; 
+      background: #ffffff; 
+      color: var(--primary-blue); 
+      border: 1px solid var(--border-color); 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-weight: 700; 
+      font-size: 13px;
+      cursor: pointer; 
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-main);
+      border-color: var(--gold);
+    }
+
+    .btn-primary { 
+      flex: 1; 
+      background: var(--primary-blue); 
+      color: #fcf6ba; 
+      border: 1px solid var(--gold); 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-family: 'Cinzel', serif;
+      font-weight: 700; 
+      font-size: 13px;
+      cursor: pointer; 
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: #0d2f5a;
+    }
   </style>
 </head>
 <body>
 
 <div class="form-card">
-  <div id="formLogoContainer" style="text-align: center; margin-bottom: 16px;">
-    <img id="formLogoImg" src="" alt="Logo" style="max-height: 70px; max-width: 100%; display: none; margin: 0 auto;" />
+  <div id="formLogoContainer" style="text-align: center; margin-bottom: 20px;">
+    <img id="formLogoImg" src="" alt="Logo" style="max-height: 75px; max-width: 100%; display: none; margin: 0 auto;" />
   </div>
-  <h2>Dados para o Atendimento</h2>
+  <h2>Dados para Atendimento</h2>
   <form id="clientForm" onsubmit="event.preventDefault(); abrirConfirmacao();">
     <div class="form-group">
       <label for="nome">Nome Completo</label>
@@ -134,7 +357,7 @@
 
   function pesquisarCidade(termo) {
     clearTimeout(citySearchTimeout);
-    selectedGeo = { lat: null, lon: null, name: '' }; // Limpa a seleção ao digitar novo texto
+    selectedGeo = { lat: null, lon: null, name: '' };
     const resultsList = document.getElementById('cityResultsList');
     if (!termo || termo.trim().length < 3) {
       resultsList.style.display = 'none';
@@ -185,7 +408,6 @@
     const whatsapp = document.getElementById('whatsapp').value.trim();
     const email = document.getElementById('email').value.trim();
 
-    // TRAVA: Exige que a cidade tenha sido selecionada da lista
     if (!selectedGeo.name || selectedGeo.name !== cidadeInput || !selectedGeo.lat || !selectedGeo.lon) {
       alert('Por favor, selecione a cidade clicando em uma das opções da lista sugerida.');
       return;
@@ -226,8 +448,6 @@
     try {
       const { error } = await supabaseClient.from('mapas').insert([payload]);
       if (!error) {
-        
-        // Busca webhook e link de redirecionamento do dono do formulário
         let cfgData = null;
         try {
           let queryCfg = supabaseClient.from('configuracoes').select('*');
@@ -240,7 +460,6 @@
           console.error("Erro ao ler configuracoes:", e);
         }
 
-        // Dispara o Webhook caso configurado
         if (cfgData && cfgData.webhook_url) {
           try {
             await fetch(cfgData.webhook_url, {
@@ -261,7 +480,6 @@
         document.getElementById('clientForm').reset();
         selectedGeo = { lat: null, lon: null, name: '' };
 
-        // Redireciona se houver link cadastrado
         if (cfgData && cfgData.redirect_url) {
           window.location.href = cfgData.redirect_url;
         }
