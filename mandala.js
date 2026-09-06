@@ -557,11 +557,11 @@ function alternarRotacaoCasa1(val) {
 }
 
 function renderMandala(dadosNovos) {
+  injetarBotaoRotacaoNaBarraSuperior();
+
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
-
-  injetarBotaoRotacaoNaBarraSuperior();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
