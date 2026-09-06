@@ -494,37 +494,6 @@ function injetarBotaoRotacaoNaBarraSuperior() {
     btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-left: 6px;";
     parentContainer.appendChild(btnContainer);
   }
-   
-/* ==========================================================================
-   NOVO: STEPPER TEMPORAL DO CABEÇALHO (TESTE PARALELO)
-   ========================================================================== */
-function injetarStepperNoCabecalho() {
-  const container = document.querySelector('.header-actions') || document.querySelector('header');
-  if (!container || document.getElementById('wrapper-stepper-topo')) return;
-
-  const wrapper = document.createElement('div');
-  wrapper.id = 'wrapper-stepper-topo';
-  wrapper.style.display = 'inline-flex';
-  wrapper.style.alignItems = 'center';
-  wrapper.style.gap = '8px';
-
-  wrapper.innerHTML = `
-    <div class="time-stepper">
-      <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
-      <select id="stepUnit" class="time-select">
-        <option value="second">Segundo</option>
-        <option value="minute">Minuto</option>
-        <option value="hour">Hora</option>
-        <option value="day" selected>Dia</option>
-        <option value="month">Mês</option>
-        <option value="year">Ano</option>
-      </select>
-      <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
-    </div>
-  `;
-
-  container.appendChild(wrapper);
-}
 
   const syms = {
     mercury: '☿',
@@ -576,7 +545,6 @@ function renderMandala(dadosNovos) {
   if (!container || !currentCalculatedData) return;
 
   injetarBotaoRotacaoNaBarraSuperior();
-  injetarStepperNoCabecalho();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
