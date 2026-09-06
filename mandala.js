@@ -545,6 +545,7 @@ function renderMandala(dadosNovos) {
   if (!container || !currentCalculatedData) return;
 
   injetarBotaoRotacaoNaBarraSuperior();
+  injetarStepperNaMandala();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
@@ -1006,3 +1007,33 @@ function alternarVisaoMapaTabela() {
     }
   }
 }
+
+/* ==========================================================================
+   STEPPER DE TEMPO (EXCLUSIVO DA FERRAMENTA MANDALA)
+   ========================================================================== */
+function injetarStepperNaMandala() {
+  const mandalaContainer = document.getElementById('mandala-container');
+  if (!mandalaContainer || document.getElementById('wrapper-stepper-mandala')) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.id = 'wrapper-stepper-mandala';
+  wrapper.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px;";
+
+  wrapper.innerHTML = `
+    <div class="time-stepper">
+      <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
+      <select id="stepUnit" class="time-select">
+        <option value="second">Segundo</option>
+        <option value="minute">Minuto</option>
+        <option value="hour">Hora</option>
+        <option value="day" selected>Dia</option>
+        <option value="month">Mês</option>
+        <option value="year">Ano</option>
+      </select>
+      <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
+    </div>
+  `;
+
+  mandalaContainer.parentNode.insertBefore(wrapper, mandalaContainer);
+}
+
