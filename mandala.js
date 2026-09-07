@@ -468,9 +468,12 @@ async function executarCalculo() {
       Marte: { grau_absoluto: planetas.Marte ? planetas.Marte.grau_absoluto : 0, retro: checkRetro(planetas.Marte) },
       Júpiter: { grau_absoluto: planetas.Jupiter ? planetas.Jupiter.grau_absoluto : 0, retro: checkRetro(planetas.Jupiter) },
       Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno) }
-    };
+      };
 
     renderMandala();
+    if (typeof renderizarPainelHorasPlanetarias === 'function') {
+      renderizarPainelHorasPlanetarias();
+    }
 
   } catch (err) {
     document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
