@@ -470,9 +470,9 @@ async function executarCalculo() {
       Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno) }
       };
 
-    renderMandala();
-    if (typeof renderizarPainelHorasPlanetarias === 'function') {
-      renderizarPainelHorasPlanetarias();
+        renderMandala();
+    if (typeof iniciarModuloHoras === 'function') {
+      iniciarModuloHoras();
     }
 
   } catch (err) {
