@@ -583,22 +583,28 @@ body {
                     <i class="fa-solid fa-rotate"></i>
                 </button>
                 <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
-
-                <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
-                  <div style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                    <span style="font-size: 10px; text-transform: uppercase; color: #c59b27; font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
-                    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
-                  </div>
-                  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff;">
-                    <div>
-                      <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">Retorno Solar</span>
-                      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: #103b70;">Selecione...</span>
-                    </div>
-                    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: #64748b;"></i>
-                  </div>
-                  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid #e2e8f0; background: #ffffff; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
-                </div>
-            </div>
+ 
+                <!-- Janela RS -->
+         <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; box-shadow: 0 4px 16px rgba(16, 59, 112, 0.12); width: 280px; font-family: inherit; overflow: hidden;">
+  
+             <!-- Cabeçalho do Cartão -->
+  <div style="padding: 10px 14px; border-bottom: 1px solid #c59b27; background: #103b70;">
+    <span style="font-size: 10px; text-transform: uppercase; color: #c59b27; font-weight: 700; letter-spacing: 0.8px; display: block;">Mapa Selecionado</span>
+    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">Nenhum cliente</div>
+  </div>
+  
+  <!-- Seletor de Ano -->
+  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff; transition: background 0.2s ease;">
+    <div>
+      <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px; display: block;">Retorno Solar</span>
+      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: #103b70; margin-top: 2px; display: block;">Selecione...</span>
+    </div>
+    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: #c59b27;"></i>
+  </div>
+  
+  <!-- Lista Despencável de Anos -->
+  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid #e2e8f0; background: #ffffff;"></div>
+</div>
 
             <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
             <div id="mandala-controls-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; align-items: center; gap: 8px;">
