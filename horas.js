@@ -435,10 +435,9 @@ function iniciarModuloHoras() {
         <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
         <div style="font-size: 30px; font-weight: 800; color: var(--text-dark); margin: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
           ${getPlanet3DSVG(horaAtual.planet.id, 42)}
-          <span>${horaAtual.planet.name}</span>
         </div>
         <div style="font-size: 13px; opacity: 0.8; font-weight: 500;">
-          ${horaAtual.period === 'diurna' ? '☀️ Diurna' : '🌙 Noturna'} (${horaAtual.index}ª hora) • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
+          ${horaAtual.period === 'diurna' ? '☀️' : '🌙'} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
         </div>
       </div>
     `;
@@ -462,11 +461,10 @@ function iniciarModuloHoras() {
     const bgRow = item.isCurrent ? "background-color: var(--bg-main); font-weight: 700;" : "";
     html += `
       <tr style="border-bottom: 1px solid var(--border-color); ${bgRow}">
-        <td style="padding: 10px 8px;">${item.index}</td>
-        <td style="padding: 10px 8px;">${item.period === 'diurna' ? '☀️ Dia' : '🌙 Noite'}</td>
+        <td style="padding: 10px 8px;">${item.index}ª</td>
+        <td style="padding: 10px 8px;">${item.period === 'diurna' ? '☀️' : '🌙'}</td>
         <td style="padding: 10px 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
           ${getPlanet3DSVG(item.planet.id)}
-          <span>${item.planet.name}</span>
         </td>
         <td style="padding: 10px 8px;">${formatarHoraMinutoSegundo(item.start)}</td>
         <td style="padding: 10px 8px;">${formatarHoraMinutoSegundo(item.end)}</td>
