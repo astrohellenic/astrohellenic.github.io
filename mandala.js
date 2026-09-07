@@ -502,12 +502,12 @@ function injetarBotaoRotacaoNaBarraSuperior() {
   if (selectedHouse1Lot === 'ASC') {
     iconContent = `<span style="font-size: 11px; font-weight: 800; color: #103b70;">ASC</span>`;
   } else if (selectedHouse1Lot === 'fortune') {
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/></svg>`;
+    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
   } else if (selectedHouse1Lot === 'spirit') {
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`;
+    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`;
   } else {
     const symbol = syms[selectedHouse1Lot] || '';
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${symbol}</text></svg>`;
+    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${symbol}</text></svg>`;
   }
 
     btnContainer.innerHTML = `
@@ -812,13 +812,13 @@ function renderMandala(dadosNovos) {
 
   /* 3. Adiciona Nodos */
   if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#103b70", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#103b70", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
   }
 
   /* 4. Adiciona Sizígia */
   if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#103b70", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
   }
 
   /* 5. Adiciona os 7 Lotes */
@@ -864,7 +864,7 @@ function renderMandala(dadosNovos) {
     } else if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
@@ -872,18 +872,18 @@ function renderMandala(dadosNovos) {
         <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
         <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
         <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="21" font-size="8" font-weight="bold" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
       if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#000000" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#000000" stroke-width="1.5"/>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">${item.sym}</text>`;
       }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
 
