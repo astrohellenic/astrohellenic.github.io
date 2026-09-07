@@ -1,3 +1,4 @@
+// Versao 1.1 - Liberacao L1
 /* ==========================================
    MÓDULO DE LIBERAÇÃO ZODIACAL (APHESIS)
    ========================================== */
@@ -38,13 +39,13 @@ function getLotIconSVG(lotKey) {
   };
 
   if (lotKey === 'fortune') {
-    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
   }
   if (lotKey === 'spirit') {
-    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block;"><text x="0" y="5" font-size="24" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="24" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
   }
   const symbol = syms[lotKey] || '';
-  return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="4" font-size="11" font-weight="bold" fill="currentColor" text-anchor="middle">${symbol}</text></svg>`;
+  return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="4" font-size="11" font-weight="bold" fill="currentColor" text-anchor="middle">${symbol}</text></svg>`;
 }
 
 function iniciarModuloLiberacao() {
@@ -90,7 +91,6 @@ function renderLiberacaoUI() {
   const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
 
-  // Lote da Fortuna para cálculo dos Picos (Kentra)
   const fortLot = lotes.find(l => l.key === "fortune");
   const fortSignIdx = Math.floor(fortLot.deg / 30);
   const angularSignsFromFort = [
@@ -100,11 +100,9 @@ function renderLiberacaoUI() {
     (fortSignIdx + 9) % 12
   ];
 
-  // Identifica o lote selecionado (Fortuna como padrão se nenhum for especificado)
   const activeLotObj = lotes.find(l => l.key === selectedZRPhase) || fortLot;
   const startSignIdx = Math.floor(activeLotObj.deg / 30);
 
-  // Ordem dos 7 Lotes Herméticos: 1º Fortuna, 2º Espírito, depois os demais
   const lotesInfo = [
     { key: "fortune" },
     { key: "spirit" },
@@ -116,21 +114,20 @@ function renderLiberacaoUI() {
   ];
 
   let html = `
-    <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 900px; margin: 20px auto;">
-      <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; text-align: center;">Liberação Zodiacal (L1)</h3>
+    <div style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: #0f172a; max-width: 900px; margin: 20px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+      <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Liberação Zodiacal - L1</h3>
       
-      <!-- Seletor Quadrado dos 7 Lotes Herméticos (Ícones Limpos) -->
       <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
   `;
 
   lotesInfo.forEach(l => {
     const isSel = l.key === selectedZRPhase;
     const styleBg = isSel 
-      ? "background: var(--text-dark); color: #ffffff; border-color: var(--text-dark);" 
-      : "background: var(--bg-main); color: var(--text-dark); border-color: var(--border-color);";
+      ? "background: #103b70; color: #ffffff; border: 1px solid #c59b27;" 
+      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
     
     html += `
-      <button onclick="alternarLoteLiberacao('${l.key}')" style="${styleBg} width: 36px; height: 36px; border: 1px solid; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${l.key}">
+      <button onclick="alternarLoteLiberacao('${l.key}')" style="${styleBg} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${l.key}">
         ${getLotIconSVG(l.key)}
       </button>
     `;
@@ -139,14 +136,14 @@ function renderLiberacaoUI() {
   html += `
       </div>
 
-      <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; background: #ffffff;">
         <thead>
-          <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-dark);">
-            <th style="padding: 8px; width: 45px;"></th>
-            <th style="padding: 8px;">Duração</th>
-            <th style="padding: 8px;">Início</th>
-            <th style="padding: 8px;">Fim</th>
-            <th style="padding: 8px;">Status</th>
+          <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+            <th style="padding: 10px 8px; width: 50px; border: 1px solid #103b70;"></th>
+            <th style="padding: 10px 8px; border: 1px solid #103b70;">Duração</th>
+            <th style="padding: 10px 8px; border: 1px solid #103b70;">Início do Período</th>
+            <th style="padding: 10px 8px; border: 1px solid #103b70;">Término do Período</th>
+            <th style="padding: 10px 8px; border: 1px solid #103b70;">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -161,15 +158,19 @@ function renderLiberacaoUI() {
     const isPeak = angularSignsFromFort.includes(currSign);
 
     let statusText = "";
-    if (isPeak) statusText = `<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PICO</span>`;
+    if (isPeak) {
+      statusText = `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px;">PICO</span>`;
+    }
+
+    const bgRow = i % 2 === 0 ? '#ffffff' : '#fffdf5';
 
     html += `
-      <tr style="border-bottom: 1px solid var(--border-color);">
-        <td style="padding: 8px; text-align: center;">${getSignSVGZR(currSign, 22)}</td>
-        <td style="padding: 8px;">${durationYears}a</td>
-        <td style="padding: 8px;">${formatarDataBR(currentStart)}</td>
-        <td style="padding: 8px;">${formatarDataBR(currentEnd)}</td>
-        <td style="padding: 8px;">${statusText}</td>
+      <tr style="border-bottom: 1px solid #e2d9c2; background-color: ${bgRow};">
+        <td style="padding: 10px 8px; text-align: center; border: 1px solid #e2d9c2;">${getSignSVGZR(currSign, 22)}</td>
+        <td style="padding: 10px 8px; font-weight: 600; border: 1px solid #e2d9c2;">${durationYears} anos</td>
+        <td style="padding: 10px 8px; border: 1px solid #e2d9c2;">${formatarDataBR(currentStart)}</td>
+        <td style="padding: 10px 8px; border: 1px solid #e2d9c2;">${formatarDataBR(currentEnd)}</td>
+        <td style="padding: 10px 8px; border: 1px solid #e2d9c2;">${statusText}</td>
       </tr>
     `;
 
