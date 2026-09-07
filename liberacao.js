@@ -1,4 +1,3 @@
-// Versao 1.1 - Liberacao L1
 /* ==========================================
    MÓDULO DE LIBERAÇÃO ZODIACAL (APHESIS)
    ========================================== */
@@ -30,22 +29,24 @@ function getSignSVGZR(signIndex, size = 22) {
 }
 
 function getLotIconSVG(lotKey) {
-  const syms = {
-    venus: '♀',
-    mercury: '☿',
-    mars: '♂',
-    jupiter: '♃',
-    saturn: '♄'
-  };
-
   if (lotKey === 'fortune') {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
   }
   if (lotKey === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="24" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="0" font-size="20" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle" dominant-baseline="central">Φ</text></svg>`;
   }
-  const symbol = syms[lotKey] || '';
-  return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="4" font-size="11" font-weight="bold" fill="currentColor" text-anchor="middle">${symbol}</text></svg>`;
+
+  const lotConfig = {
+    venus:   { sym: '♀', y: 0.5, size: 10.5 },
+    mercury: { sym: '☿', y: -0.5, size: 11 },
+    mars:    { sym: '♂', y: 0, size: 10 },
+    jupiter: { sym: '♃', y: 0, size: 10 },
+    saturn:  { sym: '♄', y: -0.5, size: 10 }
+  };
+
+  const cfg = lotConfig[lotKey] || { sym: '', y: 0, size: 10 };
+
+  return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="central">${cfg.sym}</text></svg>`;
 }
 
 function iniciarModuloLiberacao() {
