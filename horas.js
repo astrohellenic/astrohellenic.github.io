@@ -422,7 +422,7 @@ function iniciarModuloHoras() {
       </defs>
     </svg>
 
-    <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 600px; margin: 20px auto;">
+    <div style="background: #ffffff; border: 1px solid #C59B27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 600px; margin: 20px auto;">
       <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
       <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px;">
         Localidade: <strong>${localNome}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
@@ -431,7 +431,7 @@ function iniciarModuloHoras() {
 
   if (horaAtual) {
     html += `
-      <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
+      <div style="background: var(--bg-main); border: 1px solid #103B70; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
         <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
         <div style="font-size: 30px; font-weight: 800; color: var(--text-dark); margin: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
           ${getPlanet3DSVG(horaAtual.planet.id, 42)}
@@ -446,7 +446,7 @@ function iniciarModuloHoras() {
   html += `
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
       <thead>
-        <tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-dark);">
+        <tr style="border-bottom: 2px solid #c59b27; text-align: left; color: var(--text-dark);">
           <th style="padding: 10px 8px;"></th>
           <th style="padding: 10px 8px;">Período</th>
           <th style="padding: 10px 8px;">Regente</th>
@@ -460,7 +460,7 @@ function iniciarModuloHoras() {
   hoursSchedule.forEach(item => {
     const bgRow = item.isCurrent ? "background-color: var(--bg-main); font-weight: 700;" : "";
     html += `
-      <tr style="border-bottom: 1px solid var(--border-color); ${bgRow}">
+      <tr style="border-bottom: 1px solid #103B70; ${bgRow}">
         <td style="padding: 10px 8px;">${item.index}ª</td>
         <td style="padding: 10px 8px;">${item.period === 'diurna' ? '☀️' : '🌙'}</td>
         <td style="padding: 10px 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
