@@ -512,7 +512,7 @@ function injetarBotaoRotacaoNaBarraSuperior() {
 
     btnContainer.innerHTML = `
     <div style="position: relative; display: inline-block;">
-      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 32px; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 36px; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
         ${iconContent}
       </button>
       <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
