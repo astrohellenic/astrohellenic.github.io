@@ -1,10 +1,7 @@
 /* ==========================================
-   MÓDULO DE CÁLCULO DE HORAS PLANETÁRIAS
+   MÓDULO DE CÁLCULO E EXIBIÇÃO DAS HORAS
    ========================================== */
 
-/**
- * Ordem Caldaica descendente das regências das horas
- */
 const CHALDEAN_ORDER_PLANETS = [
   { id: "Saturn", name: "Saturno", symbol: "♄" },
   { id: "Jupiter", name: "Júpiter", symbol: "♃" },
@@ -15,23 +12,16 @@ const CHALDEAN_ORDER_PLANETS = [
   { id: "Moon", name: "Lua", symbol: "☽" }
 ];
 
-/**
- * Regente da 1ª hora diurna conforme o Dia da Semana (0 = Domingo)
- */
 const DAY_RULERS_MAP = {
-  0: "Sun",      // Domingo -> Sol
-  1: "Moon",     // Segunda-feira -> Lua
-  2: "Mars",     // Terça-feira -> Marte
-  3: "Mercury",  // Quarta-feira -> Mercúrio
-  4: "Jupiter",  // Quinta-feira -> Júpiter
-  5: "Venus",    // Sexta-feira -> Vênus
-  6: "Saturn"    // Sábado -> Saturno
+  0: "Sun",
+  1: "Moon",
+  2: "Mars",
+  3: "Mercury",
+  4: "Jupiter",
+  5: "Venus",
+  6: "Saturn"
 };
 
-/**
- * Algoritmo astronômico de precisão para calcular o Pôr e Nascer do Sol
- * com base na latitude, longitude, fuso e data fornecidos.
- */
 function calcularNascerPorDoSol(dateObj, lat, lon, fuso) {
   const year = dateObj.getFullYear();
   const month = dateObj.getMonth() + 1;
@@ -59,12 +49,12 @@ function calcularNascerPorDoSol(dateObj, lat, lon, fuso) {
     RA = RA + (Lquadrant - RAquadrant);
     RA = RA / 15;
 
-    const zenith = 90.833; // Zenite padrão para nascer/pôr do Sol
+    const zenith = 90.833;
     const sinDec = 0.39782 * Math.sin(L * Math.PI / 180);
     const cosDec = Math.cos(Math.asin(sinDec));
     const cosH = (Math.cos(zenith * Math.PI / 180) - (sinDec * Math.sin(lat * Math.PI / 180))) / (cosDec * Math.cos(lat * Math.PI / 180));
 
-    if (cosH > 1 || cosH < -1) return null; // Sol da meia-noite ou noite polar
+    if (cosH > 1 || cosH < -1) return null;
 
     let H = isSunrise ? 360 - (Math.acos(cosH) * 180 / Math.PI) : Math.acos(cosH) * 180 / Math.PI;
     H = H / 15;
@@ -85,27 +75,19 @@ function calcularNascerPorDoSol(dateObj, lat, lon, fuso) {
   };
 }
 
-/**
- * Função principal que gera as 24 Horas Planetárias a partir do estado atual da aplicação
- */
-function calcularHorasPlanetariasDoMomento() {
-  // Puxa os dados globais definidos no script principal
-  const lat = (currentGeo && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
-  const lon = (currentGeo && currentGeo.lon !== undefined) ? currentGeo.lon : -46.6333;
-  const fuso = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(lon);
-  const now = currentMoment ? new Date(currentMoment) : new Date();
+function calcularHorasDoMomento() {
+  const lat = (typeof currentGeo !== 'undefined' && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
+  const lon = (typeof currentGeo !== 'undefined' && currentGeo.lon !== undefined) ? currentGeo.lon : -46.6333;
+  const fuso = (typeof currentGeo !== 'undefined' && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+  const now = (typeof currentMoment !== 'undefined' && currentMoment) ? new Date(currentMoment) : new Date();
 
-  // 1. Calcula o Nascer e Pôr do Sol do Dia Atual
   const sunToday = calcularNascerPorDoSol(now, lat, lon, fuso);
 
-  // 2. Determina se a data informada cai antes do nascer do Sol de hoje
-  // (Caso positivo, astrologicamente ainda estamos no dia astrológico anterior)
   let astroDate = new Date(now);
   if (now < sunToday.sunrise) {
     astroDate.setDate(astroDate.getDate() - 1);
   }
 
-  // 3. Obtém o Nascer/Pôr do Sol do Dia Astrológico Ativo e do Dia Seguinte
   const sunAstro = calcularNascerPorDoSol(astroDate, lat, lon, fuso);
   const nextDay = new Date(astroDate);
   nextDay.setDate(nextDay.getDate() + 1);
@@ -115,19 +97,16 @@ function calcularHorasPlanetariasDoMomento() {
   const sunset = sunAstro.sunset;
   const nextSunrise = sunNextAstro.sunrise;
 
-  // 4. Identifica o Dia da Semana Astrológico (começa no Nascer do Sol)
   const dayOfWeek = astroDate.getDay();
   const firstPlanetId = DAY_RULERS_MAP[dayOfWeek];
 
   let startIndex = CHALDEAN_ORDER_PLANETS.findIndex(p => p.id === firstPlanetId);
 
-  // 5. Calcula as durações exatas das horas diurnas e noturnas
   const dayDurationMs = (sunset - sunrise) / 12;
   const nightDurationMs = (nextSunrise - sunset) / 12;
 
   const hoursSchedule = [];
 
-  // 12 Horas Diurnas
   for (let i = 0; i < 12; i++) {
     const start = new Date(sunrise.getTime() + i * dayDurationMs);
     const end = new Date(sunrise.getTime() + (i + 1) * dayDurationMs);
@@ -144,7 +123,6 @@ function calcularHorasPlanetariasDoMomento() {
     });
   }
 
-  // 12 Horas Noturnas
   for (let i = 0; i < 12; i++) {
     const start = new Date(sunset.getTime() + i * nightDurationMs);
     const end = new Date(sunset.getTime() + (i + 1) * nightDurationMs);
@@ -162,7 +140,7 @@ function calcularHorasPlanetariasDoMomento() {
   }
 
   return {
-    location: currentGeo ? currentGeo.city : "Local Atual",
+    location: (typeof currentGeo !== 'undefined' && currentGeo.city) ? currentGeo.city : "Local Atual",
     sunrise: sunrise,
     sunset: sunset,
     nextSunrise: nextSunrise,
@@ -170,31 +148,30 @@ function calcularHorasPlanetariasDoMomento() {
   };
 }
 
-/**
- * Função Auxiliar para formatar horários no padrão HH:MM:SS
- */
 function formatarHoraMinutoSegundo(date) {
+  if (!date) return "--:--";
   const h = String(date.getHours()).padStart(2, '0');
   const m = String(date.getMinutes()).padStart(2, '0');
   const s = String(date.getSeconds()).padStart(2, '0');
   return `${h}:${m}:${s}`;
 }
 
-/**
- * Renderiza o Painel de Horas Planetárias na interface HTML
- */
-function renderizarPainelHorasPlanetarias(containerId = "painel-horas-container") {
-  const container = document.getElementById(containerId);
+/* FUNÇÃO CHAMADA PELO SUPABASE.JS (linha 497) */
+function iniciarModuloHoras(containerId = "horas-container") {
+  let container = document.getElementById(containerId);
+  if (!container) {
+    container = document.getElementById("horas-screen") || document.getElementById("modulo-horas") || document.getElementById("cRadix");
+  }
   if (!container) return;
 
-  const dados = calcularHorasPlanetariasDoMomento();
+  const dados = calcularHorasDoMomento();
   const horaAtual = dados.schedule.find(h => h.isCurrent);
 
   let html = `
-    <div style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 10px; padding: 16px; font-family: 'Montserrat', sans-serif; color: #0f172a; max-width: 600px; margin: 10px auto;">
+    <div style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 10px; padding: 16px; font-family: 'Montserrat', sans-serif; color: #0f172a; max-width: 600px; margin: 20px auto;">
       <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
       <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 16px;">
-        Localidade: <strong>${escapeHtml(dados.location)}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(dados.sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(dados.sunset)}</strong>
+        Localidade: <strong>${dados.location}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(dados.sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(dados.sunset)}</strong>
       </p>
   `;
 
@@ -247,4 +224,3 @@ function renderizarPainelHorasPlanetarias(containerId = "painel-horas-container"
 
   container.innerHTML = html;
 }
-
