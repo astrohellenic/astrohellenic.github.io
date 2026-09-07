@@ -976,7 +976,7 @@ window.onload = function() {
   }
 };
 
-/* CONTROLE DE ALTERNÂNCIA (MANDALA / TABELA TÉCNICA) */
+/* CONTROLE DE ALTERNÂNCIA (MANDALA / TABELA TÉCNICA) 
 window.currentViewMode = "mandala";
 
 function alternarVisaoMapaTabela() {
@@ -1018,3 +1018,4 @@ function alternarVisaoMapaTabela() {
     }
   }
 }
+*/
