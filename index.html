@@ -42,9 +42,8 @@
 
 html, body {
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden; /* Trava a rolagem global no iPad/iPhone */
+  min-height: 100vh;
+  overflow: auto;
   background-color: var(--bg-main);
   color: var(--text-dark);
   font-family: 'Montserrat', sans-serif;
@@ -306,18 +305,21 @@ body {
         .edit-btn { color: #103b70; }
         .delete-btn { color: #dc2626; }
 
-        /* ÁREA PRINCIPAL DA MANDALA */
-        #main-stage {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: #ffffff;
-            position: relative;
-            height: 100dvh;
-            width: 100vw;
-            overflow: hidden;
-            padding: 10px;
-        }
+      #main-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    overflow: visible; /* Permite que tabelas e relatórios longos expandam e imprimam */
+    padding: 10px;
+}
+        #mandala-container {
+    max-height: calc(100vh - 80px);
+    overflow: hidden;
+}
 
         /* BARRA SUPERIOR FIXA - PADRONIZADA COM CONTORNO AZUL E ÍCONES DOURADOS */
         #top-bar {
