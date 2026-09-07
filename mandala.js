@@ -944,7 +944,7 @@ ctx.drawImage(imgLoader, 0, 0, 1920, 1920);
         }
       }
 
-      // Garante que a rolagem da página não seja bloqueada por CSS
+      /* Garante que a rolagem da página não seja bloqueada por CSS
       document.body.style.overflow = "auto";
       document.documentElement.style.overflow = "auto";
 
@@ -975,6 +975,7 @@ window.onload = function() {
     try { carregarConteudoPastaAtual(); } catch(e) { console.error(e); }
   }
 };
+               */
 
 /* CONTROLE DE ALTERNÂNCIA (MANDALA / TABELA TÉCNICA) 
 window.currentViewMode = "mandala";
