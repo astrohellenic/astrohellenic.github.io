@@ -161,6 +161,14 @@ function iniciarModuloHoras() {
   const container = document.getElementById("cRadix");
   if (!container) return;
 
+  // Esconde a tela da mandala para dar espaço ao módulo de horas
+  const mandalaScreen = document.getElementById("mandala-screen");
+  if (mandalaScreen) mandalaScreen.style.display = "none";
+
+  // Exibe a div do módulo e limpa o conteúdo anterior
+  container.style.display = "block";
+  container.innerHTML = "";
+
   const dados = calcularHorasDoMomento();
   const horaAtual = dados.schedule.find(h => h.isCurrent);
 
