@@ -2,80 +2,93 @@
    MÓDULO DE CÁLCULO E EXIBIÇÃO DAS HORAS
    ========================================== */
 
-const CHALDEAN_ORDER_PLANETS = [
-  { id: "Saturn", name: "Saturno", symbol: "♄" },
-  { id: "Jupiter", name: "Júpiter", symbol: "♃" },
-  { id: "Mars", name: "Marte", symbol: "♂" },
-  { id: "Sun", name: "Sol", symbol: "☉" },
-  { id: "Venus", name: "Vênus", symbol: "♀" },
-  { id: "Mercury", name: "Mercúrio", symbol: "☿" },
-  { id: "Moon", name: "Lua", symbol: "☽" }
-];
+function iniciarModuloHoras() {
+  const container = document.getElementById("cRadix");
+  if (!container) return;
 
-const DAY_RULERS_MAP = {
-  0: "Sun",
-  1: "Moon",
-  2: "Mars",
-  3: "Mercury",
-  4: "Jupiter",
-  5: "Venus",
-  6: "Saturn"
-};
+  // Ordem Caldaica descendente
+  const CHALDEAN_ORDER_PLANETS = [
+    { id: "Saturn", name: "Saturno", symbol: "♄" },
+    { id: "Jupiter", name: "Júpiter", symbol: "♃" },
+    { id: "Mars", name: "Marte", symbol: "♂" },
+    { id: "Sun", name: "Sol", symbol: "☉" },
+    { id: "Venus", name: "Vênus", symbol: "♀" },
+    { id: "Mercury", name: "Mercúrio", symbol: "☿" },
+    { id: "Moon", name: "Lua", symbol: "☽" }
+  ];
 
-function calcularNascerPorDoSol(dateObj, lat, lon, fuso) {
-  const year = dateObj.getFullYear();
-  const month = dateObj.getMonth() + 1;
-  const day = dateObj.getDate();
+  const DAY_RULERS_MAP = {
+    0: "Sun",
+    1: "Moon",
+    2: "Mars",
+    3: "Mercury",
+    4: "Jupiter",
+    5: "Venus",
+    6: "Saturn"
+  };
 
-  const N1 = Math.floor(275 * month / 9);
-  const N2 = Math.floor((month + 9) / 12);
-  const N3 = (1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3));
-  const N = N1 - (N2 * N3) + day - 30;
+  function calcularNascerPorDoSol(dateObj, lat, lon, fuso) {
+    const year = dateObj.getFullYear();
+    const month = dateObj.getMonth() + 1;
+    const day = dateObj.getDate();
 
-  const lngHour = lon / 15;
+    const N1 = Math.floor(275 * month / 9);
+    const N2 = Math.floor((month + 9) / 12);
+    const N3 = (1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3));
+    const N = N1 - (N2 * N3) + day - 30;
 
-  function calculateEventTime(isSunrise) {
-    const t = isSunrise ? N + ((6 - lngHour) / 24) : N + ((18 - lngHour) / 24);
+    const lngHour = lon / 15;
 
-    const M = (0.985600 * t) - 3.289;
-    let L = M + (1.916 * Math.sin(M * Math.PI / 180)) + (0.020 * Math.sin(2 * M * Math.PI / 180)) + 282.634;
-    L = (L + 360) % 360;
+    function calculateEventTime(isSunrise) {
+      const t = isSunrise ? N + ((6 - lngHour) / 24) : N + ((18 - lngHour) / 24);
 
-    let RA = Math.atan(0.91764 * Math.tan(L * Math.PI / 180)) * 180 / Math.PI;
-    RA = (RA + 360) % 360;
+      const M = (0.985600 * t) - 3.289;
+      let L = M + (1.916 * Math.sin(M * Math.PI / 180)) + (0.020 * Math.sin(2 * M * Math.PI / 180)) + 282.634;
+      L = (L + 360) % 360;
 
-    const Lquadrant = Math.floor(L / 90) * 90;
-    const RAquadrant = Math.floor(RA / 90) * 90;
-    RA = RA + (Lquadrant - RAquadrant);
-    RA = RA / 15;
+      let RA = Math.atan(0.91764 * Math.tan(L * Math.PI / 180)) * 180 / Math.PI;
+      RA = (RA + 360) % 360;
 
-    const zenith = 90.833;
-    const sinDec = 0.39782 * Math.sin(L * Math.PI / 180);
-    const cosDec = Math.cos(Math.asin(sinDec));
-    const cosH = (Math.cos(zenith * Math.PI / 180) - (sinDec * Math.sin(lat * Math.PI / 180))) / (cosDec * Math.cos(lat * Math.PI / 180));
+      const Lquadrant = Math.floor(L / 90) * 90;
+      const RAquadrant = Math.floor(RA / 90) * 90;
+      RA = RA + (Lquadrant - RAquadrant);
+      RA = RA / 15;
 
-    if (cosH > 1 || cosH < -1) return null;
+      const zenith = 90.833;
+      const sinDec = 0.39782 * Math.sin(L * Math.PI / 180);
+      const cosDec = Math.cos(Math.asin(sinDec));
+      const cosH = (Math.cos(zenith * Math.PI / 180) - (sinDec * Math.sin(lat * Math.PI / 180))) / (cosDec * Math.cos(lat * Math.PI / 180));
 
-    let H = isSunrise ? 360 - (Math.acos(cosH) * 180 / Math.PI) : Math.acos(cosH) * 180 / Math.PI;
-    H = H / 15;
+      if (cosH > 1 || cosH < -1) return null;
 
-    const T = H + RA - (0.06571 * t) - 6.622;
-    let UT = T - lngHour;
-    UT = (UT + 24) % 24;
+      let H = isSunrise ? 360 - (Math.acos(cosH) * 180 / Math.PI) : Math.acos(cosH) * 180 / Math.PI;
+      H = H / 15;
 
-    const localTimeHours = UT + fuso;
-    const resultDate = new Date(year, month - 1, day, 0, 0, 0);
-    resultDate.setMinutes(Math.round(localTimeHours * 60));
-    return resultDate;
+      const T = H + RA - (0.06571 * t) - 6.622;
+      let UT = T - lngHour;
+      UT = (UT + 24) % 24;
+
+      const localTimeHours = UT + fuso;
+      const resultDate = new Date(year, month - 1, day, 0, 0, 0);
+      resultDate.setMinutes(Math.round(localTimeHours * 60));
+      return resultDate;
+    }
+
+    return {
+      sunrise: calculateEventTime(true),
+      sunset: calculateEventTime(false)
+    };
   }
 
-  return {
-    sunrise: calculateEventTime(true),
-    sunset: calculateEventTime(false)
-  };
-}
+  function formatarHoraMinutoSegundo(date) {
+    if (!date) return "--:--";
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    const s = String(date.getSeconds()).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
 
-function calcularHorasDoMomento() {
+  // Puxa coordenadas e instante das variáveis globais do sistema
   const lat = (typeof currentGeo !== 'undefined' && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
   const lon = (typeof currentGeo !== 'undefined' && currentGeo.lon !== undefined) ? currentGeo.lon : -46.6333;
   const fuso = (typeof currentGeo !== 'undefined' && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
@@ -84,7 +97,7 @@ function calcularHorasDoMomento() {
   const sunToday = calcularNascerPorDoSol(now, lat, lon, fuso);
 
   let astroDate = new Date(now);
-  if (now < sunToday.sunrise) {
+  if (sunToday && sunToday.sunrise && now < sunToday.sunrise) {
     astroDate.setDate(astroDate.getDate() - 1);
   }
 
@@ -93,9 +106,14 @@ function calcularHorasDoMomento() {
   nextDay.setDate(nextDay.getDate() + 1);
   const sunNextAstro = calcularNascerPorDoSol(nextDay, lat, lon, fuso);
 
-  const sunrise = sunAstro.sunrise;
-  const sunset = sunAstro.sunset;
-  const nextSunrise = sunNextAstro.sunrise;
+  const sunrise = sunAstro ? sunAstro.sunrise : null;
+  const sunset = sunAstro ? sunAstro.sunset : null;
+  const nextSunrise = sunNextAstro ? sunNextAstro.sunrise : null;
+
+  if (!sunrise || !sunset || !nextSunrise) {
+    container.innerHTML = `<p style="color: #dc2626; text-align: center;">Erro ao calcular o horário solar.</p>`;
+    return;
+  }
 
   const dayOfWeek = astroDate.getDay();
   const firstPlanetId = DAY_RULERS_MAP[dayOfWeek];
@@ -139,44 +157,14 @@ function calcularHorasDoMomento() {
     });
   }
 
-  return {
-    location: (typeof currentGeo !== 'undefined' && currentGeo.city) ? currentGeo.city : "Local Atual",
-    sunrise: sunrise,
-    sunset: sunset,
-    nextSunrise: nextSunrise,
-    schedule: hoursSchedule
-  };
-}
-
-function formatarHoraMinutoSegundo(date) {
-  if (!date) return "--:--";
-  const h = String(date.getHours()).padStart(2, '0');
-  const m = String(date.getMinutes()).padStart(2, '0');
-  const s = String(date.getSeconds()).padStart(2, '0');
-  return `${h}:${m}:${s}`;
-}
-
-/* FUNÇÃO CHAMADA PELO SUPABASE.JS (linha 497) */
-function iniciarModuloHoras() {
-  const container = document.getElementById("cRadix");
-  if (!container) return;
-
-  // Esconde a tela da mandala para dar espaço ao módulo de horas
-  const mandalaScreen = document.getElementById("mandala-screen");
-  if (mandalaScreen) mandalaScreen.style.display = "none";
-
-  // Exibe a div do módulo e limpa o conteúdo anterior
-  container.style.display = "block";
-  container.innerHTML = "";
-
-  const dados = calcularHorasDoMomento();
-  const horaAtual = dados.schedule.find(h => h.isCurrent);
+  const horaAtual = hoursSchedule.find(h => h.isCurrent);
+  const localNome = (typeof currentGeo !== 'undefined' && currentGeo.city) ? currentGeo.city : "Local Atual";
 
   let html = `
     <div style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 10px; padding: 16px; font-family: 'Montserrat', sans-serif; color: #0f172a; max-width: 600px; margin: 20px auto;">
       <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
       <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 16px;">
-        Localidade: <strong>${dados.location}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(dados.sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(dados.sunset)}</strong>
+        Localidade: <strong>${localNome}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
   `;
 
@@ -208,7 +196,7 @@ function iniciarModuloHoras() {
       <tbody>
   `;
 
-  dados.schedule.forEach(item => {
+  hoursSchedule.forEach(item => {
     const bgRow = item.isCurrent ? "background-color: #fef9c3; font-weight: bold;" : "";
     html += `
       <tr style="border-bottom: 1px solid #e2e8f0; ${bgRow}">
