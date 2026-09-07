@@ -812,13 +812,13 @@ function renderMandala(dadosNovos) {
 
   /* 3. Adiciona Nodos */
   if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#103b70", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#103b70", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
   }
 
   /* 4. Adiciona Sizígia */
   if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#103b70", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
   }
 
   /* 5. Adiciona os 7 Lotes */
