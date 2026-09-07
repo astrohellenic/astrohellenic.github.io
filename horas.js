@@ -3,7 +3,7 @@
    ========================================== */
 
 function iniciarModuloHoras() {
-  const container = document.getElementById("cRadix");
+  const container = document.getElementById("mandala-container");
   if (!container) return;
 
   // Ordem Caldaica descendente
