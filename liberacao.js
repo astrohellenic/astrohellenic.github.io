@@ -33,13 +33,13 @@ function getLotIconSVG(lotKey) {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
   }
   if (lotKey === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="0" font-size="20" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle" dominant-baseline="central">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="0" font-size="24" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle" dominant-baseline="central">Φ</text></svg>`;
   }
 
   const lotConfig = {
-    venus:   { sym: '♀', y: 0.5, size: 10.5 },
+    venus:   { sym: '♀', y: -1.5, size: 10.5 },
     mercury: { sym: '☿', y: -0.5, size: 11 },
-    mars:    { sym: '♂', y: 0, size: 10 },
+    mars:    { sym: '♂', y: -1.5 size: 10 },
     jupiter: { sym: '♃', y: 0, size: 10 },
     saturn:  { sym: '♄', y: -0.5, size: 10 }
   };
