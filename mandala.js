@@ -864,7 +864,7 @@ function renderMandala(dadosNovos) {
     } else if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
@@ -872,7 +872,7 @@ function renderMandala(dadosNovos) {
         <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
         <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
         <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
@@ -883,7 +883,7 @@ function renderMandala(dadosNovos) {
       } else {
         svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
       }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
 
