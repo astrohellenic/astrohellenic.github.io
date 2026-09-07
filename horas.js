@@ -422,7 +422,7 @@ function iniciarModuloHoras() {
       </defs>
     </svg>
 
-    <div style="background: #ffffff; border: 1px solid #C59B27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 600px; margin: 20px auto;">
+    <div style="background: #fffdf5; border: 1px solid #C59B27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 600px; margin: 20px auto;">
       <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
       <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px;">
         Localidade: <strong>${localNome}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
