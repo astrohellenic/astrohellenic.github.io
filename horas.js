@@ -88,7 +88,6 @@ function iniciarModuloHoras() {
     return `${h}:${m}:${s}`;
   }
 
-  // Puxa coordenadas e instante das variáveis globais do sistema
   const lat = (typeof currentGeo !== 'undefined' && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
   const lon = (typeof currentGeo !== 'undefined' && currentGeo.lon !== undefined) ? currentGeo.lon : -46.6333;
   const fuso = (typeof currentGeo !== 'undefined' && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
@@ -161,21 +160,21 @@ function iniciarModuloHoras() {
   const localNome = (typeof currentGeo !== 'undefined' && currentGeo.city) ? currentGeo.city : "Local Atual";
 
   let html = `
-    <div style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 10px; padding: 16px; font-family: 'Montserrat', sans-serif; color: #0f172a; max-width: 600px; margin: 20px auto;">
-      <h3 style="font-family: 'Cinzel', serif; color: #103b70; margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
-      <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 16px;">
+    <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 600px; margin: 20px auto;">
+      <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
+      <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px;">
         Localidade: <strong>${localNome}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
   `;
 
   if (horaAtual) {
     html += `
-      <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 16px;">
-        <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #b45309; font-weight: 700;">Hora Planetária Ativa</span>
-        <div style="font-size: 28px; font-weight: 800; color: #103b70; margin: 4px 0;">
+      <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
+        <div style="font-size: 32px; font-weight: 800; color: var(--text-dark); margin: 6px 0;">
           ${horaAtual.planet.symbol} ${horaAtual.planet.name}
         </div>
-        <div style="font-size: 12px; color: #475569;">
+        <div style="font-size: 13px; opacity: 0.8; font-weight: 500;">
           ${horaAtual.period === 'diurna' ? '☀️ Diurna' : '🌙 Noturna'} (${horaAtual.index}ª hora) • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
         </div>
       </div>
@@ -183,28 +182,28 @@ function iniciarModuloHoras() {
   }
 
   html += `
-    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
       <thead>
-        <tr style="border-bottom: 2px solid #c59b27; text-align: left; color: #103b70;">
-          <th style="padding: 6px;">#</th>
-          <th style="padding: 6px;">Período</th>
-          <th style="padding: 6px;">Regente</th>
-          <th style="padding: 6px;">Início</th>
-          <th style="padding: 6px;">Término</th>
+        <tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-dark);">
+          <th style="padding: 10px 8px;">#</th>
+          <th style="padding: 10px 8px;">Período</th>
+          <th style="padding: 10px 8px;">Regente</th>
+          <th style="padding: 10px 8px;">Início</th>
+          <th style="padding: 10px 8px;">Término</th>
         </tr>
       </thead>
       <tbody>
   `;
 
   hoursSchedule.forEach(item => {
-    const bgRow = item.isCurrent ? "background-color: #fef9c3; font-weight: bold;" : "";
+    const bgRow = item.isCurrent ? "background-color: var(--bg-main); font-weight: 700;" : "";
     html += `
-      <tr style="border-bottom: 1px solid #e2e8f0; ${bgRow}">
-        <td style="padding: 6px;">${item.index}</td>
-        <td style="padding: 6px;">${item.period === 'diurna' ? '☀️ Dia' : '🌙 Noite'}</td>
-        <td style="padding: 6px; font-size: 14px;"><strong>${item.planet.symbol}</strong> ${item.planet.name}</td>
-        <td style="padding: 6px;">${formatarHoraMinutoSegundo(item.start)}</td>
-        <td style="padding: 6px;">${formatarHoraMinutoSegundo(item.end)}</td>
+      <tr style="border-bottom: 1px solid var(--border-color); ${bgRow}">
+        <td style="padding: 10px 8px;">${item.index}</td>
+        <td style="padding: 10px 8px;">${item.period === 'diurna' ? '☀️ Dia' : '🌙 Noite'}</td>
+        <td style="padding: 10px 8px; font-size: 14px;"><strong>${item.planet.symbol}</strong> ${item.planet.name}</td>
+        <td style="padding: 10px 8px;">${formatarHoraMinutoSegundo(item.start)}</td>
+        <td style="padding: 10px 8px;">${formatarHoraMinutoSegundo(item.end)}</td>
       </tr>
     `;
   });
