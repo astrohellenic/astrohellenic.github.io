@@ -486,8 +486,8 @@ function injetarBotaoRotacaoNaBarraSuperior() {
   if (!btnContainer) {
     btnContainer = document.createElement('div');
     btnContainer.id = 'lotRotationBtnContainer';
-    btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-left: 6px;";
-    parentContainer.appendChild(btnContainer);
+    btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-right: 6px;";
+    parentContainer.insertBefore(btnContainer, parentContainer.firstChild);
   }
 
   const syms = {
