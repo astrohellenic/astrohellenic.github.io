@@ -1,10 +1,51 @@
 /* ==========================================
-   MÓDULO DE LIBERAÇÃO ZODIACAAL (APHESIS)
+   MÓDULO DE LIBERAÇÃO ZODIACAL (APHESIS)
    ========================================== */
 
-let selectedZRPhase = "spirit"; // Lote padrão inicial: Espírito
+let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
 
 const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 30, 30, 12]; // Áries a Peixes
+
+const MONOLINE_ZODIAC_SVGS_ZR = [
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
+  `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="32" cy="43" r="18"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,3c14,0,15,12,15,12s0,10,17,10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,3C50,3,49,15,49,15s0,10-17,10"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,8c0,0,16,4,32,4s32-4,32-4"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,56c0,0-16-4-32-4S0,56,0,56"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="21" y1="12" x2="21" y2="52"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="43" y1="12" x2="43" y2="52"></line>`,
+  `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="11" cy="27" r="10"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5,19c0,0,7-6,28-6c15,0,31,10,31,10"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="53" cy="37" r="10"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M59,45c0,0-7,6-28,6C16,51,0,41,0,41"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="55" x2="64" y2="55"></line>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,52V12c0,0,0-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" points="52,53 57,58 52,63 "></polyline>`,
+  `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="1" y1="28" x2="36" y2="63"></line>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
+  `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="7" y1="32" x2="57" y2="32"></line>`
+];
+
+const SIGN_COLORS_ZR = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
+
+function getSignSVGZR(signIndex, size = 22) {
+  if (signIndex < 0 || signIndex > 11) return '';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_ZR[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</svg>`;
+}
+
+function getLotIconSVG(lotKey) {
+  const syms = {
+    venus: '♀',
+    mercury: '☿',
+    mars: '♂',
+    jupiter: '♃',
+    saturn: '♄'
+  };
+
+  if (lotKey === 'fortune') {
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
+  }
+  if (lotKey === 'spirit') {
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block;"><text x="0" y="5" font-size="24" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+  }
+  const symbol = syms[lotKey] || '';
+  return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="4" font-size="11" font-weight="bold" fill="currentColor" text-anchor="middle">${symbol}</text></svg>`;
+}
 
 function iniciarModuloLiberacao() {
   const container = document.getElementById("mandala-container");
@@ -19,7 +60,6 @@ function alternarLoteLiberacao(lotKey) {
 }
 
 function calcularDataFimZR(dataInicio, anos) {
-  // Padrão helenístico de 360 dias por ano (12 meses de 30 dias)
   const totalDias = anos * 360;
   const dataFim = new Date(dataInicio);
   dataFim.setDate(dataFim.getDate() + totalDias);
@@ -60,35 +100,38 @@ function renderLiberacaoUI() {
     (fortSignIdx + 9) % 12
   ];
 
-  // Identifica o lote selecionado
-  const activeLotObj = lotes.find(l => l.key === selectedZRPhase) || lotes[1];
+  // Identifica o lote selecionado (Fortuna como padrão se nenhum for especificado)
+  const activeLotObj = lotes.find(l => l.key === selectedZRPhase) || fortLot;
   const startSignIdx = Math.floor(activeLotObj.deg / 30);
 
-  // Botoes dos 7 Lotes Herméticos
+  // Ordem dos 7 Lotes Herméticos: 1º Fortuna, 2º Espírito, depois os demais
   const lotesInfo = [
-    { key: "spirit", label: "ESP", sym: "Φ" },
-    { key: "fortune", label: "FORT", sym: "⊕" },
-    { key: "venus", label: "EROS", sym: "♀" },
-    { key: "mercury", label: "NEC", sym: "☿" },
-    { key: "mars", label: "AUD", sym: "♂" },
-    { key: "jupiter", label: "VIT", sym: "♃" },
-    { key: "saturn", label: "NÊM", sym: "♄" }
+    { key: "fortune" },
+    { key: "spirit" },
+    { key: "venus" },
+    { key: "mercury" },
+    { key: "mars" },
+    { key: "jupiter" },
+    { key: "saturn" }
   ];
 
   let html = `
     <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark); max-width: 900px; margin: 20px auto;">
-      <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 12px; text-align: center;">Liberação Zodiacal</h3>
+      <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; text-align: center;">Liberação Zodiacal (L1)</h3>
       
-      <!-- Seletor dos 7 Lotes Herméticos -->
-      <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+      <!-- Seletor Quadrado dos 7 Lotes Herméticos (Ícones Limpos) -->
+      <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
   `;
 
   lotesInfo.forEach(l => {
     const isSel = l.key === selectedZRPhase;
-    const bg = isSel ? "background: var(--text-dark); color: #ffffff;" : "background: var(--bg-main); color: var(--text-dark);";
+    const styleBg = isSel 
+      ? "background: var(--text-dark); color: #ffffff; border-color: var(--text-dark);" 
+      : "background: var(--bg-main); color: var(--text-dark); border-color: var(--border-color);";
+    
     html += `
-      <button onclick="alternarLoteLiberacao('${l.key}')" style="${bg} border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 12px; font-weight: 700; font-size: 11px; cursor: pointer;">
-        ${l.sym} ${l.label}
+      <button onclick="alternarLoteLiberacao('${l.key}')" style="${styleBg} width: 36px; height: 36px; border: 1px solid; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${l.key}">
+        ${getLotIconSVG(l.key)}
       </button>
     `;
   });
@@ -99,7 +142,7 @@ function renderLiberacaoUI() {
       <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center;">
         <thead>
           <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-dark);">
-            <th style="padding: 8px;">Signo</th>
+            <th style="padding: 8px; width: 45px;"></th>
             <th style="padding: 8px;">Duração</th>
             <th style="padding: 8px;">Início</th>
             <th style="padding: 8px;">Fim</th>
@@ -110,28 +153,19 @@ function renderLiberacaoUI() {
   `;
 
   let currentStart = new Date(currentMoment);
-  let currSign = startSignIdx;
-  const initialSignOfLevel = startSignIdx;
 
   for (let i = 0; i < 12; i++) {
-    // Trata o Salto de Sinal (Loosing of the Bond) se atingir o signo oposto
-    let isLoosingBond = false;
-    if (i > 0 && currSign === (initialSignOfLevel + 6) % 12) {
-      currSign = (currSign + 1) % 12;
-      isLoosingBond = true;
-    }
-
+    const currSign = (startSignIdx + i) % 12;
     const durationYears = ZR_SIGN_YEARS[currSign];
     const currentEnd = calcularDataFimZR(currentStart, durationYears);
     const isPeak = angularSignsFromFort.includes(currSign);
 
     let statusText = "";
-    if (isPeak) statusText += `<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PICO</span> `;
-    if (isLoosingBond) statusText += `<span style="background: #fecdd3; color: #9f1239; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">SALTO</span>`;
+    if (isPeak) statusText = `<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;">PICO</span>`;
 
     html += `
       <tr style="border-bottom: 1px solid var(--border-color);">
-        <td style="padding: 8px; font-weight: 700;">${SIGNS[currSign].name}</td>
+        <td style="padding: 8px; text-align: center;">${getSignSVGZR(currSign, 22)}</td>
         <td style="padding: 8px;">${durationYears}a</td>
         <td style="padding: 8px;">${formatarDataBR(currentStart)}</td>
         <td style="padding: 8px;">${formatarDataBR(currentEnd)}</td>
@@ -140,7 +174,6 @@ function renderLiberacaoUI() {
     `;
 
     currentStart = new Date(currentEnd);
-    currSign = (currSign + 1) % 12;
   }
 
   html += `
