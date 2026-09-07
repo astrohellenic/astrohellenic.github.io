@@ -442,15 +442,18 @@ function abrirModuloTecnica(modulo) {
   const cRadix = document.getElementById('mandala-container');
   const cRev = document.getElementById('revolucao-container');
   const cOverlay = document.getElementById('mandala-controls-overlay');
-
+  const cActionsOverlay = document.getElementById('mandala-actions-overlay');
+   
   if (cRadix) cRadix.style.display = 'none';
   if (cRev) cRev.style.display = 'none';
   if (cOverlay) cOverlay.style.display = 'none';
-
+  if (cActionsOverlay) cActionsOverlay.style.display = 'none';
+   
 // 1. MANDALA / MAPA NATAL (Globinho)
 if (modulo === 'mandala' || modulo === 'radix') {
   if (cRadix) cRadix.style.display = 'block';
   if (cOverlay) cOverlay.style.display = 'flex';
+  if (cActionsOverlay) cActionsOverlay.style.display = 'flex';
   if (typeof renderMandala === 'function') renderMandala();
   }
   // 2. TABELA TÉCNICA
