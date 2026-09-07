@@ -157,11 +157,8 @@ function formatarHoraMinutoSegundo(date) {
 }
 
 /* FUNÇÃO CHAMADA PELO SUPABASE.JS (linha 497) */
-function iniciarModuloHoras(containerId = "horas-container") {
-  let container = document.getElementById(containerId);
-  if (!container) {
-    container = document.getElementById("horas-screen") || document.getElementById("modulo-horas") || document.getElementById("cRadix");
-  }
+function iniciarModuloHoras() {
+  const container = document.getElementById("cRadix");
   if (!container) return;
 
   const dados = calcularHorasDoMomento();
