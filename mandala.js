@@ -674,10 +674,18 @@ function renderMandala(dadosNovos) {
         <stop offset="100%" stop-color="#334155" stop-opacity="0.95" />
       </linearGradient>
 
-      <!-- Máscara das faixas de Júpiter -->
+         <!-- Máscara das faixas de Júpiter -->
       <clipPath id="jupiterClip">
         <circle cx="50" cy="50" r="42" />
       </clipPath>
+
+      <!-- BRILHO DE COMBUSTÃO / SOB OS RAIOS (halo ao redor do Sol) -->
+      <radialGradient id="combustionGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.9" />
+        <stop offset="30%" stop-color="#fde68a" stop-opacity="0.75" />
+        <stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" />
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+      </radialGradient>
     </defs>
 
     <rect width="${width}" height="${height}" fill="#ffffff"/>`;
@@ -838,6 +846,15 @@ function renderMandala(dadosNovos) {
   aplicarDesvioLateralArco(outerRingItems, 7.5);
 
   const pR = 300;
+   
+     /* BRILHO DE COMBUSTÃO / SOB OS RAIOS, ATRÁS DO SOL */
+  const sunRingItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
+  if (sunRingItem) {
+    const degToPx = (2 * Math.PI * pR) / 360;
+    const rSobRaios = degToPx * 15;
+    const sunGlowPos = polarToCart(cx, cy, pR, sunRingItem.aShift);
+    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
+  }
 
   /* RENDERIZAÇÃO DE TODOS OS ITENS NA ÓRBITA EXTERNA */
   outerRingItems.forEach(item => {
