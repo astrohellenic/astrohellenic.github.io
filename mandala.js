@@ -461,13 +461,13 @@ async function executarCalculo() {
       MC: { grau_absoluto: mcAbs },
       Nodo_Norte: { grau_absoluto: planetas.NodoNorte ? planetas.NodoNorte.grau_absoluto : 0, retro: checkRetro(planetas.NodoNorte) },
       Sizigia: { grau_absoluto: sizigiaData.grau_absoluto !== undefined ? parseFloat(sizigiaData.grau_absoluto) : 0 },
-      Sol: { grau_absoluto: planetas.Sol ? planetas.Sol.grau_absoluto : 0, retro: false },
-      Lua: { grau_absoluto: planetas.Lua ? planetas.Lua.grau_absoluto : 0, retro: false },
-      Mercúrio: { grau_absoluto: planetas.Mercurio ? planetas.Mercurio.grau_absoluto : 0, retro: checkRetro(planetas.Mercurio) },
-      Vênus: { grau_absoluto: planetas.Venus ? planetas.Venus.grau_absoluto : 0, retro: checkRetro(planetas.Venus) },
-      Marte: { grau_absoluto: planetas.Marte ? planetas.Marte.grau_absoluto : 0, retro: checkRetro(planetas.Marte) },
-      Júpiter: { grau_absoluto: planetas.Jupiter ? planetas.Jupiter.grau_absoluto : 0, retro: checkRetro(planetas.Jupiter) },
-      Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno) }
+      Sol: { grau_absoluto: planetas.Sol ? planetas.Sol.grau_absoluto : 0, retro: false, lat: planetas.Sol ? parseFloat(planetas.Sol.latitude) || 0 : 0 },
+      Lua: { grau_absoluto: planetas.Lua ? planetas.Lua.grau_absoluto : 0, retro: false, lat: planetas.Lua ? parseFloat(planetas.Lua.latitude) || 0 : 0 },
+      Mercúrio: { grau_absoluto: planetas.Mercurio ? planetas.Mercurio.grau_absoluto : 0, retro: checkRetro(planetas.Mercurio), lat: planetas.Mercurio ? parseFloat(planetas.Mercurio.latitude) || 0 : 0 },
+      Vênus: { grau_absoluto: planetas.Venus ? planetas.Venus.grau_absoluto : 0, retro: checkRetro(planetas.Venus), lat: planetas.Venus ? parseFloat(planetas.Venus.latitude) || 0 : 0 },
+      Marte: { grau_absoluto: planetas.Marte ? planetas.Marte.grau_absoluto : 0, retro: checkRetro(planetas.Marte), lat: planetas.Marte ? parseFloat(planetas.Marte.latitude) || 0 : 0 },
+      Júpiter: { grau_absoluto: planetas.Jupiter ? planetas.Jupiter.grau_absoluto : 0, retro: checkRetro(planetas.Jupiter), lat: planetas.Jupiter ? parseFloat(planetas.Jupiter.latitude) || 0 : 0 },
+      Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno), lat: planetas.Saturno ? parseFloat(planetas.Saturno.latitude) || 0 : 0 }
       };
 
         renderMandala();
@@ -802,7 +802,7 @@ function renderMandala(dadosNovos) {
   const outerRingItems = [];
 
   /* 1. Adiciona os 7 Planetas */
-  PLANETS_DEF.forEach(p => {
+    PLANETS_DEF.forEach(p => {
     const item = data[p.key];
     const absDeg = item ? item.grau_absoluto : 0;
     outerRingItems.push({
@@ -811,6 +811,7 @@ function renderMandala(dadosNovos) {
       symbol: p.symbol,
       deg: absDeg,
       retro: item ? Boolean(item.retro) : false,
+      eclLat: item ? (item.lat || 0) : 0,
       aScreen: eclToScreenAngle(absDeg, house1RefAbs)
     });
   });
@@ -866,7 +867,12 @@ function renderMandala(dadosNovos) {
     const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
 
-    const pPos = polarToCart(cx, cy, pR, item.aShift);
+    const latPxPerGrau = 6;
+    const raioEfetivo = item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : pR;
+    const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
+
+    if (item.type === "planet") {
+
 
     if (item.type === "planet") {
       const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
