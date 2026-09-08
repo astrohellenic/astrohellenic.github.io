@@ -139,7 +139,7 @@ function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
   return subperiodos;
 }
 
-// CÁLCULO DOS SUB-SUBPERÍODOS DO L3 (Dias brutos = Anos do signo)
+// CÁLCULO DOS SUBPERÍODOS DO L3 (Cada unidade do signo = 2.5 dias)
 function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
   const subperiodos = [];
   let currSign = l2SignIdx;
@@ -151,8 +151,9 @@ function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
       currSign = (l2SignIdx + 6) % 12; // Salto (Lysis)
     }
 
-    const days = ZR_SIGN_YEARS[currSign];
-    let currEnd = new Date(currStart.getTime() + days * 24 * 60 * 60 * 1000);
+    const yearsVal = ZR_SIGN_YEARS[currSign];
+    const totalDaysL3 = yearsVal * 2.5; // 1 unidade de L3 = 2.5 dias
+    let currEnd = new Date(currStart.getTime() + totalDaysL3 * 24 * 60 * 60 * 1000);
 
     let isClamped = false;
     if (currEnd > l2End) {
@@ -162,7 +163,7 @@ function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
 
     subperiodos.push({
       signIdx: currSign,
-      days: days,
+      days: totalDaysL3,
       start: new Date(currStart),
       end: new Date(currEnd),
       isLysis: (count === 12)
@@ -309,7 +310,6 @@ function renderLiberacaoUI() {
           </tr>
         `;
 
-        // TABELA DO L3 (EXPANDE ABAIXO DA LINHA DO L2 SELECIONADA)
         if (isL2Expanded) {
           const subperiodosL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
           html += `
