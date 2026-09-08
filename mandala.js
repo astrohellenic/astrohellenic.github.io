@@ -872,9 +872,6 @@ function renderMandala(dadosNovos) {
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
     if (item.type === "planet") {
-
-
-    if (item.type === "planet") {
       const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
       let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
