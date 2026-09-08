@@ -422,7 +422,7 @@ function iniciarModuloHoras() {
       </defs>
     </svg>
 
-    <div style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 12px; padding: 16px; max-width: 640px; margin: 20px auto;">
+    <div style="background: #fffdf5; border-radius: 12px; padding: 16px; max-width: 640px; margin: 20px auto;">
   <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark);">
       <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
       <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px;">
@@ -432,7 +432,7 @@ function iniciarModuloHoras() {
 
   if (horaAtual) {
     html += `
-      <div style="background: var(--bg-main); border: 1px solid #103B70; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
+      <div style="background: var(--bg-main); border: 2px solid #103B70; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
         <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
         <div style="font-size: 30px; font-weight: 800; color: var(--text-dark); margin: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
           ${getPlanet3DSVG(horaAtual.planet.id, 42)}
