@@ -106,6 +106,17 @@ function formatarDataBR(data) {
   return `${d}/${m}/${a}`;
 }
 
+// FORMATAÇÃO COM DATA E HORÁRIO EMPILHADOS PARA L3 E L4
+function formatarDataHoraBR(data) {
+  if (!data) return "--/--/----";
+  const d = String(data.getDate()).padStart(2, '0');
+  const m = String(data.getMonth() + 1).padStart(2, '0');
+  const a = data.getFullYear();
+  const hh = String(data.getHours()).padStart(2, '0');
+  const mm = String(data.getMinutes()).padStart(2, '0');
+  return `${d}/${m}/${a}<br><span style="font-size: 9px; opacity: 0.8; font-weight: 500;">${hh}:${mm}h</span>`;
+}
+
 // CÁLCULO DOS SUBPERÍODOS DO L2 (Meses de 30 dias)
 function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
   const subperiodos = [];
@@ -414,13 +425,12 @@ function renderLiberacaoUI() {
               <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #cbd5e1; background-color: ${isL3Expanded ? '#e0e7ff' : bgRowL3}; cursor: pointer;">
                 <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
                 <td style="padding: 6px; font-weight: 600; color: #103b70;">${subL3.days} Dias</td>
-                <td style="padding: 6px; color: #334155;">${formatarDataBR(subL3.start)}</td>
-                <td style="padding: 6px; color: #334155;">${formatarDataBR(subL3.end)}</td>
+                <td style="padding: 6px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
+                <td style="padding: 6px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
                 <td style="padding: 6px; text-align: center;">${statusL3}</td>
               </tr>
             `;
 
-            // TABELA DO L4 (EXPANDE ABAIXO DA LINHA DO L3 SELECIONADA)
             if (isL3Expanded) {
               const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
               html += `
@@ -455,8 +465,8 @@ function renderLiberacaoUI() {
                   <tr style="border-bottom: 1px solid #cbd5e1; background-color: ${bgRowL4};">
                     <td style="padding: 5px; text-align: center;">${getSignSVGZR(subL4.signIdx, 16)}</td>
                     <td style="padding: 5px; font-weight: 600; color: #103b70;">${subL4.hours} Horas</td>
-                    <td style="padding: 5px; color: #334155;">${formatarDataBR(subL4.start)}</td>
-                    <td style="padding: 5px; color: #334155;">${formatarDataBR(subL4.end)}</td>
+                    <td style="padding: 5px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
+                    <td style="padding: 5px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
                     <td style="padding: 5px; text-align: center;">${statusL4}</td>
                   </tr>
                 `;
