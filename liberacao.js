@@ -3,8 +3,9 @@
    ========================================== */
 
 let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
+let expandedL1Index = 0; // Primeiro L1 expandido por padrão
 
-const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 30, 30, 12]; // Áries a Peixes
+const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 15, 15, 12, 30, 30, 12]; // Áries a Peixes (anos/meses)
 
 const MONOLINE_ZODIAC_SVGS_ZR = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
@@ -21,6 +22,7 @@ const MONOLINE_ZODIAC_SVGS_ZR = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="7" y1="32" x2="57" y2="32"></line>`
 ];
 
+const SIGN_NAMES_ZR = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
 const SIGN_COLORS_ZR = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
 
 function getSignSVGZR(signIndex, size = 22) {
@@ -58,6 +60,12 @@ function iniciarModuloLiberacao() {
 
 function alternarLoteLiberacao(lotKey) {
   selectedZRPhase = lotKey;
+  expandedL1Index = 0;
+  renderLiberacaoUI();
+}
+
+function alternarL1Accordion(index) {
+  expandedL1Index = (expandedL1Index === index) ? null : index;
   renderLiberacaoUI();
 }
 
@@ -74,6 +82,51 @@ function formatarDataBR(data) {
   const m = String(data.getMonth() + 1).padStart(2, '0');
   const a = data.getFullYear();
   return `${d}/${m}/${a}`;
+}
+
+// CÁLCULO DOS SUBPERÍODOS DO L2 (com regra de 30 dias por mês e Quebra de Laço)
+function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
+  const subperiodos = [];
+  const l1Days = l1Years * 360;
+  const l1End = new Date(l1Start.getTime() + l1Days * 24 * 60 * 60 * 1000);
+
+  let currSign = l1SignIdx;
+  let currStart = new Date(l1Start);
+  let count = 0;
+
+  while (currStart < l1End) {
+    if (count === 12) {
+      // Salto / Quebra de Laço (Lysis): pula para o signo oposto (+6)
+      currSign = (l1SignIdx + 6) % 12;
+    }
+
+    const months = ZR_SIGN_YEARS[currSign];
+    const days = months * 30;
+    let currEnd = new Date(currStart.getTime() + days * 24 * 60 * 60 * 1000);
+
+    let isClamped = false;
+    if (currEnd > l1End) {
+      currEnd = new Date(l1End);
+      isClamped = true;
+    }
+
+    subperiodos.push({
+      signIdx: currSign,
+      months: months,
+      days: days,
+      start: new Date(currStart),
+      end: new Date(currEnd),
+      isLysis: (count === 12)
+    });
+
+    if (isClamped) break;
+
+    currStart = new Date(currEnd);
+    currSign = (currSign + 1) % 12;
+    count++;
+  }
+
+  return subperiodos;
 }
 
 function renderLiberacaoUI() {
@@ -135,57 +188,93 @@ function renderLiberacaoUI() {
     `;
   });
 
-  html += `
-        </div>
+  html += `</div>`;
 
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
-          <thead>
-            <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
-              <th style="padding: 10px 8px; width: 50px;">L1</th>
-              <th style="padding: 10px 8px;">Duração</th>
-              <th style="padding: 10px 8px;">Início do Período</th>
-              <th style="padding: 10px 8px;">Término do Período</th>
-              <th style="padding: 10px 8px;">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-  `;
-
+  // MONTAGEM DAS ERAS DO L1 E SEUS SUBPERÍODOS L2
   let currentStart = new Date(currentMoment);
 
   for (let i = 0; i < 12; i++) {
     const currSign = (startSignIdx + i) % 12;
     const durationYears = ZR_SIGN_YEARS[currSign];
     const currentEnd = calcularDataFimZR(currentStart, durationYears);
-    const isPeak = angularSignsFromFort.includes(currSign);
+    const isExpanded = (expandedL1Index === i);
+    const subperiodosL2 = calcularSubperiodosL2(currSign, currentStart, durationYears);
 
-    let statusText = "";
-    if (isPeak) {
-      statusText = `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px;">PICO</span>`;
-    }
-
-    const isCurrent = (i === 0);
-    const bgRow = i % 2 === 0 ? '#ffffff' : '#fffdf5';
-    const rowStyle = isCurrent 
-      ? "background-color: #fefcf2; border-left: 4px solid #c59b27; border-bottom: 1px solid #e5d5a1;" 
-      : `background-color: ${bgRow}; border-bottom: 1px solid #e5d5a1;`;
+    const isPeakL1 = angularSignsFromFort.includes(currSign);
+    let peakBadgeL1 = isPeakL1 
+      ? `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; margin-left: 8px;">PICO</span>` 
+      : ``;
 
     html += `
-      <tr style="${rowStyle}">
-        <td style="padding: 12px 8px; text-align: center;">${getSignSVGZR(currSign, 22)}</td>
-        <td style="padding: 12px 8px; font-weight: 600; color: #103b70;">${durationYears} anos</td>
-        <td style="padding: 12px 8px; color: #334155;">${formatarDataBR(currentStart)}</td>
-        <td style="padding: 12px 8px; color: #334155;">${formatarDataBR(currentEnd)}</td>
-        <td style="padding: 12px 8px; text-align: center;">${statusText}</td>
-      </tr>
+      <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: #ffffff;">
+        <!-- CABEÇALHO DO L1 (CLICÁVEL) -->
+        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? '#fefcf2' : '#ffffff'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #e5d5a1' : 'none'};">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            ${getSignSVGZR(currSign, 24)}
+            <div>
+              <strong style="color: #103b70; font-family: 'Cinzel', serif; font-size: 13px;">L1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</strong>
+              <span style="font-size: 12px; color: #64748b; margin-left: 6px;">(${durationYears} Anos)</span>
+              ${peakBadgeL1}
+            </div>
+          </div>
+          <div style="font-size: 12px; font-weight: 600; color: #334155;">
+            ${formatarDataBR(currentStart)} a ${formatarDataBR(currentEnd)}
+          </div>
+        </div>
     `;
 
+    // TABELA DO L2 (APARECE QUANDO O L1 ESTÁ EXPANDIDO)
+    if (isExpanded) {
+      html += `
+        <div style="padding: 10px; background: #fffdf5;">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
+            <thead>
+              <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
+                <th style="padding: 8px;">L2 (Subperíodo)</th>
+                <th style="padding: 8px;">Duração</th>
+                <th style="padding: 8px;">Início</th>
+                <th style="padding: 8px;">Término</th>
+                <th style="padding: 8px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      subperiodosL2.forEach((sub, sIdx) => {
+        const bgRow = sIdx % 2 === 0 ? '#ffffff' : '#fffdf5';
+        const isPeakL2 = angularSignsFromFort.includes(sub.signIdx);
+
+        let statusL2 = "";
+        if (sub.isLysis) {
+          statusL2 += `<span style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; margin-right: 4px;">SALTO</span>`;
+        }
+        if (isPeakL2) {
+          statusL2 += `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">PICO</span>`;
+        }
+
+        html += `
+          <tr style="border-bottom: 1px solid #e5d5a1; background-color: ${bgRow};">
+            <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
+            <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses (${sub.days}d)</td>
+            <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.start)}</td>
+            <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.end)}</td>
+            <td style="padding: 8px; text-align: center;">${statusL2}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
     currentStart = new Date(currentEnd);
   }
 
   html += `
-          </tbody>
-        </table>
       </div>
     </div>
   `;
