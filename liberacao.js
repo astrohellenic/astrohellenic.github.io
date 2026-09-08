@@ -384,9 +384,9 @@ function renderLiberacaoUI() {
           html += `
             <tr>
               <td colspan="5" style="padding: 8px 12px; background: #faf8f0; border-bottom: 1px solid #e5d5a1;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: #ffffff;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #103b70; border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: #ffffff;">
                   <thead>
-                    <tr style="background-color: #1e293b; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
+                    <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
                       <th style="padding: 6px;">L3 Subperíodo</th>
                       <th style="padding: 6px;">Duração</th>
                       <th style="padding: 6px;">Início</th>
@@ -399,7 +399,7 @@ function renderLiberacaoUI() {
 
           subperiodosL3.forEach((subL3, l3Idx) => {
             const isL3Expanded = (expandedL3Key === `${i}_${sIdx}_${l3Idx}`);
-            const bgRowL3 = l3Idx % 2 === 0 ? '#ffffff' : '#fffdf5';
+            const bgRowL3 = l3Idx % 2 === 0 ? '#ffffff' : '#f0f4f9';
             const isPeakL3 = angularSignsFromFort.includes(subL3.signIdx);
 
             let statusL3 = "";
@@ -411,7 +411,7 @@ function renderLiberacaoUI() {
             }
 
             html += `
-              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #e5d5a1; background-color: ${isL3Expanded ? '#fefcf2' : bgRowL3}; cursor: pointer;">
+              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #cbd5e1; background-color: ${isL3Expanded ? '#e0e7ff' : bgRowL3}; cursor: pointer;">
                 <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
                 <td style="padding: 6px; font-weight: 600; color: #103b70;">${subL3.days} Dias</td>
                 <td style="padding: 6px; color: #334155;">${formatarDataBR(subL3.start)}</td>
@@ -425,7 +425,7 @@ function renderLiberacaoUI() {
               const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
               html += `
                 <tr>
-                  <td colspan="5" style="padding: 6px 10px; background: #f1f5f9; border-bottom: 1px solid #e5d5a1;">
+                  <td colspan="5" style="padding: 6px 10px; background: #faf8f0; border-bottom: 1px solid #cbd5e1;">
                     <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #94a3b8; border-radius: 6px; overflow: hidden; font-size: 10px; text-align: center; background: #ffffff;">
                       <thead>
                         <tr style="background-color: #475569; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px;">
