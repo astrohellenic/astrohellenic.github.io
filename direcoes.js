@@ -5,7 +5,7 @@
 
 let selectedAphetesKey = "ASC"; // Afeta padrão inicial
 
-/* 1. MATRIZ DE TERMOS EGÍPCIOS DE VETTIUS VALENS */
+/* MATRIZ DE TERMOS EGÍPCIOS DE VETTIUS VALENS */
 const EGYPTIAN_TERMS_DIRECOES = [
   [{ pId: "Jupiter", pSym: "♃", deg: 6 }, { pId: "Venus", pSym: "♀", deg: 12 }, { pId: "Mercury", pSym: "☿", deg: 20 }, { pId: "Mars", pSym: "♂", deg: 25 }, { pId: "Saturn", pSym: "♄", deg: 30 }],
   [{ pId: "Venus", pSym: "♀", deg: 8 }, { pId: "Mercury", pSym: "☿", deg: 14 }, { pId: "Jupiter", pSym: "♃", deg: 22 }, { pId: "Saturn", pSym: "♄", deg: 27 }, { pId: "Mars", pSym: "♂", deg: 30 }],
@@ -21,10 +21,9 @@ const EGYPTIAN_TERMS_DIRECOES = [
   [{ pId: "Venus", pSym: "♀", deg: 12 }, { pId: "Jupiter", pSym: "♃", deg: 16 }, { pId: "Mercury", pSym: "☿", deg: 19 }, { pId: "Mars", pSym: "♂", deg: 28 }, { pId: "Saturn", pSym: "♄", deg: 30 }]
 ];
 
-/* 2. TABELA DE TEMPOS DE ASCENSÃO OBLÍQUA DOS SIGNOS (VALENS) - CLIMA PADRÃO */
-const VALENS_ASCENSION_TIMES = [20, 24, 28, 32, 36, 40, 40, 36, 32, 28, 24, 20]; // Áries a Peixes
+/* TEMPOS DE ASCENSÃO OBLÍQUA DOS SIGNOS (VALENS) - CLIMA III/IV */
+const VALENS_ASCENSION_TIMES = [20, 24, 28, 32, 36, 40, 40, 36, 32, 28, 24, 20];
 
-/* 3. ATIVOS SVG E ESTILOS COMPARTILHADOS DO SOFTWARE */
 const MONOLINE_ZODIAC_SVGS_DIRECOES = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
   `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="32" cy="43" r="18"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,3c14,0,15,12,15,12s0,10,17,10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,3C50,3,49,15,49,15s0,10-17,10"></path>`,
@@ -51,14 +50,14 @@ function getPlanet3DSVGDir(planetId) {
   if (typeof getPlanet3DSVG === 'function') {
     return getPlanet3DSVG(planetId);
   }
-  return `<strong style="color: #103b70;">${planetId}</strong>`;
+  return '';
 }
 
 function getItemSVGDir(key) {
   if (typeof getItemSVG === 'function') {
     return getItemSVG(key);
   }
-  return `<span style="font-size: 11px; font-weight: bold; color: #103b70;">${key}</span>`;
+  return '';
 }
 
 function formatDegMinDir(absDeg) {
@@ -78,7 +77,6 @@ function formatarDataBRDir(data) {
   return `${d}/${m}/${a}`;
 }
 
-/* 4. MÉTODOS DE CÁLCULO DAS CIRCUMAMBULAÇÕES (VALENS) */
 function obterGrauEfetivoAfeta(key, data) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const pObj = {};
@@ -90,13 +88,25 @@ function obterGrauEfetivoAfeta(key, data) {
 
   const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
   const fortAbs = (isDay ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
+  const spirAbs = (isDay ? (ascAbs + pObj.Sun - pObj.Moon) : (ascAbs + pObj.Moon - pObj.Sun) + 36000) % 360;
+  const erosAbs = (isDay ? (ascAbs + pObj.Venus - spirAbs) : (ascAbs + spirAbs - pObj.Venus) + 36000) % 360;
+  const necAbs = (isDay ? (ascAbs + fortAbs - pObj.Mercury) : (ascAbs + pObj.Mercury - fortAbs) + 36000) % 360;
+  const courAbs = (isDay ? (ascAbs + fortAbs - pObj.Mars) : (ascAbs + pObj.Mars - fortAbs) + 36000) % 360;
+  const vicAbs = (isDay ? (ascAbs + pObj.Jupiter - spirAbs) : (ascAbs + spirAbs - pObj.Jupiter) + 36000) % 360;
+  const nemAbs = (isDay ? (ascAbs + fortAbs - pObj.Saturn) : (ascAbs + pObj.Saturn - fortAbs) + 36000) % 360;
 
   switch (key) {
     case "ASC": return ascAbs;
     case "Sun": return pObj.Sun;
     case "Moon": return pObj.Moon;
     case "Syz": return data.Sizigia ? data.Sizigia.grau_absoluto : 0;
-    case "FORT": return fortAbs;
+    case "fortune": return fortAbs;
+    case "spirit": return spirAbs;
+    case "venus": return erosAbs;
+    case "mercury": return necAbs;
+    case "mars": return courAbs;
+    case "jupiter": return vicAbs;
+    case "saturn": return nemAbs;
     default: return ascAbs;
   }
 }
@@ -107,13 +117,11 @@ function calcularTabelaCircumambulatoria(startAbsDeg, birthDate) {
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
 
-  // Geramos o percurso ao longo de 120 anos de vida útil
   while (totalYearsAccum < 120) {
     const signIdx = Math.floor(currAbsDeg / 30);
     const degInSign = currAbsDeg % 30;
     const signTerms = EGYPTIAN_TERMS_DIRECOES[signIdx];
 
-    // Encontra o termo ativo no ponto atual
     let currentTerm = signTerms[0];
     for (let t of signTerms) {
       if (degInSign < t.deg) {
@@ -122,20 +130,18 @@ function calcularTabelaCircumambulatoria(startAbsDeg, birthDate) {
       }
     }
 
-    // Distância até o final do termo egípcio atual
     const remDegInTerm = currentTerm.deg - degInSign;
-    const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30; // Tempos de ascensão por grau
+    const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30;
     const yearsInTerm = remDegInTerm * ascTimePerDegree;
 
     const startDate = new Date(currDate);
-    const endDate = new Date(currDate.getTime() + yearsInTerm * 360 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(currDate.getTime() + yearsInTerm * 365.25 * 24 * 60 * 60 * 1000);
 
     tabela.push({
       signIdx: signIdx,
       startDegAbs: currAbsDeg,
       endDegAbs: (currAbsDeg + remDegInTerm) % 360,
       termPlanetId: currentTerm.pId,
-      termPlanetSym: currentTerm.pSym,
       durationYears: yearsInTerm.toFixed(2),
       startYearsOld: totalYearsAccum.toFixed(2),
       endYearsOld: (totalYearsAccum + yearsInTerm).toFixed(2),
@@ -151,7 +157,6 @@ function calcularTabelaCircumambulatoria(startAbsDeg, birthDate) {
   return tabela;
 }
 
-/* 5. INTERFACE DO USUÁRIO (UI) */
 function alternarAfetaCircumambulation(key) {
   selectedAphetesKey = key;
   renderCircumambulaçõesUI();
@@ -173,11 +178,17 @@ function renderCircumambulaçõesUI() {
   const birthDate = new Date(currentMoment);
 
   const afetasDisponiveis = [
-    { key: "ASC", name: "Ascendente (ASC)", type: "item" },
-    { key: "Sun", name: "Sol (Diurno)", type: "planet" },
-    { key: "Moon", name: "Lua (Noturno)", type: "planet" },
-    { key: "Syz", name: "Sizígia Pré-Natal", type: "item" },
-    { key: "FORT", name: "Lote da Fortuna", type: "item" }
+    { key: "ASC", type: "item" },
+    { key: "Sun", type: "planet" },
+    { key: "Moon", type: "planet" },
+    { key: "Syz", type: "item" },
+    { key: "fortune", type: "item" },
+    { key: "spirit", type: "item" },
+    { key: "venus", type: "item" },
+    { key: "mercury", type: "item" },
+    { key: "mars", type: "item" },
+    { key: "jupiter", type: "item" },
+    { key: "saturn", type: "item" }
   ];
 
   const tabelaDirecoes = calcularTabelaCircumambulatoria(startAbsDeg, birthDate);
@@ -191,8 +202,8 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
         
-        <!-- SELEÇÃO DO AFETA (APHETES) -->
-        <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;">
+        <!-- BOTOEIRA DE AFETAS -->
+        <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
   `;
 
   afetasDisponiveis.forEach(af => {
@@ -201,12 +212,11 @@ function renderCircumambulaçõesUI() {
       ? "background: #103b70; color: #ffffff; border: 1px solid #c59b27;" 
       : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
 
-    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "FORT" ? "fortune" : (af.key === "Syz" ? "Sizígia" : af.key));
+    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
 
     html += `
-      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" title="${af.name}">
+      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${af.key}">
         <div style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">${iconHTML}</div>
-        <span>${af.key}</span>
       </button>
     `;
   });
@@ -241,11 +251,8 @@ function renderCircumambulaçõesUI() {
       <tr style="${rowStyle}">
         <td style="padding: 10px 8px; text-align: center;">${getSignSVGDir(row.signIdx, 22)}</td>
         <td style="padding: 10px 8px; font-weight: 600; color: #334155;">${formatDegMinDir(row.startDegAbs)} a ${formatDegMinDir(row.endDegAbs)}</td>
-        <td style="padding: 10px 8px; font-weight: 700; color: #c59b27; font-size: 14px;">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <div style="width: 24px; height: 24px;">${getPlanet3DSVGDir(row.termPlanetId)}</div>
-            <span>${row.termPlanetSym}</span>
-          </div>
+        <td style="padding: 10px 8px; text-align: center;">
+          <div style="width: 28px; height: 28px; margin: 0 auto;">${getPlanet3DSVGDir(row.termPlanetId)}</div>
         </td>
         <td style="padding: 10px 8px; font-weight: 600; color: #103b70;">${row.startYearsOld} a ${row.endYearsOld} anos</td>
         <td style="padding: 10px 8px; color: #334155;">${formatarDataBRDir(row.startDate)}</td>
