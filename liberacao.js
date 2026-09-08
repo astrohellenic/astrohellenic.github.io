@@ -5,7 +5,8 @@
 let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
 let expandedL1Index = 0; // Primeiro L1 expandido por padrão
 
-const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 15, 15, 12, 30, 30, 12]; // Áries a Peixes (anos/meses)
+// Anos Helenísticos (Valens): Áries(15), Touro(8), Gêmeos(20), Câncer(25), Leão(19), Virgem(20), Libra(8), Escorpião(15), Sagitário(12), Capricórnio(27), Aquário(30), Peixes(12)
+const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12];
 
 const MONOLINE_ZODIAC_SVGS_ZR = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
@@ -84,7 +85,7 @@ function formatarDataBR(data) {
   return `${d}/${m}/${a}`;
 }
 
-// CÁLCULO DOS SUBPERÍODOS DO L2 (com regra de 30 dias por mês e Quebra de Laço)
+// CÁLCULO DOS SUBPERÍODOS DO L2
 function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
   const subperiodos = [];
   const l1Days = l1Years * 360;
@@ -96,7 +97,7 @@ function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
 
   while (currStart < l1End) {
     if (count === 12) {
-      // Salto / Quebra de Laço (Lysis): pula para o signo oposto (+6)
+      // Salto / Quebra de Laço (Lysis): pula para o signo oposto
       currSign = (l1SignIdx + 6) % 12;
     }
 
@@ -190,7 +191,6 @@ function renderLiberacaoUI() {
 
   html += `</div>`;
 
-  // MONTAGEM DAS ERAS DO L1 E SEUS SUBPERÍODOS L2
   let currentStart = new Date(currentMoment);
 
   for (let i = 0; i < 12; i++) {
@@ -207,13 +207,12 @@ function renderLiberacaoUI() {
 
     html += `
       <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: #ffffff;">
-        <!-- CABEÇALHO DO L1 (CLICÁVEL) -->
         <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? '#fefcf2' : '#ffffff'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #e5d5a1' : 'none'};">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
               <strong style="color: #103b70; font-family: 'Cinzel', serif; font-size: 13px;">L1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</strong>
-              <span style="font-size: 12px; color: #64748b; margin-left: 6px;">(${durationYears} Anos)</span>
+              <span style="font-size: 12px; color: #64748b; margin-left: 6px;">${durationYears} Anos</span>
               ${peakBadgeL1}
             </div>
           </div>
@@ -223,14 +222,13 @@ function renderLiberacaoUI() {
         </div>
     `;
 
-    // TABELA DO L2 (APARECE QUANDO O L1 ESTÁ EXPANDIDO)
     if (isExpanded) {
       html += `
         <div style="padding: 10px; background: #fffdf5;">
           <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
             <thead>
               <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
-                <th style="padding: 8px;">L2 (Subperíodo)</th>
+                <th style="padding: 8px;">L2 Subperíodo</th>
                 <th style="padding: 8px;">Duração</th>
                 <th style="padding: 8px;">Início</th>
                 <th style="padding: 8px;">Término</th>
@@ -255,7 +253,7 @@ function renderLiberacaoUI() {
         html += `
           <tr style="border-bottom: 1px solid #e5d5a1; background-color: ${bgRow};">
             <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
-            <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses (${sub.days}d)</td>
+            <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses e ${sub.days} Dias</td>
             <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.start)}</td>
             <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.end)}</td>
             <td style="padding: 8px; text-align: center;">${statusL2}</td>
