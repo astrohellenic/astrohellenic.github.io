@@ -3,8 +3,9 @@
    ========================================== */
 
 let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
-let expandedL1Index = 0; // Primeiro L1 expandido por padrão
+let expandedL1Index = null; // Detectado automaticamente com base no momento atual
 let expandedL2Key = null; // Guarda a chave do L2 expandido (ex: "0_2")
+let expandedL3Key = null; // Guarda a chave do L3 expandido (ex: "0_2_1")
 
 // Anos Helenísticos (Valens): Áries(15), Touro(8), Gêmeos(20), Câncer(25), Leão(19), Virgem(20), Libra(8), Escorpião(15), Sagitário(12), Capricórnio(27), Aquário(30), Peixes(12)
 const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12];
@@ -62,14 +63,16 @@ function iniciarModuloLiberacao() {
 
 function alternarLoteLiberacao(lotKey) {
   selectedZRPhase = lotKey;
-  expandedL1Index = 0;
+  expandedL1Index = null;
   expandedL2Key = null;
+  expandedL3Key = null;
   renderLiberacaoUI();
 }
 
 function alternarL1Accordion(index) {
   expandedL1Index = (expandedL1Index === index) ? null : index;
   expandedL2Key = null;
+  expandedL3Key = null;
   renderLiberacaoUI();
 }
 
@@ -77,6 +80,14 @@ function alternarL2Accordion(l1Idx, l2Idx, event) {
   if (event) event.stopPropagation();
   const key = `${l1Idx}_${l2Idx}`;
   expandedL2Key = (expandedL2Key === key) ? null : key;
+  expandedL3Key = null;
+  renderLiberacaoUI();
+}
+
+function alternarL3Accordion(l1Idx, l2Idx, l3Idx, event) {
+  if (event) event.stopPropagation();
+  const key = `${l1Idx}_${l2Idx}_${l3Idx}`;
+  expandedL3Key = (expandedL3Key === key) ? null : key;
   renderLiberacaoUI();
 }
 
@@ -152,7 +163,7 @@ function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
     }
 
     const yearsVal = ZR_SIGN_YEARS[currSign];
-    const totalDaysL3 = yearsVal * 2.5; // 1 unidade de L3 = 2.5 dias
+    const totalDaysL3 = yearsVal * 2.5;
     let currEnd = new Date(currStart.getTime() + totalDaysL3 * 24 * 60 * 60 * 1000);
 
     let isClamped = false;
@@ -164,6 +175,46 @@ function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
     subperiodos.push({
       signIdx: currSign,
       days: totalDaysL3,
+      start: new Date(currStart),
+      end: new Date(currEnd),
+      isLysis: (count === 12)
+    });
+
+    if (isClamped) break;
+
+    currStart = new Date(currEnd);
+    currSign = (currSign + 1) % 12;
+    count++;
+  }
+
+  return subperiodos;
+}
+
+// CÁLCULO DOS SUBPERÍODOS DO L4 (Cada unidade do signo = 5 horas)
+function calcularSubperiodosL4(l3SignIdx, l3Start, l3End) {
+  const subperiodos = [];
+  let currSign = l3SignIdx;
+  let currStart = new Date(l3Start);
+  let count = 0;
+
+  while (currStart < l3End) {
+    if (count === 12) {
+      currSign = (l3SignIdx + 6) % 12; // Salto (Lysis)
+    }
+
+    const yearsVal = ZR_SIGN_YEARS[currSign];
+    const totalHoursL4 = yearsVal * 5;
+    let currEnd = new Date(currStart.getTime() + totalHoursL4 * 60 * 60 * 1000);
+
+    let isClamped = false;
+    if (currEnd > l3End) {
+      currEnd = new Date(l3End);
+      isClamped = true;
+    }
+
+    subperiodos.push({
+      signIdx: currSign,
+      hours: totalHoursL4,
       start: new Date(currStart),
       end: new Date(currEnd),
       isLysis: (count === 12)
@@ -206,6 +257,24 @@ function renderLiberacaoUI() {
 
   const activeLotObj = lotes.find(l => l.key === selectedZRPhase) || fortLot;
   const startSignIdx = Math.floor(activeLotObj.deg / 30);
+
+  // DETECÇÃO AUTOMÁTICA DO L1 ATIVO SE NENHUM ESTIVER EXPANDIDO MANUALMENTE
+  const hoje = new Date();
+  if (expandedL1Index === null) {
+    let checkStart = new Date(currentMoment);
+    for (let i = 0; i < 12; i++) {
+      const currSign = (startSignIdx + i) % 12;
+      const durationYears = ZR_SIGN_YEARS[currSign];
+      const checkEnd = calcularDataFimZR(checkStart, durationYears);
+
+      if (hoje >= checkStart && hoje < checkEnd) {
+        expandedL1Index = i;
+        break;
+      }
+      checkStart = new Date(checkEnd);
+    }
+    if (expandedL1Index === null) expandedL1Index = 0; // Fallback
+  }
 
   const lotesInfo = [
     { key: "fortune" },
@@ -329,6 +398,7 @@ function renderLiberacaoUI() {
           `;
 
           subperiodosL3.forEach((subL3, l3Idx) => {
+            const isL3Expanded = (expandedL3Key === `${i}_${sIdx}_${l3Idx}`);
             const bgRowL3 = l3Idx % 2 === 0 ? '#ffffff' : '#fffdf5';
             const isPeakL3 = angularSignsFromFort.includes(subL3.signIdx);
 
@@ -341,7 +411,7 @@ function renderLiberacaoUI() {
             }
 
             html += `
-              <tr style="border-bottom: 1px solid #e5d5a1; background-color: ${bgRowL3};">
+              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #e5d5a1; background-color: ${isL3Expanded ? '#fefcf2' : bgRowL3}; cursor: pointer;">
                 <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
                 <td style="padding: 6px; font-weight: 600; color: #103b70;">${subL3.days} Dias</td>
                 <td style="padding: 6px; color: #334155;">${formatarDataBR(subL3.start)}</td>
@@ -349,6 +419,56 @@ function renderLiberacaoUI() {
                 <td style="padding: 6px; text-align: center;">${statusL3}</td>
               </tr>
             `;
+
+            // TABELA DO L4 (EXPANDE ABAIXO DA LINHA DO L3 SELECIONADA)
+            if (isL3Expanded) {
+              const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
+              html += `
+                <tr>
+                  <td colspan="5" style="padding: 6px 10px; background: #f1f5f9; border-bottom: 1px solid #e5d5a1;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #94a3b8; border-radius: 6px; overflow: hidden; font-size: 10px; text-align: center; background: #ffffff;">
+                      <thead>
+                        <tr style="background-color: #475569; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px;">
+                          <th style="padding: 5px;">L4 Subperíodo</th>
+                          <th style="padding: 5px;">Duração</th>
+                          <th style="padding: 5px;">Início</th>
+                          <th style="padding: 5px;">Término</th>
+                          <th style="padding: 5px;">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+              `;
+
+              subperiodosL4.forEach((subL4, l4Idx) => {
+                const bgRowL4 = l4Idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const isPeakL4 = angularSignsFromFort.includes(subL4.signIdx);
+
+                let statusL4 = "";
+                if (subL4.isLysis) {
+                  statusL4 += `<span style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px; margin-right: 3px;">SALTO</span>`;
+                }
+                if (isPeakL4) {
+                  statusL4 += `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px;">PICO</span>`;
+                }
+
+                html += `
+                  <tr style="border-bottom: 1px solid #cbd5e1; background-color: ${bgRowL4};">
+                    <td style="padding: 5px; text-align: center;">${getSignSVGZR(subL4.signIdx, 16)}</td>
+                    <td style="padding: 5px; font-weight: 600; color: #103b70;">${subL4.hours} Horas</td>
+                    <td style="padding: 5px; color: #334155;">${formatarDataBR(subL4.start)}</td>
+                    <td style="padding: 5px; color: #334155;">${formatarDataBR(subL4.end)}</td>
+                    <td style="padding: 5px; text-align: center;">${statusL4}</td>
+                  </tr>
+                `;
+              });
+
+              html += `
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              `;
+            }
           });
 
           html += `
