@@ -4,6 +4,7 @@
 
 let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
 let expandedL1Index = 0; // Primeiro L1 expandido por padrão
+let expandedL2Key = null; // Guarda a chave do L2 expandido (ex: "0_2")
 
 // Anos Helenísticos (Valens): Áries(15), Touro(8), Gêmeos(20), Câncer(25), Leão(19), Virgem(20), Libra(8), Escorpião(15), Sagitário(12), Capricórnio(27), Aquário(30), Peixes(12)
 const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12];
@@ -62,11 +63,20 @@ function iniciarModuloLiberacao() {
 function alternarLoteLiberacao(lotKey) {
   selectedZRPhase = lotKey;
   expandedL1Index = 0;
+  expandedL2Key = null;
   renderLiberacaoUI();
 }
 
 function alternarL1Accordion(index) {
   expandedL1Index = (expandedL1Index === index) ? null : index;
+  expandedL2Key = null;
+  renderLiberacaoUI();
+}
+
+function alternarL2Accordion(l1Idx, l2Idx, event) {
+  if (event) event.stopPropagation();
+  const key = `${l1Idx}_${l2Idx}`;
+  expandedL2Key = (expandedL2Key === key) ? null : key;
   renderLiberacaoUI();
 }
 
@@ -85,7 +95,7 @@ function formatarDataBR(data) {
   return `${d}/${m}/${a}`;
 }
 
-// CÁLCULO DOS SUBPERÍODOS DO L2
+// CÁLCULO DOS SUBPERÍODOS DO L2 (Meses de 30 dias)
 function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
   const subperiodos = [];
   const l1Days = l1Years * 360;
@@ -97,8 +107,7 @@ function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
 
   while (currStart < l1End) {
     if (count === 12) {
-      // Salto / Quebra de Laço (Lysis): pula para o signo oposto
-      currSign = (l1SignIdx + 6) % 12;
+      currSign = (l1SignIdx + 6) % 12; // Salto (Lysis)
     }
 
     const months = ZR_SIGN_YEARS[currSign];
@@ -114,6 +123,45 @@ function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
     subperiodos.push({
       signIdx: currSign,
       months: months,
+      days: days,
+      start: new Date(currStart),
+      end: new Date(currEnd),
+      isLysis: (count === 12)
+    });
+
+    if (isClamped) break;
+
+    currStart = new Date(currEnd);
+    currSign = (currSign + 1) % 12;
+    count++;
+  }
+
+  return subperiodos;
+}
+
+// CÁLCULO DOS SUB-SUBPERÍODOS DO L3 (Dias brutos = Anos do signo)
+function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
+  const subperiodos = [];
+  let currSign = l2SignIdx;
+  let currStart = new Date(l2Start);
+  let count = 0;
+
+  while (currStart < l2End) {
+    if (count === 12) {
+      currSign = (l2SignIdx + 6) % 12; // Salto (Lysis)
+    }
+
+    const days = ZR_SIGN_YEARS[currSign];
+    let currEnd = new Date(currStart.getTime() + days * 24 * 60 * 60 * 1000);
+
+    let isClamped = false;
+    if (currEnd > l2End) {
+      currEnd = new Date(l2End);
+      isClamped = true;
+    }
+
+    subperiodos.push({
+      signIdx: currSign,
       days: days,
       start: new Date(currStart),
       end: new Date(currEnd),
@@ -239,6 +287,7 @@ function renderLiberacaoUI() {
       `;
 
       subperiodosL2.forEach((sub, sIdx) => {
+        const isL2Expanded = (expandedL2Key === `${i}_${sIdx}`);
         const bgRow = sIdx % 2 === 0 ? '#ffffff' : '#fffdf5';
         const isPeakL2 = angularSignsFromFort.includes(sub.signIdx);
 
@@ -251,14 +300,64 @@ function renderLiberacaoUI() {
         }
 
         html += `
-          <tr style="border-bottom: 1px solid #e5d5a1; background-color: ${bgRow};">
+          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid #e5d5a1; background-color: ${isL2Expanded ? '#fefcf2' : bgRow}; cursor: pointer;">
             <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
-            <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses e ${sub.days} Dias</td>
+            <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses (${sub.days} Dias)</td>
             <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.start)}</td>
             <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.end)}</td>
             <td style="padding: 8px; text-align: center;">${statusL2}</td>
           </tr>
         `;
+
+        // TABELA DO L3 (EXPANDE ABAIXO DA LINHA DO L2 SELECIONADA)
+        if (isL2Expanded) {
+          const subperiodosL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
+          html += `
+            <tr>
+              <td colspan="5" style="padding: 8px 12px; background: #faf8f0; border-bottom: 1px solid #e5d5a1;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: #ffffff;">
+                  <thead>
+                    <tr style="background-color: #1e293b; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
+                      <th style="padding: 6px;">L3 Subperíodo</th>
+                      <th style="padding: 6px;">Duração</th>
+                      <th style="padding: 6px;">Início</th>
+                      <th style="padding: 6px;">Término</th>
+                      <th style="padding: 6px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+          `;
+
+          subperiodosL3.forEach((subL3, l3Idx) => {
+            const bgRowL3 = l3Idx % 2 === 0 ? '#ffffff' : '#fffdf5';
+            const isPeakL3 = angularSignsFromFort.includes(subL3.signIdx);
+
+            let statusL3 = "";
+            if (subL3.isLysis) {
+              statusL3 += `<span style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px; margin-right: 4px;">SALTO</span>`;
+            }
+            if (isPeakL3) {
+              statusL3 += `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px;">PICO</span>`;
+            }
+
+            html += `
+              <tr style="border-bottom: 1px solid #e5d5a1; background-color: ${bgRowL3};">
+                <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
+                <td style="padding: 6px; font-weight: 600; color: #103b70;">${subL3.days} Dias</td>
+                <td style="padding: 6px; color: #334155;">${formatarDataBR(subL3.start)}</td>
+                <td style="padding: 6px; color: #334155;">${formatarDataBR(subL3.end)}</td>
+                <td style="padding: 6px; text-align: center;">${statusL3}</td>
+              </tr>
+            `;
+          });
+
+          html += `
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          `;
+        }
       });
 
       html += `
