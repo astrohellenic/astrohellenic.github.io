@@ -78,16 +78,16 @@ function formatarDataBRDir(data) {
 }
 
 function getItemSVG(key) {
-    if (key === 'Syz' || key === 'Sizígia') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="0" cy="0" r="4" fill="currentColor"/></svg>`;
+      if (key === 'Syz' || key === 'Sizígia') {
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="0" cy="0" r="5" fill="currentColor"/></svg>`;
   }
 
   const lotConfig = {
-    'venus':   { sym: '♀', y: -2,  size: 15 },
-    'mercury': { sym: '☿', y: 0.5, size: 15 },
-    'mars':    { sym: '♂', y: -2,  size: 15 },
+    'venus':   { sym: '♀', y: 0,  size: 15 },
+    'mercury': { sym: '☿', y: 0, size: 15 },
+    'mars':    { sym: '♂', y: 0,  size: 15 },
     'jupiter': { sym: '♃', y: 0,   size: 15 },
-    'saturn':  { sym: '♄', y: 0.5, size: 15 }
+    'saturn':  { sym: '♄', y: 0, size: 15 }
   };
 
   if (key === 'fortune') {
