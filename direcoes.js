@@ -79,7 +79,7 @@ function formatarDataBRDir(data) {
 
 function getItemSVG(key) {
       if (key === 'Syz' || key === 'Sizígia') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="0" cy="0" r="5" fill="currentColor"/></svg>`;
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#103b70" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#103b70"/><circle cx="0" cy="0" r="2.3" fill="#103b70"/></svg>`,
   }
 
   const lotConfig = {
