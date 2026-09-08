@@ -116,10 +116,10 @@ function renderLiberacaoUI() {
 
   let html = `
     <div style="background: #fffdf5; border-radius: 16px; padding: 20px; max-width: 900px; margin: 20px auto;">
-  <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Liberação Zodiacal - L1</h3>
-      
-      <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+      <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Liberação Zodiacal</h3>
+          
+        <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
   `;
 
   lotesInfo.forEach(l => {
@@ -136,19 +136,19 @@ function renderLiberacaoUI() {
   });
 
   html += `
-      </div>
+        </div>
 
-      <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; background: #ffffff;">
-        <thead>
-          <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
-            <th style="padding: 10px 8px; width: 50px; border: 1px solid #103b70;"></th>
-            <th style="padding: 10px 8px; border: 1px solid #103b70;">Duração</th>
-            <th style="padding: 10px 8px; border: 1px solid #103b70;">Início do Período</th>
-            <th style="padding: 10px 8px; border: 1px solid #103b70;">Término do Período</th>
-            <th style="padding: 10px 8px; border: 1px solid #103b70;">Status</th>
-          </tr>
-        </thead>
-        <tbody>
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
+          <thead>
+            <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+              <th style="padding: 10px 8px; width: 50px;">L1</th>
+              <th style="padding: 10px 8px;">Duração</th>
+              <th style="padding: 10px 8px;">Início do Período</th>
+              <th style="padding: 10px 8px;">Término do Período</th>
+              <th style="padding: 10px 8px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
   `;
 
   let currentStart = new Date(currentMoment);
@@ -164,25 +164,29 @@ function renderLiberacaoUI() {
       statusText = `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px;">PICO</span>`;
     }
 
+    const isCurrent = (i === 0);
     const bgRow = i % 2 === 0 ? '#ffffff' : '#fffdf5';
+    const rowStyle = isCurrent 
+      ? "background-color: #fefcf2; border-left: 4px solid #c59b27; border-bottom: 1px solid #e5d5a1;" 
+      : `background-color: ${bgRow}; border-bottom: 1px solid #e5d5a1;`;
 
-      html += `
-    <tr style="border-bottom: 1px solid #e5d5a1; background-color: ${bgRow};">
-      <td style="padding: 12px 8px; text-align: center;">${getSignSVGZR(currSign, 22)}</td>
-      <td style="padding: 12px 8px; font-weight: 600; color: #103b70;">${durationYears} anos</td>
-      <td style="padding: 12px 8px; color: #334155;">${formatarDataBR(currentStart)}</td>
-      <td style="padding: 12px 8px; color: #334155;">${formatarDataBR(currentEnd)}</td>
-      <td style="padding: 12px 8px; text-align: center;">${statusText}</td>
-    </tr>
-  `;
+    html += `
+      <tr style="${rowStyle}">
+        <td style="padding: 12px 8px; text-align: center;">${getSignSVGZR(currSign, 22)}</td>
+        <td style="padding: 12px 8px; font-weight: 600; color: #103b70;">${durationYears} anos</td>
+        <td style="padding: 12px 8px; color: #334155;">${formatarDataBR(currentStart)}</td>
+        <td style="padding: 12px 8px; color: #334155;">${formatarDataBR(currentEnd)}</td>
+        <td style="padding: 12px 8px; text-align: center;">${statusText}</td>
+      </tr>
+    `;
 
     currentStart = new Date(currentEnd);
   }
 
   html += `
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 
