@@ -208,6 +208,7 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   ];
 }
 
+// Desvio lateral
 function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
   if (!items || items.length === 0) return;
   items.sort((a, b) => a.aScreen - b.aScreen);
@@ -217,6 +218,10 @@ function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
     for (let i = 0; i < items.length - 1; i++) {
       let atual = items[i];
       let proximo = items[i + 1];
+
+      // Se qualquer um dos dois for o Sol, ignora a colisão entre eles
+      if (atual.id === 'Sun' || proximo.id === 'Sun') continue;
+
       let diff = proximo.aShift - atual.aShift;
       if (diff < distMinimaGraus) {
         let overlap = (distMinimaGraus - diff) / 2;
@@ -225,6 +230,10 @@ function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
       }
     }
   }
+
+  // Trava o Sol 100% no grau astronômico real
+  const sun = items.find(it => it.id === 'Sun');
+  if (sun) sun.aShift = sun.aScreen;
 }
 
 function selecionarRegistro(index) {
@@ -851,17 +860,20 @@ function renderMandala(dadosNovos) {
 
   const pR = 300;
    
-     /* BRILHO DE COMBUSTÃO / SOB OS RAIOS, ATRÁS DO SOL */
-  const sunRingItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-  if (sunRingItem) {
+    /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
+  const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
+  if (sunItem) {
     const degToPx = (2 * Math.PI * pR) / 360;
     const rSobRaios = degToPx * 15;
-    const sunGlowPos = polarToCart(cx, cy, pR, sunRingItem.aShift);
+    const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
   }
 
-  /* RENDERIZAÇÃO DE TODOS OS ITENS NA ÓRBITA EXTERNA */
+  /* 2. CAMADA 2: DEMAIS ELEMENTOS (MEIO - PLANETAS, LOTES, EIXOS) */
   outerRingItems.forEach(item => {
+    // Pula o Sol nesta etapa para desenhá-lo na frente de todos
+    if (item.type === 'planet' && item.id === 'Sun') return;
+
     const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
     const p2 = polarToCart(cx, cy, pR - 19, item.aShift);
     const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
@@ -909,6 +921,21 @@ function renderMandala(dadosNovos) {
       svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
+
+  /* 3. CAMADA 3: O SOL (TOPO DE TUDO) */
+  if (sunItem) {
+    const p1 = polarToCart(cx, cy, R.Termos, sunItem.aScreen);
+    const p2 = polarToCart(cx, cy, pR - 19, sunItem.aScreen);
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+
+    const pPos = polarToCart(cx, cy, pR, sunItem.aScreen);
+    const planetSvgContent = PLANET_3D_SVGS['Sun'] || '';
+
+    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+      <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
+      <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(sunItem.deg)}</text>
+    </g>`;
+  }
 
   svg += `</svg>`;
 
