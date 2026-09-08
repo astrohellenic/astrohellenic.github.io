@@ -77,6 +77,31 @@ function formatarDataBRDir(data) {
   return `${d}/${m}/${a}`;
 }
 
+function getItemSVG(key) {
+  // Configuração de tamanho e posição vertical dos planetas dentro dos lotes
+  const lotConfig = {
+    'venus':   { sym: '♀', y: -4,  size: 15 },
+    'mercury': { sym: '☿', y: -0.5, size: 15 },
+    'mars':    { sym: '♂', y: -4,  size: 15 },
+    'jupiter': { sym: '♃', y: 0,   size: 15 },
+    'saturn':  { sym: '♄', y: -0.5, size: 15 }
+  };
+
+  if (key === 'fortune') {
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.5"/></svg>`;
+  }
+  if (key === 'spirit') {
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="24" font-weight="400" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+  }
+
+  const cfg = lotConfig[key];
+  if (cfg) {
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="currentColor" text-anchor="middle">${cfg.sym}</text></svg>`;
+  }
+
+  return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
+}
+
 function obterGrauEfetivoAfeta(key, data) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const pObj = {};
@@ -209,7 +234,7 @@ function renderCircumambulaçõesUI() {
   afetasDisponiveis.forEach(af => {
     const isSel = (af.key === selectedAphetesKey);
     const styleBtn = isSel 
-      ? "background: #103b70; color: #ffffff; border: 1px solid #c59b27;" 
+      ? "background: #f1f5f9; color: #ffffff; border: 1px solid #c59b27;" 
       : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
 
     let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
