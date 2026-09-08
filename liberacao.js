@@ -37,11 +37,11 @@ function getLotIconSVG(lotKey) {
   }
 
   const lotConfig = {
-    venus:   { sym: '♀', y: -3.5, size: 11 },
-    mercury: { sym: '☿', y: -0.5, size: 11 },
-    mars:    { sym: '♂', y: -6, size: 11 },
-    jupiter: { sym: '♃', y: 0, size: 11 },
-    saturn:  { sym: '♄', y: -0.5, size: 11 }
+    venus:   { sym: '♀', y: -4, size: 12 },
+    mercury: { sym: '☿', y: -0.5, size: 12 },
+    mars:    { sym: '♂', y: -5, size: 12 },
+    jupiter: { sym: '♃', y: 0, size: 12 },
+    saturn:  { sym: '♄', y: -0.5, size: 12 }
   };
 
   const cfg = lotConfig[lotKey] || { sym: '', y: 0, size: 10 };
