@@ -449,6 +449,8 @@ function abrirModuloTecnica(modulo) {
   if (cOverlay) cOverlay.style.display = 'none';
   if (cActionsOverlay) cActionsOverlay.style.display = 'none';
    
+  document.body.classList.toggle('modo-mandala', modulo === 'mandala' || modulo === 'radix');
+
 // 1. MANDALA / MAPA NATAL (Globinho)
 if (modulo === 'mandala' || modulo === 'radix') {
   if (cRadix) cRadix.style.display = 'block';
