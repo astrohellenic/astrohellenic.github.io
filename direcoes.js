@@ -447,7 +447,7 @@ function renderCircumambulaçõesUI() {
       html += `<line x1="${xRay}" y1="${yAspectLine - 10}" x2="${xRay}" y2="${yAspectLine + 6}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
 
       // Idade do Aspecto (Acima)
-      html += `<text x="${xRay}" y="${yAspectLine - 13}" font-size="8" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld}a</text>`;
+      html += `<text x="${xRay}" y="${yAspectLine - 13}" font-size="8" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} anos</text>`;
 
       // Conjunto: Símbolo do Aspecto (Conjunção em preto) + SVG 3D do Planeta Emissor
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
