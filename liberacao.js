@@ -435,7 +435,7 @@ function renderLiberacaoUI() {
               const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
               html += `
                 <tr>
-                  <td colspan="5" style="padding: 6px 10px; background: #faf8f0; border-bottom: 1px solid #cbd5e1;">
+                  <td colspan="5" style="padding: 6px 10px; background: #transparent; border-bottom: 1px solid #cbd5e1;">
                     <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #94a3b8; border-radius: 6px; overflow: hidden; font-size: 10px; text-align: center; background: #ffffff;">
                       <thead>
                         <tr style="background-color: #475569; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px;">
