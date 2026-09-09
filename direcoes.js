@@ -103,8 +103,8 @@ function getAfetaCursorSVG(key) {
 /* SÍMBOLOS DOS ASPECTOS EM SVG VETORIAL */
 function getAspectSymbolSVGDir(type) {
   switch (type) {
-    case 'conj': // Conjunção
-      return `<svg width="11" height="11" viewBox="0 0 20 20"><circle cx="8" cy="12" r="5" fill="none" stroke="#c59b27" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#c59b27" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    case 'conj': // Conjunção (Preto)
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
     case 'sex': // Sextil (Azul claro)
       return `<svg width="11" height="11" viewBox="0 0 20 20"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
     case 'squ': // Quadratura (Vermelho)
@@ -177,7 +177,6 @@ function calcularRaiosAspectos(data, startAbsDeg) {
       const rayAbsDeg = (pDegAbs + asp.offset) % 360;
       const distDeg = (rayAbsDeg - startAbsDeg + 360) % 360;
 
-      // Calcula o tempo ascensional percorrido pelo Afeta até atingir o raio
       let currDeg = startAbsDeg;
       let accumulatedYears = 0;
       let degToCover = distDeg;
@@ -328,6 +327,7 @@ function renderCircumambulaçõesUI() {
   const svgTotalHeight = 20 + (signPassages.length * rowHeight);
 
   const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
+  const natalDegInSign = startAbsDeg % 30;
 
   let html = `
     <div style="background: #fffdf5; border-radius: 16px; padding: 20px; max-width: 960px; margin: 20px auto; font-family: 'Montserrat', sans-serif;">
@@ -432,8 +432,14 @@ function renderCircumambulaçõesUI() {
       }
     });
 
-    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (PISTA SUPERIOR)
-    const raiosDoSigno = raiosAspectos.filter(r => r.signIdx === passage.signIdx);
+    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (APENAS PÓS-NASCIMENTO)
+    const raiosDoSigno = raiosAspectos.filter(r => {
+      if (r.signIdx !== passage.signIdx) return false;
+      // Na primeira linha do signo natal, descarta aspectos antes do grau de nascimento
+      if (pIdx === 0 && r.degInSign < natalDegInSign) return false;
+      return true;
+    });
+
     raiosDoSigno.forEach(r => {
       const xRay = x0 + (r.degInSign * scale);
 
@@ -443,7 +449,7 @@ function renderCircumambulaçõesUI() {
       // Idade do Aspecto (Acima)
       html += `<text x="${xRay}" y="${yAspectLine - 13}" font-size="8" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld}a</text>`;
 
-      // Conjunto: Símbolo do Aspecto + SVG 3D do Planeta Emissor
+      // Conjunto: Símbolo do Aspecto (Conjunção em preto) + SVG 3D do Planeta Emissor
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
       const planet3DSVG = getPlanet3DSVGDir(r.planetId);
 
@@ -453,7 +459,6 @@ function renderCircumambulaçõesUI() {
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (DENTRO DA CAIXA DO TERMO)
     if (pIdx === 0) {
-      const natalDegInSign = startAbsDeg % 30;
       const xNatal = x0 + (natalDegInSign * scale);
 
       // Traço Vermelho de Posição Inicial
