@@ -299,19 +299,31 @@ function renderMatrizVisibilidadeHTML(data) {
   }
 
   function getAspecto(deg1, deg2) {
-    if (deg1 === undefined || deg2 === undefined) return '';
-    const s1 = Math.floor(deg1 / 30);
-    const s2 = Math.floor(deg2 / 30);
-    let diff = Math.abs(s1 - s2);
-    if (diff > 6) diff = 12 - diff;
+  if (deg1 === undefined || deg2 === undefined) return '';
+  const s1 = Math.floor(deg1 / 30);
+  const s2 = Math.floor(deg2 / 30);
+  let diff = Math.abs(s1 - s2);
+  if (diff > 6) diff = 12 - diff;
 
-    if (diff === 0) return 'σ';
-    if (diff === 2) return '*';
-    if (diff === 3) return '☐';
-    if (diff === 4) return 'Δ';
-    if (diff === 6) return '☍';
-    return '';
+  const styleBase = "display: inline-block; vertical-align: middle;";
+
+  if (diff === 0) { // Conjunção (Preto)
+    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
   }
+  if (diff === 2) { // Sextil (Azul claro)
+    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+  }
+  if (diff === 3) { // Quadratura (Vermelho)
+    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
+  }
+  if (diff === 4) { // Trígono (Azul escuro)
+    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
+  }
+  if (diff === 6) { // Oposição (Vinho)
+    return `<svg width="16" height="14" viewBox="0 0 24 20" style="${styleBase}"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
+  }
+  return '';
+}
 
   let h = `
     <div style="max-width: 960px; margin: 40px auto 20px auto; background: #fffdf5; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
