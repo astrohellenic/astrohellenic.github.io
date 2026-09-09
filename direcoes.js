@@ -134,7 +134,7 @@ function obterGrauEfetivoAfeta(key, data) {
   }
 }
 
-/* CÁLCULO DAS DIREÇÕES: 12 SIGNOS COM TODOS OS TERMOS COMPLETOS (0° A 30°) */
+/* CÁLCULO DAS DIREÇÕES: APENAS REGISTRA IDADE/DATA A PARTIR DO PONTO DO AFETA */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
   const tabela = [];
   let currDate = new Date(birthDate);
@@ -154,13 +154,12 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
       const termEndDeg = t.deg;
       prevTermDeg = t.deg;
 
-      let termActiveYears = 0;
       let startDate = null;
       let endDate = null;
       let startYearsOld = null;
       let endYearsOld = null;
 
-      // Se o termo estiver à frente da posição do Afeta
+      // Se a transição do termo ocorre APÓS o ponto inicial do Afeta
       if (sOffset > 0 || termEndDeg > startDegInSign) {
         let effStart = (sOffset === 0 && termStartDeg < startDegInSign) ? startDegInSign : termStartDeg;
         let effEnd = termEndDeg;
@@ -172,7 +171,11 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
         startDate = new Date(currDate);
         endDate = new Date(currDate.getTime() + years * 365.25 * 24 * 60 * 60 * 1000);
 
-        startYearsOld = totalYearsAccum.toFixed(2);
+        // Apenas exibe idade/data na borda do termo se essa borda for posterior ao nascimento
+        if (sOffset > 0 || termStartDeg >= startDegInSign) {
+          startYearsOld = totalYearsAccum.toFixed(2);
+        }
+
         endYearsOld = (totalYearsAccum + years).toFixed(2);
 
         totalYearsAccum += years;
@@ -348,24 +351,24 @@ function renderCircumambulaçõesUI() {
       const xCenter = xStart + (wTerm / 2);
       html += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
-      // Exibe idade/data do termo se for posterior ao ponto do Afeta
-      if (term.startYearsOld !== null) {
+      // Exibe idade/data ABAIXO DA CAIXA apenas para transições pós-nascimento
+      if (term.startYearsOld !== null && term.startDate !== null) {
         html += `<text x="${xStart + 3}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
         html += `<text x="${xStart + 3}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
 
-    // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (NA PRIMEIRA PAUTA)
+    // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (DENTRO DA CAIXA DO TERMO)
     if (pIdx === 0) {
       const natalDegInSign = startAbsDeg % 30;
       const xNatal = x0 + (natalDegInSign * scale);
 
       // Traço Vermelho de Posição Inicial
-      html += `<line x1="${xNatal}" y1="${yOffset + 12}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
-      
-      // Rotulo da Posição Inicial (0.00 anos)
-      html += `<text x="${xNatal + 4}" y="${yBaseline + 39}" font-size="8.5" font-weight="900" fill="#e84118" text-anchor="start">0.00 anos</text>`;
-      html += `<text x="${xNatal + 4}" y="${yBaseline + 49}" font-size="7.5" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      html += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
+
+      // Texto Vermelho da Idade Inicial DENTRO DO RECT DO TERMO (Sem Colidir Embaixo)
+      html += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.00 anos</text>`;
+      html += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
