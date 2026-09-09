@@ -53,15 +53,6 @@ function getPlanet3DSVGDir(planetId) {
   return '';
 }
 
-function formatDegMinDir(absDeg) {
-  if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return '-';
-  const degInSign = absDeg % 30;
-  const degrees = Math.floor(degInSign);
-  const minutes = Math.round((degInSign - degrees) * 60);
-  const minStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  return `${degrees}°${minStr}′`;
-}
-
 function formatarDataBRDir(data) {
   if (!data) return "--/--/----";
   const d = String(data.getDate()).padStart(2, '0');
@@ -143,51 +134,63 @@ function obterGrauEfetivoAfeta(key, data) {
   }
 }
 
+/* CÁLCULO DAS DIREÇÕES: 12 SIGNOS COM TODOS OS TERMOS COMPLETOS (0° A 30°) */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
   const tabela = [];
-  let currAbsDeg = startAbsDeg;
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
 
   const startSignIdx = Math.floor(startAbsDeg / 30);
+  const startDegInSign = startAbsDeg % 30;
 
   for (let sOffset = 0; sOffset < 12; sOffset++) {
     const signIdx = (startSignIdx + sOffset) % 12;
     const signTerms = EGYPTIAN_TERMS_DIRECOES[signIdx];
-    
-    let degInSign = (sOffset === 0) ? (startAbsDeg % 30) : 0;
 
-    for (let t of signTerms) {
-      if (t.deg <= degInSign) continue;
+    let prevTermDeg = 0;
 
-      const remDegInTerm = t.deg - degInSign;
-      const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30;
-      const yearsInTerm = remDegInTerm * ascTimePerDegree;
+    signTerms.forEach((t) => {
+      const termStartDeg = prevTermDeg;
+      const termEndDeg = t.deg;
+      prevTermDeg = t.deg;
 
-      const startDate = new Date(currDate);
-      const endDate = new Date(currDate.getTime() + yearsInTerm * 365.25 * 24 * 60 * 60 * 1000);
+      let termActiveYears = 0;
+      let startDate = null;
+      let endDate = null;
+      let startYearsOld = null;
+      let endYearsOld = null;
 
-      const startAbs = (signIdx * 30) + degInSign;
-      const endAbs = (signIdx * 30) + t.deg;
+      // Se o termo estiver à frente da posição do Afeta
+      if (sOffset > 0 || termEndDeg > startDegInSign) {
+        let effStart = (sOffset === 0 && termStartDeg < startDegInSign) ? startDegInSign : termStartDeg;
+        let effEnd = termEndDeg;
+
+        const remDeg = effEnd - effStart;
+        const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30;
+        const years = remDeg * ascTimePerDegree;
+
+        startDate = new Date(currDate);
+        endDate = new Date(currDate.getTime() + years * 365.25 * 24 * 60 * 60 * 1000);
+
+        startYearsOld = totalYearsAccum.toFixed(2);
+        endYearsOld = (totalYearsAccum + years).toFixed(2);
+
+        totalYearsAccum += years;
+        currDate = new Date(endDate);
+      }
 
       tabela.push({
         signIdx: signIdx,
-        startDegAbs: startAbs,
-        endDegAbs: endAbs,
+        termStartDeg: termStartDeg,
+        termEndDeg: termEndDeg,
         termPlanetId: t.pId,
         termPlanetSym: t.pSym,
-        durationYears: yearsInTerm.toFixed(2),
-        startYearsOld: totalYearsAccum.toFixed(2),
-        endYearsOld: (totalYearsAccum + yearsInTerm).toFixed(2),
+        startYearsOld: startYearsOld,
+        endYearsOld: endYearsOld,
         startDate: startDate,
         endDate: endDate
       });
-
-      totalYearsAccum += yearsInTerm;
-      currDate = new Date(endDate);
-      degInSign = t.deg;
-      currAbsDeg = endAbs % 360;
-    }
+    });
   }
 
   return tabela;
@@ -320,7 +323,7 @@ function renderCircumambulaçõesUI() {
         tickY2 = yBaseline + 8;
         strokeW = 1.8;
         opacity = 1.0;
-        // Números dos Graus Principais acima da Régua
+        // Números dos Graus Principais
         html += `<text x="${xDeg}" y="${yBaseline - 12}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
         tickY1 = yBaseline - 6;
@@ -332,47 +335,53 @@ function renderCircumambulaçõesUI() {
       html += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
-    // BLOCOS DOS TERMOS (PISTA INFERIOR)
+    // BLOCOS DOS 5 TERMOS COMPLETOS (0° A 30°)
     passage.terms.forEach(term => {
-      const dInSignStart = term.startDegAbs % 30;
-      let dInSignEnd = term.endDegAbs % 30;
-      if (dInSignEnd === 0 && term.endDegAbs > term.startDegAbs) dInSignEnd = 30;
-
-      const xStart = x0 + (dInSignStart * scale);
-      const xEnd = x0 + (dInSignEnd * scale);
+      const xStart = x0 + (term.termStartDeg * scale);
+      const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      // Caixa do Termo
+      // Caixa do Termo Egípcio
       html += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="26" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
 
       // Símbolo Dourado do Regente do Termo
       const xCenter = xStart + (wTerm / 2);
       html += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
-      // Idade e Data de Início sem Encavalamento no 0°
-      const xText = Math.max(xStart, x0 + 2);
-      html += `<text x="${xText}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
-      html += `<text x="${xText}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+      // Exibe idade/data do termo se for posterior ao ponto do Afeta
+      if (term.startYearsOld !== null) {
+        html += `<text x="${xStart + 3}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
+        html += `<text x="${xStart + 3}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+      }
     });
+
+    // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (NA PRIMEIRA PAUTA)
+    if (pIdx === 0) {
+      const natalDegInSign = startAbsDeg % 30;
+      const xNatal = x0 + (natalDegInSign * scale);
+
+      // Traço Vermelho de Posição Inicial
+      html += `<line x1="${xNatal}" y1="${yOffset + 12}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
+      
+      // Rotulo da Posição Inicial (0.00 anos)
+      html += `<text x="${xNatal + 4}" y="${yBaseline + 39}" font-size="8.5" font-weight="900" fill="#e84118" text-anchor="start">0.00 anos</text>`;
+      html += `<text x="${xNatal + 4}" y="${yBaseline + 49}" font-size="7.5" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+    }
 
     // CURSOR DO AFETA NO "HOJE"
     passage.terms.forEach(term => {
-      if (hoje >= term.startDate && hoje < term.endDate) {
+      if (term.startDate && term.endDate && hoje >= term.startDate && hoje < term.endDate) {
         const tTotal = term.endDate.getTime() - term.startDate.getTime();
         const tElapsed = hoje.getTime() - term.startDate.getTime();
         const frac = Math.max(0, Math.min(1, tElapsed / tTotal));
 
-        const dInSignStart = term.startDegAbs % 30;
-        let dInSignEnd = term.endDegAbs % 30;
-        if (dInSignEnd === 0 && term.endDegAbs > term.startDegAbs) dInSignEnd = 30;
-
-        const currDeg = dInSignStart + (frac * (dInSignEnd - dInSignStart));
+        const currDeg = term.termStartDeg + (frac * (term.termEndDeg - term.termStartDeg));
         const xHoje = x0 + (currDeg * scale);
 
         // Linha Guia Vertical do Afeta
         html += `<line x1="${xHoje}" y1="${yOffset + 10}" x2="${xHoje}" y2="${yOffset + 104}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
 
-        // SVG do Afeta Selecionado posicionado no grau exato
+        // SVG do Afeta Selecionado no grau exato
         html += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
       }
     });
