@@ -42,11 +42,16 @@
 
 html, body {
   width: 100%;
-  min-height: 100vh;
-  overflow: visible;
   background-color: var(--bg-main);
   color: var(--text-dark);
   font-family: 'Montserrat', sans-serif;
+}
+
+/* Trava de tela cheia: some ligada só quando a mandala está ativa */
+body.modo-mandala, html.modo-mandala {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 body {
@@ -305,22 +310,30 @@ body {
         .edit-btn { color: #103b70; }
         .delete-btn { color: #dc2626; }
 
-      #main-stage {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: #ffffff;
-    position: relative;
-    min-height: 100vh;
-    width: 100%;
-    overflow: visible; /* Permite que tabelas e relatórios longos expandam e imprimam */
-    padding: 10px;
-}
+           /* ÁREA PRINCIPAL DA MANDALA */
+        #main-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            position: relative;
+            width: 100%;
+            padding: 10px;
+        }
+
+        /* Só trava a altura do palco quando a mandala está ativa */
+        body.modo-mandala #main-stage {
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /*
         #mandala-container {
     max-height: calc(100vh - 80px);
     overflow: hidden;
 }
-
+*/
+        
         /* BARRA SUPERIOR FIXA - PADRONIZADA COM CONTORNO AZUL E ÍCONES DOURADOS */
         #top-bar {
             height: 52px;
