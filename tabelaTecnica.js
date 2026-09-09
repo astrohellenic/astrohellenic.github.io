@@ -212,6 +212,17 @@ function formatDegMinTabela(absDeg) {
   return `${degrees}°${minStr}′`;
 }
 
+function formatarLatitudeEcliptica(lat) {
+  if (lat === undefined || lat === null || isNaN(lat)) return '-';
+  if (Math.abs(lat) < 0.001) return '0°00′';
+  const absLat = Math.abs(lat);
+  const deg = Math.floor(absLat);
+  const min = Math.round((absLat - deg) * 60);
+  const minStr = min < 10 ? `0${min}` : `${min}`;
+  const dir = lat >= 0 ? 'N' : 'S';
+  return `${deg}°${minStr}′ ${dir}`;
+}
+
 function calcEgyptianTermTabela(absDeg) {
   if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return '-';
   const signIdx = Math.floor(absDeg / 30);
@@ -299,31 +310,31 @@ function renderMatrizVisibilidadeHTML(data) {
   }
 
   function getAspecto(deg1, deg2) {
-  if (deg1 === undefined || deg2 === undefined) return '';
-  const s1 = Math.floor(deg1 / 30);
-  const s2 = Math.floor(deg2 / 30);
-  let diff = Math.abs(s1 - s2);
-  if (diff > 6) diff = 12 - diff;
+    if (deg1 === undefined || deg2 === undefined) return '';
+    const s1 = Math.floor(deg1 / 30);
+    const s2 = Math.floor(deg2 / 30);
+    let diff = Math.abs(s1 - s2);
+    if (diff > 6) diff = 12 - diff;
 
-  const styleBase = "display: inline-block; vertical-align: middle;";
+    const styleBase = "display: inline-block; vertical-align: middle;";
 
-  if (diff === 0) { // Conjunção (Preto)
-    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    if (diff === 0) { // Conjunção (Preto)
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    }
+    if (diff === 2) { // Sextil (Azul claro)
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+    }
+    if (diff === 3) { // Quadratura (Vermelho)
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
+    }
+    if (diff === 4) { // Trígono (Azul escuro)
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
+    }
+    if (diff === 6) { // Oposição (Vinho)
+      return `<svg width="16" height="14" viewBox="0 0 24 20" style="${styleBase}"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
+    }
+    return '';
   }
-  if (diff === 2) { // Sextil (Azul claro)
-    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
-  }
-  if (diff === 3) { // Quadratura (Vermelho)
-    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
-  }
-  if (diff === 4) { // Trígono (Azul escuro)
-    return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
-  }
-  if (diff === 6) { // Oposição (Vinho)
-    return `<svg width="16" height="14" viewBox="0 0 24 20" style="${styleBase}"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
-  }
-  return '';
-}
 
   let h = `
     <div style="max-width: 960px; margin: 40px auto 20px auto; background: #fffdf5; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
@@ -375,7 +386,11 @@ function renderPainelTecnico(data, containerId) {
     const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
     ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
       const item = data[mapKeys[id]];
-      pObj[id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false };
+      pObj[id] = {
+        abs: item ? item.grau_absoluto : 0,
+        retro: item ? Boolean(item.retro) : false,
+        lat: item ? (parseFloat(item.lat) || 0) : 0
+      };
     });
 
     const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
@@ -390,13 +405,13 @@ function renderPainelTecnico(data, containerId) {
     const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
 
     const listaElementos = [
-      { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false },
-      { type: 'planet', pId: 'Moon', abs: pObj.Moon.abs, retro: false },
-      { type: 'planet', pId: 'Mercury', abs: pObj.Mercury.abs, retro: pObj.Mercury.retro },
-      { type: 'planet', pId: 'Venus', abs: pObj.Venus.abs, retro: pObj.Venus.retro },
-      { type: 'planet', pId: 'Mars', abs: pObj.Mars.abs, retro: pObj.Mars.retro },
-      { type: 'planet', pId: 'Jupiter', abs: pObj.Jupiter.abs, retro: pObj.Jupiter.retro },
-      { type: 'planet', pId: 'Saturn', abs: pObj.Saturn.abs, retro: pObj.Saturn.retro },
+      { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false, lat: pObj.Sun.lat },
+      { type: 'planet', pId: 'Moon', abs: pObj.Moon.abs, retro: false, lat: pObj.Moon.lat },
+      { type: 'planet', pId: 'Mercury', abs: pObj.Mercury.abs, retro: pObj.Mercury.retro, lat: pObj.Mercury.lat },
+      { type: 'planet', pId: 'Venus', abs: pObj.Venus.abs, retro: pObj.Venus.retro, lat: pObj.Venus.lat },
+      { type: 'planet', pId: 'Mars', abs: pObj.Mars.abs, retro: pObj.Mars.retro, lat: pObj.Mars.lat },
+      { type: 'planet', pId: 'Jupiter', abs: pObj.Jupiter.abs, retro: pObj.Jupiter.retro, lat: pObj.Jupiter.lat },
+      { type: 'planet', pId: 'Saturn', abs: pObj.Saturn.abs, retro: pObj.Saturn.retro, lat: pObj.Saturn.lat },
       { type: 'item', key: 'Nodo Norte', abs: nodeAbs },
       { type: 'item', key: 'Nodo Sul', abs: (nodeAbs + 180) % 360 },
       { type: 'item', key: 'Sizígia', abs: syzAbs },
@@ -446,11 +461,12 @@ function renderPainelTecnico(data, containerId) {
           font-size: 11px;
           letter-spacing: 0.5px;
         }
-        .col-ponto { width: 16%; }
-        .col-signo { width: 12%; }
-        .col-grau { width: 20%; font-weight: 600; }
-        .col-termo { width: 12%; font-weight: bold; color: #c59b27; font-size: 14px; }
-        .col-dodec-signo { width: 12%; }
+        .col-ponto { width: 12%; }
+        .col-signo { width: 10%; }
+        .col-grau { width: 16%; font-weight: 600; }
+        .col-lat { width: 14%; font-weight: 600; color: #475569; }
+        .col-termo { width: 10%; font-weight: bold; color: #c59b27; font-size: 14px; }
+        .col-dodec-signo { width: 10%; }
         .col-dodec-grau { width: 28%; font-weight: 600; }
       </style>
 
@@ -462,6 +478,7 @@ function renderPainelTecnico(data, containerId) {
               <th rowspan="2" class="col-ponto">Ponto</th>
               <th rowspan="2" class="col-signo">Signo</th>
               <th rowspan="2" class="col-grau">Grau</th>
+              <th rowspan="2" class="col-lat">Latitude</th>
               <th rowspan="2" class="col-termo">Termo</th>
               <th colspan="2">Dodecatemória</th>
             </tr>
@@ -487,6 +504,7 @@ function renderPainelTecnico(data, containerId) {
       const signIdx = Math.floor(absDeg / 30);
       const signoSVG = getSignSVG(signIdx, 18);
       const grauFormatted = `${formatDegMinTabela(absDeg)}${retroSymbol}`;
+      const latFormatted = (el.type === 'planet') ? formatarLatitudeEcliptica(el.lat) : '-';
       const termo = calcEgyptianTermTabela(absDeg);
 
       const dodec = calcDodecatemoriaTabela(absDeg);
@@ -497,6 +515,7 @@ function renderPainelTecnico(data, containerId) {
           <td class="col-ponto">${iconHTML}</td>
           <td class="col-signo">${signoSVG}</td>
           <td class="col-grau">${grauFormatted}</td>
+          <td class="col-lat">${latFormatted}</td>
           <td class="col-termo">${termo}</td>
           <td class="col-dodec-signo">${dodecSignoSVG}</td>
           <td class="col-dodec-grau">${dodec.degFormatted}</td>
