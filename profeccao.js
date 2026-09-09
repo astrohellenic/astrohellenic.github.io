@@ -1,8 +1,17 @@
 (function() {
     window.profeccaoOffsetAnos = 0;
+    window.expandedProfeccaoMes = null; // Guarda o índice do mês aberto (0 a 11)
 
     window.mudarAnoProfeccao = function(delta) {
         window.profeccaoOffsetAnos += delta;
+        window.expandedProfeccaoMes = null; // Reseta para recalcular o mês ativo no novo ano
+        if (typeof window.iniciarModuloProfeccao === 'function') {
+            window.iniciarModuloProfeccao();
+        }
+    };
+
+    window.alternarMesProfeccao = function(index) {
+        window.expandedProfeccaoMes = (window.expandedProfeccaoMes === index) ? null : index;
         if (typeof window.iniciarModuloProfeccao === 'function') {
             window.iniciarModuloProfeccao();
         }
@@ -185,7 +194,7 @@
             }
         }
 
-                let html = `
+        let html = `
     <div id="profeccao-container" 
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
          style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
@@ -234,62 +243,81 @@
 
         for (let i = 0; i < 12; i++) {
             const mSignIdx = (profectedSignIdx + i) % 12;
-            const mSign = SIGNS[mSignIdx];
-            monthlyCache.push({ monthNum: i + 1, signIdx: mSignIdx, start: currentMonthStart });
-
-            html += `
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 10px 12px; text-align: center;"><strong>Mês ${i + 1}</strong></td>
-                    <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtml(mSignIdx, 20)}</td>
-                    <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
-                    <td style="padding: 10px 12px; text-align: left;">${formatarData(currentMonthStart)}</td>
-                </tr>
-            `;
-            currentMonthStart += MONTH_MS;
+            const nextMonthStart = currentMonthStart + MONTH_MS;
+            monthlyCache.push({ 
+                monthNum: i + 1, 
+                signIdx: mSignIdx, 
+                start: currentMonthStart, 
+                end: nextMonthStart 
+            });
+            currentMonthStart = nextMonthStart;
         }
 
-        html += `</tbody></table></div></div>`;
+        // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
+        if (window.expandedProfeccaoMes === null) {
+            const agora = hoje.getTime();
+            const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
+            window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
+        }
 
-        html += `
-            <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; border-radius: 14px; padding: 18px; margin-top: 25px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
-                <div style="border-bottom: 1px solid #e2d9c2; padding-bottom: 8px; margin-bottom: 14px;">
-                    <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Passos Diários (60 Horas)</h3>
-                </div>
-        `;
+        monthlyCache.forEach((m, i) => {
+            const mSign = SIGNS[m.signIdx];
+            const isExpanded = (window.expandedProfeccaoMes === i);
+            const bgRow = isExpanded ? '#fefcf2' : (i % 2 === 0 ? '#ffffff' : '#fffdf5');
 
-        monthlyCache.forEach(m => {
             html += `
-                <details style="margin-bottom: 8px; border: 1px solid #c59b27; border-radius: 8px; padding: 10px; background: #ffffff;">
-                    <summary style="font-weight: bold; cursor: pointer; color: #103b70; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                        Mês ${m.monthNum}: ${getSignSvgHtml(m.signIdx, 18)} <span>(${formatarData(m.start)})</span>
-                    </summary>
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-top: 8px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                            <thead>
-                                <tr style="background: #f1f5f9; color: #103b70;">
-                                    <th style="padding: 8px; text-align: center;">Passo</th>
-                                    <th style="padding: 8px; text-align: center;">Signo</th>
-                                    <th style="padding: 8px; text-align: left;">Início (60h)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                <tr onclick="alternarMesProfeccao(${i})" style="border-bottom: 1px solid #e2d9c2; background-color: ${bgRow}; cursor: pointer; user-select: none;">
+                    <td style="padding: 10px 12px; text-align: center;"><strong>Mês ${m.monthNum}</strong></td>
+                    <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtml(m.signIdx, 20)}</td>
+                    <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
+                    <td style="padding: 10px 12px; text-align: left;">${formatarData(m.start)}</td>
+                </tr>
             `;
-            let dailyStart = m.start;
-            for (let d = 0; d < 12; d++) {
-                const dSignIdx = (m.signIdx + d) % 12;
+
+            if (isExpanded) {
                 html += `
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 6px; text-align: center;">Passo ${d + 1}</td>
-                        <td style="padding: 6px; text-align: center;">${getSignSvgHtml(dSignIdx, 16)}</td>
-                        <td style="padding: 6px; text-align: left;">${formatarData(dailyStart)}</td>
-                    </tr>
+                <tr>
+                    <td colspan="4" style="padding: 10px 14px; background: #faf8f0; border-bottom: 2px solid #c59b27;">
+                        <div style="background: #ffffff; border: 1px solid #103b70; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                            <div style="background: #103b70; color: #ffffff; font-family: 'Cinzel', serif; font-size: 11px; padding: 6px 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Passos Diários de 60 Horas — Mês ${m.monthNum}
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                <thead>
+                                    <tr style="background: #f1f5f9; color: #103b70; border-bottom: 1px solid #cbd5e1;">
+                                        <th style="padding: 8px; text-align: center;">Passo</th>
+                                        <th style="padding: 8px; text-align: center;">Signo</th>
+                                        <th style="padding: 8px; text-align: left;">Início (60h)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                 `;
-                dailyStart += DAILY_STEP_MS;
+
+                let dailyStart = m.start;
+                for (let d = 0; d < 12; d++) {
+                    const dSignIdx = (m.signIdx + d) % 12;
+                    const bgDaily = d % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    html += `
+                        <tr style="border-bottom: 1px solid #e2e8f0; background-color: ${bgDaily};">
+                            <td style="padding: 6px 8px; text-align: center; font-weight: 600; color: #103b70;">Passo ${d + 1}</td>
+                            <td style="padding: 6px 8px; text-align: center;">${getSignSvgHtml(dSignIdx, 18)}</td>
+                            <td style="padding: 6px 8px; text-align: left; color: #334155;">${formatarData(dailyStart)}</td>
+                        </tr>
+                    `;
+                    dailyStart += DAILY_STEP_MS;
+                }
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                `;
             }
-            html += `</tbody></table></div></details>`;
         });
 
-        html += `</div></div>`;
+        html += `</tbody></table></div></div></div>`;
         container.innerHTML = html;
     }
 
