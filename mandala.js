@@ -728,10 +728,10 @@ function renderMandala(dadosNovos) {
       let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
       if (diff > 6) diff = 12 - diff;
       let col = null;
-      if (diff === 6) col = "#8b0000";
-      else if (diff === 4) col = "#0b2545";
-      else if (diff === 3) col = "#dc2626";
-      else if (diff === 2) col = "#2563eb";
+      if (diff === 6) col = "#881337";      // Oposição (Vinho)
+else if (diff === 4) col = "#1d4ed8"; // Trígono (Azul escuro)
+else if (diff === 3) col = "#e84118"; // Quadratura (Vermelho vivo)
+else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
 
       if (col) {
         const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
