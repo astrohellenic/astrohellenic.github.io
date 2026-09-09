@@ -84,10 +84,10 @@ function getItemSVG(key) {
 
   const lotConfig = {
     'venus':   { sym: '♀', y: 0,  size: 15 },
-    'mercury': { sym: '☿', y: 0, size: 15 },
+    'mercury': { sym: '☿', y: 1, size: 15 },
     'mars':    { sym: '♂', y: 0,  size: 15 },
-    'jupiter': { sym: '♃', y: 0,   size: 15 },
-    'saturn':  { sym: '♄', y: 0, size: 15 }
+    'jupiter': { sym: '♃', y: 1,   size: 15 },
+    'saturn':  { sym: '♄', y: 1, size: 15 }
   };
 
   if (key === 'fortune') {
@@ -237,7 +237,7 @@ function renderCircumambulaçõesUI() {
   afetasDisponiveis.forEach(af => {
     const isSel = (af.key === selectedAphetesKey);
     const styleBtn = isSel 
-      ? "background: #f1f5f9; color: #ffffff; border: 1px solid #c59b27;" 
+      ? "background: #f1f5f9; color: #103b70; border: 1px solid #c59b27;" 
       : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
 
     let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
