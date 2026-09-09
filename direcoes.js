@@ -67,9 +67,9 @@ function getItemSVGDir(key) {
   }
 
   const lotConfig = {
-    'venus':   { sym: '♀', y: 4, size: 15 },
+    'venus':   { sym: '♀', y: 2, size: 15 },
     'mercury': { sym: '☿', y: 4, size: 15 },
-    'mars':    { sym: '♂', y: 4, size: 15 },
+    'mars':    { sym: '♂', y: 2, size: 15 },
     'jupiter': { sym: '♃', y: 4, size: 15 },
     'saturn':  { sym: '♄', y: 4, size: 15 }
   };
@@ -78,7 +78,7 @@ function getItemSVGDir(key) {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
   }
   if (key === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="8" font-size="26" font-weight="400" fill="#103b70" text-anchor="middle">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" fill="#103b70" text-anchor="middle">Φ</text></svg>`;
   }
 
   const cfg = lotConfig[key];
@@ -453,8 +453,11 @@ function renderCircumambulaçõesUI() {
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
       const planet3DSVG = getPlanet3DSVGDir(r.planetId);
 
+      // Se for Saturno aumenta para 0.95, para os outros mantém 0.75
+      const escalaPlaneta = (r.planetId === 'Saturn') ? 0.95 : 0.75;
+
       html += `<g transform="translate(${xRay - 13}, ${yAspectLine - 7})">${aspectSVG}</g>`;
-      html += `<g transform="translate(${xRay + 1}, ${yAspectLine - 9}) scale(0.75)">${planet3DSVG}</g>`;
+      html += `<g transform="translate(${xRay + 1}, ${yAspectLine - 9}) scale(${escalaPlaneta})">${planet3DSVG}</g>`;
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (DENTRO DA CAIXA DO TERMO)
