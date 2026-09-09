@@ -204,7 +204,7 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                 <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
                 
-                <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual (${idade} Anos)</h2>
+                <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
                 
                 <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
             </div>
@@ -217,7 +217,7 @@
 
         <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
             <div style="border-bottom: 1px solid #e2d9c2; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal (30d 10h 30m)</h3>
+                <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
             </div>
 
             <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; margin-top: 10px;">
