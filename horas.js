@@ -381,6 +381,10 @@ function iniciarModuloHoras() {
 
   const horaAtual = hoursSchedule.find(h => h.isCurrent);
   const localNome = (typeof currentGeo !== 'undefined' && currentGeo.city) ? currentGeo.city : "Local Atual";
+  window.horasPlanetariasAtual = {
+    dayRulerId: firstPlanetId,
+    hourRulerId: horaAtual ? horaAtual.planet.id : null
+  };
 
   let html = `
     <!-- Definições Globais dos Gradientes e Filtros dos Planetas 3D -->
