@@ -100,6 +100,23 @@ function getAfetaCursorSVG(key) {
   return getItemSVGDir(key === 'Syz' ? 'Sizígia' : key);
 }
 
+/* SÍMBOLOS DOS ASPECTOS EM SVG VETORIAL */
+function getAspectSymbolSVGDir(type) {
+  switch (type) {
+    case 'conj': // Conjunção
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><circle cx="8" cy="12" r="5" fill="none" stroke="#c59b27" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#c59b27" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    case 'sex': // Sextil (Azul claro)
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+    case 'squ': // Quadratura (Vermelho)
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
+    case 'tri': // Trígono (Azul escuro)
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
+    case 'opp': // Oposição (Vinho / Vermelho Escuro)
+      return `<svg width="13" height="11" viewBox="0 0 24 20"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
+    default: return '';
+  }
+}
+
 function obterGrauEfetivoAfeta(key, data) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const pObj = {};
@@ -134,7 +151,65 @@ function obterGrauEfetivoAfeta(key, data) {
   }
 }
 
-/* CÁLCULO DAS DIREÇÕES: APENAS REGISTRA IDADE/DATA A PARTIR DO PONTO DO AFETA */
+/* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) DOS 7 PLANETAS POR ASCENSÃO OBLÍQUA */
+function calcularRaiosAspectos(data, startAbsDeg) {
+  const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
+  const planetIds = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+  const aspectDefs = [
+    { offset: 0, type: 'conj' },
+    { offset: 60, type: 'sex' },
+    { offset: 90, type: 'squ' },
+    { offset: 120, type: 'tri' },
+    { offset: 180, type: 'opp' },
+    { offset: 240, type: 'tri' },
+    { offset: 270, type: 'squ' },
+    { offset: 300, type: 'sex' }
+  ];
+
+  const raios = [];
+
+  planetIds.forEach(pId => {
+    const item = data[mapKeys[pId]];
+    if (!item || item.grau_absoluto === undefined) return;
+    const pDegAbs = item.grau_absoluto;
+
+    aspectDefs.forEach(asp => {
+      const rayAbsDeg = (pDegAbs + asp.offset) % 360;
+      const distDeg = (rayAbsDeg - startAbsDeg + 360) % 360;
+
+      // Calcula o tempo ascensional percorrido pelo Afeta até atingir o raio
+      let currDeg = startAbsDeg;
+      let accumulatedYears = 0;
+      let degToCover = distDeg;
+
+      while (degToCover > 0.0001) {
+        const sIdx = Math.floor(currDeg / 30);
+        const degInS = currDeg % 30;
+        const degLeftInSign = 30 - degInS;
+
+        const stepDeg = Math.min(degToCover, degLeftInSign);
+        const ascTimePerDegree = VALENS_ASCENSION_TIMES[sIdx] / 30;
+        accumulatedYears += stepDeg * ascTimePerDegree;
+
+        currDeg = (currDeg + stepDeg) % 360;
+        degToCover -= stepDeg;
+      }
+
+      raios.push({
+        rayAbsDeg: rayAbsDeg,
+        signIdx: Math.floor(rayAbsDeg / 30),
+        degInSign: rayAbsDeg % 30,
+        planetId: pId,
+        aspectType: asp.type,
+        yearsOld: accumulatedYears.toFixed(2)
+      });
+    });
+  });
+
+  return raios;
+}
+
+/* CÁLCULO DAS DIREÇÕES: TERMOS COMPLETOS (0° A 30°) */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
   const tabela = [];
   let currDate = new Date(birthDate);
@@ -159,7 +234,6 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
       let startYearsOld = null;
       let endYearsOld = null;
 
-      // Se a transição do termo ocorre APÓS o ponto inicial do Afeta
       if (sOffset > 0 || termEndDeg > startDegInSign) {
         let effStart = (sOffset === 0 && termStartDeg < startDegInSign) ? startDegInSign : termStartDeg;
         let effEnd = termEndDeg;
@@ -171,7 +245,6 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
         startDate = new Date(currDate);
         endDate = new Date(currDate.getTime() + years * 365.25 * 24 * 60 * 60 * 1000);
 
-        // Apenas exibe idade/data na borda do termo se essa borda for posterior ao nascimento
         if (sOffset > 0 || termStartDeg >= startDegInSign) {
           startYearsOld = totalYearsAccum.toFixed(2);
         }
@@ -234,6 +307,7 @@ function renderCircumambulaçõesUI() {
   ];
 
   const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate);
+  const raiosAspectos = calcularRaiosAspectos(data, startAbsDeg);
   const hoje = new Date();
 
   const signPassages = [];
@@ -358,6 +432,25 @@ function renderCircumambulaçõesUI() {
       }
     });
 
+    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (PISTA SUPERIOR)
+    const raiosDoSigno = raiosAspectos.filter(r => r.signIdx === passage.signIdx);
+    raiosDoSigno.forEach(r => {
+      const xRay = x0 + (r.degInSign * scale);
+
+      // Traço de Alinhamento na Pista do Aspecto
+      html += `<line x1="${xRay}" y1="${yAspectLine - 10}" x2="${xRay}" y2="${yAspectLine + 6}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+
+      // Idade do Aspecto (Acima)
+      html += `<text x="${xRay}" y="${yAspectLine - 13}" font-size="8" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld}a</text>`;
+
+      // Conjunto: Símbolo do Aspecto + SVG 3D do Planeta Emissor
+      const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
+      const planet3DSVG = getPlanet3DSVGDir(r.planetId);
+
+      html += `<g transform="translate(${xRay - 13}, ${yAspectLine - 7})">${aspectSVG}</g>`;
+      html += `<g transform="translate(${xRay + 1}, ${yAspectLine - 9}) scale(0.75)">${planet3DSVG}</g>`;
+    });
+
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (DENTRO DA CAIXA DO TERMO)
     if (pIdx === 0) {
       const natalDegInSign = startAbsDeg % 30;
@@ -366,7 +459,7 @@ function renderCircumambulaçõesUI() {
       // Traço Vermelho de Posição Inicial
       html += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
 
-      // Texto Vermelho da Idade Inicial DENTRO DO RECT DO TERMO (Sem Colidir Embaixo)
+      // Texto Vermelho da Idade Inicial DENTRO DO RECT DO TERMO
       html += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.00 anos</text>`;
       html += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
