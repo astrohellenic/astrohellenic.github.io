@@ -432,32 +432,47 @@ function renderCircumambulaçõesUI() {
       }
     });
 
-    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (APENAS PÓS-NASCIMENTO)
+      // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (COM SISTEMA ANTI-COLISÃO POR NÍVEIS)
     const raiosDoSigno = raiosAspectos.filter(r => {
       if (r.signIdx !== passage.signIdx) return false;
-      // Na primeira linha do signo natal, descarta aspectos antes do grau de nascimento
       if (pIdx === 0 && r.degInSign < natalDegInSign) return false;
       return true;
     });
 
+    // 1. Ordena os raios do signo por grau para identificar colisões sequenciais
+    raiosDoSigno.sort((a, b) => a.degInSign - b.degInSign);
+
+    let prevX = -999;
+    let currentLevel = 0; // Nível 0 = base, Nível 1 = suspenso
+
     raiosDoSigno.forEach(r => {
       const xRay = x0 + (r.degInSign * scale);
 
-      // Traço de Alinhamento na Pista do Aspecto
-      html += `<line x1="${xRay}" y1="${yAspectLine - 10}" x2="${xRay}" y2="${yAspectLine + 6}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+      // 2. Se a distância em pixels do aspecto anterior for menor que 38px, alterna o andar
+      if (xRay - prevX < 38) {
+        currentLevel = (currentLevel === 0) ? 1 : 0;
+      } else {
+        currentLevel = 0; // Reseta para o nível base se houver espaço suficiente
+      }
+      prevX = xRay;
 
-      // Idade do Aspecto (Acima)
-      html += `<text x="${xRay}" y="${yAspectLine - 13}" font-size="8" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} anos</text>`;
+      // 3. Define a elevação vertical do andar (18px para cima no nível 1)
+      const yShift = currentLevel * 18;
+      const yTop = yAspectLine - yShift;
 
-      // Conjunto: Símbolo do Aspecto (Conjunção em preto) + SVG 3D do Planeta Emissor
+      // Traço de Alinhamento estendido verticalmente conforme o nível
+      html += `<line x1="${xRay}" y1="${yTop - 10}" x2="${xRay}" y2="${yBaseline - 4}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+
+      // Idade do Aspecto (Acima do ícone, no nível ajustado)
+      html += `<text x="${xRay}" y="${yTop - 13}" font-size="8" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} anos</text>`;
+
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
       const planet3DSVG = getPlanet3DSVGDir(r.planetId);
-
-      // Se for Saturno aumenta para 0.95, para os outros mantém 0.75
       const escalaPlaneta = (r.planetId === 'Saturn') ? 0.95 : 0.75;
 
-      html += `<g transform="translate(${xRay - 13}, ${yAspectLine - 7})">${aspectSVG}</g>`;
-      html += `<g transform="translate(${xRay + 1}, ${yAspectLine - 9}) scale(${escalaPlaneta})">${planet3DSVG}</g>`;
+      // Símbolos do Aspecto e Planeta posicionados no nível correspondente
+      html += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
+      html += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaPlaneta})">${planet3DSVG}</g>`;
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL DO AFETA (DENTRO DA CAIXA DO TERMO)
