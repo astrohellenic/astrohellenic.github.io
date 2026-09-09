@@ -84,17 +84,17 @@ function getItemSVG(key) {
 
   const lotConfig = {
     'venus':   { sym: '♀', y: 0,  size: 15 },
-    'mercury': { sym: '☿', y: 1, size: 15 },
+    'mercury': { sym: '☿', y: 3, size: 15 },
     'mars':    { sym: '♂', y: 0,  size: 15 },
-    'jupiter': { sym: '♃', y: 1,   size: 15 },
-    'saturn':  { sym: '♄', y: 1, size: 15 }
+    'jupiter': { sym: '♃', y: 3,   size: 15 },
+    'saturn':  { sym: '♄', y: 3, size: 15 }
   };
 
   if (key === 'fortune') {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.5"/></svg>`;
   }
   if (key === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="24" font-weight="400" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+    return `<svg width="22" height="24" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="26" font-weight="400" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
   }
 
   const cfg = lotConfig[key];
