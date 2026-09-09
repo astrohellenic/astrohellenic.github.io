@@ -98,7 +98,6 @@ function getItemSVGDir(key) {
   return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
 
-/* RETORNA O SVG VETORIAL DO AFETA SELECIONADO PARA O CURSOR */
 function getAfetaCursorSVG(key) {
   const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
   if (planetKeys.includes(key)) {
@@ -144,7 +143,6 @@ function obterGrauEfetivoAfeta(key, data) {
   }
 }
 
-/* CÁLCULO EXATO DAS DIREÇÕES ATÉ COBRIR OS 12 SIGNOS DO ZODÍACO */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
   const tabela = [];
   let currAbsDeg = startAbsDeg;
@@ -157,7 +155,6 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
     const signIdx = (startSignIdx + sOffset) % 12;
     const signTerms = EGYPTIAN_TERMS_DIRECOES[signIdx];
     
-    // Grau inicial do signo atual nesta travessia
     let degInSign = (sOffset === 0) ? (startAbsDeg % 30) : 0;
 
     for (let t of signTerms) {
@@ -233,7 +230,6 @@ function renderCircumambulaçõesUI() {
   const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate);
   const hoje = new Date();
 
-  // AGRUPA A TABELA POR PASSAGEM DOS 12 SIGNOS
   const signPassages = [];
   let currentPassage = null;
 
@@ -248,10 +244,9 @@ function renderCircumambulaçõesUI() {
     currentPassage.terms.push(row);
   });
 
-  const rowHeight = 110;
+  const rowHeight = 120;
   const svgTotalHeight = 20 + (signPassages.length * rowHeight);
 
-  // SVG DO AFETA PARA O CURSOR
   const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
 
   let html = `
@@ -289,46 +284,52 @@ function renderCircumambulaçõesUI() {
           <svg viewBox="0 0 920 ${svgTotalHeight}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">
   `;
 
-  // RENDERING DAS 12 PAUTAS
   signPassages.forEach((passage, pIdx) => {
     const yOffset = 10 + (pIdx * rowHeight);
 
     // Moldura da Pauta
-    html += `<rect x="10" y="${yOffset}" width="900" height="100" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
+    html += `<rect x="10" y="${yOffset}" width="900" height="110" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
 
     // Ícone Monoline do Signo
-    html += `<g transform="translate(18, ${yOffset + 33})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
+    html += `<g transform="translate(18, ${yOffset + 38})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
 
-    const x0 = 70;  // 0°
+    const x0 = 75;  // 0°
     const x1 = 880; // 30°
-    const barWidth = x1 - x0; // 810px
-    const scale = barWidth / 30; // 27px/grau
+    const barWidth = x1 - x0; // 805px
+    const scale = barWidth / 30; // 26.83px/grau
 
-    const yBaseline = yOffset + 46;
+    const yAspectLine = yOffset + 32; // Linha da Pista Superior (Aspectos)
+    const yBaseline   = yOffset + 55; // Linha Guia Central (Régua de Graus)
 
-    // Linha Guia da Pauta
-    html += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.5"/>`;
+    // LINHA TRACEJADA DA PISTA SUPERIOR (ASPECTOS)
+    html += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
 
-    // TODOS OS 30 DENTES DA RÉGUA DE GRAUS (1° a 30°)
+    // LINHA GUIA CENTRAL (RÉGUA DE GRAUS)
+    html += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
+
+    // DENTINHOS VISÍVEIS DE TODOS OS 30 GRAUS (1° A 30°)
     for (let d = 0; d <= 30; d++) {
       const xDeg = x0 + (d * scale);
-      let tickLen = 4;
-      let strokeW = 0.8;
-      let opacity = 0.35;
+      let tickY1 = yBaseline - 4;
+      let tickY2 = yBaseline + 4;
+      let strokeW = 1.0;
+      let opacity = 0.6;
 
       if (d % 10 === 0) {
-        tickLen = 12;
-        strokeW = 1.5;
+        tickY1 = yBaseline - 8;
+        tickY2 = yBaseline + 8;
+        strokeW = 1.8;
         opacity = 1.0;
-        // Marcador numérico a cada 10°
-        html += `<text x="${xDeg}" y="${yBaseline - 14}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
+        // Números dos Graus Principais acima da Régua
+        html += `<text x="${xDeg}" y="${yBaseline - 12}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
-        tickLen = 8;
-        strokeW = 1.2;
-        opacity = 0.7;
+        tickY1 = yBaseline - 6;
+        tickY2 = yBaseline + 6;
+        strokeW = 1.4;
+        opacity = 0.85;
       }
 
-      html += `<line x1="${xDeg}" y1="${yBaseline - (tickLen / 2)}" x2="${xDeg}" y2="${yBaseline + (tickLen / 2)}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
+      html += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
     // BLOCOS DOS TERMOS (PISTA INFERIOR)
@@ -342,18 +343,19 @@ function renderCircumambulaçõesUI() {
       const wTerm = xEnd - xStart;
 
       // Caixa do Termo
-      html += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="28" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
+      html += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="26" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
 
-      // Símbolo do Regente
+      // Símbolo Dourado do Regente do Termo
       const xCenter = xStart + (wTerm / 2);
-      html += `<text x="${xCenter}" y="${yBaseline + 20}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
+      html += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
-      // Idade e Data
-      html += `<text x="${xStart + 3}" y="${yBaseline + 42}" font-size="9" font-weight="800" fill="#103b70">${term.startYearsOld}a</text>`;
-      html += `<text x="${xStart + 3}" y="${yBaseline + 51}" font-size="8" font-weight="500" fill="#64748b">${formatarDataBRDir(term.startDate)}</text>`;
+      // Idade e Data de Início sem Encavalamento no 0°
+      const xText = Math.max(xStart, x0 + 2);
+      html += `<text x="${xText}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
+      html += `<text x="${xText}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
     });
 
-    // CURSOR DO AFETA REAL PARA O HOJE (SE O HOJE CAIR NESTE SIGNO E TERMO)
+    // CURSOR DO AFETA NO "HOJE"
     passage.terms.forEach(term => {
       if (hoje >= term.startDate && hoje < term.endDate) {
         const tTotal = term.endDate.getTime() - term.startDate.getTime();
@@ -367,10 +369,10 @@ function renderCircumambulaçõesUI() {
         const currDeg = dInSignStart + (frac * (dInSignEnd - dInSignStart));
         const xHoje = x0 + (currDeg * scale);
 
-        // Linha Guia Vertical Discreta
-        html += `<line x1="${xHoje}" y1="${yOffset + 12}" x2="${xHoje}" y2="${yOffset + 96}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        // Linha Guia Vertical do Afeta
+        html += `<line x1="${xHoje}" y1="${yOffset + 10}" x2="${xHoje}" y2="${yOffset + 104}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
 
-        // SVG do Afeta Selecionado no Grau de Hoje
+        // SVG do Afeta Selecionado posicionado no grau exato
         html += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
       }
     });
