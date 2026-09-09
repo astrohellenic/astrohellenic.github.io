@@ -32,7 +32,7 @@ const MONOLINE_ZODIAC_SVGS_DIRECOES = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="55" x2="64" y2="55"></line>`,
-  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" points="52,53 57,58 52,63 "></polyline>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,52V12c0,0,0-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" points="52,53 57,58 52,63 "></polyline>`,
   `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="1" y1="28" x2="36" y2="63"></line>`,
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
   `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
@@ -84,18 +84,30 @@ function getItemSVGDir(key) {
   };
 
   if (key === 'fortune') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.5"/></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
   }
   if (key === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="8" font-size="26" font-weight="400" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="8" font-size="26" font-weight="400" fill="#103b70" text-anchor="middle">Φ</text></svg>`;
   }
 
   const cfg = lotConfig[key];
   if (cfg) {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="currentColor" text-anchor="middle">${cfg.sym}</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="#103b70" text-anchor="middle">${cfg.sym}</text></svg>`;
   }
 
   return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
+}
+
+/* RETORNA O SVG VETORIAL DO AFETA SELECIONADO PARA O CURSOR */
+function getAfetaCursorSVG(key) {
+  const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+  if (planetKeys.includes(key)) {
+    return getPlanet3DSVGDir(key);
+  }
+  if (key === 'ASC') {
+    return `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#103b70" text-anchor="middle">ASC</text></svg>`;
+  }
+  return getItemSVGDir(key === 'Syz' ? 'Sizígia' : key);
 }
 
 function obterGrauEfetivoAfeta(key, data) {
@@ -132,48 +144,53 @@ function obterGrauEfetivoAfeta(key, data) {
   }
 }
 
-function calcularTabelaCircumambulatoria(startAbsDeg, birthDate) {
+/* CÁLCULO EXATO DAS DIREÇÕES ATÉ COBRIR OS 12 SIGNOS DO ZODÍACO */
+function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
   const tabela = [];
   let currAbsDeg = startAbsDeg;
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
 
-  while (totalYearsAccum < 120) {
-    const signIdx = Math.floor(currAbsDeg / 30);
-    const degInSign = currAbsDeg % 30;
+  const startSignIdx = Math.floor(startAbsDeg / 30);
+
+  for (let sOffset = 0; sOffset < 12; sOffset++) {
+    const signIdx = (startSignIdx + sOffset) % 12;
     const signTerms = EGYPTIAN_TERMS_DIRECOES[signIdx];
+    
+    // Grau inicial do signo atual nesta travessia
+    let degInSign = (sOffset === 0) ? (startAbsDeg % 30) : 0;
 
-    let currentTerm = signTerms[0];
     for (let t of signTerms) {
-      if (degInSign < t.deg) {
-        currentTerm = t;
-        break;
-      }
+      if (t.deg <= degInSign) continue;
+
+      const remDegInTerm = t.deg - degInSign;
+      const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30;
+      const yearsInTerm = remDegInTerm * ascTimePerDegree;
+
+      const startDate = new Date(currDate);
+      const endDate = new Date(currDate.getTime() + yearsInTerm * 365.25 * 24 * 60 * 60 * 1000);
+
+      const startAbs = (signIdx * 30) + degInSign;
+      const endAbs = (signIdx * 30) + t.deg;
+
+      tabela.push({
+        signIdx: signIdx,
+        startDegAbs: startAbs,
+        endDegAbs: endAbs,
+        termPlanetId: t.pId,
+        termPlanetSym: t.pSym,
+        durationYears: yearsInTerm.toFixed(2),
+        startYearsOld: totalYearsAccum.toFixed(2),
+        endYearsOld: (totalYearsAccum + yearsInTerm).toFixed(2),
+        startDate: startDate,
+        endDate: endDate
+      });
+
+      totalYearsAccum += yearsInTerm;
+      currDate = new Date(endDate);
+      degInSign = t.deg;
+      currAbsDeg = endAbs % 360;
     }
-
-    const remDegInTerm = currentTerm.deg - degInSign;
-    const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30;
-    const yearsInTerm = remDegInTerm * ascTimePerDegree;
-
-    const startDate = new Date(currDate);
-    const endDate = new Date(currDate.getTime() + yearsInTerm * 365.25 * 24 * 60 * 60 * 1000);
-
-    tabela.push({
-      signIdx: signIdx,
-      startDegAbs: currAbsDeg,
-      endDegAbs: (currAbsDeg + remDegInTerm) % 360,
-      termPlanetId: currentTerm.pId,
-      termPlanetSym: currentTerm.pSym,
-      durationYears: yearsInTerm.toFixed(2),
-      startYearsOld: totalYearsAccum.toFixed(2),
-      endYearsOld: (totalYearsAccum + yearsInTerm).toFixed(2),
-      startDate: startDate,
-      endDate: endDate
-    });
-
-    totalYearsAccum += yearsInTerm;
-    currDate = new Date(endDate);
-    currAbsDeg = (currAbsDeg + remDegInTerm) % 360;
   }
 
   return tabela;
@@ -213,10 +230,10 @@ function renderCircumambulaçõesUI() {
     { key: "saturn", type: "item" }
   ];
 
-  const tabelaDirecoes = calcularTabelaCircumambulatoria(startAbsDeg, birthDate);
+  const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate);
   const hoje = new Date();
 
-  // AGRUPA A TABELA POR PASSAGEM DE SIGNO (CADA SIGNO = 1 PAUTA VETORIAL)
+  // AGRUPA A TABELA POR PASSAGEM DOS 12 SIGNOS
   const signPassages = [];
   let currentPassage = null;
 
@@ -231,17 +248,11 @@ function renderCircumambulaçõesUI() {
     currentPassage.terms.push(row);
   });
 
-  const rowHeight = 108;
+  const rowHeight = 110;
   const svgTotalHeight = 20 + (signPassages.length * rowHeight);
 
-  // DETERMINA O ÍCONE SVG DO AFETA SELECIONADO PARA O CURSOR DO "HOJE"
-  const selectedAfetaDef = afetasDisponiveis.find(a => a.key === selectedAphetesKey);
-  let afetaCursorIconHTML = "";
-  if (selectedAfetaDef && selectedAfetaDef.type === "planet") {
-    afetaCursorIconHTML = getPlanet3DSVGDir(selectedAphetesKey);
-  } else {
-    afetaCursorIconHTML = getItemSVGDir(selectedAphetesKey === "Syz" ? "Sizígia" : selectedAphetesKey);
-  }
+  // SVG DO AFETA PARA O CURSOR
+  const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
 
   let html = `
     <div style="background: #fffdf5; border-radius: 16px; padding: 20px; max-width: 960px; margin: 20px auto; font-family: 'Montserrat', sans-serif;">
@@ -251,7 +262,7 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
         
-        <!-- BOTOEIRA DE AFETAS (MANTIDA 100% INTACTA) -->
+        <!-- BOTOEIRA DE AFETAS INTACTA -->
         <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
   `;
 
@@ -273,59 +284,54 @@ function renderCircumambulaçõesUI() {
   html += `
         </div>
 
-        <!-- PAUTAS RETILÍNEAS DA LINHA DO TEMPO EM SVG -->
+        <!-- PAUTAS DAS 12 LINHAS DOS SIGNOS EM SVG -->
         <div style="width: 100%; overflow-x: auto;">
           <svg viewBox="0 0 920 ${svgTotalHeight}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">
-            <defs>
-              <filter id="afetaGlow" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#e84118" flood-opacity="0.4" />
-              </filter>
-            </defs>
   `;
 
-  // DESENHO DE CADA PAUTA DE SIGNO
+  // RENDERING DAS 12 PAUTAS
   signPassages.forEach((passage, pIdx) => {
     const yOffset = 10 + (pIdx * rowHeight);
 
-    // Fundo da Pauta do Signo
-    html += `<rect x="10" y="${yOffset}" width="900" height="98" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
+    // Moldura da Pauta
+    html += `<rect x="10" y="${yOffset}" width="900" height="100" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
 
-    // Ícone Monoline do Signo (Início da Linha)
-    html += `<g transform="translate(18, ${yOffset + 32})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
+    // Ícone Monoline do Signo
+    html += `<g transform="translate(18, ${yOffset + 33})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
 
-    const x0 = 70;  // Início da Régua dos 30°
-    const x1 = 880; // Fim da Régua dos 30°
+    const x0 = 70;  // 0°
+    const x1 = 880; // 30°
     const barWidth = x1 - x0; // 810px
-    const scale = barWidth / 30; // 27px por grau
+    const scale = barWidth / 30; // 27px/grau
 
-    const yBaseline = yOffset + 44; // Linha Divisória entre Aspectos (Topo) e Termos (Baixo)
+    const yBaseline = yOffset + 46;
 
-    // Linha Guia Central da Pauta
+    // Linha Guia da Pauta
     html += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.5"/>`;
 
-    // RÉGUA DE DENTES/GRAUS DO SIGNO (0° a 30°)
+    // TODOS OS 30 DENTES DA RÉGUA DE GRAUS (1° a 30°)
     for (let d = 0; d <= 30; d++) {
       const xDeg = x0 + (d * scale);
       let tickLen = 4;
       let strokeW = 0.8;
-      let opacity = 0.4;
+      let opacity = 0.35;
 
       if (d % 10 === 0) {
         tickLen = 12;
         strokeW = 1.5;
         opacity = 1.0;
-        // Número do Grau Major
+        // Marcador numérico a cada 10°
         html += `<text x="${xDeg}" y="${yBaseline - 14}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
         tickLen = 8;
         strokeW = 1.2;
-        opacity = 0.8;
+        opacity = 0.7;
       }
 
       html += `<line x1="${xDeg}" y1="${yBaseline - (tickLen / 2)}" x2="${xDeg}" y2="${yBaseline + (tickLen / 2)}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
-    // DESENHO DOS BLOCOS DOS TERMOS (PISTA INFERIOR)
+    // BLOCOS DOS TERMOS (PISTA INFERIOR)
     passage.terms.forEach(term => {
       const dInSignStart = term.startDegAbs % 30;
       let dInSignEnd = term.endDegAbs % 30;
@@ -335,22 +341,19 @@ function renderCircumambulaçõesUI() {
       const xEnd = x0 + (dInSignEnd * scale);
       const wTerm = xEnd - xStart;
 
-      // Caixa do Termo Egípcio
+      // Caixa do Termo
       html += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="28" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
 
-      // Símbolo Dourado do Regente do Termo
+      // Símbolo do Regente
       const xCenter = xStart + (wTerm / 2);
       html += `<text x="${xCenter}" y="${yBaseline + 20}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
-      // Idade e Data de Início do Termo (na divisão do termo)
+      // Idade e Data
       html += `<text x="${xStart + 3}" y="${yBaseline + 42}" font-size="9" font-weight="800" fill="#103b70">${term.startYearsOld}a</text>`;
       html += `<text x="${xStart + 3}" y="${yBaseline + 51}" font-size="8" font-weight="500" fill="#64748b">${formatarDataBRDir(term.startDate)}</text>`;
     });
 
-    // PISTA SUPERIOR DOS ASPECTOS (Reservada e Pronta para a Etapa 2)
-    // Os aspectos por lançamento de raios entrarão alinhados acima de yBaseline
-
-    // MARCADOR DO CURSOR "HOJE" (SE O AFETA ESTIVER NESTA PAUTA HOJE)
+    // CURSOR DO AFETA REAL PARA O HOJE (SE O HOJE CAIR NESTE SIGNO E TERMO)
     passage.terms.forEach(term => {
       if (hoje >= term.startDate && hoje < term.endDate) {
         const tTotal = term.endDate.getTime() - term.startDate.getTime();
@@ -364,16 +367,11 @@ function renderCircumambulaçõesUI() {
         const currDeg = dInSignStart + (frac * (dInSignEnd - dInSignStart));
         const xHoje = x0 + (currDeg * scale);
 
-        // Linha Guia Vertical do Hoje
-        html += `<line x1="${xHoje}" y1="${yOffset + 4}" x2="${xHoje}" y2="${yOffset + 94}" stroke="#e84118" stroke-width="2" stroke-dasharray="4,3"/>`;
+        // Linha Guia Vertical Discreta
+        html += `<line x1="${xHoje}" y1="${yOffset + 12}" x2="${xHoje}" y2="${yOffset + 96}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
 
-        // Badge "HOJE"
-        html += `<rect x="${xHoje - 20}" y="${yOffset + 2}" width="40" height="14" rx="4" fill="#e84118"/>`;
-        html += `<text x="${xHoje}" y="${yOffset + 12}" font-size="8.5" font-weight="800" fill="#ffffff" text-anchor="middle">HOJE</text>`;
-
-        // Ícone Destaque do Afeta em Posição
-        html += `<circle cx="${xHoje}" cy="${yBaseline}" r="14" fill="#ffffff" stroke="#e84118" stroke-width="2" filter="url(#afetaGlow)"/>`;
-        html += `<g transform="translate(${xHoje - 11}, ${yBaseline - 11}) scale(0.95)">${afetaCursorIconHTML}</g>`;
+        // SVG do Afeta Selecionado no Grau de Hoje
+        html += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
       }
     });
 
