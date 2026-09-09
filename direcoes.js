@@ -200,7 +200,7 @@ function calcularRaiosAspectos(data, startAbsDeg) {
         degInSign: rayAbsDeg % 30,
         planetId: pId,
         aspectType: asp.type,
-        yearsOld: accumulatedYears.toFixed(2)
+        yearsOld: accumulatedYears.toFixed(1)
       });
     });
   });
@@ -245,10 +245,10 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
         endDate = new Date(currDate.getTime() + years * 365.25 * 24 * 60 * 60 * 1000);
 
         if (sOffset > 0 || termStartDeg >= startDegInSign) {
-          startYearsOld = totalYearsAccum.toFixed(2);
+          startYearsOld = totalYearsAccum.toFixed(1);
         }
 
-        endYearsOld = (totalYearsAccum + years).toFixed(2);
+        endYearsOld = (totalYearsAccum + years).toFixed(1);
 
         totalYearsAccum += years;
         currDate = new Date(endDate);
@@ -468,7 +468,7 @@ function renderCircumambulaçõesUI() {
       html += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
 
       // Texto Vermelho da Idade Inicial DENTRO DO RECT DO TERMO
-      html += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.00 anos</text>`;
+      html += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
       html += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
