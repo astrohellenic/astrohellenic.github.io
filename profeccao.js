@@ -1,6 +1,6 @@
 (function() {
     window.profeccaoOffsetAnos = 0;
-    window.expandedProfeccaoMes = null; // Guarda o índice do mês aberto (0 a 11)
+    window.expandedProfeccaoMes = undefined; // Guarda o índice do mês aberto (0 a 11)
 
     window.mudarAnoProfeccao = function(delta) {
         window.profeccaoOffsetAnos += delta;
@@ -11,11 +11,11 @@
     };
 
     window.alternarMesProfeccao = function(index) {
-        window.expandedProfeccaoMes = (window.expandedProfeccaoMes === index) ? null : index;
-        if (typeof window.iniciarModuloProfeccao === 'function') {
-            window.iniciarModuloProfeccao();
-        }
-    };
+    window.expandedProfeccaoMes = (window.expandedProfeccaoMes === index) ? -1 : index;
+    if (typeof window.iniciarModuloProfeccao === 'function') {
+        window.iniciarModuloProfeccao();
+    }
+};
 
     const SIGNS = [
         { ruler: "Mars", rulerName: "Marte" },
@@ -254,7 +254,7 @@
         }
 
         // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
-        if (window.expandedProfeccaoMes === null) {
+        if (window.expandedProfeccaoMes === undefined) {
             const agora = hoje.getTime();
             const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
             window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
@@ -263,7 +263,7 @@
         monthlyCache.forEach((m, i) => {
             const mSign = SIGNS[m.signIdx];
             const isExpanded = (window.expandedProfeccaoMes === i);
-            const bgRow = isExpanded ? '#fefcf2' : (i % 2 === 0 ? '#ffffff' : '#fffdf5');
+            const bgRow = isExpanded ? '#e0e7ff' : (i % 2 === 0 ? '#ffffff' : '#fffdf5');
 
             html += `
                 <tr onclick="alternarMesProfeccao(${i})" style="border-bottom: 1px solid #e2d9c2; background-color: ${bgRow}; cursor: pointer; user-select: none;">
