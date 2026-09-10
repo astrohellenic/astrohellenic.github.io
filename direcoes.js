@@ -22,17 +22,11 @@ const EGYPTIAN_TERMS_DIRECOES = [
 ];
 
 /* OBTÉM OS TEMPOS ASCENSIONAIS LENDO A LATITUDE DA REQUISIÇÃO DA API */
-function obterTemposAscensionaisValens(data) {
-  // Lê a latitude do objeto retornado ou da variável global da requisição
-  let lat = 0;
-  if (data && data.lat !== undefined) {
-    lat = parseFloat(data.lat);
-  } else if (typeof latitudeAtual !== 'undefined') {
-    lat = parseFloat(latitudeAtual);
-  }
+function obterTemposAscensionaisValens(lat) {
+  const latNum = parseFloat(lat) || 0;
 
   // Hemisfério Sul (latitude < 0): Inverte os tempos ascensionais
-  if (lat < 0) {
+  if (latNum < 0) {
     return [40, 36, 32, 28, 24, 20, 20, 24, 28, 32, 36, 40];
   }
 
@@ -135,21 +129,17 @@ function getAspectSymbolSVGDir(type) {
 
 /* BUSCA O GRAU DO AFETA MAPEANDO OS NOMES EXATOS DA API PYTHON */
 function obterGrauEfetivoAfeta(key, data) {
-  const ascAbs = data.ascendente ? (data.ascendente.grau_absoluto ?? 0) : 0;
-  const pObj = {};
-  
-  // Mapeamento idêntico às chaves do dicionário "planetas" da sua API Flask
-  const mapKeys = { 
-    Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercurio', Venus: 'Venus', 
-    Mars: 'Marte', Jupiter: 'Jupiter', Saturn: 'Saturno' 
+  const ascAbs = data.Ascendente ? (data.Ascendente.grau_absoluto ?? 0) : 0;
+
+  const pObj = {
+    Sun: data.Sol ? data.Sol.grau_absoluto : 0,
+    Moon: data.Lua ? data.Lua.grau_absoluto : 0,
+    Mercury: data.Mercúrio ? data.Mercúrio.grau_absoluto : 0,
+    Venus: data.Vênus ? data.Vênus.grau_absoluto : 0,
+    Mars: data.Marte ? data.Marte.grau_absoluto : 0,
+    Jupiter: data.Júpiter ? data.Júpiter.grau_absoluto : 0,
+    Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
   };
-
-  const planetas = data.planetas || {};
-
-  ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
-    const item = planetas[mapKeys[id]];
-    pObj[id] = item ? item.grau_absoluto : 0;
-  });
 
   const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
   const fortAbs = (isDay ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
@@ -164,7 +154,7 @@ function obterGrauEfetivoAfeta(key, data) {
     case "ASC": return ascAbs;
     case "Sun": return pObj.Sun;
     case "Moon": return pObj.Moon;
-    case "Syz": return data.sizigia ? data.sizigia.grau_absoluto : 0;
+    case "Syz": return data.Sizigia ? data.Sizigia.grau_absoluto : 0;
     case "fortune": return fortAbs;
     case "spirit": return spirAbs;
     case "venus": return erosAbs;
@@ -178,13 +168,24 @@ function obterGrauEfetivoAfeta(key, data) {
 
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
-  const temposAscensionais = obterTemposAscensionaisValens(data);
-  const planetas = data.planetas || {};
+  const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
+  const temposAscensionais = obterTemposAscensionaisValens(latAtual);
 
-  // Nomes exatos do dicionário PLANETAS do seu script Python
+  // Monta o objeto "planetas" diretamente a partir do formato real de currentCalculatedData
+  const planetas = {
+    Sun: data.Sol ? { grau_absoluto: data.Sol.grau_absoluto } : null,
+    Moon: data.Lua ? { grau_absoluto: data.Lua.grau_absoluto } : null,
+    Mercury: data.Mercúrio ? { grau_absoluto: data.Mercúrio.grau_absoluto } : null,
+    Venus: data.Vênus ? { grau_absoluto: data.Vênus.grau_absoluto } : null,
+    Mars: data.Marte ? { grau_absoluto: data.Marte.grau_absoluto } : null,
+    Jupiter: data.Júpiter ? { grau_absoluto: data.Júpiter.grau_absoluto } : null,
+    Saturn: data.Saturno ? { grau_absoluto: data.Saturno.grau_absoluto } : null,
+    NodoNorte: data.Nodo_Norte ? { grau_absoluto: data.Nodo_Norte.grau_absoluto } : null
+  };
+
   const mapKeys = { 
-    Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercurio', Venus: 'Venus', 
-    Mars: 'Marte', Jupiter: 'Jupiter', Saturn: 'Saturno',
+    Sun: 'Sun', Moon: 'Moon', Mercury: 'Mercury', Venus: 'Venus', 
+    Mars: 'Mars', Jupiter: 'Jupiter', Saturn: 'Saturn',
     NodoNorte: 'NodoNorte'
   };
   
@@ -264,7 +265,8 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
 
 /* CÁLCULO DAS DIREÇÕES: TERMOS COMPLETOS (0° A 30°) */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
-  const temposAscensionais = obterTemposAscensionaisValens(data);
+  const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
+  const temposAscensionais = obterTemposAscensionaisValens(latAtual);
   const tabela = [];
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
