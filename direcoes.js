@@ -1,6 +1,6 @@
 /* ==========================================
    MÓDULO DE CIRCUMAMBULAÇÕES (DIREÇÕES)
-   MÉTODO HELENÍSTICO PURISTA (VETTIUS VALENS)
+   MÉSTATIC HELENÍSTICO PURISTA (VETTIUS VALENS)
    ========================================== */
 
 let selectedAphetesKey = "ASC"; // Afeta padrão inicial
@@ -21,8 +21,24 @@ const EGYPTIAN_TERMS_DIRECOES = [
   [{ pId: "Venus", pSym: "♀", deg: 12 }, { pId: "Jupiter", pSym: "♃", deg: 16 }, { pId: "Mercury", pSym: "☿", deg: 19 }, { pId: "Mars", pSym: "♂", deg: 28 }, { pId: "Saturn", pSym: "♄", deg: 30 }]
 ];
 
-/* TEMPOS DE ASCENSÃO OBLÍQUA DOS SIGNOS (VALENS) - CLIMA III/IV */
-const VALENS_ASCENSION_TIMES = [20, 24, 28, 32, 36, 40, 40, 36, 32, 28, 24, 20];
+/* FUNÇÃO PARA OBTER OS TEMPOS DE ASCENSÃO OBLÍQUA DOS SIGNOS (VALENS) CONFORME O HEMISFÉRIO */
+function obterTemposAscensionaisValens(data) {
+  let lat = 0;
+  if (data) {
+    if (typeof data.latitude === 'number') lat = data.latitude;
+    else if (typeof data.lat === 'number') lat = data.lat;
+    else if (data.coordenadas && typeof data.coordenadas.latitude === 'number') lat = data.coordenadas.latitude;
+    else if (data.Info && typeof data.Info.latitude === 'number') lat = data.Info.latitude;
+  }
+
+  // No Hemisfério Sul (latitude < 0), inverte-se a escala ascensional dos signos (Áries a Peixes)
+  if (lat < 0) {
+    return [40, 36, 32, 28, 24, 20, 20, 24, 28, 32, 36, 40];
+  }
+
+  // Hemisfério Norte (Padrão Clima III/IV)
+  return [20, 24, 28, 32, 36, 40, 40, 36, 32, 28, 24, 20];
+}
 
 const MONOLINE_ZODIAC_SVGS_DIRECOES = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
@@ -153,6 +169,7 @@ function obterGrauEfetivoAfeta(key, data) {
 
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) DOS 7 PLANETAS POR ASCENSÃO OBLÍQUA */
 function calcularRaiosAspectos(data, startAbsDeg) {
+  const temposAscensionais = obterTemposAscensionaisValens(data);
   const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
   const planetIds = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
   const aspectDefs = [
@@ -187,7 +204,7 @@ function calcularRaiosAspectos(data, startAbsDeg) {
         const degLeftInSign = 30 - degInS;
 
         const stepDeg = Math.min(degToCover, degLeftInSign);
-        const ascTimePerDegree = VALENS_ASCENSION_TIMES[sIdx] / 30;
+        const ascTimePerDegree = temposAscensionais[sIdx] / 30;
         accumulatedYears += stepDeg * ascTimePerDegree;
 
         currDeg = (currDeg + stepDeg) % 360;
@@ -209,7 +226,8 @@ function calcularRaiosAspectos(data, startAbsDeg) {
 }
 
 /* CÁLCULO DAS DIREÇÕES: TERMOS COMPLETOS (0° A 30°) */
-function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
+function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
+  const temposAscensionais = obterTemposAscensionaisValens(data);
   const tabela = [];
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
@@ -238,7 +256,7 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate) {
         let effEnd = termEndDeg;
 
         const remDeg = effEnd - effStart;
-        const ascTimePerDegree = VALENS_ASCENSION_TIMES[signIdx] / 30;
+        const ascTimePerDegree = temposAscensionais[signIdx] / 30;
         const years = remDeg * ascTimePerDegree;
 
         startDate = new Date(currDate);
@@ -305,7 +323,7 @@ function renderCircumambulaçõesUI() {
     { key: "saturn", type: "item" }
   ];
 
-  const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate);
+  const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
   const raiosAspectos = calcularRaiosAspectos(data, startAbsDeg);
   const hoje = new Date();
 
@@ -432,7 +450,7 @@ function renderCircumambulaçõesUI() {
       }
     });
 
-      // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (COM SISTEMA ANTI-COLISÃO POR NÍVEIS)
+    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (COM SISTEMA ANTI-COLISÃO POR NÍVEIS)
     const raiosDoSigno = raiosAspectos.filter(r => {
       if (r.signIdx !== passage.signIdx) return false;
       if (pIdx === 0 && r.degInSign < natalDegInSign) return false;
