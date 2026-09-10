@@ -479,10 +479,10 @@ async function executarCalculo() {
       Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno), lat: planetas.Saturno ? parseFloat(planetas.Saturno.latitude) || 0 : 0 }
       };
 
-        renderMandala();
-    if (typeof iniciarModuloHoras === 'function') {
+                if (typeof iniciarModuloHoras === 'function') {
       iniciarModuloHoras();
     }
+    renderMandala();
 
   } catch (err) {
     document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
@@ -715,8 +715,20 @@ function renderMandala(dadosNovos) {
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="888" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
     <text x="30" y="906" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-    <text x="30" y="922" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
+        <text x="30" y="922" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
   </g>`;
+
+  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
+  if (horasInfo) {
+    if (horasInfo.dayRulerId && PLANET_3D_SVGS[horasInfo.dayRulerId]) {
+      svg += `<text x="760" y="906" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">DIA</text>
+      <g transform="translate(800, 900)"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
+    }
+    if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
+      svg += `<text x="845" y="906" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
+      <g transform="translate(895, 900)"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
+    }
+  }
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
