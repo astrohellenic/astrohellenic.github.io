@@ -21,16 +21,22 @@ const EGYPTIAN_TERMS_DIRECOES = [
   [{ pId: "Venus", pSym: "♀", deg: 12 }, { pId: "Jupiter", pSym: "♃", deg: 16 }, { pId: "Mercury", pSym: "☿", deg: 19 }, { pId: "Mars", pSym: "♂", deg: 28 }, { pId: "Saturn", pSym: "♄", deg: 30 }]
 ];
 
-/* TEMPOS DE ASCENSÃO OBLÍQUA DOS SIGNOS (VALENS) - DETECÇÃO DIRETA DO HEMISFÉRIO */
+/* OBTÉM OS TEMPOS ASCENSIONAIS LENDO A LATITUDE DA REQUISIÇÃO DA API */
 function obterTemposAscensionaisValens(data) {
-  const lat = parseFloat(data.latitude);
+  // Lê a latitude do objeto retornado ou da variável global da requisição
+  let lat = 0;
+  if (data && data.lat !== undefined) {
+    lat = parseFloat(data.lat);
+  } else if (typeof latitudeAtual !== 'undefined') {
+    lat = parseFloat(latitudeAtual);
+  }
 
-  // Hemisfério Sul (latitude < 0): Inverte a escala de ascensão dos signos (Áries a Peixes)
+  // Hemisfério Sul (latitude < 0): Inverte os tempos ascensionais
   if (lat < 0) {
     return [40, 36, 32, 28, 24, 20, 20, 24, 28, 32, 36, 40];
   }
 
-  // Hemisfério Norte (Padrão Clima III/IV)
+  // Hemisfério Norte
   return [20, 24, 28, 32, 36, 40, 40, 36, 32, 28, 24, 20];
 }
 
@@ -100,7 +106,7 @@ function getItemSVGDir(key) {
 }
 
 function getAfetaCursorSVG(key) {
-  const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+  const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'NodoNorte'];
   if (planetKeys.includes(key)) {
     return getPlanet3DSVGDir(key);
   }
@@ -113,26 +119,35 @@ function getAfetaCursorSVG(key) {
 /* SÍMBOLOS DOS ASPECTOS EM SVG VETORIAL */
 function getAspectSymbolSVGDir(type) {
   switch (type) {
-    case 'conj': // Conjunção
+    case 'conj': 
       return `<svg width="11" height="11" viewBox="0 0 20 20"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
-    case 'sex': // Sextil
+    case 'sex': 
       return `<svg width="11" height="11" viewBox="0 0 20 20"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
-    case 'squ': // Quadratura
+    case 'squ': 
       return `<svg width="11" height="11" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
-    case 'tri': // Trígono
+    case 'tri': 
       return `<svg width="11" height="11" viewBox="0 0 20 20"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
-    case 'opp': // Oposição
+    case 'opp': 
       return `<svg width="13" height="11" viewBox="0 0 24 20"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
     default: return '';
   }
 }
 
+/* BUSCA O GRAU DO AFETA MAPEANDO OS NOMES EXATOS DA API PYTHON */
 function obterGrauEfetivoAfeta(key, data) {
-  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+  const ascAbs = data.ascendente ? (data.ascendente.grau_absoluto ?? 0) : 0;
   const pObj = {};
-  const mapKeys = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
+  
+  // Mapeamento idêntico às chaves do dicionário "planetas" da sua API Flask
+  const mapKeys = { 
+    Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercurio', Venus: 'Venus', 
+    Mars: 'Marte', Jupiter: 'Jupiter', Saturn: 'Saturno' 
+  };
+
+  const planetas = data.planetas || {};
+
   ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(id => {
-    const item = data[mapKeys[id]];
+    const item = planetas[mapKeys[id]];
     pObj[id] = item ? item.grau_absoluto : 0;
   });
 
@@ -149,7 +164,7 @@ function obterGrauEfetivoAfeta(key, data) {
     case "ASC": return ascAbs;
     case "Sun": return pObj.Sun;
     case "Moon": return pObj.Moon;
-    case "Syz": return data.Sizigia ? data.Sizigia.grau_absoluto : 0;
+    case "Syz": return data.sizigia ? data.sizigia.grau_absoluto : 0;
     case "fortune": return fortAbs;
     case "spirit": return spirAbs;
     case "venus": return erosAbs;
@@ -161,17 +176,29 @@ function obterGrauEfetivoAfeta(key, data) {
   }
 }
 
-/* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) + NODOS (SÓ CONJUNÇÃO) + DATA EXATA */
+/* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
   const temposAscensionais = obterTemposAscensionaisValens(data);
+  const planetas = data.planetas || {};
+
+  // Nomes exatos do dicionário PLANETAS do seu script Python
   const mapKeys = { 
-    Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', 
-    Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno',
-    Node: 'NodoNorte', SouthNode: 'NodoSul' 
+    Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercurio', Venus: 'Venus', 
+    Mars: 'Marte', Jupiter: 'Jupiter', Saturn: 'Saturno',
+    NodoNorte: 'NodoNorte'
   };
   
-  const planetIds = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Node', 'SouthNode'];
-  
+  const planetIds = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'NodoNorte'];
+
+  // Calcula a posição do Nodo Sul (oposto exato do Nodo Norte em +180°)
+  if (planetas['NodoNorte'] && planetas['NodoNorte'].grau_absoluto !== undefined) {
+    planetas['NodoSul'] = {
+      grau_absoluto: (planetas['NodoNorte'].grau_absoluto + 180) % 360
+    };
+    mapKeys['NodoSul'] = 'NodoSul';
+    planetIds.push('NodoSul');
+  }
+
   const aspectDefs = [
     { offset: 0, type: 'conj' },
     { offset: 60, type: 'sex' },
@@ -187,14 +214,14 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
 
   planetIds.forEach(pId => {
     const itemKey = mapKeys[pId];
-    const item = data[itemKey];
+    const item = planetas[itemKey];
     if (!item || item.grau_absoluto === undefined) return;
     const pDegAbs = item.grau_absoluto;
 
-    const isNode = (pId === 'Node' || pId === 'SouthNode');
+    const isNode = (pId === 'NodoNorte' || pId === 'NodoSul');
 
     aspectDefs.forEach(asp => {
-      // Regra de Valens: Nodos LUNARES NÚMERO SÓ POR CONJUNÇÃO (offset 0°)
+      // Regra de Valens: Nodos LUNARES SÓ POR CONJUNÇÃO (offset 0°)
       if (isNode && asp.type !== 'conj') return;
 
       const rayAbsDeg = (pDegAbs + asp.offset) % 360;
@@ -217,7 +244,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
         degToCover -= stepDeg;
       }
 
-      // Cálculo da Data Exata em Calendário
+      // Converte tempo acumulado na data exata
       const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
 
       raios.push({
@@ -456,7 +483,7 @@ function renderCircumambulaçõesUI() {
       }
     });
 
-    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS (COM SISTEMA ANTI-COLISÃO)
+    // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS
     const raiosDoSigno = raiosAspectos.filter(r => {
       if (r.signIdx !== passage.signIdx) return false;
       if (pIdx === 0 && r.degInSign < natalDegInSign) return false;
