@@ -758,13 +758,14 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
 
-  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
-  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
+  const ascPt = polarToCart(cx, cy, R.SignSector, eclToScreenAngle(ascAbs, house1RefAbs));
+  const dscPt = polarToCart(cx, cy, R.SignSector, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
 
-  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
-  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
+  const mcPt = polarToCart(cx, cy, R.SignSector, eclToScreenAngle(mcAbs, house1RefAbs));
+  const icPt = polarToCart(cx, cy, R.SignSector, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+
 
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
