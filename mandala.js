@@ -758,13 +758,14 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
 
-  const ascPt = polarToCart(cx, cy, R.SignSector, eclToScreenAngle(ascAbs, house1RefAbs));
-  const dscPt = polarToCart(cx, cy, R.SignSector, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
+  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
+  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
 
-  const mcPt = polarToCart(cx, cy, R.SignSector, eclToScreenAngle(mcAbs, house1RefAbs));
-  const icPt = polarToCart(cx, cy, R.SignSector, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
+  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
+  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+
 
 
   for (let i = 0; i < 12; i++) {
@@ -904,12 +905,14 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
         <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
         <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
-    } else if (item.type === "axis") {
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+      } else if (item.type === "axis") {
+      const axisPos = polarToCart(cx, cy, R.Dodec + 12, item.aShift);
+      svg += `<g transform="translate(${axisPos.x}, ${axisPos.y})">
         <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
         <text x="0" y="3.5" font-size="9" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
         <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
+    }
     } else if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
