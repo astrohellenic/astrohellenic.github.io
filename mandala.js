@@ -585,8 +585,9 @@ function renderMandala(dadosNovos) {
     { text: "Sex", sym: "♀" },
     { text: "Sáb", sym: "♄" }
   ];
+   
   const dayInfo = diasSemanaMap[currentMoment.getDay()];
-  const diaSemanaFormatted = `${dayInfo.text} ${dayInfo.sym}`;
+  const diaSemanaFormatted = dayInfo.text;
 
   const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
   const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
@@ -710,7 +711,7 @@ function renderMandala(dadosNovos) {
   /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
   svg += `<g id="png-discreet-header">
     <!-- Fundo Creme e Borda Dourada Estendidos quase até o fim -->
-    <rect x="15" y="865" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
+    <rect x="15" y="865" width="835" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
     
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="888" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
@@ -725,7 +726,7 @@ function renderMandala(dadosNovos) {
       <g transform="translate(800, 900)"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
-      svg += `<text x="845" y="906" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
+      svg += `<text x="845" y="906" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA </text>
       <g transform="translate(895, 900)"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
     }
   }
