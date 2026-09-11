@@ -886,9 +886,9 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   });
 
   /* APLICA O DESVIO LATERAL GLOBAL PARA EVITAR QUALQUER SOBREPOSIÇÃO NA BORDA */
-  aplicarDesvioLateralArco(outerRingItems, 7.5);
+  //aplicarDesvioLateralArco(outerRingItems, 7.5);
 
-  const pR = 340;
+  const pR = 360;
    
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
@@ -909,7 +909,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
 
-    const latPxPerGrau = 6;
+    const latPxPerGrau = 12;
     const raioEfetivo = item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : (item.type === 'lot' ? 276 : pR);
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
