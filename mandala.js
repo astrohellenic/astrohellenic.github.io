@@ -886,8 +886,8 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   });
 
   /* APLICA O DESVIO LATERAL GLOBAL PARA EVITAR QUALQUER SOBREPOSIÇÃO NA BORDA */
-  //aplicarDesvioLateralArco(outerRingItems, 7.5);
-   outerRingItems.forEach(it => it.aShift = it.aScreen);
+  aplicarDesvioLateralArco(outerRingItems, 7.5);
+   //outerRingItems.forEach(it => it.aShift = it.aScreen);
 
   const pR = 360;
    
