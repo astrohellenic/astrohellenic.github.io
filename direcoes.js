@@ -131,7 +131,7 @@ function getAspectSymbolSVGDir(type) {
 function obterGrauEfetivoAfeta(key, data) {
   const ascAbs = data.Ascendente ? (data.Ascendente.grau_absoluto ?? 0) : 0;
 
-  const pObj = {
+    const pObj = {
     Sun: data.Sol ? data.Sol.grau_absoluto : 0,
     Moon: data.Lua ? data.Lua.grau_absoluto : 0,
     Mercury: data.Mercúrio ? data.Mercúrio.grau_absoluto : 0,
@@ -141,6 +141,7 @@ function obterGrauEfetivoAfeta(key, data) {
     Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
   };
 
+  const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
   const fortAbs = (isDay ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
   const spirAbs = (isDay ? (ascAbs + pObj.Sun - pObj.Moon) : (ascAbs + pObj.Moon - pObj.Sun) + 36000) % 360;
   const erosAbs = (isDay ? (ascAbs + pObj.Venus - spirAbs) : (ascAbs + spirAbs - pObj.Venus) + 36000) % 360;
@@ -172,33 +173,22 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
   const temposAscensionais = obterTemposAscensionaisValens(latAtual);
 
   // Monta o objeto "planetas" diretamente a partir do formato real de currentCalculatedData
-  const planetas = {
+    const planetas = {
     Sun: data.Sol ? { grau_absoluto: data.Sol.grau_absoluto } : null,
     Moon: data.Lua ? { grau_absoluto: data.Lua.grau_absoluto } : null,
     Mercury: data.Mercúrio ? { grau_absoluto: data.Mercúrio.grau_absoluto } : null,
     Venus: data.Vênus ? { grau_absoluto: data.Vênus.grau_absoluto } : null,
     Mars: data.Marte ? { grau_absoluto: data.Marte.grau_absoluto } : null,
     Jupiter: data.Júpiter ? { grau_absoluto: data.Júpiter.grau_absoluto } : null,
-    Saturn: data.Saturno ? { grau_absoluto: data.Saturno.grau_absoluto } : null,
-    NodoNorte: data.Nodo_Norte ? { grau_absoluto: data.Nodo_Norte.grau_absoluto } : null
+    Saturn: data.Saturno ? { grau_absoluto: data.Saturno.grau_absoluto } : null
   };
 
   const mapKeys = { 
     Sun: 'Sun', Moon: 'Moon', Mercury: 'Mercury', Venus: 'Venus', 
-    Mars: 'Mars', Jupiter: 'Jupiter', Saturn: 'Saturn',
-    NodoNorte: 'NodoNorte'
+    Mars: 'Mars', Jupiter: 'Jupiter', Saturn: 'Saturn'
   };
   
-  const planetIds = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'NodoNorte'];
-
-  // Calcula a posição do Nodo Sul (oposto exato do Nodo Norte em +180°)
-  if (planetas['NodoNorte'] && planetas['NodoNorte'].grau_absoluto !== undefined) {
-    planetas['NodoSul'] = {
-      grau_absoluto: (planetas['NodoNorte'].grau_absoluto + 180) % 360
-    };
-    mapKeys['NodoSul'] = 'NodoSul';
-    planetIds.push('NodoSul');
-  }
+  const planetIds = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
 
   const aspectDefs = [
     { offset: 0, type: 'conj' },
@@ -219,12 +209,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
     if (!item || item.grau_absoluto === undefined) return;
     const pDegAbs = item.grau_absoluto;
 
-    const isNode = (pId === 'NodoNorte' || pId === 'NodoSul');
-
-    aspectDefs.forEach(asp => {
-      // Regra de Valens: Nodos LUNARES SÓ POR CONJUNÇÃO (offset 0°)
-      if (isNode && asp.type !== 'conj') return;
-
+      aspectDefs.forEach(asp => {
       const rayAbsDeg = (pDegAbs + asp.offset) % 360;
       const distDeg = (rayAbsDeg - startAbsDeg + 360) % 360;
 
@@ -574,11 +559,15 @@ function renderCircumambulaçõesUI() {
       html += `<text x="${xRay}" y="${yTop - 13}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
-      const planet3DSVG = getPlanet3DSVGDir(r.planetId);
-      const escalaPlaneta = (r.planetId === 'Saturn') ? 0.95 : 0.75;
+
+      const isPlanetaReal = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn'].includes(r.planetId);
+      const iconSVG = isPlanetaReal
+        ? getPlanet3DSVGDir(r.planetId)
+        : getItemSVGDir(r.planetId === 'Syz' ? 'Sizígia' : r.planetId);
+      const escalaIcone = isPlanetaReal ? ((r.planetId === 'Saturn') ? 0.95 : 0.75) : 1;
 
       html += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
-      html += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaPlaneta})">${planet3DSVG}</g>`;
+      html += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL
