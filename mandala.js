@@ -860,13 +860,6 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
       aScreen: eclToScreenAngle(absDeg, house1RefAbs)
     });
   });
-
-  /* 2. Adiciona os Ângulos
-  outerRingItems.push({ type: "axis", label: "ASC", deg: ascAbs, color: "#000000", aScreen: eclToScreenAngle(ascAbs, house1RefAbs) });
-  outerRingItems.push({ type: "axis", label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((ascAbs + 180) % 360, house1RefAbs) });
-  outerRingItems.push({ type: "axis", label: "MC", deg: mcAbs, color: "#000000", aScreen: eclToScreenAngle(mcAbs, house1RefAbs) });
-  outerRingItems.push({ type: "axis", label: "IC", deg: (mcAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((mcAbs + 180) % 360, house1RefAbs) });
-*/
    
   /* 3. Adiciona Nodos */
   if (nodeAbs > 0) {
@@ -912,12 +905,12 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     if (item.type === 'planet' && item.id === 'Sun') return;
 
     const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-    const p2 = polarToCart(cx, cy, pR - 19, item.aShift);
+    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? 264 : pR - 19), item.aShift);
     const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
 
     const latPxPerGrau = 6;
-    const raioEfetivo = item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : pR;
+    const raioEfetivo = item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : (item.type === 'lot' ? 276 : pR);
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
     if (item.type === "planet") {
@@ -927,15 +920,6 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
         <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
         <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
-  
-    /*
-    } else if (item.type === "axis") {
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${item.color}" stroke-width="1.8"/>
-        <text x="0" y="3.5" font-size="9" font-weight="900" fill="${item.color}" text-anchor="middle">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-*/
       
     } else if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
@@ -1050,47 +1034,3 @@ window.onload = function() {
   }
 };
                
-
-/* CONTROLE DE ALTERNÂNCIA (MANDALA / TABELA TÉCNICA) 
-window.currentViewMode = "mandala";
-
-function alternarVisaoMapaTabela() {
-  const containerMandala = document.getElementById('mandala-container');
-  const containerTabela = document.getElementById('painel-tecnico-container');
-  const btn = document.getElementById('btnToggleVisao');
-
-  if (window.currentViewMode === "mandala") {
-    window.currentViewMode = "tabela";
-    
-    // Esconde a mandala
-    if (containerMandala) containerMandala.style.display = "none";
-    
-    // Exibe a tabela e força a renderização
-    if (containerTabela) {
-      containerTabela.style.display = "block";
-      if (typeof renderPainelTecnico === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) {
-        renderPainelTecnico(currentCalculatedData, 'painel-tecnico-container');
-      }
-    }
-    
-    // Altera o ícone do botão para a Mandala (sem texto)
-    if (btn) {
-      btn.innerHTML = `<i class="fa-solid fa-chart-pie"></i>`;
-      btn.title = "Alternar para Mandala";
-    }
-
-  } else {
-    window.currentViewMode = "mandala";
-    
-    // Esconde a tabela e exibe a mandala
-    if (containerTabela) containerTabela.style.display = "none";
-    if (containerMandala) containerMandala.style.display = "block";
-    
-    // Altera o ícone do botão para a Tabela (sem texto)
-    if (btn) {
-      btn.innerHTML = `<i class="fa-solid fa-table-list"></i>`;
-      btn.title = "Alternar para Tabela Técnica";
-    }
-  }
-}
-*/
