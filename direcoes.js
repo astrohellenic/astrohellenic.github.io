@@ -392,9 +392,15 @@ function renderCircumambulaçõesUI() {
     { key: "saturn", type: "item" }
   ];
 
-  const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
+    const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
   const raiosAspectos = calcularRaiosAspectos(data, startAbsDeg, birthDate);
   const hoje = new Date();
+
+  // ---- DEBUG TEMPORÁRIO ----
+  const debugRaios = raiosAspectos.filter(r => ['fortune', 'spirit', 'Syz'].includes(r.planetId));
+  console.log('DEBUG lotes/sizigia:', debugRaios);
+  window.__debugRaios = debugRaios;
+  // ---- FIM DEBUG ----
 
   const signPassages = [];
   let currentPassage = null;
@@ -416,8 +422,9 @@ function renderCircumambulaçõesUI() {
   const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
   const natalDegInSign = startAbsDeg % 30;
 
-  let html = `
+    let html = `
     <div style="background: #fffdf5; border-radius: 16px; padding: 20px; max-width: 960px; margin: 20px auto; font-family: 'Montserrat', sans-serif;">
+      <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 11px; font-family: monospace; white-space: pre-wrap;">DEBUG: ${escapeHtml ? '' : ''}${JSON.stringify(debugRaios)}</div>
       <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         
         <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
