@@ -232,10 +232,15 @@ function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
     }
   }
 
-  // Trava o Sol 100% no grau astronômico real
+  // Trava o Sol e qualquer ponto a até 15° no grau astronômico real
   const sun = items.find(it => it.id === 'Sun');
-  if (sun) sun.aShift = sun.aScreen;
-}
+  if (sun) {
+    items.forEach(it => {
+      let diff = Math.abs(it.deg - sun.deg);
+      if (diff > 180) diff = 360 - diff;
+      if (diff <= 15) it.aShift = it.aScreen;
+    });
+  }
 
 function selecionarRegistro(index) {
   if (typeof cachedFolderData !== 'undefined' && cachedFolderData[index]) {
