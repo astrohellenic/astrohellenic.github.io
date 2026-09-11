@@ -141,28 +141,24 @@ function obterGrauEfetivoAfeta(key, data) {
     Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
   };
 
-  const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
-  const fortAbs = (isDay ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
-  const spirAbs = (isDay ? (ascAbs + pObj.Sun - pObj.Moon) : (ascAbs + pObj.Moon - pObj.Sun) + 36000) % 360;
-  const erosAbs = (isDay ? (ascAbs + pObj.Venus - spirAbs) : (ascAbs + spirAbs - pObj.Venus) + 36000) % 360;
-  const necAbs  = (isDay ? (ascAbs + fortAbs - pObj.Mercury) : (ascAbs + pObj.Mercury - fortAbs) + 36000) % 360;
-  const courAbs = (isDay ? (ascAbs + pObj.Mars - fortAbs) : (ascAbs + fortAbs - pObj.Mars) + 36000) % 360;
-  const vicAbs  = (isDay ? (ascAbs + pObj.Jupiter - spirAbs) : (ascAbs + spirAbs - pObj.Jupiter) + 36000) % 360;
-  const nemAbs  = (isDay ? (ascAbs + pObj.Saturn - fortAbs) : (ascAbs + fortAbs - pObj.Saturn) + 36000) % 360;
-
+    const lotesGlobais = (typeof window.currentLotes !== 'undefined' && window.currentLotes) ? window.currentLotes : [];
+  const buscarLote = (chave) => {
+    const l = lotesGlobais.find(item => item.key === chave);
+    return l ? l.deg : 0;
+  };
 
   switch (key) {
     case "ASC": return ascAbs;
     case "Sun": return pObj.Sun;
     case "Moon": return pObj.Moon;
     case "Syz": return data.Sizigia ? data.Sizigia.grau_absoluto : 0;
-    case "fortune": return fortAbs;
-    case "spirit": return spirAbs;
-    case "venus": return erosAbs;
-    case "mercury": return necAbs;
-    case "mars": return courAbs;
-    case "jupiter": return vicAbs;
-    case "saturn": return nemAbs;
+    case "fortune": return buscarLote('fortune');
+    case "spirit": return buscarLote('spirit');
+    case "venus": return buscarLote('venus');
+    case "mercury": return buscarLote('mercury');
+    case "mars": return buscarLote('mars');
+    case "jupiter": return buscarLote('jupiter');
+    case "saturn": return buscarLote('saturn');
     default: return ascAbs;
   }
 }
@@ -246,25 +242,17 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
   });
    
   // ALVOS CORPORAIS (Fortuna, Espírito e Sizígia) - Apenas por Conjunção (0°)
-  const ascAbs = data.Ascendente ? (data.Ascendente.grau_absoluto ?? 0) : 0;
-  const pObj = {
-    Sun: data.Sol ? data.Sol.grau_absoluto : 0,
-    Moon: data.Lua ? data.Lua.grau_absoluto : 0,
-    Mercury: data.Mercúrio ? data.Mercúrio.grau_absoluto : 0,
-    Venus: data.Vênus ? data.Vênus.grau_absoluto : 0,
-    Mars: data.Marte ? data.Marte.grau_absoluto : 0,
-    Jupiter: data.Júpiter ? data.Júpiter.grau_absoluto : 0,
-    Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
+  const lotesGlobaisRaios = (typeof window.currentLotes !== 'undefined' && window.currentLotes) ? window.currentLotes : [];
+  const buscarLoteRaio = (chave) => {
+    const l = lotesGlobaisRaios.find(item => item.key === chave);
+    return l ? l.deg : undefined;
   };
 
-  const isDayCalc = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
-  const fortDeg = (isDayCalc ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
-  const spirDeg = (isDayCalc ? (ascAbs + pObj.Sun - pObj.Moon) : (ascAbs + pObj.Moon - pObj.Sun) + 36000) % 360;
   const syzDeg = data.Sizigia ? data.Sizigia.grau_absoluto : undefined;
 
   const alvosCorporais = [
-    { key: 'fortune', deg: fortDeg },
-    { key: 'spirit', deg: spirDeg },
+    { key: 'fortune', deg: buscarLoteRaio('fortune') },
+    { key: 'spirit', deg: buscarLoteRaio('spirit') },
     { key: 'Syz', deg: syzDeg }
   ];
 
