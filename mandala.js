@@ -888,7 +888,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   /* APLICA O DESVIO LATERAL GLOBAL PARA EVITAR QUALQUER SOBREPOSIÇÃO NA BORDA */
   aplicarDesvioLateralArco(outerRingItems, 7.5);
 
-  const pR = 300;
+  const pR = 340;
    
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
