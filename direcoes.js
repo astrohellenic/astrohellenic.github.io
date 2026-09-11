@@ -141,14 +141,14 @@ function obterGrauEfetivoAfeta(key, data) {
     Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
   };
 
-  const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
   const fortAbs = (isDay ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
   const spirAbs = (isDay ? (ascAbs + pObj.Sun - pObj.Moon) : (ascAbs + pObj.Moon - pObj.Sun) + 36000) % 360;
   const erosAbs = (isDay ? (ascAbs + pObj.Venus - spirAbs) : (ascAbs + spirAbs - pObj.Venus) + 36000) % 360;
-  const necAbs = (isDay ? (ascAbs + fortAbs - pObj.Mercury) : (ascAbs + pObj.Mercury - fortAbs) + 36000) % 360;
-  const courAbs = (isDay ? (ascAbs + fortAbs - pObj.Mars) : (ascAbs + pObj.Mars - fortAbs) + 36000) % 360;
-  const vicAbs = (isDay ? (ascAbs + pObj.Jupiter - spirAbs) : (ascAbs + spirAbs - pObj.Jupiter) + 36000) % 360;
-  const nemAbs = (isDay ? (ascAbs + fortAbs - pObj.Saturn) : (ascAbs + pObj.Saturn - fortAbs) + 36000) % 360;
+  const necAbs  = (isDay ? (ascAbs + fortAbs - pObj.Mercury) : (ascAbs + pObj.Mercury - fortAbs) + 36000) % 360;
+  const courAbs = (isDay ? (ascAbs + pObj.Mars - fortAbs) : (ascAbs + fortAbs - pObj.Mars) + 36000) % 360;
+  const vicAbs  = (isDay ? (ascAbs + pObj.Jupiter - spirAbs) : (ascAbs + spirAbs - pObj.Jupiter) + 36000) % 360;
+  const nemAbs  = (isDay ? (ascAbs + pObj.Saturn - fortAbs) : (ascAbs + fortAbs - pObj.Saturn) + 36000) % 360;
+
 
   switch (key) {
     case "ASC": return ascAbs;
@@ -257,6 +257,63 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
         yearsOld: accumulatedYears.toFixed(1),
         exactDate: formatarDataBRDir(rayDate)
       });
+    });
+  });
+   
+  // ALVOS CORPORAIS (Fortuna, Espírito e Sizígia) - Apenas por Conjunção (0°)
+  const ascAbs = data.Ascendente ? (data.Ascendente.grau_absoluto ?? 0) : 0;
+  const pObj = {
+    Sun: data.Sol ? data.Sol.grau_absoluto : 0,
+    Moon: data.Lua ? data.Lua.grau_absoluto : 0,
+    Mercury: data.Mercúrio ? data.Mercúrio.grau_absoluto : 0,
+    Venus: data.Vênus ? data.Vênus.grau_absoluto : 0,
+    Mars: data.Marte ? data.Marte.grau_absoluto : 0,
+    Jupiter: data.Júpiter ? data.Júpiter.grau_absoluto : 0,
+    Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
+  };
+
+  const isDayCalc = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
+  const fortDeg = (isDayCalc ? (ascAbs + pObj.Moon - pObj.Sun) : (ascAbs + pObj.Sun - pObj.Moon) + 36000) % 360;
+  const spirDeg = (isDayCalc ? (ascAbs + pObj.Sun - pObj.Moon) : (ascAbs + pObj.Moon - pObj.Sun) + 36000) % 360;
+  const syzDeg = data.Sizigia ? data.Sizigia.grau_absoluto : undefined;
+
+  const alvosCorporais = [
+    { key: 'fortune', deg: fortDeg },
+    { key: 'spirit', deg: spirDeg },
+    { key: 'Syz', deg: syzDeg }
+  ];
+
+  alvosCorporais.forEach(alvo => {
+    if (alvo.deg === undefined) return;
+    const targetDeg = alvo.deg;
+
+    const distDeg = (targetDeg - startAbsDeg + 360) % 360;
+    let currDeg = startAbsDeg;
+    let accumulatedYears = 0;
+    let degToCover = distDeg;
+
+    while (degToCover > 0.0001) {
+      const sIdx = Math.floor(currDeg / 30);
+      const degInS = currDeg % 30;
+      const degLeftInSign = 30 - degInS;
+
+      const stepDeg = Math.min(degToCover, degLeftInSign);
+      accumulatedYears += stepDeg * (temposAscensionais[sIdx] / 30);
+
+      currDeg = (currDeg + stepDeg) % 360;
+      degToCover -= stepDeg;
+    }
+
+    const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
+
+    raios.push({
+      rayAbsDeg: targetDeg,
+      signIdx: Math.floor(targetDeg / 30),
+      degInSign: targetDeg % 30,
+      planetId: alvo.key,
+      aspectType: 'conj',
+      yearsOld: accumulatedYears.toFixed(1),
+      exactDate: formatarDataBRDir(rayDate)
     });
   });
 
