@@ -230,7 +230,6 @@ function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
         proximo.aShift += overlap;
       }
     }
-  }
 
   // Trava o Sol e qualquer ponto a até 15° no grau astronômico real
   const sun = items.find(it => it.id === 'Sun');
