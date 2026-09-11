@@ -570,6 +570,7 @@ function renderMandala(dadosNovos) {
   const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
 
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
+  window.currentLotes = lotes;
 
   let house1RefAbs = ascAbs;
   if (selectedHouse1Lot !== "ASC") {
