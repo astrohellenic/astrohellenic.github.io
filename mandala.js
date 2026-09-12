@@ -164,7 +164,8 @@ let currentCustomCode = null;
 let lastRenderedPngUrl = "";
 
 function formatDegMin(absDeg) {
-  const degInSign = absDeg % 30;
+  const normDeg = (absDeg % 360 + 360) % 360; // Força qualquer valor a ficar entre 0° e 359.99°
+  const degInSign = normDeg % 30;
   const degrees = Math.floor(degInSign);
   const minutes = Math.round((degInSign - degrees) * 60);
   const minStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
@@ -189,14 +190,14 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   const jup = planetObj.Jupiter.abs;
   const sat = planetObj.Saturn.abs;
 
-  const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
-  const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
-  const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
-  const necAbs  = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
-  const courAbs = (isDay ? (ascAbs + mars - fortAbs) : (ascAbs + fortAbs - mars) + 36000) % 360;
-  const vicAbs  = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
-  const nemAbs  = (isDay ? (ascAbs + sat - fortAbs) : (ascAbs + fortAbs - sat) + 36000) % 360;
-
+  // Garantindo que a subtração nunca resulte em número negativo (+ 36000)
+  const fortAbs = ((isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon)) + 36000) % 360;
+  const spirAbs = ((isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun)) + 36000) % 360;
+  const erosAbs = ((isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven)) + 36000) % 360;
+  const necAbs  = ((isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs)) + 36000) % 360;
+  const courAbs = ((isDay ? (ascAbs + mars - fortAbs) : (ascAbs + fortAbs - mars)) + 36000) % 360;
+  const vicAbs  = ((isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup)) + 36000) % 360;
+  const nemAbs  = ((isDay ? (ascAbs + sat - fortAbs) : (ascAbs + fortAbs - sat)) + 36000) % 360;
 
   return [
     { key: "fortune", label: "FORT", type: "fortune", deg: fortAbs },
