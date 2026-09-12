@@ -210,19 +210,24 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
 }
 
 // Empilhamento radial: separa itens em conjunção sem nunca alterar o ângulo
-// (a posição real no zodíaco), apenas a distância deles ao centro.
+// (a posição real no zodíaco), apenas a distância deles ao centro. Lotes são
+// pontos calculados, fora da eclíptica, com raio próprio bem menor — nunca
+// competem por espaço com quem está na órbita dos planetas (planetas, nodos,
+// sizígia), nem são movidos por essa lógica.
 function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 22) {
   if (!items || items.length === 0) return;
-  items.sort((a, b) => a.aScreen - b.aScreen);
   items.forEach(it => { it.aShift = it.aScreen; it.rOffset = 0; });
 
+  const naEcliptica = items.filter(it => it.type !== 'lot').sort((a, b) => a.aScreen - b.aScreen);
+  if (naEcliptica.length === 0) return;
+
   // Agrupa vizinhos que estão colados demais (conjunção visual)
-  const grupos = [[items[0]]];
-  for (let i = 1; i < items.length; i++) {
-    if (items[i].aScreen - items[i - 1].aScreen < distMinimaGraus) {
-      grupos[grupos.length - 1].push(items[i]);
+  const grupos = [[naEcliptica[0]]];
+  for (let i = 1; i < naEcliptica.length; i++) {
+    if (naEcliptica[i].aScreen - naEcliptica[i - 1].aScreen < distMinimaGraus) {
+      grupos[grupos.length - 1].push(naEcliptica[i]);
     } else {
-      grupos.push([items[i]]);
+      grupos.push([naEcliptica[i]]);
     }
   }
 
@@ -244,9 +249,9 @@ function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 2
   // sobreposição ali é proposital — representa estar "sob os raios do Sol",
   // sem visibilidade a olho nu. Quem cobre quem é decidido depois pela
   // ordem caldaica de distância à Terra, não pelo deslocamento.
-  const sol = items.find(it => it.id === 'Sun');
+  const sol = naEcliptica.find(it => it.id === 'Sun');
   if (sol) {
-    items.forEach(it => {
+    naEcliptica.forEach(it => {
       let diff = Math.abs(it.deg - sol.deg);
       if (diff > 180) diff = 360 - diff;
       if (diff <= 15) it.rOffset = 0;
@@ -620,7 +625,7 @@ function renderMandala(dadosNovos) {
   /* Espaço extra no topo para a mancha de combustão do Sol nunca ser cortada
      quando ele está na parte superior do mapa (perto do MC). Recalculado
      sempre que o raio dos planetas (pR, mais abaixo) mudar. */
-  const topPad = 80;
+  const topPad = 110;
   const width = 960, height = 960 + topPad, cx = 480, cy = 440 + topPad;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
