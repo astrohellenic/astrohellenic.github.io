@@ -838,14 +838,20 @@ function renderMandala(dadosNovos) {
            distante desse mapa. O primeiro stop fica exatamente na borda
            interna dessa faixa (R.Termos), então tudo que se vê vai do tom
            mais claro, perto do horizonte, ao tom-base, mais saturado, perto
-           da borda — uma perspectiva atmosférica simples. -->
+           da borda — uma perspectiva atmosférica simples. Nos últimos 20%
+           o céu perde opacidade até ficar transparente, revelando o espaço
+           sideral por baixo aos poucos — só na borda externa; a linha do
+           horizonte (onde o céu encontra o espaço lateralmente) continua
+           nítida, pois ali é o corte reto do próprio path. -->
       <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#eafdff" />
-        <stop offset="100%" stop-color="#C5F4FF" />
+        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#eafdff" stop-opacity="1" />
+        <stop offset="80%" stop-color="#C5F4FF" stop-opacity="1" />
+        <stop offset="100%" stop-color="#C5F4FF" stop-opacity="0" />
       </radialGradient>
       <radialGradient id="skyGradNight" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3c4d7c" />
-        <stop offset="100%" stop-color="#273568" />
+        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3c4d7c" stop-opacity="1" />
+        <stop offset="80%" stop-color="#273568" stop-opacity="1" />
+        <stop offset="100%" stop-color="#273568" stop-opacity="0" />
       </radialGradient>
       <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
         <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3a1b66" />
