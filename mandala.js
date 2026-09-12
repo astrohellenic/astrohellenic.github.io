@@ -194,9 +194,9 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   const spirAbs = ((isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun)) + 36000) % 360;
   const erosAbs = ((isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven)) + 36000) % 360;
   const necAbs  = ((isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs)) + 36000) % 360;
-  const courAbs = ((isDay ? (ascAbs + mars - fortAbs) : (ascAbs + fortAbs - mars)) + 36000) % 360;
+  const courAbs = ((isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs)) + 36000) % 360;
   const vicAbs  = ((isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup)) + 36000) % 360;
-  const nemAbs  = ((isDay ? (ascAbs + sat - fortAbs) : (ascAbs + fortAbs - sat)) + 36000) % 360;
+  const nemAbs  = ((isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs)) + 36000) % 360;
 
   return [
     { key: "fortune", label: "FORT", type: "fortune", deg: fortAbs },
