@@ -774,12 +774,18 @@ function renderMandala(dadosNovos) {
 
     <rect width="${width}" height="${height}" fill="#ffffff"/>
 
-    <!-- Faixa de fora dos termos: céu (acima do horizonte ASC-DSC, que
-         nesse estilo de mandala é sempre exatamente horizontal) na cor do
-         dia ou da noite, e espaço sideral (abaixo, sempre a mesma cor —
-         representa o que não está sendo visto) -->
-    <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_OuterLine} ${cy} A ${R_OuterLine} ${R_OuterLine} 0 0 0 ${cx - R_OuterLine} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>
-    <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 0 ${cx + R.Termos} ${cy} L ${cx + R_OuterLine} ${cy} A ${R_OuterLine} ${R_OuterLine} 0 0 1 ${cx - R_OuterLine} ${cy} Z" fill="url(#spaceGrad)"/>`;
+    <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
+         direção, até a borda da tela (o "furo" no meio, via fill-rule
+         evenodd, é o disco interno — signos, dodecatemoria, termos — que
+         continua branco, intocado) -->
+    <path fill-rule="evenodd" d="M 0 0 H ${width} V ${height} H 0 Z
+      M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx - R.Termos} ${cy} Z" fill="url(#spaceGrad)"/>
+
+    <!-- Céu: só a faixa entre o anel dos termos e onde acabam os raios da
+         mandala, acima do horizonte ASC-DSC (sempre exatamente horizontal
+         nesse estilo de mandala) — desenhado por cima do espaço sideral,
+         mesmo tamanho de antes -->
+    <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_OuterLine} ${cy} A ${R_OuterLine} ${R_OuterLine} 0 0 0 ${cx - R_OuterLine} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>`;
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
