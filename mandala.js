@@ -618,8 +618,9 @@ function renderMandala(dadosNovos) {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
   /* Espaço extra no topo para a mancha de combustão do Sol nunca ser cortada
-     quando ele está na parte superior do mapa (perto do MC). */
-  const topPad = 40;
+     quando ele está na parte superior do mapa (perto do MC). Recalculado
+     sempre que o raio dos planetas (pR, mais abaixo) mudar. */
+  const topPad = 80;
   const width = 960, height = 960 + topPad, cx = 480, cy = 440 + topPad;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
@@ -908,7 +909,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
   aplicarEmpilhamentoRadial(outerRingItems, 7.5);
 
-  const pR = 360;
+  const pR = 390;
    
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
