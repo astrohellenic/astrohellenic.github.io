@@ -646,14 +646,94 @@ function renderMandala(dadosNovos) {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  /* Espaço extra no topo para a mancha de combustão do Sol nunca ser cortada
-     quando ele está na parte superior do mapa (perto do MC). Recalculado
-     sempre que o raio dos planetas (pR, mais abaixo) mudar. */
-  const topPad = 110;
-  const width = 960, height = 960 + topPad, cx = 480, cy = 440 + topPad;
+  const goldColor = "#c59b27";
+  const pR = 390;
+
+  /* UNIFICANDO TODOS OS ITENS DA ÓRBITA EXTERNA (Planetas + Eixos + Nodos + Sizígia + Lotes).
+     Precisa vir antes do layout vertical (mais abaixo): o tamanho da faixa
+     de céu/espaço depende de o quão longe os planetas acabam sendo
+     empurrados (latitude + empilhamento radial). */
+  const outerRingItems = [];
+
+  /* 1. Adiciona os 7 Planetas */
+    PLANETS_DEF.forEach(p => {
+    const item = data[p.key];
+    const absDeg = item ? item.grau_absoluto : 0;
+    outerRingItems.push({
+      type: "planet",
+      id: p.id,
+      symbol: p.symbol,
+      deg: absDeg,
+      retro: item ? Boolean(item.retro) : false,
+      eclLat: item ? (item.lat || 0) : 0,
+      aScreen: eclToScreenAngle(absDeg, house1RefAbs)
+    });
+  });
+
+  /* 3. Adiciona Nodos */
+  if (nodeAbs > 0) {
+    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+  }
+
+  /* 4. Adiciona Sizígia */
+  if (syzAbs > 0) {
+    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+  }
+
+  /* 5. Adiciona os 7 Lotes */
+  lotes.forEach(lot => {
+    outerRingItems.push({
+      type: "lot",
+      label: lot.label,
+      lotType: lot.type,
+      sym: lot.sym,
+      deg: lot.deg,
+      color: goldColor,
+      aScreen: eclToScreenAngle(lot.deg, house1RefAbs)
+    });
+  });
+
+  /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
+  aplicarEmpilhamentoRadial(outerRingItems, 7.5);
+
+  /* LOTES SE SEPARAM À PARTE, DESVIANDO NO ÂNGULO (SEM MUDAR DE RAIO) */
+  aplicarDesvioLateralLotes(outerRingItems, 6);
+
+  const latPxPerGrau = 12;
+
+  /* Raio externo da faixa de céu/espaço: precisa cobrir o ponto mais
+     distante que qualquer planeta (ou a mancha de combustão) possa
+     alcançar nesse mapa específico, senão o planeta "escapa" do céu. */
+  const degToPxPR = (2 * Math.PI * pR) / 360;
+  const rSobRaiosGlow = degToPxPR * 15;
+  let maxRaioItens = pR + rSobRaiosGlow;
+  outerRingItems.forEach(item => {
+    if (item.type === 'lot') return; // lotes ficam bem mais perto do centro, nunca definem o máximo
+    const base = item.type === 'planet' ? pR + (item.eclLat * latPxPerGrau) : pR;
+    const raio = base + (item.rOffset || 0);
+    if (raio > maxRaioItens) maxRaioItens = raio;
+  });
+  const R_Ceu = maxRaioItens + 50; // folga visual (ícone + rótulo de grau)
+
+  /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
+     ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
+     está no próprio ASC. Girando a mesma quantidade que o ASC girou em
+     relação a essa referência horizontal, o céu acompanha o horizonte
+     verdadeiro em vez de ficar sempre travado na horizontal. */
+  const ascScreenAngle = eclToScreenAngle(ascAbs, house1RefAbs);
+  const skyRotation = ascScreenAngle - 180;
+
+  /* Espaço extra no topo (e até o cabeçalho) para a faixa de céu/espaço
+     (raio R_Ceu) e a mancha de combustão do Sol nunca serem cortadas. */
+  const margemVertical = 30;
+  const cy = R_Ceu + margemVertical;
+  const headerY = cy + R_Ceu + margemVertical;
+  const headerH = 75;
+  const headerGapBottom = 20;
+  const width = 960, height = headerY + headerH + headerGapBottom, cx = width / 2;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
-  const goldColor = "#c59b27";
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -752,22 +832,23 @@ function renderMandala(dadosNovos) {
         <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
       </radialGradient>
 
-      <!-- CÉU (metade acima do ASC-DSC) e ESPAÇO SIDERAL (metade abaixo),
-           só na faixa de fora dos termos até onde acabam os raios da
-           mandala. O primeiro stop fica exatamente na borda interna dessa
-           faixa (R.Termos), então tudo que se vê vai do tom mais claro,
-           perto do horizonte, ao tom-base, mais saturado, perto da borda —
-           uma perspectiva atmosférica simples. -->
-      <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_OuterLine}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_OuterLine * 100).toFixed(2)}%" stop-color="#eafdff" />
+      <!-- CÉU (metade do lado do MC/acima do horizonte ASC-DSC) e ESPAÇO
+           SIDERAL (metade do lado do IC), na faixa de fora dos termos até
+           R_Ceu — raio grande o bastante para sempre cobrir o planeta mais
+           distante desse mapa. O primeiro stop fica exatamente na borda
+           interna dessa faixa (R.Termos), então tudo que se vê vai do tom
+           mais claro, perto do horizonte, ao tom-base, mais saturado, perto
+           da borda — uma perspectiva atmosférica simples. -->
+      <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
+        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#eafdff" />
         <stop offset="100%" stop-color="#C5F4FF" />
       </radialGradient>
-      <radialGradient id="skyGradNight" cx="${cx}" cy="${cy}" r="${R_OuterLine}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_OuterLine * 100).toFixed(2)}%" stop-color="#3c4d7c" />
+      <radialGradient id="skyGradNight" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
+        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3c4d7c" />
         <stop offset="100%" stop-color="#273568" />
       </radialGradient>
-      <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_OuterLine}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_OuterLine * 100).toFixed(2)}%" stop-color="#3a1b66" />
+      <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
+        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3a1b66" />
         <stop offset="100%" stop-color="#1A073F" />
       </radialGradient>
     </defs>
@@ -777,15 +858,18 @@ function renderMandala(dadosNovos) {
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule
          evenodd, é o disco interno — signos, dodecatemoria, termos — que
-         continua branco, intocado) -->
+         continua branco, intocado). Não gira: já cobre as duas metades por
+         igual, então a orientação do horizonte não importa para ele. -->
     <path fill-rule="evenodd" d="M 0 0 H ${width} V ${height} H 0 Z
       M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx - R.Termos} ${cy} Z" fill="url(#spaceGrad)"/>
 
-    <!-- Céu: só a faixa entre o anel dos termos e onde acabam os raios da
-         mandala, acima do horizonte ASC-DSC (sempre exatamente horizontal
-         nesse estilo de mandala) — desenhado por cima do espaço sideral,
-         mesmo tamanho de antes -->
-    <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_OuterLine} ${cy} A ${R_OuterLine} ${R_OuterLine} 0 0 0 ${cx - R_OuterLine} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>`;
+    <!-- Céu: a faixa entre o anel dos termos e R_Ceu, do lado do MC (acima
+         do horizonte ASC-DSC) — desenhado por cima do espaço sideral. Gira
+         junto com o botão de "casa 1" (skyRotation), para acompanhar o
+         horizonte real quando ele deixa de ser exatamente horizontal. -->
+    <g transform="rotate(${skyRotation} ${cx} ${cy})">
+      <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_Ceu} ${cy} A ${R_Ceu} ${R_Ceu} 0 0 0 ${cx - R_Ceu} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>
+    </g>`;
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
@@ -795,23 +879,23 @@ function renderMandala(dadosNovos) {
   /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
   svg += `<g id="png-discreet-header">
     <!-- Fundo Creme e Borda Dourada Estendidos quase até o fim -->
-    <rect x="15" y="${865 + topPad}" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
+    <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
-    <text x="30" y="${888 + topPad}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-        <text x="30" y="${922 + topPad}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
+    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
+    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
+        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
   </g>`;
 
   const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
   if (horasInfo) {
     if (horasInfo.dayRulerId && PLANET_3D_SVGS[horasInfo.dayRulerId]) {
-      svg += `<text x="760" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">DIA</text>
-      <g transform="translate(800, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
+      svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">DIA</text>
+      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
-      svg += `<text x="845" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
-      <g transform="translate(915, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
+      svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
+      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
     }
   }
 
@@ -925,56 +1009,6 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  /* UNIFICANDO TODOS OS ITENS DA ÓRBITA EXTERNA (Planetas + Eixos + Nodos + Sizígia + Lotes) */
-  const outerRingItems = [];
-
-  /* 1. Adiciona os 7 Planetas */
-    PLANETS_DEF.forEach(p => {
-    const item = data[p.key];
-    const absDeg = item ? item.grau_absoluto : 0;
-    outerRingItems.push({
-      type: "planet",
-      id: p.id,
-      symbol: p.symbol,
-      deg: absDeg,
-      retro: item ? Boolean(item.retro) : false,
-      eclLat: item ? (item.lat || 0) : 0,
-      aScreen: eclToScreenAngle(absDeg, house1RefAbs)
-    });
-  });
-   
-  /* 3. Adiciona Nodos */
-  if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
-  }
-
-  /* 4. Adiciona Sizígia */
-  if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
-  }
-
-  /* 5. Adiciona os 7 Lotes */
-  lotes.forEach(lot => {
-    outerRingItems.push({
-      type: "lot",
-      label: lot.label,
-      lotType: lot.type,
-      sym: lot.sym,
-      deg: lot.deg,
-      color: goldColor,
-      aScreen: eclToScreenAngle(lot.deg, house1RefAbs)
-    });
-  });
-
-  /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
-  aplicarEmpilhamentoRadial(outerRingItems, 7.5);
-
-  /* LOTES SE SEPARAM À PARTE, DESVIANDO NO ÂNGULO (SEM MUDAR DE RAIO) */
-  aplicarDesvioLateralLotes(outerRingItems, 6);
-
-  const pR = 390;
-   
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
   if (sunItem) {
@@ -1028,7 +1062,6 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
      planeta), quem fica na frente é sempre o corpo mais próximo da Terra —
      exatamente como no céu real, onde o mais distante fica encoberto. */
   const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
-  const latPxPerGrau = 12;
   outerRingItems
     .filter(item => item.type === 'planet')
     .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
