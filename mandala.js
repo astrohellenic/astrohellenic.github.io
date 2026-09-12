@@ -751,9 +751,41 @@ function renderMandala(dadosNovos) {
         <stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" />
         <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
       </radialGradient>
+
+      <!-- CÉU (metade acima do ASC-DSC) e ESPAÇO SIDERAL (metade abaixo),
+           só na faixa de fora dos termos até onde acabam os raios da
+           mandala. O primeiro stop fica exatamente na borda interna dessa
+           faixa (R.Termos), então tudo que se vê vai do tom mais claro,
+           perto do horizonte, ao tom-base, mais saturado, perto da borda —
+           uma perspectiva atmosférica simples. -->
+      <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_OuterLine}" gradientUnits="userSpaceOnUse">
+        <stop offset="${(R.Termos / R_OuterLine * 100).toFixed(2)}%" stop-color="#eafdff" />
+        <stop offset="100%" stop-color="#C5F4FF" />
+      </radialGradient>
+      <radialGradient id="skyGradNight" cx="${cx}" cy="${cy}" r="${R_OuterLine}" gradientUnits="userSpaceOnUse">
+        <stop offset="${(R.Termos / R_OuterLine * 100).toFixed(2)}%" stop-color="#3c4d7c" />
+        <stop offset="100%" stop-color="#273568" />
+      </radialGradient>
+      <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_OuterLine}" gradientUnits="userSpaceOnUse">
+        <stop offset="${(R.Termos / R_OuterLine * 100).toFixed(2)}%" stop-color="#3a1b66" />
+        <stop offset="100%" stop-color="#1A073F" />
+      </radialGradient>
     </defs>
 
-    <rect width="${width}" height="${height}" fill="#ffffff"/>`;
+    <rect width="${width}" height="${height}" fill="#ffffff"/>
+
+    <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
+         direção, até a borda da tela (o "furo" no meio, via fill-rule
+         evenodd, é o disco interno — signos, dodecatemoria, termos — que
+         continua branco, intocado) -->
+    <path fill-rule="evenodd" d="M 0 0 H ${width} V ${height} H 0 Z
+      M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx - R.Termos} ${cy} Z" fill="url(#spaceGrad)"/>
+
+    <!-- Céu: só a faixa entre o anel dos termos e onde acabam os raios da
+         mandala, acima do horizonte ASC-DSC (sempre exatamente horizontal
+         nesse estilo de mandala) — desenhado por cima do espaço sideral,
+         mesmo tamanho de antes -->
+    <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_OuterLine} ${cy} A ${R_OuterLine} ${R_OuterLine} 0 0 0 ${cx - R_OuterLine} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>`;
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
@@ -778,8 +810,8 @@ function renderMandala(dadosNovos) {
       <g transform="translate(800, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
-      svg += `<text x="845" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA  </text>
-      <g transform="translate(895, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
+      svg += `<text x="845" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
+      <g transform="translate(915, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
     }
   }
 
