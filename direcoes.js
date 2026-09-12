@@ -24,14 +24,44 @@ const EGYPTIAN_TERMS_DIRECOES = [
 /* OBTÉM OS TEMPOS ASCENSIONAIS LENDO A LATITUDE DA REQUISIÇÃO DA API */
 function obterTemposAscensionaisValens(lat) {
   const latNum = parseFloat(lat) || 0;
+  const absLat = Math.abs(latNum);
 
-  // Hemisfério Sul (latitude < 0): Inverte os tempos ascensionais
-  if (latNum < 0) {
-    return [40, 36, 32, 28, 24, 20, 20, 24, 28, 32, 36, 40];
+  // Tabelas dos 7 Climas de Vettius Valens (Áries a Virgem)
+  // De Libra a Peixes é a ordem inversa (Virgem a Áries)
+  let baseAsc = [20, 24, 28, 32, 36, 40]; // Padrão: Clima 2 (Alexandria)
+
+  if (absLat < 27.5) {
+    // Clima 1 (Meroé / ~24° N)
+    baseAsc = [22.5, 25.5, 28.5, 31.5, 34.5, 37.5];
+  } else if (absLat < 32.5) {
+    // Clima 2 (Alexandria / ~31° N)
+    baseAsc = [20.0, 24.0, 28.0, 32.0, 36.0, 40.0];
+  } else if (absLat < 35.0) {
+    // Clima 3 (Babilônia / ~34° N)
+    baseAsc = [18.5, 23.0, 27.5, 32.5, 37.0, 41.5];
+  } else if (absLat < 38.5) {
+    // Clima 4 (Rodes / ~36° N)
+    baseAsc = [17.0, 22.0, 27.0, 33.0, 38.0, 43.0];
+  } else if (absLat < 41.5) {
+    // Clima 5 (Hellesponto / ~41° N)
+    baseAsc = [15.0, 20.5, 26.0, 34.0, 39.5, 45.0];
+  } else if (absLat < 43.5) {
+    // Clima 6 (Roma / ~42° N)
+    baseAsc = [13.5, 19.5, 25.5, 34.5, 40.5, 46.5];
+  } else {
+    // Clima 7 (Ancona / ~45° N)
+    baseAsc = [12.0, 18.0, 25.0, 35.0, 42.0, 48.0];
   }
 
-  // Hemisfério Norte
-  return [20, 24, 28, 32, 36, 40, 40, 36, 32, 28, 24, 20];
+  // Completa os 12 signos: Virgem a Áries para a segunda metade (Libra a Peixes)
+  const norte12 = [...baseAsc, ...[...baseAsc].reverse()];
+
+  // Hemisfério Sul: inverte totalmente o array dos 12 signos
+  if (latNum < 0) {
+    return norte12.reverse();
+  }
+
+  return norte12;
 }
 
 const MONOLINE_ZODIAC_SVGS_DIRECOES = [
