@@ -228,9 +228,9 @@ function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 2
 
   grupos.forEach(grupo => {
     if (grupo.length <= 1) return;
-    // O Sol nunca se move: a mancha de combustão está ancorada nele. Os
-    // demais membros do grupo se afastam dele em camadas, alternando para
-    // fora e para dentro do raio que a latitude eclíptica já definiu.
+    // O Sol nunca se move. Os demais membros do grupo se afastam dele em
+    // camadas, alternando para fora e para dentro do raio que a latitude
+    // eclíptica já definiu.
     const membros = grupo.filter(it => it.id !== 'Sun');
     let camada = 1;
     membros.forEach((item, idx) => {
@@ -239,6 +239,19 @@ function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 2
       if (idx % 2 === 1) camada++;
     });
   });
+
+  // Dentro da órbita de combustão (15° do Sol) ninguém se desloca: a
+  // sobreposição ali é proposital — representa estar "sob os raios do Sol",
+  // sem visibilidade a olho nu. Quem cobre quem é decidido depois pela
+  // ordem caldaica de distância à Terra, não pelo deslocamento.
+  const sol = items.find(it => it.id === 'Sun');
+  if (sol) {
+    items.forEach(it => {
+      let diff = Math.abs(it.deg - sol.deg);
+      if (diff > 180) diff = 360 - diff;
+      if (diff <= 15) it.rOffset = 0;
+    });
+  }
 }
 
 function selecionarRegistro(index) {
@@ -906,30 +919,19 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
   }
 
-  /* 2. CAMADA 2: DEMAIS ELEMENTOS (MEIO - PLANETAS, LOTES, EIXOS) */
+  /* 2. CAMADA 2: PONTOS SEM CORPO FÍSICO (nodos, sizígia, lotes) */
   outerRingItems.forEach(item => {
-    // Pula o Sol nesta etapa para desenhá-lo na frente de todos
-    if (item.type === 'planet' && item.id === 'Sun') return;
+    if (item.type === 'planet') return;
 
-    const latPxPerGrau = 12;
-    const raioEfetivo = (item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : (item.type === 'lot' ? 276 : pR)) + (item.rOffset || 0);
+    const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
 
     const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
     const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
-    const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
-    if (item.type === "planet") {
-      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
-      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-        <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
-      </g>`;
-      
-    } else if (item.type === "node") {
+    if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
         <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
@@ -955,20 +957,31 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     }
   });
 
-  /* 3. CAMADA 3: O SOL (TOPO DE TUDO) */
-  if (sunItem) {
-    const p1 = polarToCart(cx, cy, R.Termos, sunItem.aScreen);
-    const p2 = polarToCart(cx, cy, pR - 19, sunItem.aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+  /* 3. CAMADA 3: OS 7 PLANETAS CLÁSSICOS, NA ORDEM CALDAICA
+     (do mais distante da Terra para o mais próximo). Assim, quando um
+     planeta está "sob os raios" e por isso sobreposto ao Sol (ou a outro
+     planeta), quem fica na frente é sempre o corpo mais próximo da Terra —
+     exatamente como no céu real, onde o mais distante fica encoberto. */
+  const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
+  const latPxPerGrau = 12;
+  outerRingItems
+    .filter(item => item.type === 'planet')
+    .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
+    .forEach(item => {
+      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
 
-    const pPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    const planetSvgContent = PLANET_3D_SVGS['Sun'] || '';
+      const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
+      const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
+      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
 
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-      <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(sunItem.deg)}</text>
-    </g>`;
-  }
+      const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
+      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
+      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
+        <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+      </g>`;
+    });
 
   svg += `</svg>`;
 
