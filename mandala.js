@@ -164,7 +164,7 @@ let currentCustomCode = null;
 let lastRenderedPngUrl = "";
 
 function formatDegMin(absDeg) {
-  const normDeg = (absDeg % 360 + 360) % 360; // Força qualquer valor a ficar entre 0° e 359.99°
+  const normDeg = (absDeg % 360 + 360) % 360;
   const degInSign = normDeg % 30;
   const degrees = Math.floor(degInSign);
   const minutes = Math.round((degInSign - degrees) * 60);
@@ -190,7 +190,6 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   const jup = planetObj.Jupiter.abs;
   const sat = planetObj.Saturn.abs;
 
-  // Garantindo que a subtração nunca resulte em número negativo (+ 36000)
   const fortAbs = ((isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon)) + 36000) % 360;
   const spirAbs = ((isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun)) + 36000) % 360;
   const erosAbs = ((isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven)) + 36000) % 360;
