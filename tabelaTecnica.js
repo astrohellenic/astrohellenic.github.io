@@ -263,16 +263,19 @@ function renderMatrizVisibilidadeHTML(data) {
     pObj[id] = item ? item.grau_absoluto : 0;
   });
 
-  const isDay = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
-  const sun = pObj.Sun, moon = pObj.Moon, merc = pObj.Mercury, ven = pObj.Venus, mars = pObj.Mars, jup = pObj.Jupiter, sat = pObj.Saturn;
+    function buscarLoteDeg(chave) {
+    if (typeof window.currentLotes === 'undefined' || !window.currentLotes) return 0;
+    const item = window.currentLotes.find(l => l.key === chave);
+    return item ? item.deg : 0;
+  }
 
-  const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
-  const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
-  const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
-  const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
-  const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
-  const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
-  const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
+  const fortAbs = buscarLoteDeg('fortune');
+  const spirAbs = buscarLoteDeg('spirit');
+  const erosAbs = buscarLoteDeg('venus');
+  const necAbs = buscarLoteDeg('mercury');
+  const courAbs = buscarLoteDeg('mars');
+  const vicAbs = buscarLoteDeg('jupiter');
+  const nemAbs = buscarLoteDeg('saturn');
 
   const colunas = [
     { key: 'Sun', type: 'planet', id: 'Sun' },
@@ -393,16 +396,19 @@ function renderPainelTecnico(data, containerId) {
       };
     });
 
-    const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
+        function buscarLoteDeg(chave) {
+      if (typeof window.currentLotes === 'undefined' || !window.currentLotes) return 0;
+      const item = window.currentLotes.find(l => l.key === chave);
+      return item ? item.deg : 0;
+    }
 
-    const sun = pObj.Sun.abs, moon = pObj.Moon.abs, merc = pObj.Mercury.abs, ven = pObj.Venus.abs, mars = pObj.Mars.abs, jup = pObj.Jupiter.abs, sat = pObj.Saturn.abs;
-    const fortAbs = (isDay ? (ascAbs + moon - sun) : (ascAbs + sun - moon) + 36000) % 360;
-    const spirAbs = (isDay ? (ascAbs + sun - moon) : (ascAbs + moon - sun) + 36000) % 360;
-    const erosAbs = (isDay ? (ascAbs + ven - spirAbs) : (ascAbs + spirAbs - ven) + 36000) % 360;
-    const necAbs = (isDay ? (ascAbs + fortAbs - merc) : (ascAbs + merc - fortAbs) + 36000) % 360;
-    const courAbs = (isDay ? (ascAbs + fortAbs - mars) : (ascAbs + mars - fortAbs) + 36000) % 360;
-    const vicAbs = (isDay ? (ascAbs + jup - spirAbs) : (ascAbs + spirAbs - jup) + 36000) % 360;
-    const nemAbs = (isDay ? (ascAbs + fortAbs - sat) : (ascAbs + sat - fortAbs) + 36000) % 360;
+    const fortAbs = buscarLoteDeg('fortune');
+    const spirAbs = buscarLoteDeg('spirit');
+    const erosAbs = buscarLoteDeg('venus');
+    const necAbs = buscarLoteDeg('mercury');
+    const courAbs = buscarLoteDeg('mars');
+    const vicAbs = buscarLoteDeg('jupiter');
+    const nemAbs = buscarLoteDeg('saturn');
 
     const listaElementos = [
       { type: 'planet', pId: 'Sun', abs: pObj.Sun.abs, retro: false, lat: pObj.Sun.lat },
