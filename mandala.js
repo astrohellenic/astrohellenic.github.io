@@ -209,36 +209,47 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   ];
 }
 
-// Desvio lateral
-function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
+// Empilhamento radial: separa itens em conjunção sem nunca alterar o ângulo
+// (a posição real no zodíaco), apenas a distância deles ao centro.
+function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 22) {
   if (!items || items.length === 0) return;
   items.sort((a, b) => a.aScreen - b.aScreen);
-  items.forEach(it => it.aShift = it.aScreen);
+  items.forEach(it => { it.aShift = it.aScreen; it.rOffset = 0; });
 
-  for (let pass = 0; pass < 12; pass++) {
-    for (let i = 0; i < items.length - 1; i++) {
-      let atual = items[i];
-      let proximo = items[i + 1];
-
-      // Se qualquer um dos dois for o Sol, ignora a colisão entre eles
-      if (atual.id === 'Sun' || proximo.id === 'Sun') continue;
-
-      let diff = proximo.aShift - atual.aShift;
-      if (diff < distMinimaGraus) {
-        let overlap = (distMinimaGraus - diff) / 2;
-        atual.aShift -= overlap;
-        proximo.aShift += overlap;
-      }
+  // Agrupa vizinhos que estão colados demais (conjunção visual)
+  const grupos = [[items[0]]];
+  for (let i = 1; i < items.length; i++) {
+    if (items[i].aScreen - items[i - 1].aScreen < distMinimaGraus) {
+      grupos[grupos.length - 1].push(items[i]);
+    } else {
+      grupos.push([items[i]]);
     }
   }
 
-  // Trava o Sol e qualquer ponto a até 15° no grau astronômico real
-  const sun = items.find(it => it.id === 'Sun');
-  if (sun) {
+  grupos.forEach(grupo => {
+    if (grupo.length <= 1) return;
+    // O Sol nunca se move. Os demais membros do grupo se afastam dele em
+    // camadas, alternando para fora e para dentro do raio que a latitude
+    // eclíptica já definiu.
+    const membros = grupo.filter(it => it.id !== 'Sun');
+    let camada = 1;
+    membros.forEach((item, idx) => {
+      const direcao = idx % 2 === 0 ? 1 : -1;
+      item.rOffset = direcao * camada * passoRadial;
+      if (idx % 2 === 1) camada++;
+    });
+  });
+
+  // Dentro da órbita de combustão (15° do Sol) ninguém se desloca: a
+  // sobreposição ali é proposital — representa estar "sob os raios do Sol",
+  // sem visibilidade a olho nu. Quem cobre quem é decidido depois pela
+  // ordem caldaica de distância à Terra, não pelo deslocamento.
+  const sol = items.find(it => it.id === 'Sun');
+  if (sol) {
     items.forEach(it => {
-      let diff = Math.abs(it.deg - sun.deg);
+      let diff = Math.abs(it.deg - sol.deg);
       if (diff > 180) diff = 360 - diff;
-      if (diff <= 15) it.aShift = it.aScreen;
+      if (diff <= 15) it.rOffset = 0;
     });
   }
 }
@@ -607,8 +618,9 @@ function renderMandala(dadosNovos) {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
   /* Espaço extra no topo para a mancha de combustão do Sol nunca ser cortada
-     quando ele está na parte superior do mapa (perto do MC). */
-  const topPad = 40;
+     quando ele está na parte superior do mapa (perto do MC). Recalculado
+     sempre que o raio dos planetas (pR, mais abaixo) mudar. */
+  const topPad = 80;
   const width = 960, height = 960 + topPad, cx = 480, cy = 440 + topPad;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
@@ -894,11 +906,10 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     });
   });
 
-  /* APLICA O DESVIO LATERAL GLOBAL PARA EVITAR QUALQUER SOBREPOSIÇÃO NA BORDA */
-  aplicarDesvioLateralArco(outerRingItems, 7.5);
-   //outerRingItems.forEach(it => it.aShift = it.aScreen);
+  /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
+  aplicarEmpilhamentoRadial(outerRingItems, 7.5);
 
-  const pR = 360;
+  const pR = 390;
    
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
@@ -909,29 +920,19 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
   }
 
-  /* 2. CAMADA 2: DEMAIS ELEMENTOS (MEIO - PLANETAS, LOTES, EIXOS) */
+  /* 2. CAMADA 2: PONTOS SEM CORPO FÍSICO (nodos, sizígia, lotes) */
   outerRingItems.forEach(item => {
-    // Pula o Sol nesta etapa para desenhá-lo na frente de todos
-    if (item.type === 'planet' && item.id === 'Sun') return;
+    if (item.type === 'planet') return;
+
+    const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
 
     const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? 264 : pR - 19), item.aShift);
-    const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
+    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
-    const latPxPerGrau = 12;
-    const raioEfetivo = item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : (item.type === 'lot' ? 276 : pR);
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
-    if (item.type === "planet") {
-      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
-      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-        <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
-      </g>`;
-      
-    } else if (item.type === "node") {
+    if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
         <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
@@ -957,20 +958,31 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     }
   });
 
-  /* 3. CAMADA 3: O SOL (TOPO DE TUDO) */
-  if (sunItem) {
-    const p1 = polarToCart(cx, cy, R.Termos, sunItem.aScreen);
-    const p2 = polarToCart(cx, cy, pR - 19, sunItem.aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+  /* 3. CAMADA 3: OS 7 PLANETAS CLÁSSICOS, NA ORDEM CALDAICA
+     (do mais distante da Terra para o mais próximo). Assim, quando um
+     planeta está "sob os raios" e por isso sobreposto ao Sol (ou a outro
+     planeta), quem fica na frente é sempre o corpo mais próximo da Terra —
+     exatamente como no céu real, onde o mais distante fica encoberto. */
+  const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
+  const latPxPerGrau = 12;
+  outerRingItems
+    .filter(item => item.type === 'planet')
+    .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
+    .forEach(item => {
+      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
 
-    const pPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    const planetSvgContent = PLANET_3D_SVGS['Sun'] || '';
+      const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
+      const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
+      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
 
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-      <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(sunItem.deg)}</text>
-    </g>`;
-  }
+      const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
+      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
+      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
+        <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+      </g>`;
+    });
 
   svg += `</svg>`;
 
