@@ -259,6 +259,30 @@ function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 2
   }
 }
 
+// Desvio lateral exclusivo dos lotes: como são pontos calculados (não
+// posições reais no céu), podem se afastar no ângulo para não se
+// sobreporem, sem o problema de distorcer a leitura da posição de um
+// planeta. Fica completamente à parte do empilhamento radial acima —
+// nunca muda o raio fixo do lote, só o ângulo em que ele é desenhado.
+function aplicarDesvioLateralLotes(items, distMinimaGraus = 6) {
+  const lotes = items.filter(it => it.type === 'lot').sort((a, b) => a.aScreen - b.aScreen);
+  if (lotes.length === 0) return;
+  lotes.forEach(it => it.aShift = it.aScreen);
+
+  for (let pass = 0; pass < 12; pass++) {
+    for (let i = 0; i < lotes.length - 1; i++) {
+      const atual = lotes[i];
+      const proximo = lotes[i + 1];
+      const diff = proximo.aShift - atual.aShift;
+      if (diff < distMinimaGraus) {
+        const overlap = (distMinimaGraus - diff) / 2;
+        atual.aShift -= overlap;
+        proximo.aShift += overlap;
+      }
+    }
+  }
+}
+
 function selecionarRegistro(index) {
   if (typeof cachedFolderData !== 'undefined' && cachedFolderData[index]) {
     aplicarDadosDoPerfilNoMapa(cachedFolderData[index]);
@@ -913,6 +937,9 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
 
   /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
   aplicarEmpilhamentoRadial(outerRingItems, 7.5);
+
+  /* LOTES SE SEPARAM À PARTE, DESVIANDO NO ÂNGULO (SEM MUDAR DE RAIO) */
+  aplicarDesvioLateralLotes(outerRingItems, 6);
 
   const pR = 390;
    
