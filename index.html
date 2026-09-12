@@ -417,7 +417,15 @@ body {
             cursor: pointer;
         }
 
-        /* PALCO DA MANDALA */
+        /* PALCO DA MANDALA: fundo roxo, continuação do espaço sideral
+           desenhado dentro da própria mandala. Fica só aqui (não em
+           #main-stage nem em body), então nunca aparece nas outras
+           ferramentas — e a barra superior fixa, que tem fundo creme
+           próprio, continua por cima sem ser afetada. */
+        #mandala-screen {
+            background-color: #1A073F;
+        }
+
         #mandala-container {
             flex: 1;
             display: flex;
@@ -426,7 +434,7 @@ body {
             justify-content: flex-start;
             padding: 16px;
             position: relative;
-            background-color: #ffffff;
+            background-color: transparent;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -634,8 +642,8 @@ body {
             
        <!-- RENDERIZADOR DA MANDALA -->
             <div id="mandala-container">
-                <div id="loadingSpinner" style="color: #64748b; font-size: 13px; font-weight: 600; text-align: center;">
-                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #103b70; margin-bottom: 8px; display: block;"></i>
+                <div id="loadingSpinner" style="color: #d4af37; font-size: 13px; font-weight: 600; text-align: center;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 8px; display: block;"></i>
                     Gerando mapa...
                 </div>
             </div>
