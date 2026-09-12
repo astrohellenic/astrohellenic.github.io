@@ -778,8 +778,8 @@ function renderMandala(dadosNovos) {
       <g transform="translate(800, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
-      svg += `<text x="845" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA  </text>
-      <g transform="translate(895, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
+      svg += `<text x="845" y="${906 + topPad}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
+      <g transform="translate(915, ${900 + topPad})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
     }
   }
 
