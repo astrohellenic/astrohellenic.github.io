@@ -209,38 +209,36 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
   ];
 }
 
-// Desvio lateral
-function aplicarDesvioLateralArco(items, distMinimaGraus = 6.5) {
+// Empilhamento radial: separa itens em conjunção sem nunca alterar o ângulo
+// (a posição real no zodíaco), apenas a distância deles ao centro.
+function aplicarEmpilhamentoRadial(items, distMinimaGraus = 6.5, passoRadial = 22) {
   if (!items || items.length === 0) return;
   items.sort((a, b) => a.aScreen - b.aScreen);
-  items.forEach(it => it.aShift = it.aScreen);
+  items.forEach(it => { it.aShift = it.aScreen; it.rOffset = 0; });
 
-  for (let pass = 0; pass < 12; pass++) {
-    for (let i = 0; i < items.length - 1; i++) {
-      let atual = items[i];
-      let proximo = items[i + 1];
-
-      // Se qualquer um dos dois for o Sol, ignora a colisão entre eles
-      if (atual.id === 'Sun' || proximo.id === 'Sun') continue;
-
-      let diff = proximo.aShift - atual.aShift;
-      if (diff < distMinimaGraus) {
-        let overlap = (distMinimaGraus - diff) / 2;
-        atual.aShift -= overlap;
-        proximo.aShift += overlap;
-      }
+  // Agrupa vizinhos que estão colados demais (conjunção visual)
+  const grupos = [[items[0]]];
+  for (let i = 1; i < items.length; i++) {
+    if (items[i].aScreen - items[i - 1].aScreen < distMinimaGraus) {
+      grupos[grupos.length - 1].push(items[i]);
+    } else {
+      grupos.push([items[i]]);
     }
   }
 
-  // Trava o Sol e qualquer ponto a até 15° no grau astronômico real
-  const sun = items.find(it => it.id === 'Sun');
-  if (sun) {
-    items.forEach(it => {
-      let diff = Math.abs(it.deg - sun.deg);
-      if (diff > 180) diff = 360 - diff;
-      if (diff <= 15) it.aShift = it.aScreen;
+  grupos.forEach(grupo => {
+    if (grupo.length <= 1) return;
+    // O Sol nunca se move: a mancha de combustão está ancorada nele. Os
+    // demais membros do grupo se afastam dele em camadas, alternando para
+    // fora e para dentro do raio que a latitude eclíptica já definiu.
+    const membros = grupo.filter(it => it.id !== 'Sun');
+    let camada = 1;
+    membros.forEach((item, idx) => {
+      const direcao = idx % 2 === 0 ? 1 : -1;
+      item.rOffset = direcao * camada * passoRadial;
+      if (idx % 2 === 1) camada++;
     });
-  }
+  });
 }
 
 function selecionarRegistro(index) {
@@ -894,9 +892,8 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     });
   });
 
-  /* APLICA O DESVIO LATERAL GLOBAL PARA EVITAR QUALQUER SOBREPOSIÇÃO NA BORDA */
-  aplicarDesvioLateralArco(outerRingItems, 7.5);
-   //outerRingItems.forEach(it => it.aShift = it.aScreen);
+  /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
+  aplicarEmpilhamentoRadial(outerRingItems, 7.5);
 
   const pR = 360;
    
@@ -914,13 +911,14 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     // Pula o Sol nesta etapa para desenhá-lo na frente de todos
     if (item.type === 'planet' && item.id === 'Sun') return;
 
+    const latPxPerGrau = 12;
+    const raioEfetivo = (item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : (item.type === 'lot' ? 276 : pR)) + (item.rOffset || 0);
+
     const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? 264 : pR - 19), item.aShift);
+    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
     const lineColor = item.type === 'planet' ? "#94a3b8" : item.color;
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${lineColor}" stroke-width="1.2"/>`;
 
-    const latPxPerGrau = 12;
-    const raioEfetivo = item.type === 'planet' ? (pR + (item.eclLat * latPxPerGrau)) : (item.type === 'lot' ? 276 : pR);
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
     if (item.type === "planet") {
