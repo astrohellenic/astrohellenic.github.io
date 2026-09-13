@@ -641,6 +641,11 @@
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
         if (sunItem) {
             const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
+            /* Disco branco opaco por baixo do gradiente: a mancha de combustão é
+               parcialmente transparente, então sem isso a fatia verde/amarela do
+               signo destacado (desenhada bem atrás) vazaria através dela e sujaria
+               o dourado puro da mancha. */
+            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="#ffffff"/>`;
             svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
         }
 
