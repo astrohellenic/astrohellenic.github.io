@@ -415,12 +415,15 @@ body {
             cursor: pointer;
         }
 
-        /* PALCO DA MANDALA: fundo roxo, continuação do espaço sideral
-           desenhado dentro da própria mandala. Fica só aqui (não em
-           #main-stage nem em body), então nunca aparece nas outras
-           ferramentas — e a barra superior fixa, que tem fundo creme
-           próprio, continua por cima sem ser afetada. */
-        #mandala-screen {
+        /* PALCO DA MANDALA: no tema "Céu", fundo roxo, continuação do
+           espaço sideral desenhado dentro da própria mandala. Só se aplica
+           com body.tema-ceu (o tema é por usuário, alternado em
+           Configurações > Aparência); no tema "Claro" (padrão) fica sem
+           fundo próprio, mostrando o creme normal do site. Fica só aqui
+           (não em #main-stage nem em body), então nunca aparece nas
+           outras ferramentas — e a barra superior fixa, que tem fundo
+           creme próprio, continua por cima sem ser afetada. */
+        body.tema-ceu #mandala-screen {
             background-color: #1A073F;
         }
 
@@ -1094,6 +1097,7 @@ body:not(.modo-mandala) #main-stage {
       const { data: { user } } = await client.auth.getUser();
       if (user) {
         fecharTelaLogin();
+        if (typeof carregarTemaMandala === 'function') carregarTemaMandala(user.id);
       }
     }
   });

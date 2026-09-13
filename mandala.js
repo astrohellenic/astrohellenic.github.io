@@ -716,6 +716,11 @@ function renderMandala(dadosNovos) {
   });
   const R_Ceu = maxRaioItens + 20; // folga visual (ícone + rótulo de grau)
 
+  /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
+     nunca escolheu) — controla só a decoração de céu/espaço sideral. O
+     tamanho e o layout do desenho continuam iguais nos dois temas. */
+  const temaCeu = (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
+
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
      está no próprio ASC. Girando a mesma quantidade que o ASC girou em
@@ -848,6 +853,7 @@ function renderMandala(dadosNovos) {
            sideral por baixo aos poucos — só na borda externa; a linha do
            horizonte (onde o céu encontra o espaço lateralmente) continua
            nítida, pois ali é o corte reto do próprio path. -->
+      ${temaCeu ? `
       <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
         <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#eafdff" stop-opacity="1" />
         <stop offset="80%" stop-color="#C5F4FF" stop-opacity="1" />
@@ -861,11 +867,11 @@ function renderMandala(dadosNovos) {
       <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
         <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3a1b66" />
         <stop offset="100%" stop-color="#1A073F" />
-      </radialGradient>
+      </radialGradient>` : ''}
     </defs>
 
     <rect width="${width}" height="${height}" fill="#ffffff"/>
-
+${temaCeu ? `
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule
          evenodd, é o disco interno — signos, dodecatemoria, termos — que
@@ -880,7 +886,7 @@ function renderMandala(dadosNovos) {
          horizonte real quando ele deixa de ser exatamente horizontal. -->
     <g transform="rotate(${skyRotation} ${cx} ${cy})">
       <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_Ceu} ${cy} A ${R_Ceu} ${R_Ceu} 0 0 0 ${cx - R_Ceu} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>
-    </g>`;
+    </g>` : ''}`;
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
