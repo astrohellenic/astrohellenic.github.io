@@ -486,7 +486,12 @@ function renderCircumambulaçõesUI() {
     currentPassage.terms.push(row);
   });
 
-  const rowHeight = 120;
+  /* Layout vertical da pauta: reduzido para caber tudo numa página só,
+     mantendo as mesmas proporções internas da caixa original (k é o
+     fator de redução aplicado a todos os deslocamentos verticais). */
+  const boxHeight = 96;
+  const rowHeight = 108;
+  const k = boxHeight / 110;
   const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
   const natalDegInSign = startAbsDeg % 30;
 
@@ -501,18 +506,18 @@ function renderCircumambulaçõesUI() {
     let rowHtml = '';
 
     // Moldura da Pauta
-    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="110" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
+    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" rx="8" ry="8" fill="#ffffff" stroke="#1e5fa4" stroke-width="1.2"/>`;
 
     // Ícone Monoline do Signo
-    rowHtml += `<g transform="translate(18, ${yOffset + 38})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
+    rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
 
     const x0 = 75;  // 0°
     const x1 = 880; // 30°
     const barWidth = x1 - x0; // 805px
     const scale = barWidth / 30; // 26.83px/grau
 
-    const yAspectLine = yOffset + 32; // Linha da Pista Superior (Aspectos)
-    const yBaseline   = yOffset + 55; // Linha Guia Central (Régua de Graus)
+    const yAspectLine = yOffset + Math.round(32 * k); // Linha da Pista Superior (Aspectos)
+    const yBaseline   = yOffset + Math.round(55 * k); // Linha Guia Central (Régua de Graus)
 
     // LINHA TRACEJADA DA PISTA SUPERIOR (ASPECTOS)
     rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
@@ -521,22 +526,26 @@ function renderCircumambulaçõesUI() {
     rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
 
     // DENTINHOS VISÍVEIS DE TODOS OS 30 GRAUS
+    const tickShort = Math.round(4 * k);
+    const tickMed = Math.round(6 * k);
+    const tickTall = Math.round(8 * k);
+    const tickLabelOffset = Math.round(12 * k);
     for (let d = 0; d <= 30; d++) {
       const xDeg = x0 + (d * scale);
-      let tickY1 = yBaseline - 4;
-      let tickY2 = yBaseline + 4;
+      let tickY1 = yBaseline - tickShort;
+      let tickY2 = yBaseline + tickShort;
       let strokeW = 1.0;
       let opacity = 0.6;
 
       if (d % 10 === 0) {
-        tickY1 = yBaseline - 8;
-        tickY2 = yBaseline + 8;
+        tickY1 = yBaseline - tickTall;
+        tickY2 = yBaseline + tickTall;
         strokeW = 1.8;
         opacity = 1.0;
-        rowHtml += `<text x="${xDeg}" y="${yBaseline - 12}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
+        rowHtml += `<text x="${xDeg}" y="${yBaseline - tickLabelOffset}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
-        tickY1 = yBaseline - 6;
-        tickY2 = yBaseline + 6;
+        tickY1 = yBaseline - tickMed;
+        tickY2 = yBaseline + tickMed;
         strokeW = 1.4;
         opacity = 0.85;
       }
@@ -545,19 +554,22 @@ function renderCircumambulaçõesUI() {
     }
 
     // BLOCOS DOS 5 TERMOS COMPLETOS
+    const termHeight = Math.round(26 * k);
+    const termLabel1Offset = Math.round(39 * k);
+    const termLabel2Offset = Math.round(49 * k);
     passage.terms.forEach(term => {
       const xStart = x0 + (term.termStartDeg * scale);
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="26" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
+      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
-      rowHtml += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
+      rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
       if (term.startYearsOld !== null && term.startDate !== null) {
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
 
@@ -572,6 +584,7 @@ function renderCircumambulaçõesUI() {
 
     let prevX = -999;
     let currentLevel = 0;
+    const rayLevelShift = Math.round(18 * k);
 
     raiosDoSigno.forEach(r => {
       const xRay = x0 + (r.degInSign * scale);
@@ -583,14 +596,14 @@ function renderCircumambulaçõesUI() {
       }
       prevX = xRay;
 
-      const yShift = currentLevel * 18;
+      const yShift = currentLevel * rayLevelShift;
       const yTop = yAspectLine - yShift;
 
-      rowHtml += `<line x1="${xRay}" y1="${yTop - 10}" x2="${xRay}" y2="${yBaseline - 4}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+      rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      rowHtml += `<text x="${xRay}" y="${yTop - 21}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
-      rowHtml += `<text x="${xRay}" y="${yTop - 13}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
 
@@ -607,10 +620,12 @@ function renderCircumambulaçõesUI() {
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL
     if (ehPrimeiraGlobal) {
       const xNatal = x0 + (natalDegInSign * scale);
+      const natalTop = yOffset + Math.round(10 * k);
+      const natalBottom = yOffset + boxHeight - Math.round(6 * k);
 
-      rowHtml += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="#e84118" stroke-width="2"/>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
@@ -622,9 +637,11 @@ function renderCircumambulaçõesUI() {
 
         const currDeg = term.termStartDeg + (frac * (term.termEndDeg - term.termStartDeg));
         const xHoje = x0 + (currDeg * scale);
+        const hojeTop = yOffset + Math.round(10 * k);
+        const hojeBottom = yOffset + boxHeight - Math.round(6 * k);
 
-        rowHtml += `<line x1="${xHoje}" y1="${yOffset + 10}" x2="${xHoje}" y2="${yOffset + 104}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-        rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
+        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
       }
     });
 
@@ -668,26 +685,22 @@ function renderCircumambulaçõesUI() {
   const afetaAtualLabel = afetaLabelsDir[selectedAphetesKey] || selectedAphetesKey;
 
   let html = `
-    <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
-    <div class="dir-card" style="background: #fffdf5; border-radius: 16px; padding: 20px; font-family: 'Montserrat', sans-serif;">
-      <div class="dir-innercard" style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
 
         <h3 class="dir-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO (mesmo contorno/fundo do cabeçalho da mandala: creme #fffdf5, borda dourada #c59b27) -->
-        <div class="dir-cabecalho" style="text-align: center; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-          <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>Afeta Direcionado:</span>
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;">${afetaCursorSvgHTML}</span>
-            <span style="color: #103b70; font-weight: 700;">${escapeHtml(afetaAtualLabel)}</span>
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + ícone do afeta à direita -->
+        <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+          <div>
+            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+            <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           </div>
+          <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0;" title="Afeta Direcionado: ${escapeHtml(afetaAtualLabel)}">${afetaCursorSvgHTML}</div>
         </div>
 
-        <!-- BOTOEIRA DE AFETAS (não aparece na impressão; ver "Afeta Direcionado" acima) -->
+        <!-- BOTOEIRA DE AFETAS (não aparece na impressão; ver o ícone no cabeçalho acima) -->
         <div class="no-print" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
   `;
 
@@ -714,8 +727,6 @@ function renderCircumambulaçõesUI() {
           ${svgTela}
         </div>
 
-      </div>
-    </div>
     </div>
   `;
 
