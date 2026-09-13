@@ -198,13 +198,27 @@ function getItemSVG(key) {
     'Nodo Norte': `<span style="font-size: 16px; font-weight: bold; color: #103b70;">☊</span>`,
     'Nodo Sul': `<span style="font-size: 16px; font-weight: bold; color: #103b70;">☋</span>`,
     'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#103b70" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#103b70"/><circle cx="0" cy="0" r="2.3" fill="#103b70"/></svg>`,
-    'ASC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">ASC</span>`,
-    'DSC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">DSC</span>`,
-    'MC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">MC</span>`,
-    'IC': `<span style="font-size: 11px; font-weight: 900; color: #103b70;">IC</span>`
+    'ASC': getAnguloCirculoSVG('ASC'),
+    'DSC': getAnguloCirculoSVG('DSC'),
+    'MC': getAnguloCirculoSVG('MC'),
+    'IC': getAnguloCirculoSVG('IC')
   };
   return itemSVGs[key] || `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
+
+/* ÍCONE DO ASC/DSC/MC/IC: mesmo círculo branco com contorno preto usado
+   para esses pontos na mandala. */
+function getAnguloCirculoSVG(label) {
+  return `<svg width="24" height="24" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">${label}</text></svg>`;
+}
+
+/* NOMES POR EXTENSO DE CADA PONTO, PARA A COLUNA "PONTO" DO PAINEL TÉCNICO */
+const NOMES_PONTOS_TABELA = {
+  Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno',
+  'Nodo Norte': 'Nodo Norte', 'Nodo Sul': 'Nodo Sul', 'Sizígia': 'Sizígia',
+  fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Audácia', jupiter: 'Vitória', saturn: 'Némesis',
+  ASC: 'Ascendente', DSC: 'Descendente', MC: 'Meio-Céu', IC: 'Fundo do Céu'
+};
 
 function formatDegMinTabela(absDeg) {
   if (absDeg === undefined || absDeg === null || isNaN(absDeg)) return '-';
@@ -343,32 +357,32 @@ function renderMatrizVisibilidadeHTML(data) {
   }
 
   let h = `
-    <div style="max-width: 960px; margin: 40px auto 20px auto; background: #fffdf5; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-      <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
-      <div style="overflow-x: auto;">
-        <table class="tabela-enxuta" style="font-size: 11px; margin: 0 auto; background: #ffffff;">
+    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 24px 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+    <div style="overflow-x: auto;">
+      <div style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+        <table class="tabela-enxuta" style="font-size: 11px; background: #ffffff;">
           <thead>
             <tr>
               <th style="width: 40px; background-color: #fffdf5;"></th>
   `;
 
   colunas.forEach(c => {
-    h += `<th style="padding: 6px 4px; vertical-align: middle; border: 1px solid #e2d9c2; background-color: #fffdf5;">${getMatrixIcon(c)}</th>`;
+    h += `<th style="padding: 6px 4px; vertical-align: middle; border: 1px solid #1e5fa4; background-color: #fffdf5;">${getMatrixIcon(c)}</th>`;
   });
   h += `</tr></thead><tbody>`;
 
   colunas.forEach((row, i) => {
-    h += `<tr><td style="font-weight: bold; background: #fffdf5; vertical-align: middle; border: 1px solid #e2d9c2; text-align: center; padding: 6px 4px;">${getMatrixIcon(row)}</td>`;
+    h += `<tr><td style="font-weight: bold; background: #fffdf5; vertical-align: middle; border: 1px solid #1e5fa4; text-align: center; padding: 6px 4px;">${getMatrixIcon(row)}</td>`;
     colunas.forEach((col, j) => {
       if (j <= i) {
-        h += `<td style="background: #f7f5ed; color: #b5aea2; border: 1px solid #e2d9c2;">-</td>`;
+        h += `<td style="background: #f7f5ed; color: #b5aea2; border: 1px solid #1e5fa4;">-</td>`;
       } else {
         const asp = getAspecto(posicoes[row.key], posicoes[col.key]);
         let colorStyle = '#0f172a';
         if (asp === 'σ') colorStyle = '#103b70';
         else if (asp === '☐' || asp === '☍') colorStyle = '#dc2626';
         else if (asp === 'Δ' || asp === '*') colorStyle = '#2563eb';
-        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle; border: 1px solid #e2d9c2; text-align: center;">${asp}</td>`;
+        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle; border: 1px solid #1e5fa4; text-align: center;">${asp}</td>`;
       }
     });
     h += `</tr>`;
@@ -437,18 +451,22 @@ function renderPainelTecnico(data, containerId) {
       { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
     ];
 
+    /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa), incluindo o dia e a hora planetários já calculados pelo módulo de Horas Planetárias */
+    const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+    const diasSemanaTabelaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const diaSemanaFormatted = diasSemanaTabelaLabels[currentMoment.getDay()];
+    const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+    const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+    const anoH = currentMoment.getFullYear();
+    const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
+    const diaH = String(currentMoment.getDate()).padStart(2, '0');
+    const horaH = String(currentMoment.getHours()).padStart(2, '0');
+    const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+    const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
+
     let html = `
-      <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+      <div style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
       <style>
-        .tabela-enxuta-wrapper {
-          max-width: 960px;
-          margin: 30px auto;
-          background: #fffdf5;
-          border: 2px solid #c59b27;
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
         .tabela-enxuta {
           width: 100%;
           border-collapse: collapse;
@@ -458,7 +476,7 @@ function renderPainelTecnico(data, containerId) {
           color: #0f172a;
         }
         .tabela-enxuta th, .tabela-enxuta td {
-          border: 1px solid #e2d9c2;
+          border: 1px solid #1e5fa4;
           padding: 8px 10px;
           text-align: center;
           vertical-align: middle;
@@ -477,38 +495,62 @@ function renderPainelTecnico(data, containerId) {
         .col-lat { width: 14%; font-weight: 600; color: #475569; }
         .col-termo { width: 10%; font-weight: bold; color: #c59b27; font-size: 14px; }
         .col-dodec-signo { width: 10%; }
-        .col-dodec-grau { width: 28%; font-weight: 600; }
+        .col-dodec-grau { width: 1%; white-space: nowrap; font-weight: 600; }
       </style>
 
-      <div class="tabela-enxuta-wrapper">
-        <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Painel Técnico de Natividades</h3>
-        <table class="tabela-enxuta">
-          <thead>
-            <tr>
-              <th rowspan="2" class="col-ponto">Ponto</th>
-              <th rowspan="2" class="col-signo">Signo</th>
-              <th rowspan="2" class="col-grau">Grau</th>
-              <th rowspan="2" class="col-lat">Latitude</th>
-              <th rowspan="2" class="col-termo">Termo</th>
-              <th colspan="2">Dodecatemória</th>
-            </tr>
-            <tr>
-              <th class="col-dodec-signo">Signo</th>
-              <th class="col-dodec-grau">Grau</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
+
+      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), com o dia/hora planetários à direita -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+        <div>
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+        </div>
+        ${horasInfo ? `
+        <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
+          <div style="text-align: center;">
+            <div style="font-size: 10px; font-weight: 700; color: #103b70; text-transform: uppercase;">Dia</div>
+            ${getPlanet3DSVG(horasInfo.dayRulerId)}
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 10px; font-weight: 700; color: #103b70; text-transform: uppercase;">Hora</div>
+            ${getPlanet3DSVG(horasInfo.hourRulerId)}
+          </div>
+        </div>` : ''}
+      </div>
+
+      <div style="overflow-x: auto; margin-bottom: 24px;">
+        <div style="border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+          <table class="tabela-enxuta">
+            <thead>
+              <tr>
+                <th rowspan="2" class="col-ponto">Ponto</th>
+                <th rowspan="2" class="col-signo">Signo</th>
+                <th rowspan="2" class="col-grau">Grau</th>
+                <th rowspan="2" class="col-lat">Latitude</th>
+                <th rowspan="2" class="col-termo">Termo</th>
+                <th colspan="2">Dodecatemória</th>
+              </tr>
+              <tr>
+                <th class="col-dodec-signo">Signo</th>
+                <th class="col-dodec-grau">Grau</th>
+              </tr>
+            </thead>
+            <tbody>
     `;
 
     listaElementos.forEach(el => {
       let iconHTML = '';
       let absDeg = el.abs;
       let retroSymbol = el.retro ? `<span style="color: #dc2626; font-weight: 900; margin-left: 2px;">℞</span>` : '';
+      let pointName = '';
 
       if (el.type === 'planet') {
         iconHTML = getPlanet3DSVG(el.pId);
+        pointName = NOMES_PONTOS_TABELA[el.pId] || el.pId;
       } else {
         iconHTML = getItemSVG(el.key);
+        pointName = NOMES_PONTOS_TABELA[el.key] || el.key;
       }
 
       const signIdx = Math.floor(absDeg / 30);
@@ -522,7 +564,12 @@ function renderPainelTecnico(data, containerId) {
 
       html += `
         <tr>
-          <td class="col-ponto">${iconHTML}</td>
+          <td class="col-ponto">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              ${iconHTML}
+              <span style="font-size: 9px; font-weight: 600; color: #103b70; line-height: 1.1;">${escapeHtml(pointName)}</span>
+            </div>
+          </td>
           <td class="col-signo">${signoSVG}</td>
           <td class="col-grau">${grauFormatted}</td>
           <td class="col-lat">${latFormatted}</td>
@@ -534,8 +581,9 @@ function renderPainelTecnico(data, containerId) {
     });
 
     html += `
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
 
