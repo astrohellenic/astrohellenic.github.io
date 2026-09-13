@@ -945,6 +945,50 @@ body:not(.modo-mandala) #main-stage {
   overflow: visible !important;
 }
 
+/* ==========================================================
+   IMPRESSÃO. ".no-print" some só ao imprimir; ".print-only"
+   fica oculto na tela e só aparece na impressão — usados pelas
+   ferramentas para trocar controles interativos (botões) por um
+   layout compacto de página, sem a barra superior nem o menu. */
+.print-only { display: none; }
+
+@media print {
+  #top-bar, #sidebar, #mandala-actions-overlay, #mandala-controls-overlay, .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: flex !important;
+  }
+  html, body, #main-stage, #mandala-screen, #mandala-container {
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  #mandala-container {
+    padding: 0 !important;
+  }
+  .dir-outer {
+    padding: 4px !important;
+  }
+  .dir-card, .dir-innercard {
+    padding: 6px !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .dir-titulo {
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+  }
+  .dir-cabecalho {
+    margin-bottom: 8px !important;
+  }
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+}
+
 </style>
 
 <div id="loginOverlay">

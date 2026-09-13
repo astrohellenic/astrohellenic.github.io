@@ -468,15 +468,9 @@ function renderCircumambulaçõesUI() {
     { key: "saturn", type: "item" }
   ];
 
-    const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
+  const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
   const raiosAspectos = calcularRaiosAspectos(data, startAbsDeg, birthDate);
   const hoje = new Date();
-
-  // ---- DEBUG TEMPORÁRIO ----
-  //const debugRaios = raiosAspectos.filter(r => ['fortune', 'spirit', 'Syz'].includes(r.planetId));
-  //console.log('DEBUG lotes/sizigia:', debugRaios);
-  //window.__debugRaios = debugRaios;
-  // ---- FIM DEBUG ----
 
   const signPassages = [];
   let currentPassage = null;
@@ -493,55 +487,24 @@ function renderCircumambulaçõesUI() {
   });
 
   const rowHeight = 120;
-  const svgTotalHeight = 20 + (signPassages.length * rowHeight);
-
   const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
   const natalDegInSign = startAbsDeg % 30;
 
-    let html = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
-    <div style="background: #fffdf5; border-radius: 16px; padding: 20px; font-family: 'Montserrat', sans-serif;">
-      <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        
-        <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-          Circumambulação pelos Termos
-        </h3>
-        
-        <!-- BOTOEIRA DE AFETAS -->
-        <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-  `;
-
-  afetasDisponiveis.forEach(af => {
-    const isSel = (af.key === selectedAphetesKey);
-    const styleBtn = isSel 
-      ? "background: #f1f5f9; color: #103b70; border: 1px solid #c59b27;" 
-      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
-
-    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
-
-    html += `
-      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${af.key}">
-        <div style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">${iconHTML}</div>
-      </button>
-    `;
-  });
-
-  html += `
-        </div>
-
-        <!-- PAUTAS DAS 12 LINHAS DOS SIGNOS EM SVG -->
-        <div style="width: 100%; overflow-x: auto;">
-          <svg viewBox="0 0 920 ${svgTotalHeight}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">
-  `;
-
-  signPassages.forEach((passage, pIdx) => {
-    const yOffset = 10 + (pIdx * rowHeight);
+  /* Desenha uma pauta (linha) de signo, posicionada em localIdx dentro
+     do <svg> que a contém — pode ser o bloco único da tela ou uma das
+     colunas da impressão. ehPrimeiraGlobal indica se essa é a
+     primeiríssima pauta de toda a circumambulação (onde entram a
+     marcação da posição natal e o corte dos raios anteriores a ela),
+     independente de em qual coluna ela estiver sendo desenhada. */
+  function gerarLinhaSigno(passage, localIdx, ehPrimeiraGlobal) {
+    const yOffset = 10 + (localIdx * rowHeight);
+    let rowHtml = '';
 
     // Moldura da Pauta
-    html += `<rect x="10" y="${yOffset}" width="900" height="110" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
+    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="110" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
 
     // Ícone Monoline do Signo
-    html += `<g transform="translate(18, ${yOffset + 38})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
+    rowHtml += `<g transform="translate(18, ${yOffset + 38})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
 
     const x0 = 75;  // 0°
     const x1 = 880; // 30°
@@ -552,10 +515,10 @@ function renderCircumambulaçõesUI() {
     const yBaseline   = yOffset + 55; // Linha Guia Central (Régua de Graus)
 
     // LINHA TRACEJADA DA PISTA SUPERIOR (ASPECTOS)
-    html += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
 
     // LINHA GUIA CENTRAL (RÉGUA DE GRAUS)
-    html += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
 
     // DENTINHOS VISÍVEIS DE TODOS OS 30 GRAUS
     for (let d = 0; d <= 30; d++) {
@@ -570,7 +533,7 @@ function renderCircumambulaçõesUI() {
         tickY2 = yBaseline + 8;
         strokeW = 1.8;
         opacity = 1.0;
-        html += `<text x="${xDeg}" y="${yBaseline - 12}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
+        rowHtml += `<text x="${xDeg}" y="${yBaseline - 12}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
         tickY1 = yBaseline - 6;
         tickY2 = yBaseline + 6;
@@ -578,7 +541,7 @@ function renderCircumambulaçõesUI() {
         opacity = 0.85;
       }
 
-      html += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
+      rowHtml += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
     // BLOCOS DOS 5 TERMOS COMPLETOS
@@ -587,21 +550,21 @@ function renderCircumambulaçõesUI() {
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      html += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="26" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
+      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="26" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
-      html += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
+      rowHtml += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
       if (term.startYearsOld !== null && term.startDate !== null) {
-        html += `<text x="${xStart + 3}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
-        html += `<text x="${xStart + 3}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
 
     // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS
     const raiosDoSigno = raiosAspectos.filter(r => {
       if (r.signIdx !== passage.signIdx) return false;
-      if (pIdx === 0 && r.degInSign < natalDegInSign) return false;
+      if (ehPrimeiraGlobal && r.degInSign < natalDegInSign) return false;
       return true;
     });
 
@@ -623,11 +586,11 @@ function renderCircumambulaçõesUI() {
       const yShift = currentLevel * 18;
       const yTop = yAspectLine - yShift;
 
-      html += `<line x1="${xRay}" y1="${yTop - 10}" x2="${xRay}" y2="${yBaseline - 4}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+      rowHtml += `<line x1="${xRay}" y1="${yTop - 10}" x2="${xRay}" y2="${yBaseline - 4}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      html += `<text x="${xRay}" y="${yTop - 21}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
-      html += `<text x="${xRay}" y="${yTop - 13}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - 21}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - 13}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
 
@@ -637,17 +600,17 @@ function renderCircumambulaçõesUI() {
         : getItemSVGDir(r.planetId === 'Syz' ? 'Sizígia' : r.planetId);
       const escalaIcone = isPlanetaReal ? ((r.planetId === 'Saturn') ? 0.95 : 0.75) : 1;
 
-      html += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
-      html += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
+      rowHtml += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
+      rowHtml += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL
-    if (pIdx === 0) {
+    if (ehPrimeiraGlobal) {
       const xNatal = x0 + (natalDegInSign * scale);
 
-      html += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
-      html += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
-      html += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      rowHtml += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
@@ -660,15 +623,105 @@ function renderCircumambulaçõesUI() {
         const currDeg = term.termStartDeg + (frac * (term.termEndDeg - term.termStartDeg));
         const xHoje = x0 + (currDeg * scale);
 
-        html += `<line x1="${xHoje}" y1="${yOffset + 10}" x2="${xHoje}" y2="${yOffset + 104}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-        html += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
+        rowHtml += `<line x1="${xHoje}" y1="${yOffset + 10}" x2="${xHoje}" y2="${yOffset + 104}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
       }
     });
 
+    return rowHtml;
+  }
+
+  /* Monta um <svg> completo com as pautas passadas em passagesSubset,
+     empilhadas a partir do topo. offsetGlobalInicial é a posição (no
+     conjunto completo de 12 pautas) da primeira pauta desse subconjunto
+     — necessário para saber se a marcação da posição natal cai aqui. */
+  function montarSvgPautas(passagesSubset, offsetGlobalInicial) {
+    const alturaSvg = 20 + (passagesSubset.length * rowHeight);
+    let svgInner = '';
+    passagesSubset.forEach((passage, idxLocal) => {
+      svgInner += gerarLinhaSigno(passage, idxLocal, (offsetGlobalInicial + idxLocal) === 0);
+    });
+    return `<svg viewBox="0 0 920 ${alturaSvg}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${svgInner}</svg>`;
+  }
+
+  // TELA: uma única coluna com todas as pautas, como sempre foi.
+  const svgTela = montarSvgPautas(signPassages, 0);
+
+  // IMPRESSÃO: duas colunas lado a lado, para caber tudo em uma página.
+  const metadeCorte = Math.ceil(signPassages.length / 2);
+  const svgImpressaoCol1 = montarSvgPautas(signPassages.slice(0, metadeCorte), 0);
+  const svgImpressaoCol2 = montarSvgPautas(signPassages.slice(metadeCorte), metadeCorte);
+
+  /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa) */
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const diasSemanaDirLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemanaDirLabels[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const anoH = currentMoment.getFullYear();
+  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const diaH = String(currentMoment.getDate()).padStart(2, '0');
+  const horaH = String(currentMoment.getHours()).padStart(2, '0');
+  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  const afetaLabelsDir = {
+    ASC: "Ascendente", Sun: "Sol", Moon: "Lua", Syz: "Sizígia Prenatal",
+    fortune: "Lote da Fortuna", spirit: "Lote do Espírito", venus: "Lote de Eros",
+    mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória",
+    saturn: "Lote de Némesis"
+  };
+  const afetaAtualLabel = afetaLabelsDir[selectedAphetesKey] || selectedAphetesKey;
+
+  let html = `
+    <div class="dir-outer" style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div class="dir-card" style="background: #fffdf5; border-radius: 16px; padding: 20px; font-family: 'Montserrat', sans-serif;">
+      <div class="dir-innercard" style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+
+        <h3 class="dir-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+          Circumambulação pelos Termos
+        </h3>
+
+        <!-- CABEÇALHO PADRÃO (mesmas informações do topo da mandala) -->
+        <div class="dir-cabecalho" style="text-align: center; margin-bottom: 16px;">
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+          <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>Afeta Direcionado:</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;">${afetaCursorSvgHTML}</span>
+            <span style="color: #103b70; font-weight: 700;">${escapeHtml(afetaAtualLabel)}</span>
+          </div>
+        </div>
+
+        <!-- BOTOEIRA DE AFETAS (não aparece na impressão; ver "Afeta Direcionado" acima) -->
+        <div class="no-print" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+  `;
+
+  afetasDisponiveis.forEach(af => {
+    const isSel = (af.key === selectedAphetesKey);
+    const styleBtn = isSel
+      ? "background: #f1f5f9; color: #103b70; border: 1px solid #c59b27;"
+      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
+
+    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
+
+    html += `
+      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${af.key}">
+        <div style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">${iconHTML}</div>
+      </button>
+    `;
   });
 
   html += `
-          </svg>
+        </div>
+
+        <!-- PAUTAS DOS SIGNOS: uma coluna só na tela; duas colunas lado a lado na impressão, para caber tudo em uma página -->
+        <div class="no-print" style="width: 100%; overflow-x: auto;">
+          ${svgTela}
+        </div>
+
+        <div class="print-only" style="gap: 14px; width: 100%;">
+          <div style="flex: 1; min-width: 0;">${svgImpressaoCol1}</div>
+          <div style="flex: 1; min-width: 0;">${svgImpressaoCol2}</div>
         </div>
 
       </div>
