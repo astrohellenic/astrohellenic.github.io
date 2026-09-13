@@ -720,6 +720,31 @@
             }
         }
 
+        /* FAIXAS SÓLIDAS NA BORDA EXTERNA — "ETIQUETAS" DE CADA DESTAQUE.
+           A fatia transparente lá atrás dá o clima visual, mas quando dois
+           destaques caem no mesmo signo a cor de cima acaba disfarçando a
+           de baixo. Estas faixas ficam uma do lado da outra, em cores
+           sólidas, sem se misturar — dá pra apontar pro cliente exatamente
+           quais destaques bateram naquele signo. Desenhadas por último, por
+           cima de tudo, pra nunca ficarem encobertas por um planeta que
+           tenha sido empurrado além da borda do mapa. */
+        function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
+            if (signIdx === null || signIdx === undefined) return '';
+            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+            const passos = 15;
+            const pontosFora = [];
+            for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
+            const pontosDentro = [];
+            for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
+            const pontos = pontosFora.concat(pontosDentro);
+            const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+            return `<path d="${d}" fill="${cor}"/>`;
+        }
+
+        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
+        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 14, R_OuterLine + 22);
+        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+
         svg += `</svg>`;
         return svg;
     }
