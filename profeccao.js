@@ -444,10 +444,14 @@
        EM mandala.js (aspectos, anel de signos, dodecatemoria, termos egípcios,
        ticks de grau, eixo ASC/DSC/MC/IC, lotes herméticos, planetas em SVG 3D
        com sombra e mancha de combustão), só sem a faixa de céu/espaço sideral. */
-    function gerarMandalaSVG(dados) {
+    function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
             return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
         }
+
+        const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
+        const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
+        const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
 
         const goldColor = "#c59b27";
         const sufixo = `w${wheelInstanceCounter++}`;
@@ -509,6 +513,27 @@
         let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 380px; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="#ffffff"/>`;
+
+        /* DESTAQUE DE SIGNO (fatia inteira, do centro até a borda externa,
+           por baixo de todo o resto do desenho) — usado para marcar o signo
+           profectado do ano (verde) e, só no mapa natal, o signo onde cai o
+           Ascendente da Revolução Solar (amarelo). */
+        function desenharFatiaDestaque(signIdx, cor) {
+            if (signIdx === null || signIdx === undefined) return '';
+            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+            const passos = 15;
+            let d = `M ${cx} ${cy} `;
+            for (let s = 0; s <= passos; s++) {
+                const p = polarToCart(cx, cy, R_OuterLine, angInicial - (30 * s / passos));
+                d += `L ${p.x} ${p.y} `;
+            }
+            d += 'Z';
+            return `<path d="${d}" fill="${cor}"/>`;
+        }
+
+        svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, "rgba(224, 231, 255, 0.6)");
+        svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
+        svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
 
         svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -618,6 +643,11 @@
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
         if (sunItem) {
             const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
+            /* Disco branco opaco por baixo do gradiente: a mancha de combustão é
+               parcialmente transparente, então sem isso a fatia verde/amarela do
+               signo destacado (desenhada bem atrás) vazaria através dela e sujaria
+               o dourado puro da mancha. */
+            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="#ffffff"/>`;
             svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
         }
 
@@ -674,6 +704,47 @@
                 </g>`;
             });
 
+        /* COROA SOBRE O REGENTE DO SIGNO PROFECTADO DO ANO. */
+        if (profectedSignIdx !== null && SIGNS[profectedSignIdx]) {
+            const rulerId = SIGNS[profectedSignIdx].ruler;
+            const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
+            if (rulerItem) {
+                const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
+                const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
+                svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
+                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
+                    <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
+                    <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
+                    <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
+                </g>`;
+            }
+        }
+
+        /* FAIXAS SÓLIDAS NA BORDA EXTERNA — "ETIQUETAS" DE CADA DESTAQUE.
+           A fatia transparente lá atrás dá o clima visual, mas quando dois
+           destaques caem no mesmo signo a cor de cima acaba disfarçando a
+           de baixo. Estas faixas ficam uma do lado da outra, em cores
+           sólidas, sem se misturar — dá pra apontar pro cliente exatamente
+           quais destaques bateram naquele signo. Desenhadas por último, por
+           cima de tudo, pra nunca ficarem encobertas por um planeta que
+           tenha sido empurrado além da borda do mapa. */
+        function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
+            if (signIdx === null || signIdx === undefined) return '';
+            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+            const passos = 15;
+            const pontosFora = [];
+            for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
+            const pontosDentro = [];
+            for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
+            const pontos = pontosFora.concat(pontosDentro);
+            const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+            return `<path d="${d}" fill="${cor}"/>`;
+        }
+
+        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
+        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 14, R_OuterLine + 22);
+        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+
         svg += `</svg>`;
         return svg;
     }
@@ -722,6 +793,44 @@
             console.warn("Falha na busca da Revolução Solar para Profecção:", err);
         }
 
+        const rsAscSignIdx = (dadosRS && dadosRS.Ascendente)
+            ? Math.floor((((dadosRS.Ascendente.grau_absoluto % 360) + 360) % 360) / 30)
+            : null;
+
+        /* Calendário mensal calculado aqui em cima (antes do HTML das mandalas)
+           porque precisamos saber já o signo do mês aberto na tabela, para
+           destacá-lo em azul no mapa natal. */
+        let baseMonthStart = rsTimestamp;
+        if (!baseMonthStart) {
+            baseMonthStart = new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+        }
+
+        let currentMonthStart = baseMonthStart;
+        const monthlyCache = [];
+
+        for (let i = 0; i < 12; i++) {
+            const mSignIdx = (profectedSignIdx + i) % 12;
+            const nextMonthStart = currentMonthStart + MONTH_MS;
+            monthlyCache.push({
+                monthNum: i + 1,
+                signIdx: mSignIdx,
+                start: currentMonthStart,
+                end: nextMonthStart
+            });
+            currentMonthStart = nextMonthStart;
+        }
+
+        // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
+        if (window.expandedProfeccaoMes === undefined) {
+            const agora = hoje.getTime();
+            const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
+            window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
+        }
+
+        const expandedMonthSignIdx = (window.expandedProfeccaoMes !== -1 && monthlyCache[window.expandedProfeccaoMes])
+            ? monthlyCache[window.expandedProfeccaoMes].signIdx
+            : null;
+
         let html = `
     <div id="profeccao-container" 
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
@@ -746,11 +855,11 @@
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
-                ${gerarMandalaSVG(dadosRS)}
+                ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
             </div>
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
-                ${gerarMandalaSVG(dadosNatal)}
+                ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
             </div>
         </div>
 
@@ -771,33 +880,6 @@
                     </thead>
                     <tbody>
 `;
-
-        let baseMonthStart = rsTimestamp;
-        if (!baseMonthStart) {
-            baseMonthStart = new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
-        }
-
-        let currentMonthStart = baseMonthStart;
-        const monthlyCache = [];
-
-        for (let i = 0; i < 12; i++) {
-            const mSignIdx = (profectedSignIdx + i) % 12;
-            const nextMonthStart = currentMonthStart + MONTH_MS;
-            monthlyCache.push({ 
-                monthNum: i + 1, 
-                signIdx: mSignIdx, 
-                start: currentMonthStart, 
-                end: nextMonthStart 
-            });
-            currentMonthStart = nextMonthStart;
-        }
-
-        // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
-        if (window.expandedProfeccaoMes === undefined) {
-            const agora = hoje.getTime();
-            const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
-            window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
-        }
 
         monthlyCache.forEach((m, i) => {
             const mSign = SIGNS[m.signIdx];
