@@ -288,6 +288,9 @@
     }
 
     function fragmentoPlaneta3D(planetId, sufixo) {
+        if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico() && typeof getPlanetSimpleFragment === 'function') {
+            return getPlanetSimpleFragment(planetId);
+        }
         const frags = {
             Sun: `<g>
                 <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25" filter="blur(2px)"/>
