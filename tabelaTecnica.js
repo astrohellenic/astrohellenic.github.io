@@ -435,6 +435,7 @@ function renderPainelTecnico(data, containerId) {
     ];
 
     let html = `
+      <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
       <style>
         .tabela-enxuta-wrapper {
           max-width: 960px;
@@ -536,6 +537,7 @@ function renderPainelTecnico(data, containerId) {
     `;
 
     html += renderMatrizVisibilidadeHTML(data);
+    html += `</div>`;
     container.innerHTML = html;
   } catch (err) {
     const container = document.getElementById(containerId);
