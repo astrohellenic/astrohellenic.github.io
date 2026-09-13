@@ -727,6 +727,22 @@
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
          style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
 
+        <div style="background: #fffdf5; border: 1.5px solid #c59b27; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
+
+                <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
+
+                <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center; color: #103b70;">
+                <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
+                <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
+            </div>
+        </div>
+
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
@@ -735,22 +751,6 @@
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
                 ${gerarMandalaSVG(dadosNatal)}
-            </div>
-        </div>
-
-        <div style="background: #fffdf5; border: 1.5px solid #c59b27; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-            
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
-                
-                <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
-                
-                <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
-            </div>
-
-            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center; color: #103b70;">
-                <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
-                <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
             </div>
         </div>
 
