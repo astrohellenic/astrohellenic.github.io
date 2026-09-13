@@ -444,10 +444,13 @@
        EM mandala.js (aspectos, anel de signos, dodecatemoria, termos egípcios,
        ticks de grau, eixo ASC/DSC/MC/IC, lotes herméticos, planetas em SVG 3D
        com sombra e mancha de combustão), só sem a faixa de céu/espaço sideral. */
-    function gerarMandalaSVG(dados) {
+    function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
             return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
         }
+
+        const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
+        const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
 
         const goldColor = "#c59b27";
         const sufixo = `w${wheelInstanceCounter++}`;
@@ -509,6 +512,26 @@
         let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 380px; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="#ffffff"/>`;
+
+        /* DESTAQUE DE SIGNO (fatia inteira, do centro até a borda externa,
+           por baixo de todo o resto do desenho) — usado para marcar o signo
+           profectado do ano (verde) e, só no mapa natal, o signo onde cai o
+           Ascendente da Revolução Solar (amarelo). */
+        function desenharFatiaDestaque(signIdx, cor) {
+            if (signIdx === null || signIdx === undefined) return '';
+            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+            const passos = 15;
+            let d = `M ${cx} ${cy} `;
+            for (let s = 0; s <= passos; s++) {
+                const p = polarToCart(cx, cy, R_OuterLine, angInicial - (30 * s / passos));
+                d += `L ${p.x} ${p.y} `;
+            }
+            d += 'Z';
+            return `<path d="${d}" fill="${cor}"/>`;
+        }
+
+        svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
+        svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
 
         svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -674,6 +697,22 @@
                 </g>`;
             });
 
+        /* COROA SOBRE O REGENTE DO SIGNO PROFECTADO DO ANO. */
+        if (profectedSignIdx !== null && SIGNS[profectedSignIdx]) {
+            const rulerId = SIGNS[profectedSignIdx].ruler;
+            const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
+            if (rulerItem) {
+                const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
+                const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
+                svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
+                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
+                    <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
+                    <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
+                    <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
+                </g>`;
+            }
+        }
+
         svg += `</svg>`;
         return svg;
     }
@@ -722,6 +761,10 @@
             console.warn("Falha na busca da Revolução Solar para Profecção:", err);
         }
 
+        const rsAscSignIdx = (dadosRS && dadosRS.Ascendente)
+            ? Math.floor((((dadosRS.Ascendente.grau_absoluto % 360) + 360) % 360) / 30)
+            : null;
+
         let html = `
     <div id="profeccao-container" 
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
@@ -746,11 +789,11 @@
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
-                ${gerarMandalaSVG(dadosRS)}
+                ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
             </div>
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
-                ${gerarMandalaSVG(dadosNatal)}
+                ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx })}
             </div>
         </div>
 
