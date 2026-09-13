@@ -714,7 +714,7 @@ function renderMandala(dadosNovos) {
     const raio = base + (item.rOffset || 0);
     if (raio > maxRaioItens) maxRaioItens = raio;
   });
-  const R_Ceu = maxRaioItens + 50; // folga visual (ícone + rótulo de grau)
+  const R_Ceu = maxRaioItens + 20; // folga visual (ícone + rótulo de grau)
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -726,7 +726,7 @@ function renderMandala(dadosNovos) {
 
   /* Espaço extra no topo (e até o cabeçalho) para a faixa de céu/espaço
      (raio R_Ceu) e a mancha de combustão do Sol nunca serem cortadas. */
-  const margemVertical = 30;
+  const margemVertical = 10;
   const cy = R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
   const headerH = 75;
