@@ -451,6 +451,7 @@
 
         const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
         const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
+        const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
 
         const goldColor = "#c59b27";
         const sufixo = `w${wheelInstanceCounter++}`;
@@ -530,6 +531,7 @@
             return `<path d="${d}" fill="${cor}"/>`;
         }
 
+        svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, "rgba(224, 231, 255, 0.6)");
         svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
         svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
 
@@ -770,6 +772,40 @@
             ? Math.floor((((dadosRS.Ascendente.grau_absoluto % 360) + 360) % 360) / 30)
             : null;
 
+        /* Calendário mensal calculado aqui em cima (antes do HTML das mandalas)
+           porque precisamos saber já o signo do mês aberto na tabela, para
+           destacá-lo em azul no mapa natal. */
+        let baseMonthStart = rsTimestamp;
+        if (!baseMonthStart) {
+            baseMonthStart = new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+        }
+
+        let currentMonthStart = baseMonthStart;
+        const monthlyCache = [];
+
+        for (let i = 0; i < 12; i++) {
+            const mSignIdx = (profectedSignIdx + i) % 12;
+            const nextMonthStart = currentMonthStart + MONTH_MS;
+            monthlyCache.push({
+                monthNum: i + 1,
+                signIdx: mSignIdx,
+                start: currentMonthStart,
+                end: nextMonthStart
+            });
+            currentMonthStart = nextMonthStart;
+        }
+
+        // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
+        if (window.expandedProfeccaoMes === undefined) {
+            const agora = hoje.getTime();
+            const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
+            window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
+        }
+
+        const expandedMonthSignIdx = (window.expandedProfeccaoMes !== -1 && monthlyCache[window.expandedProfeccaoMes])
+            ? monthlyCache[window.expandedProfeccaoMes].signIdx
+            : null;
+
         let html = `
     <div id="profeccao-container" 
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
@@ -798,7 +834,7 @@
             </div>
             <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
-                ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx })}
+                ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
             </div>
         </div>
 
@@ -819,33 +855,6 @@
                     </thead>
                     <tbody>
 `;
-
-        let baseMonthStart = rsTimestamp;
-        if (!baseMonthStart) {
-            baseMonthStart = new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
-        }
-
-        let currentMonthStart = baseMonthStart;
-        const monthlyCache = [];
-
-        for (let i = 0; i < 12; i++) {
-            const mSignIdx = (profectedSignIdx + i) % 12;
-            const nextMonthStart = currentMonthStart + MONTH_MS;
-            monthlyCache.push({ 
-                monthNum: i + 1, 
-                signIdx: mSignIdx, 
-                start: currentMonthStart, 
-                end: nextMonthStart 
-            });
-            currentMonthStart = nextMonthStart;
-        }
-
-        // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
-        if (window.expandedProfeccaoMes === undefined) {
-            const agora = hoje.getTime();
-            const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
-            window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
-        }
 
         monthlyCache.forEach((m, i) => {
             const mSign = SIGNS[m.signIdx];
