@@ -379,16 +379,22 @@
     /* BUSCA (COM CACHE) O TIMESTAMP EXATO E O MAPA PLANETÁRIO COMPLETO
        DA REVOLUÇÃO SOLAR DE UM ANO-ALVO, PARA A TABELA DE 60H E PARA A MINI-MANDALA. */
     async function obterDadosCompletosRS(anoAlvo, dataNasc) {
-        if (rsFullDataCache[anoAlvo]) return rsFullDataCache[anoAlvo];
+        const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat) ? currentGeo.lat : -23.5505;
+        const lon = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lon) ? currentGeo.lon : -46.6333;
+        const fuso = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+
+        /* A chave do cache PRECISA incluir os dados de nascimento (não só o
+           ano-alvo): sem isso, ao trocar de mapa para uma pessoa cujo ano-alvo
+           calculado coincide com um já em cache da pessoa anterior, a
+           ferramenta reaproveitava a Revolução Solar errada — misturando
+           dados de mapas diferentes ("salada" ao trocar de mapa). */
+        const cacheKey = `${anoAlvo}|${dataNasc.getTime()}|${lat}|${lon}|${fuso}`;
+        if (rsFullDataCache[cacheKey]) return rsFullDataCache[cacheKey];
 
         const diaStr = String(dataNasc.getDate()).padStart(2, '0');
         const mesStr = String(dataNasc.getMonth() + 1).padStart(2, '0');
         const dataFormatada = `${dataNasc.getFullYear()}-${mesStr}-${diaStr}`;
         const horaStr = String(dataNasc.getHours()).padStart(2, '0') + ":" + String(dataNasc.getMinutes()).padStart(2, '0');
-
-        const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat) ? currentGeo.lat : -23.5505;
-        const lon = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lon) ? currentGeo.lon : -46.6333;
-        const fuso = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
 
         const urlSolar = `https://motor-astrologia.vercel.app/api/revolucao?data=${dataFormatada}&hora=${horaStr}&lat=${lat}&lon=${lon}&fuso=${fuso}&ano=${anoAlvo}`;
 
@@ -436,7 +442,7 @@
             }
         };
 
-        rsFullDataCache[anoAlvo] = resultado;
+        rsFullDataCache[cacheKey] = resultado;
         return resultado;
     }
 
