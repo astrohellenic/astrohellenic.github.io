@@ -298,7 +298,8 @@ function renderLiberacaoUI() {
   ];
 
   let html = `
-    <div style="background: #fffdf5; border-radius: 16px; padding: 20px; max-width: 900px; margin: 20px auto;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="background: #fffdf5; border-radius: 16px; padding: 20px;">
       <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Liberação Zodiacal</h3>
           
@@ -503,6 +504,7 @@ function renderLiberacaoUI() {
 
   html += `
       </div>
+    </div>
     </div>
   `;
 
