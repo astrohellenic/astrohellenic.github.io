@@ -1,6 +1,23 @@
 /* ==========================================
    MÓDULO DE CIRCUMAMBULAÇÕES (DIREÇÕES)
    MÉTODO HELENÍSTICO PURISTA (VETTIUS VALENS)
+
+   Fontes:
+   - Método de ascensão (Ascensão Oblíqua, 1° de ascensão = 1 ano):
+     Vettius Valens, Anthology I.6.
+   - Lotes (Fortuna, Espírito e os 5 lotes planetários): método de
+     Paulo de Alexandria.
+   - Termos egípcios: tabela padrão consolidada (ver
+     EGYPTIAN_TERMS_DIRECOES abaixo).
+   - Zodíaco tropical puro, 0° Áries = equinócio real, sem offset
+     histórico (nem 8°, nem 10°) — mesma configuração padrão (offset=0)
+     usada pelo Delphic Oracle (Project Hindsight / Robert Schmidt).
+
+   Nota de design: os afetas direcionáveis (Ascendente, Sol, Lua,
+   Sizígia e os 7 Lotes) representam, cada um, seu próprio domínio
+   temático a ser investigado via circumambulação. Não há, por
+   enquanto, implementação de planetas individuais como pontos
+   direcionáveis — não há atestação direta disso nas fontes.
    ========================================== */
 
 let selectedAphetesKey = "ASC"; // Afeta padrão inicial
@@ -21,39 +38,109 @@ const EGYPTIAN_TERMS_DIRECOES = [
   [{ pId: "Venus", pSym: "♀", deg: 12 }, { pId: "Jupiter", pSym: "♃", deg: 16 }, { pId: "Mercury", pSym: "☿", deg: 19 }, { pId: "Mars", pSym: "♂", deg: 28 }, { pId: "Saturn", pSym: "♄", deg: 30 }]
 ];
 
-/* OBTÉM OS TEMPOS ASCENSIONAIS LENDO A LATITUDE DA REQUISIÇÃO DA API */
-function obterTemposAscensionaisValens(lat) {
-  const latNum = parseFloat(lat) || 0;
-  const absLat = Math.abs(latNum);
+/* ==========================================================
+   ASCENSÃO OBLÍQUA — CÁLCULO TRIGONOMÉTRICO EXATO
+   Substitui a tabela discreta de 7 climas (antiga
+   obterTemposAscensionaisValens) por cálculo contínuo, válido para
+   qualquer latitude (Norte ou Sul), sem necessidade de tabela nem de
+   lógica de espelhamento hemisférico.
 
-  // Tabelas dos 7 Climas de Vettius Valens (Áries a Virgem)
-  let baseAsc = [20, 24, 28, 32, 36, 40]; // Padrão: Clima 2 (Alexandria)
+   Método: mesma convenção usada por Vettius Valens (Anthology I.6) —
+   1 grau de ascensão (tempo-grau equatorial) = 1 ano de vida.
+   Zodíaco tropical puro (0° Áries = equinócio real, sem offset histórico).
+   Configuração alinhada ao Delphic Oracle (Project Hindsight / Robert Schmidt).
+   ========================================================== */
 
-  if (absLat < 27.5) {
-    baseAsc = [22.5, 25.5, 28.5, 31.5, 34.5, 37.5]; // Clima 1
-  } else if (absLat < 32.5) {
-    baseAsc = [20.0, 24.0, 28.0, 32.0, 36.0, 40.0]; // Clima 2
-  } else if (absLat < 35.0) {
-    baseAsc = [18.5, 23.0, 27.5, 32.5, 37.0, 41.5]; // Clima 3
-  } else if (absLat < 38.5) {
-    baseAsc = [17.0, 22.0, 27.0, 33.0, 38.0, 43.0]; // Clima 4
-  } else if (absLat < 41.5) {
-    baseAsc = [15.0, 20.5, 26.0, 34.0, 39.5, 45.0]; // Clima 5
-  } else if (absLat < 43.5) {
-    baseAsc = [13.5, 19.5, 25.5, 34.5, 40.5, 46.5]; // Clima 6
-  } else {
-    baseAsc = [12.0, 18.0, 25.0, 35.0, 42.0, 48.0]; // Clima 7
-  }
+/* Obliquidade da eclíptica (valor moderno; pode ser trocado por um
+   valor histórico se um dia quiserem testar precisão antiga, mas o
+   Delphic Oracle usa o valor exato/moderno por padrão) */
+const OBLIQUIDADE_ECLIPTICA_GRAUS = 23.4367;
 
-  // Hemisfério Sul: inverte o bloco inicial de Áries-Virgem
-  if (latNum < 0) {
-    const sulBase = [...baseAsc].reverse(); // Virgem passa para a posição de Áries [40, 36, 32, 28, 24, 20]
-    return [...sulBase, ...[...sulBase].reverse()]; 
-    // Resultado no Sul: Áries (40), Touro (36), Gêmeos (32), Câncer (28), Leão (24), Virgem (20)...
-  }
+function grausParaRad(g) {
+  return (g * Math.PI) / 180;
+}
 
-  // Hemisfério Norte
-  return [...baseAsc, ...[...baseAsc].reverse()];
+function radParaGraus(r) {
+  return (r * 180) / Math.PI;
+}
+
+function normalizar360(g) {
+  return ((g % 360) + 360) % 360;
+}
+
+/**
+ * Declinação de um ponto da eclíptica.
+ * sin(δ) = sin(ε) × sin(λ)
+ * @param {number} longitudeEclipticaGraus - longitude tropical absoluta (0-360, 0 = Áries)
+ * @returns {number} declinação em graus (positiva = Norte, negativa = Sul)
+ */
+function calcularDeclinacao(longitudeEclipticaGraus) {
+  const eps = grausParaRad(OBLIQUIDADE_ECLIPTICA_GRAUS);
+  const lam = grausParaRad(longitudeEclipticaGraus);
+  return radParaGraus(Math.asin(Math.sin(eps) * Math.sin(lam)));
+}
+
+/**
+ * Ascensão Reta (RA) de um ponto da eclíptica.
+ * @param {number} longitudeEclipticaGraus - longitude tropical absoluta (0-360)
+ * @returns {number} ascensão reta em graus (0-360)
+ */
+function calcularAscensaoReta(longitudeEclipticaGraus) {
+  const eps = grausParaRad(OBLIQUIDADE_ECLIPTICA_GRAUS);
+  const lam = grausParaRad(longitudeEclipticaGraus);
+  const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
+  return normalizar360(radParaGraus(ra));
+}
+
+/**
+ * Diferença Ascensional (AD).
+ * AD = arcsin(tan(δ) × tan(latitude))
+ * O sinal da latitude (negativo no Hemisfério Sul) já resolve
+ * automaticamente a inversão Norte/Sul — não precisa de tabela espelhada.
+ * @param {number} declinacaoGraus
+ * @param {number} latitudeGraus - positiva = Norte, negativa = Sul
+ * @returns {number} AD em graus
+ */
+function calcularDiferencaAscensional(declinacaoGraus, latitudeGraus) {
+  const decl = grausParaRad(declinacaoGraus);
+  const lat = grausParaRad(latitudeGraus);
+  let produto = Math.tan(decl) * Math.tan(lat);
+  // Proteção para latitudes extremas (círculo polar) — não deve ocorrer
+  // em uso normal, mas evita NaN caso alguém teste uma latitude extrema.
+  produto = Math.max(-1, Math.min(1, produto));
+  return radParaGraus(Math.asin(produto));
+}
+
+/**
+ * Ascensão Oblíqua (OA) de um ponto da eclíptica, para uma latitude dada.
+ * OA = RA − AD
+ * @param {number} longitudeEclipticaGraus - longitude tropical absoluta (0-360)
+ * @param {number} latitudeGraus - positiva = Norte, negativa = Sul
+ * @returns {number} ascensão oblíqua em graus (0-360)
+ */
+function calcularAscensaoObliqua(longitudeEclipticaGraus, latitudeGraus) {
+  const decl = calcularDeclinacao(longitudeEclipticaGraus);
+  const ra = calcularAscensaoReta(longitudeEclipticaGraus);
+  const ad = calcularDiferencaAscensional(decl, latitudeGraus);
+  return normalizar360(ra - ad);
+}
+
+/**
+ * Tempo de ascensão (em "anos", pela convenção 1° = 1 ano) entre dois
+ * graus absolutos da eclíptica, percorridos na ordem direta dos signos
+ * (sentido do início ao fim, sempre para frente).
+ * @param {number} grauInicioAbs - grau absoluto de partida (0-360)
+ * @param {number} grauFimAbs - grau absoluto de chegada (0-360)
+ * @param {number} latitudeGraus - latitude do nativo (positiva=N, negativa=S)
+ * @returns {number} anos decorridos (sempre positivo, considera volta ao
+ *   zodíaco se o fim "está atrás" do início em termos de OA)
+ */
+function tempoAscensionalEntreGraus(grauInicioAbs, grauFimAbs, latitudeGraus) {
+  const oaInicio = calcularAscensaoObliqua(grauInicioAbs, latitudeGraus);
+  const oaFim = calcularAscensaoObliqua(grauFimAbs, latitudeGraus);
+  let anos = oaFim - oaInicio;
+  if (anos < 0) anos += 360;
+  return anos;
 }
 
 const MONOLINE_ZODIAC_SVGS_DIRECOES = [
@@ -188,7 +275,6 @@ function obterGrauEfetivoAfeta(key, data) {
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
   const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
-  const temposAscensionais = obterTemposAscensionaisValens(latAtual);
 
   // Monta o objeto "planetas" diretamente a partir do formato real de currentCalculatedData
     const planetas = {
@@ -229,24 +315,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
 
       aspectDefs.forEach(asp => {
       const rayAbsDeg = (pDegAbs + asp.offset) % 360;
-      const distDeg = (rayAbsDeg - startAbsDeg + 360) % 360;
-
-      let currDeg = startAbsDeg;
-      let accumulatedYears = 0;
-      let degToCover = distDeg;
-
-      while (degToCover > 0.0001) {
-        const sIdx = Math.floor(currDeg / 30);
-        const degInS = currDeg % 30;
-        const degLeftInSign = 30 - degInS;
-
-        const stepDeg = Math.min(degToCover, degLeftInSign);
-        const ascTimePerDegree = temposAscensionais[sIdx] / 30;
-        accumulatedYears += stepDeg * ascTimePerDegree;
-
-        currDeg = (currDeg + stepDeg) % 360;
-        degToCover -= stepDeg;
-      }
+      const accumulatedYears = tempoAscensionalEntreGraus(startAbsDeg, rayAbsDeg, latAtual);
 
       // Converte tempo acumulado na data exata
       const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
@@ -282,22 +351,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
     if (alvo.deg === undefined) return;
     const targetDeg = alvo.deg;
 
-    const distDeg = (targetDeg - startAbsDeg + 360) % 360;
-    let currDeg = startAbsDeg;
-    let accumulatedYears = 0;
-    let degToCover = distDeg;
-
-    while (degToCover > 0.0001) {
-      const sIdx = Math.floor(currDeg / 30);
-      const degInS = currDeg % 30;
-      const degLeftInSign = 30 - degInS;
-
-      const stepDeg = Math.min(degToCover, degLeftInSign);
-      accumulatedYears += stepDeg * (temposAscensionais[sIdx] / 30);
-
-      currDeg = (currDeg + stepDeg) % 360;
-      degToCover -= stepDeg;
-    }
+    const accumulatedYears = tempoAscensionalEntreGraus(startAbsDeg, targetDeg, latAtual);
 
     const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
 
@@ -318,7 +372,6 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
 /* CÁLCULO DAS DIREÇÕES: TERMOS COMPLETOS (0° A 30°) */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
   const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
-  const temposAscensionais = obterTemposAscensionaisValens(latAtual);
   const tabela = [];
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
@@ -329,6 +382,7 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
   for (let sOffset = 0; sOffset < 12; sOffset++) {
     const signIdx = (startSignIdx + sOffset) % 12;
     const signTerms = EGYPTIAN_TERMS_DIRECOES[signIdx];
+    const signBaseAbsDeg = signIdx * 30;
 
     let prevTermDeg = 0;
 
@@ -346,9 +400,9 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
         let effStart = (sOffset === 0 && termStartDeg < startDegInSign) ? startDegInSign : termStartDeg;
         let effEnd = termEndDeg;
 
-        const remDeg = effEnd - effStart;
-        const ascTimePerDegree = temposAscensionais[signIdx] / 30;
-        const years = remDeg * ascTimePerDegree;
+        const effStartAbs = signBaseAbsDeg + effStart;
+        const effEndAbs = signBaseAbsDeg + effEnd;
+        const years = tempoAscensionalEntreGraus(effStartAbs, effEndAbs, latAtual);
 
         startDate = new Date(currDate);
         endDate = new Date(currDate.getTime() + years * 365.25 * 24 * 60 * 60 * 1000);
