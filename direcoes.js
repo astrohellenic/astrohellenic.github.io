@@ -668,7 +668,7 @@ function renderCircumambulaçõesUI() {
   const afetaAtualLabel = afetaLabelsDir[selectedAphetesKey] || selectedAphetesKey;
 
   let html = `
-    <div class="dir-outer" style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
     <div class="dir-card" style="background: #fffdf5; border-radius: 16px; padding: 20px; font-family: 'Montserrat', sans-serif;">
       <div class="dir-innercard" style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
 
@@ -676,8 +676,8 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO (mesmas informações do topo da mandala) -->
-        <div class="dir-cabecalho" style="text-align: center; margin-bottom: 16px;">
+        <!-- CABEÇALHO PADRÃO (mesmo contorno/fundo do cabeçalho da mandala: creme #fffdf5, borda dourada #c59b27) -->
+        <div class="dir-cabecalho" style="text-align: center; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
           <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
           <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">
