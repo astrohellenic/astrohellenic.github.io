@@ -86,6 +86,9 @@ function iniciarModuloHoras() {
 
   // Função auxiliar para gerar a tag SVG embutida
   function getPlanet3DSVG(planetId) {
+  if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico()) {
+    return getPlanetSimpleSVG(planetId, 34);
+  }
   const planetSVGs = {
     Sun: `<svg width="34" height="34" viewBox="0 0 100 100" style="vertical-align: middle; display: inline-block;">
       <defs>
