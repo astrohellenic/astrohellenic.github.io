@@ -925,14 +925,19 @@ body {
     text-decoration: underline;
   }
 
-    /* LIBERA A ROLAGEM GLOBAL DA PÁGINA */
-html, body {
+    /* LIBERA A ROLAGEM GLOBAL DA PÁGINA — só fora do modo mandala. Com o
+       modo mandala ativo, html/body/#main-stage precisam ficar travados na
+       altura da tela (ver body.modo-mandala e body.modo-mandala #main-stage
+       mais acima); do contrário a imagem da mandala perde a referência de
+       altura e para de encolher para caber (max-height:100% deixa de ter
+       efeito), ficando cortada nas laterais em telas largas. */
+html:not(.modo-mandala), body:not(.modo-mandala) {
   min-height: 100vh !important;
   height: auto !important;
   overflow-y: auto !important;
 }
 
-#main-stage {
+body:not(.modo-mandala) #main-stage {
   min-height: 100vh !important;
   height: auto !important;
   overflow: visible !important;
