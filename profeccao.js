@@ -105,20 +105,194 @@
         return `${diasSemana[d.getDay()]}, ${dia}/${mes}/${ano} às ${hora}:${min}`;
     }
 
-    function obterTimestampRevolucaoSolar(anoAlvo) {
-        if (typeof window.currentSolarReturnDate !== 'undefined' && window.currentSolarReturnDate) {
-            const rsCalculada = new Date(window.currentSolarReturnDate);
-            if (!isNaN(rsCalculada.getTime()) && rsCalculada.getFullYear() === anoAlvo) {
-                return rsCalculada.getTime();
-            }
+    /* CACHE DOS DADOS COMPLETOS DA REVOLUÇÃO SOLAR, POR ANO-ALVO.
+       Evita refazer o fetch toda vez que o usuário troca de mês/passo na tela. */
+    const rsFullDataCache = {};
+
+    const SIGNOS_INDEX_RS = {
+        "Aries": 0, "Touro": 1, "Gemeos": 2, "Cancer": 3,
+        "Leao": 4, "Virgem": 5, "Libra": 6, "Escorpiao": 7,
+        "Sagitario": 8, "Capricornio": 9, "Aquario": 10, "Peixes": 11
+    };
+
+    function calcularAbsolutoRS(obj) {
+        if (!obj) return 0;
+        if (obj.grau_absoluto !== undefined && obj.grau_absoluto !== null && obj.grau_absoluto !== 0) {
+            return parseFloat(obj.grau_absoluto);
         }
-        if (typeof window.dadosSolar !== 'undefined' && window.dadosSolar && window.dadosSolar.dataHora) {
-            const rsCalculada = new Date(window.dadosSolar.dataHora);
-            if (!isNaN(rsCalculada.getTime()) && rsCalculada.getFullYear() === anoAlvo) {
-                return rsCalculada.getTime();
-            }
+        const idxSigno = SIGNOS_INDEX_RS[obj.signo] !== undefined ? SIGNOS_INDEX_RS[obj.signo] : 0;
+        const grauRel = parseFloat(obj.grau_no_signo !== undefined ? obj.grau_no_signo : (obj.grau || 0));
+        return (idxSigno * 30) + grauRel;
+    }
+
+    function checkRetroRS(pObj) {
+        if (!pObj) return false;
+        if (pObj.retrogrado !== undefined) return Boolean(pObj.retrogrado);
+        if (pObj.velocidade !== undefined) return parseFloat(pObj.velocidade) < 0;
+        return false;
+    }
+
+    /* BUSCA (COM CACHE) O TIMESTAMP EXATO E O MAPA PLANETÁRIO COMPLETO
+       DA REVOLUÇÃO SOLAR DE UM ANO-ALVO, PARA A TABELA DE 60H E PARA A MINI-MANDALA. */
+    async function obterDadosCompletosRS(anoAlvo, dataNasc) {
+        if (rsFullDataCache[anoAlvo]) return rsFullDataCache[anoAlvo];
+
+        const diaStr = String(dataNasc.getDate()).padStart(2, '0');
+        const mesStr = String(dataNasc.getMonth() + 1).padStart(2, '0');
+        const dataFormatada = `${dataNasc.getFullYear()}-${mesStr}-${diaStr}`;
+        const horaStr = String(dataNasc.getHours()).padStart(2, '0') + ":" + String(dataNasc.getMinutes()).padStart(2, '0');
+
+        const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat) ? currentGeo.lat : -23.5505;
+        const lon = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lon) ? currentGeo.lon : -46.6333;
+        const fuso = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+
+        const urlSolar = `https://motor-astrologia.vercel.app/api/revolucao?data=${dataFormatada}&hora=${horaStr}&lat=${lat}&lon=${lon}&fuso=${fuso}&ano=${anoAlvo}`;
+
+        const resSolar = await fetch(urlSolar);
+        if (!resSolar.ok) return null;
+        const apiJson = await resSolar.json();
+
+        const planetas = apiJson.planetas || {};
+        const ascData = apiJson.ascendente || {};
+        const mcData = apiJson.meio_ceu || {};
+
+        let horaExataRS = apiJson.momento_exato ? apiJson.momento_exato.hora_local : "";
+        let dataExataRS = apiJson.momento_exato ? apiJson.momento_exato.data_utc : "";
+
+        let anoR = anoAlvo, mesR = dataNasc.getMonth(), diaR = dataNasc.getDate(), horaR = 12, minR = 0;
+
+        if (dataExataRS && dataExataRS.includes('-')) {
+            const pD = dataExataRS.split('-');
+            anoR = parseInt(pD[0]) || anoAlvo;
+            mesR = (parseInt(pD[1]) || 1) - 1;
+            diaR = parseInt(pD[2]) || dataNasc.getDate();
         }
-        return null;
+
+        if (horaExataRS && horaExataRS.includes(':')) {
+            const pH = horaExataRS.split(':');
+            horaR = parseInt(pH[0]) || 0;
+            minR = parseInt(pH[1]) || 0;
+        }
+
+        const resultado = {
+            timestamp: new Date(anoR, mesR, diaR, horaR, minR).getTime(),
+            dados: {
+                Ascendente: { grau_absoluto: calcularAbsolutoRS(ascData) },
+                MC: { grau_absoluto: calcularAbsolutoRS(mcData) },
+                Nodo_Norte: { grau_absoluto: calcularAbsolutoRS(planetas.NodoNorte), retro: checkRetroRS(planetas.NodoNorte) },
+                Sol: { grau_absoluto: calcularAbsolutoRS(planetas.Sol), retro: false },
+                Lua: { grau_absoluto: calcularAbsolutoRS(planetas.Lua), retro: false },
+                Mercúrio: { grau_absoluto: calcularAbsolutoRS(planetas.Mercurio), retro: checkRetroRS(planetas.Mercurio) },
+                Vênus: { grau_absoluto: calcularAbsolutoRS(planetas.Venus), retro: checkRetroRS(planetas.Venus) },
+                Marte: { grau_absoluto: calcularAbsolutoRS(planetas.Marte), retro: checkRetroRS(planetas.Marte) },
+                Júpiter: { grau_absoluto: calcularAbsolutoRS(planetas.Jupiter), retro: checkRetroRS(planetas.Jupiter) },
+                Saturno: { grau_absoluto: calcularAbsolutoRS(planetas.Saturno), retro: checkRetroRS(planetas.Saturno) }
+            }
+        };
+
+        rsFullDataCache[anoAlvo] = resultado;
+        return resultado;
+    }
+
+    /* DESENHA UMA MINI-MANDALA (SIGNOS + CASAS + EIXO ASC/MC + PLANETAS) EM SVG,
+       AUTÔNOMA — NÃO DEPENDE DE NENHUMA FUNÇÃO DE mandala.js. */
+    function gerarMiniMandalaSVG(dados, titulo) {
+        if (!dados || !dados.Ascendente) {
+            return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+        }
+
+        const ascAbs = dados.Ascendente.grau_absoluto;
+        const mcAbs = dados.MC ? dados.MC.grau_absoluto : (ascAbs + 270) % 360;
+        const ascSignIdx = Math.floor((((ascAbs % 360) + 360) % 360) / 30);
+
+        const cx = 180, cy = 180;
+        const R_signOut = 160, R_signIn = 126, R_houseLabel = 170, R_planet = 92;
+
+        function screenAngle(deg) {
+            return (180 - (deg - ascAbs) + 36000) % 360;
+        }
+        function pt(r, angleDeg) {
+            const rad = angleDeg * Math.PI / 180;
+            return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+        }
+
+        let svg = `<svg viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto;">`;
+
+        svg += `<circle cx="${cx}" cy="${cy}" r="${R_signOut}" fill="#fffdf7" stroke="#c59b27" stroke-width="1.5" />`;
+
+        for (let i = 0; i < 12; i++) {
+            const a1 = screenAngle(i * 30);
+            const pontosOut = [];
+            for (let t = 0; t <= 6; t++) pontosOut.push(pt(R_signOut, a1 - (t * 5)));
+            const pontosIn = [];
+            for (let t = 6; t >= 0; t--) pontosIn.push(pt(R_signIn, a1 - (t * 5)));
+            const pontos = pontosOut.concat(pontosIn);
+            const dPath = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z';
+            const cor = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
+            svg += `<path d="${dPath}" fill="${cor}" fill-opacity="0.08" stroke="${cor}" stroke-opacity="0.35" stroke-width="0.75" />`;
+
+            const midAngle = a1 - 15;
+            const signPos = pt((R_signOut + R_signIn) / 2, midAngle);
+            const signSize = 16;
+            svg += `<g transform="translate(${(signPos.x - signSize / 2).toFixed(2)}, ${(signPos.y - signSize / 2).toFixed(2)})">${getSignSvgHtml(i, signSize)}</g>`;
+
+            const houseNum = ((i - ascSignIdx + 12) % 12) + 1;
+            const houseLabelPos = pt(R_houseLabel, midAngle);
+            svg += `<text x="${houseLabelPos.x.toFixed(2)}" y="${houseLabelPos.y.toFixed(2)}" font-size="9" font-family="'Montserrat', sans-serif" font-weight="700" fill="#103b70" text-anchor="middle" dominant-baseline="middle">${houseNum}</text>`;
+        }
+
+        const ascP1 = pt(R_signOut, screenAngle(ascAbs));
+        const ascP2 = pt(R_signOut, screenAngle(ascAbs + 180));
+        svg += `<line x1="${ascP1.x.toFixed(2)}" y1="${ascP1.y.toFixed(2)}" x2="${ascP2.x.toFixed(2)}" y2="${ascP2.y.toFixed(2)}" stroke="#c59b27" stroke-width="1.5" />`;
+
+        const mcP1 = pt(R_signOut, screenAngle(mcAbs));
+        const mcP2 = pt(R_signOut, screenAngle(mcAbs + 180));
+        svg += `<line x1="${mcP1.x.toFixed(2)}" y1="${mcP1.y.toFixed(2)}" x2="${mcP2.x.toFixed(2)}" y2="${mcP2.y.toFixed(2)}" stroke="#103b70" stroke-width="1" stroke-dasharray="3,3" />`;
+
+        const itens = [];
+        [
+            { id: "Sun", key: "Sol" }, { id: "Moon", key: "Lua" }, { id: "Mercury", key: "Mercúrio" },
+            { id: "Venus", key: "Vênus" }, { id: "Mars", key: "Marte" }, { id: "Jupiter", key: "Júpiter" }, { id: "Saturn", key: "Saturno" }
+        ].forEach(p => {
+            const dado = dados[p.key];
+            if (!dado) return;
+            const deg = dado.grau_absoluto;
+            itens.push({ tipo: 'planeta', id: p.id, retro: Boolean(dado.retro), aScreen: screenAngle(deg), rOffset: 0 });
+        });
+        if (dados.Nodo_Norte) {
+            itens.push({ tipo: 'nodo', aScreen: screenAngle(dados.Nodo_Norte.grau_absoluto), rOffset: 0 });
+        }
+
+        itens.sort((a, b) => a.aScreen - b.aScreen);
+        for (let i = 1; i < itens.length; i++) {
+            let diff = itens[i].aScreen - itens[i - 1].aScreen;
+            if (diff < 0) diff += 360;
+            if (diff < 9) itens[i].rOffset = itens[i - 1].rOffset + 20;
+        }
+
+        itens.forEach(it => {
+            const raio = R_planet - it.rOffset;
+            const pos = pt(raio, it.aScreen);
+            if (it.tipo === 'planeta') {
+                const size = 24;
+                svg += `<g transform="translate(${(pos.x - size / 2).toFixed(2)}, ${(pos.y - size / 2).toFixed(2)})">${getPlanet3DSVG(it.id, size)}</g>`;
+                if (it.retro) {
+                    svg += `<text x="${(pos.x + size / 2 - 2).toFixed(2)}" y="${(pos.y - size / 2 + 6).toFixed(2)}" font-size="9" fill="#dc2626" font-weight="900">℞</text>`;
+                }
+            } else {
+                svg += `<circle cx="${pos.x.toFixed(2)}" cy="${pos.y.toFixed(2)}" r="9" fill="#ffffff" stroke="#334155" stroke-width="1" />`;
+                svg += `<text x="${pos.x.toFixed(2)}" y="${pos.y.toFixed(2)}" font-size="11" fill="#334155" text-anchor="middle" dominant-baseline="central">☊</text>`;
+            }
+        });
+
+        svg += `<circle cx="${cx}" cy="${cy}" r="30" fill="#ffffff" stroke="#c59b27" stroke-width="1" />`;
+        svg += `<text x="${cx}" y="${cy - 4}" font-size="9" font-family="'Cinzel', serif" font-weight="700" fill="#103b70" text-anchor="middle">${titulo.linha1}</text>`;
+        if (titulo.linha2) {
+            svg += `<text x="${cx}" y="${cy + 9}" font-size="9" font-family="'Cinzel', serif" font-weight="700" fill="#103b70" text-anchor="middle">${titulo.linha2}</text>`;
+        }
+
+        svg += `</svg>`;
+        return svg;
     }
 
     async function iniciarModuloProfeccao() {
@@ -150,55 +324,37 @@
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
         const anoAlvoRS = dataNasc.getFullYear() + idade;
-        let rsTimestamp = obterTimestampRevolucaoSolar(anoAlvoRS);
+        const dadosNatal = currentCalculatedData;
+        let rsTimestamp = null;
+        let dadosRS = null;
 
-        if (!rsTimestamp) {
-            try {
-                const diaStr = String(dataNasc.getDate()).padStart(2, '0');
-                const mesStr = String(dataNasc.getMonth() + 1).padStart(2, '0');
-                const dataFormatada = `${dataNasc.getFullYear()}-${mesStr}-${diaStr}`;
-                const horaStr = String(dataNasc.getHours()).padStart(2, '0') + ":" + String(dataNasc.getMinutes()).padStart(2, '0');
-                
-                const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat) ? currentGeo.lat : -23.5505;
-                const lon = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lon) ? currentGeo.lon : -46.6333;
-                const fuso = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
-
-                const urlSolar = `https://motor-astrologia.vercel.app/api/revolucao?data=${dataFormatada}&hora=${horaStr}&lat=${lat}&lon=${lon}&fuso=${fuso}&ano=${anoAlvoRS}`;
-                
-                const resSolar = await fetch(urlSolar);
-                if (resSolar.ok) {
-                    const apiJson = await resSolar.json();
-                    let horaExataRS = apiJson.momento_exato ? apiJson.momento_exato.hora_local : "";
-                    let dataExataRS = apiJson.momento_exato ? apiJson.momento_exato.data_utc : "";
-
-                    let anoR = anoAlvoRS, mesR = dataNasc.getMonth(), diaR = dataNasc.getDate(), horaR = 12, minR = 0;
-
-                    if (dataExataRS && dataExataRS.includes('-')) {
-                        const pD = dataExataRS.split('-');
-                        anoR = parseInt(pD[0]) || anoAlvoRS;
-                        mesR = (parseInt(pD[1]) || 1) - 1;
-                        diaR = parseInt(pD[2]) || dataNasc.getDate();
-                    }
-
-                    if (horaExataRS && horaExataRS.includes(':')) {
-                        const pH = horaExataRS.split(':');
-                        horaR = parseInt(pH[0]) || 0;
-                        minR = parseInt(pH[1]) || 0;
-                    }
-
-                    window.currentSolarReturnDate = new Date(anoR, mesR, diaR, horaR, minR);
-                    rsTimestamp = window.currentSolarReturnDate.getTime();
-                }
-            } catch (err) {
-                console.warn("Falha na busca automática da RS para Profecção:", err);
+        try {
+            const resultadoRS = await obterDadosCompletosRS(anoAlvoRS, dataNasc);
+            if (resultadoRS) {
+                rsTimestamp = resultadoRS.timestamp;
+                dadosRS = resultadoRS.dados;
+                window.currentSolarReturnDate = new Date(rsTimestamp);
             }
+        } catch (err) {
+            console.warn("Falha na busca da Revolução Solar para Profecção:", err);
         }
 
         let html = `
     <div id="profeccao-container" 
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
          style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
-        
+
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
+            <div style="flex: 1 1 260px; max-width: 340px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
+                ${gerarMiniMandalaSVG(dadosRS, { linha1: 'REVOLUÇÃO', linha2: String(anoAlvoRS) })}
+            </div>
+            <div style="flex: 1 1 260px; max-width: 340px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
+                ${gerarMiniMandalaSVG(dadosNatal, { linha1: 'NATAL', linha2: '' })}
+            </div>
+        </div>
+
         <div style="background: #fffdf5; border: 1.5px solid #c59b27; border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
             
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
