@@ -731,7 +731,12 @@ function renderMandala(dadosNovos) {
   const headerY = cy + R_Ceu + margemVertical;
   const headerH = 75;
   const headerGapBottom = 20;
-  const width = 960, height = headerY + headerH + headerGapBottom, cx = width / 2;
+  /* A largura também precisa acompanhar R_Ceu: sem isso, o céu (que agora
+     varia de tamanho por mapa) pode passar dos 480px de raio e ser cortado
+     nas laterais pelo próprio SVG, antes mesmo de chegar no navegador —
+     nunca menor que 960 (largura original), só cresce quando precisa. */
+  const cx = Math.max(480, R_Ceu + margemVertical);
+  const width = cx * 2, height = headerY + headerH + headerGapBottom;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
 
