@@ -644,13 +644,8 @@ function renderCircumambulaçõesUI() {
     return `<svg viewBox="0 0 920 ${alturaSvg}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${svgInner}</svg>`;
   }
 
-  // TELA: uma única coluna com todas as pautas, como sempre foi.
+  // Uma única coluna com todas as pautas, na tela e na impressão.
   const svgTela = montarSvgPautas(signPassages, 0);
-
-  // IMPRESSÃO: duas colunas lado a lado, para caber tudo em uma página.
-  const metadeCorte = Math.ceil(signPassages.length / 2);
-  const svgImpressaoCol1 = montarSvgPautas(signPassages.slice(0, metadeCorte), 0);
-  const svgImpressaoCol2 = montarSvgPautas(signPassages.slice(metadeCorte), metadeCorte);
 
   /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa) */
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
@@ -714,14 +709,9 @@ function renderCircumambulaçõesUI() {
   html += `
         </div>
 
-        <!-- PAUTAS DOS SIGNOS: uma coluna só na tela; duas colunas lado a lado na impressão, para caber tudo em uma página -->
-        <div class="no-print" style="width: 100%; overflow-x: auto;">
+        <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão -->
+        <div style="width: 100%; overflow-x: auto;">
           ${svgTela}
-        </div>
-
-        <div class="print-only" style="gap: 14px; width: 100%;">
-          <div style="flex: 1; min-width: 0;">${svgImpressaoCol1}</div>
-          <div style="flex: 1; min-width: 0;">${svgImpressaoCol2}</div>
         </div>
 
       </div>
