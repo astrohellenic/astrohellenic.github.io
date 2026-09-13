@@ -195,18 +195,23 @@
     }
 
     /* DESENHA UMA MINI-MANDALA (SIGNOS + CASAS + EIXO ASC/MC + PLANETAS) EM SVG,
-       AUTÔNOMA — NÃO DEPENDE DE NENHUMA FUNÇÃO DE mandala.js. */
+       AUTÔNOMA — NÃO DEPENDE DE NENHUMA FUNÇÃO DE mandala.js. Usa a mesma
+       linguagem visual da mandala principal (anéis e hastes douradas, eixo
+       ASC/MC preto, mancha de combustão atrás do Sol), só sem a faixa de
+       céu/espaço sideral — desnecessária num mapa em miniatura. */
     function gerarMiniMandalaSVG(dados, titulo) {
         if (!dados || !dados.Ascendente) {
             return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
         }
 
+        const goldColor = "#c59b27";
         const ascAbs = dados.Ascendente.grau_absoluto;
         const mcAbs = dados.MC ? dados.MC.grau_absoluto : (ascAbs + 270) % 360;
         const ascSignIdx = Math.floor((((ascAbs % 360) + 360) % 360) / 30);
+        const glowId = `combustionGlowMini_${(titulo.linha1 || '').replace(/[^a-zA-Z0-9]/g, '')}`;
 
         const cx = 180, cy = 180;
-        const R_signOut = 160, R_signIn = 126, R_houseLabel = 170, R_planet = 92;
+        const R_signOut = 160, R_signIn = 128, R_spokeIn = 100, R_houseLabel = 170, R_planet = 92;
 
         function screenAngle(deg) {
             return (180 - (deg - ascAbs) + 36000) % 360;
@@ -216,22 +221,26 @@
             return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
         }
 
-        let svg = `<svg viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto;">`;
+        let svg = `<svg viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto;">
+            <defs>
+                <radialGradient id="${glowId}" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.9" />
+                    <stop offset="30%" stop-color="#fde68a" stop-opacity="0.75" />
+                    <stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" />
+                    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+                </radialGradient>
+            </defs>`;
 
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R_signOut}" fill="#fffdf7" stroke="#c59b27" stroke-width="1.5" />`;
+        svg += `<circle cx="${cx}" cy="${cy}" r="${R_signOut}" fill="#fffdf7" stroke="${goldColor}" stroke-width="1.5" />`;
+        svg += `<circle cx="${cx}" cy="${cy}" r="${R_signIn}" fill="none" stroke="${goldColor}" stroke-width="1.2" />`;
 
         for (let i = 0; i < 12; i++) {
-            const a1 = screenAngle(i * 30);
-            const pontosOut = [];
-            for (let t = 0; t <= 6; t++) pontosOut.push(pt(R_signOut, a1 - (t * 5)));
-            const pontosIn = [];
-            for (let t = 6; t >= 0; t--) pontosIn.push(pt(R_signIn, a1 - (t * 5)));
-            const pontos = pontosOut.concat(pontosIn);
-            const dPath = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z';
-            const cor = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
-            svg += `<path d="${dPath}" fill="${cor}" fill-opacity="0.08" stroke="${cor}" stroke-opacity="0.35" stroke-width="0.75" />`;
+            const aBoundary = screenAngle(i * 30);
+            const spokeOut = pt(R_signOut, aBoundary);
+            const spokeIn = pt(R_spokeIn, aBoundary);
+            svg += `<line x1="${spokeIn.x.toFixed(2)}" y1="${spokeIn.y.toFixed(2)}" x2="${spokeOut.x.toFixed(2)}" y2="${spokeOut.y.toFixed(2)}" stroke="${goldColor}" stroke-width="1.5" />`;
 
-            const midAngle = a1 - 15;
+            const midAngle = aBoundary - 15;
             const signPos = pt((R_signOut + R_signIn) / 2, midAngle);
             const signSize = 16;
             svg += `<g transform="translate(${(signPos.x - signSize / 2).toFixed(2)}, ${(signPos.y - signSize / 2).toFixed(2)})">${getSignSvgHtml(i, signSize)}</g>`;
@@ -243,11 +252,13 @@
 
         const ascP1 = pt(R_signOut, screenAngle(ascAbs));
         const ascP2 = pt(R_signOut, screenAngle(ascAbs + 180));
-        svg += `<line x1="${ascP1.x.toFixed(2)}" y1="${ascP1.y.toFixed(2)}" x2="${ascP2.x.toFixed(2)}" y2="${ascP2.y.toFixed(2)}" stroke="#c59b27" stroke-width="1.5" />`;
+        svg += `<line x1="${ascP1.x.toFixed(2)}" y1="${ascP1.y.toFixed(2)}" x2="${ascP2.x.toFixed(2)}" y2="${ascP2.y.toFixed(2)}" stroke="#000000" stroke-width="2" />`;
+        svg += `<text x="${(ascP1.x + (cx - ascP1.x) * 0.12).toFixed(2)}" y="${(ascP1.y + (cy - ascP1.y) * 0.12).toFixed(2)}" font-size="8" font-weight="900" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2.5" paint-order="stroke fill">ASC</text>`;
 
         const mcP1 = pt(R_signOut, screenAngle(mcAbs));
         const mcP2 = pt(R_signOut, screenAngle(mcAbs + 180));
-        svg += `<line x1="${mcP1.x.toFixed(2)}" y1="${mcP1.y.toFixed(2)}" x2="${mcP2.x.toFixed(2)}" y2="${mcP2.y.toFixed(2)}" stroke="#103b70" stroke-width="1" stroke-dasharray="3,3" />`;
+        svg += `<line x1="${mcP1.x.toFixed(2)}" y1="${mcP1.y.toFixed(2)}" x2="${mcP2.x.toFixed(2)}" y2="${mcP2.y.toFixed(2)}" stroke="#000000" stroke-width="1.2" stroke-dasharray="4,3" />`;
+        svg += `<text x="${(mcP1.x + (cx - mcP1.x) * 0.12).toFixed(2)}" y="${(mcP1.y + (cy - mcP1.y) * 0.12).toFixed(2)}" font-size="8" font-weight="900" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="2.5" paint-order="stroke fill">MC</text>`;
 
         const itens = [];
         [
@@ -270,6 +281,17 @@
             if (diff < 9) itens[i].rOffset = itens[i - 1].rOffset + 20;
         }
 
+        /* MANCHA DE COMBUSTÃO ATRÁS DO SOL — halo dourado, mesmo gradiente
+           usado na mandala principal, com raio proporcional a 15° de arco
+           (a "órbita de combustão" tradicional), desenhado antes dos ícones
+           dos planetas para ficar por baixo deles. */
+        const solItem = itens.find(it => it.tipo === 'planeta' && it.id === 'Sun');
+        if (solItem) {
+            const solPos = pt(R_planet - solItem.rOffset, solItem.aScreen);
+            const rGlow = (2 * Math.PI * R_planet / 360) * 15;
+            svg += `<circle cx="${solPos.x.toFixed(2)}" cy="${solPos.y.toFixed(2)}" r="${rGlow.toFixed(2)}" fill="url(#${glowId})" />`;
+        }
+
         itens.forEach(it => {
             const raio = R_planet - it.rOffset;
             const pos = pt(raio, it.aScreen);
@@ -285,7 +307,7 @@
             }
         });
 
-        svg += `<circle cx="${cx}" cy="${cy}" r="30" fill="#ffffff" stroke="#c59b27" stroke-width="1" />`;
+        svg += `<circle cx="${cx}" cy="${cy}" r="30" fill="#fffdf7" stroke="${goldColor}" stroke-width="1.5" />`;
         svg += `<text x="${cx}" y="${cy - 4}" font-size="9" font-family="'Cinzel', serif" font-weight="700" fill="#103b70" text-anchor="middle">${titulo.linha1}</text>`;
         if (titulo.linha2) {
             svg += `<text x="${cx}" y="${cy + 9}" font-size="9" font-family="'Cinzel', serif" font-weight="700" fill="#103b70" text-anchor="middle">${titulo.linha2}</text>`;
