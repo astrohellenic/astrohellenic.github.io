@@ -833,7 +833,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: #0f172a;
+    background: #1A073F;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1085,15 +1085,13 @@ html, body {
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
-    setTimeout(async () => {
-      const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
-      if (client) {
-        const { data: { user } } = await client.auth.getUser();
-        if (user) {
-          fecharTelaLogin();
-        }
+    const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    if (client) {
+      const { data: { user } } = await client.auth.getUser();
+      if (user) {
+        fecharTelaLogin();
       }
-    }, 500);
+    }
   });
 
     /* FUNÇÃO GLOBAL PARA EXPORTAR QUALQUER TABELA EM PNG */
