@@ -145,8 +145,112 @@ function abrirNavegacaoConfiguracoes() {
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
       </div>
 
+      <!-- OPÇÃO: APARÊNCIA -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAparencia()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-palette" style="color: #c59b27;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Aparência</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+      </div>
+
     </div>
   `;
+}
+
+/* SUB-TELA: APARÊNCIA (TEMA DA MANDALA) */
+function abrirConfiguracoesAparencia() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  const temaAtual = window.temaMandala || 'claro';
+  const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? '#103b70' : '#e2d9c2'}; border-radius: 8px; background: #ffffff; cursor: pointer;`;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+      </button>
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">APARÊNCIA</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 16px; line-height: 1.4;">
+        Escolha como a mandala é exibida. Essa preferência fica salva na sua conta.
+      </div>
+
+      <div onclick="salvarTemaMandala('claro')" style="${opcaoStyle(temaAtual === 'claro')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-sun" style="color: #c59b27;"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Tema Claro</div>
+            <div style="font-size: 11px; color: #64748b;">Fundo branco, sem céu nem espaço sideral</div>
+          </div>
+        </div>
+        ${temaAtual === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+      </div>
+
+      <div onclick="salvarTemaMandala('ceu')" style="${opcaoStyle(temaAtual === 'ceu')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-star" style="color: #c59b27;"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Tema Céu</div>
+            <div style="font-size: 11px; color: #64748b;">Céu diurno/noturno e espaço sideral ao redor da mandala</div>
+          </div>
+        </div>
+        ${temaAtual === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+      </div>
+
+    </div>
+  `;
+}
+
+/* CARREGA O TEMA DA MANDALA DO SUPABASE (chamado logo após o login) */
+async function carregarTemaMandala(userId) {
+  let tema = 'claro';
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('tema_mandala')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data && data.tema_mandala) tema = data.tema_mandala;
+  } catch (e) {
+    console.error("Erro ao carregar tema da mandala:", e);
+  }
+  window.temaMandala = tema;
+  document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  // Se a mandala já tinha sido desenhada com o tema padrão antes desse
+  // carregamento terminar, refaz o desenho já com o tema certo.
+  if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
+    renderMandala();
+  }
+}
+
+/* SALVA O TEMA DA MANDALA ESCOLHIDO E ATUALIZA A TELA NA HORA */
+async function salvarTemaMandala(tema) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, tema_mandala: tema }, { onConflict: 'user_id' });
+
+    if (!error) {
+      window.temaMandala = tema;
+      document.body.classList.toggle('tema-ceu', tema === 'ceu');
+      if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
+        renderMandala();
+      }
+      abrirConfiguracoesAparencia();
+    } else {
+      alert("Erro ao salvar tema: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar tema.");
+  }
 }
 
 /* SUB-TELA: CAPTAÇÃO DE CLIENTES COM UPLOAD DIRETO */
