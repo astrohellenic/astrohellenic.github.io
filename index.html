@@ -815,6 +815,7 @@ body {
 <!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
+<script src="planetIcons.js"></script>
 <script src="tabelaTecnica.js"></script>
 <script src="mandala.js"></script>
 <script src="isopsefia.js"></script>
@@ -1098,6 +1099,7 @@ body:not(.modo-mandala) #main-stage {
       if (user) {
         fecharTelaLogin();
         if (typeof carregarTemaMandala === 'function') carregarTemaMandala(user.id);
+        if (typeof carregarEstiloPlanetas === 'function') carregarEstiloPlanetas(user.id);
       }
     }
   });

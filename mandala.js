@@ -141,6 +141,15 @@ const PLANET_3D_SVGS = {
   `
 };
 
+/* Escolhe entre o ícone esférico 3D e o ícone simples (glifo), conforme a
+   configuração de Aparência salva pelo usuário. */
+function planetIconFragment(planetId) {
+  if (typeof estiloPlanetasEsferico === 'function' && estiloPlanetasEsferico()) {
+    return PLANET_3D_SVGS[planetId] || '';
+  }
+  return (typeof getPlanetSimpleFragment === 'function') ? getPlanetSimpleFragment(planetId) : (PLANET_3D_SVGS[planetId] || '');
+}
+
 const EGYPTIAN_TERMS = [
   [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
   [{ p: "♀", deg: 8 }, { p: "☿", deg: 14 }, { p: "♃", deg: 22 }, { p: "♄", deg: 27 }, { p: "♂", deg: 30 }],
@@ -908,11 +917,11 @@ ${temaCeu ? `
   if (horasInfo) {
     if (horasInfo.dayRulerId && PLANET_3D_SVGS[horasInfo.dayRulerId]) {
       svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">DIA</text>
-      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
+      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
       svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
-      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
+      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
     }
   }
 
@@ -1090,7 +1099,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
 
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
+      const planetSvgContent = planetIconFragment(item.id);
       let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>

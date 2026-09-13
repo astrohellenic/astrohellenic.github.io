@@ -164,6 +164,7 @@ function abrirConfiguracoesAparencia() {
   if (!sidebar) return;
 
   const temaAtual = window.temaMandala || 'claro';
+  const estiloPlanetasAtual = window.estiloPlanetas || 'simples';
   const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? '#103b70' : '#e2d9c2'}; border-radius: 8px; background: #ffffff; cursor: pointer;`;
 
   sidebar.innerHTML = `
@@ -200,6 +201,32 @@ function abrirConfiguracoesAparencia() {
           </div>
         </div>
         ${temaAtual === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+      </div>
+
+      <div style="font-size: 11px; color: #64748b; margin: 20px 0 16px; line-height: 1.4;">
+        Escolha como os 7 planetas clássicos aparecem em toda a ferramenta (mandala, horas planetárias, tabela técnica, decênios, profecção e direções).
+      </div>
+
+      <div onclick="salvarEstiloPlanetas('simples')" style="${opcaoStyle(estiloPlanetasAtual === 'simples')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px; color: #c59b27; width: 20px; text-align: center;">☉</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Planetas Ícones Simples</div>
+            <div style="font-size: 11px; color: #64748b;">Glifos planetários, iguais aos usados nos termos egípcios</div>
+          </div>
+        </div>
+        ${estiloPlanetasAtual === 'simples' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+      </div>
+
+      <div onclick="salvarEstiloPlanetas('esferico')" style="${opcaoStyle(estiloPlanetasAtual === 'esferico')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-circle-dot" style="color: #c59b27;"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Planetas Ícones Esféricos</div>
+            <div style="font-size: 11px; color: #64748b;">Ilustrações 3D com gradiente para cada planeta</div>
+          </div>
+        </div>
+        ${estiloPlanetasAtual === 'esferico' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
       </div>
 
     </div>
@@ -251,6 +278,52 @@ async function salvarTemaMandala(tema) {
   } catch (e) {
     alert("Erro de conexão ao salvar tema.");
   }
+}
+
+/* CARREGA O ESTILO DOS ÍCONES DOS PLANETAS DO SUPABASE (chamado logo após o login) */
+async function carregarEstiloPlanetas(userId) {
+  let estilo = 'simples';
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('estilo_planetas')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data && data.estilo_planetas) estilo = data.estilo_planetas;
+  } catch (e) {
+    console.error("Erro ao carregar estilo dos planetas:", e);
+  }
+  window.estiloPlanetas = estilo;
+  reRenderizarModuloAtivo();
+}
+
+/* SALVA O ESTILO DOS ÍCONES DOS PLANETAS ESCOLHIDO E ATUALIZA A TELA NA HORA */
+async function salvarEstiloPlanetas(estilo) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, estilo_planetas: estilo }, { onConflict: 'user_id' });
+
+    if (!error) {
+      window.estiloPlanetas = estilo;
+      reRenderizarModuloAtivo();
+      abrirConfiguracoesAparencia();
+    } else {
+      alert("Erro ao salvar estilo dos planetas: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar estilo dos planetas.");
+  }
+}
+
+/* REDESENHA A FERRAMENTA ATUALMENTE ABERTA (usado ao trocar o estilo dos ícones dos planetas) */
+function reRenderizarModuloAtivo() {
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
+  const modulo = window.moduloTecnicoAtivo || 'mandala';
+  if (typeof abrirModuloTecnica === 'function') abrirModuloTecnica(modulo);
 }
 
 /* SUB-TELA: CAPTAÇÃO DE CLIENTES COM UPLOAD DIRETO */
@@ -543,6 +616,7 @@ async function fazerLogout() {
 
 /* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo) {
+  window.moduloTecnicoAtivo = modulo;
   const cRadix = document.getElementById('mandala-container');
   const cRev = document.getElementById('revolucao-container');
   const cOverlay = document.getElementById('mandala-controls-overlay');

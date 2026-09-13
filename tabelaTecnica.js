@@ -40,6 +40,9 @@ function getSignSVG(signIndex, size = 20) {
 }
 
 function getPlanet3DSVG(planetId) {
+  if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico()) {
+    return getPlanetSimpleSVG(planetId, 34);
+  }
   const planetSVGs = {
     Sun: `<svg width="34" height="34" viewBox="0 0 100 100" style="display: block; margin: 0 auto;">
       <defs>
