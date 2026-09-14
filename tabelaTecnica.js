@@ -519,8 +519,8 @@ function renderPainelTecnico(data, containerId) {
         </div>` : ''}
       </div>
 
-      <div style="overflow-x: auto; margin-bottom: 24px;">
-        <div style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+      <div style="overflow-x: auto; margin-bottom: 24px; text-align: center;">
+        <div style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
           <table class="tabela-enxuta">
             <thead>
               <tr>
