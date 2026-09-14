@@ -160,7 +160,9 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
            próprio cabeçalho que a mandala desenha dentro da imagem) -->
       <section class="rel-page rel-capa" data-pg="capa">
         <h1 class="rel-titulo-capa">Mapa Natal<br>Clássico</h1>
-        <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
+        <div class="rel-capa-centro">
+          <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
+        </div>
         <div class="rel-marca-rodape">
           ${marcaHtml}
           <div class="rel-powered-by">powered by Astro Hellenic</div>
@@ -420,11 +422,15 @@ function injetarEstilosRelatorio() {
       .tabela-enxuta th { background-color: #fffdf5; font-weight: 700; color: #103b70; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
       .tabela-enxuta tr { break-inside: avoid; page-break-inside: avoid; }
 
-      /* CAPA */
-      .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 14mm; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 18px; }
-      .rel-img-capa { max-width: 92mm; }
-      .rel-marca-rodape { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
+      /* CAPA: título fixo no topo, mandala centralizada no espaço que
+         sobra, e a marca do astrólogo + "powered by" fixas no rodapé —
+         por isso a página inteira (não só o conteúdo) precisa virar um
+         flex column de cima a baixo. */
+      .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
+      .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+      .rel-img-capa { max-width: 92mm; max-height: 100%; }
+      .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
       .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
       .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
 
