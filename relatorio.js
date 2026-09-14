@@ -138,8 +138,8 @@ function voltarConfigRelatorio() {
 
 function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, dadosAstrologo, logoUrl) {
   const marcaHtml = logoUrl
-    ? `<img src="${logoUrl}" alt="Logo" style="max-height: 46px; max-width: 220px; object-fit: contain;">`
-    : `<div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; letter-spacing: 0.08em;">ASTRO HELLENIC</div>`;
+    ? `<img src="${logoUrl}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
+    : '';
 
   const rodapeAstrologo = [dadosAstrologo.nome, dadosAstrologo.telefone, dadosAstrologo.email].filter(Boolean);
 
@@ -156,29 +156,32 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
     <div class="rel-viewer">
 
-      <!-- 1. CAPA (o nome/data/local não se repetem aqui: já vêm no
+      <!-- 1. CAPA (nome/data/local não se repetem aqui: já vêm no
            próprio cabeçalho que a mandala desenha dentro da imagem) -->
-      <section class="rel-page rel-capa">
-        <div class="rel-marca">${marcaHtml}</div>
+      <section class="rel-page rel-capa" data-pg="capa">
         <h1 class="rel-titulo-capa">Mapa Natal<br>Clássico</h1>
         <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
+        <div class="rel-marca-rodape">
+          ${marcaHtml}
+          <div class="rel-powered-by">powered by Astro Hellenic</div>
+        </div>
       </section>
 
       <!-- 2. ÍNDICE -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="indice">
         <div class="rel-h1">Índice</div>
         <ul class="rel-indice">
-          <li>O que é Mapa Natal</li>
-          <li>Mapa Natal</li>
-          <li>Entendendo as Mandalas</li>
-          <li>Os Sete Lotes Herméticos</li>
-          <li>As Dodecatemórias</li>
-          <li>Casas a partir do Lote da Fortuna</li>
+          <li><span>O que é Mapa Natal</span><span class="rel-num-pagina" data-alvo="o-que-e"></span></li>
+          <li><span>Mapa Natal</span><span class="rel-num-pagina" data-alvo="mandala1"></span></li>
+          <li><span>Entendendo as Mandalas</span><span class="rel-num-pagina" data-alvo="entendendo"></span></li>
+          <li><span>Os Sete Lotes Herméticos</span><span class="rel-num-pagina" data-alvo="sete-lotes"></span></li>
+          <li><span>As Dodecatemórias</span><span class="rel-num-pagina" data-alvo="dodecatemorias"></span></li>
+          <li><span>Casas a partir do Lote da Fortuna</span><span class="rel-num-pagina" data-alvo="casas-fortuna"></span></li>
         </ul>
       </section>
 
       <!-- 3. O QUE É MAPA NATAL -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="o-que-e">
         <div class="rel-h1">O que é Mapa Natal</div>
         <div class="rel-corpo">
           <p>O mapa natal é o registro geométrico e astronômico do céu no exato instante e local do nascimento de um indivíduo. Longe de ser um resumo estático de personalidade, ele representa a matriz fundamental de uma vida, funcionando como o projeto arquitetônico que descreve o destino, as potências e os cenários que se desdobrarão ao longo da existência.</p>
@@ -187,21 +190,21 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
         </div>
       </section>
 
-      <!-- 4. MAPA NATAL - MANDALA 1 (sem título aqui: a própria mandala
-           já traz seu cabeçalho com nome/data/local) -->
-      <section class="rel-page rel-page-mapa">
+      <!-- 4. MAPA NATAL - MANDALA 1 -->
+      <section class="rel-page rel-page-mapa" data-pg="mandala1">
+        <div class="rel-h1">Mapa Natal</div>
         <img class="rel-img-mandala" src="${png1}" alt="Mandala 1">
         <div class="rel-legenda-mandala">Mandala 1</div>
       </section>
 
       <!-- 5. MANDALA 2 (Fortuna na Casa 1) -->
-      <section class="rel-page rel-page-mapa">
+      <section class="rel-page rel-page-mapa" data-pg="mandala2">
         <img class="rel-img-mandala" src="${png2}" alt="Mandala 2">
         <div class="rel-legenda-mandala">Mandala 2</div>
       </section>
 
       <!-- 6. ENTENDENDO AS MANDALAS -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="entendendo">
         <div class="rel-h1">Entendendo as Mandalas</div>
         <div class="rel-corpo">
           <p>Para facilitar a sua navegação pelo relatório, o seu mapa foi estruturado em duas camadas que se complementam. Veja como ler cada uma delas:</p>
@@ -211,7 +214,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 7. OS SETE LOTES HERMÉTICOS -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="sete-lotes">
         <div class="rel-h1">Os Sete Lotes Herméticos</div>
         <div class="rel-corpo">
           <p>Os Sete Lotes Herméticos constituem um dos sistemas mais refinados de cálculo e subdivisão temática da astrologia clássica. Atribuída à tradição de Hermes, essa metodologia projeta sete pontos matemáticos específicos no mapa natal, onde cada um está geometricamente atrelado a um dos astros do setenário. Eles funcionam como receptáculos das promessas planetárias, isolando e detalhando áreas cruciais da experiência humana para avaliar como o destino e a ação do nativo se desdobrarão em cenários muito específicos da vida material e factual.</p>
@@ -222,7 +225,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 8. AS DODECATEMÓRIAS -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="dodecatemorias">
         <div class="rel-h1">As Dodecatemórias</div>
         <div class="rel-corpo">
           <p>As dodecatemórias representam uma das técnicas mais profundas de microsubdivisão zodiacal da astrologia clássica. O termo, de origem grega, refere-se à divisão de cada um dos doze signos de 30° em doze partes menores de exatamente 2,5° cada, projetando uma espécie de "microcosmo zodiacal" dentro de cada signo. Essa técnica permite decodificar uma camada subjacente e íntima do mapa natal, revelando a raiz oculta e as ramificações invisíveis de cada planeta e ponto calculado.</p>
@@ -233,7 +236,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 9. CASAS A PARTIR DO LOTE DA FORTUNA -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="casas-fortuna">
         <div class="rel-h1">Casas a partir do Lote da Fortuna</div>
         <div class="rel-corpo">
           <p>A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.</p>
@@ -263,6 +266,30 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
   container.innerHTML = htmlRelatorio;
   container.scrollTop = 0;
+  numerarPaginasIndice(container);
+}
+
+/* Preenche os números de página do Índice medindo a altura real de cada
+   seção já renderizada (cada .rel-page ocupa 297mm — uma ou mais páginas
+   físicas, se o conteúdo dela transbordar). Não dá pra saber a paginação
+   de antemão porque o conteúdo varia por cliente (tabelas maiores/menores
+   etc.), então ela é calculada depois de tudo estar na tela. */
+function numerarPaginasIndice(container) {
+  const paginaAlturaPx = 297 * 96 / 25.4; // 297mm convertidos para px (96dpi, o padrão do CSS)
+  const paginas = container.querySelectorAll('.rel-viewer > .rel-page[data-pg]');
+  let numeroAtual = 1;
+  const numeroPorAlvo = {};
+
+  paginas.forEach(pagina => {
+    numeroPorAlvo[pagina.dataset.pg] = numeroAtual;
+    const altura = pagina.getBoundingClientRect().height;
+    numeroAtual += Math.max(1, Math.round(altura / paginaAlturaPx));
+  });
+
+  container.querySelectorAll('.rel-num-pagina[data-alvo]').forEach(span => {
+    const numero = numeroPorAlvo[span.dataset.alvo];
+    if (numero) span.textContent = numero;
+  });
 }
 
 /* Planeta regente de cada lote (usado só para escolher o ícone na
@@ -380,7 +407,8 @@ function injetarEstilosRelatorio() {
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
 
       .rel-indice { list-style: none; padding: 0; margin: 0; }
-      .rel-indice li { font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
+      .rel-indice li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
+      .rel-num-pagina { font-weight: 700; color: #9a6d18; }
 
       /* TABELAS: mesmo padrão visual (cores, bordas, ícones) da Tabela
          Técnica (classe .tabela-enxuta, definida também em tabelaTecnica.js)
@@ -394,9 +422,11 @@ function injetarEstilosRelatorio() {
 
       /* CAPA */
       .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 14mm; }
-      .rel-marca { margin-bottom: 18px; }
       .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 18px; }
       .rel-img-capa { max-width: 92mm; }
+      .rel-marca-rodape { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
+      .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
+      .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
 
       /* PÁGINAS DAS MANDALAS */
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
