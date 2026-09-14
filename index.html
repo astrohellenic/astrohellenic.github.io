@@ -583,15 +583,67 @@ body {
                 </button>
                 
                 <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
-                <button class="icon-btn" onclick="abrirModuloTecnica('mandala')" title="Natal"><i class="fa-solid fa-globe"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('tabelaTecnica')" title="Tabela Técnica"><i class="fa-solid fa-table"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('direcoes')" title="Direções Primárias"><i class="fa-solid fa-compass"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('decenios')" title="Decênios"><i class="fa-solid fa-hourglass-half"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('profeccao')" title="Profecção"><i class="fa-solid fa-arrow-trend-up"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('liberacao')" title="Liberação Zodiacal"><i class="fa-solid fa-dharmachakra"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('lotes')" title="Calculadora de Lotes"><i class="fa-solid fa-coins"></i></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('mandala')" title="Natal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="32" cy="32" r="26"/>
+  <circle cx="32" cy="32" r="12"/>
+  <line x1="32" y1="6" x2="32" y2="58"/>
+  <line x1="6" y1="32" x2="58" y2="32"/>
+  <line x1="14" y1="14" x2="50" y2="50"/>
+  <line x1="50" y1="14" x2="14" y2="50"/>
+</svg></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('tabelaTecnica')" title="Tabela Técnica"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="8" y="12" width="48" height="40" rx="3"/>
+  <line x1="8" y1="24" x2="56" y2="24"/>
+  <line x1="8" y1="36" x2="56" y2="36"/>
+  <line x1="24" y1="12" x2="24" y2="52"/>
+  <line x1="40" y1="12" x2="40" y2="52"/>
+</svg></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('direcoes')" title="Direções Primárias"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M 32 8 A 24 24 0 1 1 10 24"/>
+  <polyline points="18,16 10,24 6,14"/>
+  <circle cx="32" cy="32" r="3" fill="currentColor" stroke="none"/>
+</svg></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('decenios')" title="Decênios"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14,6 H50 M14,58 H50"/>
+  <path d="M16,6 C16,24 48,24 48,6"/>
+  <path d="M16,58 C16,40 48,40 48,58"/>
+  <path d="M28,26 L36,26 L32,32 Z" fill="currentColor" stroke="none"/>
+</svg></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('profeccao')" title="Profecção"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="32" cy="32" r="26"/>
+  <line x1="32" y1="6" x2="32" y2="58"/>
+  <line x1="6" y1="32" x2="58" y2="32"/>
+  <line x1="14" y1="14" x2="50" y2="50"/>
+  <line x1="50" y1="14" x2="14" y2="50"/>
+  <path d="M32,32 L48,20" stroke-width="3.5"/>
+  <polyline points="42,18 48,20 46,26" stroke-width="3.5"/>
+</svg></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('liberacao')" title="Liberação Zodiacal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="14" y="28" width="36" height="28" rx="5"/>
+  <path d="M22,28 V18 A12,12 0 0 1 44,10"/>
+  <circle cx="32" cy="40" r="3" fill="currentColor" stroke="none"/>
+  <line x1="32" y1="43" x2="32" y2="49"/>
+</svg></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('lotes')" title="Calculadora de Lotes"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="10" y="4" width="44" height="56" rx="4"/>
+  <line x1="16" y1="14" x2="48" y2="14"/>
+  <circle cx="19" cy="28" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="32" cy="28" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="45" cy="28" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="19" cy="38" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="32" cy="38" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="45" cy="38" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="19" cy="48" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="32" cy="48" r="2.5" fill="currentColor" stroke="none"/>
+  <circle cx="45" cy="48" r="2.5" fill="currentColor" stroke="none"/>
+</svg></button>
                 <button class="icon-btn" onclick="abrirModuloTecnica('horas')" title="Horas Planetárias"><i class="fa-solid fa-clock"></i></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('isopsefia')" title="Isopsefia"><i class="fa-solid fa-calculator"></i></button>
+                <button class="icon-btn" onclick="abrirModuloTecnica('isopsefia')" title="Isopsefia"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <text x="16" y="38" font-size="30" font-weight="700" fill="currentColor" stroke="none" font-family="serif">Α</text>
+  <line x1="32" y1="30" x2="44" y2="30"/>
+  <polyline points="40,26 44,30 40,34"/>
+  <text x="44" y="52" font-size="16" font-weight="700" fill="currentColor" stroke="none">1</text>
+</svg></button>
 
             </div>
         </div>
