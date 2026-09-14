@@ -52,7 +52,6 @@
 
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const MONTH_MS = (30 + (10.5 / 24)) * MS_PER_DAY;
-    const DAILY_STEP_MS = 2.5 * MS_PER_DAY;
 
     function getSignSvgHtml(signIdx, size = 18) {
         const color = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[signIdx]];
@@ -777,9 +776,6 @@
 
         idade += window.profeccaoOffsetAnos;
 
-        const grandCycleHouse = Math.floor(idade / 12) + 1;
-        const grandCycleSignIdx = (ascIdx + (grandCycleHouse - 1)) % 12;
-
         const houseNumber = (idade % 12) + 1;
         const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
 
@@ -852,8 +848,7 @@
                 <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
             </div>
 
-            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center; color: #103b70;">
-                <div><strong>Grande Ciclo de 12 anos:</strong> Casa ${grandCycleHouse} em ${getSignSvgHtml(grandCycleSignIdx, 18)}</div>
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; font-size: 13px; align-items: center; color: #103b70;">
                 <div><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</div>
             </div>
         </div>
@@ -900,48 +895,6 @@
                     <td style="padding: 10px 12px; text-align: left;">${formatarData(m.start)}</td>
                 </tr>
             `;
-
-            if (isExpanded) {
-                html += `
-                <tr>
-                    <td colspan="4" style="padding: 10px 14px; background: #faf8f0; border-bottom: 2px solid #c59b27;">
-                        <div style="background: #ffffff; border: 1px solid #103b70; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-                            <div style="background: #103b70; color: #ffffff; font-family: 'Cinzel', serif; font-size: 11px; padding: 6px 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                                Passos Diários de 60 Horas — Mês ${m.monthNum}
-                            </div>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                <thead>
-                                    <tr style="background: #f1f5f9; color: #103b70; border-bottom: 1px solid #cbd5e1;">
-                                        <th style="padding: 8px; text-align: center;">Passo</th>
-                                        <th style="padding: 8px; text-align: center;">Signo</th>
-                                        <th style="padding: 8px; text-align: left;">Início (60h)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                `;
-
-                let dailyStart = m.start;
-                for (let d = 0; d < 12; d++) {
-                    const dSignIdx = (m.signIdx + d) % 12;
-                    const bgDaily = d % 2 === 0 ? '#ffffff' : '#f8fafc';
-                    html += `
-                        <tr style="border-bottom: 1px solid #e2e8f0; background-color: ${bgDaily};">
-                            <td style="padding: 6px 8px; text-align: center; font-weight: 600; color: #103b70;">Passo ${d + 1}</td>
-                            <td style="padding: 6px 8px; text-align: center;">${getSignSvgHtml(dSignIdx, 18)}</td>
-                            <td style="padding: 6px 8px; text-align: left; color: #334155;">${formatarData(dailyStart)}</td>
-                        </tr>
-                    `;
-                    dailyStart += DAILY_STEP_MS;
-                }
-
-                html += `
-                                </tbody>
-                            </table>
-                        </div>
-                    </td>
-                </tr>
-                `;
-            }
         });
 
         html += `</tbody></table></div></div></div>`;
