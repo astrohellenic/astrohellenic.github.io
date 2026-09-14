@@ -128,19 +128,19 @@ function renderDeceniosUI(container) {
           </div>
         </div>
 
-        <div style="position: relative; width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;" title="Planeta Inicial">
-          <div style="pointer-events: none; display: flex; align-items: center; justify-content: center;">
+        <div style="position: relative; display: inline-block;">
+          <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Planeta Inicial">
             ${getPlanet3DSVG(startPlanetKey, 26)}
+          </button>
+          <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
+            <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
+            <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
+            <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
+            <div onclick="alternarSeitaManual('Venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Venus', 24)}</div>
+            <div onclick="alternarSeitaManual('Mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mars', 24)}</div>
+            <div onclick="alternarSeitaManual('Jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Jupiter', 24)}</div>
+            <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
           </div>
-          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none;">
-            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol</option>
-            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua</option>
-            <option value="Mercury" ${startPlanetKey === 'Mercury' ? 'selected' : ''}>Mercúrio</option>
-            <option value="Venus" ${startPlanetKey === 'Venus' ? 'selected' : ''}>Vênus</option>
-            <option value="Mars" ${startPlanetKey === 'Mars' ? 'selected' : ''}>Marte</option>
-            <option value="Jupiter" ${startPlanetKey === 'Jupiter' ? 'selected' : ''}>Júpiter</option>
-            <option value="Saturn" ${startPlanetKey === 'Saturn' ? 'selected' : ''}>Saturno</option>
-          </select>
         </div>
       </div>
 
@@ -387,7 +387,6 @@ function renderizarResultadosHTML(res) {
             <div style="display: flex; align-items: center; gap: 10px;">
               ${getPlanet3DSVG(activeL1.planet.id, 42)}
               <div>
-                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL1.planet.name}</h4>
                 <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} ${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}'</div>
               </div>
             </div>
@@ -406,7 +405,6 @@ function renderizarResultadosHTML(res) {
             <div style="display: flex; align-items: center; gap: 10px;">
               ${getPlanet3DSVG(activeL2.planet.id, 42)}
               <div>
-                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL2.planet.name}</h4>
                 <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} ${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}'</div>
               </div>
             </div>
@@ -424,7 +422,7 @@ function renderizarResultadosHTML(res) {
         <div style="padding: 10px 14px; background: #fffdf5; border-bottom: 1px solid #fef08a; display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 8px;">
             ${getPlanet3DSVG(activeL1.planet.id, 28)}
-            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1 ATIVO: ${activeL1.planet.name.toUpperCase()}</strong>
+            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1 ATIVO</strong>
           </div>
           <span style="font-size: 11px; color: #475569;"><strong>${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong></span>
         </div>
@@ -477,7 +475,7 @@ function renderizarResultadosHTML(res) {
               <div style="display: flex; align-items: center; gap: 10px;">
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
-                  <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1: ${l1.planet.name.toUpperCase()}</strong>
+                  <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1</strong>
                   <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' • 129 Meses</div>
                 </div>
               </div>
