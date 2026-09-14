@@ -64,8 +64,6 @@ body {
   display: block;
   position: relative;
   width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
   z-index: 1;
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
@@ -417,12 +415,15 @@ body {
             cursor: pointer;
         }
 
-        /* PALCO DA MANDALA: fundo roxo, continuação do espaço sideral
-           desenhado dentro da própria mandala. Fica só aqui (não em
-           #main-stage nem em body), então nunca aparece nas outras
-           ferramentas — e a barra superior fixa, que tem fundo creme
-           próprio, continua por cima sem ser afetada. */
-        #mandala-screen {
+        /* PALCO DA MANDALA: no tema "Céu", fundo roxo, continuação do
+           espaço sideral desenhado dentro da própria mandala. Só se aplica
+           com body.tema-ceu (o tema é por usuário, alternado em
+           Configurações > Aparência); no tema "Claro" (padrão) fica sem
+           fundo próprio, mostrando o creme normal do site. Fica só aqui
+           (não em #main-stage nem em body), então nunca aparece nas
+           outras ferramentas — e a barra superior fixa, que tem fundo
+           creme próprio, continua por cima sem ser afetada. */
+        body.tema-ceu #mandala-screen {
             background-color: #1A073F;
         }
 
@@ -814,6 +815,7 @@ body {
 <!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
+<script src="planetIcons.js"></script>
 <script src="tabelaTecnica.js"></script>
 <script src="mandala.js"></script>
 <script src="isopsefia.js"></script>
@@ -925,17 +927,50 @@ body {
     text-decoration: underline;
   }
 
-    /* LIBERA A ROLAGEM GLOBAL DA PÁGINA */
-html, body {
+    /* LIBERA A ROLAGEM GLOBAL DA PÁGINA — só fora do modo mandala. Com o
+       modo mandala ativo, html/body/#main-stage precisam ficar travados na
+       altura da tela (ver body.modo-mandala e body.modo-mandala #main-stage
+       mais acima); do contrário a imagem da mandala perde a referência de
+       altura e para de encolher para caber (max-height:100% deixa de ter
+       efeito), ficando cortada nas laterais em telas largas. */
+html:not(.modo-mandala), body:not(.modo-mandala) {
   min-height: 100vh !important;
   height: auto !important;
   overflow-y: auto !important;
 }
 
-#main-stage {
+body:not(.modo-mandala) #main-stage {
   min-height: 100vh !important;
   height: auto !important;
   overflow: visible !important;
+}
+
+/* ==========================================================
+   IMPRESSÃO. ".no-print" some só ao imprimir — usado pelas ferramentas
+   para tirar controles interativos (botões) da folha impressa, sem a
+   barra superior nem o menu. */
+@media print {
+  #top-bar, #sidebar, #mandala-actions-overlay, #mandala-controls-overlay, .no-print {
+    display: none !important;
+  }
+  html, body, #main-stage, #mandala-screen, #mandala-container {
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  #mandala-container {
+    padding: 0 !important;
+  }
+  .dir-titulo {
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+  }
+  .dir-cabecalho {
+    margin-bottom: 8px !important;
+  }
+  @page {
+    margin: 10mm;
+  }
 }
 
 </style>
@@ -1091,6 +1126,8 @@ html, body {
       const { data: { user } } = await client.auth.getUser();
       if (user) {
         fecharTelaLogin();
+        if (typeof carregarTemaMandala === 'function') carregarTemaMandala(user.id);
+        if (typeof carregarEstiloPlanetas === 'function') carregarEstiloPlanetas(user.id);
       }
     }
   });

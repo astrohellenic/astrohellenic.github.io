@@ -59,6 +59,9 @@
     }
 
     function getPlanet3DSVG(planetId, size = 34) {
+        if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico()) {
+            return getPlanetSimpleSVG(planetId, size);
+        }
         const planetSVGs = {
             Sun: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
                 <defs><radialGradient id="pSun" cx="35%" cy="32%" r="68%"><stop offset="0%" stop-color="#fffbeb" /><stop offset="25%" stop-color="#fde047" /><stop offset="60%" stop-color="#f59e0b" /><stop offset="88%" stop-color="#d97706" /><stop offset="100%" stop-color="#92400e" /></radialGradient></defs>
@@ -284,6 +287,9 @@
     }
 
     function fragmentoPlaneta3D(planetId, sufixo) {
+        if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico() && typeof getPlanetSimpleFragment === 'function') {
+            return getPlanetSimpleFragment(planetId);
+        }
         const frags = {
             Sun: `<g>
                 <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25" filter="blur(2px)"/>

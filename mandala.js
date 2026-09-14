@@ -141,6 +141,15 @@ const PLANET_3D_SVGS = {
   `
 };
 
+/* Escolhe entre o ícone esférico 3D e o ícone simples (glifo), conforme a
+   configuração de Aparência salva pelo usuário. */
+function planetIconFragment(planetId) {
+  if (typeof estiloPlanetasEsferico === 'function' && estiloPlanetasEsferico()) {
+    return PLANET_3D_SVGS[planetId] || '';
+  }
+  return (typeof getPlanetSimpleFragment === 'function') ? getPlanetSimpleFragment(planetId) : (PLANET_3D_SVGS[planetId] || '');
+}
+
 const EGYPTIAN_TERMS = [
   [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
   [{ p: "♀", deg: 8 }, { p: "☿", deg: 14 }, { p: "♃", deg: 22 }, { p: "♄", deg: 27 }, { p: "♂", deg: 30 }],
@@ -559,7 +568,7 @@ function injetarBotaoRotacaoNaBarraSuperior() {
 
   let iconContent = '';
   if (selectedHouse1Lot === 'ASC') {
-    iconContent = `<span style="font-size: 11px; font-weight: 800; color: #103b70;">ASC</span>`;
+    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
   } else if (selectedHouse1Lot === 'fortune') {
     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
   } else if (selectedHouse1Lot === 'spirit') {
@@ -714,7 +723,12 @@ function renderMandala(dadosNovos) {
     const raio = base + (item.rOffset || 0);
     if (raio > maxRaioItens) maxRaioItens = raio;
   });
-  const R_Ceu = maxRaioItens + 50; // folga visual (ícone + rótulo de grau)
+  const R_Ceu = maxRaioItens + 20; // folga visual (ícone + rótulo de grau)
+
+  /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
+     nunca escolheu) — controla só a decoração de céu/espaço sideral. O
+     tamanho e o layout do desenho continuam iguais nos dois temas. */
+  const temaCeu = (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -726,12 +740,17 @@ function renderMandala(dadosNovos) {
 
   /* Espaço extra no topo (e até o cabeçalho) para a faixa de céu/espaço
      (raio R_Ceu) e a mancha de combustão do Sol nunca serem cortadas. */
-  const margemVertical = 30;
+  const margemVertical = 10;
   const cy = R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
   const headerH = 75;
   const headerGapBottom = 20;
-  const width = 960, height = headerY + headerH + headerGapBottom, cx = width / 2;
+  /* A largura também precisa acompanhar R_Ceu: sem isso, o céu (que agora
+     varia de tamanho por mapa) pode passar dos 480px de raio e ser cortado
+     nas laterais pelo próprio SVG, antes mesmo de chegar no navegador —
+     nunca menor que 960 (largura original), só cresce quando precisa. */
+  const cx = Math.max(480, R_Ceu + margemVertical);
+  const width = cx * 2, height = headerY + headerH + headerGapBottom;
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
 
@@ -843,6 +862,7 @@ function renderMandala(dadosNovos) {
            sideral por baixo aos poucos — só na borda externa; a linha do
            horizonte (onde o céu encontra o espaço lateralmente) continua
            nítida, pois ali é o corte reto do próprio path. -->
+      ${temaCeu ? `
       <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
         <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#eafdff" stop-opacity="1" />
         <stop offset="80%" stop-color="#C5F4FF" stop-opacity="1" />
@@ -856,11 +876,11 @@ function renderMandala(dadosNovos) {
       <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
         <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3a1b66" />
         <stop offset="100%" stop-color="#1A073F" />
-      </radialGradient>
+      </radialGradient>` : ''}
     </defs>
 
     <rect width="${width}" height="${height}" fill="#ffffff"/>
-
+${temaCeu ? `
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule
          evenodd, é o disco interno — signos, dodecatemoria, termos — que
@@ -875,7 +895,7 @@ function renderMandala(dadosNovos) {
          horizonte real quando ele deixa de ser exatamente horizontal. -->
     <g transform="rotate(${skyRotation} ${cx} ${cy})">
       <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_Ceu} ${cy} A ${R_Ceu} ${R_Ceu} 0 0 0 ${cx - R_Ceu} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>
-    </g>`;
+    </g>` : ''}`;
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
 
@@ -897,11 +917,11 @@ function renderMandala(dadosNovos) {
   if (horasInfo) {
     if (horasInfo.dayRulerId && PLANET_3D_SVGS[horasInfo.dayRulerId]) {
       svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">DIA</text>
-      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.dayRulerId]}</g></g>`;
+      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
       svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
-      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${PLANET_3D_SVGS[horasInfo.hourRulerId]}</g></g>`;
+      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
     }
   }
 
@@ -1079,7 +1099,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
 
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      const planetSvgContent = PLANET_3D_SVGS[item.id] || '';
+      const planetSvgContent = planetIconFragment(item.id);
       let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>

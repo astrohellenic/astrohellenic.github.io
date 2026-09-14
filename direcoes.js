@@ -1,6 +1,23 @@
 /* ==========================================
    MÓDULO DE CIRCUMAMBULAÇÕES (DIREÇÕES)
    MÉTODO HELENÍSTICO PURISTA (VETTIUS VALENS)
+
+   Fontes:
+   - Método de ascensão (Ascensão Oblíqua, 1° de ascensão = 1 ano):
+     Vettius Valens, Anthology I.6.
+   - Lotes (Fortuna, Espírito e os 5 lotes planetários): método de
+     Paulo de Alexandria.
+   - Termos egípcios: tabela padrão consolidada (ver
+     EGYPTIAN_TERMS_DIRECOES abaixo).
+   - Zodíaco tropical puro, 0° Áries = equinócio real, sem offset
+     histórico (nem 8°, nem 10°) — mesma configuração padrão (offset=0)
+     usada pelo Delphic Oracle (Project Hindsight / Robert Schmidt).
+
+   Nota de design: os afetas direcionáveis (Ascendente, Sol, Lua,
+   Sizígia e os 7 Lotes) representam, cada um, seu próprio domínio
+   temático a ser investigado via circumambulação. Não há, por
+   enquanto, implementação de planetas individuais como pontos
+   direcionáveis — não há atestação direta disso nas fontes.
    ========================================== */
 
 let selectedAphetesKey = "ASC"; // Afeta padrão inicial
@@ -21,39 +38,109 @@ const EGYPTIAN_TERMS_DIRECOES = [
   [{ pId: "Venus", pSym: "♀", deg: 12 }, { pId: "Jupiter", pSym: "♃", deg: 16 }, { pId: "Mercury", pSym: "☿", deg: 19 }, { pId: "Mars", pSym: "♂", deg: 28 }, { pId: "Saturn", pSym: "♄", deg: 30 }]
 ];
 
-/* OBTÉM OS TEMPOS ASCENSIONAIS LENDO A LATITUDE DA REQUISIÇÃO DA API */
-function obterTemposAscensionaisValens(lat) {
-  const latNum = parseFloat(lat) || 0;
-  const absLat = Math.abs(latNum);
+/* ==========================================================
+   ASCENSÃO OBLÍQUA — CÁLCULO TRIGONOMÉTRICO EXATO
+   Substitui a tabela discreta de 7 climas (antiga
+   obterTemposAscensionaisValens) por cálculo contínuo, válido para
+   qualquer latitude (Norte ou Sul), sem necessidade de tabela nem de
+   lógica de espelhamento hemisférico.
 
-  // Tabelas dos 7 Climas de Vettius Valens (Áries a Virgem)
-  let baseAsc = [20, 24, 28, 32, 36, 40]; // Padrão: Clima 2 (Alexandria)
+   Método: mesma convenção usada por Vettius Valens (Anthology I.6) —
+   1 grau de ascensão (tempo-grau equatorial) = 1 ano de vida.
+   Zodíaco tropical puro (0° Áries = equinócio real, sem offset histórico).
+   Configuração alinhada ao Delphic Oracle (Project Hindsight / Robert Schmidt).
+   ========================================================== */
 
-  if (absLat < 27.5) {
-    baseAsc = [22.5, 25.5, 28.5, 31.5, 34.5, 37.5]; // Clima 1
-  } else if (absLat < 32.5) {
-    baseAsc = [20.0, 24.0, 28.0, 32.0, 36.0, 40.0]; // Clima 2
-  } else if (absLat < 35.0) {
-    baseAsc = [18.5, 23.0, 27.5, 32.5, 37.0, 41.5]; // Clima 3
-  } else if (absLat < 38.5) {
-    baseAsc = [17.0, 22.0, 27.0, 33.0, 38.0, 43.0]; // Clima 4
-  } else if (absLat < 41.5) {
-    baseAsc = [15.0, 20.5, 26.0, 34.0, 39.5, 45.0]; // Clima 5
-  } else if (absLat < 43.5) {
-    baseAsc = [13.5, 19.5, 25.5, 34.5, 40.5, 46.5]; // Clima 6
-  } else {
-    baseAsc = [12.0, 18.0, 25.0, 35.0, 42.0, 48.0]; // Clima 7
-  }
+/* Obliquidade da eclíptica (valor moderno; pode ser trocado por um
+   valor histórico se um dia quiserem testar precisão antiga, mas o
+   Delphic Oracle usa o valor exato/moderno por padrão) */
+const OBLIQUIDADE_ECLIPTICA_GRAUS = 23.4367;
 
-  // Hemisfério Sul: inverte o bloco inicial de Áries-Virgem
-  if (latNum < 0) {
-    const sulBase = [...baseAsc].reverse(); // Virgem passa para a posição de Áries [40, 36, 32, 28, 24, 20]
-    return [...sulBase, ...[...sulBase].reverse()]; 
-    // Resultado no Sul: Áries (40), Touro (36), Gêmeos (32), Câncer (28), Leão (24), Virgem (20)...
-  }
+function grausParaRad(g) {
+  return (g * Math.PI) / 180;
+}
 
-  // Hemisfério Norte
-  return [...baseAsc, ...[...baseAsc].reverse()];
+function radParaGraus(r) {
+  return (r * 180) / Math.PI;
+}
+
+function normalizar360(g) {
+  return ((g % 360) + 360) % 360;
+}
+
+/**
+ * Declinação de um ponto da eclíptica.
+ * sin(δ) = sin(ε) × sin(λ)
+ * @param {number} longitudeEclipticaGraus - longitude tropical absoluta (0-360, 0 = Áries)
+ * @returns {number} declinação em graus (positiva = Norte, negativa = Sul)
+ */
+function calcularDeclinacao(longitudeEclipticaGraus) {
+  const eps = grausParaRad(OBLIQUIDADE_ECLIPTICA_GRAUS);
+  const lam = grausParaRad(longitudeEclipticaGraus);
+  return radParaGraus(Math.asin(Math.sin(eps) * Math.sin(lam)));
+}
+
+/**
+ * Ascensão Reta (RA) de um ponto da eclíptica.
+ * @param {number} longitudeEclipticaGraus - longitude tropical absoluta (0-360)
+ * @returns {number} ascensão reta em graus (0-360)
+ */
+function calcularAscensaoReta(longitudeEclipticaGraus) {
+  const eps = grausParaRad(OBLIQUIDADE_ECLIPTICA_GRAUS);
+  const lam = grausParaRad(longitudeEclipticaGraus);
+  const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
+  return normalizar360(radParaGraus(ra));
+}
+
+/**
+ * Diferença Ascensional (AD).
+ * AD = arcsin(tan(δ) × tan(latitude))
+ * O sinal da latitude (negativo no Hemisfério Sul) já resolve
+ * automaticamente a inversão Norte/Sul — não precisa de tabela espelhada.
+ * @param {number} declinacaoGraus
+ * @param {number} latitudeGraus - positiva = Norte, negativa = Sul
+ * @returns {number} AD em graus
+ */
+function calcularDiferencaAscensional(declinacaoGraus, latitudeGraus) {
+  const decl = grausParaRad(declinacaoGraus);
+  const lat = grausParaRad(latitudeGraus);
+  let produto = Math.tan(decl) * Math.tan(lat);
+  // Proteção para latitudes extremas (círculo polar) — não deve ocorrer
+  // em uso normal, mas evita NaN caso alguém teste uma latitude extrema.
+  produto = Math.max(-1, Math.min(1, produto));
+  return radParaGraus(Math.asin(produto));
+}
+
+/**
+ * Ascensão Oblíqua (OA) de um ponto da eclíptica, para uma latitude dada.
+ * OA = RA − AD
+ * @param {number} longitudeEclipticaGraus - longitude tropical absoluta (0-360)
+ * @param {number} latitudeGraus - positiva = Norte, negativa = Sul
+ * @returns {number} ascensão oblíqua em graus (0-360)
+ */
+function calcularAscensaoObliqua(longitudeEclipticaGraus, latitudeGraus) {
+  const decl = calcularDeclinacao(longitudeEclipticaGraus);
+  const ra = calcularAscensaoReta(longitudeEclipticaGraus);
+  const ad = calcularDiferencaAscensional(decl, latitudeGraus);
+  return normalizar360(ra - ad);
+}
+
+/**
+ * Tempo de ascensão (em "anos", pela convenção 1° = 1 ano) entre dois
+ * graus absolutos da eclíptica, percorridos na ordem direta dos signos
+ * (sentido do início ao fim, sempre para frente).
+ * @param {number} grauInicioAbs - grau absoluto de partida (0-360)
+ * @param {number} grauFimAbs - grau absoluto de chegada (0-360)
+ * @param {number} latitudeGraus - latitude do nativo (positiva=N, negativa=S)
+ * @returns {number} anos decorridos (sempre positivo, considera volta ao
+ *   zodíaco se o fim "está atrás" do início em termos de OA)
+ */
+function tempoAscensionalEntreGraus(grauInicioAbs, grauFimAbs, latitudeGraus) {
+  const oaInicio = calcularAscensaoObliqua(grauInicioAbs, latitudeGraus);
+  const oaFim = calcularAscensaoObliqua(grauFimAbs, latitudeGraus);
+  let anos = oaFim - oaInicio;
+  if (anos < 0) anos += 360;
+  return anos;
 }
 
 const MONOLINE_ZODIAC_SVGS_DIRECOES = [
@@ -95,7 +182,7 @@ function formatarDataBRDir(data) {
 
 function getItemSVGDir(key) {
   if (key === 'Syz' || key === 'Sizígia') {
-    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#103b70" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#103b70"/><circle cx="0" cy="0" r="2.3" fill="#103b70"/></svg>`;
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#000000" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#000000"/><circle cx="0" cy="0" r="2.3" fill="#000000"/></svg>`;
   }
 
   const lotConfig = {
@@ -118,6 +205,11 @@ function getItemSVGDir(key) {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="#103b70" text-anchor="middle">${cfg.sym}</text></svg>`;
   }
 
+  if (key === 'ASC' || key === 'DSC' || key === 'MC' || key === 'IC') {
+    /* Mesmo círculo preto sobre fundo branco usado para esses pontos na mandala e no Painel Técnico. */
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">${key}</text></svg>`;
+  }
+
   return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
 
@@ -125,9 +217,6 @@ function getAfetaCursorSVG(key) {
   const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'NodoNorte'];
   if (planetKeys.includes(key)) {
     return getPlanet3DSVGDir(key);
-  }
-  if (key === 'ASC') {
-    return `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#103b70" text-anchor="middle">ASC</text></svg>`;
   }
   return getItemSVGDir(key === 'Syz' ? 'Sizígia' : key);
 }
@@ -188,7 +277,6 @@ function obterGrauEfetivoAfeta(key, data) {
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
   const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
-  const temposAscensionais = obterTemposAscensionaisValens(latAtual);
 
   // Monta o objeto "planetas" diretamente a partir do formato real de currentCalculatedData
     const planetas = {
@@ -229,24 +317,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
 
       aspectDefs.forEach(asp => {
       const rayAbsDeg = (pDegAbs + asp.offset) % 360;
-      const distDeg = (rayAbsDeg - startAbsDeg + 360) % 360;
-
-      let currDeg = startAbsDeg;
-      let accumulatedYears = 0;
-      let degToCover = distDeg;
-
-      while (degToCover > 0.0001) {
-        const sIdx = Math.floor(currDeg / 30);
-        const degInS = currDeg % 30;
-        const degLeftInSign = 30 - degInS;
-
-        const stepDeg = Math.min(degToCover, degLeftInSign);
-        const ascTimePerDegree = temposAscensionais[sIdx] / 30;
-        accumulatedYears += stepDeg * ascTimePerDegree;
-
-        currDeg = (currDeg + stepDeg) % 360;
-        degToCover -= stepDeg;
-      }
+      const accumulatedYears = tempoAscensionalEntreGraus(startAbsDeg, rayAbsDeg, latAtual);
 
       // Converte tempo acumulado na data exata
       const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
@@ -282,22 +353,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
     if (alvo.deg === undefined) return;
     const targetDeg = alvo.deg;
 
-    const distDeg = (targetDeg - startAbsDeg + 360) % 360;
-    let currDeg = startAbsDeg;
-    let accumulatedYears = 0;
-    let degToCover = distDeg;
-
-    while (degToCover > 0.0001) {
-      const sIdx = Math.floor(currDeg / 30);
-      const degInS = currDeg % 30;
-      const degLeftInSign = 30 - degInS;
-
-      const stepDeg = Math.min(degToCover, degLeftInSign);
-      accumulatedYears += stepDeg * (temposAscensionais[sIdx] / 30);
-
-      currDeg = (currDeg + stepDeg) % 360;
-      degToCover -= stepDeg;
-    }
+    const accumulatedYears = tempoAscensionalEntreGraus(startAbsDeg, targetDeg, latAtual);
 
     const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
 
@@ -318,7 +374,6 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
 /* CÁLCULO DAS DIREÇÕES: TERMOS COMPLETOS (0° A 30°) */
 function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
   const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
-  const temposAscensionais = obterTemposAscensionaisValens(latAtual);
   const tabela = [];
   let currDate = new Date(birthDate);
   let totalYearsAccum = 0;
@@ -329,6 +384,7 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
   for (let sOffset = 0; sOffset < 12; sOffset++) {
     const signIdx = (startSignIdx + sOffset) % 12;
     const signTerms = EGYPTIAN_TERMS_DIRECOES[signIdx];
+    const signBaseAbsDeg = signIdx * 30;
 
     let prevTermDeg = 0;
 
@@ -346,9 +402,9 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
         let effStart = (sOffset === 0 && termStartDeg < startDegInSign) ? startDegInSign : termStartDeg;
         let effEnd = termEndDeg;
 
-        const remDeg = effEnd - effStart;
-        const ascTimePerDegree = temposAscensionais[signIdx] / 30;
-        const years = remDeg * ascTimePerDegree;
+        const effStartAbs = signBaseAbsDeg + effStart;
+        const effEndAbs = signBaseAbsDeg + effEnd;
+        const years = tempoAscensionalEntreGraus(effStartAbs, effEndAbs, latAtual);
 
         startDate = new Date(currDate);
         endDate = new Date(currDate.getTime() + years * 365.25 * 24 * 60 * 60 * 1000);
@@ -414,15 +470,9 @@ function renderCircumambulaçõesUI() {
     { key: "saturn", type: "item" }
   ];
 
-    const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
+  const tabelaDirecoes = calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data);
   const raiosAspectos = calcularRaiosAspectos(data, startAbsDeg, birthDate);
   const hoje = new Date();
-
-  // ---- DEBUG TEMPORÁRIO ----
-  //const debugRaios = raiosAspectos.filter(r => ['fortune', 'spirit', 'Syz'].includes(r.planetId));
-  //console.log('DEBUG lotes/sizigia:', debugRaios);
-  //window.__debugRaios = debugRaios;
-  // ---- FIM DEBUG ----
 
   const signPassages = [];
   let currentPassage = null;
@@ -438,115 +488,97 @@ function renderCircumambulaçõesUI() {
     currentPassage.terms.push(row);
   });
 
-  const rowHeight = 120;
-  const svgTotalHeight = 20 + (signPassages.length * rowHeight);
-
+  /* Layout vertical da pauta: reduzido para caber tudo numa página só,
+     mantendo as mesmas proporções internas da caixa original (k é o
+     fator de redução aplicado a todos os deslocamentos verticais). */
+  const boxHeight = 96;
+  const rowHeight = 108;
+  const k = boxHeight / 110;
   const afetaCursorSvgHTML = getAfetaCursorSVG(selectedAphetesKey);
   const natalDegInSign = startAbsDeg % 30;
 
-    let html = `
-    <div style="background: #fffdf5; border-radius: 16px; padding: 20px; max-width: 960px; margin: 20px auto; font-family: 'Montserrat', sans-serif;">
-      <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 12px; padding: 20px; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        
-        <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-          Circumambulação pelos Termos
-        </h3>
-        
-        <!-- BOTOEIRA DE AFETAS -->
-        <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-  `;
-
-  afetasDisponiveis.forEach(af => {
-    const isSel = (af.key === selectedAphetesKey);
-    const styleBtn = isSel 
-      ? "background: #f1f5f9; color: #103b70; border: 1px solid #c59b27;" 
-      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
-
-    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
-
-    html += `
-      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${af.key}">
-        <div style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">${iconHTML}</div>
-      </button>
-    `;
-  });
-
-  html += `
-        </div>
-
-        <!-- PAUTAS DAS 12 LINHAS DOS SIGNOS EM SVG -->
-        <div style="width: 100%; overflow-x: auto;">
-          <svg viewBox="0 0 920 ${svgTotalHeight}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">
-  `;
-
-  signPassages.forEach((passage, pIdx) => {
-    const yOffset = 10 + (pIdx * rowHeight);
+  /* Desenha uma pauta (linha) de signo, posicionada em localIdx dentro
+     do <svg> que a contém — pode ser o bloco único da tela ou uma das
+     colunas da impressão. ehPrimeiraGlobal indica se essa é a
+     primeiríssima pauta de toda a circumambulação (onde entram a
+     marcação da posição natal e o corte dos raios anteriores a ela),
+     independente de em qual coluna ela estiver sendo desenhada. */
+  function gerarLinhaSigno(passage, localIdx, ehPrimeiraGlobal) {
+    const yOffset = 10 + (localIdx * rowHeight);
+    let rowHtml = '';
 
     // Moldura da Pauta
-    html += `<rect x="10" y="${yOffset}" width="900" height="110" rx="8" ry="8" fill="#fffdf5" stroke="#c59b27" stroke-width="1.2"/>`;
+    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" rx="8" ry="8" fill="#ffffff" stroke="#1e5fa4" stroke-width="1.2"/>`;
 
     // Ícone Monoline do Signo
-    html += `<g transform="translate(18, ${yOffset + 38})">${getSignSVGDir(passage.signIdx, 34)}</g>`;
+    rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
 
     const x0 = 75;  // 0°
     const x1 = 880; // 30°
     const barWidth = x1 - x0; // 805px
     const scale = barWidth / 30; // 26.83px/grau
 
-    const yAspectLine = yOffset + 32; // Linha da Pista Superior (Aspectos)
-    const yBaseline   = yOffset + 55; // Linha Guia Central (Régua de Graus)
+    const yAspectLine = yOffset + Math.round(32 * k); // Linha da Pista Superior (Aspectos)
+    const yBaseline   = yOffset + Math.round(55 * k); // Linha Guia Central (Régua de Graus)
 
     // LINHA TRACEJADA DA PISTA SUPERIOR (ASPECTOS)
-    html += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
 
     // LINHA GUIA CENTRAL (RÉGUA DE GRAUS)
-    html += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
 
     // DENTINHOS VISÍVEIS DE TODOS OS 30 GRAUS
+    const tickShort = Math.round(4 * k);
+    const tickMed = Math.round(6 * k);
+    const tickTall = Math.round(8 * k);
+    const tickLabelOffset = Math.round(12 * k);
     for (let d = 0; d <= 30; d++) {
       const xDeg = x0 + (d * scale);
-      let tickY1 = yBaseline - 4;
-      let tickY2 = yBaseline + 4;
+      let tickY1 = yBaseline - tickShort;
+      let tickY2 = yBaseline + tickShort;
       let strokeW = 1.0;
       let opacity = 0.6;
 
       if (d % 10 === 0) {
-        tickY1 = yBaseline - 8;
-        tickY2 = yBaseline + 8;
+        tickY1 = yBaseline - tickTall;
+        tickY2 = yBaseline + tickTall;
         strokeW = 1.8;
         opacity = 1.0;
-        html += `<text x="${xDeg}" y="${yBaseline - 12}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
+        rowHtml += `<text x="${xDeg}" y="${yBaseline - tickLabelOffset}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
-        tickY1 = yBaseline - 6;
-        tickY2 = yBaseline + 6;
+        tickY1 = yBaseline - tickMed;
+        tickY2 = yBaseline + tickMed;
         strokeW = 1.4;
         opacity = 0.85;
       }
 
-      html += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
+      rowHtml += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
     // BLOCOS DOS 5 TERMOS COMPLETOS
+    const termHeight = Math.round(26 * k);
+    const termLabel1Offset = Math.round(39 * k);
+    const termLabel2Offset = Math.round(49 * k);
     passage.terms.forEach(term => {
       const xStart = x0 + (term.termStartDeg * scale);
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      html += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="26" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
+      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
-      html += `<text x="${xCenter}" y="${yBaseline + 18}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
+      rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
 
       if (term.startYearsOld !== null && term.startDate !== null) {
-        html += `<text x="${xStart + 3}" y="${yBaseline + 39}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
-        html += `<text x="${xStart + 3}" y="${yBaseline + 49}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
 
     // RENDERIZAÇÃO DOS RAIOS DOS ASPECTOS
     const raiosDoSigno = raiosAspectos.filter(r => {
       if (r.signIdx !== passage.signIdx) return false;
-      if (pIdx === 0 && r.degInSign < natalDegInSign) return false;
+      if (ehPrimeiraGlobal && r.degInSign < natalDegInSign) return false;
       return true;
     });
 
@@ -554,6 +586,7 @@ function renderCircumambulaçõesUI() {
 
     let prevX = -999;
     let currentLevel = 0;
+    const rayLevelShift = Math.round(18 * k);
 
     raiosDoSigno.forEach(r => {
       const xRay = x0 + (r.degInSign * scale);
@@ -565,14 +598,14 @@ function renderCircumambulaçõesUI() {
       }
       prevX = xRay;
 
-      const yShift = currentLevel * 18;
+      const yShift = currentLevel * rayLevelShift;
       const yTop = yAspectLine - yShift;
 
-      html += `<line x1="${xRay}" y1="${yTop - 10}" x2="${xRay}" y2="${yBaseline - 4}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+      rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      html += `<text x="${xRay}" y="${yTop - 21}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
-      html += `<text x="${xRay}" y="${yTop - 13}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
 
@@ -582,17 +615,19 @@ function renderCircumambulaçõesUI() {
         : getItemSVGDir(r.planetId === 'Syz' ? 'Sizígia' : r.planetId);
       const escalaIcone = isPlanetaReal ? ((r.planetId === 'Saturn') ? 0.95 : 0.75) : 1;
 
-      html += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
-      html += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
+      rowHtml += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
+      rowHtml += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL
-    if (pIdx === 0) {
+    if (ehPrimeiraGlobal) {
       const xNatal = x0 + (natalDegInSign * scale);
+      const natalTop = yOffset + Math.round(10 * k);
+      const natalBottom = yOffset + boxHeight - Math.round(6 * k);
 
-      html += `<line x1="${xNatal}" y1="${yOffset + 10}" x2="${xNatal}" y2="${yOffset + 104}" stroke="#e84118" stroke-width="2"/>`;
-      html += `<text x="${xNatal + 3}" y="${yBaseline + 11}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
-      html += `<text x="${xNatal + 3}" y="${yBaseline + 21}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="#e84118" stroke-width="2"/>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
@@ -604,19 +639,93 @@ function renderCircumambulaçõesUI() {
 
         const currDeg = term.termStartDeg + (frac * (term.termEndDeg - term.termStartDeg));
         const xHoje = x0 + (currDeg * scale);
+        const hojeTop = yOffset + Math.round(10 * k);
+        const hojeBottom = yOffset + boxHeight - Math.round(6 * k);
 
-        html += `<line x1="${xHoje}" y1="${yOffset + 10}" x2="${xHoje}" y2="${yOffset + 104}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-        html += `<g transform="translate(${xHoje - 12}, ${yBaseline - 12})">${afetaCursorSvgHTML}</g>`;
+        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
       }
     });
 
-  });
+    return rowHtml;
+  }
 
-  html += `
-          </svg>
+  /* Monta um <svg> completo com as pautas passadas em passagesSubset,
+     empilhadas a partir do topo. offsetGlobalInicial é a posição (no
+     conjunto completo de 12 pautas) da primeira pauta desse subconjunto
+     — necessário para saber se a marcação da posição natal cai aqui. */
+  function montarSvgPautas(passagesSubset, offsetGlobalInicial) {
+    const alturaSvg = 20 + (passagesSubset.length * rowHeight);
+    let svgInner = '';
+    passagesSubset.forEach((passage, idxLocal) => {
+      svgInner += gerarLinhaSigno(passage, idxLocal, (offsetGlobalInicial + idxLocal) === 0);
+    });
+    return `<svg viewBox="0 0 920 ${alturaSvg}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${svgInner}</svg>`;
+  }
+
+  // Uma única coluna com todas as pautas, na tela e na impressão.
+  const svgTela = montarSvgPautas(signPassages, 0);
+
+  /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa) */
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const diasSemanaDirLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemanaDirLabels[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const anoH = currentMoment.getFullYear();
+  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const diaH = String(currentMoment.getDate()).padStart(2, '0');
+  const horaH = String(currentMoment.getHours()).padStart(2, '0');
+  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  const afetaLabelsDir = {
+    ASC: "Ascendente", Sun: "Sol", Moon: "Lua", Syz: "Sizígia Prenatal",
+    fortune: "Lote da Fortuna", spirit: "Lote do Espírito", venus: "Lote de Eros",
+    mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória",
+    saturn: "Lote de Némesis"
+  };
+  function iconeAfetaDir(af) {
+    return af.type === "planet"
+      ? getPlanet3DSVGDir(af.key)
+      : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
+  }
+
+  const afetaAtual = afetasDisponiveis.find(af => af.key === selectedAphetesKey) || afetasDisponiveis[0];
+  const iconAtualHTML = iconeAfetaDir(afetaAtual);
+
+  const afetaMenuRowsHTML = afetasDisponiveis.map(af => {
+    const label = afetaLabelsDir[af.key] || af.key;
+    return `<div onclick="alternarAfetaCircumambulation('${af.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${iconeAfetaDir(af)}</div>`;
+  }).join('');
+
+  let html = `
+    <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+
+        <h3 class="dir-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+          Circumambulação pelos Termos
+        </h3>
+
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta à direita. Mesma caixa/menu com rolagem e ícones (não texto) já usada no seletor de Casa 1 da mandala. -->
+        <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+          <div>
+            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+            <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+          </div>
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Afeta Direcionado">
+              ${iconAtualHTML}
+            </button>
+            <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+              ${afetaMenuRowsHTML}
+            </div>
+          </div>
         </div>
 
-      </div>
+        <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão -->
+        <div style="width: 100%; overflow-x: auto;">
+          ${svgTela}
+        </div>
+
     </div>
   `;
 

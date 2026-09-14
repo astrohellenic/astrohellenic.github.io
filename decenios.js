@@ -42,6 +42,9 @@ function getSignSvgHtmlDec(signIdx, size = 18) {
 }
 
 function getPlanet3DSVG(planetId, size = 34) {
+  if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico()) {
+    return getPlanetSimpleSVG(planetId, size);
+  }
   const planetSVGs = {
     Sun: `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle;">
       <defs><radialGradient id="decSun" cx="35%" cy="32%" r="68%"><stop offset="0%" stop-color="#fffbeb" /><stop offset="25%" stop-color="#fde047" /><stop offset="60%" stop-color="#f59e0b" /><stop offset="88%" stop-color="#d97706" /><stop offset="100%" stop-color="#92400e" /></radialGradient></defs>
@@ -76,6 +79,7 @@ function getPlanet3DSVG(planetId, size = 34) {
 }
 
 let overrideStartPlanet = null;
+let expandedL3KeyDec = null; // Guarda a chave do L3 (regência diária) expandido, ex.: "0_2" ou "active_1"
 
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS */
 function iniciarModuloDecenios() {
@@ -94,11 +98,22 @@ function renderDeceniosUI(container) {
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const sunAbs = data.Sol ? data.Sol.grau_absoluto : 0;
+  const moonAbs = data.Lua ? data.Lua.grau_absoluto : 0;
 
   // DETECTA A SEITA AUTOMATICAMENTE
   const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
   const detectedStartPlanet = isDay ? 'Sun' : 'Moon';
   const startPlanetKey = overrideStartPlanet || detectedStartPlanet;
+
+  // AVISO: LUZ (DA SEITA) EM CASA NÃO-OPERANTE — sempre com base na luz
+  // detectada automaticamente pela seita, não no override manual do usuário
+  const luzAbs = isDay ? sunAbs : moonAbs;
+  const signoASC = Math.floor(ascAbs / 30);
+  const signoLuz = Math.floor(luzAbs / 30);
+  const casaLuz = ((signoLuz - signoASC + 12) % 12) + 1;
+  const CASAS_NAO_OPERANTES_DEC = [2, 6, 8, 12];
+  const luzEmCasaNaoOperante = CASAS_NAO_OPERANTES_DEC.includes(casaLuz);
+  const nomeLuzDec = isDay ? 'Sol' : 'Lua';
 
   // PROCESSA O CÁLCULO INSTANTANEAMENTE
   const result = calcularDeceniosAutomatico(startPlanetKey);
@@ -124,12 +139,30 @@ function renderDeceniosUI(container) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #d4af37;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70; font-family: 'Cinzel', serif;">PLANETA INICIAL:</label>
-          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
-            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol (Diurno)</option>
-            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua (Noturno)</option>
-          </select>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          ${luzEmCasaNaoOperante ? `
+            <div title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) — considere selecionar outro planeta manualmente" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; cursor: help;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display: block;">
+                <path d="M12 2 L23 21 H1 Z" fill="#fef3c7" stroke="#b45309" stroke-width="1.5" stroke-linejoin="round"/>
+                <rect x="11" y="9" width="2" height="6" rx="1" fill="#b45309"/>
+                <rect x="11" y="16.5" width="2" height="2" rx="1" fill="#b45309"/>
+              </svg>
+            </div>
+          ` : ''}
+          <div style="position: relative; display: inline-block;">
+            <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Planeta Inicial">
+              ${getPlanet3DSVG(startPlanetKey, 26)}
+            </button>
+            <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
+              <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
+              <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
+              <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
+              <div onclick="alternarSeitaManual('Venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Venus', 24)}</div>
+              <div onclick="alternarSeitaManual('Mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mars', 24)}</div>
+              <div onclick="alternarSeitaManual('Jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Jupiter', 24)}</div>
+              <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -232,7 +265,7 @@ function calcularDeceniosAutomatico(startPlanetId) {
     currentPointer = new Date(l1End);
   }
 
-  return { activeL1, activeL2, timelineL1 };
+  return { activeL1, activeL2, timelineL1, sortedPlanets };
 }
 
 function addDaysDec(date, days) {
@@ -249,8 +282,111 @@ function formatDateDec(date) {
   return `${day}/${month}/${year}`;
 }
 
+// FORMATAÇÃO COM DATA E HORÁRIO EMPILHADOS PARA O L3 (REGÊNCIA DIÁRIA)
+function formatDateHoraDec(date) {
+  if (!date) return '--/--/----';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${day}/${month}/${year}<br><span style="font-size: 9px; opacity: 0.8; font-weight: 500;">${hh}:${mm}h</span>`;
+}
+
+function formatDiasDec(dias) {
+  const rounded = Math.round(dias * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
+// CÁLCULO DOS SUBPERÍODOS DO L3 (REGÊNCIA DIÁRIA) - mesma lógica recursiva do L1→L2, aplicada mais uma vez
+// Dentro do bloco de L2 do planeta P (l2Days dias), subdivide entre os 7 planetas na ordem zodiacal
+// da carta, começando por P: diasDeQ = (minorYears de Q / 129) * l2Days (Valens, sem arredondar)
+function calcularSubperiodosL3Dec(l2Planet, l2Start, l2Days, sortedPlanets) {
+  const l2IndexInSorted = sortedPlanets.findIndex(p => p.id === l2Planet.id);
+  const l3PlanetSequence = [];
+  for (let k = 0; k < 7; k++) {
+    l3PlanetSequence.push(sortedPlanets[(l2IndexInSorted + k) % 7]);
+  }
+
+  const subperiodos = [];
+  let pointer = new Date(l2Start);
+
+  l3PlanetSequence.forEach(planet => {
+    const dias = (planet.minorYears / 129) * l2Days;
+    const start = new Date(pointer);
+    const end = new Date(start.getTime() + dias * 24 * 60 * 60 * 1000);
+
+    subperiodos.push({
+      planet,
+      days: dias,
+      startDate: start,
+      endDate: end
+    });
+
+    pointer = new Date(end);
+  });
+
+  return subperiodos;
+}
+
+function alternarL3AccordionDec(l1Idx, l2Idx, event) {
+  if (event) event.stopPropagation();
+  const key = `${l1Idx}_${l2Idx}`;
+  const previousKey = expandedL3KeyDec;
+
+  if (previousKey && previousKey !== key) {
+    const prevSubRow = document.getElementById(`dec_l3_row_${previousKey}`);
+    const prevMainRow = document.getElementById(`dec_l2_row_${previousKey}`);
+    if (prevSubRow) prevSubRow.style.display = 'none';
+    if (prevMainRow) prevMainRow.style.backgroundColor = prevMainRow.dataset.bgDefault || '';
+  }
+
+  const subRow = document.getElementById(`dec_l3_row_${key}`);
+  const mainRow = document.getElementById(`dec_l2_row_${key}`);
+  if (!subRow || !mainRow) return;
+
+  const willOpen = previousKey !== key;
+  expandedL3KeyDec = willOpen ? key : null;
+
+  subRow.style.display = willOpen ? 'table-row' : 'none';
+  mainRow.style.backgroundColor = willOpen ? '#fefcf2' : (mainRow.dataset.bgDefault || '');
+}
+
+// RENDERIZA A SUB-TABELA DO L3 (ABERTA DENTRO DA CÉLULA COLSPAN DA LINHA DE L2)
+function renderL3SubTableDec(l2Obj, sortedPlanets) {
+  const subperiodosL3 = calcularSubperiodosL3Dec(l2Obj.planet, l2Obj.startDate, l2Obj.days, sortedPlanets);
+
+  return `
+    <div style="padding: 8px 12px; background: #faf8f0;">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #103b70; border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: #ffffff;">
+        <thead>
+          <tr style="background-color: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
+            <th style="padding: 6px;">L3 (Regência Diária)</th>
+            <th style="padding: 6px; text-align: left;">Duração</th>
+            <th style="padding: 6px; text-align: left;">Início</th>
+            <th style="padding: 6px; text-align: left;">Término</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${subperiodosL3.map((sub3, i3) => {
+            const bgRow = i3 % 2 === 0 ? '#ffffff' : '#f8fafc';
+            return `
+              <tr style="border-bottom: 1px solid #e2e8f0; background-color: ${bgRow};">
+                <td style="padding: 6px; text-align: center;">${getPlanet3DSVG(sub3.planet.id, 26)}</td>
+                <td style="padding: 6px; text-align: left; font-weight: 600; color: #103b70;">${formatDiasDec(sub3.days)} Dias</td>
+                <td style="padding: 6px; text-align: left; color: #334155;">${formatDateHoraDec(sub3.startDate)}</td>
+                <td style="padding: 6px; text-align: left; color: #334155;">${formatDateHoraDec(sub3.endDate)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function renderizarResultadosHTML(res) {
-  const { activeL1, activeL2, timelineL1 } = res;
+  const { activeL1, activeL2, timelineL1, sortedPlanets } = res;
   if (!activeL1 || !activeL2) {
     return `<div style="background: #ffffff; border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; text-align: center; color: #64748b; font-size: 13px;">A idade atual do nativo está fora da janela dos 10 primeiros ciclos de Decênios.</div>`;
   }
@@ -268,13 +404,12 @@ function renderizarResultadosHTML(res) {
       <div style="display: flex; flex-wrap: wrap; gap: 14px;">
         <!-- L1 -->
         <div style="flex: 1; min-width: 260px; background: #ffffff; border: 1px solid #fde047; border-radius: 10px; padding: 14px;">
-          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase;">Nível 1 (L1) - Regente da Era</span>
+          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase;">L1 - Regente da Era</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
               ${getPlanet3DSVG(activeL1.planet.id, 42)}
               <div>
-                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL1.planet.name}</h4>
-                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL1.planet.signIdx]}</strong> (${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}')</div>
+                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} ${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}'</div>
               </div>
             </div>
             <span style="background: #fefce8; border: 1px solid #fde047; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #854d0e;">129 Meses</span>
@@ -287,13 +422,12 @@ function renderizarResultadosHTML(res) {
 
         <!-- L2 -->
         <div style="flex: 1; min-width: 260px; background: #ffffff; border: 1px solid #93c5fd; border-radius: 10px; padding: 14px;">
-          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #1d5fa8; text-transform: uppercase;">Nível 2 (L2) - Executor do Momento</span>
+          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #1d5fa8; text-transform: uppercase;">L2 - Executor do Momento</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
               ${getPlanet3DSVG(activeL2.planet.id, 42)}
               <div>
-                <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL2.planet.name}</h4>
-                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL2.planet.signIdx]}</strong> (${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}')</div>
+                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} ${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}'</div>
               </div>
             </div>
             <span style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #1e40af;">${activeL2.months} Meses</span>
@@ -310,7 +444,7 @@ function renderizarResultadosHTML(res) {
         <div style="padding: 10px 14px; background: #fffdf5; border-bottom: 1px solid #fef08a; display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 8px;">
             ${getPlanet3DSVG(activeL1.planet.id, 28)}
-            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1 ATIVO: ${activeL1.planet.name.toUpperCase()}</strong>
+            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1 ATIVO</strong>
           </div>
           <span style="font-size: 11px; color: #475569;"><strong>${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong></span>
         </div>
@@ -325,14 +459,24 @@ function renderizarResultadosHTML(res) {
               </tr>
             </thead>
             <tbody>
-              ${activeL1.subperiods.map(sub => `
-                <tr style="border-bottom: 1px solid #e2e8f0; ${sub.isActive ? 'background: #fffbf0; border-left: 4px solid #d4af37;' : ''}">
-                  <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(sub.planet.id, 32)}</td>
-                  <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days}d)</td>
-                  <td style="padding: 10px 12px;">${formatDateDec(sub.startDate)}</td>
-                  <td style="padding: 10px 12px;">${formatDateDec(sub.endDate)}</td>
-                </tr>
-              `).join('')}
+              ${activeL1.subperiods.map((sub, sIdx) => {
+                const keyL3 = `active_${sIdx}`;
+                const defaultBg = sub.isActive ? '#fffbf0' : 'transparent';
+                const borderLeft = sub.isActive ? 'border-left: 4px solid #d4af37;' : '';
+                return `
+                  <tr id="dec_l2_row_${keyL3}" data-bg-default="${defaultBg}" onclick="alternarL3AccordionDec('active', ${sIdx}, event)" style="border-bottom: 1px solid #e2e8f0; background-color: ${defaultBg}; ${borderLeft} cursor: pointer;">
+                    <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(sub.planet.id, 32)}</td>
+                    <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days} dias)</td>
+                    <td style="padding: 10px 12px;">${formatDateDec(sub.startDate)}</td>
+                    <td style="padding: 10px 12px;">${formatDateDec(sub.endDate)}</td>
+                  </tr>
+                  <tr id="dec_l3_row_${keyL3}" style="display: none;">
+                    <td colspan="4" style="padding: 0; border-bottom: 1px solid #e2e8f0;">
+                      ${renderL3SubTableDec(sub, sortedPlanets)}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -353,8 +497,8 @@ function renderizarResultadosHTML(res) {
               <div style="display: flex; align-items: center; gap: 10px;">
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
-                  <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1: ${l1.planet.name.toUpperCase()}</strong>
-                  <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${ZODIACO_DECENIOS[l1.planet.signIdx]} (${l1.planet.degree}°${formatMin(l1.planet.minute)}') • 129 Meses</div>
+                  <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1</strong>
+                  <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' • 129 Meses</div>
                 </div>
               </div>
               <strong style="font-size: 11px; color: #475569;">${formatDateDec(l1.startDate)} a ${formatDateDec(l1.endDate)}</strong>
@@ -371,14 +515,24 @@ function renderizarResultadosHTML(res) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${l1.subperiods.map(l2 => `
-                    <tr style="border-bottom: 1px solid #e2e8f0; ${l2.isActive ? 'background: #fffbf0; border-left: 4px solid #d4af37;' : ''}">
-                      <td style="padding: 8px 10px; text-align: center;">${getPlanet3DSVG(l2.planet.id, 28)}</td>
-                      <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days}d)</td>
-                      <td style="padding: 8px 10px;">${formatDateDec(l2.startDate)}</td>
-                      <td style="padding: 8px 10px;">${formatDateDec(l2.endDate)}</td>
-                    </tr>
-                  `).join('')}
+                  ${l1.subperiods.map((l2, l2Idx) => {
+                    const keyL3 = `${idx}_${l2Idx}`;
+                    const defaultBg = l2.isActive ? '#fffbf0' : 'transparent';
+                    const borderLeft = l2.isActive ? 'border-left: 4px solid #d4af37;' : '';
+                    return `
+                      <tr id="dec_l2_row_${keyL3}" data-bg-default="${defaultBg}" onclick="alternarL3AccordionDec(${idx}, ${l2Idx}, event)" style="border-bottom: 1px solid #e2e8f0; background-color: ${defaultBg}; ${borderLeft} cursor: pointer;">
+                        <td style="padding: 8px 10px; text-align: center;">${getPlanet3DSVG(l2.planet.id, 28)}</td>
+                        <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days} dias)</td>
+                        <td style="padding: 8px 10px;">${formatDateDec(l2.startDate)}</td>
+                        <td style="padding: 8px 10px;">${formatDateDec(l2.endDate)}</td>
+                      </tr>
+                      <tr id="dec_l3_row_${keyL3}" style="display: none;">
+                        <td colspan="4" style="padding: 0; border-bottom: 1px solid #e2e8f0;">
+                          ${renderL3SubTableDec(l2, sortedPlanets)}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
