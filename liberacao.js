@@ -267,7 +267,15 @@ function renderLiberacaoUI() {
   ];
 
   const activeLotObj = lotes.find(l => l.key === selectedZRPhase) || fortLot;
-  const startSignIdx = Math.floor(activeLotObj.deg / 30);
+  const signoEspirito = Math.floor(lotes.find(l => l.key === "spirit").deg / 30);
+  let startSignIdx;
+  if (selectedZRPhase === "spirit" && signoEspirito === fortSignIdx) {
+    // Valens, Anthology IV.V: quando Espírito e Fortuna caem no mesmo signo
+    // (Lua Nova/Cheia exata), a contagem de L1 do Espírito começa no signo seguinte.
+    startSignIdx = (signoEspirito + 1) % 12;
+  } else {
+    startSignIdx = Math.floor(activeLotObj.deg / 30);
+  }
 
   // DETECÇÃO AUTOMÁTICA DO L1 ATIVO SE NENHUM ESTIVER EXPANDIDO MANUALMENTE
   const hoje = new Date();
