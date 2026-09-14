@@ -358,8 +358,8 @@ function renderLiberacaoUI() {
       : ``;
 
     html += `
-      <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: ${isExpanded ? '#ffffff' : '#fffdf5'};">
-        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? '#ffffff' : '#fffdf5'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #1e5fa4' : 'none'};">
+      <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: #ffffff;">
+        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #1e5fa4' : 'none'};">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
