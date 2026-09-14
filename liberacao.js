@@ -38,20 +38,20 @@ function getLotIconSVG(lotKey) {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
   }
   if (lotKey === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="0" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle" dominant-baseline="central">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
   }
 
   const lotConfig = {
-    venus:   { sym: '♀', y: -4, size: 15 },
-    mercury: { sym: '☿', y: -0.5, size: 15 },
-    mars:    { sym: '♂', y: -4, size: 15 },
-    jupiter: { sym: '♃', y: 0, size: 15 },
-    saturn:  { sym: '♄', y: -0.5, size: 15 }
+    venus:   { sym: '♀', y: 2, size: 15 },
+    mercury: { sym: '☿', y: 4, size: 15 },
+    mars:    { sym: '♂', y: 2, size: 15 },
+    jupiter: { sym: '♃', y: 4, size: 15 },
+    saturn:  { sym: '♄', y: 4, size: 15 }
   };
 
   const cfg = lotConfig[lotKey] || { sym: '', y: 0, size: 10 };
 
-  return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="central">${cfg.sym}</text></svg>`;
+  return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="currentColor" text-anchor="middle">${cfg.sym}</text></svg>`;
 }
 
 function iniciarModuloLiberacao() {
@@ -358,8 +358,8 @@ function renderLiberacaoUI() {
       : ``;
 
     html += `
-      <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: #ffffff;">
-        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? '#fefcf2' : '#ffffff'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #e5d5a1' : 'none'};">
+      <div style="margin-bottom: 12px; border-radius: 8px; overflow: hidden; background: ${isExpanded ? '#ffffff' : '#fffdf5'};">
+        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? '#ffffff' : '#fffdf5'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #1e5fa4' : 'none'};">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
@@ -377,7 +377,7 @@ function renderLiberacaoUI() {
     if (isExpanded) {
       html += `
         <div style="padding: 10px; background: #fffdf5;">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #c59b27; border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #1e5fa4; border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
             <thead>
               <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
                 <th style="padding: 8px;">L2 Subperíodo</th>
@@ -404,7 +404,7 @@ function renderLiberacaoUI() {
         }
 
         html += `
-          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid #e5d5a1; background-color: ${isL2Expanded ? '#fefcf2' : bgRow}; cursor: pointer;">
+          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid #1e5fa4; background-color: ${isL2Expanded ? '#fefcf2' : bgRow}; cursor: pointer;">
             <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
             <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses (${sub.days} Dias)</td>
             <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.start)}</td>
