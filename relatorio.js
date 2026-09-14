@@ -1,12 +1,15 @@
 /* ==========================================
-   MÓDULO DE RELATÓRIO (MAPA NATAL CLÁSSICO EM PDF)
-   Monta um relatório multi-página no padrão do relatório manual do
-   astrólogo (capa + textos fixos + as duas mandalas do cliente) e usa
-   a impressão do navegador ("Salvar como PDF") para exportar — sem
+   MÓDULO DE RELATÓRIO (RELATÓRIOS EM PDF, POR PRESETS)
+   Monta um relatório multi-página a partir de um preset salvo pelo
+   astrólogo (capa + blocos de texto editáveis + mandalas do cliente) e
+   usa a impressão do navegador ("Salvar como PDF") para exportar — sem
    depender de nenhuma biblioteca nova.
-   ========================================== */
 
-const RELATORIO_ASTROLOGO_KEY = 'astro_relatorio_dados_astrologo';
+   Os presets (nome, textos, quais blocos entram) e o perfil do
+   astrólogo (logo, nome, contato) ficam salvos no Supabase, nas tabelas
+   relatorio_presets e relatorio_perfil — editáveis em
+   Configurações > Relatórios (telas em supabase.js).
+   ========================================== */
 
 const RELATORIO_LOT_NOMES = {
   fortune: 'Lote da Fortuna',
@@ -18,21 +21,97 @@ const RELATORIO_LOT_NOMES = {
   saturn: 'Lote da Nêmesis'
 };
 
-function carregarDadosAstrologoRelatorio() {
+/* NOMES E DESCRIÇÕES DOS TIPOS DE BLOCO "FERRAMENTA" DISPONÍVEIS HOJE.
+   Cada novo tipo (decênios, profecção, revolução solar...) entra aqui
+   quando a ferramenta correspondente for adaptada pra virar um bloco de
+   relatório — por enquanto só as duas mandalas estão prontas. */
+const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
+  mandala_natal: { label: 'Mandala Natal (casas do Ascendente)', tituloIndice: 'Mapa Natal' },
+  mandala_fortuna: { label: 'Mandala com a Fortuna na Casa 1', tituloIndice: null }
+};
+
+/* CONJUNTO DE BLOCOS PADRÃO — o relatório "Mapa Natal Clássico" original.
+   Serve de modelo pra quando o astrólogo cria um preset novo, e é usado
+   pra semear automaticamente o primeiro preset de quem ainda não tem
+   nenhum salvo (pra não perder a ferramenta que já existia). */
+const RELATORIO_BLOCOS_PADRAO = [
+  {
+    id: 'o-que-e', type: 'texto', titulo: 'O que é Mapa Natal',
+    corpo: 'O mapa natal é o registro geométrico e astronômico do céu no exato instante e local do nascimento de um indivíduo. Longe de ser um resumo estático de personalidade, ele representa a matriz fundamental de uma vida, funcionando como o projeto arquitetônico que descreve o destino, as potências e os cenários que se desdobrarão ao longo da existência.\n\nNa perspectiva clássica, o mapa funciona como um espelho do macrocosmo, onde a disposição dos sete astros errantes pelas doze divisões do céu determina a distribuição de responsabilidades e papéis na jornada do nativo. Cada planeta atua como um administrador ou emissário de áreas específicas da vida, e a rede de relações que eles estabelecem entre si desenha as facilidades e os obstáculos fixos que estruturam a realidade material e psicológica do indivíduo.\n\nCompreender o mapa natal não significa submeter-se a um determinismo cego, mas sim obter o mapeamento exato das regras do jogo da própria vida. Ele revela a engenharia oculta por trás dos acontecimentos e inclinações pessoais, servindo como a ferramenta definitiva para que o indivíduo compreenda seu papel no cosmos, otimize suas virtudes naturais e navegue por seus desafios com clareza e maestria técnica.'
+  },
+  { id: 'mandala_natal', type: 'ferramenta' },
+  { id: 'mandala_fortuna', type: 'ferramenta' },
+  {
+    id: 'entendendo-mandalas', type: 'texto', titulo: 'Entendendo as Mandalas',
+    corpo: 'Para facilitar a sua navegação pelo relatório, o seu mapa foi estruturado em duas camadas que se complementam. Veja como ler cada uma delas:\n\nMandala 1 (O Mapa Natal Absoluto): mostra a posição exata dos planetas do setenário tradicional (coloridos), os signos (também coloridos), nodos lunares e lotes (em preto), bem como as casas nativas (contadas a partir do ascendente) no momento exato do nascimento. Na borda externa dos signos estão as marcações das dodecatemórias dentro do respectivo signo — uma espécie de "microscópio" da astrologia clássica: cada signo é subdividido em 12 partes, revelando onde a semente oculta (ou a raiz) de cada planeta está plantada.\n\nMandala 2 (As Casas a partir da Fortuna): o mapa visto com o Lote da Fortuna na casa 1 serve para analisar a vida sob a ótica material. Enquanto as casas nativas focam na jornada geral, as Casas de Fortuna revelam como a sorte, a saúde física, as finanças e o meio ambiente tangível vão se manifestar concretamente na realidade. A disposição das cores funciona como na Mandala 1.'
+  },
+  {
+    id: 'sete-lotes', type: 'texto', titulo: 'Os Sete Lotes Herméticos',
+    corpo: 'Os Sete Lotes Herméticos constituem um dos sistemas mais refinados de cálculo e subdivisão temática da astrologia clássica. Atribuída à tradição de Hermes, essa metodologia projeta sete pontos matemáticos específicos no mapa natal, onde cada um está geometricamente atrelado a um dos astros do setenário. Eles funcionam como receptáculos das promessas planetárias, isolando e detalhando áreas cruciais da experiência humana para avaliar como o destino e a ação do nativo se desdobrarão em cenários muito específicos da vida material e factual.\n\nCada lote atua como uma lente especializada para um assunto fundamental: o Lote da Fortuna (associado à Lua) governa o corpo, a saúde e as circunstâncias materiais; o Lote do Espírito (Sol) direciona a mente, a intenção, a vontade e a carreira; o Lote de Eros (Vênus) revela os desejos, os afetos e as escolhas feitas por prazer; o Lote da Necessidade (Mercúrio) sinaliza as restrições, as disputas e o intelecto sob pressão; o Lote da Audácia (Marte) rege a audácia, os riscos e as tomadas de iniciativa; o Lote da Vitória (Júpiter) aponta para o sucesso, as honras e a gratificação; e o Lote da Nêmesis (Saturno) administra as perdas, os fatores ocultos e as limitações inevitáveis.\n\nAnalisando o conjunto dos sete lotes herméticos — observando em quais casas esses pontos se localizam e como seus respectivos senhores se posicionam no mapa — decodificamos a infraestrutura factual que sustenta os sucessos, as crises, as escolhas e as amarras que o nativo encontrará ao longo de sua jornada.'
+  },
+  {
+    id: 'dodecatemorias', type: 'texto', titulo: 'As Dodecatemórias',
+    corpo: 'As dodecatemórias representam uma das técnicas mais profundas de microsubdivisão zodiacal da astrologia clássica. O termo, de origem grega, refere-se à divisão de cada um dos doze signos de 30° em doze partes menores de exatamente 2,5° cada, projetando uma espécie de "microcosmo zodiacal" dentro de cada signo. Essa técnica permite decodificar uma camada subjacente e íntima do mapa natal, revelando a raiz oculta e as ramificações invisíveis de cada planeta e ponto calculado.\n\nNa engenharia da astrologia clássica, a dodecatemória funciona como uma lente de altíssima definição. Ao projetar matematicamente a posição exata de um astro para um novo signo com base em seus graus, os antigos astrólogos conseguiam enxergar o que estava operando por baixo da superfície da matriz radical. Ela aponta para a verdadeira inclinação factual de um posicionamento, sendo capaz de confirmar, refinar ou direcionar a força das promessas de um planeta no destino prático do nativo.\n\nPortanto, a inclusão do mapa de dodecatemórias não serve como um adorno, mas sim como a sintonização fina das diretrizes do indivíduo — indispensável para destrinchar as nuances ocultas da capacidade realizadora, das aptidões e dos cenários exatos de atuação do nativo, trazendo à luz eixos de força que o mapa bruto e primário não evidencia de forma imediata.'
+  },
+  {
+    id: 'casas-fortuna', type: 'texto', titulo: 'Casas a partir do Lote da Fortuna',
+    corpo: 'A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.\n\nEnquanto a estrutura natal radical descreve a jornada geral da vida, este mapa derivado funciona como um biombo voltado para a engenharia da contingência. Ao reorganizar as casas a partir da Fortuna, os planetas assumem novos papéis e responsabilidades, revelando a arquitetura oculta da subsistência, da prosperidade, do corpo físico e dos eventos fortuitos. É através desta disposição que se mapeiam com precisão os eixos de aquisição, os momentos de ápice e os cenários onde a sorte ou os desafios materiais se manifestarão de forma concreta.\n\nPortanto, a análise deste mapa com a Fortuna na primeira casa oferece uma leitura focada na realidade prática e nas circunstâncias externas que cruzam o caminho do nativo — indispensável para decodificar como o fluxo da matéria, os recursos e os acasos do destino governarão a vida profissional e a capacidade de sustentação ao longo do tempo.'
+  }
+];
+
+function relatorioSupabaseClient() {
+  return window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+}
+
+/* CARREGA O PERFIL DE RELATÓRIO (logo, nome, telefone, e-mail) — nunca
+   lança erro: na ausência de sessão/tabela, devolve campos vazios. */
+async function carregarPerfilRelatorio() {
+  const vazio = { nome: '', telefone: '', email: '', logo_url: '' };
   try {
-    const raw = localStorage.getItem(RELATORIO_ASTROLOGO_KEY);
-    return raw ? JSON.parse(raw) : { nome: '', telefone: '', email: '' };
+    const client = relatorioSupabaseClient();
+    if (!client) return vazio;
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return vazio;
+    const { data, error } = await client.from('relatorio_perfil').select('*').eq('user_id', user.id).maybeSingle();
+    if (error || !data) return vazio;
+    return { nome: data.nome || '', telefone: data.telefone || '', email: data.email || '', logo_url: data.logo_url || '' };
   } catch (e) {
-    return { nome: '', telefone: '', email: '' };
+    return vazio;
   }
 }
 
-function salvarDadosAstrologoRelatorio(dados) {
-  try { localStorage.setItem(RELATORIO_ASTROLOGO_KEY, JSON.stringify(dados)); } catch (e) { /* localStorage indisponível */ }
+/* CARREGA OS PRESETS SALVOS DO USUÁRIO. Se ainda não existir nenhum,
+   semeia automaticamente o preset padrão (Mapa Natal Clássico) — assim
+   quem já usava o relatório antes dos presets não perde a ferramenta. */
+async function carregarOuSemearPresetsRelatorio() {
+  const client = relatorioSupabaseClient();
+  if (!client) return [{ id: null, nome: 'Mapa Natal Clássico', blocos: RELATORIO_BLOCOS_PADRAO }];
+
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [{ id: null, nome: 'Mapa Natal Clássico', blocos: RELATORIO_BLOCOS_PADRAO }];
+
+    const { data, error } = await client.from('relatorio_presets').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
+    if (!error && data && data.length) return data;
+
+    // Ainda sem presets (ou tabela indisponível): tenta criar o padrão pro usuário;
+    // se não conseguir salvar, ainda assim devolve um preset "em memória" pra o
+    // relatório continuar funcionando nesta sessão.
+    const { data: novo, error: erroInsert } = await client
+      .from('relatorio_presets')
+      .insert({ user_id: user.id, nome: 'Mapa Natal Clássico', blocos: RELATORIO_BLOCOS_PADRAO })
+      .select()
+      .maybeSingle();
+
+    if (!erroInsert && novo) return [novo];
+    return [{ id: null, nome: 'Mapa Natal Clássico', blocos: RELATORIO_BLOCOS_PADRAO }];
+  } catch (e) {
+    return [{ id: null, nome: 'Mapa Natal Clássico', blocos: RELATORIO_BLOCOS_PADRAO }];
+  }
 }
 
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS (abrirModuloTecnica) */
-function iniciarModuloRelatorio() {
+async function iniciarModuloRelatorio() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
@@ -41,11 +120,13 @@ function iniciarModuloRelatorio() {
     return;
   }
 
-  renderRelatorioSetup(container);
+  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Carregando seus modelos de relatório...</div>`;
+
+  const presets = await carregarOuSemearPresetsRelatorio();
+  renderRelatorioSetup(container, presets);
 }
 
-function renderRelatorioSetup(container) {
-  const dados = carregarDadosAstrologoRelatorio();
+function renderRelatorioSetup(container, presets) {
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
   const dia = String(currentMoment.getDate()).padStart(2, '0');
@@ -53,28 +134,24 @@ function renderRelatorioSetup(container) {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
+  const opcoesPreset = presets.map((p, idx) => `<option value="${idx}">${escapeHtml(p.nome)}</option>`).join('');
+
   container.innerHTML = `
     <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
 
       <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">Relatório · Mapa Natal Clássico</h2>
+        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">Relatório</h2>
         <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
           ${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}
         </div>
       </div>
 
       <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em;">Dados de Contato</div>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">Aparecem na página final do relatório. Ficam salvos neste navegador para os próximos relatórios.</div>
-
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Seu nome / marca</label>
-        <input type="text" id="relAstrNome" class="modal-input" style="margin-bottom: 10px;" value="${escapeHtml(dados.nome || '')}" placeholder="Ex: Cassio Farias - Astrólogo">
-
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Telefone / WhatsApp</label>
-        <input type="text" id="relAstrTelefone" class="modal-input" style="margin-bottom: 10px;" value="${escapeHtml(dados.telefone || '')}" placeholder="Ex: 11970404508">
-
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail</label>
-        <input type="email" id="relAstrEmail" class="modal-input" style="margin-bottom: 18px;" value="${escapeHtml(dados.email || '')}" placeholder="Ex: contato@email.com">
+        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Modelo de Relatório</label>
+        <select id="relPresetEscolhido" class="modal-select" style="margin-bottom: 6px;">${opcoesPreset}</select>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">
+          Os textos, o logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral.
+        </div>
 
         <button type="button" class="btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="confirmarGerarRelatorio()">
           <i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i> Gerar Relatório
@@ -83,71 +160,89 @@ function renderRelatorioSetup(container) {
 
     </div>
   `;
+
+  window.relatorioPresetsCarregados = presets;
 }
 
 function confirmarGerarRelatorio() {
-  const dados = {
-    nome: (document.getElementById('relAstrNome').value || '').trim(),
-    telefone: (document.getElementById('relAstrTelefone').value || '').trim(),
-    email: (document.getElementById('relAstrEmail').value || '').trim()
-  };
-  salvarDadosAstrologoRelatorio(dados);
-  gerarRelatorioCompleto(dados);
+  const idx = parseInt(document.getElementById('relPresetEscolhido').value, 10) || 0;
+  const preset = (window.relatorioPresetsCarregados || [])[idx];
+  if (!preset) return;
+  gerarRelatorioCompleto(preset);
 }
 
-async function gerarRelatorioCompleto(dadosAstrologo) {
+async function gerarRelatorioCompleto(preset) {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando as mandalas do relatório...</div>`;
+  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando o relatório...</div>`;
 
-  // Busca o logotipo salvo pelo astrólogo (Configurações > Captação de Clientes), se houver.
-  // Nunca trava a geração do relatório caso a busca falhe.
-  let logoUrl = null;
-  try {
-    const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
-    if (client) {
-      const { data: { user } } = await client.auth.getUser();
-      if (user) {
-        const { data } = await client.from('configuracoes').select('logo_url').eq('user_id', user.id).maybeSingle();
-        if (data && data.logo_url) logoUrl = data.logo_url;
-      }
-    }
-  } catch (e) { /* segue sem logo */ }
+  const perfil = await carregarPerfilRelatorio();
+  const blocos = preset.blocos || [];
 
-  const lotSalvo = selectedHouse1Lot;
-  const ascAbsNatal = currentCalculatedData.Ascendente.grau_absoluto;
+  const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
+  const { png1, png2 } = await renderizarMandalasDoPreset(blocos);
 
-  selectedHouse1Lot = 'ASC';
-  renderMandala(null, (png1) => {
-    const lotesNatal = (window.currentLotes || []).slice();
+  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal);
+}
 
-    selectedHouse1Lot = 'fortune';
-    renderMandala(null, (png2) => {
-      selectedHouse1Lot = lotSalvo; // restaura o estado da mandala (não é redesenhada agora, só quando o usuário voltar pra ela)
-
-      montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, dadosAstrologo, logoUrl);
-    });
+/* Calcula os 7 lotes diretamente dos dados já carregados, sem precisar
+   desenhar nenhuma mandala — assim a tabela de Lotes funciona mesmo se o
+   preset não incluir nenhum bloco de mandala. */
+function calcularLotesRelatorio() {
+  const data = currentCalculatedData;
+  const ascAbs = data.Ascendente.grau_absoluto;
+  const pObj = {};
+  PLANETS_DEF.forEach(p => {
+    const item = data[p.key];
+    pObj[p.id] = { abs: item ? item.grau_absoluto : 0 };
   });
+  const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
+  return { lotes: calculateSevenLots(ascAbs, isDay, pObj), ascAbs };
+}
+
+/* Desenha só as mandalas que o preset realmente usa (pode ser nenhuma,
+   uma, ou as duas), restaurando a rotação da Casa 1 ao final. */
+async function renderizarMandalasDoPreset(blocos) {
+  const precisaNatal = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_natal');
+  const precisaFortuna = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_fortuna');
+  const lotSalvo = selectedHouse1Lot;
+  let png1 = null, png2 = null;
+
+  if (precisaNatal) {
+    selectedHouse1Lot = 'ASC';
+    png1 = await new Promise(resolve => renderMandala(null, resolve));
+  }
+  if (precisaFortuna) {
+    selectedHouse1Lot = 'fortune';
+    png2 = await new Promise(resolve => renderMandala(null, resolve));
+  }
+  selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
+
+  return { png1, png2 };
 }
 
 function voltarConfigRelatorio() {
   const container = document.getElementById('mandala-container');
-  if (container) renderRelatorioSetup(container);
+  if (container && window.relatorioPresetsCarregados) renderRelatorioSetup(container, window.relatorioPresetsCarregados);
 }
 
-function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, dadosAstrologo, logoUrl) {
-  const marcaHtml = logoUrl
-    ? `<img src="${logoUrl}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal) {
+  const marcaHtml = perfil.logo_url
+    ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
-
-  const rodapeAstrologo = [dadosAstrologo.nome, dadosAstrologo.telefone, dadosAstrologo.email].filter(Boolean);
+  const rodapeAstrologo = [perfil.nome, perfil.telefone, perfil.email].filter(Boolean);
   const capaClasseCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-capa-ceu' : '';
-
-  const tabelaLotesHtml = renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal);
-  const tabelaDodecHtml = renderTabelaDodecatemoriasRelatorio();
+  const blocos = preset.blocos || [];
 
   injetarEstilosRelatorio();
+
+  const itensIndice = [];
+  const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice })).join('');
+
+  const indiceHtml = itensIndice.map(item => `
+    <li><span>${escapeHtml(item.titulo)}</span><span class="rel-num-pagina" data-alvo="${item.alvo}"></span></li>
+  `).join('');
 
   const htmlRelatorio = `
     <div class="rel-toolbar no-print">
@@ -157,98 +252,30 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
     <div class="rel-viewer">
 
-      <!-- 1. CAPA (nome/data/local não se repetem aqui: já vêm no
-           próprio cabeçalho que a mandala desenha dentro da imagem) -->
+      <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
+           cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
       <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa">
-        <h1 class="rel-titulo-capa">Mapa Natal<br>Clássico</h1>
-        <div class="rel-capa-centro">
-          <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
-        </div>
+        <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
+        ${png1 ? `
+          <div class="rel-capa-centro">
+            <img class="rel-img-capa" src="${png1}" alt="${escapeHtml(preset.nome)}">
+          </div>
+        ` : '<div class="rel-capa-centro"></div>'}
         <div class="rel-marca-rodape">
           ${marcaHtml}
           <div class="rel-powered-by">powered by Astro Hellenic</div>
         </div>
       </section>
 
-      <!-- 2. ÍNDICE -->
+      <!-- ÍNDICE -->
       <section class="rel-page" data-pg="indice">
         <div class="rel-h1">Índice</div>
-        <ul class="rel-indice">
-          <li><span>O que é Mapa Natal</span><span class="rel-num-pagina" data-alvo="o-que-e"></span></li>
-          <li><span>Mapa Natal</span><span class="rel-num-pagina" data-alvo="mandala1"></span></li>
-          <li><span>Entendendo as Mandalas</span><span class="rel-num-pagina" data-alvo="entendendo"></span></li>
-          <li><span>Os Sete Lotes Herméticos</span><span class="rel-num-pagina" data-alvo="sete-lotes"></span></li>
-          <li><span>As Dodecatemórias</span><span class="rel-num-pagina" data-alvo="dodecatemorias"></span></li>
-          <li><span>Casas a partir do Lote da Fortuna</span><span class="rel-num-pagina" data-alvo="casas-fortuna"></span></li>
-        </ul>
+        <ul class="rel-indice">${indiceHtml}</ul>
       </section>
 
-      <!-- 3. O QUE É MAPA NATAL -->
-      <section class="rel-page" data-pg="o-que-e">
-        <div class="rel-h1">O que é Mapa Natal</div>
-        <div class="rel-corpo">
-          <p>O mapa natal é o registro geométrico e astronômico do céu no exato instante e local do nascimento de um indivíduo. Longe de ser um resumo estático de personalidade, ele representa a matriz fundamental de uma vida, funcionando como o projeto arquitetônico que descreve o destino, as potências e os cenários que se desdobrarão ao longo da existência.</p>
-          <p>Na perspectiva clássica, o mapa funciona como um espelho do macrocosmo, onde a disposição dos sete astros errantes pelas doze divisões do céu determina a distribuição de responsabilidades e papéis na jornada do nativo. Cada planeta atua como um administrador ou emissário de áreas específicas da vida, e a rede de relações que eles estabelecem entre si desenha as facilidades e os obstáculos fixos que estruturam a realidade material e psicológica do indivíduo.</p>
-          <p>Compreender o mapa natal não significa submeter-se a um determinismo cego, mas sim obter o mapeamento exato das regras do jogo da própria vida. Ele revela a engenharia oculta por trás dos acontecimentos e inclinações pessoais, servindo como a ferramenta definitiva para que o indivíduo compreenda seu papel no cosmos, otimize suas virtudes naturais e navegue por seus desafios com clareza e maestria técnica.</p>
-        </div>
-      </section>
+      ${paginasHtml}
 
-      <!-- 4. MAPA NATAL - MANDALA 1 -->
-      <section class="rel-page rel-page-mapa" data-pg="mandala1">
-        <div class="rel-h1">Mapa Natal</div>
-        <img class="rel-img-mandala" src="${png1}" alt="Mandala 1">
-        <div class="rel-legenda-mandala">Mandala 1</div>
-      </section>
-
-      <!-- 5. MANDALA 2 (Fortuna na Casa 1) -->
-      <section class="rel-page rel-page-mapa" data-pg="mandala2">
-        <img class="rel-img-mandala" src="${png2}" alt="Mandala 2">
-        <div class="rel-legenda-mandala">Mandala 2</div>
-      </section>
-
-      <!-- 6. ENTENDENDO AS MANDALAS -->
-      <section class="rel-page" data-pg="entendendo">
-        <div class="rel-h1">Entendendo as Mandalas</div>
-        <div class="rel-corpo">
-          <p>Para facilitar a sua navegação pelo relatório, o seu mapa foi estruturado em duas camadas que se complementam. Veja como ler cada uma delas:</p>
-          <p><strong>Mandala 1 (O Mapa Natal Absoluto):</strong> mostra a posição exata dos planetas do setenário tradicional (coloridos), os signos (também coloridos), nodos lunares e lotes (em preto), bem como as casas nativas (contadas a partir do ascendente) no momento exato do nascimento. Na borda externa dos signos estão as marcações das dodecatemórias dentro do respectivo signo — uma espécie de "microscópio" da astrologia clássica: cada signo é subdividido em 12 partes, revelando onde a semente oculta (ou a raiz) de cada planeta está plantada.</p>
-          <p><strong>Mandala 2 (As Casas a partir da Fortuna):</strong> o mapa visto com o Lote da Fortuna na casa 1 serve para analisar a vida sob a ótica material. Enquanto as casas nativas focam na jornada geral, as Casas de Fortuna revelam como a sorte, a saúde física, as finanças e o meio ambiente tangível vão se manifestar concretamente na realidade. A disposição das cores funciona como na Mandala 1.</p>
-        </div>
-      </section>
-
-      <!-- 7. OS SETE LOTES HERMÉTICOS -->
-      <section class="rel-page" data-pg="sete-lotes">
-        <div class="rel-h1">Os Sete Lotes Herméticos</div>
-        <div class="rel-corpo">
-          <p>Os Sete Lotes Herméticos constituem um dos sistemas mais refinados de cálculo e subdivisão temática da astrologia clássica. Atribuída à tradição de Hermes, essa metodologia projeta sete pontos matemáticos específicos no mapa natal, onde cada um está geometricamente atrelado a um dos astros do setenário. Eles funcionam como receptáculos das promessas planetárias, isolando e detalhando áreas cruciais da experiência humana para avaliar como o destino e a ação do nativo se desdobrarão em cenários muito específicos da vida material e factual.</p>
-          <p>Cada lote atua como uma lente especializada para um assunto fundamental: o Lote da Fortuna (associado à Lua) governa o corpo, a saúde e as circunstâncias materiais; o Lote do Espírito (Sol) direciona a mente, a intenção, a vontade e a carreira; o Lote de Eros (Vênus) revela os desejos, os afetos e as escolhas feitas por prazer; o Lote da Necessidade (Mercúrio) sinaliza as restrições, as disputas e o intelecto sob pressão; o Lote da Audácia (Marte) rege a audácia, os riscos e as tomadas de iniciativa; o Lote da Vitória (Júpiter) aponta para o sucesso, as honras e a gratificação; e o Lote da Nêmesis (Saturno) administra as perdas, os fatores ocultos e as limitações inevitáveis.</p>
-          <p>Analisando o conjunto dos sete lotes herméticos — observando em quais casas esses pontos se localizam e como seus respectivos senhores se posicionam no mapa — decodificamos a infraestrutura factual que sustenta os sucessos, as crises, as escolhas e as amarras que o nativo encontrará ao longo de sua jornada.</p>
-        </div>
-        ${tabelaLotesHtml}
-      </section>
-
-      <!-- 8. AS DODECATEMÓRIAS -->
-      <section class="rel-page" data-pg="dodecatemorias">
-        <div class="rel-h1">As Dodecatemórias</div>
-        <div class="rel-corpo">
-          <p>As dodecatemórias representam uma das técnicas mais profundas de microsubdivisão zodiacal da astrologia clássica. O termo, de origem grega, refere-se à divisão de cada um dos doze signos de 30° em doze partes menores de exatamente 2,5° cada, projetando uma espécie de "microcosmo zodiacal" dentro de cada signo. Essa técnica permite decodificar uma camada subjacente e íntima do mapa natal, revelando a raiz oculta e as ramificações invisíveis de cada planeta e ponto calculado.</p>
-          <p>Na engenharia da astrologia clássica, a dodecatemória funciona como uma lente de altíssima definição. Ao projetar matematicamente a posição exata de um astro para um novo signo com base em seus graus, os antigos astrólogos conseguiam enxergar o que estava operando por baixo da superfície da matriz radical. Ela aponta para a verdadeira inclinação factual de um posicionamento, sendo capaz de confirmar, refinar ou direcionar a força das promessas de um planeta no destino prático do nativo.</p>
-          <p>Portanto, a inclusão do mapa de dodecatemórias não serve como um adorno, mas sim como a sintonização fina das diretrizes do indivíduo — indispensável para destrinchar as nuances ocultas da capacidade realizadora, das aptidões e dos cenários exatos de atuação do nativo, trazendo à luz eixos de força que o mapa bruto e primário não evidencia de forma imediata.</p>
-        </div>
-        ${tabelaDodecHtml}
-      </section>
-
-      <!-- 9. CASAS A PARTIR DO LOTE DA FORTUNA -->
-      <section class="rel-page" data-pg="casas-fortuna">
-        <div class="rel-h1">Casas a partir do Lote da Fortuna</div>
-        <div class="rel-corpo">
-          <p>A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.</p>
-          <p>Enquanto a estrutura natal radical descreve a jornada geral da vida, este mapa derivado funciona como um biombo voltado para a engenharia da contingência. Ao reorganizar as casas a partir da Fortuna, os planetas assumem novos papéis e responsabilidades, revelando a arquitetura oculta da subsistência, da prosperidade, do corpo físico e dos eventos fortuitos. É através desta disposição que se mapeiam com precisão os eixos de aquisição, os momentos de ápice e os cenários onde a sorte ou os desafios materiais se manifestarão de forma concreta.</p>
-          <p>Portanto, a análise deste mapa com a Fortuna na primeira casa oferece uma leitura focada na realidade prática e nas circunstâncias externas que cruzam o caminho do nativo — indispensável para decodificar como o fluxo da matéria, os recursos e os acasos do destino governarão a vida profissional e a capacidade de sustentação ao longo do tempo.</p>
-        </div>
-      </section>
-
-      <!-- 10. ENCERRAMENTO -->
+      <!-- ENCERRAMENTO -->
       <section class="rel-page rel-page-encerramento">
         <div class="rel-corpo">
           <p>Caso tenha alguma dúvida ou queira complementar seu autoconhecimento através de previsões com técnicas como Revolução Solar ou Liberação Zodiacal, basta entrar em contato.</p>
@@ -257,9 +284,9 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
         </div>
         ${rodapeAstrologo.length ? `
           <div class="rel-rodape-astrologo">
-            ${dadosAstrologo.nome ? `<div class="rel-rodape-nome">${escapeHtml(dadosAstrologo.nome)}</div>` : ''}
-            ${dadosAstrologo.telefone ? `<div>${escapeHtml(dadosAstrologo.telefone)}</div>` : ''}
-            ${dadosAstrologo.email ? `<div>${escapeHtml(dadosAstrologo.email)}</div>` : ''}
+            ${perfil.nome ? `<div class="rel-rodape-nome">${escapeHtml(perfil.nome)}</div>` : ''}
+            ${perfil.telefone ? `<div>${escapeHtml(perfil.telefone)}</div>` : ''}
+            ${perfil.email ? `<div>${escapeHtml(perfil.email)}</div>` : ''}
           </div>
         ` : ''}
       </section>
@@ -272,11 +299,57 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
   numerarPaginasIndice(container);
 }
 
+/* Renderiza um bloco do preset (texto ou ferramenta) como uma ou mais
+   .rel-page, e — quando o bloco entra no índice — registra o item em
+   opts.itensIndice pra virar uma linha na página de Índice. */
+function renderBlocoRelatorio(bloco, opts) {
+  if (bloco.type === 'texto') {
+    const paragrafos = (bloco.corpo || '').split(/\n\s*\n/).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+    let tabelaExtra = '';
+    if (bloco.id === 'sete-lotes') tabelaExtra = renderTabelaLotesRelatorio(opts.lotesNatal, opts.ascAbsNatal);
+    if (bloco.id === 'dodecatemorias') tabelaExtra = renderTabelaDodecatemoriasRelatorio();
+
+    opts.itensIndice.push({ titulo: bloco.titulo, alvo: bloco.id });
+
+    return `
+      <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
+        <div class="rel-h1">${escapeHtml(bloco.titulo)}</div>
+        <div class="rel-corpo">${paragrafos}</div>
+        ${tabelaExtra}
+      </section>
+    `;
+  }
+
+  if (bloco.type === 'ferramenta') {
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
+    if (bloco.id === 'mandala_natal' && opts.png1) {
+      opts.itensIndice.push({ titulo: (info && info.tituloIndice) || 'Mapa Natal', alvo: bloco.id });
+      return `
+        <section class="rel-page rel-page-mapa" data-pg="${escapeHtml(bloco.id)}">
+          <div class="rel-h1">Mapa Natal</div>
+          <img class="rel-img-mandala" src="${opts.png1}" alt="Mandala 1">
+          <div class="rel-legenda-mandala">Mandala 1</div>
+        </section>
+      `;
+    }
+    if (bloco.id === 'mandala_fortuna' && opts.png2) {
+      return `
+        <section class="rel-page rel-page-mapa" data-pg="${escapeHtml(bloco.id)}">
+          <img class="rel-img-mandala" src="${opts.png2}" alt="Mandala 2">
+          <div class="rel-legenda-mandala">Mandala 2</div>
+        </section>
+      `;
+    }
+  }
+
+  return '';
+}
+
 /* Preenche os números de página do Índice medindo a altura real de cada
-   seção já renderizada (cada .rel-page ocupa 297mm — uma ou mais páginas
-   físicas, se o conteúdo dela transbordar). Não dá pra saber a paginação
-   de antemão porque o conteúdo varia por cliente (tabelas maiores/menores
-   etc.), então ela é calculada depois de tudo estar na tela. */
+   seção já renderizada (cada .rel-page ocupa uma ou mais páginas físicas,
+   se o conteúdo dela transbordar). Não dá pra saber a paginação de
+   antemão porque o conteúdo varia por cliente/preset, então ela é
+   calculada depois de tudo estar na tela. */
 function numerarPaginasIndice(container) {
   const paginaAlturaPx = 297 * 96 / 25.4; // 297mm convertidos para px (96dpi, o padrão do CSS)
   const paginas = container.querySelectorAll('.rel-viewer > .rel-page[data-pg]');
@@ -430,7 +503,7 @@ function injetarEstilosRelatorio() {
          por isso a página inteira (não só o conteúdo) precisa virar um
          flex column de cima a baixo. */
       .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       .rel-img-capa { max-width: 92mm; max-height: 100%; }
       .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }

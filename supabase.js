@@ -154,6 +154,15 @@ function abrirNavegacaoConfiguracoes() {
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
       </div>
 
+      <!-- OPÇÃO: RELATÓRIOS -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesRelatorio()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-file-pdf" style="color: #c59b27;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Relatórios</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+      </div>
+
     </div>
   `;
 }
@@ -231,6 +240,340 @@ function abrirConfiguracoesAparencia() {
 
     </div>
   `;
+}
+
+/* SUB-TELA: RELATÓRIOS (PERFIL DO ASTRÓLOGO NOS RELATÓRIOS + MODELOS/PRESETS) */
+async function abrirConfiguracoesRelatorio() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+      </button>
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">RELATÓRIOS</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+
+      <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em;">Seu Perfil nos Relatórios</div>
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 14px; line-height: 1.4;">
+        Logo e dados de contato que aparecem nos relatórios gerados — podem ser diferentes do logo usado na Captação de Clientes.
+      </div>
+
+      <div id="relCfgLogoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
+        <img id="relCfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #c59b27; border-radius: 8px; padding: 4px; background: #ffffff;">
+      </div>
+      <input type="file" id="relCfgLogoFile" accept="image/*" onchange="fazerUploadLogoRelatorio(this)" style="display: none;">
+      <button onclick="document.getElementById('relCfgLogoFile').click()" style="width: 100%; background: #ffffff; color: #103b70; border: 1px dashed #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+        <i class="fa-solid fa-upload" style="color: #c59b27;"></i> <span id="relCfgBtnUploadText">Selecionar Logo do Relatório</span>
+      </button>
+      <input type="hidden" id="relCfgLogoUrl">
+
+      <label style="font-size: 11px; font-weight: 600; color: #64748b;">Seu nome / marca</label>
+      <input type="text" id="relCfgNome" class="modal-input" style="margin-bottom: 10px;" placeholder="Ex: Cassio Farias - Astrólogo">
+
+      <label style="font-size: 11px; font-weight: 600; color: #64748b;">Telefone / WhatsApp</label>
+      <input type="text" id="relCfgTelefone" class="modal-input" style="margin-bottom: 10px;" placeholder="Ex: 11970404508">
+
+      <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail</label>
+      <input type="email" id="relCfgEmail" class="modal-input" style="margin-bottom: 16px;" placeholder="Ex: contato@email.com">
+
+      <button onclick="salvarPerfilRelatorio()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-bottom: 24px;">
+        Salvar Perfil
+      </button>
+
+      <div style="border-top: 1px solid #e2d9c2; padding-top: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Modelos de Relatório</div>
+          <button onclick="criarNovoPreset()" style="font-size: 11px; font-weight: 700; color: #103b70; padding: 6px 10px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Novo</button>
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+          Cada modelo escolhe quais textos e mandalas entram no relatório, e com que conteúdo. Ao gerar um relatório, você escolhe qual modelo usar.
+        </div>
+        <div id="relCfgListaPresets" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+
+    </div>
+  `;
+
+  await carregarConfiguracoesRelatorio();
+}
+
+/* CARREGA O PERFIL E A LISTA DE MODELOS NA TELA DE CONFIGURAÇÕES > RELATÓRIOS */
+async function carregarConfiguracoesRelatorio() {
+  try {
+    const perfil = await carregarPerfilRelatorio();
+    if (document.getElementById('relCfgNome')) document.getElementById('relCfgNome').value = perfil.nome;
+    if (document.getElementById('relCfgTelefone')) document.getElementById('relCfgTelefone').value = perfil.telefone;
+    if (document.getElementById('relCfgEmail')) document.getElementById('relCfgEmail').value = perfil.email;
+    if (perfil.logo_url) {
+      document.getElementById('relCfgLogoUrl').value = perfil.logo_url;
+      const previewImg = document.getElementById('relCfgLogoPreview');
+      const previewContainer = document.getElementById('relCfgLogoPreviewContainer');
+      if (previewImg && previewContainer) {
+        previewImg.src = perfil.logo_url;
+        previewContainer.style.display = 'block';
+      }
+      const btnText = document.getElementById('relCfgBtnUploadText');
+      if (btnText) btnText.innerText = 'Alterar Logo do Relatório';
+    }
+  } catch (e) {
+    console.error("Erro ao carregar perfil de relatório:", e);
+  }
+
+  await carregarListaPresetsNaTela();
+}
+
+async function carregarListaPresetsNaTela() {
+  const lista = document.getElementById('relCfgListaPresets');
+  if (!lista) return;
+  lista.innerHTML = `<div style="font-size: 11px; color: #64748b; text-align: center; padding: 8px;">Carregando...</div>`;
+
+  const presets = await carregarOuSemearPresetsRelatorio();
+  window.relatorioPresetsConfig = presets;
+
+  lista.innerHTML = presets.map((p, idx) => `
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
+      <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(p.nome)}</span>
+      <div style="display: flex; gap: 12px;">
+        <i class="fa-solid fa-pen" style="color: #103b70; cursor: pointer; font-size: 12px;" onclick="abrirEditorPreset(${idx})" title="Editar"></i>
+        ${presets.length > 1 ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px;" onclick="excluirPreset(${idx})" title="Excluir"></i>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* PROCESSA O UPLOAD DO LOGO USADO NOS RELATÓRIOS (bucket 'logos', arquivo
+   separado do logo da Captação de Clientes) */
+async function fazerUploadLogoRelatorio(inputElement) {
+  const file = inputElement.files[0];
+  if (!file) return;
+
+  const btnText = document.getElementById('relCfgBtnUploadText');
+  if (btnText) btnText.innerText = "Enviando imagem...";
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+      alert("Sessão não encontrada.");
+      if (btnText) btnText.innerText = "Selecionar Logo do Relatório";
+      return;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}-logo-relatorio.${fileExt}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('logos')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      alert("Erro ao enviar imagem: " + uploadError.message);
+      if (btnText) btnText.innerText = "Selecionar Logo do Relatório";
+      return;
+    }
+
+    const { data: publicUrlData } = supabaseClient.storage
+      .from('logos')
+      .getPublicUrl(filePath);
+
+    const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+    document.getElementById('relCfgLogoUrl').value = publicUrl;
+
+    const previewImg = document.getElementById('relCfgLogoPreview');
+    const previewContainer = document.getElementById('relCfgLogoPreviewContainer');
+    if (previewImg && previewContainer) {
+      previewImg.src = publicUrl;
+      previewContainer.style.display = 'block';
+    }
+
+    if (btnText) btnText.innerText = "Alterar Logo do Relatório";
+  } catch (e) {
+    alert("Erro ao processar arquivo de imagem.");
+    if (btnText) btnText.innerText = "Selecionar Logo do Relatório";
+  }
+}
+
+/* SALVA O PERFIL DE RELATÓRIO (nome/telefone/e-mail/logo) NO SUPABASE */
+async function salvarPerfilRelatorio() {
+  const nome = document.getElementById('relCfgNome').value.trim();
+  const telefone = document.getElementById('relCfgTelefone').value.trim();
+  const email = document.getElementById('relCfgEmail').value.trim();
+  const logoUrl = document.getElementById('relCfgLogoUrl').value.trim();
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('relatorio_perfil')
+      .upsert({ user_id: user.id, nome, telefone, email, logo_url: logoUrl, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+    if (!error) {
+      alert("Perfil de relatório salvo com sucesso!");
+    } else {
+      alert("Erro ao salvar perfil: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar perfil.");
+  }
+}
+
+/* CRIA UM NOVO MODELO DE RELATÓRIO A PARTIR DO CONJUNTO DE BLOCOS PADRÃO
+   (o astrólogo edita os textos e escolhe o que entra depois, no editor) */
+async function criarNovoPreset() {
+  const nome = prompt("Nome do novo modelo de relatório (ex: Revolução Solar):");
+  if (!nome || !nome.trim()) return;
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('relatorio_presets')
+      .insert({ user_id: user.id, nome: nome.trim(), blocos: RELATORIO_BLOCOS_PADRAO });
+
+    if (error) { alert("Erro ao criar modelo: " + error.message); return; }
+    await carregarListaPresetsNaTela();
+  } catch (e) {
+    alert("Erro de conexão ao criar modelo.");
+  }
+}
+
+async function excluirPreset(idx) {
+  const preset = (window.relatorioPresetsConfig || [])[idx];
+  if (!preset || !preset.id) return;
+  if (!confirm(`Excluir o modelo "${preset.nome}"? Essa ação não pode ser desfeita.`)) return;
+
+  try {
+    const { error } = await supabaseClient.from('relatorio_presets').delete().eq('id', preset.id);
+    if (error) { alert("Erro ao excluir: " + error.message); return; }
+    await carregarListaPresetsNaTela();
+  } catch (e) {
+    alert("Erro de conexão ao excluir modelo.");
+  }
+}
+
+/* EDITOR DE UM MODELO: pra cada bloco padrão (na ordem fixa do relatório),
+   um checkbox pra incluir ou não, e — pros blocos de texto — título e
+   corpo editáveis (pré-preenchidos com o que já está salvo, ou com o
+   texto padrão se o bloco nunca foi habilitado neste modelo). */
+function abrirEditorPreset(idx) {
+  const preset = (window.relatorioPresetsConfig || [])[idx];
+  if (!preset) return;
+
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  const mapaBlocosAtuais = {};
+  (preset.blocos || []).forEach(b => { mapaBlocosAtuais[b.id] = b; });
+
+  const linhasBlocos = RELATORIO_BLOCOS_PADRAO.map(padrao => {
+    const atual = mapaBlocosAtuais[padrao.id];
+    const marcado = !!atual;
+
+    if (padrao.type === 'ferramenta') {
+      const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id];
+      return `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; cursor: pointer;">
+          <input type="checkbox" data-bloco-id="${padrao.id}" data-bloco-tipo="ferramenta" ${marcado ? 'checked' : ''}>
+          <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(info.label)}</span>
+        </label>
+      `;
+    }
+
+    const titulo = atual ? atual.titulo : padrao.titulo;
+    const corpo = atual ? atual.corpo : padrao.corpo;
+    return `
+      <div style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; overflow: hidden;">
+        <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer;">
+          <input type="checkbox" data-bloco-id="${padrao.id}" data-bloco-tipo="texto" ${marcado ? 'checked' : ''} onchange="this.closest('div').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
+          <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(padrao.titulo)}</span>
+        </label>
+        <div class="rel-editor-campos" style="display: ${marcado ? 'block' : 'none'}; padding: 0 12px 12px;">
+          <input type="text" data-bloco-titulo="${padrao.id}" class="modal-input" value="${escapeHtml(titulo)}" style="margin-bottom: 6px; font-size: 12px;">
+          <textarea data-bloco-corpo="${padrao.id}" class="modal-textarea" style="height: 120px; font-size: 11px;">${escapeHtml(corpo)}</textarea>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+      <button class="icon-btn" onclick="abrirConfiguracoesRelatorio()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+      </button>
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">EDITAR MODELO</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+
+      <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
+      <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 16px;">
+
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
+        Marque o que entra no relatório. A ordem é sempre a mostrada aqui embaixo.
+      </div>
+
+      ${linhasBlocos}
+
+      <button onclick="salvarEdicaoPreset(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 12px;">
+        Salvar Modelo
+      </button>
+    </div>
+  `;
+}
+
+/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA */
+async function salvarEdicaoPreset(idx) {
+  const preset = (window.relatorioPresetsConfig || [])[idx];
+  if (!preset) return;
+
+  const nome = document.getElementById('relEditorNome').value.trim();
+  if (!nome) { alert("Informe um nome pro modelo."); return; }
+
+  const novosBlocos = [];
+  RELATORIO_BLOCOS_PADRAO.forEach(padrao => {
+    const checkbox = document.querySelector(`input[data-bloco-id="${padrao.id}"]`);
+    if (!checkbox || !checkbox.checked) return;
+
+    if (padrao.type === 'ferramenta') {
+      novosBlocos.push({ id: padrao.id, type: 'ferramenta' });
+    } else {
+      const tituloInput = document.querySelector(`[data-bloco-titulo="${padrao.id}"]`);
+      const corpoInput = document.querySelector(`[data-bloco-corpo="${padrao.id}"]`);
+      novosBlocos.push({
+        id: padrao.id,
+        type: 'texto',
+        titulo: (tituloInput && tituloInput.value.trim()) || padrao.titulo,
+        corpo: (corpoInput && corpoInput.value) || padrao.corpo
+      });
+    }
+  });
+
+  if (!novosBlocos.length) { alert("Marque pelo menos um item pra entrar no relatório."); return; }
+
+  try {
+    if (preset.id) {
+      const { error } = await supabaseClient
+        .from('relatorio_presets')
+        .update({ nome, blocos: novosBlocos, updated_at: new Date().toISOString() })
+        .eq('id', preset.id);
+      if (error) { alert("Erro ao salvar modelo: " + error.message); return; }
+    } else {
+      // Preset "em memória" (sem id — a tabela pode não ter existido na hora
+      // que ele foi semeado): tenta criar de verdade agora que está salvando.
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
+        await supabaseClient.from('relatorio_presets').insert({ user_id: user.id, nome, blocos: novosBlocos });
+      }
+    }
+    abrirConfiguracoesRelatorio();
+  } catch (e) {
+    alert("Erro de conexão ao salvar modelo.");
+  }
 }
 
 /* CARREGA O TEMA DA MANDALA DO SUPABASE (chamado logo após o login) */
