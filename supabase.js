@@ -681,6 +681,11 @@ if (modulo === 'mandala' || modulo === 'radix') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloHoras === 'function') iniciarModuloHoras();
   }
+  // 10. RELATÓRIO (Mapa Natal Clássico em PDF)
+  else if (modulo === 'relatorio') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloRelatorio === 'function') iniciarModuloRelatorio();
+  }
 }
 
 /* NÍVEL 2C: TELA DE PASTAS COM "IMPORTAR EM MASSA" NO TOPO */

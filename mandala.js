@@ -602,7 +602,7 @@ function alternarRotacaoCasa1(val) {
   renderMandala();
 }
 
-function renderMandala(dadosNovos) {
+function renderMandala(dadosNovos, onReady) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -1158,6 +1158,8 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     } catch (err) {
       console.error("Erro ao renderizar painel técnico:", err);
     }
+
+    if (typeof onReady === 'function') onReady(lastRenderedPngUrl);
   };
   imgLoader.src = blobURL;
 }
