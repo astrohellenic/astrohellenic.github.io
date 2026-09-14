@@ -376,7 +376,7 @@ function renderLiberacaoUI() {
 
     if (isExpanded) {
       html += `
-        <div style="padding: 10px; background: #fffdf5;">
+        <div style="padding: 10px; background: #ffffff;">
           <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #1e5fa4; border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
             <thead>
               <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
