@@ -117,6 +117,107 @@
         return `${diasSemana[d.getDay()]}, ${dia}/${mes}/${ano} às ${hora}:${min}`;
     }
 
+    /* PORTADO DE horas.js: cálculo de nascer/pôr do sol (fórmula pura, sem
+       API) e dos regentes de dia/hora planetários — usado para calcular os
+       regentes do MOMENTO EXATO DA REVOLUÇÃO SOLAR, já que
+       window.horasPlanetariasAtual só guarda os do mapa natal. */
+    const CHALDEAN_ORDER_HORAS = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"];
+    const DAY_RULERS_MAP_PROF = { 0: "Sun", 1: "Moon", 2: "Mars", 3: "Mercury", 4: "Jupiter", 5: "Venus", 6: "Saturn" };
+
+    function calcularNascerPorDoSolProf(dateObj, lat, lon, fuso) {
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth() + 1;
+        const day = dateObj.getDate();
+
+        const N1 = Math.floor(275 * month / 9);
+        const N2 = Math.floor((month + 9) / 12);
+        const N3 = (1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3));
+        const N = N1 - (N2 * N3) + day - 30;
+
+        const lngHour = lon / 15;
+
+        function calculateEventTime(isSunrise) {
+            const t = isSunrise ? N + ((6 - lngHour) / 24) : N + ((18 - lngHour) / 24);
+
+            const M = (0.985600 * t) - 3.289;
+            let L = M + (1.916 * Math.sin(M * Math.PI / 180)) + (0.020 * Math.sin(2 * M * Math.PI / 180)) + 282.634;
+            L = (L + 360) % 360;
+
+            let RA = Math.atan(0.91764 * Math.tan(L * Math.PI / 180)) * 180 / Math.PI;
+            RA = (RA + 360) % 360;
+
+            const Lquadrant = Math.floor(L / 90) * 90;
+            const RAquadrant = Math.floor(RA / 90) * 90;
+            RA = RA + (Lquadrant - RAquadrant);
+            RA = RA / 15;
+
+            const zenith = 90.833;
+            const sinDec = 0.39782 * Math.sin(L * Math.PI / 180);
+            const cosDec = Math.cos(Math.asin(sinDec));
+            const cosH = (Math.cos(zenith * Math.PI / 180) - (sinDec * Math.sin(lat * Math.PI / 180))) / (cosDec * Math.cos(lat * Math.PI / 180));
+
+            if (cosH > 1 || cosH < -1) return null;
+
+            let H = isSunrise ? 360 - (Math.acos(cosH) * 180 / Math.PI) : Math.acos(cosH) * 180 / Math.PI;
+            H = H / 15;
+
+            const T = H + RA - (0.06571 * t) - 6.622;
+            let UT = T - lngHour;
+            UT = (UT + 24) % 24;
+
+            const localTimeHours = UT + fuso;
+            const resultDate = new Date(year, month - 1, day, 0, 0, 0);
+            resultDate.setMinutes(Math.round(localTimeHours * 60));
+            return resultDate;
+        }
+
+        return { sunrise: calculateEventTime(true), sunset: calculateEventTime(false) };
+    }
+
+    function calcularHorasPlanetariasProf(momento, lat, lon, fuso) {
+        const now = new Date(momento);
+        const sunToday = calcularNascerPorDoSolProf(now, lat, lon, fuso);
+
+        let astroDate = new Date(now);
+        if (sunToday && sunToday.sunrise && now < sunToday.sunrise) {
+            astroDate.setDate(astroDate.getDate() - 1);
+        }
+
+        const sunAstro = calcularNascerPorDoSolProf(astroDate, lat, lon, fuso);
+        const nextDay = new Date(astroDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const sunNextAstro = calcularNascerPorDoSolProf(nextDay, lat, lon, fuso);
+
+        const sunrise = sunAstro ? sunAstro.sunrise : null;
+        const sunset = sunAstro ? sunAstro.sunset : null;
+        const nextSunrise = sunNextAstro ? sunNextAstro.sunrise : null;
+
+        if (!sunrise || !sunset || !nextSunrise) return null;
+
+        const dayOfWeek = astroDate.getDay();
+        const firstPlanetId = DAY_RULERS_MAP_PROF[dayOfWeek];
+        const startIndex = CHALDEAN_ORDER_HORAS.indexOf(firstPlanetId);
+
+        const dayDurationMs = (sunset - sunrise) / 12;
+        const nightDurationMs = (nextSunrise - sunset) / 12;
+
+        let hourRulerId = null;
+        for (let i = 0; i < 12; i++) {
+            const start = new Date(sunrise.getTime() + i * dayDurationMs);
+            const end = new Date(sunrise.getTime() + (i + 1) * dayDurationMs);
+            if (now >= start && now < end) { hourRulerId = CHALDEAN_ORDER_HORAS[(startIndex + i) % 7]; break; }
+        }
+        if (!hourRulerId) {
+            for (let i = 0; i < 12; i++) {
+                const start = new Date(sunset.getTime() + i * nightDurationMs);
+                const end = new Date(sunset.getTime() + (i + 1) * nightDurationMs);
+                if (now >= start && now < end) { hourRulerId = CHALDEAN_ORDER_HORAS[(startIndex + 12 + i) % 7]; break; }
+            }
+        }
+
+        return { dayRulerId: firstPlanetId, hourRulerId };
+    }
+
     /* ===== A PARTIR DAQUI: PORTADO DE mandala.js (mesma lógica de desenho,
        mesmos anéis/hastes/ticks dourados, aspectos, dodecatemoria, termos
        egípcios, lotes herméticos, planetas em SVG 3D com sombra e mancha de
@@ -870,22 +971,31 @@
         const isDayNatal = ((dadosNatal.Sol.grau_absoluto - dadosNatal.Ascendente.grau_absoluto + 360) % 360) >= 180;
         const sectNatalText = isDayNatal ? 'Natividade Diurna' : 'Natividade Noturna';
 
-        const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-        const diaHoraHTML = horasInfo ? `
-            <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
-                ${horasInfo.dayRulerId ? `
-                <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 700; color: #103b70;">DIA</div>
-                    ${getPlanet3DSVG(horasInfo.dayRulerId, 28)}
-                </div>` : ''}
-                ${horasInfo.hourRulerId ? `
-                <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 700; color: #103b70;">HORA</div>
-                    ${getPlanet3DSVG(horasInfo.hourRulerId, 28)}
-                </div>` : ''}
-            </div>` : '';
+        const latAtual = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
+        const lonAtual = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lon !== undefined) ? currentGeo.lon : -46.6333;
 
-        let linhaRSHTML = '';
+        function blocoDiaHora(rotulo, horasInfo) {
+            if (!horasInfo) return '';
+            return `
+                <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
+                    ${horasInfo.dayRulerId ? `
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: #103b70;">DIA</div>
+                        ${getPlanet3DSVG(horasInfo.dayRulerId, 28)}
+                    </div>` : ''}
+                    ${horasInfo.hourRulerId ? `
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: #103b70;">HORA</div>
+                        ${getPlanet3DSVG(horasInfo.hourRulerId, 28)}
+                    </div>` : ''}
+                </div>`;
+        }
+
+        const horasInfoNatal = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
+        const diaHoraNatalHTML = blocoDiaHora('Natal', horasInfoNatal);
+
+        let linhaRSTextoHTML = '';
+        let diaHoraRSHTML = '';
         if (dadosRS && rsTimestamp) {
             const rsMoment = new Date(rsTimestamp);
             const fusoRSVal = fusoNatalVal;
@@ -899,11 +1009,14 @@
             const isDayRS = ((dadosRS.Sol.grau_absoluto - dadosRS.Ascendente.grau_absoluto + 360) % 360) >= 180;
             const sectRSText = isDayRS ? 'Natividade Diurna' : 'Natividade Noturna';
 
-            linhaRSHTML = `
+            linhaRSTextoHTML = `
             <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2d9c2;">
                 <div style="font-size: 12px; color: #475569; font-weight: 500;">${diaSemanaRS} • ${diaRSFmt}/${mesRSFmt}/${anoRSFmt} às ${horaRSFmt}:${minRSFmt} (${fusoRSFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
                 <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa de Revolução Solar <span style="color: #9a6d18; font-weight: 700;">• ${sectRSText}</span></div>
             </div>`;
+
+            const horasInfoRS = calcularHorasPlanetariasProf(rsMoment, latAtual, lonAtual, fusoRSVal);
+            diaHoraRSHTML = blocoDiaHora('RS', horasInfoRS);
         }
 
         let html = `
@@ -925,17 +1038,22 @@
             </div>
         </div>
 
-        <!-- CABEÇALHO PADRÃO (estilo mandala): dados do natal em cima (nome, data/hora/local, zodíaco/signos/tipo de mapa + seita, e regentes do dia/hora à direita), dados da Revolução Solar calculada embaixo. -->
-        <div style="background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                <div>
-                    <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70;">${escapeHtmlProf(headerTitle)}</div>
-                    <div style="font-size: 12px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: #9a6d18; font-weight: 700;">• ${sectNatalText}</span></div>
-                </div>
-                ${diaHoraHTML}
+        <!-- CABEÇALHO PADRÃO (estilo mandala): coluna esquerda com os dados do
+             natal (nome, data/hora/local, zodíaco/signos/tipo de mapa + seita)
+             e, embaixo, os dados equivalentes da Revolução Solar calculada;
+             coluna direita com os regentes de dia/hora do natal e, empilhados
+             logo abaixo, os da Revolução Solar. -->
+        <div style="background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+            <div style="flex: 1 1 260px;">
+                <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70;">${escapeHtmlProf(headerTitle)}</div>
+                <div style="font-size: 12px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: #9a6d18; font-weight: 700;">• ${sectNatalText}</span></div>
+                ${linhaRSTextoHTML}
             </div>
-            ${linhaRSHTML}
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex-shrink: 0;">
+                ${diaHoraNatalHTML}
+                ${diaHoraRSHTML}
+            </div>
         </div>
 
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
