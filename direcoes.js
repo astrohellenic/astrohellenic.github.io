@@ -684,16 +684,19 @@ function renderCircumambulaçõesUI() {
     mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória",
     saturn: "Lote de Némesis"
   };
-  const afetaSelectOptions = afetasDisponiveis.map(af => {
-    const label = afetaLabelsDir[af.key] || af.key;
-    const sel = af.key === selectedAphetesKey ? ' selected' : '';
-    return `<option value="${af.key}"${sel}>${escapeHtml(label)}</option>`;
-  }).join('');
+  function iconeAfetaDir(af) {
+    return af.type === "planet"
+      ? getPlanet3DSVGDir(af.key)
+      : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
+  }
 
   const afetaAtual = afetasDisponiveis.find(af => af.key === selectedAphetesKey) || afetasDisponiveis[0];
-  const iconAtualHTML = afetaAtual.type === "planet"
-    ? getPlanet3DSVGDir(afetaAtual.key)
-    : getItemSVGDir(afetaAtual.key === "Syz" ? "Sizígia" : afetaAtual.key);
+  const iconAtualHTML = iconeAfetaDir(afetaAtual);
+
+  const afetaMenuRowsHTML = afetasDisponiveis.map(af => {
+    const label = afetaLabelsDir[af.key] || af.key;
+    return `<div onclick="alternarAfetaCircumambulation('${af.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${iconeAfetaDir(af)}</div>`;
+  }).join('');
 
   let html = `
     <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
@@ -702,19 +705,19 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta à direita. Mesma lógica dos Decênios: caixa quadrada com o ícone atual (seguindo o tema de planetas escolhido), com um <select> nativo transparente por cima para trocar com rolagem. -->
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta à direita. Mesma caixa/menu com rolagem e ícones (não texto) já usada no seletor de Casa 1 da mandala. -->
         <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
           <div>
             <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
             <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           </div>
-          <div style="position: relative; width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Afeta Direcionado">
-            <div style="pointer-events: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px;">
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Afeta Direcionado">
               ${iconAtualHTML}
+            </button>
+            <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+              ${afetaMenuRowsHTML}
             </div>
-            <select onchange="alternarAfetaCircumambulation(this.value)" style="position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none;">
-              ${afetaSelectOptions}
-            </select>
           </div>
         </div>
 
