@@ -128,11 +128,18 @@ function renderDeceniosUI(container) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #d4af37;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70; font-family: 'Cinzel', serif;">PLANETA INICIAL:</label>
-          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
-            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol (Diurno)</option>
-            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua (Noturno)</option>
+        <div style="position: relative; width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;" title="Planeta Inicial">
+          <div style="pointer-events: none; display: flex; align-items: center; justify-content: center;">
+            ${getPlanet3DSVG(startPlanetKey, 26)}
+          </div>
+          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none;">
+            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol</option>
+            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua</option>
+            <option value="Mercury" ${startPlanetKey === 'Mercury' ? 'selected' : ''}>Mercúrio</option>
+            <option value="Venus" ${startPlanetKey === 'Venus' ? 'selected' : ''}>Vênus</option>
+            <option value="Mars" ${startPlanetKey === 'Mars' ? 'selected' : ''}>Marte</option>
+            <option value="Jupiter" ${startPlanetKey === 'Jupiter' ? 'selected' : ''}>Júpiter</option>
+            <option value="Saturn" ${startPlanetKey === 'Saturn' ? 'selected' : ''}>Saturno</option>
           </select>
         </div>
       </div>
@@ -375,13 +382,13 @@ function renderizarResultadosHTML(res) {
       <div style="display: flex; flex-wrap: wrap; gap: 14px;">
         <!-- L1 -->
         <div style="flex: 1; min-width: 260px; background: #ffffff; border: 1px solid #fde047; border-radius: 10px; padding: 14px;">
-          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase;">Nível 1 (L1) - Regente da Era</span>
+          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase;">L1 - Regente da Era</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
               ${getPlanet3DSVG(activeL1.planet.id, 42)}
               <div>
                 <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL1.planet.name}</h4>
-                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL1.planet.signIdx]}</strong> (${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}')</div>
+                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} ${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}'</div>
               </div>
             </div>
             <span style="background: #fefce8; border: 1px solid #fde047; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #854d0e;">129 Meses</span>
@@ -394,13 +401,13 @@ function renderizarResultadosHTML(res) {
 
         <!-- L2 -->
         <div style="flex: 1; min-width: 260px; background: #ffffff; border: 1px solid #93c5fd; border-radius: 10px; padding: 14px;">
-          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #1d5fa8; text-transform: uppercase;">Nível 2 (L2) - Executor do Momento</span>
+          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #1d5fa8; text-transform: uppercase;">L2 - Executor do Momento</span>
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
               ${getPlanet3DSVG(activeL2.planet.id, 42)}
               <div>
                 <h4 style="font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; margin: 0; color: #1e293b;">${activeL2.planet.name}</h4>
-                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} <strong>${ZODIACO_DECENIOS[activeL2.planet.signIdx]}</strong> (${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}')</div>
+                <div style="font-size: 11px; color: #64748b; margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} ${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}'</div>
               </div>
             </div>
             <span style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #1e40af;">${activeL2.months} Meses</span>
@@ -439,7 +446,7 @@ function renderizarResultadosHTML(res) {
                 return `
                   <tr id="dec_l2_row_${keyL3}" data-bg-default="${defaultBg}" onclick="alternarL3AccordionDec('active', ${sIdx}, event)" style="border-bottom: 1px solid #e2e8f0; background-color: ${defaultBg}; ${borderLeft} cursor: pointer;">
                     <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(sub.planet.id, 32)}</td>
-                    <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days}d)</td>
+                    <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days} dias)</td>
                     <td style="padding: 10px 12px;">${formatDateDec(sub.startDate)}</td>
                     <td style="padding: 10px 12px;">${formatDateDec(sub.endDate)}</td>
                   </tr>
@@ -471,7 +478,7 @@ function renderizarResultadosHTML(res) {
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
                   <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: #0f172a;">L1: ${l1.planet.name.toUpperCase()}</strong>
-                  <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${ZODIACO_DECENIOS[l1.planet.signIdx]} (${l1.planet.degree}°${formatMin(l1.planet.minute)}') • 129 Meses</div>
+                  <div style="font-size: 11px; color: #64748b;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' • 129 Meses</div>
                 </div>
               </div>
               <strong style="font-size: 11px; color: #475569;">${formatDateDec(l1.startDate)} a ${formatDateDec(l1.endDate)}</strong>
@@ -495,7 +502,7 @@ function renderizarResultadosHTML(res) {
                     return `
                       <tr id="dec_l2_row_${keyL3}" data-bg-default="${defaultBg}" onclick="alternarL3AccordionDec(${idx}, ${l2Idx}, event)" style="border-bottom: 1px solid #e2e8f0; background-color: ${defaultBg}; ${borderLeft} cursor: pointer;">
                         <td style="padding: 8px 10px; text-align: center;">${getPlanet3DSVG(l2.planet.id, 28)}</td>
-                        <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days}d)</td>
+                        <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days} dias)</td>
                         <td style="padding: 8px 10px;">${formatDateDec(l2.startDate)}</td>
                         <td style="padding: 8px 10px;">${formatDateDec(l2.endDate)}</td>
                       </tr>
