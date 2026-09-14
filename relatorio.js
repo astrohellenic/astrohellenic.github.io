@@ -18,8 +18,6 @@ const RELATORIO_LOT_NOMES = {
   saturn: 'Lote da Nêmesis'
 };
 
-const RELATORIO_DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
 function carregarDadosAstrologoRelatorio() {
   try {
     const raw = localStorage.getItem(RELATORIO_ASTROLOGO_KEY);
@@ -139,20 +137,9 @@ function voltarConfigRelatorio() {
 }
 
 function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, dadosAstrologo, logoUrl) {
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-  const diaSemana = RELATORIO_DIAS_SEMANA[currentMoment.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `GMT ${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const nomeCliente = currentSubjectName || 'Nativo(a)';
-  const cidade = currentGeo.city || 'Localidade não informada';
-
   const marcaHtml = logoUrl
-    ? `<img src="${logoUrl}" alt="Logo" style="max-height: 46px; max-width: 220px; object-fit: contain;">`
-    : `<div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; letter-spacing: 0.08em;">ASTRO HELLENIC</div>`;
+    ? `<img src="${logoUrl}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
+    : '';
 
   const rodapeAstrologo = [dadosAstrologo.nome, dadosAstrologo.telefone, dadosAstrologo.email].filter(Boolean);
 
@@ -169,33 +156,34 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
     <div class="rel-viewer">
 
-      <!-- 1. CAPA -->
-      <section class="rel-page rel-capa">
-        <div class="rel-marca">${marcaHtml}</div>
+      <!-- 1. CAPA (nome/data/local não se repetem aqui: já vêm no
+           próprio cabeçalho que a mandala desenha dentro da imagem) -->
+      <section class="rel-page rel-capa" data-pg="capa">
         <h1 class="rel-titulo-capa">Mapa Natal<br>Clássico</h1>
-        <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
-        <div class="rel-caixa-cliente">
-          <div class="rel-nome-cliente">${escapeHtml(nomeCliente)}</div>
-          <div class="rel-linha-cliente">${dia}/${mes}/${ano}, ${diaSemana} - ${hora}h${min} ${fusoFormatted}</div>
-          <div class="rel-linha-cliente">${escapeHtml(cidade)}</div>
+        <div class="rel-capa-centro">
+          <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
+        </div>
+        <div class="rel-marca-rodape">
+          ${marcaHtml}
+          <div class="rel-powered-by">powered by Astro Hellenic</div>
         </div>
       </section>
 
       <!-- 2. ÍNDICE -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="indice">
         <div class="rel-h1">Índice</div>
         <ul class="rel-indice">
-          <li>O que é Mapa Natal</li>
-          <li>Mapa Natal</li>
-          <li>Entendendo as Mandalas</li>
-          <li>Os Sete Lotes Herméticos</li>
-          <li>As Dodecatemórias</li>
-          <li>Casas a partir do Lote da Fortuna</li>
+          <li><span>O que é Mapa Natal</span><span class="rel-num-pagina" data-alvo="o-que-e"></span></li>
+          <li><span>Mapa Natal</span><span class="rel-num-pagina" data-alvo="mandala1"></span></li>
+          <li><span>Entendendo as Mandalas</span><span class="rel-num-pagina" data-alvo="entendendo"></span></li>
+          <li><span>Os Sete Lotes Herméticos</span><span class="rel-num-pagina" data-alvo="sete-lotes"></span></li>
+          <li><span>As Dodecatemórias</span><span class="rel-num-pagina" data-alvo="dodecatemorias"></span></li>
+          <li><span>Casas a partir do Lote da Fortuna</span><span class="rel-num-pagina" data-alvo="casas-fortuna"></span></li>
         </ul>
       </section>
 
       <!-- 3. O QUE É MAPA NATAL -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="o-que-e">
         <div class="rel-h1">O que é Mapa Natal</div>
         <div class="rel-corpo">
           <p>O mapa natal é o registro geométrico e astronômico do céu no exato instante e local do nascimento de um indivíduo. Longe de ser um resumo estático de personalidade, ele representa a matriz fundamental de uma vida, funcionando como o projeto arquitetônico que descreve o destino, as potências e os cenários que se desdobrarão ao longo da existência.</p>
@@ -205,20 +193,20 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 4. MAPA NATAL - MANDALA 1 -->
-      <section class="rel-page rel-page-mapa">
+      <section class="rel-page rel-page-mapa" data-pg="mandala1">
         <div class="rel-h1">Mapa Natal</div>
         <img class="rel-img-mandala" src="${png1}" alt="Mandala 1">
         <div class="rel-legenda-mandala">Mandala 1</div>
       </section>
 
       <!-- 5. MANDALA 2 (Fortuna na Casa 1) -->
-      <section class="rel-page rel-page-mapa">
+      <section class="rel-page rel-page-mapa" data-pg="mandala2">
         <img class="rel-img-mandala" src="${png2}" alt="Mandala 2">
         <div class="rel-legenda-mandala">Mandala 2</div>
       </section>
 
       <!-- 6. ENTENDENDO AS MANDALAS -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="entendendo">
         <div class="rel-h1">Entendendo as Mandalas</div>
         <div class="rel-corpo">
           <p>Para facilitar a sua navegação pelo relatório, o seu mapa foi estruturado em duas camadas que se complementam. Veja como ler cada uma delas:</p>
@@ -228,7 +216,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 7. OS SETE LOTES HERMÉTICOS -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="sete-lotes">
         <div class="rel-h1">Os Sete Lotes Herméticos</div>
         <div class="rel-corpo">
           <p>Os Sete Lotes Herméticos constituem um dos sistemas mais refinados de cálculo e subdivisão temática da astrologia clássica. Atribuída à tradição de Hermes, essa metodologia projeta sete pontos matemáticos específicos no mapa natal, onde cada um está geometricamente atrelado a um dos astros do setenário. Eles funcionam como receptáculos das promessas planetárias, isolando e detalhando áreas cruciais da experiência humana para avaliar como o destino e a ação do nativo se desdobrarão em cenários muito específicos da vida material e factual.</p>
@@ -239,7 +227,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 8. AS DODECATEMÓRIAS -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="dodecatemorias">
         <div class="rel-h1">As Dodecatemórias</div>
         <div class="rel-corpo">
           <p>As dodecatemórias representam uma das técnicas mais profundas de microsubdivisão zodiacal da astrologia clássica. O termo, de origem grega, refere-se à divisão de cada um dos doze signos de 30° em doze partes menores de exatamente 2,5° cada, projetando uma espécie de "microcosmo zodiacal" dentro de cada signo. Essa técnica permite decodificar uma camada subjacente e íntima do mapa natal, revelando a raiz oculta e as ramificações invisíveis de cada planeta e ponto calculado.</p>
@@ -250,7 +238,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
       </section>
 
       <!-- 9. CASAS A PARTIR DO LOTE DA FORTUNA -->
-      <section class="rel-page">
+      <section class="rel-page" data-pg="casas-fortuna">
         <div class="rel-h1">Casas a partir do Lote da Fortuna</div>
         <div class="rel-corpo">
           <p>A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.</p>
@@ -280,60 +268,109 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
   container.innerHTML = htmlRelatorio;
   container.scrollTop = 0;
+  numerarPaginasIndice(container);
+}
+
+/* Preenche os números de página do Índice medindo a altura real de cada
+   seção já renderizada (cada .rel-page ocupa 297mm — uma ou mais páginas
+   físicas, se o conteúdo dela transbordar). Não dá pra saber a paginação
+   de antemão porque o conteúdo varia por cliente (tabelas maiores/menores
+   etc.), então ela é calculada depois de tudo estar na tela. */
+function numerarPaginasIndice(container) {
+  const paginaAlturaPx = 297 * 96 / 25.4; // 297mm convertidos para px (96dpi, o padrão do CSS)
+  const paginas = container.querySelectorAll('.rel-viewer > .rel-page[data-pg]');
+  let numeroAtual = 1;
+  const numeroPorAlvo = {};
+
+  paginas.forEach(pagina => {
+    numeroPorAlvo[pagina.dataset.pg] = numeroAtual;
+    const altura = pagina.getBoundingClientRect().height;
+    numeroAtual += Math.max(1, Math.round(altura / paginaAlturaPx));
+  });
+
+  container.querySelectorAll('.rel-num-pagina[data-alvo]').forEach(span => {
+    const numero = numeroPorAlvo[span.dataset.alvo];
+    if (numero) span.textContent = numero;
+  });
+}
+
+/* Planeta regente de cada lote (usado só para escolher o ícone na
+   tabela) — o mesmo associado a cada lote no texto acima. */
+const RELATORIO_LOT_PLANETA_ID = {
+  fortune: 'Moon', spirit: 'Sun', venus: 'Venus', mercury: 'Mercury',
+  mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn'
+};
+
+/* Célula no padrão da Tabela Técnica: ícone em cima, rótulo pequeno embaixo. */
+function relatorioCelulaIconeRotulo(iconHTML, rotulo) {
+  return `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+      ${iconHTML}
+      <span style="font-size: 9px; font-weight: 600; color: #103b70; line-height: 1.1; text-align: center;">${escapeHtml(rotulo)}</span>
+    </div>
+  `;
 }
 
 function renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal) {
-  if (!lotesNatal || !lotesNatal.length || typeof casaDoGrauLotes !== 'function' || typeof SIGN_NAMES_LOTES === 'undefined') return '';
+  if (!lotesNatal || !lotesNatal.length) return '';
+  if (typeof casaDoGrauLotes !== 'function' || typeof SIGN_NAMES_LOTES === 'undefined') return '';
+  if (typeof getSignSVG !== 'function' || typeof getPlanet3DSVG !== 'function') return '';
 
   const ordemPadrao = ['fortune', 'spirit', 'venus', 'mercury', 'mars', 'jupiter', 'saturn'];
   const linhas = ordemPadrao.map(key => {
     const lot = lotesNatal.find(l => l.key === key);
     if (!lot) return '';
-    const signo = SIGN_NAMES_LOTES[Math.floor(((lot.deg % 360) + 360) % 360 / 30)];
+    const signIdx = Math.floor(((lot.deg % 360) + 360) % 360 / 30);
     const casa = casaDoGrauLotes(lot.deg, ascAbsNatal);
+    const iconePlaneta = getPlanet3DSVG(RELATORIO_LOT_PLANETA_ID[key], 30);
     return `
       <tr>
-        <td>${escapeHtml(RELATORIO_LOT_NOMES[key] || key)}</td>
-        <td>${escapeHtml(signo)} ${formatDegMin(lot.deg)}</td>
+        <td class="col-ponto">${relatorioCelulaIconeRotulo(iconePlaneta, RELATORIO_LOT_NOMES[key] || key)}</td>
+        <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(signIdx, 18), SIGN_NAMES_LOTES[signIdx])}</td>
+        <td class="col-grau">${formatDegMin(lot.deg)}</td>
         <td>Casa ${casa}</td>
       </tr>
     `;
   }).join('');
 
   return `
-    <table class="rel-tabela">
-      <thead><tr><th>Lote</th><th>Posição</th><th>Casa Nativa</th></tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>
+    <div class="rel-tabela-wrap">
+      <table class="tabela-enxuta">
+        <thead><tr><th>Lote</th><th>Signo</th><th>Grau</th><th>Casa Nativa</th></tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>
   `;
 }
 
 function renderTabelaDodecatemoriasRelatorio() {
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return '';
   if (typeof calcDodecatemoriaTabela !== 'function' || typeof PLANETS_DEF === 'undefined' || typeof SIGNS === 'undefined') return '';
+  if (typeof getSignSVG !== 'function' || typeof getPlanet3DSVG !== 'function') return '';
 
   const data = currentCalculatedData;
   const linhas = PLANETS_DEF.map(p => {
     const item = data[p.key];
     if (!item) return '';
     const absDeg = item.grau_absoluto;
-    const signoNatal = SIGNS[Math.floor(((absDeg % 360) + 360) % 360 / 30)].name;
+    const signIdxNatal = Math.floor(((absDeg % 360) + 360) % 360 / 30);
     const dodec = calcDodecatemoriaTabela(absDeg);
-    const signoDodec = dodec.signIdx >= 0 ? SIGNS[dodec.signIdx].name : '-';
     return `
       <tr>
-        <td>${escapeHtml(p.name)}</td>
-        <td>${escapeHtml(signoNatal)}</td>
-        <td>${escapeHtml(signoDodec)}</td>
+        <td class="col-ponto">${relatorioCelulaIconeRotulo(getPlanet3DSVG(p.id, 30), p.name)}</td>
+        <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(signIdxNatal, 18), SIGNS[signIdxNatal].name)}</td>
+        <td class="col-signo">${dodec.signIdx >= 0 ? relatorioCelulaIconeRotulo(getSignSVG(dodec.signIdx, 18), SIGNS[dodec.signIdx].name) : '-'}</td>
       </tr>
     `;
   }).join('');
 
   return `
-    <table class="rel-tabela">
-      <thead><tr><th>Planeta</th><th>Signo Natal</th><th>Dodecatemória</th></tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>
+    <div class="rel-tabela-wrap">
+      <table class="tabela-enxuta">
+        <thead><tr><th>Planeta</th><th>Signo Natal</th><th>Dodecatemória</th></tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>
   `;
 }
 
@@ -366,26 +403,36 @@ function injetarEstilosRelatorio() {
         font-family: 'Cinzel', serif; font-size: 19px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
         border: 1.5px solid #c59b27; border-radius: 8px; padding: 14px; margin-bottom: 26px; background: #fffdf5;
+        break-inside: avoid; page-break-inside: avoid;
       }
 
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
 
       .rel-indice { list-style: none; padding: 0; margin: 0; }
-      .rel-indice li { font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
+      .rel-indice li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
+      .rel-num-pagina { font-weight: 700; color: #9a6d18; }
 
-      .rel-tabela { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 11.5px; }
-      .rel-tabela th { background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; padding: 8px 10px; text-align: left; }
-      .rel-tabela td { padding: 7px 10px; border-bottom: 1px solid #e2d9c2; color: #1e293b; }
-      .rel-tabela tr:nth-child(even) td { background: #faf8f0; }
+      /* TABELAS: mesmo padrão visual (cores, bordas, ícones) da Tabela
+         Técnica (classe .tabela-enxuta, definida também em tabelaTecnica.js)
+         — repetida aqui porque o CSS daquele módulo só existe enquanto ele
+         está aberto, e some do documento quando se troca de ferramenta. */
+      .rel-tabela-wrap { margin-top: 18px; }
+      .rel-tabela-wrap .tabela-enxuta { margin: 0 auto; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: #ffffff; font-size: 12px; color: #0f172a; }
+      .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1e5fa4; padding: 8px 10px; text-align: center; vertical-align: middle; }
+      .tabela-enxuta th { background-color: #fffdf5; font-weight: 700; color: #103b70; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+      .tabela-enxuta tr { break-inside: avoid; page-break-inside: avoid; }
 
-      /* CAPA */
-      .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 14mm; }
-      .rel-marca { margin-bottom: 18px; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 18px; }
-      .rel-img-capa { max-width: 92mm; margin-bottom: 24px; }
-      .rel-caixa-cliente { border: 2.5px solid #c59b27; border-radius: 8px; padding: 16px 24px; width: 100%; max-width: 150mm; margin-top: auto; }
-      .rel-nome-cliente { font-family: 'Cinzel', serif; font-weight: 800; font-size: 16px; color: #103b70; text-transform: uppercase; margin-bottom: 6px; }
-      .rel-linha-cliente { font-size: 12px; color: #334155; font-weight: 600; }
+      /* CAPA: título fixo no topo, mandala centralizada no espaço que
+         sobra, e a marca do astrólogo + "powered by" fixas no rodapé —
+         por isso a página inteira (não só o conteúdo) precisa virar um
+         flex column de cima a baixo. */
+      .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
+      .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+      .rel-img-capa { max-width: 92mm; max-height: 100%; }
+      .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
+      .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
+      .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
 
       /* PÁGINAS DAS MANDALAS */
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
@@ -394,7 +441,7 @@ function injetarEstilosRelatorio() {
 
       /* ENCERRAMENTO */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
-      .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; }
+      .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; break-inside: avoid; page-break-inside: avoid; }
       .rel-rodape-nome { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; }
 
       @media print {
