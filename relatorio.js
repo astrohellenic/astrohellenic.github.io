@@ -18,8 +18,6 @@ const RELATORIO_LOT_NOMES = {
   saturn: 'Lote da Nêmesis'
 };
 
-const RELATORIO_DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
 function carregarDadosAstrologoRelatorio() {
   try {
     const raw = localStorage.getItem(RELATORIO_ASTROLOGO_KEY);
@@ -139,17 +137,6 @@ function voltarConfigRelatorio() {
 }
 
 function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, dadosAstrologo, logoUrl) {
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-  const diaSemana = RELATORIO_DIAS_SEMANA[currentMoment.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `GMT ${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const nomeCliente = currentSubjectName || 'Nativo(a)';
-  const cidade = currentGeo.city || 'Localidade não informada';
-
   const marcaHtml = logoUrl
     ? `<img src="${logoUrl}" alt="Logo" style="max-height: 46px; max-width: 220px; object-fit: contain;">`
     : `<div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; letter-spacing: 0.08em;">ASTRO HELLENIC</div>`;
@@ -169,16 +156,12 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
     <div class="rel-viewer">
 
-      <!-- 1. CAPA -->
+      <!-- 1. CAPA (o nome/data/local não se repetem aqui: já vêm no
+           próprio cabeçalho que a mandala desenha dentro da imagem) -->
       <section class="rel-page rel-capa">
         <div class="rel-marca">${marcaHtml}</div>
         <h1 class="rel-titulo-capa">Mapa Natal<br>Clássico</h1>
         <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
-        <div class="rel-caixa-cliente">
-          <div class="rel-nome-cliente">${escapeHtml(nomeCliente)}</div>
-          <div class="rel-linha-cliente">${dia}/${mes}/${ano}, ${diaSemana} - ${hora}h${min} ${fusoFormatted}</div>
-          <div class="rel-linha-cliente">${escapeHtml(cidade)}</div>
-        </div>
       </section>
 
       <!-- 2. ÍNDICE -->
@@ -204,9 +187,9 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
         </div>
       </section>
 
-      <!-- 4. MAPA NATAL - MANDALA 1 -->
+      <!-- 4. MAPA NATAL - MANDALA 1 (sem título aqui: a própria mandala
+           já traz seu cabeçalho com nome/data/local) -->
       <section class="rel-page rel-page-mapa">
-        <div class="rel-h1">Mapa Natal</div>
         <img class="rel-img-mandala" src="${png1}" alt="Mandala 1">
         <div class="rel-legenda-mandala">Mandala 1</div>
       </section>
@@ -282,58 +265,83 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
   container.scrollTop = 0;
 }
 
+/* Planeta regente de cada lote (usado só para escolher o ícone na
+   tabela) — o mesmo associado a cada lote no texto acima. */
+const RELATORIO_LOT_PLANETA_ID = {
+  fortune: 'Moon', spirit: 'Sun', venus: 'Venus', mercury: 'Mercury',
+  mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn'
+};
+
+/* Célula no padrão da Tabela Técnica: ícone em cima, rótulo pequeno embaixo. */
+function relatorioCelulaIconeRotulo(iconHTML, rotulo) {
+  return `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+      ${iconHTML}
+      <span style="font-size: 9px; font-weight: 600; color: #103b70; line-height: 1.1; text-align: center;">${escapeHtml(rotulo)}</span>
+    </div>
+  `;
+}
+
 function renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal) {
-  if (!lotesNatal || !lotesNatal.length || typeof casaDoGrauLotes !== 'function' || typeof SIGN_NAMES_LOTES === 'undefined') return '';
+  if (!lotesNatal || !lotesNatal.length) return '';
+  if (typeof casaDoGrauLotes !== 'function' || typeof SIGN_NAMES_LOTES === 'undefined') return '';
+  if (typeof getSignSVG !== 'function' || typeof getPlanet3DSVG !== 'function') return '';
 
   const ordemPadrao = ['fortune', 'spirit', 'venus', 'mercury', 'mars', 'jupiter', 'saturn'];
   const linhas = ordemPadrao.map(key => {
     const lot = lotesNatal.find(l => l.key === key);
     if (!lot) return '';
-    const signo = SIGN_NAMES_LOTES[Math.floor(((lot.deg % 360) + 360) % 360 / 30)];
+    const signIdx = Math.floor(((lot.deg % 360) + 360) % 360 / 30);
     const casa = casaDoGrauLotes(lot.deg, ascAbsNatal);
+    const iconePlaneta = getPlanet3DSVG(RELATORIO_LOT_PLANETA_ID[key], 30);
     return `
       <tr>
-        <td>${escapeHtml(RELATORIO_LOT_NOMES[key] || key)}</td>
-        <td>${escapeHtml(signo)} ${formatDegMin(lot.deg)}</td>
+        <td class="col-ponto">${relatorioCelulaIconeRotulo(iconePlaneta, RELATORIO_LOT_NOMES[key] || key)}</td>
+        <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(signIdx, 18), SIGN_NAMES_LOTES[signIdx])}</td>
+        <td class="col-grau">${formatDegMin(lot.deg)}</td>
         <td>Casa ${casa}</td>
       </tr>
     `;
   }).join('');
 
   return `
-    <table class="rel-tabela">
-      <thead><tr><th>Lote</th><th>Posição</th><th>Casa Nativa</th></tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>
+    <div class="rel-tabela-wrap">
+      <table class="tabela-enxuta">
+        <thead><tr><th>Lote</th><th>Signo</th><th>Grau</th><th>Casa Nativa</th></tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>
   `;
 }
 
 function renderTabelaDodecatemoriasRelatorio() {
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return '';
   if (typeof calcDodecatemoriaTabela !== 'function' || typeof PLANETS_DEF === 'undefined' || typeof SIGNS === 'undefined') return '';
+  if (typeof getSignSVG !== 'function' || typeof getPlanet3DSVG !== 'function') return '';
 
   const data = currentCalculatedData;
   const linhas = PLANETS_DEF.map(p => {
     const item = data[p.key];
     if (!item) return '';
     const absDeg = item.grau_absoluto;
-    const signoNatal = SIGNS[Math.floor(((absDeg % 360) + 360) % 360 / 30)].name;
+    const signIdxNatal = Math.floor(((absDeg % 360) + 360) % 360 / 30);
     const dodec = calcDodecatemoriaTabela(absDeg);
-    const signoDodec = dodec.signIdx >= 0 ? SIGNS[dodec.signIdx].name : '-';
     return `
       <tr>
-        <td>${escapeHtml(p.name)}</td>
-        <td>${escapeHtml(signoNatal)}</td>
-        <td>${escapeHtml(signoDodec)}</td>
+        <td class="col-ponto">${relatorioCelulaIconeRotulo(getPlanet3DSVG(p.id, 30), p.name)}</td>
+        <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(signIdxNatal, 18), SIGNS[signIdxNatal].name)}</td>
+        <td class="col-signo">${dodec.signIdx >= 0 ? relatorioCelulaIconeRotulo(getSignSVG(dodec.signIdx, 18), SIGNS[dodec.signIdx].name) : '-'}</td>
       </tr>
     `;
   }).join('');
 
   return `
-    <table class="rel-tabela">
-      <thead><tr><th>Planeta</th><th>Signo Natal</th><th>Dodecatemória</th></tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>
+    <div class="rel-tabela-wrap">
+      <table class="tabela-enxuta">
+        <thead><tr><th>Planeta</th><th>Signo Natal</th><th>Dodecatemória</th></tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>
   `;
 }
 
@@ -366,6 +374,7 @@ function injetarEstilosRelatorio() {
         font-family: 'Cinzel', serif; font-size: 19px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
         border: 1.5px solid #c59b27; border-radius: 8px; padding: 14px; margin-bottom: 26px; background: #fffdf5;
+        break-inside: avoid; page-break-inside: avoid;
       }
 
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
@@ -373,19 +382,21 @@ function injetarEstilosRelatorio() {
       .rel-indice { list-style: none; padding: 0; margin: 0; }
       .rel-indice li { font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
 
-      .rel-tabela { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 11.5px; }
-      .rel-tabela th { background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; padding: 8px 10px; text-align: left; }
-      .rel-tabela td { padding: 7px 10px; border-bottom: 1px solid #e2d9c2; color: #1e293b; }
-      .rel-tabela tr:nth-child(even) td { background: #faf8f0; }
+      /* TABELAS: mesmo padrão visual (cores, bordas, ícones) da Tabela
+         Técnica (classe .tabela-enxuta, definida também em tabelaTecnica.js)
+         — repetida aqui porque o CSS daquele módulo só existe enquanto ele
+         está aberto, e some do documento quando se troca de ferramenta. */
+      .rel-tabela-wrap { margin-top: 18px; }
+      .rel-tabela-wrap .tabela-enxuta { margin: 0 auto; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: #ffffff; font-size: 12px; color: #0f172a; }
+      .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1e5fa4; padding: 8px 10px; text-align: center; vertical-align: middle; }
+      .tabela-enxuta th { background-color: #fffdf5; font-weight: 700; color: #103b70; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+      .tabela-enxuta tr { break-inside: avoid; page-break-inside: avoid; }
 
       /* CAPA */
       .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 14mm; }
       .rel-marca { margin-bottom: 18px; }
       .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 34px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 18px; }
-      .rel-img-capa { max-width: 92mm; margin-bottom: 24px; }
-      .rel-caixa-cliente { border: 2.5px solid #c59b27; border-radius: 8px; padding: 16px 24px; width: 100%; max-width: 150mm; margin-top: auto; }
-      .rel-nome-cliente { font-family: 'Cinzel', serif; font-weight: 800; font-size: 16px; color: #103b70; text-transform: uppercase; margin-bottom: 6px; }
-      .rel-linha-cliente { font-size: 12px; color: #334155; font-weight: 600; }
+      .rel-img-capa { max-width: 92mm; }
 
       /* PÁGINAS DAS MANDALAS */
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
@@ -394,7 +405,7 @@ function injetarEstilosRelatorio() {
 
       /* ENCERRAMENTO */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
-      .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; }
+      .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; break-inside: avoid; page-break-inside: avoid; }
       .rel-rodape-nome { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; }
 
       @media print {
