@@ -128,11 +128,18 @@ function renderDeceniosUI(container) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #d4af37;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70; font-family: 'Cinzel', serif;">PLANETA INICIAL:</label>
-          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #334155; outline: none; background: #ffffff; cursor: pointer;">
-            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol (Diurno)</option>
-            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua (Noturno)</option>
+        <div style="position: relative; width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;" title="Planeta Inicial">
+          <div style="pointer-events: none; display: flex; align-items: center; justify-content: center;">
+            ${getPlanet3DSVG(startPlanetKey, 26)}
+          </div>
+          <select id="decStartPlanetSelect" onchange="alternarSeitaManual(this.value)" style="position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none;">
+            <option value="Sun" ${startPlanetKey === 'Sun' ? 'selected' : ''}>Sol</option>
+            <option value="Moon" ${startPlanetKey === 'Moon' ? 'selected' : ''}>Lua</option>
+            <option value="Mercury" ${startPlanetKey === 'Mercury' ? 'selected' : ''}>Mercúrio</option>
+            <option value="Venus" ${startPlanetKey === 'Venus' ? 'selected' : ''}>Vênus</option>
+            <option value="Mars" ${startPlanetKey === 'Mars' ? 'selected' : ''}>Marte</option>
+            <option value="Jupiter" ${startPlanetKey === 'Jupiter' ? 'selected' : ''}>Júpiter</option>
+            <option value="Saturn" ${startPlanetKey === 'Saturn' ? 'selected' : ''}>Saturno</option>
           </select>
         </div>
       </div>
