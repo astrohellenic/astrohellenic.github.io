@@ -682,7 +682,11 @@ function renderCircumambulaçõesUI() {
     mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória",
     saturn: "Lote de Némesis"
   };
-  const afetaAtualLabel = afetaLabelsDir[selectedAphetesKey] || selectedAphetesKey;
+  const afetaSelectOptions = afetasDisponiveis.map(af => {
+    const label = afetaLabelsDir[af.key] || af.key;
+    const sel = af.key === selectedAphetesKey ? ' selected' : '';
+    return `<option value="${af.key}"${sel}>${escapeHtml(label)}</option>`;
+  }).join('');
 
   let html = `
     <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
@@ -691,35 +695,15 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + ícone do afeta à direita -->
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta (com rolagem, igual ao de Decênios) à direita -->
         <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
           <div>
             <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
             <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0;" title="Afeta Direcionado: ${escapeHtml(afetaAtualLabel)}">${afetaCursorSvgHTML}</div>
-        </div>
-
-        <!-- BOTOEIRA DE AFETAS (não aparece na impressão; ver o ícone no cabeçalho acima) -->
-        <div class="no-print" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-  `;
-
-  afetasDisponiveis.forEach(af => {
-    const isSel = (af.key === selectedAphetesKey);
-    const styleBtn = isSel
-      ? "background: #f1f5f9; color: #103b70; border: 1px solid #c59b27;"
-      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
-
-    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
-
-    html += `
-      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${af.key}">
-        <div style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">${iconHTML}</div>
-      </button>
-    `;
-  });
-
-  html += `
+          <select onchange="alternarAfetaCircumambulation(this.value)" title="Afeta Direcionado" style="flex-shrink: 0; padding: 6px 10px; border-radius: 8px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; outline: none; cursor: pointer; max-width: 170px;">
+            ${afetaSelectOptions}
+          </select>
         </div>
 
         <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão -->
