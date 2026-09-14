@@ -568,7 +568,7 @@ function injetarBotaoRotacaoNaBarraSuperior() {
 
   let iconContent = '';
   if (selectedHouse1Lot === 'ASC') {
-    iconContent = `<span style="font-size: 11px; font-weight: 800; color: #103b70;">ASC</span>`;
+    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
   } else if (selectedHouse1Lot === 'fortune') {
     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
   } else if (selectedHouse1Lot === 'spirit') {
