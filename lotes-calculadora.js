@@ -1,0 +1,497 @@
+/* ==========================================
+   MÓDULO DA CALCULADORA DE LOTES
+   Ferramenta adicional — não altera calculateSevenLots()
+   nem nenhum outro módulo já existente.
+
+   Parte 1: lotes pré-calculados para o mapa carregado.
+   Parte 2: calculadora livre (ponto de partida + Planeta A/B).
+
+   Fórmulas conforme especificação do usuário. Onde não indicado
+   autor específico na fonte, usa-se a atribuição genérica
+   "Tradição Helenística".
+   ========================================== */
+
+const MONOLINE_ZODIAC_SVGS_LOTES = [
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
+  `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="32" cy="43" r="18"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,3c14,0,15,12,15,12s0,10,17,10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,3C50,3,49,15,49,15s0,10-17,10"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,8c0,0,16,4,32,4s32-4,32-4"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M64,56c0,0-16-4-32-4S0,56,0,56"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="21" y1="12" x2="21" y2="52"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="43" y1="12" x2="43" y2="52"></line>`,
+  `<circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="11" cy="27" r="10"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5,19c0,0,7-6,28-6c15,0,31,10,31,10"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="53" cy="37" r="10"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M59,45c0,0-7,6-28,6C16,51,0,41,0,41"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M22.649,33.597 c-8.337-4.888-11.134-15.608-6.247-23.946C21.29,1.312,32.012-1.485,40.35,3.403c8.337,4.888,11.134,15.608,6.247,23.946 C46.597,27.35,36,46,36,54"></path><circle fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" cx="19" cy="42" r="9"></circle><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M53.064,58c-1.473,2.963-4.531,5-8.064,5 c-4.971,0-9-4.029-9-9"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,64c0,0-6-5-6-12s0-40,0-40s0-11-8-11s-8,11-8,11 v40"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,52V12c0,0,0.083-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M16,12c0,0,0-10-8-10"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,24c0,0,0-14,6-14s6,14,6,14s-1,34-27,34"></path>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M41.667,38.002 c3.913-2.939,6.444-7.619,6.444-12.891C48.111,16.213,40.897,9,32,9s-16.111,7.213-16.111,16.111c0,5.27,2.53,9.948,6.442,12.889"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="38" x2="23" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="41" y1="38" x2="64" y2="38"></line><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="0" y1="55" x2="64" y2="55"></line>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30,52V12c0,0,0-11,8-11s8,11,8,11s0,33,0,40 c0,0,0,6,6,6h5"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,52V12c0,0,0-11,8-11s8,11,8,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14,12c0,0,0-10-8-10"></path><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="bevel" stroke-linecap="round" points="52,53 57,58 52,63 "></polyline>`,
+  `<line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="63" y1="1" x2="0" y2="64"></line><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="36,1 63,1 63,28 "></polyline><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="1" y1="28" x2="36" y2="63"></line>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M9,5c0,0,0-4,6-4c5,0,4,10,4,10v29"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M19,11c0,0,0-10,7-10s7,10,7,10v29c0,0-1,14,15,14"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,40c-3,0-12,1-12,12c0,1,1,11-12,11"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M48,54c3.866,0,7-3.134,7-7s-3.134-7-7-7"></path>`,
+  `<polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,28 16,16 20,28 36,16 40,28 55,16 63,28 "></polyline><polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="0,48 16,36 20,48 36,36 40,48 55,36 63,48 "></polyline>`,
+  `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="7" y1="32" x2="57" y2="32"></line>`
+];
+
+const SIGN_NAMES_LOTES = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
+const SIGN_COLORS_LOTES = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
+
+function getSignSVGLotes(signIndex, size = 22) {
+  if (signIndex < 0 || signIndex > 11) return '';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_LOTES[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</svg>`;
+}
+
+/* Reaproveita o SVG esférico/simples já definido globalmente (decenios.js/horas.js) conforme a Aparência escolhida pelo usuário. */
+function getPlanet3DSVGLotes(planetId, size = 26) {
+  if (typeof getPlanet3DSVG === 'function') {
+    return getPlanet3DSVG(planetId, size);
+  }
+  return '';
+}
+
+/* Mesmo círculo preto sobre fundo branco usado para ASC/DSC/MC/IC na mandala e no Painel Técnico. */
+function getASCIconSVGLotes(size = 22) {
+  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
+}
+
+/* Ícone genérico de lote (mesmo padrão de círculo + símbolo usado em liberacao.js/direcoes.js), com uma abreviação curta no lugar de um único glifo planetário quando o lote combina mais de um termo. */
+function getLoteAbbrevIconSVG(abbrev, size = 22) {
+  const len = (abbrev || '').length;
+  const fontSize = len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6));
+  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="currentColor" text-anchor="middle">${abbrev}</text></svg>`;
+}
+
+function getLoteFortunaIconSVG(size = 22) {
+  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
+}
+
+function getLoteEspiritoIconSVG(size = 22) {
+  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+}
+
+/* Dispara o ícone correto para um item de lote já calculado (Parte 1). */
+function getLoteIconHTMLLotes(lotObj, size = 24) {
+  if (lotObj.iconType === 'fortune') return getLoteFortunaIconSVG(size);
+  if (lotObj.iconType === 'spirit') return getLoteEspiritoIconSVG(size);
+  return getLoteAbbrevIconSVG(lotObj.abbrev || '', size);
+}
+
+/* ==========================================
+   MATEMÁTICA DOS LOTES
+   ========================================== */
+
+function norm360Lotes(v) {
+  return ((v % 360) + 360) % 360;
+}
+
+function angularDistLotes(a, b) {
+  const d = Math.abs(norm360Lotes(a) - norm360Lotes(b));
+  return d > 180 ? 360 - d : d;
+}
+
+/* ASC + A − B (dia); se invert=true e a seita for noturna, inverte para ASC + B − A. */
+function calcLotePonto(ascAbs, a, b, isDay, invert) {
+  let termA = a, termB = b;
+  if (invert && !isDay) {
+    termA = b;
+    termB = a;
+  }
+  return norm360Lotes(ascAbs + termA - termB);
+}
+
+function casaDoGrauLotes(grauAbs, ascAbs) {
+  const signoAsc = Math.floor(norm360Lotes(ascAbs) / 30);
+  const signo = Math.floor(norm360Lotes(grauAbs) / 30);
+  return ((signo - signoAsc + 12) % 12) + 1;
+}
+
+function obterAbsPlanetasLotes(data) {
+  return {
+    asc: data.Ascendente ? data.Ascendente.grau_absoluto : 0,
+    sun: data.Sol ? data.Sol.grau_absoluto : 0,
+    moon: data.Lua ? data.Lua.grau_absoluto : 0,
+    merc: data.Mercúrio ? data.Mercúrio.grau_absoluto : 0,
+    ven: data.Vênus ? data.Vênus.grau_absoluto : 0,
+    mars: data.Marte ? data.Marte.grau_absoluto : 0,
+    jup: data.Júpiter ? data.Júpiter.grau_absoluto : 0,
+    sat: data.Saturno ? data.Saturno.grau_absoluto : 0
+  };
+}
+
+const PLANET_NAMES_PT_LOTES = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
+
+function absDoPlanetaLotes(planetId, p) {
+  switch (planetId) {
+    case 'Sun': return p.sun;
+    case 'Moon': return p.moon;
+    case 'Mercury': return p.merc;
+    case 'Venus': return p.ven;
+    case 'Mars': return p.mars;
+    case 'Jupiter': return p.jup;
+    case 'Saturn': return p.sat;
+    default: return 0;
+  }
+}
+
+/* ==========================================
+   PARTE 1 — LOTES PRÉ-CALCULADOS
+   ========================================== */
+
+function computeAllLotesPrecalculados(data, isDay) {
+  const p = obterAbsPlanetasLotes(data);
+  const asc = p.asc;
+  const seitaTxt = isDay ? 'diurna' : 'noturna';
+
+  const fortuna = calcLotePonto(asc, p.moon, p.sun, isDay, true);
+  const espirito = calcLotePonto(asc, p.sun, p.moon, isDay, true);
+  const eros = calcLotePonto(asc, espirito, fortuna, isDay, true);
+  const necessidade = calcLotePonto(asc, fortuna, p.merc, isDay, true);
+  const coragem = calcLotePonto(asc, fortuna, p.mars, isDay, true);
+  const vitoria = calcLotePonto(asc, espirito, p.jup, isDay, true);
+  const nemesis = calcLotePonto(asc, fortuna, p.sat, isDay, true);
+  const religiao = calcLotePonto(asc, p.merc, p.moon, isDay, true);
+
+  const casamentoDorHomem = norm360Lotes(asc + p.ven - p.sat);
+  const casamentoDorMulher = norm360Lotes(asc + p.sat - p.ven);
+  const casamentoValens = norm360Lotes(asc + p.jup - p.ven);
+
+  const exaltacao = isDay
+    ? norm360Lotes(asc + 19 - p.sun)
+    : norm360Lotes(asc + 33 - p.moon);
+
+  const divida = norm360Lotes(asc + p.sat - p.merc);
+
+  const filhosValens = calcLotePonto(asc, p.jup, p.sat, isDay, true);
+  const filhosPaulo = norm360Lotes(asc + p.sat - p.jup);
+  const filhosHomens = calcLotePonto(asc, p.merc, p.jup, isDay, true);
+  const filhasMulheres = calcLotePonto(asc, p.ven, p.jup, isDay, true);
+
+  const paiCombusto = angularDistLotes(p.sat, p.sun) < 15;
+  const pai = paiCombusto
+    ? calcLotePonto(asc, p.jup, p.mars, isDay, true)
+    : calcLotePonto(asc, p.sat, p.sun, isDay, true);
+
+  const mae = calcLotePonto(asc, p.moon, p.ven, isDay, true);
+
+  const inimigos = norm360Lotes(asc + p.mars - p.sat);
+
+  return [
+    {
+      key: 'fortuna', nome: 'Lote da Fortuna', iconType: 'fortune', deg: fortuna,
+      legenda: `Lote da Fortuna — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Lua − Sol' : 'ASC + Sol − Lua'})`
+    },
+    {
+      key: 'espirito', nome: 'Lote do Espírito', iconType: 'spirit', deg: espirito,
+      legenda: `Lote do Espírito — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Sol − Lua' : 'ASC + Lua − Sol'})`
+    },
+    {
+      key: 'eros', nome: 'Lote de Eros', abbrev: 'ERO', deg: eros,
+      legenda: `Lote de Eros — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Espírito − Fortuna' : 'ASC + Fortuna − Espírito'})`
+    },
+    {
+      key: 'necessidade', nome: 'Lote da Necessidade', abbrev: 'NEC', deg: necessidade,
+      legenda: `Lote da Necessidade — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Fortuna − Mercúrio' : 'ASC + Mercúrio − Fortuna'})`
+    },
+    {
+      key: 'coragem', nome: 'Lote da Coragem', abbrev: 'COR', deg: coragem,
+      legenda: `Lote da Coragem — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Fortuna − Marte' : 'ASC + Marte − Fortuna'})`
+    },
+    {
+      key: 'vitoria', nome: 'Lote da Vitória', abbrev: 'VIT', deg: vitoria,
+      legenda: `Lote da Vitória — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Espírito − Júpiter' : 'ASC + Júpiter − Espírito'})`
+    },
+    {
+      key: 'nemesis', nome: 'Lote de Nêmesis', abbrev: 'NEM', deg: nemesis,
+      legenda: `Lote de Nêmesis — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Fortuna − Saturno' : 'ASC + Saturno − Fortuna'})`
+    },
+    {
+      key: 'religiao', nome: 'Lote da Religião', abbrev: 'REL', deg: religiao,
+      legenda: `Lote da Religião — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Mercúrio − Lua' : 'ASC + Lua − Mercúrio'})`
+    },
+    {
+      key: 'casamentoDorHomem', nome: 'Casamento (Dorotheus, Homem)', abbrev: 'CDH', deg: casamentoDorHomem,
+      legenda: `Lote do Casamento (versão masculina) — Dorotheus de Sidon, fórmula fixa (ASC + Vênus − Saturno), sem inversão por seita`
+    },
+    {
+      key: 'casamentoDorMulher', nome: 'Casamento (Dorotheus, Mulher)', abbrev: 'CDM', deg: casamentoDorMulher,
+      legenda: `Lote do Casamento (versão feminina) — Dorotheus de Sidon, fórmula fixa (ASC + Saturno − Vênus), sem inversão por seita`
+    },
+    {
+      key: 'casamentoValens', nome: 'Casamento (Valens, Geral)', abbrev: 'CV', deg: casamentoValens,
+      legenda: `Lote do Casamento (versão geral) — Vettius Valens, fórmula fixa originalmente noturna (ASC + Júpiter − Vênus), sem inversão por seita`
+    },
+    {
+      key: 'exaltacao', nome: 'Lote da Exaltação', abbrev: 'EXA', deg: exaltacao,
+      legenda: `Lote da Exaltação — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + 19°Áries − Sol' : 'ASC + 3°Touro − Lua'})`
+    },
+    {
+      key: 'divida', nome: 'Lote da Dívida', abbrev: 'DIV', deg: divida,
+      legenda: `Lote da Dívida — Tradição Helenística, fórmula fixa (ASC + Saturno − Mercúrio), sem inversão por seita`
+    },
+    {
+      key: 'filhosValens', nome: 'Filhos (Valens)', abbrev: 'FIV', deg: filhosValens,
+      legenda: `Lote dos Filhos (versão de Valens) — Vettius Valens, fórmula ${seitaTxt} (${isDay ? 'ASC + Júpiter − Saturno' : 'ASC + Saturno − Júpiter'})`
+    },
+    {
+      key: 'filhosPaulo', nome: 'Filhos (Paulo)', abbrev: 'FIP', deg: filhosPaulo,
+      legenda: `Lote dos Filhos (variação de Paulo) — Paulo de Alexandria, fórmula fixa (ASC + Saturno − Júpiter), sem inversão por seita`
+    },
+    {
+      key: 'filhosHomens', nome: 'Lote dos Filhos-Homens', abbrev: 'FIH', deg: filhosHomens,
+      legenda: `Lote dos Filhos-Homens — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Mercúrio − Júpiter' : 'ASC + Júpiter − Mercúrio'})`
+    },
+    {
+      key: 'filhasMulheres', nome: 'Lote das Filhas-Mulheres', abbrev: 'FIM', deg: filhasMulheres,
+      legenda: `Lote das Filhas-Mulheres — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Vênus − Júpiter' : 'ASC + Júpiter − Vênus'})`
+    },
+    {
+      key: 'pai', nome: 'Lote do Pai', abbrev: 'PAI', deg: pai,
+      legenda: `Lote do Pai — Tradição Helenística, fórmula ${seitaTxt} (${paiCombusto ? (isDay ? 'ASC + Júpiter − Marte' : 'ASC + Marte − Júpiter') : (isDay ? 'ASC + Saturno − Sol' : 'ASC + Sol − Saturno')})${paiCombusto ? ' — Saturno sob os raios do Sol (menos de 15°), usando a fórmula alternativa' : ''}`
+    },
+    {
+      key: 'mae', nome: 'Lote da Mãe', abbrev: 'MÃE', deg: mae,
+      legenda: `Lote da Mãe — Tradição Helenística, fórmula ${seitaTxt} (${isDay ? 'ASC + Lua − Vênus' : 'ASC + Vênus − Lua'})`
+    },
+    {
+      key: 'inimigos', nome: 'Lote dos Inimigos', abbrev: 'INI', deg: inimigos,
+      legenda: `Lote dos Inimigos — Tradição Helenística, fórmula fixa (ASC + Marte − Saturno), válida de dia e de noite, sem inversão por seita`
+    }
+  ];
+}
+
+/* ==========================================
+   PARTE 2 — CALCULADORA LIVRE (ESTADO)
+   ========================================== */
+
+let lotesCalcStartPoint = 'ASC';
+let lotesCalcPlanetA = 'Sun';
+let lotesCalcPlanetB = 'Moon';
+let lotesCalcManualSect = null; // null = automático (pela seita do mapa) | true = dia | false = noite
+
+function alternarLotesStartPoint(key) {
+  lotesCalcStartPoint = key;
+  renderLotesUI();
+}
+
+function alternarLotesPlanetA(key) {
+  lotesCalcPlanetA = key;
+  renderLotesUI();
+}
+
+function alternarLotesPlanetB(key) {
+  lotesCalcPlanetB = key;
+  renderLotesUI();
+}
+
+function alternarLotesSeitaManual(val) {
+  lotesCalcManualSect = val;
+  renderLotesUI();
+}
+
+function resolveStartPointAbsLotes(key, p, lotesPart1) {
+  if (key === 'ASC') return p.asc;
+  if (PLANET_NAMES_PT_LOTES[key]) return absDoPlanetaLotes(key, p);
+  const lot = lotesPart1.find(l => l.key === key);
+  return lot ? lot.deg : p.asc;
+}
+
+function getPontoLabelLotes(key, lotesPart1) {
+  if (key === 'ASC') return 'Ascendente';
+  if (PLANET_NAMES_PT_LOTES[key]) return PLANET_NAMES_PT_LOTES[key];
+  const lot = lotesPart1.find(l => l.key === key);
+  return lot ? lot.nome.replace(/^Lote (d[aoe]s?) /i, '') : key;
+}
+
+function getPontoIconHTMLLotes(key, lotesPart1, size) {
+  if (key === 'ASC') return getASCIconSVGLotes(size);
+  if (PLANET_NAMES_PT_LOTES[key]) return getPlanet3DSVGLotes(key, size);
+  const lot = lotesPart1.find(l => l.key === key);
+  return lot ? getLoteIconHTMLLotes(lot, size) : '';
+}
+
+/* ==========================================
+   RENDERIZAÇÃO
+   ========================================== */
+
+function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda) {
+  const signo = Math.floor(norm360Lotes(deg) / 30);
+  const casa = casaDoGrauLotes(deg, ascAbs);
+  return `
+    <div style="border: 1px solid #c59b27; border-radius: 10px; background: #ffffff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #103b70; flex-shrink: 0;">${iconHTML}</div>
+        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 12.5px; color: #103b70; line-height: 1.25;">${escapeHtml(nome)}</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; background: #fffdf5; border: 1px solid #e5d5a1; border-radius: 8px; padding: 6px 10px;">
+        ${getSignSVGLotes(signo, 22)}
+        <div>
+          <div style="font-size: 12.5px; font-weight: 700; color: #103b70;">${SIGN_NAMES_LOTES[signo]} ${formatDegMin(deg)}</div>
+          <div style="font-size: 10.5px; color: #64748b; font-weight: 600;">Casa ${casa}</div>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: #64748b; font-style: italic; line-height: 1.35;">${escapeHtml(legenda)}</div>
+    </div>
+  `;
+}
+
+function renderSeletorLotes(menuId, iconHTML, menuRowsHTML, label) {
+  return `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <span style="font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">${label}</span>
+      <div style="position: relative;">
+        <button type="button" onclick="document.querySelectorAll('.lotesCalcMenu').forEach(m => { if (m.id !== '${menuId}') m.style.display = 'none'; }); const menu = document.getElementById('${menuId}'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 42px; height: 42px; border-radius: 8px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          ${iconHTML}
+        </button>
+        <div id="${menuId}" class="lotesCalcMenu" style="display: none; position: absolute; top: 46px; left: 50%; transform: translateX(-50%); background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 44px; max-height: 240px; overflow-y: auto; box-sizing: border-box;">
+          ${menuRowsHTML}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderToggleSeitaLotes(isDayAuto) {
+  const opts = [
+    { val: 'null', label: 'Auto', icon: isDayAuto ? '☉' : '☽', ativo: lotesCalcManualSect === null },
+    { val: 'true', label: 'Dia', icon: '☉', ativo: lotesCalcManualSect === true },
+    { val: 'false', label: 'Noite', icon: '☽', ativo: lotesCalcManualSect === false }
+  ];
+  const buttons = opts.map(o => {
+    return `<button type="button" onclick="alternarLotesSeitaManual(${o.val})" style="padding: 0 10px; height: 42px; font-size: 10.5px; font-weight: 700; border: 1px solid #c59b27; border-left: none; background: ${o.ativo ? '#103b70' : '#fffdf5'}; color: ${o.ativo ? '#ffffff' : '#103b70'}; cursor: pointer;">${o.icon} ${o.label}</button>`;
+  }).join('');
+  return `
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <span style="font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">Seita</span>
+      <div style="display: flex; border-radius: 8px; overflow: hidden; border-left: 1px solid #c59b27;">${buttons}</div>
+    </div>
+  `;
+}
+
+function iniciarModuloLotes() {
+  const container = document.getElementById("mandala-container");
+  if (!container) return;
+
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Calculadora de Lotes.</div>`;
+    return;
+  }
+
+  renderLotesUI();
+}
+
+function renderLotesUI() {
+  const container = document.getElementById("mandala-container");
+  if (!container || !currentCalculatedData) return;
+
+  const data = currentCalculatedData;
+  const p = obterAbsPlanetasLotes(data);
+  const isDayAuto = ((p.sun - p.asc + 360) % 360) >= 180;
+
+  const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
+
+  /* CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), usado por Decênios, Liberação Zodiacal e Circumambulações. */
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const diasSemanaLotesLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemanaLotesLabels[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const anoH = currentMoment.getFullYear();
+  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const diaH = String(currentMoment.getDate()).padStart(2, '0');
+  const horaH = String(currentMoment.getHours()).padStart(2, '0');
+  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  let html = `
+    <div class="lotes-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+
+      <h3 class="lotes-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+        Calculadora de Lotes
+      </h3>
+
+      <div class="lotes-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+        <div>
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)} • <strong style="color: #b45309;">${isDayAuto ? 'Natividade Diurna' : 'Natividade Noturna'}</strong></div>
+        </div>
+      </div>
+
+      <!-- PARTE 1: LOTES PRÉ-CALCULADOS -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px;">Parte 1 — Lotes Pré-Calculados</span>
+        <div style="flex: 1; height: 1px; background: #c59b27; opacity: 0.5;"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
+        ${lotesPart1.map(l => renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda)).join('')}
+      </div>
+  `;
+
+  /* PARTE 2: CALCULADORA LIVRE */
+  const startPointOptions = [
+    { key: 'ASC', label: 'Ascendente' },
+    { key: 'Sun', label: 'Sol' },
+    { key: 'Moon', label: 'Lua' },
+    { key: 'Mercury', label: 'Mercúrio' },
+    { key: 'Venus', label: 'Vênus' },
+    { key: 'Mars', label: 'Marte' },
+    { key: 'Jupiter', label: 'Júpiter' },
+    { key: 'Saturn', label: 'Saturno' },
+    ...lotesPart1.map(l => ({ key: l.key, label: l.nome }))
+  ];
+  const planetOptions = [
+    { key: 'Sun', label: 'Sol' },
+    { key: 'Moon', label: 'Lua' },
+    { key: 'Mercury', label: 'Mercúrio' },
+    { key: 'Venus', label: 'Vênus' },
+    { key: 'Mars', label: 'Marte' },
+    { key: 'Jupiter', label: 'Júpiter' },
+    { key: 'Saturn', label: 'Saturno' }
+  ];
+
+  const startMenuRows = startPointOptions.map(o =>
+    `<div onclick="alternarLotesStartPoint('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: #103b70;">${getPontoIconHTMLLotes(o.key, lotesPart1, 22)}</div>`
+  ).join('');
+  const planetAMenuRows = planetOptions.map(o =>
+    `<div onclick="alternarLotesPlanetA('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVGLotes(o.key, 22)}</div>`
+  ).join('');
+  const planetBMenuRows = planetOptions.map(o =>
+    `<div onclick="alternarLotesPlanetB('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVGLotes(o.key, 22)}</div>`
+  ).join('');
+
+  const startIconHTML = getPontoIconHTMLLotes(lotesCalcStartPoint, lotesPart1, 26);
+  const planetAIconHTML = getPlanet3DSVGLotes(lotesCalcPlanetA, 26);
+  const planetBIconHTML = getPlanet3DSVGLotes(lotesCalcPlanetB, 26);
+
+  const effectiveIsDay = (lotesCalcManualSect !== null) ? lotesCalcManualSect : isDayAuto;
+  const startAbs = resolveStartPointAbsLotes(lotesCalcStartPoint, p, lotesPart1);
+  const aAbs = absDoPlanetaLotes(lotesCalcPlanetA, p);
+  const bAbs = absDoPlanetaLotes(lotesCalcPlanetB, p);
+  const resultAbs = calcLotePonto(startAbs, aAbs, bAbs, effectiveIsDay, true);
+
+  const startLabel = getPontoLabelLotes(lotesCalcStartPoint, lotesPart1);
+  const aLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetA];
+  const bLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetB];
+  const formulaTxt = effectiveIsDay ? `${startLabel} + ${aLabel} − ${bLabel}` : `${startLabel} + ${bLabel} − ${aLabel}`;
+  const sectLabelTxt = lotesCalcManualSect === null ? `automática (${isDayAuto ? 'dia' : 'noite'})` : (lotesCalcManualSect ? 'dia — manual' : 'noite — manual');
+  const resultLegenda = `Calculadora Livre — fórmula: ASC-equivalente ${formulaTxt} • seita ${sectLabelTxt}`;
+
+  html += `
+      <!-- PARTE 2: CALCULADORA LIVRE -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px;">Parte 2 — Calculadora Livre</span>
+        <div style="flex: 1; height: 1px; background: #c59b27; opacity: 0.5;"></div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 22px;">
+          ${renderSeletorLotes('lotesStartMenu', startIconHTML, startMenuRows, 'Ponto de Partida')}
+          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: #c59b27; margin-top: 20px;">+</div>
+          ${renderSeletorLotes('lotesPlanetAMenu', planetAIconHTML, planetAMenuRows, 'Planeta A')}
+          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: #c59b27; margin-top: 20px;">−</div>
+          ${renderSeletorLotes('lotesPlanetBMenu', planetBIconHTML, planetBMenuRows, 'Planeta B')}
+          ${renderToggleSeitaLotes(isDayAuto)}
+        </div>
+
+        <div style="max-width: 260px; margin: 0 auto; width: 100%;">
+          ${renderLoteCardHTML(getLoteAbbrevIconSVG('=', 24), formulaTxt, resultAbs, p.asc, resultLegenda)}
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  container.innerHTML = html;
+}

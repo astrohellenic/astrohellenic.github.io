@@ -671,6 +671,11 @@ if (modulo === 'mandala' || modulo === 'radix') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloDirecoes === 'function') iniciarModuloDirecoes();
   }
+  // 8B. CALCULADORA DE LOTES
+  else if (modulo === 'lotes') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloLotes === 'function') iniciarModuloLotes();
+  }
   // 9. HORAS PLANETÁRIAS
   else if (modulo === 'horas') {
     if (cRadix) cRadix.style.display = 'block';
