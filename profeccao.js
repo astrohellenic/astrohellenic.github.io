@@ -632,7 +632,7 @@
         const cx = R_canvas, cy = R_canvas;
         const canvasSize = R_canvas * 2;
 
-        let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 380px; height: auto; display: block; margin: 0 auto;">
+        let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="#ffffff"/>`;
 
@@ -762,6 +762,31 @@
             svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
         }
 
+        /* FAIXAS SÓLIDAS NA BORDA EXTERNA — "ETIQUETAS" DE CADA DESTAQUE.
+           A fatia transparente lá atrás dá o clima visual, mas quando dois
+           destaques caem no mesmo signo a cor de cima acaba disfarçando a
+           de baixo. Estas faixas ficam uma do lado da outra, em cores
+           sólidas, sem se misturar — dá pra apontar pro cliente exatamente
+           quais destaques bateram naquele signo. Desenhadas antes dos
+           planetas (e da mancha de combustão), pra nunca cobrirem um
+           planeta que tenha sido empurrado além da borda do mapa. */
+        function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
+            if (signIdx === null || signIdx === undefined) return '';
+            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+            const passos = 15;
+            const pontosFora = [];
+            for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
+            const pontosDentro = [];
+            for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
+            const pontos = pontosFora.concat(pontosDentro);
+            const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+            return `<path d="${d}" fill="${cor}"/>`;
+        }
+
+        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
+        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 14, R_OuterLine + 22);
+        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
         if (sunItem) {
             const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
@@ -841,31 +866,6 @@
                 </g>`;
             }
         }
-
-        /* FAIXAS SÓLIDAS NA BORDA EXTERNA — "ETIQUETAS" DE CADA DESTAQUE.
-           A fatia transparente lá atrás dá o clima visual, mas quando dois
-           destaques caem no mesmo signo a cor de cima acaba disfarçando a
-           de baixo. Estas faixas ficam uma do lado da outra, em cores
-           sólidas, sem se misturar — dá pra apontar pro cliente exatamente
-           quais destaques bateram naquele signo. Desenhadas por último, por
-           cima de tudo, pra nunca ficarem encobertas por um planeta que
-           tenha sido empurrado além da borda do mapa. */
-        function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
-            if (signIdx === null || signIdx === undefined) return '';
-            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
-            const passos = 15;
-            const pontosFora = [];
-            for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
-            const pontosDentro = [];
-            for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
-            const pontos = pontosFora.concat(pontosDentro);
-            const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-            return `<path d="${d}" fill="${cor}"/>`;
-        }
-
-        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
-        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 14, R_OuterLine + 22);
-        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
 
         svg += `</svg>`;
         return svg;
@@ -1057,11 +1057,11 @@
         </div>
 
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
-            <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div style="flex: 1 1 0; min-width: 280px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
                 ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
             </div>
-            <div style="flex: 1 1 280px; max-width: 380px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div style="flex: 1 1 0; min-width: 280px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
                 ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
             </div>
