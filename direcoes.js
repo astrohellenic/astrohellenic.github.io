@@ -205,6 +205,11 @@ function getItemSVGDir(key) {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="#103b70" text-anchor="middle">${cfg.sym}</text></svg>`;
   }
 
+  if (key === 'ASC' || key === 'DSC' || key === 'MC' || key === 'IC') {
+    /* Mesmo círculo preto sobre fundo branco usado para esses pontos na mandala e no Painel Técnico. */
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">${key}</text></svg>`;
+  }
+
   return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
 
@@ -212,9 +217,6 @@ function getAfetaCursorSVG(key) {
   const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'NodoNorte'];
   if (planetKeys.includes(key)) {
     return getPlanet3DSVGDir(key);
-  }
-  if (key === 'ASC') {
-    return `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#103b70" text-anchor="middle">ASC</text></svg>`;
   }
   return getItemSVGDir(key === 'Syz' ? 'Sizígia' : key);
 }
@@ -682,7 +684,16 @@ function renderCircumambulaçõesUI() {
     mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória",
     saturn: "Lote de Némesis"
   };
-  const afetaAtualLabel = afetaLabelsDir[selectedAphetesKey] || selectedAphetesKey;
+  const afetaSelectOptions = afetasDisponiveis.map(af => {
+    const label = afetaLabelsDir[af.key] || af.key;
+    const sel = af.key === selectedAphetesKey ? ' selected' : '';
+    return `<option value="${af.key}"${sel}>${escapeHtml(label)}</option>`;
+  }).join('');
+
+  const afetaAtual = afetasDisponiveis.find(af => af.key === selectedAphetesKey) || afetasDisponiveis[0];
+  const iconAtualHTML = afetaAtual.type === "planet"
+    ? getPlanet3DSVGDir(afetaAtual.key)
+    : getItemSVGDir(afetaAtual.key === "Syz" ? "Sizígia" : afetaAtual.key);
 
   let html = `
     <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
@@ -691,35 +702,20 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + ícone do afeta à direita -->
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta à direita. Mesma lógica dos Decênios: caixa quadrada com o ícone atual (seguindo o tema de planetas escolhido), com um <select> nativo transparente por cima para trocar com rolagem. -->
         <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
           <div>
             <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
             <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0;" title="Afeta Direcionado: ${escapeHtml(afetaAtualLabel)}">${afetaCursorSvgHTML}</div>
-        </div>
-
-        <!-- BOTOEIRA DE AFETAS (não aparece na impressão; ver o ícone no cabeçalho acima) -->
-        <div class="no-print" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-  `;
-
-  afetasDisponiveis.forEach(af => {
-    const isSel = (af.key === selectedAphetesKey);
-    const styleBtn = isSel
-      ? "background: #f1f5f9; color: #103b70; border: 1px solid #c59b27;"
-      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
-
-    let iconHTML = af.type === "planet" ? getPlanet3DSVGDir(af.key) : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
-
-    html += `
-      <button onclick="alternarAfetaCircumambulation('${af.key}')" style="${styleBtn} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${af.key}">
-        <div style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">${iconHTML}</div>
-      </button>
-    `;
-  });
-
-  html += `
+          <div style="position: relative; width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Afeta Direcionado">
+            <div style="pointer-events: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px;">
+              ${iconAtualHTML}
+            </div>
+            <select onchange="alternarAfetaCircumambulation(this.value)" style="position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none;">
+              ${afetaSelectOptions}
+            </select>
+          </div>
         </div>
 
         <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão -->
