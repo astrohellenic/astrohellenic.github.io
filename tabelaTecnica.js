@@ -489,13 +489,13 @@ function renderPainelTecnico(data, containerId) {
           font-size: 11px;
           letter-spacing: 0.5px;
         }
-        .col-ponto { width: 12%; }
-        .col-signo { width: 10%; }
-        .col-grau { width: 16%; font-weight: 600; }
-        .col-lat { width: 14%; font-weight: 600; color: #475569; }
-        .col-termo { width: 10%; font-weight: bold; color: #c59b27; font-size: 14px; }
-        .col-dodec-signo { width: 10%; }
-        .col-dodec-grau { width: 1%; white-space: nowrap; font-weight: 600; }
+        .col-ponto { white-space: nowrap; }
+        .col-signo { white-space: nowrap; }
+        .col-grau { font-weight: 600; white-space: nowrap; }
+        .col-lat { font-weight: 600; color: #475569; white-space: nowrap; }
+        .col-termo { font-weight: bold; color: #c59b27; font-size: 14px; white-space: nowrap; }
+        .col-dodec-signo { white-space: nowrap; }
+        .col-dodec-grau { font-weight: 600; white-space: nowrap; }
       </style>
 
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
@@ -519,8 +519,8 @@ function renderPainelTecnico(data, containerId) {
         </div>` : ''}
       </div>
 
-      <div style="overflow-x: auto; margin-bottom: 24px;">
-        <div style="border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+      <div style="overflow-x: auto; margin-bottom: 24px; text-align: center;">
+        <div style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
           <table class="tabela-enxuta">
             <thead>
               <tr>
