@@ -142,6 +142,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
     : '';
 
   const rodapeAstrologo = [dadosAstrologo.nome, dadosAstrologo.telefone, dadosAstrologo.email].filter(Boolean);
+  const capaClasseCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-capa-ceu' : '';
 
   const tabelaLotesHtml = renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal);
   const tabelaDodecHtml = renderTabelaDodecatemoriasRelatorio();
@@ -158,7 +159,7 @@ function montarEExibirRelatorio(container, png1, png2, lotesNatal, ascAbsNatal, 
 
       <!-- 1. CAPA (nome/data/local não se repetem aqui: já vêm no
            próprio cabeçalho que a mandala desenha dentro da imagem) -->
-      <section class="rel-page rel-capa" data-pg="capa">
+      <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa">
         <h1 class="rel-titulo-capa">Mapa Natal<br>Clássico</h1>
         <div class="rel-capa-centro">
           <img class="rel-img-capa" src="${png1}" alt="Mapa Natal">
@@ -294,13 +295,6 @@ function numerarPaginasIndice(container) {
   });
 }
 
-/* Planeta regente de cada lote (usado só para escolher o ícone na
-   tabela) — o mesmo associado a cada lote no texto acima. */
-const RELATORIO_LOT_PLANETA_ID = {
-  fortune: 'Moon', spirit: 'Sun', venus: 'Venus', mercury: 'Mercury',
-  mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn'
-};
-
 /* Célula no padrão da Tabela Técnica: ícone em cima, rótulo pequeno embaixo. */
 function relatorioCelulaIconeRotulo(iconHTML, rotulo) {
   return `
@@ -314,7 +308,7 @@ function relatorioCelulaIconeRotulo(iconHTML, rotulo) {
 function renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal) {
   if (!lotesNatal || !lotesNatal.length) return '';
   if (typeof casaDoGrauLotes !== 'function' || typeof SIGN_NAMES_LOTES === 'undefined') return '';
-  if (typeof getSignSVG !== 'function' || typeof getPlanet3DSVG !== 'function') return '';
+  if (typeof getSignSVG !== 'function' || typeof getItemSVG !== 'function') return '';
 
   const ordemPadrao = ['fortune', 'spirit', 'venus', 'mercury', 'mars', 'jupiter', 'saturn'];
   const linhas = ordemPadrao.map(key => {
@@ -322,10 +316,11 @@ function renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal) {
     if (!lot) return '';
     const signIdx = Math.floor(((lot.deg % 360) + 360) % 360 / 30);
     const casa = casaDoGrauLotes(lot.deg, ascAbsNatal);
-    const iconePlaneta = getPlanet3DSVG(RELATORIO_LOT_PLANETA_ID[key], 30);
+    // getItemSVG é o ícone próprio dos lotes (círculo azul), o mesmo usado
+    // na Tabela Técnica e independente do estilo de ícone dos planetas.
     return `
       <tr>
-        <td class="col-ponto">${relatorioCelulaIconeRotulo(iconePlaneta, RELATORIO_LOT_NOMES[key] || key)}</td>
+        <td class="col-ponto">${relatorioCelulaIconeRotulo(getItemSVG(key), RELATORIO_LOT_NOMES[key] || key)}</td>
         <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(signIdx, 18), SIGN_NAMES_LOTES[signIdx])}</td>
         <td class="col-grau">${formatDegMin(lot.deg)}</td>
         <td>Casa ${casa}</td>
@@ -335,10 +330,12 @@ function renderTabelaLotesRelatorio(lotesNatal, ascAbsNatal) {
 
   return `
     <div class="rel-tabela-wrap">
-      <table class="tabela-enxuta">
-        <thead><tr><th>Lote</th><th>Signo</th><th>Grau</th><th>Casa Nativa</th></tr></thead>
-        <tbody>${linhas}</tbody>
-      </table>
+      <div class="rel-tabela-caixa">
+        <table class="tabela-enxuta">
+          <thead><tr><th>Lote</th><th>Signo</th><th>Grau</th><th>Casa Nativa</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -366,10 +363,12 @@ function renderTabelaDodecatemoriasRelatorio() {
 
   return `
     <div class="rel-tabela-wrap">
-      <table class="tabela-enxuta">
-        <thead><tr><th>Planeta</th><th>Signo Natal</th><th>Dodecatemória</th></tr></thead>
-        <tbody>${linhas}</tbody>
-      </table>
+      <div class="rel-tabela-caixa">
+        <table class="tabela-enxuta">
+          <thead><tr><th>Planeta</th><th>Signo Natal</th><th>Dodecatemória</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -412,12 +411,16 @@ function injetarEstilosRelatorio() {
       .rel-indice li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
       .rel-num-pagina { font-weight: 700; color: #9a6d18; }
 
-      /* TABELAS: mesmo padrão visual (cores, bordas, ícones) da Tabela
-         Técnica (classe .tabela-enxuta, definida também em tabelaTecnica.js)
-         — repetida aqui porque o CSS daquele módulo só existe enquanto ele
-         está aberto, e some do documento quando se troca de ferramenta. */
-      .rel-tabela-wrap { margin-top: 18px; }
-      .rel-tabela-wrap .tabela-enxuta { margin: 0 auto; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: #ffffff; font-size: 12px; color: #0f172a; }
+      /* TABELAS: mesmo padrão visual (cores, bordas, ícones, contorno
+         arredondado) da Tabela Técnica (classe .tabela-enxuta e o wrapper
+         com border-radius, definidos também em tabelaTecnica.js) —
+         repetido aqui porque o CSS daquele módulo só existe enquanto ele
+         está aberto, e some do documento quando se troca de ferramenta.
+         O contorno arredondado tem que ficar num DIV por fora da table:
+         border-radius não tem efeito numa table com border-collapse. */
+      .rel-tabela-wrap { margin-top: 18px; text-align: center; }
+      .rel-tabela-caixa { display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; }
+      .tabela-enxuta { border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: #ffffff; font-size: 12px; color: #0f172a; }
       .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1e5fa4; padding: 8px 10px; text-align: center; vertical-align: middle; }
       .tabela-enxuta th { background-color: #fffdf5; font-weight: 700; color: #103b70; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
       .tabela-enxuta tr { break-inside: avoid; page-break-inside: avoid; }
@@ -434,6 +437,12 @@ function injetarEstilosRelatorio() {
       .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
       .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
 
+      /* CAPA com o tema "Céu": fundo roxo (a mesma cor de fundo que a
+         mandala usa nesse tema) e o título em dourado em vez de azul.
+         Só a capa muda — as páginas da Mandala 1/2 continuam iguais. */
+      .rel-capa.rel-capa-ceu { background: #1A073F; }
+      .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #d4af37; }
+
       /* PÁGINAS DAS MANDALAS */
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
       .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; }
@@ -446,7 +455,15 @@ function injetarEstilosRelatorio() {
 
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }
-        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 0; page-break-after: always; }
+        /* altura fixa (não min-height) do tamanho real de uma folha impressa
+           (297mm - as duas margens de 12mm do @page abaixo): sem isso, as
+           páginas que distribuem conteúdo do topo ao rodapé com flexbox
+           (a capa, o encerramento) encolhem pro tamanho do conteúdo na
+           impressão, e o que devia ficar no rodapé sobe pra logo abaixo
+           do texto. overflow visível continua deixando o conteúdo mais
+           longo (tabelas grandes) transbordar normalmente pra próxima
+           página. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; height: 273mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
         @page { size: A4; margin: 12mm; }
       }
