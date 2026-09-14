@@ -297,29 +297,51 @@ function renderLiberacaoUI() {
     { key: "saturn" }
   ];
 
+  const loteLabelsZR = {
+    fortune: "Lote da Fortuna", spirit: "Lote do Espírito", venus: "Lote de Eros",
+    mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória", saturn: "Lote de Némesis"
+  };
+
+  /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa) */
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const diasSemanaZRLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemanaZRLabels[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const anoH = currentMoment.getFullYear();
+  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const diaH = String(currentMoment.getDate()).padStart(2, '0');
+  const horaH = String(currentMoment.getHours()).padStart(2, '0');
+  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  const loteMenuRowsHTML = lotesInfo.map(l => {
+    const label = loteLabelsZR[l.key] || l.key;
+    return `<div onclick="alternarLoteLiberacao('${l.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: #103b70;">${getLotIconSVG(l.key)}</div>`;
+  }).join('');
+
   let html = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
-    <div style="background: #fffdf5; border-radius: 16px; padding: 20px;">
-      <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 12px; padding: 20px; font-family: 'Montserrat', sans-serif; color: #0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Liberação Zodiacal</h3>
-          
-        <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+    <div class="lib-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+
+      <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+        Liberação Zodiacal
+      </h3>
+
+      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do lote ativo à direita (mesma caixa/menu com rolagem e ícones já usada em Decênios e Circumambulações) -->
+      <div class="lib-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+        <div>
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+        </div>
+        <div style="position: relative; flex-shrink: 0;">
+          <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
+            ${getLotIconSVG(selectedZRPhase)}
+          </button>
+          <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+            ${loteMenuRowsHTML}
+          </div>
+        </div>
+      </div>
   `;
-
-  lotesInfo.forEach(l => {
-    const isSel = l.key === selectedZRPhase;
-    const styleBg = isSel 
-      ? "background: #103b70; color: #ffffff; border: 1px solid #c59b27;" 
-      : "background: #fffdf5; color: #103b70; border: 1px solid #c59b27;";
-    
-    html += `
-      <button onclick="alternarLoteLiberacao('${l.key}')" style="${styleBg} width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="${l.key}">
-        ${getLotIconSVG(l.key)}
-      </button>
-    `;
-  });
-
-  html += `</div>`;
 
   let currentStart = new Date(currentMoment);
 
@@ -503,8 +525,6 @@ function renderLiberacaoUI() {
   }
 
   html += `
-      </div>
-    </div>
     </div>
   `;
 
