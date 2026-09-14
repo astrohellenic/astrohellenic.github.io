@@ -688,6 +688,11 @@ function renderCircumambulaçõesUI() {
     return `<option value="${af.key}"${sel}>${escapeHtml(label)}</option>`;
   }).join('');
 
+  const afetaAtual = afetasDisponiveis.find(af => af.key === selectedAphetesKey) || afetasDisponiveis[0];
+  const iconAtualHTML = afetaAtual.type === "planet"
+    ? getPlanet3DSVGDir(afetaAtual.key)
+    : getItemSVGDir(afetaAtual.key === "Syz" ? "Sizígia" : afetaAtual.key);
+
   let html = `
     <div class="dir-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
 
@@ -695,15 +700,20 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta (com rolagem, igual ao de Decênios) à direita -->
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta à direita. Mesma lógica dos Decênios: caixa quadrada com o ícone atual (seguindo o tema de planetas escolhido), com um <select> nativo transparente por cima para trocar com rolagem. -->
         <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
           <div>
             <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
             <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           </div>
-          <select onchange="alternarAfetaCircumambulation(this.value)" title="Afeta Direcionado" style="flex-shrink: 0; padding: 6px 10px; border-radius: 8px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; outline: none; cursor: pointer; max-width: 170px;">
-            ${afetaSelectOptions}
-          </select>
+          <div style="position: relative; width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Afeta Direcionado">
+            <div style="pointer-events: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px;">
+              ${iconAtualHTML}
+            </div>
+            <select onchange="alternarAfetaCircumambulation(this.value)" style="position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none;">
+              ${afetaSelectOptions}
+            </select>
+          </div>
         </div>
 
         <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão -->
