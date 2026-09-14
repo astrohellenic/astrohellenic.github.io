@@ -98,11 +98,22 @@ function renderDeceniosUI(container) {
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const sunAbs = data.Sol ? data.Sol.grau_absoluto : 0;
+  const moonAbs = data.Lua ? data.Lua.grau_absoluto : 0;
 
   // DETECTA A SEITA AUTOMATICAMENTE
   const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
   const detectedStartPlanet = isDay ? 'Sun' : 'Moon';
   const startPlanetKey = overrideStartPlanet || detectedStartPlanet;
+
+  // AVISO: LUZ (DA SEITA) EM CASA NÃO-OPERANTE — sempre com base na luz
+  // detectada automaticamente pela seita, não no override manual do usuário
+  const luzAbs = isDay ? sunAbs : moonAbs;
+  const signoASC = Math.floor(ascAbs / 30);
+  const signoLuz = Math.floor(luzAbs / 30);
+  const casaLuz = ((signoLuz - signoASC + 12) % 12) + 1;
+  const CASAS_NAO_OPERANTES_DEC = [2, 6, 8, 12];
+  const luzEmCasaNaoOperante = CASAS_NAO_OPERANTES_DEC.includes(casaLuz);
+  const nomeLuzDec = isDay ? 'Sol' : 'Lua';
 
   // PROCESSA O CÁLCULO INSTANTANEAMENTE
   const result = calcularDeceniosAutomatico(startPlanetKey);
@@ -128,18 +139,29 @@ function renderDeceniosUI(container) {
           </div>
         </div>
 
-        <div style="position: relative; display: inline-block;">
-          <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Planeta Inicial">
-            ${getPlanet3DSVG(startPlanetKey, 26)}
-          </button>
-          <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
-            <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
-            <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
-            <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
-            <div onclick="alternarSeitaManual('Venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Venus', 24)}</div>
-            <div onclick="alternarSeitaManual('Mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mars', 24)}</div>
-            <div onclick="alternarSeitaManual('Jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Jupiter', 24)}</div>
-            <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          ${luzEmCasaNaoOperante ? `
+            <div title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) — considere selecionar outro planeta manualmente" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; cursor: help;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display: block;">
+                <path d="M12 2 L23 21 H1 Z" fill="#fef3c7" stroke="#b45309" stroke-width="1.5" stroke-linejoin="round"/>
+                <rect x="11" y="9" width="2" height="6" rx="1" fill="#b45309"/>
+                <rect x="11" y="16.5" width="2" height="2" rx="1" fill="#b45309"/>
+              </svg>
+            </div>
+          ` : ''}
+          <div style="position: relative; display: inline-block;">
+            <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Planeta Inicial">
+              ${getPlanet3DSVG(startPlanetKey, 26)}
+            </button>
+            <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
+              <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
+              <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
+              <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
+              <div onclick="alternarSeitaManual('Venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Venus', 24)}</div>
+              <div onclick="alternarSeitaManual('Mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mars', 24)}</div>
+              <div onclick="alternarSeitaManual('Jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Jupiter', 24)}</div>
+              <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
+            </div>
           </div>
         </div>
       </div>
