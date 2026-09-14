@@ -205,6 +205,11 @@ function getItemSVGDir(key) {
     return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="#103b70" text-anchor="middle">${cfg.sym}</text></svg>`;
   }
 
+  if (key === 'ASC' || key === 'DSC' || key === 'MC' || key === 'IC') {
+    /* Mesmo círculo preto sobre fundo branco usado para esses pontos na mandala e no Painel Técnico. */
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">${key}</text></svg>`;
+  }
+
   return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
 
@@ -212,9 +217,6 @@ function getAfetaCursorSVG(key) {
   const planetKeys = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'NodoNorte'];
   if (planetKeys.includes(key)) {
     return getPlanet3DSVGDir(key);
-  }
-  if (key === 'ASC') {
-    return `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#103b70" text-anchor="middle">ASC</text></svg>`;
   }
   return getItemSVGDir(key === 'Syz' ? 'Sizígia' : key);
 }
