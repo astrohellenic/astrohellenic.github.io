@@ -357,9 +357,9 @@ function renderMatrizVisibilidadeHTML(data) {
   }
 
   let h = `
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 24px 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
-    <div style="overflow-x: auto;">
-      <div style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+    <div style="overflow-x: auto; text-align: center;">
+      <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
         <table class="tabela-enxuta" style="font-size: 11px; background: #ffffff;">
           <thead>
             <tr>
@@ -501,7 +501,7 @@ function renderPainelTecnico(data, containerId) {
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
       <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), com o dia/hora planetários à direita -->
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+      <div id="painelTecnicoHeader" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
         <div>
           <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
           <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
@@ -518,8 +518,12 @@ function renderPainelTecnico(data, containerId) {
           </div>
         </div>` : ''}
       </div>
+    `;
 
-      <div style="overflow-x: auto; margin-bottom: 24px; text-align: center;">
+    html += renderMatrizVisibilidadeHTML(data);
+
+    html += `
+      <div style="overflow-x: auto; margin: 24px 0; text-align: center;">
         <div style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
           <table class="tabela-enxuta">
             <thead>
@@ -587,9 +591,18 @@ function renderPainelTecnico(data, containerId) {
       </div>
     `;
 
-    html += renderMatrizVisibilidadeHTML(data);
     html += `</div>`;
     container.innerHTML = html;
+
+    const headerEl = document.getElementById('painelTecnicoHeader');
+    const matrizEl = document.getElementById('matrizVisibilidadeWrapper');
+    if (headerEl && matrizEl) {
+      headerEl.style.width = 'fit-content';
+      const naturalWidth = headerEl.offsetWidth;
+      const matrizWidth = matrizEl.offsetWidth;
+      const finalWidth = Math.max(naturalWidth, matrizWidth);
+      if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
+    }
   } catch (err) {
     const container = document.getElementById(containerId);
     if (container) {
