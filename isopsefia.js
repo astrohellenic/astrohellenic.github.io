@@ -195,6 +195,65 @@ function renderIsopsefiaUI(container) {
     </div>
     </div>
   `;
+
+  encolherTabelasIsoVisiveis(container);
+}
+
+/* ENCOLHE A TABELA DA PLANILHA QUANDO ELA É LARGA DEMAIS PARA CABER NA TELA
+   (EM VEZ DE FICAR CORTADA), MESMA TÉCNICA USADA NOS DECÊNIOS, NO PAINEL
+   TÉCNICO, NA PROFECÇÃO MENSAL E NA LIBERAÇÃO ZODIACAL. Como a tabela usa
+   width:100% para preencher o cartão no desktop, primeiro mede a largura
+   "natural" sem essa restrição: se já coubesse do jeito de sempre, não mexe
+   em nada (zero mudança visual em telas largas). */
+function encolherTabelaLargaIso(table) {
+  if (!table || table.dataset.isoScaled === '1') return;
+  const parent = table.parentElement;
+  if (!parent) return;
+
+  const parentStyles = getComputedStyle(parent);
+  const availableWidth = parent.clientWidth
+    - parseFloat(parentStyles.paddingLeft || 0)
+    - parseFloat(parentStyles.paddingRight || 0);
+  if (availableWidth <= 0) return;
+
+  const larguraOriginal = table.style.width;
+  table.style.width = 'auto';
+  const naturalWidth = table.offsetWidth;
+
+  if (naturalWidth <= availableWidth) {
+    table.style.width = larguraOriginal;
+    return;
+  }
+
+  const naturalHeight = table.offsetHeight;
+  const escala = availableWidth / naturalWidth;
+  const scaledHeight = naturalHeight * escala;
+
+  const outerScroll = document.createElement('div');
+  outerScroll.style.textAlign = 'center';
+  const scaleBox = document.createElement('div');
+  scaleBox.style.display = 'inline-block';
+  scaleBox.style.width = (naturalWidth * escala) + 'px';
+  scaleBox.style.height = scaledHeight + 'px';
+
+  table.parentNode.insertBefore(outerScroll, table);
+  outerScroll.appendChild(scaleBox);
+  scaleBox.appendChild(table);
+
+  table.style.transformOrigin = 'top left';
+  table.style.transform = `scale(${escala})`;
+  table.dataset.isoScaled = '1';
+  // Contorna uma peculiaridade do navegador: um contêiner ao redor de uma
+  // <table> transformada pode calcular a própria altura com base no
+  // tamanho ANTES da escala, sobrando um espaço vazio grande abaixo dela.
+  outerScroll.style.height = scaledHeight + 'px';
+}
+
+function encolherTabelasIsoVisiveis(root) {
+  if (!root) return;
+  root.querySelectorAll('table:not([data-iso-scaled="1"])').forEach(t => {
+    if (t.offsetParent !== null) encolherTabelaLargaIso(t);
+  });
 }
 
 function renderConteudoAbaAtual() {
@@ -332,5 +391,8 @@ function removerTermoPlanilha(idx) {
 function atualizarSingleInput(val) {
   isoState.singleInput = val;
   const content = document.getElementById('isoTabContent');
-  if (content) content.innerHTML = renderConteudoAbaAtual();
+  if (content) {
+    content.innerHTML = renderConteudoAbaAtual();
+    encolherTabelasIsoVisiveis(content);
+  }
 }
