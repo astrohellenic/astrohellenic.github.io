@@ -528,15 +528,21 @@ function injetarEstilosRelatorio() {
 
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }
-        /* altura fixa (não min-height) do tamanho real de uma folha impressa
-           (297mm - as duas margens de 12mm do @page abaixo): sem isso, as
-           páginas que distribuem conteúdo do topo ao rodapé com flexbox
-           (a capa, o encerramento) encolhem pro tamanho do conteúdo na
-           impressão, e o que devia ficar no rodapé sobe pra logo abaixo
-           do texto. overflow visível continua deixando o conteúdo mais
-           longo (tabelas grandes) transbordar normalmente pra próxima
-           página. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; height: 273mm; overflow: visible; page-break-after: always; }
+        /* min-height (NUNCA height fixo) do tamanho real de uma folha
+           impressa (297mm - as duas margens de 12mm do @page abaixo): dá
+           às páginas que distribuem conteúdo do topo ao rodapé com
+           flexbox (a capa, o encerramento) uma altura de referência pra
+           empurrar o rodapé pra baixo de verdade — sem isso ele sobe pra
+           logo abaixo do texto. Precisa ser min-height e não height: uma
+           altura EXATA de 273mm, por um arredondamento de fração de
+           pixel entre mm e px, ficava um triz mais alta que a página
+           impressa e cada .rel-page acabava "vazando" essa migalha pra
+           uma página extra em branco (o relatório saía com o dobro de
+           páginas, uma em branco atrás de cada uma com conteúdo).
+           min-height nunca cria esse vazamento: o conteúdo mais longo
+           (tabelas grandes) continua transbordando normalmente pra
+           próxima página quando realmente precisa. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 273mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
         @page { size: A4; margin: 12mm; }
       }
