@@ -400,7 +400,7 @@ function iniciarModuloHoras() {
   };
 
   let html = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center;">
     <!-- Definições Globais dos Gradientes e Filtros dos Planetas 3D -->
     <svg style="display: none; position: absolute; width: 0; height: 0;" aria-hidden="true">
       <defs>
@@ -440,11 +440,12 @@ function iniciarModuloHoras() {
       </defs>
     </svg>
 
-    <div style="background: #fffdf5; border-radius: 12px; padding: 16px;">
+    <div style="display: inline-block; text-align: left; background: #fffdf5; border-radius: 12px; padding: 16px;">
   <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 10px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark);">
       <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
-      <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px;">
-        Localidade: <strong>${localNome}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
+      <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px; white-space: nowrap;">
+        Localidade: <strong>${localNome}</strong><br>
+        Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
   `;
 
