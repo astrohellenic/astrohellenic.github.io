@@ -218,19 +218,27 @@ async function carregarOuSemearPresetsRelatorio() {
 
 /* ==========================================
    RASCUNHOS DE RELATÓRIO
-   Um rascunho por mapa (tabela relatorio_rascunhos), salvo sozinho toda
-   vez que o astrólogo gera a prévia — sem precisar de nenhum botão
-   "Salvar". Guarda os blocos usados e as capturas de tela das outras
-   ferramentas, subindo as que ainda só existem como data URL na
-   memória pro Storage (bucket relatorio-capturas), pra não perder nada
-   ao recarregar a página ou fechar o navegador.
-   ========================================== */
+   Um cliente (mapa) pode ter vários rascunhos ao mesmo tempo (tabela
+   relatorio_rascunhos) — ex.: um rascunho de "Retificação de Mapa
+   Natal" e, separado, um de "Mapa Natal" pro mesmo cliente. Cada
+   rascunho é salvo sozinho toda vez que o astrólogo gera a prévia —
+   sem precisar de nenhum botão "Salvar" — atualizando sempre a MESMA
+   linha (currentRascunhoId) enquanto ele continua editando o mesmo
+   rascunho; carregar um mapa do zero (não a partir da lista de
+   rascunhos) sempre começa um rascunho novo pra esse cliente. Guarda
+   os blocos usados e as capturas de tela das outras ferramentas,
+   subindo as que ainda só existem como data URL na memória pro Storage
+   (bucket relatorio-capturas), pra não perder nada ao recarregar a
+   página ou fechar o navegador. */
 
 /* Lista leve (sem blocos/capturas) de todos os rascunhos do usuário,
-   pra mostrar na tela de configuração do relatório. Nome + código
-   (quando tiver) vêm exatamente como estão salvos no nativo, em ordem
-   alfabética — mas com números comparados numericamente (10 depois de
-   2, não antes), por isso o "numeric: true". */
+   pra mostrar na tela de configuração do relatório — pode ter mais de
+   um rascunho por mapa. Nome (cliente) vem exatamente como está salvo
+   no nativo; título (tipo de relatório, ex. "Mapa Natal") vem do nome
+   do modelo usado pra criar aquele rascunho. Ordenados por cliente em
+   ordem alfabética — mas com números comparados numericamente (10
+   depois de 2, não antes), por isso o "numeric: true" — e dentro do
+   mesmo cliente, por título. */
 async function listarRascunhosRelatorio() {
   const client = relatorioSupabaseClient();
   if (!client) return [];
@@ -239,18 +247,24 @@ async function listarRascunhosRelatorio() {
     if (!user) return [];
     const { data, error } = await client
       .from('relatorio_rascunhos')
-      .select('id, mapa_id, nome, updated_at')
+      .select('id, mapa_id, nome, titulo, updated_at')
       .eq('user_id', user.id);
     if (error || !data) return [];
-    return data.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true }));
+    return data.sort((a, b) => {
+      const porNome = (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true });
+      if (porNome !== 0) return porNome;
+      return (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { numeric: true });
+    });
   } catch (e) {
     return [];
   }
 }
 
-async function carregarRascunhoRelatorio(mapaId) {
+/* Carrega um rascunho específico pelo seu id (não pelo mapa — o mesmo
+   mapa pode ter mais de um rascunho). */
+async function carregarRascunhoPorId(rascunhoId) {
   const client = relatorioSupabaseClient();
-  if (!client || !mapaId) return null;
+  if (!client || !rascunhoId) return null;
   try {
     const { data: { user } } = await client.auth.getUser();
     if (!user) return null;
@@ -258,7 +272,7 @@ async function carregarRascunhoRelatorio(mapaId) {
       .from('relatorio_rascunhos')
       .select('*')
       .eq('user_id', user.id)
-      .eq('mapa_id', mapaId)
+      .eq('id', rascunhoId)
       .maybeSingle();
     if (error || !data) return null;
     return data;
@@ -302,11 +316,17 @@ async function persistirCapturasRelatorio(client, userId, mapaId) {
   return resultado;
 }
 
-/* Salva (upsert) o rascunho do mapa atualmente carregado — chamada
+/* Salva o rascunho do mapa atualmente carregado — chamada
    automaticamente ao final de gerarRelatorioCompleto, sem bloquear a
    prévia (roda em segundo plano). Não faz nada se o mapa em tela ainda
    não foi salvo (currentMapaId null — ex.: "Céu do Momento"), já que
-   não haveria a quem vincular o rascunho. */
+   não haveria a quem vincular o rascunho.
+   Se já existe um rascunho sendo editado (currentRascunhoId), atualiza
+   essa mesma linha. Senão, cria um rascunho NOVO — é assim que dois
+   rascunhos do mesmo cliente convivem (ex.: um de Retificação e,
+   depois, um de Mapa Natal): cada vez que ela carrega o mapa do zero
+   (não a partir da lista "Relatórios em Andamento") e gera uma prévia,
+   começa um rascunho próprio, sem mexer nos que já existiam. */
 async function salvarRascunhoRelatorio(preset) {
   const client = relatorioSupabaseClient();
   if (!client || typeof currentMapaId === 'undefined' || !currentMapaId) return;
@@ -314,29 +334,41 @@ async function salvarRascunhoRelatorio(preset) {
     const { data: { user } } = await client.auth.getUser();
     if (!user) return;
 
-    const capturasPersistidas = await persistirCapturasRelatorio(client, user.id, currentMapaId);
+    const mapaAoSalvar = currentMapaId;
+    const capturasPersistidas = await persistirCapturasRelatorio(client, user.id, mapaAoSalvar);
     window.relatorioCapturas = capturasPersistidas;
 
-    const nomeRascunho = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
+    const nomeCliente = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
-    await client.from('relatorio_rascunhos').upsert({
+    const dadosRascunho = {
       user_id: user.id,
-      mapa_id: currentMapaId,
-      nome: nomeRascunho,
+      mapa_id: mapaAoSalvar,
+      nome: nomeCliente,
+      titulo: preset.nome || null,
       blocos: preset.blocos || [],
       capturas: capturasPersistidas,
       updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id,mapa_id' });
+    };
+
+    if (currentRascunhoId) {
+      await client.from('relatorio_rascunhos').update(dadosRascunho).eq('id', currentRascunhoId).eq('user_id', user.id);
+    } else {
+      const { data: novo, error } = await client.from('relatorio_rascunhos').insert(dadosRascunho).select().maybeSingle();
+      // só assume o rascunho recém-criado se ela continua no mesmo mapa
+      // (evita "roubar" o id se ela já trocou de cliente enquanto isso salvava)
+      if (!error && novo && currentMapaId === mapaAoSalvar) currentRascunhoId = novo.id;
+    }
   } catch (e) {
     console.error('Erro ao salvar rascunho do relatório:', e);
   }
 }
 
-/* Abre um rascunho existente: troca o mapa ativo pra o dono do
+/* Abre um rascunho existente pelo id dele (não pelo mapa — o mesmo
+   cliente pode ter mais de um): troca o mapa ativo pro dono do
    rascunho (reaproveitando aplicarDadosDoPerfilNoMapa, a mesma função
    que a lista de mapas salvos usa) e já gera a prévia com os blocos e
    capturas salvos, pra continuar exatamente de onde parou. */
-async function abrirRascunhoRelatorio(mapaId) {
+async function abrirRascunhoRelatorio(rascunhoId) {
   const client = relatorioSupabaseClient();
   const container = document.getElementById('mandala-container');
   if (!client || !container) return;
@@ -344,7 +376,10 @@ async function abrirRascunhoRelatorio(mapaId) {
   container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o rascunho...</div>`;
 
   try {
-    const { data: mapaRow, error: erroMapa } = await client.from('mapas').select('*').eq('id', mapaId).maybeSingle();
+    const rascunho = await carregarRascunhoPorId(rascunhoId);
+    if (!rascunho) { alert('Não foi possível carregar este rascunho.'); iniciarModuloRelatorio(); return; }
+
+    const { data: mapaRow, error: erroMapa } = await client.from('mapas').select('*').eq('id', rascunho.mapa_id).maybeSingle();
     if (erroMapa || !mapaRow) { alert('Não foi possível carregar o mapa deste rascunho.'); iniciarModuloRelatorio(); return; }
 
     if (typeof aplicarDadosDoPerfilNoMapa === 'function') {
@@ -360,12 +395,12 @@ async function abrirRascunhoRelatorio(mapaId) {
         longitude: mapaRow.longitude
       });
     }
-
-    const rascunho = await carregarRascunhoRelatorio(mapaId);
-    if (!rascunho) { iniciarModuloRelatorio(); return; }
+    // aplicarDadosDoPerfilNoMapa zera currentRascunhoId (mapa novo em
+    // tela) — agora que sabemos que é justamente ESTE rascunho, reafirma.
+    currentRascunhoId = rascunho.id;
 
     window.relatorioCapturas = rascunho.capturas || {};
-    await gerarRelatorioCompleto({ nome: rascunho.nome, blocos: rascunho.blocos || [] });
+    await gerarRelatorioCompleto({ nome: rascunho.titulo || rascunho.nome, blocos: rascunho.blocos || [] });
   } catch (e) {
     alert('Erro de conexão ao abrir o rascunho.');
   }
@@ -402,13 +437,27 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   const opcoesPreset = presets.map((p, idx) => `<option value="${idx}">${escapeHtml(p.nome)}</option>`).join('');
   const listaModelosHTML = renderizarListaModelosRelatorioHTML(presets);
 
-  const listaRascunhosHTML = (rascunhos && rascunhos.length) ? `
+  // Agrupa os rascunhos por cliente (nome) — o mesmo cliente pode ter
+  // mais de um em andamento (ex.: Retificação e, separado, Mapa Natal).
+  const gruposRascunhos = [];
+  (rascunhos || []).forEach(r => {
+    let grupo = gruposRascunhos.find(g => g.nome === r.nome);
+    if (!grupo) { grupo = { nome: r.nome, itens: [] }; gruposRascunhos.push(grupo); }
+    grupo.itens.push(r);
+  });
+
+  const listaRascunhosHTML = gruposRascunhos.length ? `
     <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
       <label style="font-size: 11px; font-weight: 600; color: #64748b; display: block; margin-bottom: 10px;">Relatórios em Andamento</label>
-      ${rascunhos.map(r => `
-        <div onclick="abrirRascunhoRelatorio(${r.mapa_id})" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.mapa_id === currentMapaId ? '#fffdf5' : '#ffffff'};">
-          <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(r.nome)}</span>
-          <i class="fa-solid fa-chevron-right" style="color: #c59b27; font-size: 11px;"></i>
+      ${gruposRascunhos.map(g => `
+        <div style="margin-bottom: 10px;">
+          <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 4px;">${escapeHtml(g.nome)}</div>
+          ${g.itens.map(r => `
+            <div onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid #e2d9c2; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? '#fffdf5' : '#ffffff'};">
+              <span style="font-size: 12px; color: #475569;">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
+              <i class="fa-solid fa-chevron-right" style="color: #c59b27; font-size: 11px;"></i>
+            </div>
+          `).join('')}
         </div>
       `).join('')}
     </div>
