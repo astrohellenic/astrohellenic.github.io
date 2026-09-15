@@ -495,11 +495,11 @@ function abrirEditorPreset(idx) {
   const mapaBlocosAtuais = {};
   (preset.blocos || []).forEach(b => { mapaBlocosAtuais[b.id] = b; });
 
-  const idsPadrao = RELATORIO_BLOCOS_PADRAO.map(b => b.id);
-  const blocosCustomizados = (preset.blocos || []).filter(b => b.type === 'texto' && !idsPadrao.includes(b.id));
+  const idsCatalogo = RELATORIO_CATALOGO_BLOCOS.map(b => b.id);
+  const blocosCustomizados = (preset.blocos || []).filter(b => b.type === 'texto' && !idsCatalogo.includes(b.id));
   const linhasCustom = blocosCustomizados.map(b => relatorioBlocoCustomHtml(b.id, b.titulo, b.corpo)).join('');
 
-  const linhasBlocos = RELATORIO_BLOCOS_PADRAO.map(padrao => {
+  const linhasBlocos = RELATORIO_CATALOGO_BLOCOS.map(padrao => {
     const atual = mapaBlocosAtuais[padrao.id];
     const marcado = !!atual;
 
@@ -573,7 +573,7 @@ async function salvarEdicaoPreset(idx) {
   if (!nome) { alert("Informe um nome pro modelo."); return; }
 
   const novosBlocos = [];
-  RELATORIO_BLOCOS_PADRAO.forEach(padrao => {
+  RELATORIO_CATALOGO_BLOCOS.forEach(padrao => {
     const checkbox = document.querySelector(`input[data-bloco-id="${padrao.id}"]`);
     if (!checkbox || !checkbox.checked) return;
 

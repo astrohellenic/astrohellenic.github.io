@@ -1020,8 +1020,14 @@
         }
 
         let html = `
-    <div id="profeccao-container" 
-         oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;" 
+    <div style="width: 100%;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <button onclick="capturarTelaParaRelatorio('profeccao', 'profeccao-container', 'Profecção Anual')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+                <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+            </button>
+        </div>
+    <div id="profeccao-container"
+         oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;"
          style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
 
         <div style="text-align: center; margin-bottom: 16px;">
@@ -1100,7 +1106,7 @@
             `;
         });
 
-        html += `</tbody></table></div></div></div>`;
+        html += `</tbody></table></div></div></div></div>`;
         container.innerHTML = html;
     }
 

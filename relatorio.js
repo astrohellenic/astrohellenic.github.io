@@ -22,12 +22,18 @@ const RELATORIO_LOT_NOMES = {
 };
 
 /* NOMES E DESCRIÇÕES DOS TIPOS DE BLOCO "FERRAMENTA" DISPONÍVEIS HOJE.
-   Cada novo tipo (decênios, profecção, revolução solar...) entra aqui
-   quando a ferramenta correspondente for adaptada pra virar um bloco de
-   relatório — por enquanto só as duas mandalas estão prontas. */
+   Cada novo tipo (decênios, revolução solar, liberação zodiacal...) entra
+   aqui quando a ferramenta correspondente for adaptada pra virar um bloco
+   de relatório. */
 const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
   mandala_natal: { label: 'Mandala Natal (casas do Ascendente)', tituloIndice: 'Mapa Natal' },
-  mandala_fortuna: { label: 'Mandala com a Fortuna na Casa 1', tituloIndice: null }
+  mandala_fortuna: { label: 'Mandala com a Fortuna na Casa 1', tituloIndice: null },
+  profeccao: {
+    label: 'Profecção Anual (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Profecção Anual',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Profecção'
+  }
 };
 
 /* CONJUNTO DE BLOCOS PADRÃO — o relatório "Mapa Natal Clássico" original.
@@ -58,6 +64,39 @@ const RELATORIO_BLOCOS_PADRAO = [
     corpo: 'A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.\n\nEnquanto a estrutura natal radical descreve a jornada geral da vida, este mapa derivado funciona como um biombo voltado para a engenharia da contingência. Ao reorganizar as casas a partir da Fortuna, os planetas assumem novos papéis e responsabilidades, revelando a arquitetura oculta da subsistência, da prosperidade, do corpo físico e dos eventos fortuitos. É através desta disposição que se mapeiam com precisão os eixos de aquisição, os momentos de ápice e os cenários onde a sorte ou os desafios materiais se manifestarão de forma concreta.\n\nPortanto, a análise deste mapa com a Fortuna na primeira casa oferece uma leitura focada na realidade prática e nas circunstâncias externas que cruzam o caminho do nativo — indispensável para decodificar como o fluxo da matéria, os recursos e os acasos do destino governarão a vida profissional e a capacidade de sustentação ao longo do tempo.'
   }
 ];
+
+/* CATÁLOGO COMPLETO DE BLOCOS QUE O EDITOR DE MODELO OFERECE — diferente
+   de RELATORIO_BLOCOS_PADRAO (que é só a semente do preset "Mapa Natal
+   Clássico"). Ferramentas novas (Profecção, e as próximas) entram aqui
+   mesmo sem fazer parte do preset padrão — assim aparecem como opção pra
+   qualquer modelo, desmarcadas até o astrólogo escolher incluí-las. */
+const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
+  { id: 'profeccao', type: 'ferramenta' }
+]);
+
+/* Guarda em memória (dura só a sessão atual, não persiste) a última
+   captura de cada ferramenta "reaproveitada" no relatório (ex.:
+   Profecção). É preenchida pelo botão "Adicionar ao Relatório" que
+   fica na própria tela de cada ferramenta — o astrólogo deixa a tela
+   do jeito que quer mostrar pro cliente e clica no botão; o relatório
+   usa exatamente essa imagem, sem reconstruir nada. */
+window.relatorioCapturas = window.relatorioCapturas || {};
+
+async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
+  const elemento = document.getElementById(containerId);
+  if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+
+  try {
+    const canvas = await html2canvas(elemento, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    window.relatorioCapturas[toolId] = { dataUrl: canvas.toDataURL('image/png'), capturadoEm: Date.now() };
+    alert(`"${rotulo}" foi adicionado ao relatório. Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar tela ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarTelaParaRelatorio = capturarTelaParaRelatorio;
 
 function relatorioSupabaseClient() {
   return window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
@@ -322,6 +361,34 @@ function renderBlocoRelatorio(bloco, opts) {
 
   if (bloco.type === 'ferramenta') {
     const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
+
+    /* Blocos "capturados": não recalculam nada — usam a imagem que o
+       astrólogo trouxe da própria tela da ferramenta (botão "Adicionar
+       ao Relatório"), exatamente como ficou montada lá, com o layout,
+       ícones e realces que a ferramenta original já desenha. */
+    if (info && info.capturada) {
+      const titulo = (info.tituloIndice || info.label);
+      opts.itensIndice.push({ titulo, alvo: bloco.id });
+      const captura = window.relatorioCapturas && window.relatorioCapturas[bloco.id];
+      if (!captura) {
+        return `
+          <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
+            <div class="rel-h1">${escapeHtml(titulo)}</div>
+            <div class="rel-corpo rel-captura-faltando">
+              Nenhuma captura encontrada. Abra ${escapeHtml(info.telaOrigem || 'a ferramenta')}
+              com os dados deste cliente, deixe a tela do jeito que quer mostrar e clique em
+              "Adicionar ao Relatório" antes de gerar o relatório de novo.
+            </div>
+          </section>
+        `;
+      }
+      return `
+        <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
+          <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
+        </section>
+      `;
+    }
+
     if (bloco.id === 'mandala_natal' && opts.png1) {
       opts.itensIndice.push({ titulo: (info && info.tituloIndice) || 'Mapa Natal', alvo: bloco.id });
       return `
@@ -520,6 +587,13 @@ function injetarEstilosRelatorio() {
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
       .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; }
       .rel-legenda-mandala { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 12px; }
+
+      /* BLOCOS "CAPTURADOS" DE OUTRAS FERRAMENTAS (ex.: Profecção) — a
+         página existe só pra emoldurar a imagem trazida da tela real da
+         ferramenta, sem redesenhar nada ao redor dela. */
+      .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
+      .rel-img-captura { width: 100%; height: auto; display: block; }
+      .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
