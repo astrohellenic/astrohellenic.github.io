@@ -544,7 +544,17 @@ function injetarEstilosRelatorio() {
            próxima página quando realmente precisa. */
         .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 273mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
+
+        /* A capa é sempre a 1ª página do documento: tira a margem só
+           dela (@page :first), pra o fundo roxo do tema Céu ir até a
+           borda do papel em vez de sobrar uma faixa branca ao redor.
+           Como essa página perde os 12mm de margem de cada lado, ela
+           também precisa da altura cheia (297mm, não 273mm) pra o roxo
+           preencher até embaixo — as demais páginas continuam com
+           margem normal e 273mm. */
+        .rel-capa { min-height: 297mm; }
         @page { size: A4; margin: 12mm; }
+        @page :first { margin: 0; }
       }
   `;
   document.head.appendChild(style);
