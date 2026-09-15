@@ -347,7 +347,12 @@ function aplicarDadosDoPerfilNoMapa(c) {
   const cidade = c.cidade || "Localidade não informada";
 
   currentGeo = { lat, lon, fuso: fusoCalc, city: cidade };
-  executarCalculo();
+  // Devolve a Promise de executarCalculo() (resolve true/false) pra quem
+  // precisa saber quando o cálculo realmente terminou — ex.: o Relatório
+  // reabrindo um rascunho, que só pode montar a prévia depois que os
+  // dados do mapa novo estiverem prontos, senão corre o risco de gerar
+  // com dados do cliente anterior ainda na tela.
+  return executarCalculo();
 }
 
 function abrirModalNovoMapa() {
@@ -608,9 +613,11 @@ async function executarCalculo() {
       iniciarModuloHoras();
     }
     renderMandala();
+    return true;
 
   } catch (err) {
     document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
+    return false;
   }
 }
 
