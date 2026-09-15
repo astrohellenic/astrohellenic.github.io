@@ -86,13 +86,13 @@ function renderMenuPrincipal() {
     </div>
     <div style="flex: 1; overflow-y: auto; background: #fffdf5;">
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
-        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
           <i class="fa-solid fa-user-plus"></i>
         </button>
-        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
           <i class="fa-solid fa-file-import"></i>
         </button>
-        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
           <i class="fa-solid fa-gear"></i>
         </button>
       </div>
