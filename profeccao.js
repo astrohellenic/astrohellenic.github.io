@@ -1105,4 +1105,11 @@
     }
 
     window.iniciarModuloProfeccao = iniciarModuloProfeccao;
+
+    /* Expostas pro módulo de Relatório (relatorio.js) reconstruir a tela de
+       Profecção como um bloco de relatório, sem duplicar o desenho da
+       mandala nem a busca/cache da Revolução Solar aqui de dentro. */
+    window.gerarMandalaSVGProfeccao = gerarMandalaSVG;
+    window.obterDadosCompletosRSProfeccao = obterDadosCompletosRS;
+    window.calcularHorasPlanetariasProfeccao = calcularHorasPlanetariasProf;
 })();

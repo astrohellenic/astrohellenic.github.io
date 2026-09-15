@@ -22,12 +22,13 @@ const RELATORIO_LOT_NOMES = {
 };
 
 /* NOMES E DESCRIÇÕES DOS TIPOS DE BLOCO "FERRAMENTA" DISPONÍVEIS HOJE.
-   Cada novo tipo (decênios, profecção, revolução solar...) entra aqui
-   quando a ferramenta correspondente for adaptada pra virar um bloco de
-   relatório — por enquanto só as duas mandalas estão prontas. */
+   Cada novo tipo (decênios, revolução solar, liberação zodiacal...) entra
+   aqui quando a ferramenta correspondente for adaptada pra virar um bloco
+   de relatório. */
 const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
   mandala_natal: { label: 'Mandala Natal (casas do Ascendente)', tituloIndice: 'Mapa Natal' },
-  mandala_fortuna: { label: 'Mandala com a Fortuna na Casa 1', tituloIndice: null }
+  mandala_fortuna: { label: 'Mandala com a Fortuna na Casa 1', tituloIndice: null },
+  profeccao: { label: 'Profecção Anual (ano corrente)', tituloIndice: 'Profecção Anual' }
 };
 
 /* CONJUNTO DE BLOCOS PADRÃO — o relatório "Mapa Natal Clássico" original.
@@ -58,6 +59,15 @@ const RELATORIO_BLOCOS_PADRAO = [
     corpo: 'A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.\n\nEnquanto a estrutura natal radical descreve a jornada geral da vida, este mapa derivado funciona como um biombo voltado para a engenharia da contingência. Ao reorganizar as casas a partir da Fortuna, os planetas assumem novos papéis e responsabilidades, revelando a arquitetura oculta da subsistência, da prosperidade, do corpo físico e dos eventos fortuitos. É através desta disposição que se mapeiam com precisão os eixos de aquisição, os momentos de ápice e os cenários onde a sorte ou os desafios materiais se manifestarão de forma concreta.\n\nPortanto, a análise deste mapa com a Fortuna na primeira casa oferece uma leitura focada na realidade prática e nas circunstâncias externas que cruzam o caminho do nativo — indispensável para decodificar como o fluxo da matéria, os recursos e os acasos do destino governarão a vida profissional e a capacidade de sustentação ao longo do tempo.'
   }
 ];
+
+/* CATÁLOGO COMPLETO DE BLOCOS QUE O EDITOR DE MODELO OFERECE — diferente
+   de RELATORIO_BLOCOS_PADRAO (que é só a semente do preset "Mapa Natal
+   Clássico"). Ferramentas novas (Profecção, e as próximas) entram aqui
+   mesmo sem fazer parte do preset padrão — assim aparecem como opção pra
+   qualquer modelo, desmarcadas até o astrólogo escolher incluí-las. */
+const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
+  { id: 'profeccao', type: 'ferramenta' }
+]);
 
 function relatorioSupabaseClient() {
   return window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
@@ -182,8 +192,10 @@ async function gerarRelatorioCompleto(preset) {
 
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
   const { png1, png2 } = await renderizarMandalasDoPreset(blocos);
+  const usaProfeccao = blocos.some(b => b.type === 'ferramenta' && b.id === 'profeccao');
+  const profeccaoHtml = usaProfeccao ? await calcularBlocoProfeccao() : '';
 
-  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal);
+  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, profeccaoHtml);
 }
 
 /* Calcula os 7 lotes diretamente dos dados já carregados, sem precisar
@@ -227,7 +239,128 @@ function voltarConfigRelatorio() {
   if (container && window.relatorioPresetsCarregados) renderRelatorioSetup(container, window.relatorioPresetsCarregados);
 }
 
-function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal) {
+/* Reconstrói a tela de Profecção Anual (profeccao.js) no visual do
+   relatório: recalcula o ano profectado do MOMENTO ATUAL (ignora
+   navegação de ano/mês que o astrólogo tenha deixado aberta na
+   ferramenta — o relatório é sempre um retrato de "agora"), busca a
+   Revolução Solar do ano-alvo e reaproveita o desenho de mandala e o
+   cálculo de RS que profeccao.js já expõe (gerarMandalaSVGProfeccao /
+   obterDadosCompletosRSProfeccao), só remontando o HTML ao redor deles
+   no padrão visual do relatório. Devolve '' se faltar alguma função
+   (profeccao.js não carregou) ou dado essencial. */
+async function calcularBlocoProfeccao() {
+  if (typeof window.gerarMandalaSVGProfeccao !== 'function' || typeof window.obterDadosCompletosRSProfeccao !== 'function') return '';
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) return '';
+
+  const dataNasc = (currentMoment instanceof Date) ? currentMoment : new Date();
+  const ascAbs = currentCalculatedData.Ascendente.grau_absoluto;
+  const ascIdx = Math.floor(ascAbs / 30);
+
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - dataNasc.getFullYear();
+  const diffMes = hoje.getMonth() - dataNasc.getMonth();
+  if (diffMes < 0 || (diffMes === 0 && hoje.getDate() < dataNasc.getDate())) idade--;
+  if (idade < 0) idade = 0;
+
+  const houseNumber = (idade % 12) + 1;
+  const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
+  const anoAlvoRS = dataNasc.getFullYear() + idade;
+  const dadosNatal = currentCalculatedData;
+
+  let rsTimestamp = null, dadosRS = null;
+  try {
+    const resultadoRS = await window.obterDadosCompletosRSProfeccao(anoAlvoRS, dataNasc);
+    if (resultadoRS) { rsTimestamp = resultadoRS.timestamp; dadosRS = resultadoRS.dados; }
+  } catch (e) { /* segue sem a Revolução Solar deste ano */ }
+
+  const rsAscSignIdx = (dadosRS && dadosRS.Ascendente)
+    ? Math.floor((((dadosRS.Ascendente.grau_absoluto % 360) + 360) % 360) / 30)
+    : null;
+
+  const MS_PER_DAY_PROF = 24 * 60 * 60 * 1000;
+  const MONTH_MS_PROF = (30 + (10.5 / 24)) * MS_PER_DAY_PROF;
+  let baseMonthStart = rsTimestamp || new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
+
+  const monthlyCache = [];
+  let cursor = baseMonthStart;
+  for (let i = 0; i < 12; i++) {
+    const proximo = cursor + MONTH_MS_PROF;
+    monthlyCache.push({ monthNum: i + 1, signIdx: (profectedSignIdx + i) % 12, start: cursor, end: proximo });
+    cursor = proximo;
+  }
+  const agora = hoje.getTime();
+  let mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
+  if (mesAtualIdx === -1) mesAtualIdx = 0;
+  const expandedMonthSignIdx = monthlyCache[mesAtualIdx].signIdx;
+
+  const svgRS = window.gerarMandalaSVGProfeccao(dadosRS, { profectedSignIdx });
+  const svgNatal = window.gerarMandalaSVGProfeccao(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx });
+
+  const nomePlaneta = id => { const p = PLANETS_DEF.find(pd => pd.id === id); return p ? p.name : id; };
+  const diasSemanaProf = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const formatarDataProf = ms => {
+    const d = new Date(ms);
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    return `${diasSemanaProf[d.getDay()]}, ${dia}/${mes}/${d.getFullYear()} às ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  const cidade = (currentGeo && currentGeo.city) ? currentGeo.city : 'Local n/i';
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
+  const fusoFmt = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+
+  const linhaRS = dadosRS
+    ? `<div><strong>Revolução Solar ${anoAlvoRS}:</strong> ${formatarDataProf(baseMonthStart)} (${fusoFmt}) · ${escapeHtml(cidade)}</div>`
+    : `<div style="color:#94a3b8;">Revolução Solar deste ano não pôde ser calculada.</div>`;
+
+  const linhasTabela = monthlyCache.map(m => {
+    const rulerId = SIGNS[m.signIdx].ruler;
+    return `
+      <tr>
+        <td>Mês ${m.monthNum}</td>
+        <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(m.signIdx, 18), SIGNS[m.signIdx].name)}</td>
+        <td class="col-signo">${relatorioCelulaIconeRotulo(getPlanet3DSVG(rulerId, 26), nomePlaneta(rulerId))}</td>
+        <td>${formatarDataProf(m.start)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <section class="rel-page" data-pg="profeccao-1">
+      <div class="rel-h1">Profecção Anual — ${idade} Anos</div>
+      <div class="rel-prof-resumo">
+        <strong>Ano Profectado:</strong> Casa ${houseNumber} em ${relatorioCelulaIconeRotulo(getSignSVG(profectedSignIdx, 22), SIGNS[profectedSignIdx].name)} · Regente ${relatorioCelulaIconeRotulo(getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 30), nomePlaneta(SIGNS[profectedSignIdx].ruler))}
+      </div>
+      <div class="rel-prof-identidade">
+        <div><strong>Natal:</strong> ${formatarDataProf(dataNasc.getTime())} (${fusoFmt}) · ${escapeHtml(cidade)}</div>
+        ${linhaRS}
+      </div>
+      <div class="rel-prof-mandalas">
+        <div class="rel-prof-mandala-item">
+          <div class="rel-prof-mandala-titulo">Revolução Solar ${anoAlvoRS}</div>
+          ${svgRS}
+        </div>
+        <div class="rel-prof-mandala-item">
+          <div class="rel-prof-mandala-titulo">Mapa Natal</div>
+          ${svgNatal}
+        </div>
+      </div>
+    </section>
+    <section class="rel-page" data-pg="profeccao-2">
+      <div class="rel-h1">Profecção Mensal</div>
+      <div class="rel-tabela-wrap">
+        <div class="rel-tabela-caixa">
+          <table class="tabela-enxuta">
+            <thead><tr><th>Mês</th><th>Signo</th><th>Regente</th><th>Início do Período</th></tr></thead>
+            <tbody>${linhasTabela}</tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, profeccaoHtml) {
   const marcaHtml = perfil.logo_url
     ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
@@ -238,7 +371,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
   injetarEstilosRelatorio();
 
   const itensIndice = [];
-  const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice })).join('');
+  const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice, profeccaoHtml })).join('');
 
   const indiceHtml = itensIndice.map(item => `
     <li><span>${escapeHtml(item.titulo)}</span><span class="rel-num-pagina" data-alvo="${item.alvo}"></span></li>
@@ -339,6 +472,10 @@ function renderBlocoRelatorio(bloco, opts) {
           <div class="rel-legenda-mandala">Mandala 2</div>
         </section>
       `;
+    }
+    if (bloco.id === 'profeccao' && opts.profeccaoHtml) {
+      opts.itensIndice.push({ titulo: (info && info.tituloIndice) || 'Profecção Anual', alvo: 'profeccao-1' });
+      return opts.profeccaoHtml;
     }
   }
 
@@ -520,6 +657,13 @@ function injetarEstilosRelatorio() {
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
       .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; }
       .rel-legenda-mandala { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 12px; }
+
+      /* PROFECÇÃO ANUAL */
+      .rel-prof-resumo { text-align: center; font-size: 13px; color: #103b70; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+      .rel-prof-identidade { background: #fffdf5; border: 1.5px solid #c59b27; border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #334155; line-height: 1.6; margin-bottom: 18px; }
+      .rel-prof-mandalas { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+      .rel-prof-mandala-item { flex: 1 1 45%; max-width: 48%; min-width: 220px; }
+      .rel-prof-mandala-titulo { text-align: center; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
 
       /* ENCERRAMENTO */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
