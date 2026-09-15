@@ -85,9 +85,9 @@ function iniciarModuloHoras() {
   };
 
   // Função auxiliar para gerar a tag SVG embutida
-  function getPlanet3DSVG(planetId) {
+  function getPlanet3DSVG(planetId, size) {
   if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico()) {
-    return getPlanetSimpleSVG(planetId, 34);
+    return getPlanetSimpleSVG(planetId, size || 34);
   }
   const planetSVGs = {
     Sun: `<svg width="34" height="34" viewBox="0 0 100 100" style="vertical-align: middle; display: inline-block;">
@@ -229,7 +229,17 @@ function iniciarModuloHoras() {
       <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text>
     </svg>`
   };
-  return planetSVGs[planetId] || '';
+  let svg = planetSVGs[planetId] || '';
+  if (size && svg) {
+    const m = svg.match(/width="([\d.]+)" height="([\d.]+)"/);
+    if (m) {
+      const origW = parseFloat(m[1]);
+      const origH = parseFloat(m[2]);
+      const newH = Math.round(size * (origH / origW));
+      svg = svg.replace(`width="${m[1]}" height="${m[2]}"`, `width="${size}" height="${newH}"`);
+    }
+  }
+  return svg;
 }
 
   // Ordem Caldaica descendente
@@ -390,7 +400,7 @@ function iniciarModuloHoras() {
   };
 
   let html = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center;">
     <!-- Definições Globais dos Gradientes e Filtros dos Planetas 3D -->
     <svg style="display: none; position: absolute; width: 0; height: 0;" aria-hidden="true">
       <defs>
@@ -430,30 +440,41 @@ function iniciarModuloHoras() {
       </defs>
     </svg>
 
-    <div style="background: #fffdf5; border-radius: 12px; padding: 16px;">
+    <div style="display: inline-block; text-align: left; background: #fffdf5; border-radius: 12px; padding: 16px;">
   <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 10px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark);">
       <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
-      <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px;">
-        Localidade: <strong>${localNome}</strong> • Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
+      <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px; white-space: nowrap;">
+        Localidade: <strong>${localNome}</strong><br>
+        Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
   `;
 
   if (horaAtual) {
     html += `
-      <div style="background: var(--bg-main); border: 2px solid #103B70; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
-        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
-        <div style="font-size: 30px; font-weight: 800; color: var(--text-dark); margin: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          ${getPlanet3DSVG(horaAtual.planet.id, 42)}
-        </div>
-        <div style="font-size: 13px; opacity: 0.8; font-weight: 500;">
-          ${horaAtual.period === 'diurna' ? '☀️' : '🌙'} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1 / 1; box-sizing: border-box; background: var(--bg-main); border: 2px solid #1e5fa4; border-radius: 10px; padding: 20px;">
+          <div style="display: flex; align-items: flex-end; justify-content: center; gap: 32px; margin: 0 0 6px 0;">
+            <div style="text-align: center;">
+              <div style="font-size: 13px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Dia</div>
+              ${getPlanet3DSVG(firstPlanetId, 100)}
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Hora</div>
+              ${getPlanet3DSVG(horaAtual.planet.id, 48)}
+            </div>
+          </div>
+          <div style="font-size: 13px; opacity: 0.8; font-weight: 500; white-space: nowrap;">
+            ${horaAtual.period === 'diurna' ? '☀️' : '🌙'} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
+          </div>
         </div>
       </div>
     `;
   }
 
   html += `
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <div style="overflow-x: auto; text-align: center;">
+    <div style="display: inline-block; text-align: left;">
+    <table style="border-collapse: collapse; font-size: 13px;">
       <thead>
         <tr style="border-bottom: 2px solid #c59b27; text-align: left; color: var(--text-dark);">
           <th style="padding: 10px 8px;"></th>
@@ -484,6 +505,8 @@ function iniciarModuloHoras() {
   html += `
       </tbody>
     </table>
+    </div>
+    </div>
   </div>
   </div>
   </div>
