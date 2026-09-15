@@ -51,6 +51,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Painel Técnico de Natividades',
     capturada: true,
     telaOrigem: 'Ferramentas > Tabela Técnica'
+  },
+  decenios: {
+    label: 'Decênios Helenísticos (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Decênios Helenísticos',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Decênios'
   }
 };
 
@@ -92,7 +98,8 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'profeccao', type: 'ferramenta' },
   { id: 'circumambulacao', type: 'ferramenta' },
   { id: 'mandala_personalizada', type: 'ferramenta' },
-  { id: 'tabela_tecnica', type: 'ferramenta' }
+  { id: 'tabela_tecnica', type: 'ferramenta' },
+  { id: 'decenios', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última
