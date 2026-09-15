@@ -912,6 +912,32 @@ body {
 <script src="perguntas.js"></script>
 <script src="relatorio.js"></script>
 
+<!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
+     de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão
+     quase instantaneamente, parecendo que "não abre"). Isso não acontece com
+     o dedo na tela. Este guarda ignora um segundo clique no MESMO elemento
+     clicável (onclick, checkbox ou radio) que chegue muito rápido depois do
+     primeiro, tratando-o como eco/fantasma do clique anterior. Não afeta
+     cliques legítimos em elementos diferentes nem o visual em nada. -->
+<script>
+(function() {
+  var lastClickEl = null;
+  var lastClickTime = 0;
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[onclick], input[type="checkbox"], input[type="radio"]');
+    if (!el) { lastClickEl = null; return; }
+    var now = Date.now();
+    if (el === lastClickEl && (now - lastClickTime) < 350) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    lastClickEl = el;
+    lastClickTime = now;
+  }, true);
+})();
+</script>
+
 <!-- ESTILOS E ESTRUTURA DA TELA DE LOGIN -->
 <style>
   #loginOverlay {
