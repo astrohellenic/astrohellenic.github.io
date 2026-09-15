@@ -63,6 +63,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Horas Planetárias',
     capturada: true,
     telaOrigem: 'Ferramentas > Horas Planetárias'
+  },
+  isopsefia: {
+    label: 'Isopsefia (a aba que você deixou aberta na ferramenta)',
+    tituloIndice: 'Isopsefia',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Isopsefia'
   }
 };
 
@@ -124,7 +130,8 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'tabela_tecnica', type: 'ferramenta' },
   { id: 'decenios', type: 'ferramenta' },
   ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' })),
-  { id: 'horas', type: 'ferramenta' }
+  { id: 'horas', type: 'ferramenta' },
+  { id: 'isopsefia', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última
