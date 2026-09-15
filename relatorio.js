@@ -39,6 +39,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Circumambulação pelos Termos',
     capturada: true,
     telaOrigem: 'Ferramentas > Direções Primárias'
+  },
+  mandala_personalizada: {
+    label: 'Mandala Personalizada (a rotação de Casa 1 que você deixou na tela — Espírito, outro lote etc.)',
+    tituloIndice: 'Mandala Personalizada',
+    capturada: true,
+    telaOrigem: 'a tela principal da Mandala'
   }
 };
 
@@ -78,7 +84,8 @@ const RELATORIO_BLOCOS_PADRAO = [
    qualquer modelo, desmarcadas até o astrólogo escolher incluí-las. */
 const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'profeccao', type: 'ferramenta' },
-  { id: 'circumambulacao', type: 'ferramenta' }
+  { id: 'circumambulacao', type: 'ferramenta' },
+  { id: 'mandala_personalizada', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última
