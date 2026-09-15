@@ -471,7 +471,9 @@ function iniciarModuloHoras() {
   }
 
   html += `
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <div style="overflow-x: auto; text-align: center;">
+    <div style="display: inline-block; text-align: left;">
+    <table style="border-collapse: collapse; font-size: 13px;">
       <thead>
         <tr style="border-bottom: 2px solid #c59b27; text-align: left; color: var(--text-dark);">
           <th style="padding: 10px 8px;"></th>
@@ -502,6 +504,8 @@ function iniciarModuloHoras() {
   html += `
       </tbody>
     </table>
+    </div>
+    </div>
   </div>
   </div>
   </div>
