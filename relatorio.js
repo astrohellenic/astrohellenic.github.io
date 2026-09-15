@@ -400,6 +400,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
   const opcoesPreset = presets.map((p, idx) => `<option value="${idx}">${escapeHtml(p.nome)}</option>`).join('');
+  const listaModelosHTML = renderizarListaModelosRelatorioHTML(presets);
 
   const listaRascunhosHTML = (rascunhos && rascunhos.length) ? `
     <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
@@ -425,11 +426,11 @@ function renderRelatorioSetup(container, presets, rascunhos) {
 
       ${listaRascunhosHTML}
 
-      <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
+      <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
         <label style="font-size: 11px; font-weight: 600; color: #64748b;">Modelo de Relatório</label>
         <select id="relPresetEscolhido" class="modal-select" style="margin-bottom: 6px;">${opcoesPreset}</select>
         <div style="font-size: 11px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">
-          Os textos, o logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral. O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
+          O logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral. O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
         </div>
 
         <button type="button" class="btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="confirmarGerarRelatorio()">
@@ -437,11 +438,307 @@ function renderRelatorioSetup(container, presets, rascunhos) {
         </button>
       </div>
 
+      <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Modelos de Relatório</div>
+          <button onclick="criarNovoPresetRelatorio()" style="font-size: 11px; font-weight: 700; color: #103b70; padding: 6px 10px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Novo</button>
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+          Cada modelo escolhe quais textos e ferramentas entram no relatório, e com que conteúdo.
+        </div>
+        <div id="relListaModelos">${listaModelosHTML}</div>
+      </div>
+
     </div>
   `;
 
   window.relatorioPresetsCarregados = presets;
 }
+
+function renderizarListaModelosRelatorioHTML(presets) {
+  return presets.map((p, idx) => `
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px;">
+      <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(p.nome)}</span>
+      <div style="display: flex; gap: 12px;">
+        <i class="fa-solid fa-pen" style="color: #103b70; cursor: pointer; font-size: 12px;" onclick="abrirEditorPresetRelatorio(${idx})" title="Editar"></i>
+        ${presets.length > 1 ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px;" onclick="excluirPresetRelatorio(${idx})" title="Excluir"></i>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* CRIA UM NOVO MODELO DE RELATÓRIO A PARTIR DO CONJUNTO DE BLOCOS PADRÃO
+   (o astrólogo edita os textos e escolhe o que entra depois, no editor) */
+async function criarNovoPresetRelatorio() {
+  const nome = prompt("Nome do novo modelo de relatório (ex: Revolução Solar):");
+  if (!nome || !nome.trim()) return;
+
+  const client = relatorioSupabaseClient();
+  if (!client) return;
+
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await client
+      .from('relatorio_presets')
+      .insert({ user_id: user.id, nome: nome.trim(), blocos: RELATORIO_BLOCOS_PADRAO });
+
+    if (error) { alert("Erro ao criar modelo: " + error.message); return; }
+    iniciarModuloRelatorio();
+  } catch (e) {
+    alert("Erro de conexão ao criar modelo.");
+  }
+}
+window.criarNovoPresetRelatorio = criarNovoPresetRelatorio;
+
+async function excluirPresetRelatorio(idx) {
+  const preset = (window.relatorioPresetsCarregados || [])[idx];
+  if (!preset || !preset.id) return;
+  if (!confirm(`Excluir o modelo "${preset.nome}"? Essa ação não pode ser desfeita.`)) return;
+
+  const client = relatorioSupabaseClient();
+  if (!client) return;
+
+  try {
+    const { error } = await client.from('relatorio_presets').delete().eq('id', preset.id);
+    if (error) { alert("Erro ao excluir: " + error.message); return; }
+    iniciarModuloRelatorio();
+  } catch (e) {
+    alert("Erro de conexão ao excluir modelo.");
+  }
+}
+window.excluirPresetRelatorio = excluirPresetRelatorio;
+
+/* EDITOR DE UM MODELO: cada bloco (do catálogo ou personalizado) vira uma
+   linha reordenável — checkbox pra incluir/excluir, título e corpo
+   editáveis pros blocos de texto, e setas ▲▼ pra mover a linha dentro do
+   container. A ordem salva é lida direto da ordem das linhas no DOM, então
+   dá pra intercalar textos, mandalas e capturas de ferramenta à vontade.
+   Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
+   espaço pra digitar os textos. */
+function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo }) {
+  const setaCss = 'width: 26px; height: 20px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
+  const setas = `
+    <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
+      <button type="button" onclick="moverBlocoEditor(this, -1)" title="Mover para cima" style="${setaCss}">▲</button>
+      <button type="button" onclick="moverBlocoEditor(this, 1)" title="Mover para baixo" style="${setaCss}">▼</button>
+    </div>
+  `;
+
+  if (tipo === 'ferramenta') {
+    return `
+      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px;">
+        ${setas}
+        <input type="checkbox" data-bloco-check="${id}" checked>
+        <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
+      </div>
+    `;
+  }
+
+  const rotuloLinha = custom ? 'Bloco personalizado' : escapeHtml(rotulo);
+  return `
+    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px; overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
+        ${setas}
+        <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
+        <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? '#9a6d18' : '#103b70'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
+        ${custom ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="this.closest('.rel-editor-linha').remove()"></i>` : ''}
+      </div>
+      <div class="rel-editor-campos" style="padding: 0 14px 14px;">
+        <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}" style="margin-bottom: 8px; font-size: 13px;">
+        <textarea data-bloco-corpo="${id}" class="modal-textarea" placeholder="${custom ? 'Texto do bloco' : ''}" style="height: 200px; font-size: 12.5px; line-height: 1.5;">${escapeHtml(corpo || '')}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+/* Move a linha (que contém o botão clicado) uma posição pra cima (-1) ou
+   pra baixo (1) dentro do container reordenável — troca de posição no DOM
+   mesmo, sem nenhuma biblioteca de drag-and-drop. */
+function moverBlocoEditor(btn, direcao) {
+  const linha = btn.closest('.rel-editor-linha');
+  if (!linha) return;
+  const alvo = direcao < 0 ? linha.previousElementSibling : linha.nextElementSibling;
+  if (!alvo || !alvo.classList.contains('rel-editor-linha')) return;
+  if (direcao < 0) linha.parentElement.insertBefore(linha, alvo);
+  else linha.parentElement.insertBefore(alvo, linha);
+}
+window.moverBlocoEditor = moverBlocoEditor;
+
+/* Acrescenta um bloco de texto personalizado em branco no fim da lista
+   reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
+   clicado) — dá pra mover ele com as setas assim que for criado. */
+function adicionarBlocoCustomizadoEditor() {
+  const container = document.getElementById('relEditorOrdenavel');
+  if (!container) return;
+  const novoId = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({ id: novoId, tipo: 'texto', custom: true, titulo: '', corpo: '' }));
+}
+window.adicionarBlocoCustomizadoEditor = adicionarBlocoCustomizadoEditor;
+
+function abrirEditorPresetRelatorio(idx) {
+  const preset = (window.relatorioPresetsCarregados || [])[idx];
+  if (!preset) return;
+
+  const container = document.getElementById('mandala-container');
+  if (!container) return;
+
+  const catalogoPorId = {};
+  RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
+
+  const blocosAtuais = preset.blocos || [];
+  const mapaBlocosAtuais = {};
+  blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
+
+  // Linhas na ordem JÁ SALVA do preset — catálogo e personalizados
+  // misturados, exatamente como o astrólogo deixou da última vez.
+  const linhasOrdenadas = blocosAtuais.map(bloco => {
+    if (bloco.type === 'ferramenta') {
+      const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
+      return relatorioLinhaEditorHtml({ id: bloco.id, tipo: 'ferramenta', rotulo: info ? info.label : bloco.id });
+    }
+    const padrao = catalogoPorId[bloco.id];
+    const custom = !padrao;
+    return relatorioLinhaEditorHtml({
+      id: bloco.id, tipo: 'texto', custom,
+      rotulo: custom ? '' : padrao.titulo,
+      titulo: bloco.titulo, corpo: bloco.corpo
+    });
+  }).join('');
+
+  // Itens do catálogo que este modelo ainda não usa — pra adicionar (entram
+  // no fim da lista de cima; depois é só mover com as setas).
+  const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => !mapaBlocosAtuais[padrao.id]).map(padrao => {
+    const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
+    return `
+      <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-adicionar-id="${padrao.id}" data-adicionar-tipo="${padrao.type}">
+        <span style="font-size: 13px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
+      </label>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+
+      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <button type="button" onclick="iniciarModuloRelatorio()" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 700;">
+          <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+        </button>
+        <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">Editar Modelo</h2>
+        <div style="width: 76px;"></div>
+      </div>
+
+      <div style="max-width: 720px; margin: 0 auto;">
+        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
+        <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 18px; font-size: 13px;">
+
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
+          Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele.
+        </div>
+
+        <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
+
+        ${linhasParaAdicionar ? `
+          <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">Adicionar ao Modelo</div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
+            Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
+          </div>
+          ${linhasParaAdicionar}
+        ` : ''}
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
+          <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
+          <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: #103b70; padding: 8px 12px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Adicionar</button>
+        </div>
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
+          Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
+        </div>
+
+        <button onclick="salvarEdicaoPresetRelatorio(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
+          Salvar Modelo
+        </button>
+      </div>
+
+    </div>
+  `;
+}
+window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
+
+/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA —
+   a ordem gravada é a ordem das linhas dentro de #relEditorOrdenavel no
+   momento do clique, então reflete qualquer reordenação feita com ▲▼. */
+async function salvarEdicaoPresetRelatorio(idx) {
+  const preset = (window.relatorioPresetsCarregados || [])[idx];
+  if (!preset) return;
+
+  const nome = document.getElementById('relEditorNome').value.trim();
+  if (!nome) { alert("Informe um nome pro modelo."); return; }
+
+  const catalogoPorId = {};
+  RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
+
+  const novosBlocos = [];
+
+  document.querySelectorAll('#relEditorOrdenavel .rel-editor-linha').forEach(linha => {
+    const id = linha.dataset.blocoId;
+    const tipo = linha.dataset.blocoTipo;
+    const checkbox = linha.querySelector(`[data-bloco-check="${id}"]`);
+    if (!checkbox || !checkbox.checked) return;
+
+    if (tipo === 'ferramenta') {
+      novosBlocos.push({ id, type: 'ferramenta' });
+      return;
+    }
+
+    const padrao = catalogoPorId[id];
+    const custom = linha.dataset.custom === '1';
+    const tituloInput = linha.querySelector(`[data-bloco-titulo="${id}"]`);
+    const corpoInput = linha.querySelector(`[data-bloco-corpo="${id}"]`);
+    const titulo = (tituloInput && tituloInput.value.trim()) || (custom ? '' : padrao.titulo);
+    const corpo = (corpoInput && corpoInput.value) || (custom ? '' : padrao.corpo);
+    if (custom && !titulo && !corpo.trim()) return; // personalizado em branco, nunca preenchido — ignora
+    novosBlocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo });
+  });
+
+  document.querySelectorAll('input[data-adicionar-id]').forEach(checkbox => {
+    if (!checkbox.checked) return;
+    const id = checkbox.dataset.adicionarId;
+    const padrao = catalogoPorId[id];
+    if (checkbox.dataset.adicionarTipo === 'ferramenta') {
+      novosBlocos.push({ id, type: 'ferramenta' });
+    } else {
+      novosBlocos.push({ id, type: 'texto', titulo: padrao.titulo, corpo: padrao.corpo });
+    }
+  });
+
+  if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
+
+  const client = relatorioSupabaseClient();
+  if (!client) return;
+
+  try {
+    if (preset.id) {
+      const { error } = await client
+        .from('relatorio_presets')
+        .update({ nome, blocos: novosBlocos, updated_at: new Date().toISOString() })
+        .eq('id', preset.id);
+      if (error) { alert("Erro ao salvar modelo: " + error.message); return; }
+    } else {
+      // Preset "em memória" (sem id — a tabela pode não ter existido na hora
+      // que ele foi semeado): tenta criar de verdade agora que está salvando.
+      const { data: { user } } = await client.auth.getUser();
+      if (user) {
+        await client.from('relatorio_presets').insert({ user_id: user.id, nome, blocos: novosBlocos });
+      }
+    }
+    iniciarModuloRelatorio();
+  } catch (e) {
+    alert("Erro de conexão ao salvar modelo.");
+  }
+}
+window.salvarEdicaoPresetRelatorio = salvarEdicaoPresetRelatorio;
 
 function confirmarGerarRelatorio() {
   const idx = parseInt(document.getElementById('relPresetEscolhido').value, 10) || 0;
@@ -506,8 +803,10 @@ async function renderizarMandalasDoPreset(blocos) {
 }
 
 function voltarConfigRelatorio() {
-  const container = document.getElementById('mandala-container');
-  if (container && window.relatorioPresetsCarregados) renderRelatorioSetup(container, window.relatorioPresetsCarregados);
+  // Recarrega do zero (modelos + rascunhos) em vez de reusar o que já
+  // estava em memória — garante que a lista de rascunhos apareça
+  // atualizada com o que acabou de ser gerado.
+  iniciarModuloRelatorio();
 }
 
 function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal) {
