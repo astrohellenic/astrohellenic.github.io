@@ -440,10 +440,17 @@ function iniciarModuloHoras() {
 
   if (horaAtual) {
     html += `
-      <div style="background: var(--bg-main); border: 2px solid #103B70; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
+      <div style="background: var(--bg-main); border: 2px solid #1e5fa4; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
         <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
-        <div style="font-size: 30px; font-weight: 800; color: var(--text-dark); margin: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          ${getPlanet3DSVG(horaAtual.planet.id, 42)}
+        <div style="display: flex; align-items: flex-end; justify-content: center; gap: 28px; margin: 10px 0 6px 0;">
+          <div style="text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Hora</div>
+            ${getPlanet3DSVG(horaAtual.planet.id, 52)}
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Dia</div>
+            ${getPlanet3DSVG(firstPlanetId, 64)}
+          </div>
         </div>
         <div style="font-size: 13px; opacity: 0.8; font-weight: 500;">
           ${horaAtual.period === 'diurna' ? '☀️' : '🌙'} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
