@@ -86,14 +86,35 @@ function renderMenuPrincipal() {
     </div>
     <div style="flex: 1; overflow-y: auto; background: #fffdf5;">
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
-        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
-          <i class="fa-solid fa-user-plus"></i>
+        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="26" cy="16" r="9"/>
+            <path d="M10,54 C10,38 17,32 26,32 C35,32 42,38 42,54"/>
+            <line x1="50" y1="30" x2="50" y2="46"/>
+            <line x1="42" y1="38" x2="58" y2="38"/>
+          </svg>
         </button>
-        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
-          <i class="fa-solid fa-file-import"></i>
+        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10,38 V54 A4,4 0 0 0 14,58 H50 A4,4 0 0 0 54,54 V38"/>
+            <polyline points="10,38 24,38 28,46 36,46 40,38 54,38"/>
+            <line x1="32" y1="6" x2="32" y2="36"/>
+            <polyline points="20,24 32,36 44,24"/>
+          </svg>
         </button>
-        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
-          <i class="fa-solid fa-gear"></i>
+        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="32" cy="32" r="10"/>
+            <circle cx="32" cy="32" r="20"/>
+            <line x1="52" y1="32" x2="58" y2="32"/>
+            <line x1="46.14" y1="46.14" x2="50.38" y2="50.38"/>
+            <line x1="32" y1="52" x2="32" y2="58"/>
+            <line x1="17.86" y1="46.14" x2="13.62" y2="50.38"/>
+            <line x1="12" y1="32" x2="6" y2="32"/>
+            <line x1="17.86" y1="17.86" x2="13.62" y2="13.62"/>
+            <line x1="32" y1="12" x2="32" y2="6"/>
+            <line x1="46.14" y1="17.86" x2="50.38" y2="13.62"/>
+          </svg>
         </button>
       </div>
 
