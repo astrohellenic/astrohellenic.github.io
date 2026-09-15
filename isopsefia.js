@@ -157,8 +157,14 @@ function renderIsopsefiaUI(container) {
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : (typeof currentSubjectName !== 'undefined' ? currentSubjectName : 'Mapa Ativo');
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
-      
+    <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: flex-end; padding: 12px 20px 0;">
+        <button onclick="capturarTelaParaRelatorio('isopsefia', 'isopsefia-container', 'Isopsefia')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+        </button>
+      </div>
+    <div id="isopsefia-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+
       <!-- CABEÇALHO PADRONIZADO -->
       <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <div>
@@ -186,6 +192,7 @@ function renderIsopsefiaUI(container) {
         ${renderConteudoAbaAtual()}
       </div>
 
+    </div>
     </div>
   `;
 }
