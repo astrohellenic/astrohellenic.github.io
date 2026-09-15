@@ -346,12 +346,24 @@ body {
             z-index: 10;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             margin-bottom: 10px;
+            overflow: hidden;
         }
 
         .top-bar-controls {
             display: flex;
             align-items: center;
             gap: 6px;
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .top-bar-controls::-webkit-scrollbar {
+            display: none;
         }
 
         .menu-toggle-btn {
@@ -367,6 +379,7 @@ body {
             justify-content: center;
             transition: all 0.15s ease;
             margin-right: 4px;
+            flex-shrink: 0;
         }
 
         .menu-toggle-btn:hover {
@@ -384,6 +397,7 @@ body {
             padding: 6px 8px;
             border-radius: 6px;
             transition: all 0.15s ease;
+            flex-shrink: 0;
         }
 
         .icon-btn:hover {
@@ -574,11 +588,10 @@ body {
         
         <!-- BARRA SUPERIOR -->
         <div id="top-bar">
+            <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Abrir Menu Lateral">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <div class="top-bar-controls">
-                <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Abrir Menu Lateral">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                
                 <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
                 <button class="icon-btn" onclick="abrirModuloTecnica('mandala')" title="Natal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="32" cy="32" r="26"/>
