@@ -60,6 +60,23 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
   }
 };
 
+/* LIBERAÇÃO ZODIACAL entra como 7 blocos independentes, um por lote — a
+   ferramenta mostra uma tabela diferente pra cada lote ativo, e o
+   astrólogo costuma precisar levar vários lotes (Fortuna, Espírito, Eros
+   etc.) pro mesmo relatório, sem um substituir o outro. Cada captura fica
+   guardada sob sua própria chave (liberacao_<lote>), então funciona só
+   reaproveitando o mecanismo genérico de bloco "capturado" já existente —
+   nenhuma mudança em renderBlocoRelatorio ou no editor de modelo. */
+const RELATORIO_LOTES_ORDEM = ['fortune', 'spirit', 'venus', 'mercury', 'mars', 'jupiter', 'saturn'];
+RELATORIO_LOTES_ORDEM.forEach(loteKey => {
+  RELATORIO_FERRAMENTAS_DISPONIVEIS['liberacao_' + loteKey] = {
+    label: `Liberação Zodiacal — ${RELATORIO_LOT_NOMES[loteKey]} (a tela que você deixou pronta na ferramenta)`,
+    tituloIndice: `Liberação Zodiacal — ${RELATORIO_LOT_NOMES[loteKey]}`,
+    capturada: true,
+    telaOrigem: 'Ferramentas > Liberação Zodiacal'
+  };
+});
+
 /* CONJUNTO DE BLOCOS PADRÃO — o relatório "Mapa Natal Clássico" original.
    Serve de modelo pra quando o astrólogo cria um preset novo, e é usado
    pra semear automaticamente o primeiro preset de quem ainda não tem
@@ -99,7 +116,8 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'circumambulacao', type: 'ferramenta' },
   { id: 'mandala_personalizada', type: 'ferramenta' },
   { id: 'tabela_tecnica', type: 'ferramenta' },
-  { id: 'decenios', type: 'ferramenta' }
+  { id: 'decenios', type: 'ferramenta' },
+  ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' }))
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última
