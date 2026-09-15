@@ -104,16 +104,16 @@ function renderMenuPrincipal() {
         </button>
         <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="32" cy="32" r="10"/>
-            <circle cx="32" cy="32" r="20"/>
-            <line x1="52" y1="32" x2="58" y2="32"/>
-            <line x1="46.14" y1="46.14" x2="50.38" y2="50.38"/>
-            <line x1="32" y1="52" x2="32" y2="58"/>
-            <line x1="17.86" y1="46.14" x2="13.62" y2="50.38"/>
-            <line x1="12" y1="32" x2="6" y2="32"/>
-            <line x1="17.86" y1="17.86" x2="13.62" y2="13.62"/>
-            <line x1="32" y1="12" x2="32" y2="6"/>
-            <line x1="46.14" y1="17.86" x2="50.38" y2="13.62"/>
+            <circle cx="32" cy="32" r="16"/>
+            <circle cx="32" cy="32" r="6"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(45 32 32)"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(90 32 32)"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(135 32 32)"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(180 32 32)"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(225 32 32)"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(270 32 32)"/>
+            <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(315 32 32)"/>
           </svg>
         </button>
       </div>
