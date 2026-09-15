@@ -602,12 +602,43 @@ function alternarRotacaoCasa1(val) {
   renderMandala();
 }
 
+/* Botão "Adicionar ao Relatório" da mandala — fica ao lado do botão de
+   rotação (mesma barra superior, um container à parte de #mandala-container,
+   então nunca aparece na própria imagem gerada). Serve pra mandar pro
+   relatório a mandala EXATAMENTE como está na tela agora, com qualquer
+   ponto na Casa 1 (ASC, Fortuna, Espírito, ou qualquer dos outros lotes) —
+   não só os dois fixos (mandala_natal / mandala_fortuna) que o relatório
+   já calculava sozinho. */
+function injetarBotaoRelatorioNaBarraSuperior() {
+  const rotationContainer = document.getElementById('lotRotationBtnContainer');
+  if (!rotationContainer || document.getElementById('mandalaRelatorioBtnContainer')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'mandalaRelatorioBtnContainer';
+  btn.type = 'button';
+  btn.title = 'Adiciona a mandala ao Relatório, exatamente do jeito que está agora (com a rotação de Casa 1 escolhida)';
+  btn.style.cssText = "width: 32px; height: 36px; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);";
+  btn.innerHTML = '<i class="fa-solid fa-file-circle-plus" style="color: #103b70; font-size: 14px;"></i>';
+  btn.onclick = capturarMandalaAtualParaRelatorio;
+  rotationContainer.after(btn);
+}
+
+async function capturarMandalaAtualParaRelatorio() {
+  if (!currentCalculatedData) { alert('Nenhum mapa carregado pra adicionar ao relatório.'); return; }
+  window.relatorioCapturas = window.relatorioCapturas || {};
+  const dataUrl = await new Promise(resolve => renderMandala(null, resolve));
+  window.relatorioCapturas['mandala_personalizada'] = { dataUrl, capturadoEm: Date.now() };
+  alert('Mandala adicionada ao relatório, do jeito que está na tela agora. Gere o relatório novamente para ver essa página atualizada.');
+}
+window.capturarMandalaAtualParaRelatorio = capturarMandalaAtualParaRelatorio;
+
 function renderMandala(dadosNovos, onReady) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
 
   injetarBotaoRotacaoNaBarraSuperior();
+  injetarBotaoRelatorioNaBarraSuperior();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
