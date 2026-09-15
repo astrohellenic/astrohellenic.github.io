@@ -659,7 +659,7 @@ function injetarEstilosRelatorio() {
          página existe só pra emoldurar a imagem trazida da tela real da
          ferramenta, sem redesenhar nada ao redor dela. */
       .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
-      .rel-img-captura { width: 100%; height: auto; display: block; }
+      .rel-img-captura { max-width: 100%; max-height: 265mm; width: auto; height: auto; display: block; margin: 0 auto; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
@@ -674,26 +674,37 @@ function injetarEstilosRelatorio() {
            às páginas que distribuem conteúdo do topo ao rodapé com
            flexbox (a capa, o encerramento) uma altura de referência pra
            empurrar o rodapé pra baixo de verdade — sem isso ele sobe pra
-           logo abaixo do texto. Precisa ser min-height e não height: uma
-           altura EXATA de 273mm, por um arredondamento de fração de
-           pixel entre mm e px, ficava um triz mais alta que a página
-           impressa e cada .rel-page acabava "vazando" essa migalha pra
-           uma página extra em branco (o relatório saía com o dobro de
-           páginas, uma em branco atrás de cada uma com conteúdo).
-           min-height nunca cria esse vazamento: o conteúdo mais longo
-           (tabelas grandes) continua transbordando normalmente pra
-           próxima página quando realmente precisa. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 273mm; overflow: visible; page-break-after: always; }
+           logo abaixo do texto.
+
+           O valor fica com folga de propósito (267mm, não os 273mm
+           "exatos" que sobram depois das margens de 12mm): o tamanho
+           real de uma página impressa varia um pouco de navegador pra
+           navegador (arredondamento de fração de pixel entre mm e px),
+           e um valor exato — mesmo sendo min-height, não height fixo —
+           fica raspando o limite real da página. Quando raspa, o
+           .rel-page "vaza" por uma fração mínima pra página seguinte, e
+           como cada .rel-page força quebra de página logo depois de si
+           (page-break-after: always), essa fração vazada vira uma
+           página inteira em branco atrás de cada página de conteúdo (o
+           relatório saía com o dobro de páginas). Com folga, o
+           min-height nunca chega perto do limite real, então nunca
+           cria esse vazamento — o conteúdo mais longo (tabelas
+           grandes, imagens capturadas) continua transbordando
+           normalmente pra próxima página quando realmente precisa. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
 
-        /* A capa é sempre a 1ª página do documento: tira a margem só
-           dela (@page :first), pra o fundo roxo do tema Céu ir até a
-           borda do papel em vez de sobrar uma faixa branca ao redor.
-           Como essa página perde os 12mm de margem de cada lado, ela
-           também precisa da altura cheia (297mm, não 273mm) pra o roxo
-           preencher até embaixo — as demais páginas continuam com
-           margem normal e 273mm. */
-        .rel-capa { min-height: 297mm; }
+        /* A capa usa a MESMA folga das demais páginas, não os 297mm da
+           folha inteira: a regra "@page :first" com margem zero (logo
+           abaixo) nem sempre é respeitada pela exportação/impressão
+           real (varia por navegador), então contar com a margem
+           removida da capa é
+           frágil — quando não é respeitado, a capa (dimensionada pra
+           297mm) vaza pra uma 2ª página só com o rodapé, exatamente o
+           mesmo efeito de página em branco descrito acima. Usando a
+           mesma folga de 267mm dos outros, a capa cabe inteira numa
+           página nos dois cenários: com ou sem a margem removida. */
+        .rel-capa { min-height: 267mm; }
         @page { size: A4; margin: 12mm; }
         @page :first { margin: 0; }
       }
