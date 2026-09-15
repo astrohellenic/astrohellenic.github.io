@@ -180,6 +180,57 @@ function renderDeceniosUI(container) {
     </div>
     </div>
   `;
+
+  encolherTabelasDecVisiveis(container);
+}
+
+/* ENCOLHE TABELAS LARGAS DEMAIS PARA CABEREM NA TELA (SEM CORTE), EM VEZ DE
+   FICAREM TRAVADAS/CORTADAS EM TELAS ESTREITAS — mesma técnica usada no
+   Painel Técnico. Em telas largas, onde as tabelas já cabem, não faz nada. */
+function encolherTabelaLargaDec(tableEl) {
+  if (!tableEl || tableEl.dataset.autoScaledDec === '1') return;
+  const parent = tableEl.parentElement;
+  if (!parent) return;
+
+  const parentStyles = getComputedStyle(parent);
+  const availableWidth = parent.clientWidth
+    - parseFloat(parentStyles.paddingLeft || 0)
+    - parseFloat(parentStyles.paddingRight || 0);
+  const naturalWidth = tableEl.offsetWidth;
+  if (!availableWidth || !naturalWidth || naturalWidth <= availableWidth) return;
+
+  const naturalHeight = tableEl.offsetHeight;
+  const escala = availableWidth / naturalWidth;
+  const scaledHeight = naturalHeight * escala;
+
+  const outerScroll = document.createElement('div');
+  outerScroll.style.overflow = 'hidden';
+  outerScroll.style.textAlign = 'center';
+  const scaleBox = document.createElement('div');
+  scaleBox.style.display = 'inline-block';
+
+  parent.insertBefore(outerScroll, tableEl);
+  outerScroll.appendChild(scaleBox);
+  scaleBox.appendChild(tableEl);
+
+  tableEl.style.transformOrigin = 'top left';
+  tableEl.style.transform = `scale(${escala})`;
+  tableEl.dataset.autoScaledDec = '1';
+
+  scaleBox.style.width = (naturalWidth * escala) + 'px';
+  scaleBox.style.height = scaledHeight + 'px';
+  // Contorna uma peculiaridade do navegador: um contêiner com overflow ao
+  // redor de uma <table> transformada calcula a própria altura com base no
+  // tamanho ANTES da escala, sobrando espaço vazio — por isso também
+  // fixamos a altura dele aqui.
+  outerScroll.style.height = scaledHeight + 'px';
+}
+
+function encolherTabelasDecVisiveis(root) {
+  if (!root) return;
+  root.querySelectorAll('table:not([data-auto-scaled-dec="1"])').forEach(t => {
+    if (t.offsetParent !== null) encolherTabelaLargaDec(t);
+  });
 }
 
 function alternarSeitaManual(val) {
@@ -357,6 +408,17 @@ function alternarL3AccordionDec(l1Idx, l2Idx, event) {
 
   subRow.style.display = willOpen ? 'table-row' : 'none';
   mainRow.style.backgroundColor = willOpen ? '#fefcf2' : (mainRow.dataset.bgDefault || '');
+
+  if (willOpen) encolherTabelasDecVisiveis(subRow);
+}
+
+// ABRE/FECHA O DETALHE DE UM L1 NA LINHA DO TEMPO (COM A TABELA DE L2 DENTRO)
+function alternarDetalhesL1Dec(idx) {
+  const el = document.getElementById(`dec_l1_details_${idx}`);
+  if (!el) return;
+  const willOpen = el.style.display === 'none';
+  el.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) encolherTabelasDecVisiveis(el);
 }
 
 // RENDERIZA A SUB-TABELA DO L3 (ABERTA DENTRO DA CÉLULA COLSPAN DA LINHA DE L2)
@@ -500,7 +562,7 @@ function renderizarResultadosHTML(res) {
       <div>
         ${timelineL1.map((l1, idx) => `
           <div style="background: #ffffff; border: 1px solid ${l1.isActive ? '#d4af37' : '#e2e8f0'}; border-radius: 10px; margin-bottom: 8px; overflow: hidden;">
-            <div style="padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="document.getElementById('dec_l1_details_${idx}').style.display = document.getElementById('dec_l1_details_${idx}').style.display === 'none' ? 'block' : 'none'">
+            <div style="padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="alternarDetalhesL1Dec(${idx})">
               <div style="display: flex; align-items: center; gap: 10px;">
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
