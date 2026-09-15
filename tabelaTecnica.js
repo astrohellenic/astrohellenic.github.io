@@ -606,7 +606,12 @@ function renderPainelTecnico(data, containerId) {
       headerEl.style.width = 'fit-content';
       const naturalWidth = headerEl.offsetWidth;
       const matrizWidth = matrizEl.offsetWidth;
-      const finalWidth = Math.max(naturalWidth, matrizWidth);
+      // Em telas estreitas a Matriz de Visibilidade rola dentro do próprio contêiner
+      // e sua largura "natural" (offsetWidth) pode ultrapassar o espaço realmente
+      // visível na tela; sem esse limite o cabeçalho ficaria largo demais e a
+      // página inteira passaria a rolar na horizontal.
+      const availableWidth = headerEl.parentElement ? headerEl.parentElement.clientWidth : Infinity;
+      const finalWidth = Math.min(Math.max(naturalWidth, matrizWidth), availableWidth);
       if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
     }
   } catch (err) {
