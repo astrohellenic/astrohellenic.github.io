@@ -40,6 +40,18 @@
   padding: 0;
 }
 
+/* Com o zoom por toque liberado (viewport sem user-scalable=no), o Safari/
+   Chrome mobile passam a tratar todo toque como um possível início de duplo
+   toque para zoom, atrasando o clique e podendo até cancelá-lo se o usuário
+   tocar de novo antes do primeiro ser reconhecido. Em elementos clicáveis
+   (todos usam onclick neste app) isso deixa acordeões/linhas de tabela sem
+   responder no celular. "manipulation" mantém o pinça-para-zoom (usado para
+   ver os SVGs ampliados) mas remove a ambiguidade de duplo toque só nesses
+   elementos, sem alterar nada no desktop (mouse não é afetado por touch-action). */
+[onclick] {
+  touch-action: manipulation;
+}
+
 html, body {
   width: 100%;
   background-color: var(--bg-main);
@@ -899,6 +911,32 @@ body {
 <script src="horas.js"></script>
 <script src="perguntas.js"></script>
 <script src="relatorio.js"></script>
+
+<!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
+     de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão
+     quase instantaneamente, parecendo que "não abre"). Isso não acontece com
+     o dedo na tela. Este guarda ignora um segundo clique no MESMO elemento
+     clicável (onclick, checkbox ou radio) que chegue muito rápido depois do
+     primeiro, tratando-o como eco/fantasma do clique anterior. Não afeta
+     cliques legítimos em elementos diferentes nem o visual em nada. -->
+<script>
+(function() {
+  var lastClickEl = null;
+  var lastClickTime = 0;
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[onclick], input[type="checkbox"], input[type="radio"]');
+    if (!el) { lastClickEl = null; return; }
+    var now = Date.now();
+    if (el === lastClickEl && (now - lastClickTime) < 350) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    lastClickEl = el;
+    lastClickTime = now;
+  }, true);
+})();
+</script>
 
 <!-- ESTILOS E ESTRUTURA DA TELA DE LOGIN -->
 <style>
