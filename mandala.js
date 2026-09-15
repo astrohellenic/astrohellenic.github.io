@@ -172,6 +172,12 @@ let currentSubjectName = "Agora";
 let currentCustomCode = null;
 let lastRenderedPngUrl = "";
 
+/* Id (na tabela `mapas`) do mapa atualmente carregado na tela — null
+   quando o mapa em tela ainda não foi salvo (ex.: "Céu do Momento").
+   Usado pelo módulo de Relatório (relatorio.js) pra saber a qual mapa
+   vincular o rascunho do relatório em andamento. */
+let currentMapaId = null;
+
 function formatDegMin(absDeg) {
   const normDeg = (absDeg % 360 + 360) % 360;
   const degInSign = normDeg % 30;
@@ -323,6 +329,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
 
   currentSubjectName = c.nome || "Nativo";
   currentCustomCode = c.codigo || null;
+  currentMapaId = c.id || null;
   window.currentMapType = c.tipo || "Natal";
   currentMoment = new Date(ano, mes - 1, dia, hora, min);
 
@@ -419,6 +426,7 @@ function confirmarNovoMapaModal() {
 
   currentSubjectName = nome;
   currentCustomCode = codigoFinal;
+  currentMapaId = null; // ainda não tem id — só ganha um depois que salvarNovoMapaAutomaticamente() inserir e devolver a linha
   window.currentMapType = "Natal";
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
   currentGeo = { lat: latFinal, lon: lonFinal, fuso: fusoReal, city: cidadeFinal };
@@ -441,7 +449,7 @@ async function salvarNovoMapaAutomaticamente(dados) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (user) userId = user.id;
 
-    const { error } = await supabaseClient
+    const { data: linhaInserida, error } = await supabaseClient
       .from('mapas')
       .insert([{
         pasta: pastaAlvo,
@@ -454,9 +462,16 @@ async function salvarNovoMapaAutomaticamente(dados) {
         latitude: dados.lat,
         longitude: dados.lon,
         user_id: userId
-      }]);
+      }])
+      .select()
+      .single();
 
     if (!error) {
+      // só assume o id se o astrólogo ainda estiver olhando pro mesmo
+      // nativo (ele pode ter trocado de mapa enquanto isso salvava)
+      if (linhaInserida && currentSubjectName === dados.nome && currentCustomCode == dados.codigo) {
+        currentMapaId = linhaInserida.id;
+      }
       if (typeof carregarMapasDoBanco === 'function') carregarMapasDoBanco(pastaAlvo);
     } else {
       alert("O mapa foi carregado na tela, mas houve um erro ao salvá-lo automaticamente: " + error.message);
@@ -484,6 +499,7 @@ function carregarCeuDoMomento() {
   if (menuHere) menuHere.classList.add('active');
   currentSubjectName = "Agora";
   currentCustomCode = null;
+  currentMapaId = null;
   window.currentMapType = "Trânsito";
   currentMoment = new Date();
 
