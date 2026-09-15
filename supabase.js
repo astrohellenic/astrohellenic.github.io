@@ -456,33 +456,68 @@ async function excluirPreset(idx) {
   }
 }
 
-/* EDITOR DE UM MODELO: pra cada bloco padrão (na ordem fixa do relatório),
-   um checkbox pra incluir ou não, e — pros blocos de texto — título e
-   corpo editáveis (pré-preenchidos com o que já está salvo, ou com o
-   texto padrão se o bloco nunca foi habilitado neste modelo). */
-/* Linha de edição de UM bloco de texto personalizado (título + corpo +
-   remover). Usada tanto pra pré-preencher os que o preset já tem quanto
-   pro botão "+ Adicionar Bloco de Texto", que gera um novo vazio. */
-function relatorioBlocoCustomHtml(id, titulo, corpo) {
-  return `
-    <div class="rel-editor-custom-bloco" data-custom-id="${id}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; padding: 10px 12px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-        <span style="font-size: 10px; font-weight: 700; color: #9a6d18; text-transform: uppercase; letter-spacing: 0.03em;">Bloco personalizado</span>
-        <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px;" title="Remover este bloco" onclick="this.closest('.rel-editor-custom-bloco').remove()"></i>
+/* EDITOR DE UM MODELO: cada bloco (do catálogo ou personalizado) vira uma
+   linha reordenável — checkbox pra incluir/excluir, título e corpo
+   editáveis pros blocos de texto, e setas ▲▼ pra mover a linha dentro do
+   container. A ordem salva é lida direto da ordem das linhas no DOM, então
+   dá pra intercalar textos, mandalas e capturas de ferramenta à vontade. */
+function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo }) {
+  const setaCss = 'width: 22px; height: 16px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; border-radius: 4px; font-size: 9px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
+  const setas = `
+    <div style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;">
+      <button type="button" onclick="moverBlocoEditor(this, -1)" title="Mover para cima" style="${setaCss}">▲</button>
+      <button type="button" onclick="moverBlocoEditor(this, 1)" title="Mover para baixo" style="${setaCss}">▼</button>
+    </div>
+  `;
+
+  if (tipo === 'ferramenta') {
+    return `
+      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px;">
+        ${setas}
+        <input type="checkbox" data-bloco-check="${id}" checked>
+        <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
       </div>
-      <input type="text" data-custom-titulo="${id}" class="modal-input" value="${escapeHtml(titulo)}" placeholder="Título do bloco" style="margin-bottom: 6px; font-size: 12px;">
-      <textarea data-custom-corpo="${id}" class="modal-textarea" placeholder="Texto do bloco" style="height: 120px; font-size: 11px;">${escapeHtml(corpo)}</textarea>
+    `;
+  }
+
+  const rotuloLinha = custom ? 'Bloco personalizado' : escapeHtml(rotulo);
+  return `
+    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px;">
+        ${setas}
+        <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
+        <span style="flex: 1; font-size: ${custom ? '10px' : '12px'}; font-weight: 700; color: ${custom ? '#9a6d18' : '#103b70'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
+        ${custom ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px;" title="Remover este bloco" onclick="this.closest('.rel-editor-linha').remove()"></i>` : ''}
+      </div>
+      <div class="rel-editor-campos" style="padding: 0 12px 12px;">
+        <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}" style="margin-bottom: 6px; font-size: 12px;">
+        <textarea data-bloco-corpo="${id}" class="modal-textarea" placeholder="${custom ? 'Texto do bloco' : ''}" style="height: 120px; font-size: 11px;">${escapeHtml(corpo || '')}</textarea>
+      </div>
     </div>
   `;
 }
 
-/* Acrescenta um bloco de texto personalizado em branco na tela do editor
-   (só entra no modelo de verdade quando "Salvar Modelo" for clicado). */
+/* Move a linha (que contém o botão clicado) uma posição pra cima (-1) ou
+   pra baixo (1) dentro do container reordenável — troca de posição no DOM
+   mesmo, sem nenhuma biblioteca de drag-and-drop. */
+function moverBlocoEditor(btn, direcao) {
+  const linha = btn.closest('.rel-editor-linha');
+  if (!linha) return;
+  const alvo = direcao < 0 ? linha.previousElementSibling : linha.nextElementSibling;
+  if (!alvo || !alvo.classList.contains('rel-editor-linha')) return;
+  if (direcao < 0) linha.parentElement.insertBefore(linha, alvo);
+  else linha.parentElement.insertBefore(alvo, linha);
+}
+window.moverBlocoEditor = moverBlocoEditor;
+
+/* Acrescenta um bloco de texto personalizado em branco no fim da lista
+   reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
+   clicado) — dá pra mover ele com as setas assim que for criado. */
 function adicionarBlocoCustomizadoEditor() {
-  const container = document.getElementById('relEditorBlocosCustom');
+  const container = document.getElementById('relEditorOrdenavel');
   if (!container) return;
   const novoId = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  container.insertAdjacentHTML('beforeend', relatorioBlocoCustomHtml(novoId, '', ''));
+  container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({ id: novoId, tipo: 'texto', custom: true, titulo: '', corpo: '' }));
 }
 
 function abrirEditorPreset(idx) {
@@ -492,40 +527,38 @@ function abrirEditorPreset(idx) {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
+  const catalogoPorId = {};
+  RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
+
+  const blocosAtuais = preset.blocos || [];
   const mapaBlocosAtuais = {};
-  (preset.blocos || []).forEach(b => { mapaBlocosAtuais[b.id] = b; });
+  blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
 
-  const idsCatalogo = RELATORIO_CATALOGO_BLOCOS.map(b => b.id);
-  const blocosCustomizados = (preset.blocos || []).filter(b => b.type === 'texto' && !idsCatalogo.includes(b.id));
-  const linhasCustom = blocosCustomizados.map(b => relatorioBlocoCustomHtml(b.id, b.titulo, b.corpo)).join('');
-
-  const linhasBlocos = RELATORIO_CATALOGO_BLOCOS.map(padrao => {
-    const atual = mapaBlocosAtuais[padrao.id];
-    const marcado = !!atual;
-
-    if (padrao.type === 'ferramenta') {
-      const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id];
-      return `
-        <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; cursor: pointer;">
-          <input type="checkbox" data-bloco-id="${padrao.id}" data-bloco-tipo="ferramenta" ${marcado ? 'checked' : ''}>
-          <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(info.label)}</span>
-        </label>
-      `;
+  // Linhas na ordem JÁ SALVA do preset — catálogo e personalizados
+  // misturados, exatamente como o astrólogo deixou da última vez.
+  const linhasOrdenadas = blocosAtuais.map(bloco => {
+    if (bloco.type === 'ferramenta') {
+      const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
+      return relatorioLinhaEditorHtml({ id: bloco.id, tipo: 'ferramenta', rotulo: info ? info.label : bloco.id });
     }
+    const padrao = catalogoPorId[bloco.id];
+    const custom = !padrao;
+    return relatorioLinhaEditorHtml({
+      id: bloco.id, tipo: 'texto', custom,
+      rotulo: custom ? '' : padrao.titulo,
+      titulo: bloco.titulo, corpo: bloco.corpo
+    });
+  }).join('');
 
-    const titulo = atual ? atual.titulo : padrao.titulo;
-    const corpo = atual ? atual.corpo : padrao.corpo;
+  // Itens do catálogo que este modelo ainda não usa — pra adicionar (entram
+  // no fim da lista de cima; depois é só mover com as setas).
+  const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => !mapaBlocosAtuais[padrao.id]).map(padrao => {
+    const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
     return `
-      <div style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; overflow: hidden;">
-        <label style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer;">
-          <input type="checkbox" data-bloco-id="${padrao.id}" data-bloco-tipo="texto" ${marcado ? 'checked' : ''} onchange="this.closest('div').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
-          <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(padrao.titulo)}</span>
-        </label>
-        <div class="rel-editor-campos" style="display: ${marcado ? 'block' : 'none'}; padding: 0 12px 12px;">
-          <input type="text" data-bloco-titulo="${padrao.id}" class="modal-input" value="${escapeHtml(titulo)}" style="margin-bottom: 6px; font-size: 12px;">
-          <textarea data-bloco-corpo="${padrao.id}" class="modal-textarea" style="height: 120px; font-size: 11px;">${escapeHtml(corpo)}</textarea>
-        </div>
-      </div>
+      <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 6px; cursor: pointer;">
+        <input type="checkbox" data-adicionar-id="${padrao.id}" data-adicionar-tipo="${padrao.type}">
+        <span style="font-size: 12px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
+      </label>
     `;
   }).join('');
 
@@ -543,19 +576,26 @@ function abrirEditorPreset(idx) {
       <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 16px;">
 
       <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
-        Marque o que entra no relatório. A ordem é sempre a mostrada aqui embaixo — os blocos personalizados sempre vêm depois destes.
+        Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele.
       </div>
 
-      ${linhasBlocos}
+      <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
+
+      ${linhasParaAdicionar ? `
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 18px 0 8px;">Adicionar ao Modelo</div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+          Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
+        </div>
+        ${linhasParaAdicionar}
+      ` : ''}
 
       <div style="display: flex; align-items: center; justify-content: space-between; margin: 18px 0 8px;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Blocos Personalizados</div>
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
         <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 11px; font-weight: 700; color: #103b70; padding: 6px 10px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Adicionar</button>
       </div>
       <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
-        Crie textos próprios além dos de cima — por exemplo, uma seção sobre um serviço que só você oferece.
+        Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
       </div>
-      <div id="relEditorBlocosCustom">${linhasCustom}</div>
 
       <button onclick="salvarEdicaoPreset(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 16px;">
         Salvar Modelo
@@ -564,7 +604,9 @@ function abrirEditorPreset(idx) {
   `;
 }
 
-/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA */
+/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA —
+   a ordem gravada é a ordem das linhas dentro de #relEditorOrdenavel no
+   momento do clique, então reflete qualquer reordenação feita com ▲▼. */
 async function salvarEdicaoPreset(idx) {
   const preset = (window.relatorioPresetsConfig || [])[idx];
   if (!preset) return;
@@ -572,31 +614,41 @@ async function salvarEdicaoPreset(idx) {
   const nome = document.getElementById('relEditorNome').value.trim();
   if (!nome) { alert("Informe um nome pro modelo."); return; }
 
+  const catalogoPorId = {};
+  RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
+
   const novosBlocos = [];
-  RELATORIO_CATALOGO_BLOCOS.forEach(padrao => {
-    const checkbox = document.querySelector(`input[data-bloco-id="${padrao.id}"]`);
+
+  document.querySelectorAll('#relEditorOrdenavel .rel-editor-linha').forEach(linha => {
+    const id = linha.dataset.blocoId;
+    const tipo = linha.dataset.blocoTipo;
+    const checkbox = linha.querySelector(`[data-bloco-check="${id}"]`);
     if (!checkbox || !checkbox.checked) return;
 
-    if (padrao.type === 'ferramenta') {
-      novosBlocos.push({ id: padrao.id, type: 'ferramenta' });
-    } else {
-      const tituloInput = document.querySelector(`[data-bloco-titulo="${padrao.id}"]`);
-      const corpoInput = document.querySelector(`[data-bloco-corpo="${padrao.id}"]`);
-      novosBlocos.push({
-        id: padrao.id,
-        type: 'texto',
-        titulo: (tituloInput && tituloInput.value.trim()) || padrao.titulo,
-        corpo: (corpoInput && corpoInput.value) || padrao.corpo
-      });
+    if (tipo === 'ferramenta') {
+      novosBlocos.push({ id, type: 'ferramenta' });
+      return;
     }
+
+    const padrao = catalogoPorId[id];
+    const custom = linha.dataset.custom === '1';
+    const tituloInput = linha.querySelector(`[data-bloco-titulo="${id}"]`);
+    const corpoInput = linha.querySelector(`[data-bloco-corpo="${id}"]`);
+    const titulo = (tituloInput && tituloInput.value.trim()) || (custom ? '' : padrao.titulo);
+    const corpo = (corpoInput && corpoInput.value) || (custom ? '' : padrao.corpo);
+    if (custom && !titulo && !corpo.trim()) return; // personalizado em branco, nunca preenchido — ignora
+    novosBlocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo });
   });
 
-  document.querySelectorAll('.rel-editor-custom-bloco').forEach(el => {
-    const id = el.dataset.customId;
-    const titulo = (el.querySelector(`[data-custom-titulo="${id}"]`).value || '').trim();
-    const corpo = el.querySelector(`[data-custom-corpo="${id}"]`).value || '';
-    if (!titulo && !corpo.trim()) return; // bloco em branco, nunca preenchido — ignora
-    novosBlocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo });
+  document.querySelectorAll('input[data-adicionar-id]').forEach(checkbox => {
+    if (!checkbox.checked) return;
+    const id = checkbox.dataset.adicionarId;
+    const padrao = catalogoPorId[id];
+    if (checkbox.dataset.adicionarTipo === 'ferramenta') {
+      novosBlocos.push({ id, type: 'ferramenta' });
+    } else {
+      novosBlocos.push({ id, type: 'texto', titulo: padrao.titulo, corpo: padrao.corpo });
+    }
   });
 
   if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
