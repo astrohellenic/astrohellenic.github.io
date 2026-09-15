@@ -28,7 +28,12 @@ const RELATORIO_LOT_NOMES = {
 const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
   mandala_natal: { label: 'Mandala Natal (casas do Ascendente)', tituloIndice: 'Mapa Natal' },
   mandala_fortuna: { label: 'Mandala com a Fortuna na Casa 1', tituloIndice: null },
-  profeccao: { label: 'Profecção Anual (ano corrente)', tituloIndice: 'Profecção Anual' }
+  profeccao: {
+    label: 'Profecção Anual (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Profecção Anual',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Profecção'
+  }
 };
 
 /* CONJUNTO DE BLOCOS PADRÃO — o relatório "Mapa Natal Clássico" original.
@@ -68,6 +73,30 @@ const RELATORIO_BLOCOS_PADRAO = [
 const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'profeccao', type: 'ferramenta' }
 ]);
+
+/* Guarda em memória (dura só a sessão atual, não persiste) a última
+   captura de cada ferramenta "reaproveitada" no relatório (ex.:
+   Profecção). É preenchida pelo botão "Adicionar ao Relatório" que
+   fica na própria tela de cada ferramenta — o astrólogo deixa a tela
+   do jeito que quer mostrar pro cliente e clica no botão; o relatório
+   usa exatamente essa imagem, sem reconstruir nada. */
+window.relatorioCapturas = window.relatorioCapturas || {};
+
+async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
+  const elemento = document.getElementById(containerId);
+  if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+
+  try {
+    const canvas = await html2canvas(elemento, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    window.relatorioCapturas[toolId] = { dataUrl: canvas.toDataURL('image/png'), capturadoEm: Date.now() };
+    alert(`"${rotulo}" foi adicionado ao relatório. Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar tela ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarTelaParaRelatorio = capturarTelaParaRelatorio;
 
 function relatorioSupabaseClient() {
   return window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
@@ -192,10 +221,8 @@ async function gerarRelatorioCompleto(preset) {
 
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
   const { png1, png2 } = await renderizarMandalasDoPreset(blocos);
-  const usaProfeccao = blocos.some(b => b.type === 'ferramenta' && b.id === 'profeccao');
-  const profeccaoHtml = usaProfeccao ? await calcularBlocoProfeccao() : '';
 
-  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, profeccaoHtml);
+  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal);
 }
 
 /* Calcula os 7 lotes diretamente dos dados já carregados, sem precisar
@@ -239,128 +266,7 @@ function voltarConfigRelatorio() {
   if (container && window.relatorioPresetsCarregados) renderRelatorioSetup(container, window.relatorioPresetsCarregados);
 }
 
-/* Reconstrói a tela de Profecção Anual (profeccao.js) no visual do
-   relatório: recalcula o ano profectado do MOMENTO ATUAL (ignora
-   navegação de ano/mês que o astrólogo tenha deixado aberta na
-   ferramenta — o relatório é sempre um retrato de "agora"), busca a
-   Revolução Solar do ano-alvo e reaproveita o desenho de mandala e o
-   cálculo de RS que profeccao.js já expõe (gerarMandalaSVGProfeccao /
-   obterDadosCompletosRSProfeccao), só remontando o HTML ao redor deles
-   no padrão visual do relatório. Devolve '' se faltar alguma função
-   (profeccao.js não carregou) ou dado essencial. */
-async function calcularBlocoProfeccao() {
-  if (typeof window.gerarMandalaSVGProfeccao !== 'function' || typeof window.obterDadosCompletosRSProfeccao !== 'function') return '';
-  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) return '';
-
-  const dataNasc = (currentMoment instanceof Date) ? currentMoment : new Date();
-  const ascAbs = currentCalculatedData.Ascendente.grau_absoluto;
-  const ascIdx = Math.floor(ascAbs / 30);
-
-  const hoje = new Date();
-  let idade = hoje.getFullYear() - dataNasc.getFullYear();
-  const diffMes = hoje.getMonth() - dataNasc.getMonth();
-  if (diffMes < 0 || (diffMes === 0 && hoje.getDate() < dataNasc.getDate())) idade--;
-  if (idade < 0) idade = 0;
-
-  const houseNumber = (idade % 12) + 1;
-  const profectedSignIdx = (ascIdx + (idade % 12)) % 12;
-  const anoAlvoRS = dataNasc.getFullYear() + idade;
-  const dadosNatal = currentCalculatedData;
-
-  let rsTimestamp = null, dadosRS = null;
-  try {
-    const resultadoRS = await window.obterDadosCompletosRSProfeccao(anoAlvoRS, dataNasc);
-    if (resultadoRS) { rsTimestamp = resultadoRS.timestamp; dadosRS = resultadoRS.dados; }
-  } catch (e) { /* segue sem a Revolução Solar deste ano */ }
-
-  const rsAscSignIdx = (dadosRS && dadosRS.Ascendente)
-    ? Math.floor((((dadosRS.Ascendente.grau_absoluto % 360) + 360) % 360) / 30)
-    : null;
-
-  const MS_PER_DAY_PROF = 24 * 60 * 60 * 1000;
-  const MONTH_MS_PROF = (30 + (10.5 / 24)) * MS_PER_DAY_PROF;
-  let baseMonthStart = rsTimestamp || new Date(anoAlvoRS, dataNasc.getMonth(), dataNasc.getDate(), dataNasc.getHours(), dataNasc.getMinutes()).getTime();
-
-  const monthlyCache = [];
-  let cursor = baseMonthStart;
-  for (let i = 0; i < 12; i++) {
-    const proximo = cursor + MONTH_MS_PROF;
-    monthlyCache.push({ monthNum: i + 1, signIdx: (profectedSignIdx + i) % 12, start: cursor, end: proximo });
-    cursor = proximo;
-  }
-  const agora = hoje.getTime();
-  let mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
-  if (mesAtualIdx === -1) mesAtualIdx = 0;
-  const expandedMonthSignIdx = monthlyCache[mesAtualIdx].signIdx;
-
-  const svgRS = window.gerarMandalaSVGProfeccao(dadosRS, { profectedSignIdx });
-  const svgNatal = window.gerarMandalaSVGProfeccao(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx });
-
-  const nomePlaneta = id => { const p = PLANETS_DEF.find(pd => pd.id === id); return p ? p.name : id; };
-  const diasSemanaProf = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const formatarDataProf = ms => {
-    const d = new Date(ms);
-    const dia = String(d.getDate()).padStart(2, '0');
-    const mes = String(d.getMonth() + 1).padStart(2, '0');
-    return `${diasSemanaProf[d.getDay()]}, ${dia}/${mes}/${d.getFullYear()} às ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  };
-
-  const cidade = (currentGeo && currentGeo.city) ? currentGeo.city : 'Local n/i';
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : -3;
-  const fusoFmt = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-
-  const linhaRS = dadosRS
-    ? `<div><strong>Revolução Solar ${anoAlvoRS}:</strong> ${formatarDataProf(baseMonthStart)} (${fusoFmt}) · ${escapeHtml(cidade)}</div>`
-    : `<div style="color:#94a3b8;">Revolução Solar deste ano não pôde ser calculada.</div>`;
-
-  const linhasTabela = monthlyCache.map(m => {
-    const rulerId = SIGNS[m.signIdx].ruler;
-    return `
-      <tr>
-        <td>Mês ${m.monthNum}</td>
-        <td class="col-signo">${relatorioCelulaIconeRotulo(getSignSVG(m.signIdx, 18), SIGNS[m.signIdx].name)}</td>
-        <td class="col-signo">${relatorioCelulaIconeRotulo(getPlanet3DSVG(rulerId, 26), nomePlaneta(rulerId))}</td>
-        <td>${formatarDataProf(m.start)}</td>
-      </tr>
-    `;
-  }).join('');
-
-  return `
-    <section class="rel-page" data-pg="profeccao-1">
-      <div class="rel-h1">Profecção Anual — ${idade} Anos</div>
-      <div class="rel-prof-resumo">
-        <strong>Ano Profectado:</strong> Casa ${houseNumber} em ${relatorioCelulaIconeRotulo(getSignSVG(profectedSignIdx, 22), SIGNS[profectedSignIdx].name)} · Regente ${relatorioCelulaIconeRotulo(getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 30), nomePlaneta(SIGNS[profectedSignIdx].ruler))}
-      </div>
-      <div class="rel-prof-identidade">
-        <div><strong>Natal:</strong> ${formatarDataProf(dataNasc.getTime())} (${fusoFmt}) · ${escapeHtml(cidade)}</div>
-        ${linhaRS}
-      </div>
-      <div class="rel-prof-mandalas">
-        <div class="rel-prof-mandala-item">
-          <div class="rel-prof-mandala-titulo">Revolução Solar ${anoAlvoRS}</div>
-          ${svgRS}
-        </div>
-        <div class="rel-prof-mandala-item">
-          <div class="rel-prof-mandala-titulo">Mapa Natal</div>
-          ${svgNatal}
-        </div>
-      </div>
-    </section>
-    <section class="rel-page" data-pg="profeccao-2">
-      <div class="rel-h1">Profecção Mensal</div>
-      <div class="rel-tabela-wrap">
-        <div class="rel-tabela-caixa">
-          <table class="tabela-enxuta">
-            <thead><tr><th>Mês</th><th>Signo</th><th>Regente</th><th>Início do Período</th></tr></thead>
-            <tbody>${linhasTabela}</tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, profeccaoHtml) {
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal) {
   const marcaHtml = perfil.logo_url
     ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
@@ -371,7 +277,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
   injetarEstilosRelatorio();
 
   const itensIndice = [];
-  const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice, profeccaoHtml })).join('');
+  const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice })).join('');
 
   const indiceHtml = itensIndice.map(item => `
     <li><span>${escapeHtml(item.titulo)}</span><span class="rel-num-pagina" data-alvo="${item.alvo}"></span></li>
@@ -455,6 +361,34 @@ function renderBlocoRelatorio(bloco, opts) {
 
   if (bloco.type === 'ferramenta') {
     const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
+
+    /* Blocos "capturados": não recalculam nada — usam a imagem que o
+       astrólogo trouxe da própria tela da ferramenta (botão "Adicionar
+       ao Relatório"), exatamente como ficou montada lá, com o layout,
+       ícones e realces que a ferramenta original já desenha. */
+    if (info && info.capturada) {
+      const titulo = (info.tituloIndice || info.label);
+      opts.itensIndice.push({ titulo, alvo: bloco.id });
+      const captura = window.relatorioCapturas && window.relatorioCapturas[bloco.id];
+      if (!captura) {
+        return `
+          <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
+            <div class="rel-h1">${escapeHtml(titulo)}</div>
+            <div class="rel-corpo rel-captura-faltando">
+              Nenhuma captura encontrada. Abra ${escapeHtml(info.telaOrigem || 'a ferramenta')}
+              com os dados deste cliente, deixe a tela do jeito que quer mostrar e clique em
+              "Adicionar ao Relatório" antes de gerar o relatório de novo.
+            </div>
+          </section>
+        `;
+      }
+      return `
+        <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
+          <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
+        </section>
+      `;
+    }
+
     if (bloco.id === 'mandala_natal' && opts.png1) {
       opts.itensIndice.push({ titulo: (info && info.tituloIndice) || 'Mapa Natal', alvo: bloco.id });
       return `
@@ -472,10 +406,6 @@ function renderBlocoRelatorio(bloco, opts) {
           <div class="rel-legenda-mandala">Mandala 2</div>
         </section>
       `;
-    }
-    if (bloco.id === 'profeccao' && opts.profeccaoHtml) {
-      opts.itensIndice.push({ titulo: (info && info.tituloIndice) || 'Profecção Anual', alvo: 'profeccao-1' });
-      return opts.profeccaoHtml;
     }
   }
 
@@ -658,12 +588,12 @@ function injetarEstilosRelatorio() {
       .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; }
       .rel-legenda-mandala { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 12px; }
 
-      /* PROFECÇÃO ANUAL */
-      .rel-prof-resumo { text-align: center; font-size: 13px; color: #103b70; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
-      .rel-prof-identidade { background: #fffdf5; border: 1.5px solid #c59b27; border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #334155; line-height: 1.6; margin-bottom: 18px; }
-      .rel-prof-mandalas { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
-      .rel-prof-mandala-item { flex: 1 1 45%; max-width: 48%; min-width: 220px; }
-      .rel-prof-mandala-titulo { text-align: center; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+      /* BLOCOS "CAPTURADOS" DE OUTRAS FERRAMENTAS (ex.: Profecção) — a
+         página existe só pra emoldurar a imagem trazida da tela real da
+         ferramenta, sem redesenhar nada ao redor dela. */
+      .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
+      .rel-img-captura { width: 100%; height: auto; display: block; }
+      .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
