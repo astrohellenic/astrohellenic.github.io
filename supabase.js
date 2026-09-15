@@ -81,33 +81,27 @@ function renderMenuPrincipal() {
   });
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <h1 class="sidebar-title" style="color: #103b70; font-family: 'Cinzel', serif; font-weight: 800;">Astro Hellenic</h1>
     </div>
     <div style="flex: 1; overflow-y: auto; background: #fffdf5;">
-      <ul class="menu-list" style="border-bottom: 1px solid #e2d9c2;">
-        <li class="menu-item" onclick="abrirModalNovoMapa()" style="border-radius: 8px; margin: 4px 8px;">
-          <span>Novo Mapa Astral</span>
-          <i class="fa-solid fa-user-plus" style="color: #c59b27;"></i>
-        </li>
-      </ul>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
+        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+          <i class="fa-solid fa-user-plus"></i>
+        </button>
+        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+          <i class="fa-solid fa-file-import"></i>
+        </button>
+        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
 
       <div style="padding: 8px 16px; border-top: 1px solid #e2d9c2; background: #fffdf5; display: flex; align-items: center; justify-content: space-between;">
         <span style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase;">Pastas</span>
         <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-weight: 700; cursor: pointer;">+ Pasta</button>
       </div>
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; margin: 6px 8px; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: #c59b27;"></i>
-          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
-        </div>
-      </div>
       ${htmlPastas}
-    </div>
-    
-    <div style="padding: 16px; border-top: 2px solid #c59b27; background: #fffdf5; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
-      <span style="font-size: 14px; font-weight: 700; color: #103b70;">Configurações</span>
-      <i class="fa-solid fa-gear" style="font-size: 16px; color: #c59b27;"></i>
     </div>
   `;
 }
@@ -118,7 +112,7 @@ function abrirNavegacaoConfiguracoes() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
@@ -177,7 +171,7 @@ function abrirConfiguracoesAparencia() {
   const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? '#103b70' : '#e2d9c2'}; border-radius: 8px; background: #ffffff; cursor: pointer;`;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
@@ -248,7 +242,7 @@ async function abrirConfiguracoesRelatorio() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
@@ -563,7 +557,7 @@ function abrirEditorPreset(idx) {
   }).join('');
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="abrirConfiguracoesRelatorio()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
@@ -773,7 +767,7 @@ async function abrirConfiguracoesCaptacao() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
@@ -983,7 +977,7 @@ async function abrirConfiguracoesSeguranca() {
   const manterLogado = localStorage.getItem('astro_keep_logged') === 'true';
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
       </button>
@@ -1137,7 +1131,7 @@ function abrirNavegacaoPastas() {
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   let html = `
-     <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+     <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <span style="font-size: 13px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">PASTAS</span>
       <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 10px; font-weight: 700; cursor: pointer;">+ Pasta</button>
     </div>
@@ -1183,7 +1177,7 @@ async function abrirConteudoPasta(nomePasta) {
   if (!sidebar) return;
 
     sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
       <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
         <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i>
       </button>
