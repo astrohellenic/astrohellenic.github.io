@@ -465,7 +465,13 @@ function renderPainelTecnico(data, containerId) {
     const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
 
     let html = `
-      <div style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+      <div style="width: 100%;">
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
+        <button onclick="capturarTelaParaRelatorio('tabela_tecnica', 'painel-tecnico-container', 'Painel Técnico de Natividades')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+        </button>
+      </div>
+      <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
       <style>
         .tabela-enxuta {
           width: 100%;
@@ -591,7 +597,7 @@ function renderPainelTecnico(data, containerId) {
       </div>
     `;
 
-    html += `</div>`;
+    html += `</div></div>`;
     container.innerHTML = html;
 
     const headerEl = document.getElementById('painelTecnicoHeader');

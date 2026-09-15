@@ -45,6 +45,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Mandala Personalizada',
     capturada: true,
     telaOrigem: 'a tela principal da Mandala'
+  },
+  tabela_tecnica: {
+    label: 'Painel Técnico de Natividades (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Painel Técnico de Natividades',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Tabela Técnica'
   }
 };
 
@@ -85,7 +91,8 @@ const RELATORIO_BLOCOS_PADRAO = [
 const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'profeccao', type: 'ferramenta' },
   { id: 'circumambulacao', type: 'ferramenta' },
-  { id: 'mandala_personalizada', type: 'ferramenta' }
+  { id: 'mandala_personalizada', type: 'ferramenta' },
+  { id: 'tabela_tecnica', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última
