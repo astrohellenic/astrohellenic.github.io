@@ -383,7 +383,14 @@ async function abrirRascunhoRelatorio(rascunhoId) {
     if (erroMapa || !mapaRow) { alert('Não foi possível carregar o mapa deste rascunho.'); iniciarModuloRelatorio(); return; }
 
     if (typeof aplicarDadosDoPerfilNoMapa === 'function') {
-      aplicarDadosDoPerfilNoMapa({
+      // Espera o cálculo do mapa terminar de verdade antes de seguir: ele
+      // busca os dados numa API externa (não é instantâneo), e se a gente
+      // não esperasse, gerarRelatorioCompleto ia rodar antes do cálculo
+      // acabar. Nesse meio-tempo o próprio cálculo, ao terminar, redesenha
+      // a mandala normal dentro deste mesmo container — sobrescrevendo o
+      // relatório que a gente tinha acabado de montar (era exatamente o
+      // "volta pra tela da mandala" depois de abrir o rascunho).
+      const calculoOk = await aplicarDadosDoPerfilNoMapa({
         id: mapaRow.id,
         nome: mapaRow.nome,
         codigo: mapaRow.codigo,
@@ -394,6 +401,7 @@ async function abrirRascunhoRelatorio(rascunhoId) {
         latitude: mapaRow.latitude,
         longitude: mapaRow.longitude
       });
+      if (calculoOk === false) { alert('Não foi possível calcular o mapa deste rascunho (erro de conexão). Tente de novo.'); iniciarModuloRelatorio(); return; }
     }
     // aplicarDadosDoPerfilNoMapa zera currentRascunhoId (mapa novo em
     // tela) — agora que sabemos que é justamente ESTE rascunho, reafirma.
@@ -1164,7 +1172,7 @@ function injetarEstilosRelatorio() {
       .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; }
       .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
-      .rel-img-capa { max-width: 92mm; max-height: 100%; }
+      .rel-img-capa { max-width: 78mm; max-height: 100%; }
       .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
       .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
       .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
@@ -1194,44 +1202,37 @@ function injetarEstilosRelatorio() {
 
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }
-        /* min-height (NUNCA height fixo) do tamanho real de uma folha
-           impressa (297mm - as duas margens de 12mm do @page abaixo): dá
-           às páginas que distribuem conteúdo do topo ao rodapé com
-           flexbox (a capa, o encerramento) uma altura de referência pra
-           empurrar o rodapé pra baixo de verdade — sem isso ele sobe pra
-           logo abaixo do texto.
 
-           O valor fica com folga de propósito (267mm, não os 273mm
-           "exatos" que sobram depois das margens de 12mm): o tamanho
-           real de uma página impressa varia um pouco de navegador pra
-           navegador (arredondamento de fração de pixel entre mm e px),
-           e um valor exato — mesmo sendo min-height, não height fixo —
-           fica raspando o limite real da página. Quando raspa, o
-           .rel-page "vaza" por uma fração mínima pra página seguinte, e
-           como cada .rel-page força quebra de página logo depois de si
-           (page-break-after: always), essa fração vazada vira uma
-           página inteira em branco atrás de cada página de conteúdo (o
-           relatório saía com o dobro de páginas). Com folga, o
-           min-height nunca chega perto do limite real, então nunca
-           cria esse vazamento — o conteúdo mais longo (tabelas
-           grandes, imagens capturadas) continua transbordando
-           normalmente pra próxima página quando realmente precisa. */
+        /* A CAUSA da borda branca ao redor de TODA página impressa
+           (não só a capa) era o "@page { margin: 12mm }" logo abaixo:
+           essa margem é reservada pelo PRÓPRIO exportador de PDF, por
+           fora de qualquer coisa que a gente desenha — nenhuma cor de
+           fundo, imagem ou conteúdo consegue entrar ali, não importa o
+           que a gente mude dentro de .rel-page. Por isso reduzir a
+           mandala, ajustar o min-height etc. nunca resolvia: a borda
+           não vinha do TAMANHO do conteúdo, vinha dessa margem fixa do
+           @page, imposta por fora do conteúdo. Tirando essa margem
+           (= 0), o conteúdo passa a poder ocupar a folha inteira de
+           verdade — a capa (com cor de fundo) fica de sangria plena, sem
+           nenhuma borda branca. O espaçamento de leitura das páginas de
+           texto continua existindo, só que agora vem só do padding do
+           próprio .rel-page (18mm/16mm, declarado no início do arquivo)
+           — uma margem só, não duas empilhadas. */
+        @page { size: A4; margin: 0; }
+
+        /* min-height (NUNCA height fixo) do tamanho real de uma folha
+           impressa, com folga (267mm dos 297mm agora disponíveis, já
+           que não tem mais os 12mm de margem do @page descontando —
+           ver acima). Esse valor precisa ser o MESMO em toda .rel-page,
+           capa incluída: testando, misturar valores diferentes entre
+           páginas (ou mudar esse número sem também levar em conta o
+           @page acima) foi o que causou perda de conteúdo em relatórios
+           longos numa rodada anterior — qualquer ajuste futuro aqui
+           precisa ser testado gerando um PDF de verdade com várias
+           páginas, não só olhando o CSS. */
         .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
-
-        /* A capa usa a MESMA folga das demais páginas, não os 297mm da
-           folha inteira: a regra "@page :first" com margem zero (logo
-           abaixo) nem sempre é respeitada pela exportação/impressão
-           real (varia por navegador), então contar com a margem
-           removida da capa é
-           frágil — quando não é respeitado, a capa (dimensionada pra
-           297mm) vaza pra uma 2ª página só com o rodapé, exatamente o
-           mesmo efeito de página em branco descrito acima. Usando a
-           mesma folga de 267mm dos outros, a capa cabe inteira numa
-           página nos dois cenários: com ou sem a margem removida. */
         .rel-capa { min-height: 267mm; }
-        @page { size: A4; margin: 12mm; }
-        @page :first { margin: 0; }
       }
   `;
   document.head.appendChild(style);
