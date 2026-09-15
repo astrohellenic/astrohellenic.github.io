@@ -544,4 +544,62 @@ function renderLiberacaoUI() {
   `;
 
   container.innerHTML = html;
+  encolherTabelasLZRVisiveis(container);
+}
+
+/* ENCOLHE TABELAS LARGAS DEMAIS (L2/L3/L4) PARA CABEREM NA TELA (SEM CORTE),
+   EM VEZ DE FICAREM TRAVADAS/CORTADAS EM TELAS ESTREITAS — mesma técnica
+   usada nos Decênios e no Painel Técnico. Como essas tabelas usam
+   width:100% para preencher o cartão no desktop, primeiro mede a largura
+   "natural" sem essa restrição: se já coubesse do jeito de sempre, não
+   mexe em nada (zero mudança visual em telas largas). */
+function encolherTabelaLZR(table) {
+  if (!table || table.dataset.zrScaled === '1') return;
+  const parent = table.parentElement;
+  if (!parent) return;
+
+  const parentStyles = getComputedStyle(parent);
+  const availableWidth = parent.clientWidth
+    - parseFloat(parentStyles.paddingLeft || 0)
+    - parseFloat(parentStyles.paddingRight || 0);
+  if (availableWidth <= 0) return;
+
+  const larguraOriginal = table.style.width;
+  table.style.width = 'auto';
+  const naturalWidth = table.offsetWidth;
+
+  if (naturalWidth <= availableWidth) {
+    table.style.width = larguraOriginal;
+    return;
+  }
+
+  const naturalHeight = table.offsetHeight;
+  const escala = availableWidth / naturalWidth;
+  const scaledHeight = naturalHeight * escala;
+
+  const outerScroll = document.createElement('div');
+  outerScroll.style.textAlign = 'center';
+  const scaleBox = document.createElement('div');
+  scaleBox.style.display = 'inline-block';
+  scaleBox.style.width = (naturalWidth * escala) + 'px';
+  scaleBox.style.height = scaledHeight + 'px';
+
+  table.parentNode.insertBefore(outerScroll, table);
+  outerScroll.appendChild(scaleBox);
+  scaleBox.appendChild(table);
+
+  table.style.transformOrigin = 'top left';
+  table.style.transform = `scale(${escala})`;
+  table.dataset.zrScaled = '1';
+  // Contorna uma peculiaridade do navegador: um contêiner ao redor de uma
+  // <table> transformada pode calcular a própria altura com base no
+  // tamanho ANTES da escala, sobrando um espaço vazio grande abaixo dela.
+  outerScroll.style.height = scaledHeight + 'px';
+}
+
+function encolherTabelasLZRVisiveis(root) {
+  if (!root) return;
+  root.querySelectorAll('table:not([data-zr-scaled="1"])').forEach(t => {
+    if (t.offsetParent !== null) encolherTabelaLZR(t);
+  });
 }
