@@ -216,6 +216,162 @@ async function carregarOuSemearPresetsRelatorio() {
   }
 }
 
+/* ==========================================
+   RASCUNHOS DE RELATÓRIO
+   Um rascunho por mapa (tabela relatorio_rascunhos), salvo sozinho toda
+   vez que o astrólogo gera a prévia — sem precisar de nenhum botão
+   "Salvar". Guarda os blocos usados e as capturas de tela das outras
+   ferramentas, subindo as que ainda só existem como data URL na
+   memória pro Storage (bucket relatorio-capturas), pra não perder nada
+   ao recarregar a página ou fechar o navegador.
+   ========================================== */
+
+/* Lista leve (sem blocos/capturas) de todos os rascunhos do usuário,
+   pra mostrar na tela de configuração do relatório. Nome + código
+   (quando tiver) vêm exatamente como estão salvos no nativo, em ordem
+   alfabética — mas com números comparados numericamente (10 depois de
+   2, não antes), por isso o "numeric: true". */
+async function listarRascunhosRelatorio() {
+  const client = relatorioSupabaseClient();
+  if (!client) return [];
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await client
+      .from('relatorio_rascunhos')
+      .select('id, mapa_id, nome, updated_at')
+      .eq('user_id', user.id);
+    if (error || !data) return [];
+    return data.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { numeric: true }));
+  } catch (e) {
+    return [];
+  }
+}
+
+async function carregarRascunhoRelatorio(mapaId) {
+  const client = relatorioSupabaseClient();
+  if (!client || !mapaId) return null;
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return null;
+    const { data, error } = await client
+      .from('relatorio_rascunhos')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('mapa_id', mapaId)
+      .maybeSingle();
+    if (error || !data) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Sobe pro Storage qualquer captura ainda "solta" na memória como data
+   URL, devolvendo o mesmo mapa de capturas já só com URLs permanentes
+   (as que já vieram de um rascunho anterior — já são URL — ficam como
+   estão). Se o upload de uma captura falhar, mantém o data URL dela:
+   assim o rascunho salva mesmo assim, só que essa captura em particular
+   não sobrevive a um recarregamento de página. */
+async function persistirCapturasRelatorio(client, userId, mapaId) {
+  const capturasAtuais = window.relatorioCapturas || {};
+  const resultado = {};
+
+  for (const toolId of Object.keys(capturasAtuais)) {
+    const captura = capturasAtuais[toolId];
+    if (!captura || !captura.dataUrl) continue;
+
+    if (!captura.dataUrl.startsWith('data:')) {
+      resultado[toolId] = captura; // já é uma URL permanente
+      continue;
+    }
+
+    try {
+      const resposta = await fetch(captura.dataUrl);
+      const blob = await resposta.blob();
+      const caminho = `${userId}-${mapaId}-${toolId}.png`;
+      const { error } = await client.storage.from('relatorio-capturas').upload(caminho, blob, { upsert: true, contentType: 'image/png' });
+      if (error) { resultado[toolId] = captura; continue; }
+      const { data: pub } = client.storage.from('relatorio-capturas').getPublicUrl(caminho);
+      resultado[toolId] = { dataUrl: pub.publicUrl, capturadoEm: captura.capturadoEm };
+    } catch (e) {
+      resultado[toolId] = captura;
+    }
+  }
+
+  return resultado;
+}
+
+/* Salva (upsert) o rascunho do mapa atualmente carregado — chamada
+   automaticamente ao final de gerarRelatorioCompleto, sem bloquear a
+   prévia (roda em segundo plano). Não faz nada se o mapa em tela ainda
+   não foi salvo (currentMapaId null — ex.: "Céu do Momento"), já que
+   não haveria a quem vincular o rascunho. */
+async function salvarRascunhoRelatorio(preset) {
+  const client = relatorioSupabaseClient();
+  if (!client || typeof currentMapaId === 'undefined' || !currentMapaId) return;
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return;
+
+    const capturasPersistidas = await persistirCapturasRelatorio(client, user.id, currentMapaId);
+    window.relatorioCapturas = capturasPersistidas;
+
+    const nomeRascunho = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
+
+    await client.from('relatorio_rascunhos').upsert({
+      user_id: user.id,
+      mapa_id: currentMapaId,
+      nome: nomeRascunho,
+      blocos: preset.blocos || [],
+      capturas: capturasPersistidas,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,mapa_id' });
+  } catch (e) {
+    console.error('Erro ao salvar rascunho do relatório:', e);
+  }
+}
+
+/* Abre um rascunho existente: troca o mapa ativo pra o dono do
+   rascunho (reaproveitando aplicarDadosDoPerfilNoMapa, a mesma função
+   que a lista de mapas salvos usa) e já gera a prévia com os blocos e
+   capturas salvos, pra continuar exatamente de onde parou. */
+async function abrirRascunhoRelatorio(mapaId) {
+  const client = relatorioSupabaseClient();
+  const container = document.getElementById('mandala-container');
+  if (!client || !container) return;
+
+  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o rascunho...</div>`;
+
+  try {
+    const { data: mapaRow, error: erroMapa } = await client.from('mapas').select('*').eq('id', mapaId).maybeSingle();
+    if (erroMapa || !mapaRow) { alert('Não foi possível carregar o mapa deste rascunho.'); iniciarModuloRelatorio(); return; }
+
+    if (typeof aplicarDadosDoPerfilNoMapa === 'function') {
+      aplicarDadosDoPerfilNoMapa({
+        id: mapaRow.id,
+        nome: mapaRow.nome,
+        codigo: mapaRow.codigo,
+        tipo: mapaRow.tipo,
+        dataNascimento: mapaRow.data_nascimento,
+        horaNascimento: mapaRow.hora_nascimento,
+        cidade: mapaRow.cidade,
+        latitude: mapaRow.latitude,
+        longitude: mapaRow.longitude
+      });
+    }
+
+    const rascunho = await carregarRascunhoRelatorio(mapaId);
+    if (!rascunho) { iniciarModuloRelatorio(); return; }
+
+    window.relatorioCapturas = rascunho.capturas || {};
+    await gerarRelatorioCompleto({ nome: rascunho.nome, blocos: rascunho.blocos || [] });
+  } catch (e) {
+    alert('Erro de conexão ao abrir o rascunho.');
+  }
+}
+window.abrirRascunhoRelatorio = abrirRascunhoRelatorio;
+
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS (abrirModuloTecnica) */
 async function iniciarModuloRelatorio() {
   const container = document.getElementById('mandala-container');
@@ -228,11 +384,14 @@ async function iniciarModuloRelatorio() {
 
   container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Carregando seus modelos de relatório...</div>`;
 
-  const presets = await carregarOuSemearPresetsRelatorio();
-  renderRelatorioSetup(container, presets);
+  const [presets, rascunhos] = await Promise.all([
+    carregarOuSemearPresetsRelatorio(),
+    listarRascunhosRelatorio()
+  ]);
+  renderRelatorioSetup(container, presets, rascunhos);
 }
 
-function renderRelatorioSetup(container, presets) {
+function renderRelatorioSetup(container, presets, rascunhos) {
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
   const dia = String(currentMoment.getDate()).padStart(2, '0');
@@ -241,6 +400,18 @@ function renderRelatorioSetup(container, presets) {
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
   const opcoesPreset = presets.map((p, idx) => `<option value="${idx}">${escapeHtml(p.nome)}</option>`).join('');
+
+  const listaRascunhosHTML = (rascunhos && rascunhos.length) ? `
+    <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
+      <label style="font-size: 11px; font-weight: 600; color: #64748b; display: block; margin-bottom: 10px;">Relatórios em Andamento</label>
+      ${rascunhos.map(r => `
+        <div onclick="abrirRascunhoRelatorio(${r.mapa_id})" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.mapa_id === currentMapaId ? '#fffdf5' : '#ffffff'};">
+          <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(r.nome)}</span>
+          <i class="fa-solid fa-chevron-right" style="color: #c59b27; font-size: 11px;"></i>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
 
   container.innerHTML = `
     <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
@@ -252,11 +423,13 @@ function renderRelatorioSetup(container, presets) {
         </div>
       </div>
 
+      ${listaRascunhosHTML}
+
       <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
         <label style="font-size: 11px; font-weight: 600; color: #64748b;">Modelo de Relatório</label>
         <select id="relPresetEscolhido" class="modal-select" style="margin-bottom: 6px;">${opcoesPreset}</select>
         <div style="font-size: 11px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">
-          Os textos, o logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral.
+          Os textos, o logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral. O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
         </div>
 
         <button type="button" class="btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="confirmarGerarRelatorio()">
@@ -290,6 +463,10 @@ async function gerarRelatorioCompleto(preset) {
   const { png1, png2 } = await renderizarMandalasDoPreset(blocos);
 
   montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal);
+
+  // Salva o rascunho em segundo plano — não trava a prévia que acabou
+  // de aparecer na tela nem precisa de nenhum botão "Salvar".
+  salvarRascunhoRelatorio(preset);
 }
 
 /* Calcula os 7 lotes diretamente dos dados já carregados, sem precisar
@@ -659,7 +836,7 @@ function injetarEstilosRelatorio() {
          página existe só pra emoldurar a imagem trazida da tela real da
          ferramenta, sem redesenhar nada ao redor dela. */
       .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
-      .rel-img-captura { width: 100%; height: auto; display: block; }
+      .rel-img-captura { max-width: 100%; max-height: 265mm; width: auto; height: auto; display: block; margin: 0 auto; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
@@ -674,26 +851,37 @@ function injetarEstilosRelatorio() {
            às páginas que distribuem conteúdo do topo ao rodapé com
            flexbox (a capa, o encerramento) uma altura de referência pra
            empurrar o rodapé pra baixo de verdade — sem isso ele sobe pra
-           logo abaixo do texto. Precisa ser min-height e não height: uma
-           altura EXATA de 273mm, por um arredondamento de fração de
-           pixel entre mm e px, ficava um triz mais alta que a página
-           impressa e cada .rel-page acabava "vazando" essa migalha pra
-           uma página extra em branco (o relatório saía com o dobro de
-           páginas, uma em branco atrás de cada uma com conteúdo).
-           min-height nunca cria esse vazamento: o conteúdo mais longo
-           (tabelas grandes) continua transbordando normalmente pra
-           próxima página quando realmente precisa. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 273mm; overflow: visible; page-break-after: always; }
+           logo abaixo do texto.
+
+           O valor fica com folga de propósito (267mm, não os 273mm
+           "exatos" que sobram depois das margens de 12mm): o tamanho
+           real de uma página impressa varia um pouco de navegador pra
+           navegador (arredondamento de fração de pixel entre mm e px),
+           e um valor exato — mesmo sendo min-height, não height fixo —
+           fica raspando o limite real da página. Quando raspa, o
+           .rel-page "vaza" por uma fração mínima pra página seguinte, e
+           como cada .rel-page força quebra de página logo depois de si
+           (page-break-after: always), essa fração vazada vira uma
+           página inteira em branco atrás de cada página de conteúdo (o
+           relatório saía com o dobro de páginas). Com folga, o
+           min-height nunca chega perto do limite real, então nunca
+           cria esse vazamento — o conteúdo mais longo (tabelas
+           grandes, imagens capturadas) continua transbordando
+           normalmente pra próxima página quando realmente precisa. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
 
-        /* A capa é sempre a 1ª página do documento: tira a margem só
-           dela (@page :first), pra o fundo roxo do tema Céu ir até a
-           borda do papel em vez de sobrar uma faixa branca ao redor.
-           Como essa página perde os 12mm de margem de cada lado, ela
-           também precisa da altura cheia (297mm, não 273mm) pra o roxo
-           preencher até embaixo — as demais páginas continuam com
-           margem normal e 273mm. */
-        .rel-capa { min-height: 297mm; }
+        /* A capa usa a MESMA folga das demais páginas, não os 297mm da
+           folha inteira: a regra "@page :first" com margem zero (logo
+           abaixo) nem sempre é respeitada pela exportação/impressão
+           real (varia por navegador), então contar com a margem
+           removida da capa é
+           frágil — quando não é respeitado, a capa (dimensionada pra
+           297mm) vaza pra uma 2ª página só com o rodapé, exatamente o
+           mesmo efeito de página em branco descrito acima. Usando a
+           mesma folga de 267mm dos outros, a capa cabe inteira numa
+           página nos dois cenários: com ou sem a margem removida. */
+        .rel-capa { min-height: 267mm; }
         @page { size: A4; margin: 12mm; }
         @page :first { margin: 0; }
       }
