@@ -178,6 +178,13 @@ let lastRenderedPngUrl = "";
    vincular o rascunho do relatório em andamento. */
 let currentMapaId = null;
 
+/* Id (na tabela relatorio_rascunhos) do rascunho que está sendo editado
+   agora, se algum. Fica null sempre que troca o mapa em tela (mesmo
+   cliente pode ter mais de um rascunho — ex.: um de Retificação e outro
+   de Mapa Natal — então carregar o mapa de novo não assume qual deles
+   continuar; só assume ao abrir um rascunho específico da lista). */
+let currentRascunhoId = null;
+
 function formatDegMin(absDeg) {
   const normDeg = (absDeg % 360 + 360) % 360;
   const degInSign = normDeg % 30;
@@ -330,6 +337,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
   currentSubjectName = c.nome || "Nativo";
   currentCustomCode = c.codigo || null;
   currentMapaId = c.id || null;
+  currentRascunhoId = null;
   window.currentMapType = c.tipo || "Natal";
   currentMoment = new Date(ano, mes - 1, dia, hora, min);
 
@@ -427,6 +435,7 @@ function confirmarNovoMapaModal() {
   currentSubjectName = nome;
   currentCustomCode = codigoFinal;
   currentMapaId = null; // ainda não tem id — só ganha um depois que salvarNovoMapaAutomaticamente() inserir e devolver a linha
+  currentRascunhoId = null;
   window.currentMapType = "Natal";
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
   currentGeo = { lat: latFinal, lon: lonFinal, fuso: fusoReal, city: cidadeFinal };
@@ -500,6 +509,7 @@ function carregarCeuDoMomento() {
   currentSubjectName = "Agora";
   currentCustomCode = null;
   currentMapaId = null;
+  currentRascunhoId = null;
   window.currentMapType = "Trânsito";
   currentMoment = new Date();
 
