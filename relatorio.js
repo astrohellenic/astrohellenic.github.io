@@ -57,6 +57,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Decênios Helenísticos',
     capturada: true,
     telaOrigem: 'Ferramentas > Decênios'
+  },
+  horas: {
+    label: 'Horas Planetárias (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Horas Planetárias',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Horas Planetárias'
   }
 };
 
@@ -117,7 +123,8 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'mandala_personalizada', type: 'ferramenta' },
   { id: 'tabela_tecnica', type: 'ferramenta' },
   { id: 'decenios', type: 'ferramenta' },
-  ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' }))
+  ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' })),
+  { id: 'horas', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última

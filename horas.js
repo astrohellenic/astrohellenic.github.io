@@ -400,7 +400,13 @@ function iniciarModuloHoras() {
   };
 
   let html = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center;">
+    <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: flex-end; padding: 12px 20px 0;">
+        <button onclick="capturarTelaParaRelatorio('horas', 'horas-container', 'Horas Planetárias')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+        </button>
+      </div>
+    <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center;">
     <!-- Definições Globais dos Gradientes e Filtros dos Planetas 3D -->
     <svg style="display: none; position: absolute; width: 0; height: 0;" aria-hidden="true">
       <defs>
@@ -507,6 +513,7 @@ function iniciarModuloHoras() {
     </table>
     </div>
     </div>
+  </div>
   </div>
   </div>
   </div>
