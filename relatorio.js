@@ -1202,35 +1202,37 @@ function injetarEstilosRelatorio() {
 
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }
-        /* min-height (NUNCA height fixo) do tamanho real de uma folha
-           impressa, com folga. Já tentamos 273mm e depois 267mm antes
-           dessa versão, e os dois ainda vazavam pra uma página extra
-           quase em branco no PDF exportado pelo Safari do iPad —
-           inclusive em páginas de conteúdo bem mais curto que isso (o
-           índice, um texto de um parágrafo), não só na capa. Isso
-           confirma que a área REAL imprimível nesse fluxo (o Safari
-           reserva um espaço próprio pra URL/data/número de página, por
-           cima da margem que a gente já pede no @page abaixo) é menor
-           do que a matemática "297mm menos a margem" sugere. Daí o
-           valor ter caído pra 250mm.
 
-           IMPORTANTE: esse valor precisa ser o MESMO em toda .rel-page,
-           capa incluída — nada de dar uma folga diferente só pra ela.
-           Cheguei a tentar isso (capa com altura livre, o resto num
-           valor menor) achando que seria mais seguro por ela ser uma
-           página isolada, e descobri testando que combinar valores
-           DIFERENTES de min-height entre páginas é o que faz o Chromium
-           por trás da exportação de PDF simplesmente DESCARTAR páginas
-           inteiras mais adiante no relatório — não é só uma questão de
-           margem sobrando, o conteúdo some de verdade. Com todo mundo
-           no mesmo valor (inclusive a capa, logo abaixo) isso não
-           acontece. O combate ao "mandala grande demais" da capa foi só
-           reduzir o tamanho da própria imagem (ver .rel-img-capa acima),
-           não a altura da página. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 250mm; overflow: visible; page-break-after: always; }
+        /* A CAUSA da borda branca ao redor de TODA página impressa
+           (não só a capa) era o "@page { margin: 12mm }" logo abaixo:
+           essa margem é reservada pelo PRÓPRIO exportador de PDF, por
+           fora de qualquer coisa que a gente desenha — nenhuma cor de
+           fundo, imagem ou conteúdo consegue entrar ali, não importa o
+           que a gente mude dentro de .rel-page. Por isso reduzir a
+           mandala, ajustar o min-height etc. nunca resolvia: a borda
+           não vinha do TAMANHO do conteúdo, vinha dessa margem fixa do
+           @page, imposta por fora do conteúdo. Tirando essa margem
+           (= 0), o conteúdo passa a poder ocupar a folha inteira de
+           verdade — a capa (com cor de fundo) fica de sangria plena, sem
+           nenhuma borda branca. O espaçamento de leitura das páginas de
+           texto continua existindo, só que agora vem só do padding do
+           próprio .rel-page (18mm/16mm, declarado no início do arquivo)
+           — uma margem só, não duas empilhadas. */
+        @page { size: A4; margin: 0; }
+
+        /* min-height (NUNCA height fixo) do tamanho real de uma folha
+           impressa, com folga (267mm dos 297mm agora disponíveis, já
+           que não tem mais os 12mm de margem do @page descontando —
+           ver acima). Esse valor precisa ser o MESMO em toda .rel-page,
+           capa incluída: testando, misturar valores diferentes entre
+           páginas (ou mudar esse número sem também levar em conta o
+           @page acima) foi o que causou perda de conteúdo em relatórios
+           longos numa rodada anterior — qualquer ajuste futuro aqui
+           precisa ser testado gerando um PDF de verdade com várias
+           páginas, não só olhando o CSS. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
-        .rel-capa { min-height: 250mm; }
-        @page { size: A4; margin: 12mm; }
+        .rel-capa { min-height: 267mm; }
       }
   `;
   document.head.appendChild(style);
