@@ -460,6 +460,31 @@ async function excluirPreset(idx) {
    um checkbox pra incluir ou não, e — pros blocos de texto — título e
    corpo editáveis (pré-preenchidos com o que já está salvo, ou com o
    texto padrão se o bloco nunca foi habilitado neste modelo). */
+/* Linha de edição de UM bloco de texto personalizado (título + corpo +
+   remover). Usada tanto pra pré-preencher os que o preset já tem quanto
+   pro botão "+ Adicionar Bloco de Texto", que gera um novo vazio. */
+function relatorioBlocoCustomHtml(id, titulo, corpo) {
+  return `
+    <div class="rel-editor-custom-bloco" data-custom-id="${id}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px; padding: 10px 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+        <span style="font-size: 10px; font-weight: 700; color: #9a6d18; text-transform: uppercase; letter-spacing: 0.03em;">Bloco personalizado</span>
+        <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px;" title="Remover este bloco" onclick="this.closest('.rel-editor-custom-bloco').remove()"></i>
+      </div>
+      <input type="text" data-custom-titulo="${id}" class="modal-input" value="${escapeHtml(titulo)}" placeholder="Título do bloco" style="margin-bottom: 6px; font-size: 12px;">
+      <textarea data-custom-corpo="${id}" class="modal-textarea" placeholder="Texto do bloco" style="height: 120px; font-size: 11px;">${escapeHtml(corpo)}</textarea>
+    </div>
+  `;
+}
+
+/* Acrescenta um bloco de texto personalizado em branco na tela do editor
+   (só entra no modelo de verdade quando "Salvar Modelo" for clicado). */
+function adicionarBlocoCustomizadoEditor() {
+  const container = document.getElementById('relEditorBlocosCustom');
+  if (!container) return;
+  const novoId = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  container.insertAdjacentHTML('beforeend', relatorioBlocoCustomHtml(novoId, '', ''));
+}
+
 function abrirEditorPreset(idx) {
   const preset = (window.relatorioPresetsConfig || [])[idx];
   if (!preset) return;
@@ -469,6 +494,10 @@ function abrirEditorPreset(idx) {
 
   const mapaBlocosAtuais = {};
   (preset.blocos || []).forEach(b => { mapaBlocosAtuais[b.id] = b; });
+
+  const idsPadrao = RELATORIO_BLOCOS_PADRAO.map(b => b.id);
+  const blocosCustomizados = (preset.blocos || []).filter(b => b.type === 'texto' && !idsPadrao.includes(b.id));
+  const linhasCustom = blocosCustomizados.map(b => relatorioBlocoCustomHtml(b.id, b.titulo, b.corpo)).join('');
 
   const linhasBlocos = RELATORIO_BLOCOS_PADRAO.map(padrao => {
     const atual = mapaBlocosAtuais[padrao.id];
@@ -514,12 +543,21 @@ function abrirEditorPreset(idx) {
       <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 16px;">
 
       <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
-        Marque o que entra no relatório. A ordem é sempre a mostrada aqui embaixo.
+        Marque o que entra no relatório. A ordem é sempre a mostrada aqui embaixo — os blocos personalizados sempre vêm depois destes.
       </div>
 
       ${linhasBlocos}
 
-      <button onclick="salvarEdicaoPreset(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin: 18px 0 8px;">
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Blocos Personalizados</div>
+        <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 11px; font-weight: 700; color: #103b70; padding: 6px 10px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Adicionar</button>
+      </div>
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+        Crie textos próprios além dos de cima — por exemplo, uma seção sobre um serviço que só você oferece.
+      </div>
+      <div id="relEditorBlocosCustom">${linhasCustom}</div>
+
+      <button onclick="salvarEdicaoPreset(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 16px;">
         Salvar Modelo
       </button>
     </div>
@@ -553,7 +591,15 @@ async function salvarEdicaoPreset(idx) {
     }
   });
 
-  if (!novosBlocos.length) { alert("Marque pelo menos um item pra entrar no relatório."); return; }
+  document.querySelectorAll('.rel-editor-custom-bloco').forEach(el => {
+    const id = el.dataset.customId;
+    const titulo = (el.querySelector(`[data-custom-titulo="${id}"]`).value || '').trim();
+    const corpo = el.querySelector(`[data-custom-corpo="${id}"]`).value || '';
+    if (!titulo && !corpo.trim()) return; // bloco em branco, nunca preenchido — ignora
+    novosBlocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo });
+  });
+
+  if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
 
   try {
     if (preset.id) {
