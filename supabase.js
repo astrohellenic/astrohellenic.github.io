@@ -85,29 +85,23 @@ function renderMenuPrincipal() {
       <h1 class="sidebar-title" style="color: #103b70; font-family: 'Cinzel', serif; font-weight: 800;">Astro Hellenic</h1>
     </div>
     <div style="flex: 1; overflow-y: auto; background: #fffdf5;">
-      <ul class="menu-list" style="border-bottom: 1px solid #e2d9c2;">
-        <li class="menu-item" onclick="abrirModalNovoMapa()" style="border-radius: 8px; margin: 4px 8px;">
-          <span>Novo Mapa Astral</span>
-          <i class="fa-solid fa-user-plus" style="color: #c59b27;"></i>
-        </li>
-      </ul>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
+        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+          <i class="fa-solid fa-user-plus"></i>
+        </button>
+        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+          <i class="fa-solid fa-file-import"></i>
+        </button>
+        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: #ffffff; border: 1px solid #c59b27; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; font-size: 16px; cursor: pointer;">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
 
       <div style="padding: 8px 16px; border-top: 1px solid #e2d9c2; background: #fffdf5; display: flex; align-items: center; justify-content: space-between;">
         <span style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase;">Pastas</span>
         <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-weight: 700; cursor: pointer;">+ Pasta</button>
       </div>
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; margin: 6px 8px; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: #c59b27;"></i>
-          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
-        </div>
-      </div>
       ${htmlPastas}
-    </div>
-    
-    <div style="padding: 16px; border-top: 2px solid #c59b27; background: #fffdf5; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="abrirNavegacaoConfiguracoes()">
-      <span style="font-size: 14px; font-weight: 700; color: #103b70;">Configurações</span>
-      <i class="fa-solid fa-gear" style="font-size: 16px; color: #c59b27;"></i>
     </div>
   `;
 }
