@@ -412,15 +412,58 @@ function confirmarNovoMapaModal() {
   const h = partesHora[0] || 12, m = partesHora[1] || 0;
 
   const fusoReal = selectedCityGeo.fuso !== undefined ? selectedCityGeo.fuso : calcularFusoPorLongitude(selectedCityGeo.lon);
+  const codigoFinal = codDigitado !== "" ? codDigitado : null;
+  const cidadeFinal = selectedCityGeo.name;
+  const latFinal = selectedCityGeo.lat;
+  const lonFinal = selectedCityGeo.lon;
 
   currentSubjectName = nome;
-  currentCustomCode = codDigitado !== "" ? codDigitado : null;
+  currentCustomCode = codigoFinal;
   window.currentMapType = "Natal";
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
-  currentGeo = { lat: selectedCityGeo.lat, lon: selectedCityGeo.lon, fuso: fusoReal, city: selectedCityGeo.name };
+  currentGeo = { lat: latFinal, lon: lonFinal, fuso: fusoReal, city: cidadeFinal };
 
   fecharModalNovoMapa();
   executarCalculo();
+
+  salvarNovoMapaAutomaticamente({
+    nome, dataStr, horaStr, codigo: codigoFinal, cidade: cidadeFinal, lat: latFinal, lon: lonFinal
+  });
+}
+
+/* SALVA AUTOMATICAMENTE O MAPA RECÉM-CRIADO PELO MODAL "NOVO MAPA ASTRAL", NA PASTA ATIVA */
+async function salvarNovoMapaAutomaticamente(dados) {
+  if (typeof supabaseClient === 'undefined') return;
+  const pastaAlvo = (typeof activeFolder !== 'undefined' && activeFolder) ? activeFolder : "Clientes";
+
+  try {
+    let userId = null;
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) userId = user.id;
+
+    const { error } = await supabaseClient
+      .from('mapas')
+      .insert([{
+        pasta: pastaAlvo,
+        tipo: 'Natal',
+        codigo: dados.codigo,
+        nome: dados.nome,
+        data_nascimento: dados.dataStr,
+        hora_nascimento: dados.horaStr,
+        cidade: dados.cidade,
+        latitude: dados.lat,
+        longitude: dados.lon,
+        user_id: userId
+      }]);
+
+    if (!error) {
+      if (typeof carregarMapasDoBanco === 'function') carregarMapasDoBanco(pastaAlvo);
+    } else {
+      alert("O mapa foi carregado na tela, mas houve um erro ao salvá-lo automaticamente: " + error.message);
+    }
+  } catch (err) {
+    alert("O mapa foi carregado na tela, mas houve um erro de conexão ao salvá-lo automaticamente.");
+  }
 }
 
 async function obterNomeCidade(lat, lon) {
