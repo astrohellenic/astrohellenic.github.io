@@ -358,8 +358,9 @@ function renderMatrizVisibilidadeHTML(data) {
 
   let h = `
     <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
-    <div style="overflow-x: auto; text-align: center;">
-      <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+    <div id="matrizOuterScroll" style="overflow-x: auto; text-align: center;">
+      <div id="matrizScaleBox" style="display: inline-block;">
+      <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
         <table class="tabela-enxuta" style="font-size: 11px; background: #ffffff;">
           <thead>
             <tr>
@@ -388,7 +389,7 @@ function renderMatrizVisibilidadeHTML(data) {
     h += `</tr>`;
   });
 
-  h += `</tbody></table></div></div>`;
+  h += `</tbody></table></div></div></div>`;
   return h;
 }
 
@@ -529,8 +530,9 @@ function renderPainelTecnico(data, containerId) {
     html += renderMatrizVisibilidadeHTML(data);
 
     html += `
-      <div style="overflow-x: auto; margin: 24px 0; text-align: center;">
-        <div style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden;">
+      <div id="painelPrincipalOuterScroll" style="overflow-x: auto; margin: 24px 0; text-align: center;">
+        <div id="painelPrincipalScaleBox" style="display: inline-block;">
+        <div id="painelPrincipalWrapper" style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
           <table class="tabela-enxuta">
             <thead>
               <tr>
@@ -594,6 +596,7 @@ function renderPainelTecnico(data, containerId) {
             </tbody>
           </table>
         </div>
+        </div>
       </div>
     `;
 
@@ -606,8 +609,53 @@ function renderPainelTecnico(data, containerId) {
       headerEl.style.width = 'fit-content';
       const naturalWidth = headerEl.offsetWidth;
       const matrizWidth = matrizEl.offsetWidth;
-      const finalWidth = Math.max(naturalWidth, matrizWidth);
+      // Em telas estreitas a Matriz de Visibilidade rola dentro do próprio contêiner
+      // e sua largura "natural" (offsetWidth) pode ultrapassar o espaço realmente
+      // visível na tela; sem esse limite o cabeçalho ficaria largo demais e a
+      // página inteira passaria a rolar na horizontal. Descontamos o padding do
+      // contêiner pai porque clientWidth inclui o padding, e um filho com esse
+      // valor "cru" como largura acaba ultrapassando a área de conteúdo real.
+      let availableWidth = Infinity;
+      if (headerEl.parentElement) {
+        const parentStyles = getComputedStyle(headerEl.parentElement);
+        availableWidth = headerEl.parentElement.clientWidth
+          - parseFloat(parentStyles.paddingLeft || 0)
+          - parseFloat(parentStyles.paddingRight || 0);
+      }
+      const finalWidth = Math.min(Math.max(naturalWidth, matrizWidth), availableWidth);
       if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
+
+      // Em telas estreitas, em vez de deixar as tabelas cortadas com rolagem
+      // interna, encolhe cada uma (mantendo a proporção) até caberem inteiras
+      // na largura disponível — o usuário pode ampliar com o dedo para ver
+      // os detalhes, já que o conteúdo é vetorial/texto e não perde nitidez.
+      function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId) {
+        const outerScroll = document.getElementById(outerScrollId);
+        const scaleBox = document.getElementById(scaleBoxId);
+        const wrapper = document.getElementById(wrapperId);
+        if (!scaleBox || !wrapper) return;
+        wrapper.style.transform = '';
+        scaleBox.style.width = '';
+        scaleBox.style.height = '';
+        if (outerScroll) outerScroll.style.height = '';
+        const naturalW = wrapper.offsetWidth;
+        const naturalH = wrapper.offsetHeight;
+        if (availableWidth > 0 && naturalW > availableWidth) {
+          const escala = availableWidth / naturalW;
+          const scaledH = naturalH * escala;
+          wrapper.style.transform = `scale(${escala})`;
+          scaleBox.style.width = (naturalW * escala) + 'px';
+          scaleBox.style.height = scaledH + 'px';
+          // Com uma <table> diretamente dentro de um elemento com transform,
+          // o contêiner com overflow-x:auto calcula a própria altura usando o
+          // tamanho da tabela ANTES da escala (bug do navegador) — por isso
+          // também fixamos a altura dele aqui, em vez de deixar em "auto".
+          if (outerScroll) outerScroll.style.height = scaledH + 'px';
+        }
+      }
+
+      encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper');
+      encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper');
     }
   } catch (err) {
     const container = document.getElementById(containerId);
