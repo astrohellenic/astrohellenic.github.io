@@ -69,6 +69,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Isopsefia',
     capturada: true,
     telaOrigem: 'Ferramentas > Isopsefia'
+  },
+  lotes_calculados: {
+    label: 'Lotes Selecionados (os quadrinhos que você marcar na Calculadora de Lotes — pré-calculados e os que você salvar)',
+    tituloIndice: 'Lotes Selecionados',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Calculadora de Lotes'
   }
 };
 
@@ -131,7 +137,8 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'decenios', type: 'ferramenta' },
   ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' })),
   { id: 'horas', type: 'ferramenta' },
-  { id: 'isopsefia', type: 'ferramenta' }
+  { id: 'isopsefia', type: 'ferramenta' },
+  { id: 'lotes_calculados', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última

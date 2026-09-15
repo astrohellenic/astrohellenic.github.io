@@ -261,6 +261,26 @@ let lotesCalcPlanetA = 'Sun';
 let lotesCalcPlanetB = 'Moon';
 let lotesCalcManualSect = null; // null = automático (pela seita do mapa) | true = dia | false = noite
 
+/* Lotes que o astrólogo salvou a partir da Calculadora Livre (Parte 2) —
+   cada um vira seu próprio quadrinho, junto com os 20 pré-calculados da
+   Parte 1. lotesSelecionadosRelatorio guarda as chaves (fixas ou dos
+   salvos) marcadas pra entrar no relatório — o astrólogo pode selecionar
+   qualquer combinação antes de clicar em "Adicionar ao Relatório". */
+let lotesCustomSalvos = [];
+let lotesSelecionadosRelatorio = new Set();
+
+function alternarSelecaoLoteRelatorio(key, marcado) {
+  if (marcado) lotesSelecionadosRelatorio.add(key);
+  else lotesSelecionadosRelatorio.delete(key);
+}
+window.alternarSelecaoLoteRelatorio = alternarSelecaoLoteRelatorio;
+
+function removerLoteCustomSalvo(id) {
+  lotesCustomSalvos = lotesCustomSalvos.filter(l => l.id !== id);
+  lotesSelecionadosRelatorio.delete(id);
+  renderLotesUI();
+}
+
 function alternarLotesStartPoint(key) {
   lotesCalcStartPoint = key;
   renderLotesUI();
@@ -306,14 +326,23 @@ function getPontoIconHTMLLotes(key, lotesPart1, size) {
    RENDERIZAÇÃO
    ========================================== */
 
-function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda) {
+function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
+  opts = opts || {};
   const signo = Math.floor(norm360Lotes(deg) / 30);
   const casa = casaDoGrauLotes(deg, ascAbs);
+  const checkboxHTML = opts.key ? `
+    <input type="checkbox" data-lote-relatorio-key="${opts.key}" ${lotesSelecionadosRelatorio.has(opts.key) ? 'checked' : ''} onchange="alternarSelecaoLoteRelatorio('${opts.key}', this.checked)" title="Selecionar para o Relatório" style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;">
+  ` : '';
+  const removerHTML = opts.onRemover ? `
+    <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 11px; margin-left: auto; flex-shrink: 0;" title="Remover este lote salvo" onclick="${opts.onRemover}"></i>
+  ` : '';
   return `
     <div style="border: 1px solid #c59b27; border-radius: 10px; background: #ffffff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
+        ${checkboxHTML}
         <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #103b70; flex-shrink: 0;">${iconHTML}</div>
-        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 12.5px; color: #103b70; line-height: 1.25;">${escapeHtml(nome)}</div>
+        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 12.5px; color: #103b70; line-height: 1.25; flex: 1;">${escapeHtml(nome)}</div>
+        ${removerHTML}
       </div>
       <div style="display: flex; align-items: center; gap: 8px; background: #fffdf5; border: 1px solid #e5d5a1; border-radius: 8px; padding: 6px 10px;">
         ${getSignSVGLotes(signo, 22)}
@@ -342,6 +371,47 @@ function renderSeletorLotes(menuId, iconHTML, menuRowsHTML, label) {
     </div>
   `;
 }
+
+/* Calcula o resultado atual da Calculadora Livre (Parte 2) a partir do
+   estado global (ponto de partida, Planeta A/B, seita) — usado tanto pra
+   desenhar o quadrinho de pré-visualização quanto pra salvar o lote. */
+function calcularResultadoLotesLivre(p, lotesPart1, isDayAuto) {
+  const effectiveIsDay = (lotesCalcManualSect !== null) ? lotesCalcManualSect : isDayAuto;
+  const startAbs = resolveStartPointAbsLotes(lotesCalcStartPoint, p, lotesPart1);
+  const aAbs = absDoPlanetaLotes(lotesCalcPlanetA, p);
+  const bAbs = absDoPlanetaLotes(lotesCalcPlanetB, p);
+  const resultAbs = calcLotePonto(startAbs, aAbs, bAbs, effectiveIsDay, true);
+
+  const startLabel = getPontoLabelLotes(lotesCalcStartPoint, lotesPart1);
+  const aLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetA];
+  const bLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetB];
+  const formulaTxt = effectiveIsDay ? `${startLabel} + ${aLabel} − ${bLabel}` : `${startLabel} + ${bLabel} − ${aLabel}`;
+  const sectLabelTxt = lotesCalcManualSect === null ? `automática (${isDayAuto ? 'dia' : 'noite'})` : (lotesCalcManualSect ? 'dia — manual' : 'noite — manual');
+  const resultLegenda = `Calculadora Livre — fórmula: ASC-equivalente ${formulaTxt} • seita ${sectLabelTxt}`;
+
+  return { resultAbs, formulaTxt, resultLegenda };
+}
+
+/* Salva o resultado atual da Calculadora Livre como um novo quadrinho
+   permanente (igual aos 20 pré-calculados da Parte 1), pra poder ser
+   selecionado e enviado ao relatório junto com os outros. */
+function salvarLoteCalculadoraLivre() {
+  if (!currentCalculatedData) return;
+  const data = currentCalculatedData;
+  const p = obterAbsPlanetasLotes(data);
+  const isDayAuto = ((p.sun - p.asc + 360) % 360) >= 180;
+  const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
+  const { resultAbs, formulaTxt, resultLegenda } = calcularResultadoLotesLivre(p, lotesPart1, isDayAuto);
+
+  const nome = prompt('Nome para este lote calculado:', formulaTxt);
+  if (nome === null) return; // cancelado
+
+  const id = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  lotesCustomSalvos.push({ id, nome: nome.trim() || formulaTxt, deg: resultAbs, legenda: resultLegenda });
+  lotesSelecionadosRelatorio.add(id);
+  renderLotesUI();
+}
+window.salvarLoteCalculadoraLivre = salvarLoteCalculadoraLivre;
 
 function renderToggleSeitaLotes(isDayAuto) {
   const opts = [
@@ -401,11 +471,14 @@ function renderLotesUI() {
         Calculadora de Lotes
       </h3>
 
-      <div class="lotes-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+      <div class="lotes-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px; flex-wrap: wrap;">
         <div>
           <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
           <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)} • <strong style="color: #b45309;">${isDayAuto ? 'Natividade Diurna' : 'Natividade Noturna'}</strong></div>
         </div>
+        <button type="button" onclick="capturarLotesSelecionadosParaRelatorio()" title="Adiciona os lotes marcados (caixinha em cada quadrinho) como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif; flex-shrink: 0;">
+          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+        </button>
       </div>
 
       <!-- PARTE 1: LOTES PRÉ-CALCULADOS -->
@@ -415,8 +488,20 @@ function renderLotesUI() {
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
-        ${lotesPart1.map(l => renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda)).join('')}
+        ${lotesPart1.map(l => renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda, { key: l.key })).join('')}
       </div>
+
+      ${lotesCustomSalvos.length ? `
+      <!-- LOTES SALVOS DA CALCULADORA LIVRE -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px;">Lotes Salvos (Calculadora Livre)</span>
+        <div style="flex: 1; height: 1px; background: #c59b27; opacity: 0.5;"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
+        ${lotesCustomSalvos.map(c => renderLoteCardHTML(getLoteAbbrevIconSVG('✓', 24), c.nome, c.deg, p.asc, c.legenda, { key: c.id, onRemover: `removerLoteCustomSalvo('${c.id}')` })).join('')}
+      </div>
+      ` : ''}
   `;
 
   /* PARTE 2: CALCULADORA LIVRE */
@@ -455,18 +540,7 @@ function renderLotesUI() {
   const planetAIconHTML = getPlanet3DSVGLotes(lotesCalcPlanetA, 26);
   const planetBIconHTML = getPlanet3DSVGLotes(lotesCalcPlanetB, 26);
 
-  const effectiveIsDay = (lotesCalcManualSect !== null) ? lotesCalcManualSect : isDayAuto;
-  const startAbs = resolveStartPointAbsLotes(lotesCalcStartPoint, p, lotesPart1);
-  const aAbs = absDoPlanetaLotes(lotesCalcPlanetA, p);
-  const bAbs = absDoPlanetaLotes(lotesCalcPlanetB, p);
-  const resultAbs = calcLotePonto(startAbs, aAbs, bAbs, effectiveIsDay, true);
-
-  const startLabel = getPontoLabelLotes(lotesCalcStartPoint, lotesPart1);
-  const aLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetA];
-  const bLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetB];
-  const formulaTxt = effectiveIsDay ? `${startLabel} + ${aLabel} − ${bLabel}` : `${startLabel} + ${bLabel} − ${aLabel}`;
-  const sectLabelTxt = lotesCalcManualSect === null ? `automática (${isDayAuto ? 'dia' : 'noite'})` : (lotesCalcManualSect ? 'dia — manual' : 'noite — manual');
-  const resultLegenda = `Calculadora Livre — fórmula: ASC-equivalente ${formulaTxt} • seita ${sectLabelTxt}`;
+  const { resultAbs, formulaTxt, resultLegenda } = calcularResultadoLotesLivre(p, lotesPart1, isDayAuto);
 
   html += `
       <!-- PARTE 2: CALCULADORA LIVRE -->
@@ -485,8 +559,11 @@ function renderLotesUI() {
           ${renderToggleSeitaLotes(isDayAuto)}
         </div>
 
-        <div style="max-width: 260px; margin: 0 auto; width: 100%;">
+        <div style="max-width: 260px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 8px;">
           ${renderLoteCardHTML(getLoteAbbrevIconSVG('=', 24), formulaTxt, resultAbs, p.asc, resultLegenda)}
+          <button type="button" onclick="salvarLoteCalculadoraLivre()" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif;">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar este Lote
+          </button>
         </div>
       </div>
 
@@ -495,3 +572,55 @@ function renderLotesUI() {
 
   container.innerHTML = html;
 }
+
+/* Monta, fora da tela (não é a tela real do usuário — é um grid novo,
+   só com os quadrinhos marcados), uma imagem com os lotes selecionados
+   e guarda pro relatório. Diferente das outras ferramentas, aqui não dá
+   pra "capturar a tela toda", porque o astrólogo escolhe um subconjunto
+   dos 20 pré-calculados + qualquer lote que tenha salvo na Calculadora
+   Livre — cada envio pega só o que estiver marcado no momento. */
+async function capturarLotesSelecionadosParaRelatorio() {
+  if (lotesSelecionadosRelatorio.size === 0) {
+    alert('Marque a caixinha de pelo menos um lote antes de adicionar ao relatório.');
+    return;
+  }
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+  if (!currentCalculatedData) return;
+
+  const data = currentCalculatedData;
+  const p = obterAbsPlanetasLotes(data);
+  const isDayAuto = ((p.sun - p.asc + 360) % 360) >= 180;
+  const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
+
+  const todosDisponiveis = lotesPart1.map(l => ({ key: l.key, iconHTML: getLoteIconHTMLLotes(l, 24), nome: l.nome, deg: l.deg, legenda: l.legenda }))
+    .concat(lotesCustomSalvos.map(c => ({ key: c.id, iconHTML: getLoteAbbrevIconSVG('✓', 24), nome: c.nome, deg: c.deg, legenda: c.legenda })));
+
+  const selecionados = todosDisponiveis.filter(l => lotesSelecionadosRelatorio.has(l.key));
+  if (!selecionados.length) {
+    alert('Os lotes marcados não foram encontrados — desmarque e marque de novo.');
+    return;
+  }
+
+  const temp = document.createElement('div');
+  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
+  temp.innerHTML = `
+    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 14px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Lotes Selecionados</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+      ${selecionados.map(l => renderLoteCardHTML(l.iconHTML, l.nome, l.deg, p.asc, l.legenda)).join('')}
+    </div>
+  `;
+  document.body.appendChild(temp);
+
+  try {
+    const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    window.relatorioCapturas = window.relatorioCapturas || {};
+    window.relatorioCapturas['lotes_calculados'] = { dataUrl: canvas.toDataURL('image/png'), capturadoEm: Date.now() };
+    alert(`${selecionados.length} lote(s) adicionado(s) ao relatório. Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar lotes ao relatório:', err);
+    alert('Não foi possível adicionar os lotes selecionados ao relatório.');
+  } finally {
+    document.body.removeChild(temp);
+  }
+}
+window.capturarLotesSelecionadosParaRelatorio = capturarLotesSelecionadosParaRelatorio;
