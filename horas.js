@@ -85,9 +85,9 @@ function iniciarModuloHoras() {
   };
 
   // Função auxiliar para gerar a tag SVG embutida
-  function getPlanet3DSVG(planetId) {
+  function getPlanet3DSVG(planetId, size) {
   if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico()) {
-    return getPlanetSimpleSVG(planetId, 34);
+    return getPlanetSimpleSVG(planetId, size || 34);
   }
   const planetSVGs = {
     Sun: `<svg width="34" height="34" viewBox="0 0 100 100" style="vertical-align: middle; display: inline-block;">
@@ -229,7 +229,17 @@ function iniciarModuloHoras() {
       <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle">♄</text>
     </svg>`
   };
-  return planetSVGs[planetId] || '';
+  let svg = planetSVGs[planetId] || '';
+  if (size && svg) {
+    const m = svg.match(/width="([\d.]+)" height="([\d.]+)"/);
+    if (m) {
+      const origW = parseFloat(m[1]);
+      const origH = parseFloat(m[2]);
+      const newH = Math.round(size * (origH / origW));
+      svg = svg.replace(`width="${m[1]}" height="${m[2]}"`, `width="${size}" height="${newH}"`);
+    }
+  }
+  return svg;
 }
 
   // Ordem Caldaica descendente
@@ -441,15 +451,14 @@ function iniciarModuloHoras() {
   if (horaAtual) {
     html += `
       <div style="background: var(--bg-main); border: 2px solid #1e5fa4; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px;">
-        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">Hora Planetária Ativa</span>
-        <div style="display: flex; align-items: flex-end; justify-content: center; gap: 28px; margin: 10px 0 6px 0;">
+        <div style="display: flex; align-items: flex-end; justify-content: center; gap: 32px; margin: 0 0 6px 0;">
           <div style="text-align: center;">
-            <div style="font-size: 12px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Dia</div>
-            ${getPlanet3DSVG(firstPlanetId, 64)}
+            <div style="font-size: 13px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Dia</div>
+            ${getPlanet3DSVG(firstPlanetId, 100)}
           </div>
           <div style="text-align: center;">
             <div style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Hora</div>
-            ${getPlanet3DSVG(horaAtual.planet.id, 52)}
+            ${getPlanet3DSVG(horaAtual.planet.id, 48)}
           </div>
         </div>
         <div style="font-size: 13px; opacity: 0.8; font-weight: 500;">
