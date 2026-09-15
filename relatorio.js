@@ -33,6 +33,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Profecção Anual',
     capturada: true,
     telaOrigem: 'Ferramentas > Profecção'
+  },
+  circumambulacao: {
+    label: 'Circumambulação pelos Termos (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Circumambulação pelos Termos',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Direções Primárias'
   }
 };
 
@@ -71,7 +77,8 @@ const RELATORIO_BLOCOS_PADRAO = [
    mesmo sem fazer parte do preset padrão — assim aparecem como opção pra
    qualquer modelo, desmarcadas até o astrólogo escolher incluí-las. */
 const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
-  { id: 'profeccao', type: 'ferramenta' }
+  { id: 'profeccao', type: 'ferramenta' },
+  { id: 'circumambulacao', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) a última
