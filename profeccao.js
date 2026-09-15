@@ -1078,8 +1078,10 @@
                 <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
             </div>
 
-            <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; margin-top: 10px;">
-                <table style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
+            <div id="profMensalOuterScroll" style="text-align: center; margin-top: 10px;">
+              <div id="profMensalScaleBox">
+              <div id="profMensalWrapper" style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; transform-origin: top left;">
+                <table id="profMensalTable" style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
                     <thead>
                         <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
                             <th style="padding: 10px 12px; text-align: center;">Mês</th>
@@ -1106,8 +1108,57 @@
             `;
         });
 
-        html += `</tbody></table></div></div></div></div>`;
+        html += `</tbody></table></div></div></div></div></div></div>`;
         container.innerHTML = html;
+
+        // Em telas estreitas, em vez de deixar a tabela cortada com rolagem
+        // interna, encolhe ela (mantendo a proporção) até caber inteira na
+        // largura disponível — mesma técnica usada nos Decênios e no Painel
+        // Técnico. Em telas largas, onde a tabela já cabe no espaço de
+        // sempre (width: 100%), NADA é alterado: a tabela continua
+        // exatamente como sempre foi, ocupando a largura toda do cartão.
+        const profContainerEl = document.getElementById('profeccao-container');
+        const outerScroll = document.getElementById('profMensalOuterScroll');
+        const scaleBox = document.getElementById('profMensalScaleBox');
+        const wrapper = document.getElementById('profMensalWrapper');
+        const tabelaMensal = document.getElementById('profMensalTable');
+        if (profContainerEl && outerScroll && scaleBox && wrapper && tabelaMensal) {
+            const containerStyles = getComputedStyle(profContainerEl);
+            const availableWidth = profContainerEl.clientWidth
+                - parseFloat(containerStyles.paddingLeft || 0)
+                - parseFloat(containerStyles.paddingRight || 0);
+
+            // Mede a largura "natural" da tabela (sem o width:100%, que
+            // sempre a força a preencher o espaço do cartão) para saber se
+            // ela realmente precisa encolher ou se cabe do jeito de sempre.
+            wrapper.style.display = 'inline-block';
+            tabelaMensal.style.width = 'auto';
+            const naturalWidth = wrapper.offsetWidth;
+
+            if (availableWidth > 0 && naturalWidth > availableWidth) {
+                const naturalHeight = wrapper.offsetHeight;
+                const escala = availableWidth / naturalWidth;
+                const scaledHeight = naturalHeight * escala;
+                scaleBox.style.display = 'inline-block';
+                wrapper.style.transform = `scale(${escala})`;
+                scaleBox.style.width = (naturalWidth * escala) + 'px';
+                scaleBox.style.height = scaledHeight + 'px';
+                // Contorna uma peculiaridade do navegador: um contêiner com
+                // overflow ao redor de uma <table> transformada calcula a
+                // própria altura com base no tamanho ANTES da escala.
+                outerScroll.style.height = scaledHeight + 'px';
+            } else {
+                // Cabe do jeito de sempre: desfaz a medição e devolve tudo
+                // ao estado original (nenhuma mudança visual).
+                wrapper.style.display = '';
+                wrapper.style.transform = '';
+                tabelaMensal.style.width = '100%';
+                scaleBox.style.display = '';
+                scaleBox.style.width = '';
+                scaleBox.style.height = '';
+                outerScroll.style.height = '';
+            }
+        }
     }
 
     window.iniciarModuloProfeccao = iniciarModuloProfeccao;
