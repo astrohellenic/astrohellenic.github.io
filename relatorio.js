@@ -1315,26 +1315,27 @@ function injetarEstilosRelatorio() {
       .rel-page {
         width: 210mm;
         max-width: 100%;
-        /* Altura mínima proporcional à largura (razão A4: 210x297mm),
-           em vez de um "min-height: 297mm" fixo. Um valor fixo em mm
-           não acompanha a largura quando ela é reduzida pelo
-           "max-width: 100%" (telas/painéis mais estreitos que 210mm) —
-           a página ficava com a largura certa, mas sempre 297mm de
-           altura, ou seja, mais estreita e comprida do que uma folha A4
-           de verdade. Com aspect-ratio, a altura mínima acompanha a
-           largura disponível e só ultrapassa a proporção quando o
-           conteúdo realmente precisa de mais espaço (mesmo
-           comportamento de antes nesse caso). Neutralizado no modo de
-           impressão logo abaixo — lá a largura já é sempre exata (a
-           página física do @page), então o valor calculado deve
-           continuar sendo o "min-height: 267mm" já testado. */
-        aspect-ratio: 210 / 297;
         margin: 0 auto 24px auto;
         background: #ffffff;
         box-shadow: 0 2px 12px rgba(0,0,0,0.12);
         padding: 18mm 16mm;
         box-sizing: border-box;
         font-family: 'Montserrat', sans-serif;
+      }
+
+      /* Altura mínima proporcional à largura (razão A4: 210x297mm), só
+         na PRÉVIA em tela — trancada num "@media screen" (nunca dentro
+         da regra base, nem tentando "desligar" com aspect-ratio:auto
+         dentro do @media print) porque motor de impressão do
+         Safari/iPad já mostrou não recalcular esse valor do jeito
+         esperado durante a paginação, e essa mistura foi o que causava
+         a capa inteira transbordar pra uma segunda página quase em
+         branco. Assim a impressão nunca vê aspect-ratio: só a prévia em
+         tela usa (min-height fixo em mm sozinho fazia a página ficar
+         mais estreita e comprida que uma A4 de verdade em painéis mais
+         estreitos que 210mm — ver histórico do PR que introduziu isso). */
+      @media screen {
+        .rel-page { aspect-ratio: 210 / 297; }
       }
 
       .rel-h1 {
@@ -1435,9 +1436,21 @@ function injetarEstilosRelatorio() {
            conteúdo em relatórios longos numa rodada anterior — qualquer
            ajuste futuro aqui precisa ser testado gerando um PDF de
            verdade com várias páginas, não só olhando o CSS. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; aspect-ratio: auto; min-height: 250mm; overflow: visible; page-break-after: always; }
+        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 250mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
-        .rel-capa { min-height: 250mm; }
+
+        /* A capa é o único .rel-page com "height" fixo (não só
+           min-height) na impressão — pode ser, porque o conteúdo dela
+           nunca é texto livre que precisa de mais espaço (é sempre
+           título + uma imagem + rodapé fixo), diferente das páginas de
+           texto/tabela. Isso importa especialmente aqui: o layout da
+           capa depende de flexbox (a área do meio com "flex: 1" pra
+           centralizar a mandala) pra se distribuir dentro da altura da
+           página, e motor de impressão que só recebe um "min-height"
+           (sem "height") às vezes não repassa uma altura definida pro
+           flexbox calcular o "flex: 1" — foi isso que causava a capa
+           inteira transbordar pra uma segunda página quase em branco. */
+        .rel-capa { height: 250mm; min-height: 250mm; }
       }
   `;
   document.head.appendChild(style);
