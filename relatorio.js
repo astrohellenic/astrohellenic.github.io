@@ -1372,7 +1372,13 @@ function injetarEstilosRelatorio() {
       .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; }
       .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
-      .rel-img-capa { max-width: 78mm; max-height: 100%; }
+      /* max-height em mm fixo, não em porcentagem: "100%" dependia da
+         altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
+         "definida" pro navegador — no motor de impressão do Safari/iPad
+         isso não resolvia direito e a porcentagem virava "sem limite",
+         deixando a mandala esticar (achatada) até o tamanho que o
+         max-width permitisse. Um valor fixo nunca depende disso. */
+      .rel-img-capa { max-width: 78mm; max-height: 140mm; }
       .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
       .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
       .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
