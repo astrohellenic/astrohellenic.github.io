@@ -1207,7 +1207,20 @@ function injetarEstilosRelatorio() {
       .rel-page {
         width: 210mm;
         max-width: 100%;
-        min-height: 297mm;
+        /* Altura mínima proporcional à largura (razão A4: 210x297mm),
+           em vez de um "min-height: 297mm" fixo. Um valor fixo em mm
+           não acompanha a largura quando ela é reduzida pelo
+           "max-width: 100%" (telas/painéis mais estreitos que 210mm) —
+           a página ficava com a largura certa, mas sempre 297mm de
+           altura, ou seja, mais estreita e comprida do que uma folha A4
+           de verdade. Com aspect-ratio, a altura mínima acompanha a
+           largura disponível e só ultrapassa a proporção quando o
+           conteúdo realmente precisa de mais espaço (mesmo
+           comportamento de antes nesse caso). Neutralizado no modo de
+           impressão logo abaixo — lá a largura já é sempre exata (a
+           página física do @page), então o valor calculado deve
+           continuar sendo o "min-height: 267mm" já testado. */
+        aspect-ratio: 210 / 297;
         margin: 0 auto 24px auto;
         background: #ffffff;
         box-shadow: 0 2px 12px rgba(0,0,0,0.12);
@@ -1308,7 +1321,7 @@ function injetarEstilosRelatorio() {
            longos numa rodada anterior — qualquer ajuste futuro aqui
            precisa ser testado gerando um PDF de verdade com várias
            páginas, não só olhando o CSS. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
+        .rel-page { box-shadow: none; margin: 0; width: auto; aspect-ratio: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
         .rel-capa { min-height: 267mm; }
       }
