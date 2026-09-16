@@ -1391,7 +1391,7 @@ function injetarEstilosRelatorio() {
          página existe só pra emoldurar a imagem trazida da tela real da
          ferramenta, sem redesenhar nada ao redor dela. */
       .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
-      .rel-img-captura { max-width: 100%; max-height: 265mm; width: auto; height: auto; display: block; margin: 0 auto; }
+      .rel-img-captura { max-width: 100%; max-height: 245mm; width: auto; height: auto; display: block; margin: 0 auto; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
@@ -1420,18 +1420,24 @@ function injetarEstilosRelatorio() {
         @page { size: A4; margin: 0; }
 
         /* min-height (NUNCA height fixo) do tamanho real de uma folha
-           impressa, com folga (267mm dos 297mm agora disponíveis, já
-           que não tem mais os 12mm de margem do @page descontando —
-           ver acima). Esse valor precisa ser o MESMO em toda .rel-page,
-           capa incluída: testando, misturar valores diferentes entre
-           páginas (ou mudar esse número sem também levar em conta o
-           @page acima) foi o que causou perda de conteúdo em relatórios
-           longos numa rodada anterior — qualquer ajuste futuro aqui
-           precisa ser testado gerando um PDF de verdade com várias
-           páginas, não só olhando o CSS. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; aspect-ratio: auto; min-height: 267mm; overflow: visible; page-break-after: always; }
+           impressa, com folga bem maior que antes (250mm dos 297mm
+           disponíveis — 47mm de sobra, não só os ~30mm de antes).
+           Motivo do aumento da folga: o navegador só respeita o
+           "@page { margin: 0 }" logo acima quando a própria caixa de
+           diálogo de impressão está com "Margens: Nenhuma" e "Escala:
+           100%" — se a pessoa deixar em "Padrão" (o mais comum), o
+           navegador aplica a margem dele por cima, sem avisar, e
+           "rouba" espaço da página sem o CSS saber. Essa folga extra é
+           a defesa contra isso. Esse valor precisa ser o MESMO em toda
+           .rel-page, capa incluída: testando, misturar valores
+           diferentes entre páginas (ou mudar esse número sem também
+           levar em conta o @page acima) foi o que causou perda de
+           conteúdo em relatórios longos numa rodada anterior — qualquer
+           ajuste futuro aqui precisa ser testado gerando um PDF de
+           verdade com várias páginas, não só olhando o CSS. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; aspect-ratio: auto; min-height: 250mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
-        .rel-capa { min-height: 267mm; }
+        .rel-capa { min-height: 250mm; }
       }
   `;
   document.head.appendChild(style);
