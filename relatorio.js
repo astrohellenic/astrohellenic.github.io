@@ -1067,10 +1067,14 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
     <li><span>${escapeHtml(item.titulo)}</span><span class="rel-num-pagina" data-alvo="${item.alvo}"></span></li>
   `).join('');
 
+  // Guardado num global pra "Baixar PDF" (chamada só pelo onclick do botão
+  // abaixo, sem parâmetro) saber o nome do modelo pro nome do arquivo.
+  window.relatorioPresetAtual = preset;
+
   const htmlRelatorio = `
     <div class="rel-toolbar no-print">
       <button type="button" class="btn-secondary" onclick="voltarConfigRelatorio()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
-      <button type="button" class="btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir / Salvar em PDF</button>
+      <button type="button" id="relBtnBaixarPdf" class="btn-primary" onclick="baixarRelatorioPDF()"><i class="fa-solid fa-file-arrow-down"></i> Baixar PDF</button>
     </div>
 
     <div class="rel-viewer">
@@ -1121,6 +1125,106 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
   container.scrollTop = 0;
   numerarPaginasIndice(container);
 }
+
+/* Monta o nome do arquivo baixado a partir do nome do modelo + o cliente
+   carregado no momento — sem caracteres que travariam a hora de salvar
+   o arquivo (ex.: "/" no meio de "Retificação/Mapa"). */
+function nomeArquivoRelatorioPDF(preset) {
+  const cliente = (typeof currentCustomCode !== 'undefined' && currentCustomCode)
+    ? `${currentCustomCode} - ${currentSubjectName}`
+    : (typeof currentSubjectName !== 'undefined' ? currentSubjectName : '');
+  const bruto = cliente ? `${preset.nome} - ${cliente}` : (preset.nome || 'Relatorio');
+  return bruto.replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
+}
+
+/* GERA O PDF DIRETO EM CÓDIGO — sem passar pelo "Imprimir" do navegador.
+   Foi trocado por isso porque cada navegador/aparelho (Chrome, Safari,
+   iPad) tem seu próprio motor de impressão, com seus próprios
+   cabeçalhos/rodapés forçados, margens e jeito de calcular página —
+   nenhum CSS consegue controlar isso por completo, e por isso o
+   relatório vinha saindo diferente (e quebrado) dependendo de onde era
+   gerado. Aqui a gente tira uma "foto" (html2canvas) de cada .rel-page
+   já pronta na tela — a prévia sempre esteve certa, só a impressão que
+   não — e cola essas fotos, uma por uma, em folhas A4 de verdade dentro
+   de um arquivo PDF (jsPDF). Sem depender de navegador nenhum pra
+   paginar, o resultado é idêntico em qualquer aparelho. */
+async function baixarRelatorioPDF() {
+  const viewer = document.querySelector('.rel-viewer');
+  if (!viewer) return;
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou. Recarregue a página e tente de novo.'); return; }
+  if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') { alert('Biblioteca de geração de PDF não carregou. Recarregue a página e tente de novo.'); return; }
+
+  const paginas = Array.from(viewer.querySelectorAll(':scope > .rel-page'));
+  if (!paginas.length) return;
+
+  const botao = document.getElementById('relBtnBaixarPdf');
+  const rotuloOriginal = botao ? botao.innerHTML : '';
+  if (botao) botao.disabled = true;
+
+  const MM_A4_LARGURA = 210;
+  const MM_A4_ALTURA = 297;
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    let paginasPdfGeradas = 0;
+
+    for (let i = 0; i < paginas.length; i++) {
+      const pagina = paginas[i];
+      if (botao) botao.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando página ${i + 1} de ${paginas.length}...`;
+
+      // Tira a sombra e a margem que só existem pra separar as páginas
+      // na prévia em tela — numa folha de PDF de verdade não fazem
+      // sentido — e devolve como estava depois de capturar.
+      const boxShadowOriginal = pagina.style.boxShadow;
+      const margemOriginal = pagina.style.margin;
+      pagina.style.boxShadow = 'none';
+      pagina.style.margin = '0';
+      const canvas = await html2canvas(pagina, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      pagina.style.boxShadow = boxShadowOriginal;
+      pagina.style.margin = margemOriginal;
+
+      // Praticamente todo bloco cabe exatamente numa folha (a prévia em
+      // tela já é do tamanho A4). Mas um texto personalizado bem comprido
+      // pode passar de uma página — em vez de espremer tudo numa folha só
+      // (o que distorceria o conteúdo), fatia a imagem em pedaços de uma
+      // folha cada, sem espremer nada.
+      const pxPorMm = canvas.width / MM_A4_LARGURA;
+      const alturaEquivalenteMm = canvas.height / pxPorMm;
+
+      if (alturaEquivalenteMm <= MM_A4_ALTURA + 2) { // +2mm de tolerância de arredondamento — cabe numa folha só
+        if (paginasPdfGeradas > 0) pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaEquivalenteMm, undefined, 'FAST');
+        paginasPdfGeradas++;
+      } else {
+        const alturaFatiaPx = Math.round(MM_A4_ALTURA * pxPorMm);
+        let offsetPx = 0;
+        while (offsetPx < canvas.height) {
+          const alturaDestaFatiaPx = Math.min(alturaFatiaPx, canvas.height - offsetPx);
+
+          const fatia = document.createElement('canvas');
+          fatia.width = canvas.width;
+          fatia.height = alturaDestaFatiaPx;
+          fatia.getContext('2d').drawImage(canvas, 0, offsetPx, canvas.width, alturaDestaFatiaPx, 0, 0, canvas.width, alturaDestaFatiaPx);
+
+          if (paginasPdfGeradas > 0) pdf.addPage();
+          const alturaFatiaMm = alturaDestaFatiaPx / pxPorMm;
+          pdf.addImage(fatia.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaFatiaMm, undefined, 'FAST');
+          paginasPdfGeradas++;
+          offsetPx += alturaDestaFatiaPx;
+        }
+      }
+    }
+
+    pdf.save(nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {}));
+  } catch (err) {
+    console.error('Erro ao gerar o PDF do relatório:', err);
+    alert('Não foi possível gerar o PDF. Tente novamente.');
+  } finally {
+    if (botao) { botao.disabled = false; botao.innerHTML = rotuloOriginal; }
+  }
+}
+window.baixarRelatorioPDF = baixarRelatorioPDF;
 
 /* Renderiza um bloco do preset (texto ou ferramenta) como uma ou mais
    .rel-page, e — quando o bloco entra no índice — registra o item em
