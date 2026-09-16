@@ -604,7 +604,7 @@ function renderCircumambulaçõesUI() {
       rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} a</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} anos</text>`;
       rowHtml += `<text x="${xRay}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
