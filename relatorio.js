@@ -516,7 +516,12 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
-  const opcoesPreset = presets.map((p, idx) => `<option value="${idx}">${escapeHtml(p.nome)}</option>`).join('');
+  // Pré-seleciona o último modelo que o astrólogo escolheu (guardado no
+  // navegador) em vez de sempre voltar pro primeiro da lista — sem isso,
+  // quem trabalha com "Retificação de Mapa Natal" o dia todo tinha que
+  // trocar o seletor toda vez que voltava nessa tela.
+  const indicePresetPadrao = indicePresetLembrado(presets);
+  const opcoesPreset = presets.map((p, idx) => `<option value="${idx}" ${idx === indicePresetPadrao ? 'selected' : ''}>${escapeHtml(p.nome)}</option>`).join('');
   const listaModelosHTML = renderizarListaModelosRelatorioHTML(presets);
 
   // Agrupa os rascunhos por cliente (nome) — o mesmo cliente pode ter
@@ -1041,10 +1046,33 @@ async function salvarEdicaoPresetRelatorio(idx) {
 }
 window.salvarEdicaoPresetRelatorio = salvarEdicaoPresetRelatorio;
 
+/* Chave estável pra "lembrar" um preset entre sessões: usa o id (o caso
+   normal, já salvo no Supabase) e cai pro nome quando ainda não tem id
+   (o preset "em memória" que carregarOuSemearPresetsRelatorio devolve
+   quando a tabela ainda não existe/não respondeu). */
+function relatorioChavePreset(preset) {
+  return preset.id != null ? `id:${preset.id}` : `nome:${preset.nome}`;
+}
+
+/* Índice, na lista de presets carregada agora, do último modelo que o
+   astrólogo escolheu (guardado no navegador, por localStorage — não
+   precisa de coluna nova no Supabase, e nem faz sentido ser por conta,
+   já que é só uma conveniência de "continuar de onde parei" no aparelho
+   que ele está usando). Sem nada guardado ainda, ou se o modelo lembrado
+   não existir mais, cai no primeiro da lista — o comportamento de antes. */
+function indicePresetLembrado(presets) {
+  let chaveLembrada = null;
+  try { chaveLembrada = localStorage.getItem('relatorioUltimoPreset'); } catch (e) { /* ignora */ }
+  if (!chaveLembrada) return 0;
+  const idx = presets.findIndex(p => relatorioChavePreset(p) === chaveLembrada);
+  return idx >= 0 ? idx : 0;
+}
+
 function confirmarGerarRelatorio() {
   const idx = parseInt(document.getElementById('relPresetEscolhido').value, 10) || 0;
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset) return;
+  try { localStorage.setItem('relatorioUltimoPreset', relatorioChavePreset(preset)); } catch (e) { /* ignora */ }
   gerarRelatorioCompleto(preset);
 }
 
