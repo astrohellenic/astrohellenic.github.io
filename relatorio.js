@@ -100,6 +100,11 @@ RELATORIO_LOTES_ORDEM.forEach(loteKey => {
    pra semear automaticamente o primeiro preset de quem ainda não tem
    nenhum salvo (pra não perder a ferramenta que já existia). */
 const RELATORIO_BLOCOS_PADRAO = [
+  /* Bloco invisível (não aparece na lista reordenável do editor — tem
+     seu próprio seletor no topo) que guarda qual mandala vai na capa.
+     Fica dentro de "blocos" pra não precisar de nenhuma coluna nova no
+     Supabase: já é um jsonb existente. Ver obterCapaFonte(). */
+  { id: '__capa__', type: 'capa', fonte: 'mandala_natal' },
   {
     id: 'o-que-e', type: 'texto', titulo: 'O que é Mapa Natal',
     corpo: 'O mapa natal é o registro geométrico e astronômico do céu no exato instante e local do nascimento de um indivíduo. Longe de ser um resumo estático de personalidade, ele representa a matriz fundamental de uma vida, funcionando como o projeto arquitetônico que descreve o destino, as potências e os cenários que se desdobrarão ao longo da existência.\n\nNa perspectiva clássica, o mapa funciona como um espelho do macrocosmo, onde a disposição dos sete astros errantes pelas doze divisões do céu determina a distribuição de responsabilidades e papéis na jornada do nativo. Cada planeta atua como um administrador ou emissário de áreas específicas da vida, e a rede de relações que eles estabelecem entre si desenha as facilidades e os obstáculos fixos que estruturam a realidade material e psicológica do indivíduo.\n\nCompreender o mapa natal não significa submeter-se a um determinismo cego, mas sim obter o mapeamento exato das regras do jogo da própria vida. Ele revela a engenharia oculta por trás dos acontecimentos e inclinações pessoais, servindo como a ferramenta definitiva para que o indivíduo compreenda seu papel no cosmos, otimize suas virtudes naturais e navegue por seus desafios com clareza e maestria técnica.'
@@ -184,6 +189,30 @@ function limparCapturasRelatorio(toolId) {
   if (window.relatorioCapturas) delete window.relatorioCapturas[toolId];
 }
 window.limparCapturasRelatorio = limparCapturasRelatorio;
+
+/* Lê, dos blocos do preset, qual mandala foi escolhida pro astrólogo pra
+   capa (ver o bloco invisível "__capa__" em RELATORIO_BLOCOS_PADRAO) —
+   'mandala_natal' é o padrão pra presets salvos antes dessa opção
+   existir, já que era o único comportamento possível até então. */
+function obterCapaFonte(blocos) {
+  const blocoCapa = (blocos || []).find(b => b.type === 'capa');
+  return (blocoCapa && blocoCapa.fonte) || 'mandala_natal';
+}
+
+/* Resolve a fonte escolhida pra imagem de fato usada na capa: as duas
+   mandalas calculadas na hora (png1/png2, iguais às usadas nas páginas
+   próprias delas) ou a última captura salva da Mandala Personalizada —
+   sem imagem nenhuma quando o astrólogo escolhe "nenhuma" ou a fonte
+   escolhida ainda não tem imagem disponível. */
+function imagemCapaRelatorio(capaFonte, png1, png2) {
+  if (capaFonte === 'mandala_fortuna') return png2 || null;
+  if (capaFonte === 'mandala_personalizada') {
+    const capturas = capturasDaFerramenta('mandala_personalizada');
+    return capturas.length ? capturas[capturas.length - 1].dataUrl : null;
+  }
+  if (capaFonte === 'nenhuma') return null;
+  return png1 || null; // 'mandala_natal', o padrão
+}
 
 async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
   const elemento = document.getElementById(containerId);
@@ -725,8 +754,10 @@ function abrirEditorPresetRelatorio(idx) {
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
 
   // Linhas na ordem JÁ SALVA do preset — catálogo e personalizados
-  // misturados, exatamente como o astrólogo deixou da última vez.
-  const linhasOrdenadas = blocosAtuais.map(bloco => {
+  // misturados, exatamente como o astrólogo deixou da última vez. O
+  // bloco "__capa__" tem seletor próprio (relatorioCapaSeletorHtml),
+  // não entra nessa lista reordenável.
+  const linhasOrdenadas = blocosAtuais.filter(bloco => bloco.type !== 'capa').map(bloco => {
     if (bloco.type === 'ferramenta') {
       const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
       return relatorioLinhaEditorHtml({ id: bloco.id, tipo: 'ferramenta', rotulo: info ? info.label : bloco.id });
@@ -742,7 +773,7 @@ function abrirEditorPresetRelatorio(idx) {
 
   // Itens do catálogo que este modelo ainda não usa — pra adicionar (entram
   // no fim da lista de cima; depois é só mover com as setas).
-  const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => !mapaBlocosAtuais[padrao.id]).map(padrao => {
+  const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => padrao.type !== 'capa' && !mapaBlocosAtuais[padrao.id]).map(padrao => {
     const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
     return `
       <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
@@ -766,6 +797,8 @@ function abrirEditorPresetRelatorio(idx) {
       <div style="max-width: 720px; margin: 0 auto;">
         <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
         <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 18px; font-size: 13px;">
+
+        ${relatorioCapaSeletorHtml(obterCapaFonte(preset.blocos))}
 
         <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
           Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele.
@@ -796,8 +829,71 @@ function abrirEditorPresetRelatorio(idx) {
 
     </div>
   `;
+  atualizarPreviewCapaEditor();
 }
 window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
+
+/* SELETOR "MANDALA DA CAPA" — fica separado da lista reordenável de
+   blocos porque não é uma página do relatório, é só metadado de qual
+   imagem (calculada na hora ou capturada) entra na capa. Independente
+   de a mandala escolhida também estar marcada como página própria mais
+   abaixo — dá pra usar a Fortuna só na capa, por exemplo. */
+function relatorioCapaSeletorHtml(capaFonteAtual) {
+  const opcoes = [
+    { valor: 'mandala_natal', label: 'Mandala Natal (casas do Ascendente)' },
+    { valor: 'mandala_fortuna', label: 'Mandala com a Fortuna na Casa 1' },
+    { valor: 'mandala_personalizada', label: 'Mandala Personalizada (a última capturada na tela da Mandala)' },
+    { valor: 'nenhuma', label: 'Nenhuma imagem — só o título' }
+  ];
+  const opcoesHtml = opcoes.map(o => `<option value="${o.valor}" ${o.valor === capaFonteAtual ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
+
+  return `
+    <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+      <label style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Mandala da Capa</label>
+      <div style="font-size: 11.5px; color: #64748b; margin: 4px 0 8px; line-height: 1.5;">
+        Escolhe qual imagem aparece na capa deste modelo — pra você nunca ficar no escuro sobre o que vai ser gerado.
+      </div>
+      <select id="relCapaFonte" class="modal-select" onchange="atualizarPreviewCapaEditor()">${opcoesHtml}</select>
+      <div id="relCapaPreviewWrap" style="margin-top: 10px;"></div>
+    </div>
+  `;
+}
+
+/* Atualiza a explicação/miniatura abaixo do seletor de capa conforme a
+   opção escolhida. Só a Mandala Personalizada tem uma miniatura de
+   verdade (é uma captura de tela já pronta, salva em memória) — as
+   outras duas são recalculadas no momento de gerar o relatório, a
+   partir do mapa do cliente carregado, então só descrevemos o que vai
+   sair (aliás, sai igual à própria página delas, se estiver marcada). */
+function atualizarPreviewCapaEditor() {
+  const select = document.getElementById('relCapaFonte');
+  const wrap = document.getElementById('relCapaPreviewWrap');
+  if (!select || !wrap) return;
+  const valor = select.value;
+
+  if (valor === 'mandala_personalizada') {
+    const capturas = capturasDaFerramenta('mandala_personalizada');
+    if (capturas.length) {
+      const ultima = capturas[capturas.length - 1];
+      wrap.innerHTML = `
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">${capturas.length > 1 ? `Vai a mais recente das ${capturas.length} capturadas:` : 'Prévia da captura:'}</div>
+        <img src="${ultima.dataUrl}" style="max-width: 160px; max-height: 160px; border: 1px solid #e2d9c2; border-radius: 8px; display: block;">
+      `;
+    } else {
+      wrap.innerHTML = `<div style="font-size: 11.5px; color: #b45309;">Nenhuma imagem capturada ainda pra essa opção. Abra a Mandala, deixe a rotação de Casa 1 do jeito que quer mostrar e clique no botão de "Adicionar ao Relatório" ao lado da rotação — depois volte aqui.</div>`;
+    }
+    return;
+  }
+
+  if (valor === 'nenhuma') {
+    wrap.innerHTML = `<div style="font-size: 11.5px; color: #64748b;">A capa vai mostrar só o título do relatório, sem nenhuma imagem.</div>`;
+    return;
+  }
+
+  const nomePagina = valor === 'mandala_natal' ? 'Mapa Natal' : 'Mandala com a Fortuna';
+  wrap.innerHTML = `<div style="font-size: 11.5px; color: #64748b;">Calculada na hora, a partir dos dados do cliente carregado — sai igual à própria página "${nomePagina}" deste relatório (se ela estiver marcada como página aqui embaixo).</div>`;
+}
+window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 
 /* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA —
    a ordem gravada é a ordem das linhas dentro de #relEditorOrdenavel no
@@ -848,6 +944,11 @@ async function salvarEdicaoPresetRelatorio(idx) {
 
   if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
 
+  // O seletor de capa fica fora da lista reordenável (não é uma página do
+  // corpo) — entra por último, já validado que há conteúdo de verdade.
+  const capaFonteSelect = document.getElementById('relCapaFonte');
+  novosBlocos.push({ id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' });
+
   const client = relatorioSupabaseClient();
   if (!client) return;
 
@@ -888,11 +989,12 @@ async function gerarRelatorioCompleto(preset) {
 
   const perfil = await carregarPerfilRelatorio();
   const blocos = preset.blocos || [];
+  const capaFonte = obterCapaFonte(blocos);
 
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
-  const { png1, png2 } = await renderizarMandalasDoPreset(blocos);
+  const { png1, png2 } = await renderizarMandalasDoPreset(blocos, capaFonte);
 
-  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal);
+  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
 
   // Salva o rascunho em segundo plano — não trava a prévia que acabou
   // de aparecer na tela nem precisa de nenhum botão "Salvar".
@@ -916,9 +1018,12 @@ function calcularLotesRelatorio() {
 
 /* Desenha só as mandalas que o preset realmente usa (pode ser nenhuma,
    uma, ou as duas), restaurando a rotação da Casa 1 ao final. */
-async function renderizarMandalasDoPreset(blocos) {
-  const precisaNatal = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_natal');
-  const precisaFortuna = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_fortuna');
+async function renderizarMandalasDoPreset(blocos, capaFonte) {
+  // Calcula cada mandala se ela tiver página própria marcada no preset OU
+  // se for a fonte escolhida pra capa (as duas coisas são independentes:
+  // dá pra usar a Fortuna só na capa sem incluir a página dela no corpo).
+  const precisaNatal = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_natal') || capaFonte === 'mandala_natal';
+  const precisaFortuna = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_fortuna') || capaFonte === 'mandala_fortuna';
   const lotSalvo = selectedHouse1Lot;
   let png1 = null, png2 = null;
 
@@ -942,13 +1047,16 @@ function voltarConfigRelatorio() {
   iniciarModuloRelatorio();
 }
 
-function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal) {
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
   const marcaHtml = perfil.logo_url
     ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
   const rodapeAstrologo = [perfil.nome, perfil.telefone, perfil.email].filter(Boolean);
   const capaClasseCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-capa-ceu' : '';
-  const blocos = preset.blocos || [];
+  // O bloco "__capa__" só guarda a escolha da mandala da capa — não é uma
+  // página do corpo do relatório, então nunca entra no map abaixo.
+  const blocos = (preset.blocos || []).filter(b => b.type !== 'capa');
+  const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2);
 
   injetarEstilosRelatorio();
 
@@ -971,9 +1079,9 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
            cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
       <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa">
         <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
-        ${png1 ? `
+        ${imgCapa ? `
           <div class="rel-capa-centro">
-            <img class="rel-img-capa" src="${png1}" alt="${escapeHtml(preset.nome)}">
+            <img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">
           </div>
         ` : '<div class="rel-capa-centro"></div>'}
         <div class="rel-marca-rodape">
