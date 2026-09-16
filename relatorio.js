@@ -648,7 +648,7 @@ window.excluirPresetRelatorio = excluirPresetRelatorio;
    dá pra intercalar textos, mandalas e capturas de ferramenta à vontade.
    Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
    espaço pra digitar os textos. */
-function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo }) {
+function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, ferramentaId, capturaIndex }) {
   const setaCss = 'width: 26px; height: 20px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
   const setas = `
     <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
@@ -659,23 +659,41 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo }) {
 
   if (tipo === 'ferramenta') {
     // Ferramentas "capturadas" (Profecção, Isopsefia, Liberação Zodiacal
-    // etc.) podem ter várias imagens acumuladas — mostra quantas já
-    // foram adicionadas e dá pra apagar todas de uma vez se foi engano
-    // (a mandala e a fortuna são calculadas na hora, não têm captura).
-    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[id];
-    const totalCapturas = (info && info.capturada) ? capturasDaFerramenta(id).length : 0;
-    const badgeCapturas = (info && info.capturada) ? `
-      <span data-badge-capturas style="font-size: 11px; font-weight: 700; color: ${totalCapturas ? '#103b70' : '#b45309'}; background: ${totalCapturas ? '#f1f5f9' : '#fffbeb'}; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;">
-        ${totalCapturas ? totalCapturas + (totalCapturas === 1 ? ' imagem' : ' imagens') : 'sem captura'}
-      </span>
-      ${totalCapturas ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px; flex-shrink: 0;" title="Apagar todas as imagens já adicionadas desta ferramenta" onclick="limparCapturasEditor('${id}', this)"></i>` : ''}
-    ` : '';
+    // etc.) podem entrar MAIS DE UMA VEZ no mesmo modelo, cada uma numa
+    // posição diferente — ex.: uma Profecção logo no início (comentada
+    // ali) e outra Profecção bem mais pra frente (comentada com outro
+    // texto). "ferramentaId" é a ferramenta de verdade (pra achar o
+    // rótulo e as capturas); "id" é único por LINHA (pra não colidir no
+    // editor quando há mais de uma). A primeira instância de cada
+    // ferramenta usa ferramentaId === id (igual sempre foi); a partir da
+    // segunda, o botão "+" abaixo cria uma linha nova com um id próprio.
+    const idFerramenta = ferramentaId || id;
+    const idx = typeof capturaIndex === 'number' ? capturaIndex : 0;
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[idFerramenta];
+
+    let extrasCapturada = '';
+    if (info && info.capturada) {
+      const totalCapturas = capturasDaFerramenta(idFerramenta).length;
+      const temImagemNestaLinha = idx < totalCapturas;
+      const rotuloBadge = temImagemNestaLinha
+        ? `usa a imagem ${idx + 1}${totalCapturas > 1 ? ' de ' + totalCapturas : ''}`
+        : 'sem captura pra esta posição';
+      const rotuloEscapado = escapeHtml(info.label).replace(/'/g, '&#39;');
+      extrasCapturada = `
+        <span style="font-size: 11px; font-weight: 700; color: ${temImagemNestaLinha ? '#103b70' : '#b45309'}; background: ${temImagemNestaLinha ? '#f1f5f9' : '#fffbeb'}; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;">
+          ${rotuloBadge}
+        </span>
+        <i class="fa-solid fa-plus" style="color: #103b70; cursor: pointer; font-size: 12px; flex-shrink: 0;" title="Adicionar mais uma página desta ferramenta em outro lugar do relatório" onclick="adicionarInstanciaFerramentaEditor('${idFerramenta}', '${rotuloEscapado}')"></i>
+      `;
+    }
+
     return `
-      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px;">
+      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px;">
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked>
         <span style="flex: 1; font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
-        ${badgeCapturas}
+        ${extrasCapturada}
+        <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="this.closest('.rel-editor-linha').remove()"></i>
       </div>
     `;
   }
@@ -728,6 +746,24 @@ function limparCapturasEditor(toolId, iconEl) {
 }
 window.limparCapturasEditor = limparCapturasEditor;
 
+/* Acrescenta mais uma linha da MESMA ferramenta capturada (Profecção,
+   Isopsefia etc.) no fim da lista reordenável — pra usar em outra
+   posição do relatório, com outro texto ao redor, mostrando outra
+   captura. O índice da imagem que essa nova linha vai usar é contado
+   pelas linhas dessa mesma ferramenta que já existem NA TELA agora (dá
+   pra clicar várias vezes seguidas, sem precisar salvar entre uma e
+   outra, que o próximo índice já vem certo). */
+function adicionarInstanciaFerramentaEditor(ferramentaId, rotulo) {
+  const container = document.getElementById('relEditorOrdenavel');
+  if (!container) return;
+  const existentes = container.querySelectorAll(`[data-ferramenta-id="${ferramentaId}"]`).length;
+  const novoId = ferramentaId + '__' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({
+    id: novoId, tipo: 'ferramenta', rotulo, ferramentaId, capturaIndex: existentes
+  }));
+}
+window.adicionarInstanciaFerramentaEditor = adicionarInstanciaFerramentaEditor;
+
 /* Acrescenta um bloco de texto personalizado em branco no fim da lista
    reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
    clicado) — dá pra mover ele com as setas assim que for criado. */
@@ -759,8 +795,12 @@ function abrirEditorPresetRelatorio(idx) {
   // não entra nessa lista reordenável.
   const linhasOrdenadas = blocosAtuais.filter(bloco => bloco.type !== 'capa').map(bloco => {
     if (bloco.type === 'ferramenta') {
-      const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
-      return relatorioLinhaEditorHtml({ id: bloco.id, tipo: 'ferramenta', rotulo: info ? info.label : bloco.id });
+      const idFerramenta = bloco.ferramentaId || bloco.id;
+      const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[idFerramenta];
+      return relatorioLinhaEditorHtml({
+        id: bloco.id, tipo: 'ferramenta', rotulo: info ? info.label : idFerramenta,
+        ferramentaId: bloco.ferramentaId, capturaIndex: bloco.capturaIndex
+      });
     }
     const padrao = catalogoPorId[bloco.id];
     const custom = !padrao;
@@ -917,7 +957,16 @@ async function salvarEdicaoPresetRelatorio(idx) {
     if (!checkbox || !checkbox.checked) return;
 
     if (tipo === 'ferramenta') {
-      novosBlocos.push({ id, type: 'ferramenta' });
+      const bloco = { id, type: 'ferramenta' };
+      // Só grava ferramentaId/capturaIndex quando essa linha é uma
+      // instância EXTRA (a partir da segunda) — a primeira instância de
+      // cada ferramenta continua salva exatamente como sempre foi
+      // ({id, type:'ferramenta'}), sem esses campos a mais.
+      const idFerramenta = linha.dataset.ferramentaId;
+      const idxCaptura = parseInt(linha.dataset.capturaIndex, 10) || 0;
+      if (idFerramenta && idFerramenta !== id) bloco.ferramentaId = idFerramenta;
+      if (idxCaptura > 0) bloco.capturaIndex = idxCaptura;
+      novosBlocos.push(bloco);
       return;
     }
 
@@ -1248,35 +1297,40 @@ function renderBlocoRelatorio(bloco, opts) {
   }
 
   if (bloco.type === 'ferramenta') {
-    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[bloco.id];
+    const idFerramenta = bloco.ferramentaId || bloco.id;
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[idFerramenta];
 
     /* Blocos "capturados": não recalculam nada — usam a imagem que o
        astrólogo trouxe da própria tela da ferramenta (botão "Adicionar
        ao Relatório"), exatamente como ficou montada lá, com o layout,
-       ícones e realces que a ferramenta original já desenha. */
+       ícones e realces que a ferramenta original já desenha. Cada bloco
+       é UMA posição no relatório e usa UMA captura específica (a de
+       índice bloco.capturaIndex) — o mesmo id de ferramenta pode
+       aparecer em várias posições do preset, cada uma com sua própria
+       captura e seu próprio texto ao redor. */
     if (info && info.capturada) {
       const titulo = (info.tituloIndice || info.label);
       opts.itensIndice.push({ titulo, alvo: bloco.id });
-      const capturas = capturasDaFerramenta(bloco.id);
-      if (!capturas.length) {
+      const capturas = capturasDaFerramenta(idFerramenta);
+      const idxCaptura = typeof bloco.capturaIndex === 'number' ? bloco.capturaIndex : 0;
+      const captura = capturas[idxCaptura];
+      if (!captura) {
         return `
           <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
             <div class="rel-h1">${escapeHtml(titulo)}</div>
             <div class="rel-corpo rel-captura-faltando">
-              Nenhuma captura encontrada. Abra ${escapeHtml(info.telaOrigem || 'a ferramenta')}
+              Nenhuma captura encontrada${capturas.length ? ' pra esta posição' : ''}. Abra ${escapeHtml(info.telaOrigem || 'a ferramenta')}
               com os dados deste cliente, deixe a tela do jeito que quer mostrar e clique em
               "Adicionar ao Relatório" antes de gerar o relatório de novo.
             </div>
           </section>
         `;
       }
-      // Uma página por captura — o alvo do índice (âncora de numeração)
-      // aponta sempre pra primeira, as demais entram logo em seguida.
-      return capturas.map((captura, idx) => `
-        <section class="rel-page rel-page-captura" data-pg="${idx === 0 ? escapeHtml(bloco.id) : escapeHtml(bloco.id) + '-' + idx}">
+      return `
+        <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
           <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
         </section>
-      `).join('');
+      `;
     }
 
     if (bloco.id === 'mandala_natal' && opts.png1) {
