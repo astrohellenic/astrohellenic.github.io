@@ -1133,7 +1133,7 @@ function nomeArquivoRelatorioPDF(preset) {
   const cliente = (typeof currentCustomCode !== 'undefined' && currentCustomCode)
     ? `${currentCustomCode} - ${currentSubjectName}`
     : (typeof currentSubjectName !== 'undefined' ? currentSubjectName : '');
-  const bruto = cliente ? `${preset.nome} - ${cliente}` : (preset.nome || 'Relatorio');
+  const bruto = cliente ? `${cliente} - ${preset.nome}` : (preset.nome || 'Relatorio');
   return bruto.replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
 }
 
