@@ -648,7 +648,7 @@ window.excluirPresetRelatorio = excluirPresetRelatorio;
    dá pra intercalar textos, mandalas e capturas de ferramenta à vontade.
    Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
    espaço pra digitar os textos. */
-function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, ferramentaId, capturaIndex }) {
+function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, ferramentaId, capturaIndex, rotuloIndice }) {
   const setaCss = 'width: 26px; height: 20px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
   const setas = `
     <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
@@ -687,13 +687,28 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, fer
       `;
     }
 
+    // Nome que aparece no Índice pra ESTA posição — editável, porque com
+    // a mesma ferramenta podendo entrar várias vezes (ver o "+" acima),
+    // o nome padrão (sempre o mesmo, ex. "Mandala Personalizada") repete
+    // no Índice e não dá pra saber qual é qual. Pré-preenchido com o
+    // nome padrão, mas o astrólogo pode reescrever pra algo específico
+    // dessa posição (ex. "Mandala com a Fortuna em Casa 1").
+    const tituloIndicePadrao = (info && (info.tituloIndice || info.label)) || rotulo;
+    const rotuloIndiceAtual = rotuloIndice || tituloIndicePadrao;
+
     return `
-      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px;">
-        ${setas}
-        <input type="checkbox" data-bloco-check="${id}" checked>
-        <span style="flex: 1; font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
-        ${extrasCapturada}
-        <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="this.closest('.rel-editor-linha').remove()"></i>
+      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px; padding: 12px 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${setas}
+          <input type="checkbox" data-bloco-check="${id}" checked>
+          <span style="flex: 1; font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
+          ${extrasCapturada}
+          <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="this.closest('.rel-editor-linha').remove()"></i>
+        </div>
+        <div style="margin-top: 8px; padding-left: 36px;">
+          <label style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Nome no Índice</label>
+          <input type="text" data-bloco-titulo-indice="${id}" class="modal-input" value="${escapeHtml(rotuloIndiceAtual)}" style="font-size: 12.5px; padding: 6px 8px; margin-top: 2px;">
+        </div>
       </div>
     `;
   }
@@ -799,7 +814,7 @@ function abrirEditorPresetRelatorio(idx) {
       const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[idFerramenta];
       return relatorioLinhaEditorHtml({
         id: bloco.id, tipo: 'ferramenta', rotulo: info ? info.label : idFerramenta,
-        ferramentaId: bloco.ferramentaId, capturaIndex: bloco.capturaIndex
+        ferramentaId: bloco.ferramentaId, capturaIndex: bloco.capturaIndex, rotuloIndice: bloco.rotuloIndice
       });
     }
     const padrao = catalogoPorId[bloco.id];
@@ -966,6 +981,9 @@ async function salvarEdicaoPresetRelatorio(idx) {
       const idxCaptura = parseInt(linha.dataset.capturaIndex, 10) || 0;
       if (idFerramenta && idFerramenta !== id) bloco.ferramentaId = idFerramenta;
       if (idxCaptura > 0) bloco.capturaIndex = idxCaptura;
+      const inputRotuloIndice = linha.querySelector(`[data-bloco-titulo-indice="${id}"]`);
+      const rotuloIndice = inputRotuloIndice && inputRotuloIndice.value.trim();
+      if (rotuloIndice) bloco.rotuloIndice = rotuloIndice;
       novosBlocos.push(bloco);
       return;
     }
@@ -1330,7 +1348,11 @@ function renderBlocoRelatorio(bloco, opts) {
        aparecer em várias posições do preset, cada uma com sua própria
        captura e seu próprio texto ao redor. */
     if (info && info.capturada) {
-      const titulo = (info.tituloIndice || info.label);
+      // rotuloIndice: nome que o astrólogo escreveu pra ESTA posição, no
+      // campo "Nome no Índice" do editor — sem ele, cai no nome padrão
+      // (sempre igual pra ferramenta, o que confunde quando a mesma
+      // ferramenta entra em mais de um lugar do relatório).
+      const titulo = bloco.rotuloIndice || (info.tituloIndice || info.label);
       opts.itensIndice.push({ titulo, alvo: bloco.id });
       const capturas = capturasDaFerramenta(idFerramenta);
       const idxCaptura = typeof bloco.capturaIndex === 'number' ? bloco.capturaIndex : 0;
@@ -1355,7 +1377,7 @@ function renderBlocoRelatorio(bloco, opts) {
     }
 
     if (bloco.id === 'mandala_natal' && opts.png1) {
-      opts.itensIndice.push({ titulo: (info && info.tituloIndice) || 'Mapa Natal', alvo: bloco.id });
+      opts.itensIndice.push({ titulo: bloco.rotuloIndice || (info && info.tituloIndice) || 'Mapa Natal', alvo: bloco.id });
       return `
         <section class="rel-page rel-page-mapa" data-pg="${escapeHtml(bloco.id)}">
           <div class="rel-h1">Mapa Natal</div>
