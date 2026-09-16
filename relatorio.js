@@ -1186,6 +1186,19 @@ function nomeArquivoRelatorioPDF(preset) {
   return bruto.replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
 }
 
+/* Escreve o número da página no canto inferior direito, direto no PDF
+   (não é uma captura de tela — é texto de verdade, desenhado pelo
+   próprio jsPDF em cima da imagem já colada) — assim funciona certinho
+   mesmo nas páginas que vieram de um bloco fatiado (um texto bem
+   comprido que ocupou mais de uma folha), onde cada fatia physicamente
+   é uma página своя e precisa do seu próprio número. Sem isso, o Índice
+   apontava pra números que não apareciam em lugar nenhum do PDF. */
+function numerarPaginaPdf(pdf, numero, larguraMm, alturaMm) {
+  pdf.setFontSize(9);
+  pdf.setTextColor(154, 109, 24); // mesmo tom dourado do número no Índice em tela
+  pdf.text(String(numero), larguraMm - 12, alturaMm - 10, { align: 'right' });
+}
+
 /* GERA O PDF DIRETO EM CÓDIGO — sem passar pelo "Imprimir" do navegador.
    Foi trocado por isso porque cada navegador/aparelho (Chrome, Safari,
    iPad) tem seu próprio motor de impressão, com seus próprios
@@ -1245,6 +1258,7 @@ async function baixarRelatorioPDF() {
         if (paginasPdfGeradas > 0) pdf.addPage();
         pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaEquivalenteMm, undefined, 'FAST');
         paginasPdfGeradas++;
+        numerarPaginaPdf(pdf, paginasPdfGeradas, MM_A4_LARGURA, MM_A4_ALTURA);
       } else {
         const alturaFatiaPx = Math.round(MM_A4_ALTURA * pxPorMm);
         let offsetPx = 0;
@@ -1260,6 +1274,7 @@ async function baixarRelatorioPDF() {
           const alturaFatiaMm = alturaDestaFatiaPx / pxPorMm;
           pdf.addImage(fatia.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaFatiaMm, undefined, 'FAST');
           paginasPdfGeradas++;
+          numerarPaginaPdf(pdf, paginasPdfGeradas, MM_A4_LARGURA, MM_A4_ALTURA);
           offsetPx += alturaDestaFatiaPx;
         }
       }
