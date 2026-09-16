@@ -613,9 +613,8 @@ async function capturarLotesSelecionadosParaRelatorio() {
 
   try {
     const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
-    window.relatorioCapturas = window.relatorioCapturas || {};
-    window.relatorioCapturas['lotes_calculados'] = { dataUrl: canvas.toDataURL('image/png'), capturadoEm: Date.now() };
-    alert(`${selecionados.length} lote(s) adicionado(s) ao relatório. Gere o relatório novamente para ver essa página atualizada.`);
+    const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
+    alert(`${selecionados.length} lote(s) adicionado(s) ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar lotes ao relatório:', err);
     alert('Não foi possível adicionar os lotes selecionados ao relatório.');

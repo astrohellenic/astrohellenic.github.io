@@ -141,13 +141,49 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'lotes_calculados', type: 'ferramenta' }
 ]);
 
-/* Guarda em memória (dura só a sessão atual, não persiste) a última
-   captura de cada ferramenta "reaproveitada" no relatório (ex.:
-   Profecção). É preenchida pelo botão "Adicionar ao Relatório" que
-   fica na própria tela de cada ferramenta — o astrólogo deixa a tela
-   do jeito que quer mostrar pro cliente e clica no botão; o relatório
-   usa exatamente essa imagem, sem reconstruir nada. */
+/* Guarda em memória (dura só a sessão atual, não persiste) as capturas
+   de cada ferramenta "reaproveitada" no relatório (ex.: Profecção). É
+   preenchida pelo botão "Adicionar ao Relatório" que fica na própria
+   tela de cada ferramenta — o astrólogo deixa a tela do jeito que quer
+   mostrar pro cliente e clica no botão; o relatório usa exatamente essa
+   imagem, sem reconstruir nada.
+
+   Cada ferramenta guarda uma LISTA de capturas (não uma só): o
+   astrólogo pode clicar em "Adicionar ao Relatório" quantas vezes
+   quiser pra mesma ferramenta — ex. Isopsefia com nomes diferentes, ou
+   Circumambulação em anos diferentes — e cada clique acrescenta uma
+   página nova no relatório, sem apagar as anteriores. */
 window.relatorioCapturas = window.relatorioCapturas || {};
+
+/* Lê as capturas de uma ferramenta já sempre como lista — normaliza o
+   formato antigo (um objeto {dataUrl, capturadoEm} só, sem array) que
+   pode vir de um rascunho salvo antes desta mudança. */
+function capturasDaFerramenta(toolId) {
+  const valor = (window.relatorioCapturas || {})[toolId];
+  if (!valor) return [];
+  return Array.isArray(valor) ? valor : [valor];
+}
+window.capturasDaFerramenta = capturasDaFerramenta;
+
+/* Acrescenta uma nova captura à lista da ferramenta (nunca substitui as
+   que já estavam lá) — usada tanto pelo fluxo genérico abaixo quanto
+   pelos botões próprios da Mandala e da Calculadora de Lotes. */
+function adicionarCapturaRelatorio(toolId, dataUrl) {
+  window.relatorioCapturas = window.relatorioCapturas || {};
+  const atuais = capturasDaFerramenta(toolId);
+  atuais.push({ dataUrl, capturadoEm: Date.now() });
+  window.relatorioCapturas[toolId] = atuais;
+  return atuais.length;
+}
+window.adicionarCapturaRelatorio = adicionarCapturaRelatorio;
+
+/* Remove TODAS as capturas já adicionadas de uma ferramenta (usado pelo
+   ícone de lixeira no editor de modelo, pra desfazer uma captura feita
+   por engano sem precisar recarregar a página). */
+function limparCapturasRelatorio(toolId) {
+  if (window.relatorioCapturas) delete window.relatorioCapturas[toolId];
+}
+window.limparCapturasRelatorio = limparCapturasRelatorio;
 
 async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
   const elemento = document.getElementById(containerId);
@@ -156,8 +192,8 @@ async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
 
   try {
     const canvas = await html2canvas(elemento, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
-    window.relatorioCapturas[toolId] = { dataUrl: canvas.toDataURL('image/png'), capturadoEm: Date.now() };
-    alert(`"${rotulo}" foi adicionado ao relatório. Gere o relatório novamente para ver essa página atualizada.`);
+    const total = adicionarCapturaRelatorio(toolId, canvas.toDataURL('image/png'));
+    alert(`"${rotulo}" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar tela ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
@@ -282,35 +318,44 @@ async function carregarRascunhoPorId(rascunhoId) {
 }
 
 /* Sobe pro Storage qualquer captura ainda "solta" na memória como data
-   URL, devolvendo o mesmo mapa de capturas já só com URLs permanentes
-   (as que já vieram de um rascunho anterior — já são URL — ficam como
-   estão). Se o upload de uma captura falhar, mantém o data URL dela:
-   assim o rascunho salva mesmo assim, só que essa captura em particular
-   não sobrevive a um recarregamento de página. */
+   URL, devolvendo o mesmo mapa de capturas (agora sempre listas) já só
+   com URLs permanentes (as que já vieram de um rascunho anterior — já
+   são URL — ficam como estão). Se o upload de uma captura falhar,
+   mantém o data URL dela: assim o rascunho salva mesmo assim, só que
+   essa captura em particular não sobrevive a um recarregamento de
+   página. O nome do arquivo inclui a posição dela na lista, já que
+   agora cada ferramenta pode ter várias. */
 async function persistirCapturasRelatorio(client, userId, mapaId) {
   const capturasAtuais = window.relatorioCapturas || {};
   const resultado = {};
 
   for (const toolId of Object.keys(capturasAtuais)) {
-    const captura = capturasAtuais[toolId];
-    if (!captura || !captura.dataUrl) continue;
+    const lista = capturasDaFerramenta(toolId);
+    if (!lista.length) continue;
 
-    if (!captura.dataUrl.startsWith('data:')) {
-      resultado[toolId] = captura; // já é uma URL permanente
-      continue;
-    }
+    const listaPersistida = [];
+    for (let idx = 0; idx < lista.length; idx++) {
+      const captura = lista[idx];
+      if (!captura || !captura.dataUrl) continue;
 
-    try {
-      const resposta = await fetch(captura.dataUrl);
-      const blob = await resposta.blob();
-      const caminho = `${userId}-${mapaId}-${toolId}.png`;
-      const { error } = await client.storage.from('relatorio-capturas').upload(caminho, blob, { upsert: true, contentType: 'image/png' });
-      if (error) { resultado[toolId] = captura; continue; }
-      const { data: pub } = client.storage.from('relatorio-capturas').getPublicUrl(caminho);
-      resultado[toolId] = { dataUrl: pub.publicUrl, capturadoEm: captura.capturadoEm };
-    } catch (e) {
-      resultado[toolId] = captura;
+      if (!captura.dataUrl.startsWith('data:')) {
+        listaPersistida.push(captura); // já é uma URL permanente
+        continue;
+      }
+
+      try {
+        const resposta = await fetch(captura.dataUrl);
+        const blob = await resposta.blob();
+        const caminho = `${userId}-${mapaId}-${toolId}-${idx}.png`;
+        const { error } = await client.storage.from('relatorio-capturas').upload(caminho, blob, { upsert: true, contentType: 'image/png' });
+        if (error) { listaPersistida.push(captura); continue; }
+        const { data: pub } = client.storage.from('relatorio-capturas').getPublicUrl(caminho);
+        listaPersistida.push({ dataUrl: pub.publicUrl, capturadoEm: captura.capturadoEm });
+      } catch (e) {
+        listaPersistida.push(captura);
+      }
     }
+    resultado[toolId] = listaPersistida;
   }
 
   return resultado;
@@ -584,11 +629,24 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo }) {
   `;
 
   if (tipo === 'ferramenta') {
+    // Ferramentas "capturadas" (Profecção, Isopsefia, Liberação Zodiacal
+    // etc.) podem ter várias imagens acumuladas — mostra quantas já
+    // foram adicionadas e dá pra apagar todas de uma vez se foi engano
+    // (a mandala e a fortuna são calculadas na hora, não têm captura).
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[id];
+    const totalCapturas = (info && info.capturada) ? capturasDaFerramenta(id).length : 0;
+    const badgeCapturas = (info && info.capturada) ? `
+      <span data-badge-capturas style="font-size: 11px; font-weight: 700; color: ${totalCapturas ? '#103b70' : '#b45309'}; background: ${totalCapturas ? '#f1f5f9' : '#fffbeb'}; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;">
+        ${totalCapturas ? totalCapturas + (totalCapturas === 1 ? ' imagem' : ' imagens') : 'sem captura'}
+      </span>
+      ${totalCapturas ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px; flex-shrink: 0;" title="Apagar todas as imagens já adicionadas desta ferramenta" onclick="limparCapturasEditor('${id}', this)"></i>` : ''}
+    ` : '';
     return `
       <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px;">
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked>
-        <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
+        <span style="flex: 1; font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
+        ${badgeCapturas}
       </div>
     `;
   }
@@ -622,6 +680,24 @@ function moverBlocoEditor(btn, direcao) {
   else linha.parentElement.insertBefore(alvo, linha);
 }
 window.moverBlocoEditor = moverBlocoEditor;
+
+/* Apaga de uma vez todas as imagens já acumuladas de uma ferramenta
+   "capturada" (ex.: se o astrólogo clicou "Adicionar ao Relatório" por
+   engano, ou quer recomeçar do zero pra esse cliente) — atualiza o
+   badge da própria linha sem precisar recarregar o editor inteiro. */
+function limparCapturasEditor(toolId, iconEl) {
+  const total = capturasDaFerramenta(toolId).length;
+  const msg = total > 1
+    ? `Apagar as ${total} imagens já adicionadas desta ferramenta?`
+    : 'Apagar a imagem já adicionada desta ferramenta?';
+  if (!confirm(msg)) return;
+  limparCapturasRelatorio(toolId);
+  const linha = iconEl.closest('.rel-editor-linha');
+  const badge = linha && linha.querySelector('[data-badge-capturas]');
+  if (badge) { badge.textContent = 'sem captura'; badge.style.color = '#b45309'; badge.style.background = '#fffbeb'; }
+  iconEl.remove();
+}
+window.limparCapturasEditor = limparCapturasEditor;
 
 /* Acrescenta um bloco de texto personalizado em branco no fim da lista
    reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
@@ -969,8 +1045,8 @@ function renderBlocoRelatorio(bloco, opts) {
     if (info && info.capturada) {
       const titulo = (info.tituloIndice || info.label);
       opts.itensIndice.push({ titulo, alvo: bloco.id });
-      const captura = window.relatorioCapturas && window.relatorioCapturas[bloco.id];
-      if (!captura) {
+      const capturas = capturasDaFerramenta(bloco.id);
+      if (!capturas.length) {
         return `
           <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
             <div class="rel-h1">${escapeHtml(titulo)}</div>
@@ -982,11 +1058,13 @@ function renderBlocoRelatorio(bloco, opts) {
           </section>
         `;
       }
-      return `
-        <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
+      // Uma página por captura — o alvo do índice (âncora de numeração)
+      // aponta sempre pra primeira, as demais entram logo em seguida.
+      return capturas.map((captura, idx) => `
+        <section class="rel-page rel-page-captura" data-pg="${idx === 0 ? escapeHtml(bloco.id) : escapeHtml(bloco.id) + '-' + idx}">
           <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
         </section>
-      `;
+      `).join('');
     }
 
     if (bloco.id === 'mandala_natal' && opts.png1) {
