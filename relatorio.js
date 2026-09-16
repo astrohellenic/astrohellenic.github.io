@@ -901,17 +901,32 @@ function injetarEstilosEditorRelatorio() {
   document.head.appendChild(style);
 }
 
-function abrirEditorPresetRelatorio(idx) {
+/* "opcoes" (opcional) é usada SÓ pela reconstrução pós-prévia (ver
+   atualizarPreviaEditorModelo): reabre a tela do editor não a partir do
+   preset salvo, mas com o que estava em edição na hora — texto,
+   ordenação, nome, capa — pra nada que o astrólogo digitou se perder.
+   Precisa disso porque desenhar a mandala pra "fotografar" o PNG da
+   prévia usa #mandala-container como área de trabalho (ver
+   renderizarMandalasDoPreset/renderMandala em mandala.js), o mesmo
+   container onde a tela inteira do editor está montada — ou seja, gerar
+   a prévia apaga a tela por baixo dos panos, e só dá pra devolver a
+   experiência de "não saiu da tela" reconstruindo tudo de novo depois. */
+function abrirEditorPresetRelatorio(idx, opcoes) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset) return;
+  opcoes = opcoes || {};
 
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
+  window.relatorioEditorIdxAtual = idx;
+
   const catalogoPorId = {};
   RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
 
-  const blocosAtuais = preset.blocos || [];
+  const blocosAtuais = opcoes.blocosOverride || preset.blocos || [];
+  const nomeAtual = opcoes.nomeOverride != null ? opcoes.nomeOverride : preset.nome;
+  const capaFonteAtual = opcoes.capaFonteOverride || obterCapaFonte(preset.blocos);
   const mapaBlocosAtuais = {};
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
 
@@ -972,9 +987,9 @@ function abrirEditorPresetRelatorio(idx) {
       <div id="relEditorFormPane">
         <div style="max-width: 720px; margin: 0 auto;">
           <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
-          <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 18px; font-size: 13px;">
+          <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(nomeAtual)}" style="margin-bottom: 18px; font-size: 13px;">
 
-          ${relatorioCapaSeletorHtml(obterCapaFonte(preset.blocos))}
+          ${relatorioCapaSeletorHtml(capaFonteAtual)}
 
           <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
             Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
@@ -1010,6 +1025,24 @@ function abrirEditorPresetRelatorio(idx) {
   `;
   inicializarQuillsPendentes();
   atualizarPreviewCapaEditor();
+
+  // Reconstrução pós-prévia: a prévia já veio pronta (foi gerada ANTES da
+  // mandala apagar a tela) — só exibe, direto na aba Prévia, sem gerar de
+  // novo (senão a mandala apagaria a tela outra vez, num ciclo sem fim).
+  if (opcoes.previaProntaHtml) {
+    const painelEditar = document.getElementById('relEditorFormPane');
+    const painelPrevia = document.getElementById('relEditorPreviaPane');
+    const abaEditarBtn = document.getElementById('relAbaEditarBtn');
+    const abaPreviaBtn = document.getElementById('relAbaPreviaBtn');
+    if (painelEditar) painelEditar.style.display = 'none';
+    if (painelPrevia) {
+      painelPrevia.style.display = 'block';
+      painelPrevia.innerHTML = opcoes.previaProntaHtml;
+      numerarPaginasIndice(painelPrevia);
+    }
+    if (abaEditarBtn) abaEditarBtn.classList.remove('ativa');
+    if (abaPreviaBtn) abaPreviaBtn.classList.add('ativa');
+  }
 }
 window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
 
@@ -1186,14 +1219,26 @@ window.salvarEdicaoPresetRelatorio = salvarEdicaoPresetRelatorio;
    que sairia no PDF. Não fica se atualizando sozinha a cada tecla —
    regenera de novo toda vez que a aba é aberta, o que já elimina o ciclo
    salvar → voltar → gerar → olhar → voltar de antes, sem o custo/risco de
-   recalcular mandalas a cada letra digitada. */
-async function atualizarPreviaEditorModelo() {
+   recalcular mandalas a cada letra digitada.
+
+   CUIDADO: quando o modelo usa (ou a capa usa) a Mandala Natal/Fortuna,
+   renderizarMandalasDoPreset desenha a mandala de VERDADE dentro de
+   #mandala-container pra conseguir "fotografar" o PNG (ver renderMandala
+   em mandala.js) — e esse é o MESMO container onde a tela inteira deste
+   editor está montada. Ou seja, gerar a prévia apaga a tela do editor por
+   baixo dos panos (é assim que "some" e parece "voltar pra tela inicial",
+   mostrando a mandala ao vivo por cima de tudo). Por isso lemos TUDO que
+   precisamos do formulário ANTES dessa chamada, e reconstruímos a tela
+   inteira depois (abrirEditorPresetRelatorio com as opções de override),
+   já com a prévia pronta — sem gerar de novo, senão a mandala apagaria a
+   tela outra vez. */
+async function atualizarPreviaEditorModelo(idx) {
   const pane = document.getElementById('relEditorPreviaPane');
   if (!pane) return;
 
   pane.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando a prévia...</div>`;
 
-  const nome = (document.getElementById('relEditorNome').value || '').trim() || 'Modelo sem nome';
+  const nomeCampo = (document.getElementById('relEditorNome').value || '').trim();
   const capaFonteSelect = document.getElementById('relCapaFonte');
   const capaFonte = capaFonteSelect ? capaFonteSelect.value : 'mandala_natal';
 
@@ -1203,7 +1248,7 @@ async function atualizarPreviaEditorModelo() {
     return;
   }
   const blocosComCapa = blocosCorpo.concat([{ id: '__capa__', type: 'capa', fonte: capaFonte }]);
-  const presetPreview = { nome, blocos: blocosComCapa };
+  const presetPreview = { nome: nomeCampo || 'Modelo sem nome', blocos: blocosComCapa };
 
   const perfil = await carregarPerfilRelatorio();
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
@@ -1211,35 +1256,44 @@ async function atualizarPreviaEditorModelo() {
 
   injetarEstilosRelatorio();
   const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
-
-  pane.innerHTML = `
+  const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
       <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar Modelo" na aba Editar quando estiver satisfeito.
     </div>
     <div class="rel-viewer">${conteudoHtml}</div>
   `;
-  numerarPaginasIndice(pane);
+
+  abrirEditorPresetRelatorio(idx, {
+    blocosOverride: blocosCorpo,
+    nomeOverride: nomeCampo,
+    capaFonteOverride: capaFonte,
+    previaProntaHtml
+  });
 }
 window.atualizarPreviaEditorModelo = atualizarPreviaEditorModelo;
 
 /* Alterna entre a aba "Editar" (formulário) e "Prévia" (renderização sob
-   demanda, sem sair da tela nem salvar) — as duas ficam sempre montadas
-   no DOM, só uma é escondida por vez, então nenhum estado do formulário
-   (Quill incluso) se perde ao trocar de aba. */
+   demanda, sem sair da tela nem salvar). Quando vai pra "previa", delega
+   pra atualizarPreviaEditorModelo — que pode reconstruir a tela inteira
+   (ver o comentário lá em cima), então não dá pra só trocar o display
+   aqui como se fazia antes. Voltar pra "editar" continua sendo uma troca
+   simples: o painel do formulário já está montado no DOM. */
 function mudarAbaEditorModelo(aba) {
+  if (aba === 'previa') {
+    atualizarPreviaEditorModelo(window.relatorioEditorIdxAtual);
+    return;
+  }
+
   const painelEditar = document.getElementById('relEditorFormPane');
   const painelPrevia = document.getElementById('relEditorPreviaPane');
   const abaEditarBtn = document.getElementById('relAbaEditarBtn');
   const abaPreviaBtn = document.getElementById('relAbaPreviaBtn');
   if (!painelEditar || !painelPrevia) return;
 
-  const previa = aba === 'previa';
-  painelEditar.style.display = previa ? 'none' : 'block';
-  painelPrevia.style.display = previa ? 'block' : 'none';
-  if (abaEditarBtn) abaEditarBtn.classList.toggle('ativa', !previa);
-  if (abaPreviaBtn) abaPreviaBtn.classList.toggle('ativa', previa);
-
-  if (previa) atualizarPreviaEditorModelo();
+  painelEditar.style.display = 'block';
+  painelPrevia.style.display = 'none';
+  if (abaEditarBtn) abaEditarBtn.classList.add('ativa');
+  if (abaPreviaBtn) abaPreviaBtn.classList.remove('ativa');
 }
 window.mudarAbaEditorModelo = mudarAbaEditorModelo;
 
