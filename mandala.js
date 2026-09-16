@@ -701,10 +701,9 @@ function injetarBotaoRelatorioNaBarraSuperior() {
 
 async function capturarMandalaAtualParaRelatorio() {
   if (!currentCalculatedData) { alert('Nenhum mapa carregado pra adicionar ao relatório.'); return; }
-  window.relatorioCapturas = window.relatorioCapturas || {};
   const dataUrl = await new Promise(resolve => renderMandala(null, resolve));
-  window.relatorioCapturas['mandala_personalizada'] = { dataUrl, capturadoEm: Date.now() };
-  alert('Mandala adicionada ao relatório, do jeito que está na tela agora. Gere o relatório novamente para ver essa página atualizada.');
+  const total = adicionarCapturaRelatorio('mandala_personalizada', dataUrl);
+  alert(`Mandala adicionada ao relatório, do jeito que está na tela agora (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
 }
 window.capturarMandalaAtualParaRelatorio = capturarMandalaAtualParaRelatorio;
 
