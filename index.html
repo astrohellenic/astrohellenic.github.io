@@ -541,6 +541,7 @@ body {
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -895,22 +896,29 @@ body {
     }
 </script>
 
-<!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS -->
+<!-- CARREGAMENTO DOS MÓDULOS DE CÓDIGO SEPARADOS
+     Cada um leva "?v=AAAAMMDD" (a data do último ajuste) só pra forçar o
+     navegador (e qualquer cache no meio do caminho) a buscar a versão
+     nova em vez de reaproveitar uma cópia antiga guardada em cache —
+     sem isso, o arquivo tem exatamente a mesma URL de sempre, e nada
+     nele avisa que o conteúdo mudou. Sempre que mexer num desses
+     arquivos, atualize o "?v=" dele (só dele, não precisa dos outros)
+     pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js"></script>
-<script src="planetIcons.js"></script>
-<script src="tabelaTecnica.js"></script>
-<script src="mandala.js"></script>
-<script src="isopsefia.js"></script>
-<script src="profeccao.js"></script>
-<script src="revolucao.js"></script>
-<script src="decenios.js"></script>
-<script src="direcoes.js"></script>
-<script src="liberacao.js"></script>
-<script src="lotes-calculadora.js"></script>
-<script src="horas.js"></script>
-<script src="perguntas.js"></script>
-<script src="relatorio.js"></script>
+<script src="supabase.js?v=20260916"></script>
+<script src="planetIcons.js?v=20260916"></script>
+<script src="tabelaTecnica.js?v=20260916"></script>
+<script src="mandala.js?v=20260916"></script>
+<script src="isopsefia.js?v=20260916"></script>
+<script src="profeccao.js?v=20260916"></script>
+<script src="revolucao.js?v=20260916"></script>
+<script src="decenios.js?v=20260916"></script>
+<script src="direcoes.js?v=20260916"></script>
+<script src="liberacao.js?v=20260916"></script>
+<script src="lotes-calculadora.js?v=20260916"></script>
+<script src="horas.js?v=20260916"></script>
+<script src="perguntas.js?v=20260916"></script>
+<script src="relatorio.js?v=20260916"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
      de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão
