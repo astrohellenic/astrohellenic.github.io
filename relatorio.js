@@ -653,7 +653,7 @@ window.excluirPresetRelatorio = excluirPresetRelatorio;
    dá pra intercalar textos, mandalas e capturas de ferramenta à vontade.
    Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
    espaço pra digitar os textos. */
-function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, ferramentaId, capturaIndex, rotuloIndice }) {
+function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, formato, ferramentaId, capturaIndex, rotuloIndice }) {
   const setaCss = 'width: 26px; height: 20px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
   const setas = `
     <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
@@ -719,21 +719,104 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, fer
   }
 
   const rotuloLinha = custom ? 'Bloco personalizado' : escapeHtml(rotulo);
+
+  // O <textarea> antigo virou um "mount" vazio: o Quill de verdade só pode
+  // ser criado depois que esse HTML já estiver no DOM (ver
+  // inicializarQuillsPendentes, chamada logo depois de qualquer innerHTML/
+  // insertAdjacentHTML que use esta função). Por isso o conteúdo inicial
+  // fica registrado aqui num mapa global em vez de ir direto pro HTML —
+  // texto rico teria que escapar pra caber num atributo, o que é frágil;
+  // um mapa em memória evita isso de vez.
+  window.relatorioQuillPendentes = window.relatorioQuillPendentes || {};
+  window.relatorioQuillPendentes[id] = { corpo: corpo || '', formato: formato || 'texto' };
+
   return `
     <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px; overflow: hidden;">
       <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
         <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? '#9a6d18' : '#103b70'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
-        ${custom ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="this.closest('.rel-editor-linha').remove()"></i>` : ''}
+        ${custom ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerLinhaTextoEditor(this, '${id}')"></i>` : ''}
       </div>
       <div class="rel-editor-campos" style="padding: 0 14px 14px;">
         <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}" style="margin-bottom: 8px; font-size: 13px;">
-        <textarea data-bloco-corpo="${id}" class="modal-textarea" placeholder="${custom ? 'Texto do bloco' : ''}" style="height: 200px; font-size: 12.5px; line-height: 1.5;">${escapeHtml(corpo || '')}</textarea>
+        <div id="quill-mount-${id}" class="rel-quill-mount"></div>
       </div>
     </div>
   `;
 }
+
+/* Cria de fato os editores Quill pra cada linha de texto pendente (ver
+   comentário acima) — chamar sempre depois de qualquer trecho de HTML que
+   use relatorioLinhaEditorHtml pra um bloco de texto ter entrado no DOM.
+   Cada bloco vira, a partir do primeiro salvamento por aqui, HTML rico
+   (formato:'rich') — texto puro antigo (sem "formato") é convertido pra
+   parágrafos na entrada, mas só é reescrito no Supabase quando o modelo
+   for salvo de novo, então nenhum preset intocado muda de formato sozinho. */
+function inicializarQuillsPendentes() {
+  configurarQuillUmaVez();
+  const pendentes = window.relatorioQuillPendentes || {};
+  window.relatorioQuillInstancias = window.relatorioQuillInstancias || {};
+
+  Object.keys(pendentes).forEach(id => {
+    const mount = document.getElementById('quill-mount-' + id);
+    if (!mount || typeof Quill !== 'function') return;
+
+    const quill = new Quill(mount, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ color: [] }],
+          [{ size: ['12px', false, '18px', '26px'] }],
+          [{ list: 'ordered' }, { list: 'bullet' }]
+        ]
+      }
+    });
+
+    const { corpo, formato } = pendentes[id];
+    if (formato === 'rich') {
+      quill.clipboard.dangerouslyPasteHTML(corpo || '');
+    } else if (corpo) {
+      // Mesma regra de parágrafo que o relatório final sempre usou pra
+      // texto puro (linha em branco separa parágrafos) — pra a prévia no
+      // Quill começar igual ao que já está publicado, sem surpresa.
+      const paragrafos = corpo.split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+      quill.clipboard.dangerouslyPasteHTML(paragrafos.map(p => `<p>${escapeHtml(p)}</p>`).join(''));
+    }
+    window.relatorioQuillInstancias[id] = quill;
+  });
+
+  window.relatorioQuillPendentes = {};
+}
+window.inicializarQuillsPendentes = inicializarQuillsPendentes;
+
+/* Registra, uma única vez por carregamento da página, o tamanho de fonte
+   do Quill como atributo de ESTILO em vez de CLASSE — assim o HTML
+   exportado (quill.root.innerHTML) já sai com "font-size" inline dentro
+   do próprio texto, funcionando em qualquer lugar que a gente cole esse
+   HTML (prévia, relatório final, captura pro PDF via html2canvas), sem
+   precisar do CSS do Quill carregado ali. Sem isso, o tamanho escolhido
+   só apareceria dentro do editor (que tem a classe .ql-editor), nunca no
+   relatório de verdade — testado antes de confiar nisso (ver sessão de
+   validação com Playwright). */
+function configurarQuillUmaVez() {
+  if (window.relatorioQuillConfigurado || typeof Quill !== 'function') return;
+  const SizeStyle = Quill.import('attributors/style/size');
+  SizeStyle.whitelist = ['12px', '18px', '26px'];
+  Quill.register(SizeStyle, true);
+  window.relatorioQuillConfigurado = true;
+}
+
+/* Remove a linha (bloco personalizado) e também o Quill dela — sem isso o
+   editor ficaria "vivo" em memória apontando pra um elemento que não
+   existe mais no DOM. */
+function removerLinhaTextoEditor(iconEl, id) {
+  const linha = iconEl.closest('.rel-editor-linha');
+  if (linha) linha.remove();
+  if (window.relatorioQuillInstancias) delete window.relatorioQuillInstancias[id];
+}
+window.removerLinhaTextoEditor = removerLinhaTextoEditor;
 
 /* Move a linha (que contém o botão clicado) uma posição pra cima (-1) ou
    pra baixo (1) dentro do container reordenável — troca de posição no DOM
@@ -792,8 +875,31 @@ function adicionarBlocoCustomizadoEditor() {
   if (!container) return;
   const novoId = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({ id: novoId, tipo: 'texto', custom: true, titulo: '', corpo: '' }));
+  inicializarQuillsPendentes();
 }
 window.adicionarBlocoCustomizadoEditor = adicionarBlocoCustomizadoEditor;
+
+/* CSS só da TELA de edição do modelo (abas Editar/Prévia, moldura do
+   Quill, aviso da prévia) — injetado uma única vez, separado do CSS do
+   relatório em si (injetarEstilosRelatorio), que é usado tanto aqui
+   (dentro da aba Prévia) quanto na geração final. */
+function injetarEstilosEditorRelatorio() {
+  if (document.getElementById('relatorio-editor-estilos')) return;
+  const style = document.createElement('style');
+  style.id = 'relatorio-editor-estilos';
+  style.textContent = `
+      .rel-editor-tabs { display: flex; gap: 4px; border-bottom: 1px solid #e2d9c2; margin-bottom: 20px; }
+      .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; }
+      .rel-editor-tab.ativa { color: #103b70; border-bottom-color: #103b70; }
+
+      .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
+      .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
+      .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
+
+      .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: #fffbeb; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #9a6d18; font-weight: 600; }
+  `;
+  document.head.appendChild(style);
+}
 
 function abrirEditorPresetRelatorio(idx) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
@@ -827,7 +933,7 @@ function abrirEditorPresetRelatorio(idx) {
     return relatorioLinhaEditorHtml({
       id: bloco.id, tipo: 'texto', custom,
       rotulo: custom ? '' : padrao.titulo,
-      titulo: bloco.titulo, corpo: bloco.corpo
+      titulo: bloco.titulo, corpo: bloco.corpo, formato: bloco.formato
     });
   }).join('');
 
@@ -843,6 +949,8 @@ function abrirEditorPresetRelatorio(idx) {
     `;
   }).join('');
 
+  injetarEstilosEditorRelatorio();
+
   container.innerHTML = `
     <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
 
@@ -854,41 +962,53 @@ function abrirEditorPresetRelatorio(idx) {
         <div style="width: 76px;"></div>
       </div>
 
-      <div style="max-width: 720px; margin: 0 auto;">
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
-        <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 18px; font-size: 13px;">
-
-        ${relatorioCapaSeletorHtml(obterCapaFonte(preset.blocos))}
-
-        <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
-          Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele.
-        </div>
-
-        <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
-
-        ${linhasParaAdicionar ? `
-          <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">Adicionar ao Modelo</div>
-          <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
-            Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
-          </div>
-          ${linhasParaAdicionar}
-        ` : ''}
-
-        <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
-          <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
-          <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: #103b70; padding: 8px 12px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Adicionar</button>
-        </div>
-        <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
-          Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
-        </div>
-
-        <button onclick="salvarEdicaoPresetRelatorio(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
-          Salvar Modelo
+      <div class="rel-editor-tabs" style="max-width: 720px; margin: 0 auto;">
+        <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
+        <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
+          <i class="fa-solid fa-eye"></i> Prévia
         </button>
       </div>
 
+      <div id="relEditorFormPane">
+        <div style="max-width: 720px; margin: 0 auto;">
+          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
+          <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(preset.nome)}" style="margin-bottom: 18px; font-size: 13px;">
+
+          ${relatorioCapaSeletorHtml(obterCapaFonte(preset.blocos))}
+
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
+            Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
+          </div>
+
+          <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
+
+          ${linhasParaAdicionar ? `
+            <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">Adicionar ao Modelo</div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
+              Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
+            </div>
+            ${linhasParaAdicionar}
+          ` : ''}
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
+            <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
+            <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: #103b70; padding: 8px 12px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Adicionar</button>
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
+            Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
+          </div>
+
+          <button onclick="salvarEdicaoPresetRelatorio(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
+            Salvar Modelo
+          </button>
+        </div>
+      </div>
+
+      <div id="relEditorPreviaPane" style="display: none;"></div>
+
     </div>
   `;
+  inicializarQuillsPendentes();
   atualizarPreviewCapaEditor();
 }
 window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
@@ -955,20 +1075,19 @@ function atualizarPreviewCapaEditor() {
 }
 window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 
-/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA —
-   a ordem gravada é a ordem das linhas dentro de #relEditorOrdenavel no
-   momento do clique, então reflete qualquer reordenação feita com ▲▼. */
-async function salvarEdicaoPresetRelatorio(idx) {
-  const preset = (window.relatorioPresetsCarregados || [])[idx];
-  if (!preset) return;
-
-  const nome = document.getElementById('relEditorNome').value.trim();
-  if (!nome) { alert("Informe um nome pro modelo."); return; }
-
+/* Lê o estado ATUAL do formulário do editor (linhas reordenáveis, cada
+   Quill, e o catálogo marcado pra adicionar) e devolve a lista de blocos
+   — SEM tocar no Supabase. Usada tanto por salvarEdicaoPresetRelatorio
+   (que ainda acrescenta o bloco de capa e grava de verdade) quanto pela
+   prévia sob demanda (atualizarPreviaEditorModelo), que precisa
+   exatamente do mesmo resultado sem persistir nada. A ordem devolvida é
+   a ordem das linhas dentro de #relEditorOrdenavel no momento da
+   chamada, então reflete qualquer reordenação feita com ▲▼. */
+function lerBlocosDoEditor() {
   const catalogoPorId = {};
   RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
 
-  const novosBlocos = [];
+  const blocos = [];
 
   document.querySelectorAll('#relEditorOrdenavel .rel-editor-linha').forEach(linha => {
     const id = linha.dataset.blocoId;
@@ -989,18 +1108,19 @@ async function salvarEdicaoPresetRelatorio(idx) {
       const inputRotuloIndice = linha.querySelector(`[data-bloco-titulo-indice="${id}"]`);
       const rotuloIndice = inputRotuloIndice && inputRotuloIndice.value.trim();
       if (rotuloIndice) bloco.rotuloIndice = rotuloIndice;
-      novosBlocos.push(bloco);
+      blocos.push(bloco);
       return;
     }
 
     const padrao = catalogoPorId[id];
     const custom = linha.dataset.custom === '1';
     const tituloInput = linha.querySelector(`[data-bloco-titulo="${id}"]`);
-    const corpoInput = linha.querySelector(`[data-bloco-corpo="${id}"]`);
     const titulo = (tituloInput && tituloInput.value.trim()) || (custom ? '' : padrao.titulo);
-    const corpo = (corpoInput && corpoInput.value) || (custom ? '' : padrao.corpo);
-    if (custom && !titulo && !corpo.trim()) return; // personalizado em branco, nunca preenchido — ignora
-    novosBlocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo });
+    const quill = (window.relatorioQuillInstancias || {})[id];
+    const corpoHtml = quill ? quill.root.innerHTML : '';
+    const corpoVazio = quill ? !quill.getText().trim() : true;
+    if (custom && !titulo && corpoVazio) return; // personalizado em branco, nunca preenchido — ignora
+    blocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo: corpoHtml, formato: 'rich' });
   });
 
   document.querySelectorAll('input[data-adicionar-id]').forEach(checkbox => {
@@ -1008,12 +1128,24 @@ async function salvarEdicaoPresetRelatorio(idx) {
     const id = checkbox.dataset.adicionarId;
     const padrao = catalogoPorId[id];
     if (checkbox.dataset.adicionarTipo === 'ferramenta') {
-      novosBlocos.push({ id, type: 'ferramenta' });
+      blocos.push({ id, type: 'ferramenta' });
     } else {
-      novosBlocos.push({ id, type: 'texto', titulo: padrao.titulo, corpo: padrao.corpo });
+      blocos.push({ id, type: 'texto', titulo: padrao.titulo, corpo: padrao.corpo });
     }
   });
 
+  return blocos;
+}
+
+/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA. */
+async function salvarEdicaoPresetRelatorio(idx) {
+  const preset = (window.relatorioPresetsCarregados || [])[idx];
+  if (!preset) return;
+
+  const nome = document.getElementById('relEditorNome').value.trim();
+  if (!nome) { alert("Informe um nome pro modelo."); return; }
+
+  const novosBlocos = lerBlocosDoEditor();
   if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
 
   // O seletor de capa fica fora da lista reordenável (não é uma página do
@@ -1045,6 +1177,71 @@ async function salvarEdicaoPresetRelatorio(idx) {
   }
 }
 window.salvarEdicaoPresetRelatorio = salvarEdicaoPresetRelatorio;
+
+/* PRÉVIA AO VIVO DO MODELO (sob demanda, ao clicar na aba "Prévia") —
+   gera o relatório a partir do que está NA TELA agora (lerBlocosDoEditor),
+   nunca do que está salvo no Supabase, reaproveitando exatamente a mesma
+   renderização do relatório final (montarConteudoRelatorioHtml +
+   renderBlocoRelatorio) pra garantir que o que aparece aqui é idêntico ao
+   que sairia no PDF. Não fica se atualizando sozinha a cada tecla —
+   regenera de novo toda vez que a aba é aberta, o que já elimina o ciclo
+   salvar → voltar → gerar → olhar → voltar de antes, sem o custo/risco de
+   recalcular mandalas a cada letra digitada. */
+async function atualizarPreviaEditorModelo() {
+  const pane = document.getElementById('relEditorPreviaPane');
+  if (!pane) return;
+
+  pane.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando a prévia...</div>`;
+
+  const nome = (document.getElementById('relEditorNome').value || '').trim() || 'Modelo sem nome';
+  const capaFonteSelect = document.getElementById('relCapaFonte');
+  const capaFonte = capaFonteSelect ? capaFonteSelect.value : 'mandala_natal';
+
+  const blocosCorpo = lerBlocosDoEditor();
+  if (!blocosCorpo.length) {
+    pane.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
+    return;
+  }
+  const blocosComCapa = blocosCorpo.concat([{ id: '__capa__', type: 'capa', fonte: capaFonte }]);
+  const presetPreview = { nome, blocos: blocosComCapa };
+
+  const perfil = await carregarPerfilRelatorio();
+  const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
+  const { png1, png2 } = await renderizarMandalasDoPreset(blocosComCapa, capaFonte);
+
+  injetarEstilosRelatorio();
+  const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+
+  pane.innerHTML = `
+    <div class="rel-previa-aviso no-print">
+      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar Modelo" na aba Editar quando estiver satisfeito.
+    </div>
+    <div class="rel-viewer">${conteudoHtml}</div>
+  `;
+  numerarPaginasIndice(pane);
+}
+window.atualizarPreviaEditorModelo = atualizarPreviaEditorModelo;
+
+/* Alterna entre a aba "Editar" (formulário) e "Prévia" (renderização sob
+   demanda, sem sair da tela nem salvar) — as duas ficam sempre montadas
+   no DOM, só uma é escondida por vez, então nenhum estado do formulário
+   (Quill incluso) se perde ao trocar de aba. */
+function mudarAbaEditorModelo(aba) {
+  const painelEditar = document.getElementById('relEditorFormPane');
+  const painelPrevia = document.getElementById('relEditorPreviaPane');
+  const abaEditarBtn = document.getElementById('relAbaEditarBtn');
+  const abaPreviaBtn = document.getElementById('relAbaPreviaBtn');
+  if (!painelEditar || !painelPrevia) return;
+
+  const previa = aba === 'previa';
+  painelEditar.style.display = previa ? 'none' : 'block';
+  painelPrevia.style.display = previa ? 'block' : 'none';
+  if (abaEditarBtn) abaEditarBtn.classList.toggle('ativa', !previa);
+  if (abaPreviaBtn) abaPreviaBtn.classList.toggle('ativa', previa);
+
+  if (previa) atualizarPreviaEditorModelo();
+}
+window.mudarAbaEditorModelo = mudarAbaEditorModelo;
 
 /* Chave estável pra "lembrar" um preset entre sessões: usa o id (o caso
    normal, já salvo no Supabase) e cai pro nome quando ainda não tem id
@@ -1142,7 +1339,12 @@ function voltarConfigRelatorio() {
   iniciarModuloRelatorio();
 }
 
-function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
+/* Monta o conteúdo de dentro de ".rel-viewer" (capa + índice + páginas +
+   encerramento) a partir de um preset (salvo ou "em memória", tanto faz)
+   — extraída de montarEExibirRelatorio pra ser reaproveitada também pela
+   prévia sob demanda do editor de modelo (atualizarPreviaEditorModelo),
+   garantindo que as duas usam exatamente a mesma renderização. */
+function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
   const marcaHtml = perfil.logo_url
     ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
@@ -1153,8 +1355,6 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
   const blocos = (preset.blocos || []).filter(b => b.type !== 'capa');
   const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2);
 
-  injetarEstilosRelatorio();
-
   const itensIndice = [];
   const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice })).join('');
 
@@ -1162,9 +1362,56 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
     <li><span>${escapeHtml(item.titulo)}</span><span class="rel-num-pagina" data-alvo="${item.alvo}"></span></li>
   `).join('');
 
+  return `
+    <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
+         cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
+    <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa">
+      <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
+      ${imgCapa ? `
+        <div class="rel-capa-centro">
+          <img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">
+        </div>
+      ` : '<div class="rel-capa-centro"></div>'}
+      <div class="rel-marca-rodape">
+        ${marcaHtml}
+        <div class="rel-powered-by">powered by Astro Hellenic</div>
+      </div>
+    </section>
+
+    <!-- ÍNDICE -->
+    <section class="rel-page" data-pg="indice">
+      <div class="rel-h1">Índice</div>
+      <ul class="rel-indice">${indiceHtml}</ul>
+    </section>
+
+    ${paginasHtml}
+
+    <!-- ENCERRAMENTO -->
+    <section class="rel-page rel-page-encerramento" data-pg="encerramento">
+      <div class="rel-corpo">
+        <p>Caso tenha alguma dúvida ou queira complementar seu autoconhecimento através de previsões com técnicas como Revolução Solar ou Liberação Zodiacal, basta entrar em contato.</p>
+        <p>Espero ter contribuído para seu autoconhecimento e que você alcance seus objetivos e tenha grande paz interior.</p>
+        <p>Namastê 🙏</p>
+      </div>
+      ${rodapeAstrologo.length ? `
+        <div class="rel-rodape-astrologo">
+          ${perfil.nome ? `<div class="rel-rodape-nome">${escapeHtml(perfil.nome)}</div>` : ''}
+          ${perfil.telefone ? `<div>${escapeHtml(perfil.telefone)}</div>` : ''}
+          ${perfil.email ? `<div>${escapeHtml(perfil.email)}</div>` : ''}
+        </div>
+      ` : ''}
+    </section>
+  `;
+}
+
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
+  injetarEstilosRelatorio();
+
   // Guardado num global pra "Baixar PDF" (chamada só pelo onclick do botão
   // abaixo, sem parâmetro) saber o nome do modelo pro nome do arquivo.
   window.relatorioPresetAtual = preset;
+
+  const conteudoHtml = montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
 
   const htmlRelatorio = `
     <div class="rel-toolbar no-print">
@@ -1173,46 +1420,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
     </div>
 
     <div class="rel-viewer">
-
-      <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
-           cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
-      <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa">
-        <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
-        ${imgCapa ? `
-          <div class="rel-capa-centro">
-            <img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">
-          </div>
-        ` : '<div class="rel-capa-centro"></div>'}
-        <div class="rel-marca-rodape">
-          ${marcaHtml}
-          <div class="rel-powered-by">powered by Astro Hellenic</div>
-        </div>
-      </section>
-
-      <!-- ÍNDICE -->
-      <section class="rel-page" data-pg="indice">
-        <div class="rel-h1">Índice</div>
-        <ul class="rel-indice">${indiceHtml}</ul>
-      </section>
-
-      ${paginasHtml}
-
-      <!-- ENCERRAMENTO -->
-      <section class="rel-page rel-page-encerramento" data-pg="encerramento">
-        <div class="rel-corpo">
-          <p>Caso tenha alguma dúvida ou queira complementar seu autoconhecimento através de previsões com técnicas como Revolução Solar ou Liberação Zodiacal, basta entrar em contato.</p>
-          <p>Espero ter contribuído para seu autoconhecimento e que você alcance seus objetivos e tenha grande paz interior.</p>
-          <p>Namastê 🙏</p>
-        </div>
-        ${rodapeAstrologo.length ? `
-          <div class="rel-rodape-astrologo">
-            ${perfil.nome ? `<div class="rel-rodape-nome">${escapeHtml(perfil.nome)}</div>` : ''}
-            ${perfil.telefone ? `<div>${escapeHtml(perfil.telefone)}</div>` : ''}
-            ${perfil.email ? `<div>${escapeHtml(perfil.email)}</div>` : ''}
-          </div>
-        ` : ''}
-      </section>
-
+      ${conteudoHtml}
     </div>
   `;
 
@@ -1347,7 +1555,14 @@ window.baixarRelatorioPDF = baixarRelatorioPDF;
    opts.itensIndice pra virar uma linha na página de Índice. */
 function renderBlocoRelatorio(bloco, opts) {
   if (bloco.type === 'texto') {
-    const paragrafos = (bloco.corpo || '').split(/\n\s*\n/).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+    // formato "rich": o corpo já É o HTML (negrito/cor/tamanho/lista,
+    // vindo do Quill no editor) — cola direto, sem escapar nem re-quebrar
+    // em parágrafos. Sem "formato" (todo preset salvo antes desta versão):
+    // continua exatamente como sempre foi, texto puro com linha em branco
+    // separando parágrafo.
+    const corpoHtml = bloco.formato === 'rich'
+      ? (bloco.corpo || '')
+      : (bloco.corpo || '').split(/\n\s*\n/).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`).join('');
     let tabelaExtra = '';
     if (bloco.id === 'sete-lotes') tabelaExtra = renderTabelaLotesRelatorio(opts.lotesNatal, opts.ascAbsNatal);
     if (bloco.id === 'dodecatemorias') tabelaExtra = renderTabelaDodecatemoriasRelatorio();
@@ -1357,7 +1572,7 @@ function renderBlocoRelatorio(bloco, opts) {
     return `
       <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
         <div class="rel-h1">${escapeHtml(bloco.titulo)}</div>
-        <div class="rel-corpo">${paragrafos}</div>
+        <div class="rel-corpo">${corpoHtml}</div>
         ${tabelaExtra}
       </section>
     `;
@@ -1601,6 +1816,13 @@ function injetarEstilosRelatorio() {
       }
 
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
+
+      /* Listas do texto rico (Quill) dentro de um bloco de texto — o
+         resto da formatação (negrito, itálico, sublinhado, cor, tamanho)
+         já vem com tag/estilo inline suficiente sozinha, sem precisar de
+         CSS extra aqui. */
+      .rel-corpo ul, .rel-corpo ol { font-size: 12.5px; line-height: 1.85; color: #1e293b; margin: 0 0 14px; padding-left: 22px; }
+      .rel-corpo li { margin-bottom: 4px; }
 
       .rel-indice { list-style: none; padding: 0; margin: 0; }
       .rel-indice li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; font-weight: 600; color: #103b70; padding: 10px 4px; border-bottom: 1px solid #e2d9c2; }
