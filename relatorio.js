@@ -1152,7 +1152,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
       ${paginasHtml}
 
       <!-- ENCERRAMENTO -->
-      <section class="rel-page rel-page-encerramento">
+      <section class="rel-page rel-page-encerramento" data-pg="encerramento">
         <div class="rel-corpo">
           <p>Caso tenha alguma dúvida ou queira complementar seu autoconhecimento através de previsões com técnicas como Revolução Solar ou Liberação Zodiacal, basta entrar em contato.</p>
           <p>Espero ter contribuído para seu autoconhecimento e que você alcance seus objetivos e tenha grande paz interior.</p>
@@ -1237,14 +1237,20 @@ async function baixarRelatorioPDF() {
 
       // Tira a sombra e a margem que só existem pra separar as páginas
       // na prévia em tela — numa folha de PDF de verdade não fazem
-      // sentido — e devolve como estava depois de capturar.
+      // sentido — e o selo de número em tela (o número de verdade quem
+      // escreve é o jsPDF, depois, direto na página; se a captura
+      // incluísse o selo também, o número saía em dobro). Devolve tudo
+      // como estava depois de capturar.
       const boxShadowOriginal = pagina.style.boxShadow;
       const margemOriginal = pagina.style.margin;
+      const seloNumero = pagina.querySelector(':scope > .rel-num-pagina-canto');
       pagina.style.boxShadow = 'none';
       pagina.style.margin = '0';
+      if (seloNumero) seloNumero.style.display = 'none';
       const canvas = await html2canvas(pagina, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       pagina.style.boxShadow = boxShadowOriginal;
       pagina.style.margin = margemOriginal;
+      if (seloNumero) seloNumero.style.display = '';
 
       // Praticamente todo bloco cabe exatamente numa folha (a prévia em
       // tela já é do tamanho A4). Mas um texto personalizado bem comprido
@@ -1384,6 +1390,24 @@ function numerarPaginasIndice(container) {
 
   paginas.forEach(pagina => {
     numeroPorAlvo[pagina.dataset.pg] = numeroAtual;
+
+    // Número no canto inferior direito da PRÓPRIA página (não só no
+    // Índice) — pra aparecer tanto na prévia em tela quanto pra quem só
+    // olhar aqui sem baixar o PDF. É só um número por página (mesmo
+    // quando o bloco estimar mais de uma folha), então nas raras páginas
+    // que passam de uma folha de conteúdo esse número em tela pode ficar
+    // defasado — o número de verdade em cada folha do PDF baixado é
+    // escrito à parte, direto pelo jsPDF (ver numerarPaginaPdf), e esse
+    // sim está sempre correto. Escondido durante a captura de cada
+    // página (baixarRelatorioPDF), senão ficaria duplicado no PDF.
+    let selo = pagina.querySelector(':scope > .rel-num-pagina-canto');
+    if (!selo) {
+      selo = document.createElement('div');
+      selo.className = 'rel-num-pagina-canto';
+      pagina.appendChild(selo);
+    }
+    selo.textContent = numeroAtual;
+
     const altura = pagina.getBoundingClientRect().height;
     numeroAtual += Math.max(1, Math.round(altura / paginaAlturaPx));
   });
@@ -1486,6 +1510,7 @@ function injetarEstilosRelatorio() {
       .rel-viewer { background: #e5e7eb; padding: 24px 12px; }
 
       .rel-page {
+        position: relative;
         width: 210mm;
         max-width: 100%;
         margin: 0 auto 24px auto;
@@ -1495,6 +1520,13 @@ function injetarEstilosRelatorio() {
         box-sizing: border-box;
         font-family: 'Montserrat', sans-serif;
       }
+
+      /* Número da página, canto inferior direito — mesma posição e cor
+         do número escrito de verdade em cada folha do PDF baixado (ver
+         numerarPaginaPdf em baixarRelatorioPDF). Escondido durante a
+         captura de tela de cada página pro PDF, senão ficaria em dobro
+         (o da imagem capturada + o que o jsPDF escreve por cima). */
+      .rel-num-pagina-canto { position: absolute; right: 10mm; bottom: 8mm; font-size: 10px; font-weight: 700; color: #9a6d18; font-family: 'Montserrat', sans-serif; }
 
       /* Altura mínima proporcional à largura (razão A4: 210x297mm), só
          na PRÉVIA em tela — trancada num "@media screen" (nunca dentro
