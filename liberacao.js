@@ -28,30 +28,52 @@ const MONOLINE_ZODIAC_SVGS_ZR = [
 const SIGN_NAMES_ZR = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
 const SIGN_COLORS_ZR = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
 
+/* Embrulha um SVG "solto" (string) numa <img src="data:image/svg+xml,...">
+   em vez de deixar o <svg> direto no HTML. O html2canvas (usado pelo
+   botão "Adicionar ao Relatório") tem bugs conhecidos com SVG inline
+   dentro de tabelas aninhadas (some inteiro, sem nem dar erro) e com
+   viewBox de origem negativa como "-12 -12 24 24" (ícone sai cortado) —
+   os dois casos exatos dos ícones desta tela (signo dentro das tabelas
+   L2/L3/L4, e o selo redondo do lote ativo). Como <img> vira só um
+   desenho já pronto (o navegador rasteriza o SVG antes, fora do
+   html2canvas), esses dois bugs somem. Precisa do "xmlns" — sem ele o
+   SVG isolado numa data URI não é XML válido e não carrega como imagem
+   (inline direto no HTML não precisa, mas isolado como recurso precisa). */
+function svgComoImagemZR(svgInterno, largura, altura, viewBox) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="${viewBox}">${svgInterno}</svg>`;
+  return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
+}
+
 function getSignSVGZR(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_ZR[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</svg>`;
+  const interno = `<g style="color: ${SIGN_COLORS_ZR[signIndex]};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
+  return svgComoImagemZR(interno, size, size, '0 0 64 64');
 }
 
 function getLotIconSVG(lotKey) {
+  // As duas telas que usam esse ícone (o menu de lotes e o botão "Lote
+  // Ativo") sempre pintam com essa mesma cor — por isso dá pra gravar a
+  // cor direto no SVG (teria que ser assim de qualquer jeito: uma <img>
+  // isolada não herda "currentColor" de fora, precisa vir com a cor já
+  // dentro dela).
+  const cor = '#103b70';
+  let interno;
   if (lotKey === 'fortune') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
+    interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${cor}" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${cor}" stroke-width="1.8"/>`;
+  } else if (lotKey === 'spirit') {
+    interno = `<text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="${cor}" text-anchor="middle">Φ</text>`;
+  } else {
+    const lotConfig = {
+      venus:   { sym: '♀', y: 2, size: 15 },
+      mercury: { sym: '☿', y: 4, size: 15 },
+      mars:    { sym: '♂', y: 2, size: 15 },
+      jupiter: { sym: '♃', y: 4, size: 15 },
+      saturn:  { sym: '♄', y: 4, size: 15 }
+    };
+    const cfg = lotConfig[lotKey] || { sym: '', y: 0, size: 10 };
+    interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="${cor}" text-anchor="middle">${cfg.sym}</text>`;
   }
-  if (lotKey === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
-  }
-
-  const lotConfig = {
-    venus:   { sym: '♀', y: 2, size: 15 },
-    mercury: { sym: '☿', y: 4, size: 15 },
-    mars:    { sym: '♂', y: 2, size: 15 },
-    jupiter: { sym: '♃', y: 4, size: 15 },
-    saturn:  { sym: '♄', y: 4, size: 15 }
-  };
-
-  const cfg = lotConfig[lotKey] || { sym: '', y: 0, size: 10 };
-
-  return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="currentColor" text-anchor="middle">${cfg.sym}</text></svg>`;
+  return svgComoImagemZR(interno, 22, 22, '-12 -12 24 24');
 }
 
 function iniciarModuloLiberacao() {
