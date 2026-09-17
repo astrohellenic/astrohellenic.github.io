@@ -28,16 +28,27 @@
       box-sizing: border-box;
     }
 
-    body { 
-      font-family: 'Montserrat', sans-serif; 
-      background-color: var(--bg-main); 
-      color: var(--text-main); 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100vh; 
-      margin: 0; 
-      padding: 20px; 
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      gap: 16px;
+    }
+
+    /* Igual ao rodapé da capa dos relatórios (ver .rel-powered-by em relatorio.js) */
+    .form-powered-by {
+      font-size: 9px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
     .form-card { 
@@ -300,6 +311,8 @@
     <button type="submit" class="btn-submit">Enviar Informações</button>
   </form>
 </div>
+
+<div class="form-powered-by">powered by Astro Hellenic</div>
 
 <!-- MODAL DE CONFIRMAÇÃO DADOS -->
 <div id="confirmModal" class="modal-overlay">
