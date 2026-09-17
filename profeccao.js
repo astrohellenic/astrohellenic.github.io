@@ -1081,7 +1081,7 @@
                 <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
             </div>
 
-            <div id="profMensalOuterScroll" style="text-align: center; margin-top: 10px;">
+            <div id="profMensalOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; margin-top: 10px; touch-action: pan-y;">
               <div id="profMensalScaleBox">
               <div id="profMensalWrapper" style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; transform-origin: top left;">
                 <table id="profMensalTable" style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
@@ -1147,13 +1147,18 @@
             wrapper.style.width = 'max-content';
             const naturalWidth = wrapper.offsetWidth;
             const naturalHeight = wrapper.offsetHeight;
-            wrapper.style.width = '';
 
             if (availableWidth > 0 && naturalWidth > availableWidth) {
                 const escala = availableWidth / naturalWidth;
                 const scaledHeight = naturalHeight * escala;
                 scaleBox.style.display = 'inline-block';
                 wrapper.style.display = 'inline-block';
+                // width:max-content continua aplicado (não é resetado aqui):
+                // se voltasse para vazio, o navegador encolheria a caixa de
+                // novo para caber no espaço disponível (mesmo problema do
+                // shrink-to-fit acima), e o transform passaria a escalar uma
+                // caixa mais estreita que a medida — sobrando um vão vazio à
+                // direita da tabela em vez dela preencher o cartão.
                 wrapper.style.transform = `scale(${escala})`;
                 scaleBox.style.width = (naturalWidth * escala) + 'px';
                 scaleBox.style.height = scaledHeight + 'px';
@@ -1164,6 +1169,7 @@
             } else {
                 // Cabe do jeito de sempre: desfaz a medição e devolve tudo
                 // ao estado original (nenhuma mudança visual).
+                wrapper.style.width = '';
                 wrapper.style.display = '';
                 wrapper.style.transform = '';
                 tabelaMensal.style.width = '100%';
