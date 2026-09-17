@@ -358,7 +358,7 @@ function renderMatrizVisibilidadeHTML(data) {
 
   let h = `
     <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
-    <div id="matrizOuterScroll" style="overflow-x: auto; text-align: center; touch-action: pan-y;">
+    <div id="matrizOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; touch-action: pan-y;">
       <div id="matrizScaleBox" style="display: inline-block;">
       <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
         <table class="tabela-enxuta" style="font-size: 11px; background: #ffffff;">
@@ -530,7 +530,7 @@ function renderPainelTecnico(data, containerId) {
     html += renderMatrizVisibilidadeHTML(data);
 
     html += `
-      <div id="painelPrincipalOuterScroll" style="overflow-x: auto; margin: 24px 0; text-align: center; touch-action: pan-y;">
+      <div id="painelPrincipalOuterScroll" style="overflow-x: auto; overflow-y: hidden; margin: 24px 0; text-align: center; touch-action: pan-y;">
         <div id="painelPrincipalScaleBox" style="display: inline-block;">
         <div id="painelPrincipalWrapper" style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
           <table class="tabela-enxuta">
