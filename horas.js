@@ -411,7 +411,97 @@ function iniciarModuloHoras() {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-    <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center;">
+    <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center; box-sizing: border-box;">
+    <style>
+      #horas-container, #horas-container * { box-sizing: border-box; }
+      #horas-container .horas-card {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        text-align: left;
+        background: #fffdf5;
+        border-radius: 12px;
+        padding: 16px;
+      }
+      #horas-container .horas-card-inner {
+        background: #ffffff;
+        border: 2px solid #c59b27;
+        border-radius: 10px;
+        padding: 20px;
+        font-family: 'Montserrat', sans-serif;
+        color: var(--text-dark);
+      }
+      #horas-container .horas-info {
+        font-size: 12px;
+        opacity: 0.75;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      #horas-container .horas-atual-wrap {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      #horas-container .horas-atual-box {
+        display: inline-flex;
+        max-width: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-main);
+        border: 2px solid #1e5fa4;
+        border-radius: 10px;
+        padding: 20px;
+      }
+      #horas-container .horas-atual-linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 32px;
+        margin: 0 0 6px 0;
+      }
+      #horas-container .horas-atual-periodo {
+        font-size: 13px;
+        opacity: 0.8;
+        font-weight: 500;
+      }
+      #horas-container .horas-table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      #horas-container table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+      }
+      #horas-container table th,
+      #horas-container table td {
+        padding: 10px 8px;
+      }
+      #horas-container table td[data-col="regente"] {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      @media (max-width: 480px) {
+        #horas-container { padding: 10px; }
+        #horas-container .horas-card { padding: 8px; }
+        #horas-container .horas-card-inner { padding: 12px; }
+        #horas-container .horas-atual-box { padding: 12px; }
+        #horas-container .horas-atual-linha { gap: 16px; }
+        #horas-container table { font-size: 11px; }
+        #horas-container table th, #horas-container table td { padding: 7px 2px; }
+        #horas-container table td[data-col="regente"] { font-size: 12px; gap: 4px; }
+        #horas-container table svg { width: 22px !important; height: auto !important; }
+      }
+      @media (max-width: 360px) {
+        #horas-container table { font-size: 10px; }
+        #horas-container table th, #horas-container table td { padding: 6px 2px; }
+        #horas-container table svg { width: 20px !important; }
+      }
+    </style>
     <!-- Definições Globais dos Gradientes e Filtros dos Planetas 3D -->
     <svg style="display: none; position: absolute; width: 0; height: 0;" aria-hidden="true">
       <defs>
@@ -451,10 +541,10 @@ function iniciarModuloHoras() {
       </defs>
     </svg>
 
-    <div style="display: inline-block; text-align: left; background: #fffdf5; border-radius: 12px; padding: 16px;">
-  <div style="background: #ffffff; border: 2px solid #c59b27; border-radius: 10px; padding: 20px; font-family: 'Montserrat', sans-serif; color: var(--text-dark);">
+    <div class="horas-card">
+  <div class="horas-card-inner">
       <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
-      <p style="font-size: 12px; opacity: 0.75; text-align: center; margin-bottom: 20px; white-space: nowrap;">
+      <p class="horas-info">
         Localidade: <strong>${localNome}</strong><br>
         Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
@@ -462,9 +552,9 @@ function iniciarModuloHoras() {
 
   if (horaAtual) {
     html += `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1 / 1; box-sizing: border-box; background: var(--bg-main); border: 2px solid #1e5fa4; border-radius: 10px; padding: 20px;">
-          <div style="display: flex; align-items: flex-end; justify-content: center; gap: 32px; margin: 0 0 6px 0;">
+      <div class="horas-atual-wrap">
+        <div class="horas-atual-box">
+          <div class="horas-atual-linha">
             <div style="text-align: center;">
               <div style="font-size: 13px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Dia</div>
               ${getPlanet3DSVG(firstPlanetId, 100)}
@@ -474,7 +564,7 @@ function iniciarModuloHoras() {
               ${getPlanet3DSVG(horaAtual.planet.id, 48)}
             </div>
           </div>
-          <div style="font-size: 13px; opacity: 0.8; font-weight: 500; white-space: nowrap;">
+          <div class="horas-atual-periodo">
             ${horaAtual.period === 'diurna' ? '☀️' : '🌙'} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
           </div>
         </div>
@@ -483,16 +573,15 @@ function iniciarModuloHoras() {
   }
 
   html += `
-    <div style="overflow-x: auto; text-align: center;">
-    <div style="display: inline-block; text-align: left;">
-    <table style="border-collapse: collapse; font-size: 13px;">
+    <div class="horas-table-scroll">
+    <table>
       <thead>
         <tr style="border-bottom: 2px solid #c59b27; text-align: left; color: var(--text-dark);">
-          <th style="padding: 10px 8px;"></th>
-          <th style="padding: 10px 8px;">Período</th>
-          <th style="padding: 10px 8px;">Regente</th>
-          <th style="padding: 10px 8px;">Início</th>
-          <th style="padding: 10px 8px;">Término</th>
+          <th></th>
+          <th>Período</th>
+          <th>Regente</th>
+          <th>Início</th>
+          <th>Término</th>
         </tr>
       </thead>
       <tbody>
@@ -502,13 +591,13 @@ function iniciarModuloHoras() {
     const bgRow = item.isCurrent ? "background-color: var(--bg-main); font-weight: 700;" : "";
     html += `
       <tr style="border-bottom: 1px solid #103B70; ${bgRow}">
-        <td style="padding: 10px 8px;">${item.index}ª</td>
-        <td style="padding: 10px 8px;">${item.period === 'diurna' ? '☀️' : '🌙'}</td>
-        <td style="padding: 10px 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+        <td>${item.index}ª</td>
+        <td>${item.period === 'diurna' ? '☀️' : '🌙'}</td>
+        <td data-col="regente">
           ${getPlanet3DSVG(item.planet.id)}
         </td>
-        <td style="padding: 10px 8px;">${formatarHoraMinutoSegundo(item.start)}</td>
-        <td style="padding: 10px 8px;">${formatarHoraMinutoSegundo(item.end)}</td>
+        <td>${formatarHoraMinutoSegundo(item.start)}</td>
+        <td>${formatarHoraMinutoSegundo(item.end)}</td>
       </tr>
     `;
   });
@@ -516,7 +605,6 @@ function iniciarModuloHoras() {
   html += `
       </tbody>
     </table>
-    </div>
     </div>
   </div>
   </div>
