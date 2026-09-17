@@ -239,6 +239,29 @@ function encolherTabelasDecVisiveis(root) {
   });
 }
 
+/* Quando uma tabela já encolhida (ver encolherTabelaLargaDec) tem uma linha
+   interna aberta/fechada (ex.: o accordion do L3), sua altura real muda,
+   mas o wrapper que a envolve ficou com a altura fixa medida antes disso —
+   sem este ajuste, o conteúdo novo fica cortado (só é visível no celular,
+   que é onde a tabela chega a ser encolhida). */
+function ajustarAlturaWrapperEscaladoDec(elDentroDaTabela) {
+  const tableEl = elDentroDaTabela && elDentroDaTabela.closest
+    ? elDentroDaTabela.closest('table[data-auto-scaled-dec="1"]')
+    : null;
+  if (!tableEl) return;
+
+  const scaleBox = tableEl.parentElement;
+  const outerScroll = scaleBox && scaleBox.parentElement;
+  if (!scaleBox || !outerScroll) return;
+
+  const match = /scale\(([^)]+)\)/.exec(tableEl.style.transform);
+  const escala = match ? parseFloat(match[1]) : 1;
+  const scaledHeight = tableEl.offsetHeight * escala;
+
+  scaleBox.style.height = scaledHeight + 'px';
+  outerScroll.style.height = scaledHeight + 'px';
+}
+
 function alternarSeitaManual(val) {
   overrideStartPlanet = val;
   iniciarModuloDecenios();
@@ -403,6 +426,7 @@ function alternarL3AccordionDec(l1Idx, l2Idx, event) {
     const prevMainRow = document.getElementById(`dec_l2_row_${previousKey}`);
     if (prevSubRow) prevSubRow.style.display = 'none';
     if (prevMainRow) prevMainRow.style.backgroundColor = prevMainRow.dataset.bgDefault || '';
+    ajustarAlturaWrapperEscaladoDec(prevMainRow);
   }
 
   const subRow = document.getElementById(`dec_l3_row_${key}`);
@@ -416,6 +440,7 @@ function alternarL3AccordionDec(l1Idx, l2Idx, event) {
   mainRow.style.backgroundColor = willOpen ? '#fefcf2' : (mainRow.dataset.bgDefault || '');
 
   if (willOpen) encolherTabelasDecVisiveis(subRow);
+  ajustarAlturaWrapperEscaladoDec(mainRow);
 }
 
 // ABRE/FECHA O DETALHE DE UM L1 NA LINHA DO TEMPO (COM A TABELA DE L2 DENTRO)
