@@ -626,8 +626,20 @@ async function executarCalculo() {
       Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno), lat: planetas.Saturno ? parseFloat(planetas.Saturno.latitude) || 0 : 0 }
       };
 
-                if (typeof iniciarModuloHoras === 'function') {
-      iniciarModuloHoras();
+    /* Só precisamos que essa chamada calcule window.horasPlanetariasAtual
+       (regente do dia/da hora, usado em mais telas) — não que ela apareça
+       na tela. Rodando num container escondido em vez do mandala-container,
+       evita aquele "flash" de 1 frame das Horas Planetárias toda vez que um
+       mapa é calculado. */
+    if (typeof iniciarModuloHoras === 'function') {
+      let containerOculto = document.getElementById('horas-calculo-oculto');
+      if (!containerOculto) {
+        containerOculto = document.createElement('div');
+        containerOculto.id = 'horas-calculo-oculto';
+        containerOculto.style.display = 'none';
+        document.body.appendChild(containerOculto);
+      }
+      iniciarModuloHoras('horas-calculo-oculto');
     }
     renderMandala();
     return true;

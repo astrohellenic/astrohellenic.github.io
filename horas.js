@@ -2,8 +2,8 @@
    MÓDULO DE CÁLCULO E EXIBIÇÃO DAS HORAS
    ========================================== */
 
-function iniciarModuloHoras() {
-  const container = document.getElementById("mandala-container");
+function iniciarModuloHoras(containerIdAlvo) {
+  const container = document.getElementById(containerIdAlvo || "mandala-container");
   if (!container) return;
 
   // Definições Vetoriais 3D dos 7 Planetas (Extraídos do mandala.js)
