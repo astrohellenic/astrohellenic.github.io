@@ -102,15 +102,6 @@ function renderMenuPrincipal() {
             <polyline points="20,24 32,36 44,24"/>
           </svg>
         </button>
-        <button onclick="abrirModuloTecnica('relatorio'); fecharSidebar();" title="Relatório" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14,4 H40 L50,14 V60 H14 Z" stroke-linejoin="round"/>
-            <path d="M40,4 V14 H50" stroke-linejoin="round"/>
-            <line x1="21" y1="28" x2="43" y2="28"/>
-            <line x1="21" y1="38" x2="43" y2="38"/>
-            <line x1="21" y1="48" x2="35" y2="48"/>
-          </svg>
-        </button>
         <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="32" cy="32" r="16"/>
