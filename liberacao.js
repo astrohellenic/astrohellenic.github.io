@@ -317,6 +317,44 @@ function renderLiberacaoUI() {
     if (expandedL1Index === null) expandedL1Index = 0; // Fallback
   }
 
+  // DETECÇÃO AUTOMÁTICA DO L2/L3 ATIVOS (mesmo princípio do L1: já abre no
+  // subperíodo do momento atual, em cascata, sem precisar clicar).
+  if (expandedL2Key === null || expandedL3Key === null) {
+    let l1Start = new Date(currentMoment);
+    let l1Sign = startSignIdx;
+    let l1Years = ZR_SIGN_YEARS[l1Sign];
+    for (let i = 0; i <= expandedL1Index; i++) {
+      const currSign = (startSignIdx + i) % 12;
+      const durationYears = ZR_SIGN_YEARS[currSign];
+      const currentEnd = calcularDataFimZR(l1Start, durationYears);
+      if (i === expandedL1Index) {
+        l1Sign = currSign;
+        l1Years = durationYears;
+      } else {
+        l1Start = new Date(currentEnd);
+      }
+    }
+
+    const subperiodosL2Auto = calcularSubperiodosL2(l1Sign, l1Start, l1Years);
+
+    if (expandedL2Key === null) {
+      const idxL2 = subperiodosL2Auto.findIndex(sub => hoje >= sub.start && hoje < sub.end);
+      if (idxL2 !== -1) expandedL2Key = `${expandedL1Index}_${idxL2}`;
+    }
+
+    if (expandedL2Key !== null && expandedL3Key === null) {
+      const [l1IdxKey, l2IdxKey] = expandedL2Key.split('_').map(Number);
+      if (l1IdxKey === expandedL1Index) {
+        const l2Sub = subperiodosL2Auto[l2IdxKey];
+        if (l2Sub) {
+          const subperiodosL3Auto = calcularSubperiodosL3(l2Sub.signIdx, l2Sub.start, l2Sub.end);
+          const idxL3 = subperiodosL3Auto.findIndex(sub => hoje >= sub.start && hoje < sub.end);
+          if (idxL3 !== -1) expandedL3Key = `${l1IdxKey}_${l2IdxKey}_${idxL3}`;
+        }
+      }
+    }
+  }
+
   const lotesInfo = [
     { key: "fortune" },
     { key: "spirit" },
