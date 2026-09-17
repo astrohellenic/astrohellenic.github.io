@@ -1120,29 +1120,40 @@
         // Técnico. Em telas largas, onde a tabela já cabe no espaço de
         // sempre (width: 100%), NADA é alterado: a tabela continua
         // exatamente como sempre foi, ocupando a largura toda do cartão.
-        const profContainerEl = document.getElementById('profeccao-container');
         const outerScroll = document.getElementById('profMensalOuterScroll');
         const scaleBox = document.getElementById('profMensalScaleBox');
         const wrapper = document.getElementById('profMensalWrapper');
         const tabelaMensal = document.getElementById('profMensalTable');
-        if (profContainerEl && outerScroll && scaleBox && wrapper && tabelaMensal) {
-            const containerStyles = getComputedStyle(profContainerEl);
-            const availableWidth = profContainerEl.clientWidth
-                - parseFloat(containerStyles.paddingLeft || 0)
-                - parseFloat(containerStyles.paddingRight || 0);
+        if (outerScroll && scaleBox && wrapper && tabelaMensal && outerScroll.parentElement) {
+            // O espaço disponível é o do cartão que envolve a tabela
+            // diretamente (não o do "profeccao-container" lá fora, que tem
+            // padding próprio somado ao padding do cartão — usar o de fora
+            // subestimava o quanto a tabela precisava encolher).
+            const parentEl = outerScroll.parentElement;
+            const parentStyles = getComputedStyle(parentEl);
+            const availableWidth = parentEl.clientWidth
+                - parseFloat(parentStyles.paddingLeft || 0)
+                - parseFloat(parentStyles.paddingRight || 0);
 
-            // Mede a largura "natural" da tabela (sem o width:100%, que
-            // sempre a força a preencher o espaço do cartão) para saber se
-            // ela realmente precisa encolher ou se cabe do jeito de sempre.
-            wrapper.style.display = 'inline-block';
+            // Mede a largura "natural" (sem quebra de linha) da tabela.
+            // display:inline-block sozinho não basta: como o wrapper ainda
+            // está dentro de contêineres de largura limitada, o navegador
+            // encolhe (shrink-to-fit) a caixa até o espaço disponível em vez
+            // de revelar o quanto o conteúdo realmente precisaria — fazendo
+            // a tabela parecer que "cabe" quando na verdade não cabe.
+            // width: max-content ignora essa limitação e força a largura
+            // real do conteúdo, mesmo que estoure o contêiner.
             tabelaMensal.style.width = 'auto';
+            wrapper.style.width = 'max-content';
             const naturalWidth = wrapper.offsetWidth;
+            const naturalHeight = wrapper.offsetHeight;
+            wrapper.style.width = '';
 
             if (availableWidth > 0 && naturalWidth > availableWidth) {
-                const naturalHeight = wrapper.offsetHeight;
                 const escala = availableWidth / naturalWidth;
                 const scaledHeight = naturalHeight * escala;
                 scaleBox.style.display = 'inline-block';
+                wrapper.style.display = 'inline-block';
                 wrapper.style.transform = `scale(${escala})`;
                 scaleBox.style.width = (naturalWidth * escala) + 'px';
                 scaleBox.style.height = scaledHeight + 'px';
