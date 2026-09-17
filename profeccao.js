@@ -994,8 +994,7 @@
         const horasInfoNatal = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
         const diaHoraNatalHTML = blocoDiaHora('Natal', horasInfoNatal);
 
-        let linhaRSTextoHTML = '';
-        let diaHoraRSHTML = '';
+        let linhaRSHTML = '';
         if (dadosRS && rsTimestamp) {
             const rsMoment = new Date(rsTimestamp);
             const fusoRSVal = fusoNatalVal;
@@ -1009,14 +1008,17 @@
             const isDayRS = ((dadosRS.Sol.grau_absoluto - dadosRS.Ascendente.grau_absoluto + 360) % 360) >= 180;
             const sectRSText = isDayRS ? 'Natividade Diurna' : 'Natividade Noturna';
 
-            linhaRSTextoHTML = `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2d9c2;">
-                <div style="font-size: 12px; color: #475569; font-weight: 500;">${diaSemanaRS} • ${diaRSFmt}/${mesRSFmt}/${anoRSFmt} às ${horaRSFmt}:${minRSFmt} (${fusoRSFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa de Revolução Solar <span style="color: #9a6d18; font-weight: 700;">• ${sectRSText}</span></div>
-            </div>`;
-
             const horasInfoRS = calcularHorasPlanetariasProf(rsMoment, latAtual, lonAtual, fusoRSVal);
-            diaHoraRSHTML = blocoDiaHora('RS', horasInfoRS);
+            const diaHoraRSHTML = blocoDiaHora('RS', horasInfoRS);
+
+            linhaRSHTML = `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2d9c2; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                <div style="flex: 1 1 260px;">
+                    <div style="font-size: 12px; color: #475569; font-weight: 500;">${diaSemanaRS} • ${diaRSFmt}/${mesRSFmt}/${anoRSFmt} às ${horaRSFmt}:${minRSFmt} (${fusoRSFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
+                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa de Revolução Solar <span style="color: #9a6d18; font-weight: 700;">• ${sectRSText}</span></div>
+                </div>
+                ${diaHoraRSHTML}
+            </div>`;
         }
 
         let html = `
@@ -1044,22 +1046,23 @@
             </div>
         </div>
 
-        <!-- CABEÇALHO PADRÃO (estilo mandala): coluna esquerda com os dados do
-             natal (nome, data/hora/local, zodíaco/signos/tipo de mapa + seita)
-             e, embaixo, os dados equivalentes da Revolução Solar calculada;
-             coluna direita com os regentes de dia/hora do natal e, empilhados
-             logo abaixo, os da Revolução Solar. -->
-        <div style="background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1 1 260px;">
-                <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70;">${escapeHtmlProf(headerTitle)}</div>
-                <div style="font-size: 12px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: #9a6d18; font-weight: 700;">• ${sectNatalText}</span></div>
-                ${linhaRSTextoHTML}
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex-shrink: 0;">
+        <!-- CABEÇALHO PADRÃO (estilo mandala): uma linha para o natal (nome,
+             data/hora/local, zodíaco/signos/tipo de mapa + seita, com o
+             regente de dia/hora do NATAL colado nela) e, separada por uma
+             linha dourada, outra linha para a Revolução Solar calculada
+             (com o regente de dia/hora da RS colado nela). Cada bloco
+             dia/hora fica sempre junto do texto ao qual pertence, inclusive
+             quando a tela é estreita e tudo empilha. -->
+        <div style="background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
+            <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin-bottom: 2px;">${escapeHtmlProf(headerTitle)}</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                <div style="flex: 1 1 260px;">
+                    <div style="font-size: 12px; color: #475569; font-weight: 500;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
+                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: #9a6d18; font-weight: 700;">• ${sectNatalText}</span></div>
+                </div>
                 ${diaHoraNatalHTML}
-                ${diaHoraRSHTML}
             </div>
+            ${linhaRSHTML}
         </div>
 
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
