@@ -262,8 +262,8 @@ function renderConteudoAbaAtual() {
   if (isoState.activeTab === 'planilha') {
     return `
       <div style="background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #d4af37; margin-bottom: 16px; display: flex; gap: 8px;">
-        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none;" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
-        <button onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Adicionar</button>
+        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none;" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
+        <button onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Adicionar</button>
       </div>
 
       <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden;">
