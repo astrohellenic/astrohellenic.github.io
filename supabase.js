@@ -781,6 +781,8 @@ async function trocarSenhaUsuario() {
 }
 
 async function fazerLogout() {
+  try { localStorage.removeItem('astro_ultimo_perfil'); } catch (e) {}
+  try { localStorage.removeItem('astro_ultimo_modulo'); } catch (e) {}
   try {
     await supabaseClient.auth.signOut();
     location.reload();
@@ -792,6 +794,7 @@ async function fazerLogout() {
 /* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo) {
   window.moduloTecnicoAtivo = modulo;
+  try { localStorage.setItem('astro_ultimo_modulo', modulo); } catch (e) {}
   const cRadix = document.getElementById('mandala-container');
   const cRev = document.getElementById('revolucao-container');
   const cOverlay = document.getElementById('mandala-controls-overlay');

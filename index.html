@@ -964,11 +964,15 @@ body {
     height: 100vh;
     height: 100dvh;
     background: #1A073F;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 999999;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  #loginOverlay.visible {
+    display: flex;
   }
 
   .login-card {
@@ -1244,17 +1248,33 @@ body:not(.modo-mandala) #main-stage {
   }
 
   function fecharTelaLogin() {
-    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('loginOverlay').classList.remove('visible');
+  }
+
+  function mostrarTelaLogin() {
+    document.getElementById('loginOverlay').classList.add('visible');
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
     const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
     if (client) {
-      const { data: { user } } = await client.auth.getUser();
-      if (user) {
-        fecharTelaLogin();
+      /* Checagem rápida e local (sem esperar resposta do servidor) pra não
+         piscar a tela de login à toa quando o usuário já está logado e só
+         voltou de outro app ou desbloqueou o celular. */
+      const { data: { session } } = await client.auth.getSession();
+      if (!session) {
+        mostrarTelaLogin();
+      } else {
+        const user = session.user;
         if (typeof carregarTemaMandala === 'function') carregarTemaMandala(user.id);
         if (typeof carregarEstiloPlanetas === 'function') carregarEstiloPlanetas(user.id);
+
+        /* Confirma a sessão com o servidor em segundo plano, sem travar a
+           tela: só interrompe o usuário se o token realmente não for mais
+           válido (ex.: senha trocada em outro aparelho). */
+        client.auth.getUser().then(({ data, error }) => {
+          if (error || !data || !data.user) mostrarTelaLogin();
+        });
       }
     }
   });

@@ -315,6 +315,8 @@ function aplicarDadosDoPerfilNoMapa(c) {
   const menuHere = document.getElementById('menu-here-now');
   if (menuHere) menuHere.classList.remove('active');
 
+  try { localStorage.setItem('astro_ultimo_perfil', JSON.stringify(c)); } catch (e) {}
+
   let ano = 2000, mes = 1, dia = 1;
   if (c.dataNascimento && c.dataNascimento.includes('/')) {
     const partes = c.dataNascimento.split('/');
@@ -445,6 +447,13 @@ function confirmarNovoMapaModal() {
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
   currentGeo = { lat: latFinal, lon: lonFinal, fuso: fusoReal, city: cidadeFinal };
 
+  try {
+    localStorage.setItem('astro_ultimo_perfil', JSON.stringify({
+      nome, dataNascimento: dataStr, horaNascimento: horaStr, codigo: codigoFinal,
+      id: null, tipo: 'Natal', latitude: latFinal, longitude: lonFinal, fuso: fusoReal, cidade: cidadeFinal
+    }));
+  } catch (e) {}
+
   fecharModalNovoMapa();
   executarCalculo();
 
@@ -485,6 +494,13 @@ async function salvarNovoMapaAutomaticamente(dados) {
       // nativo (ele pode ter trocado de mapa enquanto isso salvava)
       if (linhaInserida && currentSubjectName === dados.nome && currentCustomCode == dados.codigo) {
         currentMapaId = linhaInserida.id;
+        try {
+          const perfilSalvo = JSON.parse(localStorage.getItem('astro_ultimo_perfil') || 'null');
+          if (perfilSalvo && perfilSalvo.nome === dados.nome && perfilSalvo.codigo == dados.codigo) {
+            perfilSalvo.id = linhaInserida.id;
+            localStorage.setItem('astro_ultimo_perfil', JSON.stringify(perfilSalvo));
+          }
+        } catch (e) {}
       }
       if (typeof carregarMapasDoBanco === 'function') carregarMapasDoBanco(pastaAlvo);
     } else {
@@ -511,6 +527,7 @@ async function obterNomeCidade(lat, lon) {
 function carregarCeuDoMomento() {
   const menuHere = document.getElementById('menu-here-now');
   if (menuHere) menuHere.classList.add('active');
+  try { localStorage.removeItem('astro_ultimo_perfil'); } catch (e) {}
   currentSubjectName = "Agora";
   currentCustomCode = null;
   currentMapaId = null;
@@ -1282,7 +1299,27 @@ window.onload = function() {
   if (typeof carregarPastasSalvas === 'function') {
     try { carregarPastasSalvas(); } catch(e) { console.error(e); }
   }
-  carregarCeuDoMomento();
+
+  /* Retoma o mapa que estava aberto antes de recarregar (ex.: o navegador
+     descartou a aba em segundo plano), em vez de sempre voltar pro Céu do
+     Momento. */
+  let perfilRestaurado = null;
+  try {
+    const perfilSalvo = localStorage.getItem('astro_ultimo_perfil');
+    if (perfilSalvo) perfilRestaurado = JSON.parse(perfilSalvo);
+  } catch (e) { console.error(e); }
+
+  if (perfilRestaurado && typeof aplicarDadosDoPerfilNoMapa === 'function') {
+    aplicarDadosDoPerfilNoMapa(perfilRestaurado);
+  } else {
+    carregarCeuDoMomento();
+  }
+
+  const ultimoModulo = localStorage.getItem('astro_ultimo_modulo');
+  if (ultimoModulo && ultimoModulo !== 'mandala' && typeof abrirModuloTecnica === 'function') {
+    try { abrirModuloTecnica(ultimoModulo); } catch (e) { console.error(e); }
+  }
+
   if (typeof carregarConteudoPastaAtual === 'function') {
     try { carregarConteudoPastaAtual(); } catch(e) { console.error(e); }
   }
