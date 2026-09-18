@@ -469,7 +469,7 @@ function iniciarModuloHoras(containerIdAlvo) {
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        touch-action: pan-x pinch-zoom;
+        touch-action: manipulation;
       }
       #horas-container table {
         border-collapse: collapse;
