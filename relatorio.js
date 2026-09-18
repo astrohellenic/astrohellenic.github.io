@@ -998,30 +998,52 @@ function limparCapturasEditor(toolId, iconEl) {
 }
 window.limparCapturasEditor = limparCapturasEditor;
 
+/* Acha o próximo índice de captura ainda vazio pra uma ferramenta —
+   nunca um que já tem imagem de verdade (mesmo que nenhuma linha na
+   tela esteja usando ele) e nunca um que outra linha já esteja
+   "reservando" (ex.: clicou em "+" duas vezes seguidas antes de tirar
+   a próxima captura). É o maior entre: quantas capturas já existem de
+   verdade pra essa ferramenta (capturasDaFerramenta) e um a mais que o
+   maior índice já usado por alguma linha na tela agora. */
+function relatorioProximoIndiceVazio(container, ferramentaId) {
+  let maiorIndiceEmUso = -1;
+  container.querySelectorAll(`[data-ferramenta-id="${ferramentaId}"]`).forEach(linha => {
+    const idx = parseInt(linha.dataset.capturaIndex, 10) || 0;
+    if (idx > maiorIndiceEmUso) maiorIndiceEmUso = idx;
+  });
+  return Math.max(capturasDaFerramenta(ferramentaId).length, maiorIndiceEmUso + 1);
+}
+
 /* Acrescenta mais uma linha da MESMA ferramenta capturada (Profecção,
    Isopsefia etc.) no fim da lista reordenável — pra usar em outra
-   posição do relatório, com outro texto ao redor, mostrando outra
-   captura. O índice da imagem que essa nova linha vai usar é contado
-   pelas linhas dessa mesma ferramenta que já existem NA TELA agora (dá
-   pra clicar várias vezes seguidas, sem precisar salvar entre uma e
-   outra, que o próximo índice já vem certo). */
+   posição do relatório, com outro texto ao redor, mostrando OUTRA
+   captura ainda vazia (nunca repete uma imagem que já está em uso por
+   outra linha — ver relatorioProximoIndiceVazio) — pronta pra ele ir
+   tirar a foto nova da ferramenta e ela cair direto aqui. */
 function adicionarInstanciaFerramentaEditor(ferramentaId, rotulo) {
   const container = document.getElementById('relEditorOrdenavel');
   if (!container) return;
-  const existentes = container.querySelectorAll(`[data-ferramenta-id="${ferramentaId}"]`).length;
+  const proximoIndice = relatorioProximoIndiceVazio(container, ferramentaId);
   const novoId = ferramentaId + '__' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({
-    id: novoId, tipo: 'ferramenta', rotulo, ferramentaId, capturaIndex: existentes
+    id: novoId, tipo: 'ferramenta', rotulo, ferramentaId, capturaIndex: proximoIndice
   }));
   agendarAutoSalvarRelatorio();
 }
 window.adicionarInstanciaFerramentaEditor = adicionarInstanciaFerramentaEditor;
 
 /* Acrescenta ao vivo, no fim da lista reordenável, um item do catálogo
-   que este modelo/relatório ainda não usa (a seção "Adicionar" mais
-   embaixo) — sem precisar salvar e reabrir o editor pra ele aparecer:
-   clicou, já entra pronto pra editar e mover com as setas. Some também o
-   próprio item da lista "Adicionar" (ele já está em uso agora). */
+   (a seção "Adicionar" mais embaixo) — sem precisar salvar e reabrir o
+   editor pra ele aparecer: clicou, já entra pronto pra editar e mover
+   com as setas.
+
+   Ferramentas "capturadas" (Profecção, Circumambulação etc.) aceitam
+   mais de uma linha no mesmo relatório — clicar de novo nelas, mesmo já
+   em uso, funciona igual ao "+" que já existe em cada linha (mostra a
+   PRÓXIMA captura vazia, nunca repete uma que já está em uso) — por
+   isso elas NUNCA somem da lista "Adicionar" (ver o filtro em
+   linhasParaAdicionar). As demais (texto, ou as mandalas calculadas na
+   hora) só entram uma vez: aí sim o item some da lista depois de usado. */
 function adicionarItemCatalogoAoEditor(id, tipo) {
   const container = document.getElementById('relEditorOrdenavel');
   if (!container) return;
@@ -1029,15 +1051,19 @@ function adicionarItemCatalogoAoEditor(id, tipo) {
   const padrao = RELATORIO_CATALOGO_BLOCOS.find(b => b.id === id);
   if (!padrao) return;
 
-  let linhaHtml;
   if (tipo === 'ferramenta') {
     const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[id];
-    linhaHtml = relatorioLinhaEditorHtml({ id, tipo: 'ferramenta', rotulo: info ? info.label : id });
+    const rotulo = info ? info.label : id;
+    const jaEmUso = !!container.querySelector(`[data-ferramenta-id="${id}"]`);
+    if (info && info.capturada && jaEmUso) {
+      adicionarInstanciaFerramentaEditor(id, rotulo); // mesma lógica do "+" de cada linha — não mexe na lista "Adicionar"
+      return;
+    }
+    container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({ id, tipo: 'ferramenta', rotulo }));
   } else {
-    linhaHtml = relatorioLinhaEditorHtml({ id, tipo: 'texto', custom: false, rotulo: padrao.titulo, titulo: padrao.titulo, corpo: padrao.corpo });
+    container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({ id, tipo: 'texto', custom: false, rotulo: padrao.titulo, titulo: padrao.titulo, corpo: padrao.corpo }));
+    inicializarQuillsPendentes();
   }
-  container.insertAdjacentHTML('beforeend', linhaHtml);
-  inicializarQuillsPendentes();
 
   const itemCatalogo = document.querySelector(`[data-adicionar-id="${id}"]`);
   if (itemCatalogo) itemCatalogo.remove();
@@ -1273,12 +1299,20 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     });
   }).join('');
 
-  // Itens do catálogo que este modelo ainda não usa — clicar já acrescenta
-  // a linha de verdade no fim da lista de cima (ver adicionarItemCatalogoAoEditor),
-  // pronta pra editar e mover com as setas — sem precisar salvar e reabrir
-  // pra ela aparecer.
+  // Itens do catálogo — clicar já acrescenta a linha de verdade no fim da
+  // lista de cima (ver adicionarItemCatalogoAoEditor), pronta pra editar e
+  // mover com as setas, sem precisar salvar e reabrir pra ela aparecer.
+  // Ferramentas "capturadas" (Profecção, Circumambulação etc.) aceitam
+  // mais de uma linha no relatório, então continuam aqui mesmo depois de
+  // já usadas — as demais (texto, mandalas calculadas na hora) somem
+  // depois de usadas, porque só entram uma vez.
   const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS
-    .filter(padrao => padrao.type !== 'capa' && !mapaBlocosAtuais[padrao.id])
+    .filter(padrao => {
+      if (padrao.type === 'capa') return false;
+      const info = padrao.type === 'ferramenta' ? RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] : null;
+      const repetivel = info && info.capturada;
+      return repetivel || !mapaBlocosAtuais[padrao.id];
+    })
     .map(relatorioItemCatalogoHtml)
     .join('');
 
