@@ -1856,7 +1856,10 @@ function renderBlocoRelatorio(bloco, opts) {
       }
       return `
         <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
-          <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
+          <div class="rel-titulo-captura">${escapeHtml(titulo)}</div>
+          <div class="rel-captura-corpo">
+            <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
+          </div>
         </section>
       `;
     }
@@ -2115,9 +2118,22 @@ function injetarEstilosRelatorio() {
 
       /* BLOCOS "CAPTURADOS" DE OUTRAS FERRAMENTAS (ex.: Profecção) — a
          página existe só pra emoldurar a imagem trazida da tela real da
-         ferramenta, sem redesenhar nada ao redor dela. */
-      .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
-      .rel-img-captura { max-width: 100%; max-height: 245mm; width: auto; height: auto; display: block; margin: 0 auto; }
+         ferramenta, sem redesenhar nada ao redor dela. O título (o mesmo
+         nome que aparece no Índice) fica em cima da imagem, só a escrita
+         mesmo — sem a caixa com fundo creme e contorno do ".rel-h1" dos
+         blocos de texto — pra identificar a imagem sem competir com ela. */
+      .rel-page-captura { display: flex; flex-direction: column; padding: 14mm 10mm; }
+      .rel-titulo-captura {
+        font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
+        margin-bottom: 14px; flex-shrink: 0;
+      }
+      /* flex:1 + min-height:0 é o que permite essa área encolher dentro da
+         coluna (senão a imagem empurraria a página pra além do tamanho A4)
+         — dentro dela, centraliza a imagem nos dois eixos preservando a
+         proporção original, seja a captura larga ou alta. */
+      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .rel-img-captura { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
