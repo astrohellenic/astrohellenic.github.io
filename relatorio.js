@@ -936,6 +936,33 @@ function adicionarInstanciaFerramentaEditor(ferramentaId, rotulo) {
 }
 window.adicionarInstanciaFerramentaEditor = adicionarInstanciaFerramentaEditor;
 
+/* Acrescenta ao vivo, no fim da lista reordenável, um item do catálogo
+   que este modelo/relatório ainda não usa (a seção "Adicionar" mais
+   embaixo) — sem precisar salvar e reabrir o editor pra ele aparecer:
+   clicou, já entra pronto pra editar e mover com as setas. Some também o
+   próprio item da lista "Adicionar" (ele já está em uso agora). */
+function adicionarItemCatalogoAoEditor(id, tipo) {
+  const container = document.getElementById('relEditorOrdenavel');
+  if (!container) return;
+
+  const padrao = RELATORIO_CATALOGO_BLOCOS.find(b => b.id === id);
+  if (!padrao) return;
+
+  let linhaHtml;
+  if (tipo === 'ferramenta') {
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[id];
+    linhaHtml = relatorioLinhaEditorHtml({ id, tipo: 'ferramenta', rotulo: info ? info.label : id });
+  } else {
+    linhaHtml = relatorioLinhaEditorHtml({ id, tipo: 'texto', custom: false, rotulo: padrao.titulo, titulo: padrao.titulo, corpo: padrao.corpo });
+  }
+  container.insertAdjacentHTML('beforeend', linhaHtml);
+  inicializarQuillsPendentes();
+
+  const itemCatalogo = document.querySelector(`[data-adicionar-id="${id}"]`);
+  if (itemCatalogo) itemCatalogo.remove();
+}
+window.adicionarItemCatalogoAoEditor = adicionarItemCatalogoAoEditor;
+
 /* Acrescenta um bloco de texto personalizado em branco no fim da lista
    reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
    clicado) — dá pra mover ele com as setas assim que for criado. */
@@ -957,9 +984,16 @@ function injetarEstilosEditorRelatorio() {
   const style = document.createElement('style');
   style.id = 'relatorio-editor-estilos';
   style.textContent = `
-      .rel-editor-tabs { display: flex; gap: 4px; border-bottom: 1px solid #e2d9c2; margin-bottom: 20px; }
+      /* Travada no topo (position: sticky) — assim Editar, Prévia e Salvar
+         continuam visíveis o tempo todo, por mais que o formulário (ou a
+         prévia) role pra baixo. "top: 0" gruda logo depois do padding do
+         próprio container que rola (#mandala-container aqui dentro), que é
+         o ancestral com scroll mais próximo. */
+      .rel-editor-tabs { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #e2d9c2; margin-bottom: 20px; position: sticky; top: 0; z-index: 6; background: var(--bg-main, #f8fafc); padding: 10px 0; }
+      .rel-editor-tabs-grupo { display: flex; gap: 4px; }
       .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; }
       .rel-editor-tab.ativa { color: #103b70; border-bottom-color: #103b70; }
+      .rel-editor-btn-salvar { background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 9px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
 
       .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
@@ -1078,15 +1112,16 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     });
   }).join('');
 
-  // Itens do catálogo que este modelo ainda não usa — pra adicionar (entram
-  // no fim da lista de cima; depois é só mover com as setas).
+  // Itens do catálogo que este modelo ainda não usa — clicar já acrescenta
+  // a linha de verdade no fim da lista de cima (ver adicionarItemCatalogoAoEditor),
+  // pronta pra editar e mover com as setas — sem precisar salvar e reabrir
+  // pra ela aparecer.
   const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => padrao.type !== 'capa' && !mapaBlocosAtuais[padrao.id]).map(padrao => {
     const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
     return `
-      <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
-        <input type="checkbox" data-adicionar-id="${padrao.id}" data-adicionar-tipo="${padrao.type}">
+      <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
         <span style="font-size: 13px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
-      </label>
+      </div>
     `;
   }).join('');
 
@@ -1104,9 +1139,14 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
       </div>
 
       <div class="rel-editor-tabs" style="max-width: 720px; margin: 0 auto;">
-        <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
-        <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
-          <i class="fa-solid fa-eye"></i> Prévia
+        <div class="rel-editor-tabs-grupo">
+          <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
+          <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
+            <i class="fa-solid fa-eye"></i> Prévia
+          </button>
+        </div>
+        <button type="button" class="rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">
+          <i class="fa-solid fa-floppy-disk"></i> ${escapeHtml(config.rotuloSalvar)}
         </button>
       </div>
 
@@ -1126,7 +1166,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           ${linhasParaAdicionar ? `
             <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
             <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
-              Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
+              Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
             </div>
             ${linhasParaAdicionar}
           ` : ''}
@@ -1138,10 +1178,6 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
             Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
           </div>
-
-          <button onclick="salvarEdicaoRelatorioAtual()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
-            ${escapeHtml(config.rotuloSalvar)}
-          </button>
         </div>
       </div>
 
@@ -1281,17 +1317,6 @@ function lerBlocosDoEditor() {
     blocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo: corpoHtml, formato: 'rich' });
   });
 
-  document.querySelectorAll('input[data-adicionar-id]').forEach(checkbox => {
-    if (!checkbox.checked) return;
-    const id = checkbox.dataset.adicionarId;
-    const padrao = catalogoPorId[id];
-    if (checkbox.dataset.adicionarTipo === 'ferramenta') {
-      blocos.push({ id, type: 'ferramenta' });
-    } else {
-      blocos.push({ id, type: 'texto', titulo: padrao.titulo, corpo: padrao.corpo });
-    }
-  });
-
   return blocos;
 }
 
@@ -1411,7 +1436,7 @@ async function atualizarPreviaEditorModelo() {
   const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
   const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
-      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Volte pra aba Editar e clique no botão de salvar quando estiver satisfeito.
+      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
     </div>
     <div class="rel-viewer">${conteudoHtml}</div>
   `;
@@ -1848,7 +1873,10 @@ function renderBlocoRelatorio(bloco, opts) {
       }
       return `
         <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
-          <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
+          <div class="rel-titulo-captura">${escapeHtml(titulo)}</div>
+          <div class="rel-captura-corpo">
+            <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
+          </div>
         </section>
       `;
     }
@@ -2107,9 +2135,22 @@ function injetarEstilosRelatorio() {
 
       /* BLOCOS "CAPTURADOS" DE OUTRAS FERRAMENTAS (ex.: Profecção) — a
          página existe só pra emoldurar a imagem trazida da tela real da
-         ferramenta, sem redesenhar nada ao redor dela. */
-      .rel-page-captura { display: flex; align-items: center; justify-content: center; padding: 0; }
-      .rel-img-captura { max-width: 100%; max-height: 245mm; width: auto; height: auto; display: block; margin: 0 auto; }
+         ferramenta, sem redesenhar nada ao redor dela. O título (o mesmo
+         nome que aparece no Índice) fica em cima da imagem, só a escrita
+         mesmo — sem a caixa com fundo creme e contorno do ".rel-h1" dos
+         blocos de texto — pra identificar a imagem sem competir com ela. */
+      .rel-page-captura { display: flex; flex-direction: column; padding: 14mm 10mm; }
+      .rel-titulo-captura {
+        font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
+        margin-bottom: 14px; flex-shrink: 0;
+      }
+      /* flex:1 + min-height:0 é o que permite essa área encolher dentro da
+         coluna (senão a imagem empurraria a página pra além do tamanho A4)
+         — dentro dela, centraliza a imagem nos dois eixos preservando a
+         proporção original, seja a captura larga ou alta. */
+      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .rel-img-captura { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
