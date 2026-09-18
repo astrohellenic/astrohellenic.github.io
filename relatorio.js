@@ -931,12 +931,21 @@ function inicializarQuillsPendentes() {
     const quill = new Quill(mount, {
       theme: 'snow',
       modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline'],
-          [{ color: [] }],
-          [{ size: ['12px', false, '18px', '26px'] }],
-          [{ list: 'ordered' }, { list: 'bullet' }]
-        ]
+        toolbar: {
+          container: [
+            ['bold', 'italic', 'underline'],
+            [{ color: [] }],
+            [{ size: ['12px', false, '18px', '26px'] }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['image']
+          ],
+          // Substitui o handler padrão do botão de imagem (que abriria um
+          // seletor de arquivo do computador) — aqui a imagem sempre vem
+          // de uma captura já feita numa ferramenta (ex.: um lote
+          // específico marcado na Calculadora de Lotes), nunca de upload
+          // novo, então o botão abre esse seletor em vez disso.
+          handlers: { image: () => abrirSeletorImagemCapturaQuill(quill) }
+        }
       }
     });
 
@@ -956,6 +965,73 @@ function inicializarQuillsPendentes() {
   window.relatorioQuillPendentes = {};
 }
 window.inicializarQuillsPendentes = inicializarQuillsPendentes;
+
+/* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
+   deixa escolher entre as capturas já feitas em alguma ferramenta (ex.:
+   um lote específico marcado e enviado pela Calculadora de Lotes) e
+   insere a escolhida ALI DENTRO do parágrafo, no lugar do cursor — pra
+   quem citou um lote específico no meio do texto não precisar reservar
+   uma página inteira só pra imagem dele (a página cheia continua
+   existindo, via "Adicionar a este Relatório" > ferramenta, pra quando
+   fizer sentido levar vários lotes juntos). Reaproveita inteiramente o
+   mesmo pool de capturas (window.relatorioCapturas) já usado pelos
+   blocos "ferramenta" — nenhuma captura nova, só uma segunda forma de
+   usar a que já existe. */
+function abrirSeletorImagemCapturaQuill(quill) {
+  document.getElementById('relSeletorImagemOverlay')?.remove();
+
+  const capturas = window.relatorioCapturas || {};
+  const idsComCaptura = Object.keys(capturas).filter(id => capturasDaFerramenta(id).length);
+
+  if (!idsComCaptura.length) {
+    alert('Nenhuma captura disponível ainda. Abra a ferramenta desejada (ex.: Calculadora de Lotes), deixe pronta a tela que quer usar e clique em "Adicionar ao Relatório" — depois volte aqui pra inserir a imagem.');
+    return;
+  }
+
+  const gruposHtml = idsComCaptura.map(toolId => {
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[toolId];
+    const rotulo = (info && (info.tituloIndice || info.label)) || toolId;
+    const itensHtml = capturasDaFerramenta(toolId).map((captura, idx) => `
+      <div class="rel-seletor-imagem-item" data-url="${escapeHtml(captura.dataUrl)}" title="${escapeHtml(rotulo)} — imagem ${idx + 1}">
+        <img src="${captura.dataUrl}" alt="">
+      </div>
+    `).join('');
+    return `
+      <div>
+        <div class="rel-seletor-imagem-grupo-titulo">${escapeHtml(rotulo)}</div>
+        <div class="rel-seletor-imagem-grid">${itensHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'relSeletorImagemOverlay';
+  overlay.innerHTML = `
+    <div class="rel-seletor-imagem-box">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="modal-title">Inserir imagem de uma captura</span>
+        <i class="fa-solid fa-xmark" style="cursor: pointer; color: #64748b; font-size: 16px;" id="relSeletorImagemFechar"></i>
+      </div>
+      <div class="rel-seletor-imagem-lista">${gruposHtml}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const fechar = () => overlay.remove();
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) fechar(); });
+  document.getElementById('relSeletorImagemFechar').addEventListener('click', fechar);
+
+  overlay.querySelectorAll('.rel-seletor-imagem-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const range = quill.getSelection(true) || { index: quill.getLength() };
+      quill.insertEmbed(range.index, 'image', item.dataset.url, 'user');
+      quill.setSelection(range.index + 1, 0, 'user');
+      fechar();
+      agendarAutoSalvarRelatorio();
+    });
+  });
+}
+window.abrirSeletorImagemCapturaQuill = abrirSeletorImagemCapturaQuill;
 
 /* Registra, uma única vez por carregamento da página, o tamanho de fonte
    do Quill como atributo de ESTILO em vez de CLASSE — assim o HTML
@@ -1187,8 +1263,22 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
+      .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
 
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: #fffbeb; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #9a6d18; font-weight: 600; }
+
+      /* Modal do seletor "Inserir imagem de uma captura" (botão extra na
+         barra do Quill) — mesmo padrão visual dos modais do site
+         (.modal-box do CSS global), só que montado por JS porque a lista
+         de capturas muda a cada abertura. */
+      #relSeletorImagemOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+      .rel-seletor-imagem-box { background: #ffffff; width: 100%; max-width: 640px; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+      .rel-seletor-imagem-lista { overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+      .rel-seletor-imagem-grupo-titulo { font-size: 11px; font-weight: 700; color: #9a6d18; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
+      .rel-seletor-imagem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+      .rel-seletor-imagem-item { border: 1px solid #e2d9c2; border-radius: 8px; overflow: hidden; cursor: pointer; background: #fffdf5; }
+      .rel-seletor-imagem-item:hover { border-color: #c59b27; }
+      .rel-seletor-imagem-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
   `;
   document.head.appendChild(style);
 }
@@ -2642,6 +2732,7 @@ function injetarEstilosRelatorio() {
       }
 
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
+      .rel-corpo img { max-width: 100%; height: auto; display: block; margin: 4px auto 14px; border-radius: 8px; }
 
       /* Listas do texto rico (Quill) dentro de um bloco de texto — o
          resto da formatação (negrito, itálico, sublinhado, cor, tamanho)
