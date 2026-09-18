@@ -936,6 +936,33 @@ function adicionarInstanciaFerramentaEditor(ferramentaId, rotulo) {
 }
 window.adicionarInstanciaFerramentaEditor = adicionarInstanciaFerramentaEditor;
 
+/* Acrescenta ao vivo, no fim da lista reordenável, um item do catálogo
+   que este modelo/relatório ainda não usa (a seção "Adicionar" mais
+   embaixo) — sem precisar salvar e reabrir o editor pra ele aparecer:
+   clicou, já entra pronto pra editar e mover com as setas. Some também o
+   próprio item da lista "Adicionar" (ele já está em uso agora). */
+function adicionarItemCatalogoAoEditor(id, tipo) {
+  const container = document.getElementById('relEditorOrdenavel');
+  if (!container) return;
+
+  const padrao = RELATORIO_CATALOGO_BLOCOS.find(b => b.id === id);
+  if (!padrao) return;
+
+  let linhaHtml;
+  if (tipo === 'ferramenta') {
+    const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[id];
+    linhaHtml = relatorioLinhaEditorHtml({ id, tipo: 'ferramenta', rotulo: info ? info.label : id });
+  } else {
+    linhaHtml = relatorioLinhaEditorHtml({ id, tipo: 'texto', custom: false, rotulo: padrao.titulo, titulo: padrao.titulo, corpo: padrao.corpo });
+  }
+  container.insertAdjacentHTML('beforeend', linhaHtml);
+  inicializarQuillsPendentes();
+
+  const itemCatalogo = document.querySelector(`[data-adicionar-id="${id}"]`);
+  if (itemCatalogo) itemCatalogo.remove();
+}
+window.adicionarItemCatalogoAoEditor = adicionarItemCatalogoAoEditor;
+
 /* Acrescenta um bloco de texto personalizado em branco no fim da lista
    reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
    clicado) — dá pra mover ele com as setas assim que for criado. */
@@ -1085,15 +1112,16 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     });
   }).join('');
 
-  // Itens do catálogo que este modelo ainda não usa — pra adicionar (entram
-  // no fim da lista de cima; depois é só mover com as setas).
+  // Itens do catálogo que este modelo ainda não usa — clicar já acrescenta
+  // a linha de verdade no fim da lista de cima (ver adicionarItemCatalogoAoEditor),
+  // pronta pra editar e mover com as setas — sem precisar salvar e reabrir
+  // pra ela aparecer.
   const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => padrao.type !== 'capa' && !mapaBlocosAtuais[padrao.id]).map(padrao => {
     const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
     return `
-      <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
-        <input type="checkbox" data-adicionar-id="${padrao.id}" data-adicionar-tipo="${padrao.type}">
+      <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
         <span style="font-size: 13px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
-      </label>
+      </div>
     `;
   }).join('');
 
@@ -1138,7 +1166,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           ${linhasParaAdicionar ? `
             <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
             <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
-              Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
+              Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
             </div>
             ${linhasParaAdicionar}
           ` : ''}
@@ -1287,17 +1315,6 @@ function lerBlocosDoEditor() {
     const corpoVazio = quill ? !quill.getText().trim() : true;
     if (custom && !titulo && corpoVazio) return; // personalizado em branco, nunca preenchido — ignora
     blocos.push({ id, type: 'texto', titulo: titulo || 'Sem título', corpo: corpoHtml, formato: 'rich' });
-  });
-
-  document.querySelectorAll('input[data-adicionar-id]').forEach(checkbox => {
-    if (!checkbox.checked) return;
-    const id = checkbox.dataset.adicionarId;
-    const padrao = catalogoPorId[id];
-    if (checkbox.dataset.adicionarTipo === 'ferramenta') {
-      blocos.push({ id, type: 'ferramenta' });
-    } else {
-      blocos.push({ id, type: 'texto', titulo: padrao.titulo, corpo: padrao.corpo });
-    }
   });
 
   return blocos;
