@@ -581,7 +581,13 @@ async function iniciarModuloRelatorio() {
   if (mesmoCliente && alvoEditor && alvoEditor.tipo === 'rascunho' && cacheRascunho
       && cacheRascunho.id === alvoEditor.id && cacheRascunho.mapa_id === currentMapaId) {
     const abaParaRetomar = window.relatorioAbaEditorAtiva;
-    window.relatorioRascunhoEmEdicao = null; // relê do banco — pode ter autosave mais recente que o cache
+    // Não zera mais o cache pra "reler do banco": gravarBlocosNoRascunho
+    // (usada tanto pelo autosave quanto pelo "Salvar Agora" manual) já
+    // mantém window.relatorioRascunhoEmEdicao em dia com o que foi salvo,
+    // então reler aqui só repetia pela rede dados que já tínhamos na mão —
+    // era esse fetch, não o cálculo em si, que fazia "Abrindo o
+    // relatório..." demorar (e parecer perigoso) toda vez que o astrólogo
+    // só ia dar uma olhada noutra ferramenta e voltava.
     await abrirEditorRascunhoRelatorio(alvoEditor.id, { retomando: true });
     if (abaParaRetomar === 'previa') mudarAbaEditorModelo('previa');
     return;
@@ -1410,12 +1416,41 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     // vez que rolou ela (ver o listener de "scroll" mais abaixo) — sem
     // isso, cada vez que voltava aqui (ex.: depois de editar um texto)
     // a tela recomeçava do topo, obrigando a rolar de novo um relatório
-    // que pode ter dezenas de páginas. requestAnimationFrame espera o
-    // layout da prévia (imagens já prontas, mas o navegador ainda
-    // recalculando altura) assentar antes de rolar, senão a posição sai
-    // errada.
-    requestAnimationFrame(() => window.scrollTo(0, window.relatorioPreviaScrollY || 0));
+    // que pode ter dezenas de páginas.
+    restaurarScrollPreviaQuandoImagensCarregarem(painelPrevia, window.relatorioPreviaScrollY || 0);
   }
+}
+
+/* Espera as <img> da Prévia (mandalas, capturas de ferramenta — um
+   relatório longo tem várias) carregarem antes de rolar pra posição
+   lembrada. Um único requestAnimationFrame não bastava: ele roda bem
+   antes das imagens carregarem, quando a página ainda está "curta"
+   (imagens sem altura ainda) — o navegador clampa o scrollTo pra perto
+   do topo, e como as imagens só terminam de carregar (e esticar a
+   página pro tamanho final) depois disso, a posição nunca se corrigia
+   por conta própria. Por isso a rolagem sempre parecia "esquecida",
+   voltando pro topo mesmo com a posição certa guardada. */
+function restaurarScrollPreviaQuandoImagensCarregarem(painel, targetY) {
+  const imgs = Array.from(painel.querySelectorAll('img'));
+  const prontas = imgs.map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', resolve, { once: true });
+    });
+  });
+
+  Promise.all(prontas).then(() => {
+    // +1 frame: o navegador só recalcula a altura final da página depois
+    // do load da imagem, não no próprio instante do evento.
+    requestAnimationFrame(() => {
+      window.scrollTo(0, targetY);
+      // Reaplica de novo na volta seguinte — cobre ajustes tardios de
+      // layout (ex.: fontes/numeração de página) que ainda mexam na
+      // altura por um frame depois do scroll acima.
+      requestAnimationFrame(() => window.scrollTo(0, targetY));
+    });
+  });
 }
 
 /* SELETOR "MANDALA DA CAPA" — fica separado da lista reordenável de
@@ -1557,6 +1592,18 @@ async function gravarBlocosNoRascunho(rascunhoId, nome, blocos) {
       .update({ titulo: nome, blocos, updated_at: new Date().toISOString() })
       .eq('id', rascunhoId)
       .eq('user_id', user.id);
+    if (!error) {
+      // Mantém o cache em memória (window.relatorioRascunhoEmEdicao) em dia
+      // com o que acabou de ser gravado — sem isso, voltar pra este
+      // rascunho depois de dar uma olhada noutra ferramenta forçava reler
+      // do banco de novo (ver iniciarModuloRelatorio), um vaivém de rede só
+      // pra reconseguir dados que já estavam aqui na mão.
+      const cache = window.relatorioRascunhoEmEdicao;
+      if (cache && cache.id === rascunhoId) {
+        cache.titulo = nome;
+        cache.blocos = blocos;
+      }
+    }
     return !error;
   } catch (e) {
     return false;
