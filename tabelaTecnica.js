@@ -358,7 +358,7 @@ function renderMatrizVisibilidadeHTML(data) {
 
   let h = `
     <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
-    <div id="matrizOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; touch-action: manipulation;">
+    <div id="matrizOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center;">
       <div id="matrizScaleBox" style="display: inline-block;">
       <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
         <table class="tabela-enxuta" style="font-size: 11px; background: #ffffff;">
@@ -530,7 +530,7 @@ function renderPainelTecnico(data, containerId) {
     html += renderMatrizVisibilidadeHTML(data);
 
     html += `
-      <div id="painelPrincipalOuterScroll" style="overflow-x: auto; overflow-y: hidden; margin: 24px 0; text-align: center; touch-action: manipulation;">
+      <div id="painelPrincipalOuterScroll" style="overflow-x: auto; overflow-y: hidden; margin: 24px 0; text-align: center;">
         <div id="painelPrincipalScaleBox" style="display: inline-block;">
         <div id="painelPrincipalWrapper" style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
           <table class="tabela-enxuta">
@@ -627,32 +627,35 @@ function renderPainelTecnico(data, containerId) {
 
       // Em telas estreitas, em vez de deixar as tabelas cortadas com rolagem
       // interna, encolhe cada uma (mantendo a proporção) até caberem inteiras
-      // na largura disponível — o usuário pode ampliar com o dedo (pinça) pra
-      // ver os detalhes, já que o conteúdo é vetorial/texto e não perde nitidez.
-      //
-      // Usa "zoom" (não "transform: scale"): zoom é levado em conta pelo
-      // próprio motor de layout — o offsetWidth/offsetHeight do wrapper já
-      // sai no tamanho final encolhido, então o #...OuterScroll (overflow-x:
-      // auto) calcula sozinho a altura certa, sem precisar fixá-la à mão.
-      // Foi essa combinação (transform, que só afeta pintura, dentro de um
-      // scroll container com altura fixada via JS) que fazia a tabela
-      // "dançar" quando o pinça-pra-zoom nativo do iOS tentava ampliar o
-      // conteúdo por cima de uma altura de contêiner que não acompanhava —
-      // os dois mecanismos de zoom (o nosso e o do sistema) brigavam pelo
-      // mesmo elemento. Com "zoom" não tem essa segunda camada: o pinça
-      // nativo passa a ampliar o mesmo tamanho que o layout já enxerga.
-      function encolherTabelaParaCaber(wrapperId) {
+      // na largura disponível — o usuário pode ampliar com o dedo para ver
+      // os detalhes, já que o conteúdo é vetorial/texto e não perde nitidez.
+      function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId) {
+        const outerScroll = document.getElementById(outerScrollId);
+        const scaleBox = document.getElementById(scaleBoxId);
         const wrapper = document.getElementById(wrapperId);
-        if (!wrapper) return;
-        wrapper.style.zoom = '';
+        if (!scaleBox || !wrapper) return;
+        wrapper.style.transform = '';
+        scaleBox.style.width = '';
+        scaleBox.style.height = '';
+        if (outerScroll) outerScroll.style.height = '';
         const naturalW = wrapper.offsetWidth;
+        const naturalH = wrapper.offsetHeight;
         if (availableWidth > 0 && naturalW > availableWidth) {
-          wrapper.style.zoom = availableWidth / naturalW;
+          const escala = availableWidth / naturalW;
+          const scaledH = naturalH * escala;
+          wrapper.style.transform = `scale(${escala})`;
+          scaleBox.style.width = (naturalW * escala) + 'px';
+          scaleBox.style.height = scaledH + 'px';
+          // Com uma <table> diretamente dentro de um elemento com transform,
+          // o contêiner com overflow-x:auto calcula a própria altura usando o
+          // tamanho da tabela ANTES da escala (bug do navegador) — por isso
+          // também fixamos a altura dele aqui, em vez de deixar em "auto".
+          if (outerScroll) outerScroll.style.height = scaledH + 'px';
         }
       }
 
-      encolherTabelaParaCaber('matrizVisibilidadeWrapper');
-      encolherTabelaParaCaber('painelPrincipalWrapper');
+      encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper');
+      encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper');
     }
   } catch (err) {
     const container = document.getElementById(containerId);
