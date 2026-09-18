@@ -957,9 +957,16 @@ function injetarEstilosEditorRelatorio() {
   const style = document.createElement('style');
   style.id = 'relatorio-editor-estilos';
   style.textContent = `
-      .rel-editor-tabs { display: flex; gap: 4px; border-bottom: 1px solid #e2d9c2; margin-bottom: 20px; }
+      /* Travada no topo (position: sticky) — assim Editar, Prévia e Salvar
+         continuam visíveis o tempo todo, por mais que o formulário (ou a
+         prévia) role pra baixo. "top: 0" gruda logo depois do padding do
+         próprio container que rola (#mandala-container aqui dentro), que é
+         o ancestral com scroll mais próximo. */
+      .rel-editor-tabs { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #e2d9c2; margin-bottom: 20px; position: sticky; top: 0; z-index: 6; background: var(--bg-main, #f8fafc); padding: 10px 0; }
+      .rel-editor-tabs-grupo { display: flex; gap: 4px; }
       .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; }
       .rel-editor-tab.ativa { color: #103b70; border-bottom-color: #103b70; }
+      .rel-editor-btn-salvar { background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 9px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
 
       .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
@@ -1104,9 +1111,14 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
       </div>
 
       <div class="rel-editor-tabs" style="max-width: 720px; margin: 0 auto;">
-        <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
-        <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
-          <i class="fa-solid fa-eye"></i> Prévia
+        <div class="rel-editor-tabs-grupo">
+          <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
+          <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
+            <i class="fa-solid fa-eye"></i> Prévia
+          </button>
+        </div>
+        <button type="button" class="rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">
+          <i class="fa-solid fa-floppy-disk"></i> ${escapeHtml(config.rotuloSalvar)}
         </button>
       </div>
 
@@ -1138,10 +1150,6 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
             Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
           </div>
-
-          <button onclick="salvarEdicaoRelatorioAtual()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
-            ${escapeHtml(config.rotuloSalvar)}
-          </button>
         </div>
       </div>
 
@@ -1411,7 +1419,7 @@ async function atualizarPreviaEditorModelo() {
   const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
   const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
-      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Volte pra aba Editar e clique no botão de salvar quando estiver satisfeito.
+      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
     </div>
     <div class="rel-viewer">${conteudoHtml}</div>
   `;
