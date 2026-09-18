@@ -29,9 +29,21 @@ const MONOLINE_ZODIAC_SVGS_LOTES = [
 const SIGN_NAMES_LOTES = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
 const SIGN_COLORS_LOTES = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
 
+/* SVG cru dentro de <img> (data URI) em vez de <svg> inline: o html2canvas
+   usado pelas capturas de "Adicionar ao Relatório" tem dois bugs conhecidos
+   com <svg> inline — some em certos layouts e corta viewBox de origem
+   negativa (ex.: "-12 -12 24 24"). Envolvendo como <img>, o navegador já
+   rasteriza o SVG antes do html2canvas tocar nele (mesmo padrão de
+   liberacao.js/svgComoImagemZR). */
+function svgComoImagemLotes(svgInterno, largura, altura, viewBox) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="${viewBox}">${svgInterno}</svg>`;
+  return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
+}
+
 function getSignSVGLotes(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_LOTES[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</svg>`;
+  const interno = `<g style="color: ${SIGN_COLORS_LOTES[signIndex]};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
+  return svgComoImagemLotes(interno, size, size, '0 0 64 64');
 }
 
 /* Reaproveita o SVG esférico/simples já definido globalmente (decenios.js/horas.js) conforme a Aparência escolhida pelo usuário. */
@@ -44,22 +56,32 @@ function getPlanet3DSVGLotes(planetId, size = 26) {
 
 /* Mesmo círculo preto sobre fundo branco usado para ASC/DSC/MC/IC na mandala e no Painel Técnico. */
 function getASCIconSVGLotes(size = 22) {
-  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
+  const interno = `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text>`;
+  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 
-/* Ícone genérico de lote (mesmo padrão de círculo + símbolo usado em liberacao.js/direcoes.js), com uma abreviação curta no lugar de um único glifo planetário quando o lote combina mais de um termo. */
+/* Ícone genérico de lote (mesmo padrão de círculo + símbolo usado em liberacao.js/direcoes.js), com uma abreviação curta no lugar de um único glifo planetário quando o lote combina mais de um termo.
+   Cor gravada direto no SVG (#103b70): como <img> não herda currentColor de
+   fora, precisa vir com a cor já dentro — mesma cor usada em todos os
+   lugares que chamam esta função (ver renderLoteCardHTML/renderSeletorLotes). */
 function getLoteAbbrevIconSVG(abbrev, size = 22) {
+  const cor = '#103b70';
   const len = (abbrev || '').length;
   const fontSize = len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6));
-  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="currentColor" text-anchor="middle">${abbrev}</text></svg>`;
+  const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" text-anchor="middle">${abbrev}</text>`;
+  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 
 function getLoteFortunaIconSVG(size = 22) {
-  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="currentColor" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="currentColor" stroke-width="1.8"/></svg>`;
+  const cor = '#103b70';
+  const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${cor}" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${cor}" stroke-width="1.8"/>`;
+  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 
 function getLoteEspiritoIconSVG(size = 22) {
-  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="currentColor" text-anchor="middle">Φ</text></svg>`;
+  const cor = '#103b70';
+  const interno = `<text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="${cor}" text-anchor="middle">Φ</text>`;
+  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 
 /* Dispara o ícone correto para um item de lote já calculado (Parte 1). */
