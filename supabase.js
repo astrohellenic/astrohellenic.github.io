@@ -71,7 +71,7 @@ function renderMenuPrincipal() {
     htmlPastas += `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
         <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="abrirConteudoPasta('${pasta}')">
-          <i class="fa-solid fa-folder" style="color: #c59b27;"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
           <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
@@ -941,7 +941,7 @@ function abrirNavegacaoPastas() {
     html += `
        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-folder" style="color: #c59b27;"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
           <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
