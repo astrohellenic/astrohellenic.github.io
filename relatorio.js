@@ -777,7 +777,7 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
           <input type="checkbox" data-bloco-check="${id}" checked>
           <span style="flex: 1; font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
           ${extrasCapturada}
-          <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="this.closest('.rel-editor-linha').remove()"></i>
+          <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="removerBlocoEditor(this, '${id}')"></i>
         </div>
         <div style="margin-top: 8px; padding-left: 36px;">
           <label style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Nome no Índice</label>
@@ -805,7 +805,7 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
         <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? '#9a6d18' : '#103b70'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
-        ${custom ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerLinhaTextoEditor(this, '${id}')"></i>` : ''}
+        <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerBlocoEditor(this, '${id}')"></i>
       </div>
       <div class="rel-editor-campos" style="padding: 0 14px 14px;">
         <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}" style="margin-bottom: 8px; font-size: 13px;">
@@ -877,15 +877,70 @@ function configurarQuillUmaVez() {
   window.relatorioQuillConfigurado = true;
 }
 
-/* Remove a linha (bloco personalizado) e também o Quill dela — sem isso o
-   editor ficaria "vivo" em memória apontando pra um elemento que não
-   existe mais no DOM. */
-function removerLinhaTextoEditor(iconEl, id) {
+/* Remove a linha (texto personalizado, texto do catálogo ou ferramenta) e
+   também o Quill dela, se tinha — sem isso o editor ficaria "vivo" em
+   memória apontando pra um elemento que não existe mais no DOM.
+
+   Quando o que saiu era um item do CATÁLOGO (não personalizado) e essa
+   era a última linha dele na tela, ele volta a aparecer na lista
+   "Adicionar" — assim um item incluído só pra testar (ou por engano)
+   pode ser removido de verdade, sem precisar salvar/reabrir e sem ficar
+   só desmarcado, ocupando espaço à toa. */
+function removerBlocoEditor(iconEl, id) {
   const linha = iconEl.closest('.rel-editor-linha');
-  if (linha) linha.remove();
+  if (!linha) return;
+  const tipo = linha.dataset.blocoTipo;
+  const ehCustom = linha.dataset.custom === '1';
+  const idFerramenta = linha.dataset.ferramentaId;
+
+  linha.remove();
   if (window.relatorioQuillInstancias) delete window.relatorioQuillInstancias[id];
+
+  if (ehCustom) return; // bloco personalizado não pertence a nenhum catálogo pra voltar
+
+  const idCatalogo = tipo === 'ferramenta' ? idFerramenta : id;
+  const seletorRestantes = tipo === 'ferramenta'
+    ? `#relEditorOrdenavel [data-ferramenta-id="${idCatalogo}"]`
+    : `#relEditorOrdenavel [data-bloco-id="${idCatalogo}"]`;
+  const aindaEmUso = document.querySelector(seletorRestantes);
+  if (!aindaEmUso) restaurarItemNaListaAdicionar(idCatalogo);
 }
-window.removerLinhaTextoEditor = removerLinhaTextoEditor;
+window.removerBlocoEditor = removerBlocoEditor;
+
+/* Devolve pra lista "Adicionar" um item do catálogo que acabou de sair da
+   lista reordenável (ver removerBlocoEditor) — reaproveita o mesmo HTML
+   de quando o editor é aberto do zero (relatorioItemCatalogoHtml), pra
+   nunca ficar divergente do que apareceria numa reabertura normal. */
+function restaurarItemNaListaAdicionar(id) {
+  const lista = document.getElementById('relAdicionarLista');
+  if (!lista || lista.querySelector(`[data-adicionar-id="${id}"]`)) return;
+  const padrao = RELATORIO_CATALOGO_BLOCOS.find(b => b.id === id);
+  if (!padrao) return;
+  lista.insertAdjacentHTML('beforeend', relatorioItemCatalogoHtml(padrao));
+  relatorioAtualizarVisibilidadeAdicionar();
+}
+
+/* Mostra/esconde a seção "Adicionar" inteira conforme ela tem ou não
+   algum item pra oferecer — evita ficar com o título "Adicionar..." e a
+   explicação em cima de uma lista vazia. */
+function relatorioAtualizarVisibilidadeAdicionar() {
+  const secao = document.getElementById('relAdicionarSecao');
+  const lista = document.getElementById('relAdicionarLista');
+  if (!secao || !lista) return;
+  secao.style.display = lista.children.length ? '' : 'none';
+}
+
+/* HTML de UM item clicável da lista "Adicionar" — usado tanto na
+   primeira renderização do editor quanto quando um item volta pra essa
+   lista depois de removido (ver restaurarItemNaListaAdicionar). */
+function relatorioItemCatalogoHtml(padrao) {
+  const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
+  return `
+    <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
+      <span style="font-size: 13px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
+    </div>
+  `;
+}
 
 /* Move a linha (que contém o botão clicado) uma posição pra cima (-1) ou
    pra baixo (1) dentro do container reordenável — troca de posição no DOM
@@ -960,6 +1015,7 @@ function adicionarItemCatalogoAoEditor(id, tipo) {
 
   const itemCatalogo = document.querySelector(`[data-adicionar-id="${id}"]`);
   if (itemCatalogo) itemCatalogo.remove();
+  relatorioAtualizarVisibilidadeAdicionar();
 }
 window.adicionarItemCatalogoAoEditor = adicionarItemCatalogoAoEditor;
 
@@ -1116,14 +1172,10 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   // a linha de verdade no fim da lista de cima (ver adicionarItemCatalogoAoEditor),
   // pronta pra editar e mover com as setas — sem precisar salvar e reabrir
   // pra ela aparecer.
-  const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS.filter(padrao => padrao.type !== 'capa' && !mapaBlocosAtuais[padrao.id]).map(padrao => {
-    const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
-    return `
-      <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
-        <span style="font-size: 13px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
-      </div>
-    `;
-  }).join('');
+  const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS
+    .filter(padrao => padrao.type !== 'capa' && !mapaBlocosAtuais[padrao.id])
+    .map(relatorioItemCatalogoHtml)
+    .join('');
 
   injetarEstilosEditorRelatorio();
 
@@ -1163,13 +1215,13 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
 
           <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
 
-          ${linhasParaAdicionar ? `
+          <div id="relAdicionarSecao" style="${linhasParaAdicionar ? '' : 'display: none;'}">
             <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
             <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
               Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
             </div>
-            ${linhasParaAdicionar}
-          ` : ''}
+            <div id="relAdicionarLista">${linhasParaAdicionar}</div>
+          </div>
 
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
             <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
