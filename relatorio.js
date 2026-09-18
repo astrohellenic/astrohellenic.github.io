@@ -1453,6 +1453,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     if (painelPrevia) {
       painelPrevia.style.display = 'block';
       painelPrevia.innerHTML = opcoes.previaProntaHtml;
+      dividirPaginasLongasEmFolhas(painelPrevia);
       numerarPaginasIndice(painelPrevia);
     }
     if (abaEditarBtn) abaEditarBtn.classList.remove('ativa');
@@ -2092,6 +2093,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
   container.innerHTML = htmlRelatorio;
   container.scrollTop = 0;
   window.scrollTo(0, 0); // fora do modo Mandala quem rola de verdade é a página, não o container
+  dividirPaginasLongasEmFolhas(container);
   numerarPaginasIndice(container);
   ajustarEspacadoresBarraFixaRelatorio();
 }
@@ -2337,29 +2339,91 @@ function renderBlocoRelatorio(bloco, opts) {
   return '';
 }
 
-/* Preenche os números de página do Índice medindo a altura real de cada
-   seção já renderizada (cada .rel-page ocupa uma ou mais páginas físicas,
-   se o conteúdo dela transbordar). Não dá pra saber a paginação de
-   antemão porque o conteúdo varia por cliente/preset, então ela é
-   calculada depois de tudo estar na tela. */
+/* QUEBRA DE PÁGINA DE VERDADE: um bloco de texto (.rel-corpo) mais alto
+   que uma folha A4 crescia numa .rel-page só, cada vez mais alta — sem
+   nenhuma quebra visível, então na tela parecia "uma caixa gigante" e só
+   virava várias folhas na hora de gerar o PDF, fatiando a IMAGEM já
+   fotografada dessa caixa (ver baixarRelatorioPDF). Essa fatia era cega
+   ao conteúdo (cortava no meio de qualquer altura, texto incluso) e não
+   aparecia na prévia em tela — dava pra digitar um bloco enorme sem
+   nenhuma pista de quantas folhas ele ia realmente ocupar.
+   Agora, depois que o conteúdo está montado na tela (preciso do layout
+   de verdade pra medir a altura de cada parágrafo), caminha pelos
+   filhos de CADA .rel-corpo e, assim que a soma passaria do espaço de
+   uma folha, cria uma NOVA .rel-page (mesma classe, mesmo estilo) logo
+   depois e continua ali — movendo os elementos de verdade, não
+   copiando. O resultado: cada .rel-page passa a ser mesmo UMA folha, na
+   tela e no PDF (que nem precisa mais fatiar imagem nessas páginas). */
+function dividirPaginasLongasEmFolhas(container) {
+  const paginas = Array.from(container.querySelectorAll('.rel-viewer > .rel-page'));
+
+  paginas.forEach(pagina => {
+    const corpo = pagina.querySelector(':scope > .rel-corpo');
+    if (!corpo || !corpo.children.length) return; // só divide bloco de texto corrido
+
+    // Orçamento de altura de UMA folha, no tamanho em que a página está
+    // sendo exibida agora (a mesma proporção A4 que o CSS já aplica na
+    // tela via aspect-ratio) — nunca um valor fixo em px, porque o
+    // tamanho real varia com a largura da tela/painel.
+    const larguraAtual = pagina.getBoundingClientRect().width;
+    const alturaFolhaPx = larguraAtual * (297 / 210);
+    const estilo = getComputedStyle(pagina);
+    const orcamentoConteudoPx = alturaFolhaPx - parseFloat(estilo.paddingTop) - parseFloat(estilo.paddingBottom);
+
+    const h1Original = pagina.querySelector(':scope > .rel-h1');
+    const tabelaExtra = pagina.querySelector(':scope > .rel-tabela-wrap');
+
+    let paginaAtual = pagina;
+    let corpoAtual = corpo;
+    let alturaUsada = h1Original ? h1Original.getBoundingClientRect().height + 26 : 0; // 26px = margin-bottom do .rel-h1
+
+    Array.from(corpo.children).forEach(filho => {
+      // getBoundingClientRect() nunca inclui a margem do próprio elemento
+      // (só a caixa de borda) — sem somar o margin-bottom aqui, cada
+      // parágrafo era subcontado por ele, e a folha acabava passando do
+      // orçamento por várias vezes essa margem (perceptível já com umas
+      // 20 linhas: 20 × 14px ≈ 280px de sobra, quase 1/4 de folha).
+      const alturaFilho = filho.getBoundingClientRect().height + parseFloat(getComputedStyle(filho).marginBottom || 0);
+      if (alturaUsada > 0 && alturaUsada + alturaFilho > orcamentoConteudoPx && corpoAtual.children.length > 0) {
+        const novaPagina = document.createElement('section');
+        novaPagina.className = pagina.className;
+        const novoCorpo = document.createElement('div');
+        novoCorpo.className = 'rel-corpo';
+        novaPagina.appendChild(novoCorpo);
+        paginaAtual.after(novaPagina);
+        paginaAtual = novaPagina;
+        corpoAtual = novoCorpo;
+        alturaUsada = 0;
+      }
+      corpoAtual.appendChild(filho); // move o elemento de verdade — nunca clona
+      alturaUsada += alturaFilho;
+    });
+
+    // Tabela extra (Sete Lotes/Dodecatemorias) é sempre o fecho do
+    // bloco — se o texto acabou empurrando ela pra outra folha, segue
+    // pra a folha onde o conteúdo realmente terminou.
+    if (tabelaExtra && paginaAtual !== pagina) paginaAtual.appendChild(tabelaExtra);
+  });
+}
+
+/* Preenche os números de página do Índice — chamada depois de
+   dividirPaginasLongasEmFolhas, quando cada .rel-page já é, de verdade,
+   uma folha física só (não precisa mais estimar quantas folhas um bloco
+   comprido ocupa: ele já foi dividido em páginas separadas). */
 function numerarPaginasIndice(container) {
-  const paginaAlturaPx = 297 * 96 / 25.4; // 297mm convertidos para px (96dpi, o padrão do CSS)
-  const paginas = container.querySelectorAll('.rel-viewer > .rel-page[data-pg]');
+  const paginas = container.querySelectorAll('.rel-viewer > .rel-page');
   let numeroAtual = 1;
   const numeroPorAlvo = {};
 
   paginas.forEach(pagina => {
-    numeroPorAlvo[pagina.dataset.pg] = numeroAtual;
+    if (pagina.dataset.pg) numeroPorAlvo[pagina.dataset.pg] = numeroAtual;
 
     // Número no canto inferior direito da PRÓPRIA página (não só no
     // Índice) — pra aparecer tanto na prévia em tela quanto pra quem só
-    // olhar aqui sem baixar o PDF. É só um número por página (mesmo
-    // quando o bloco estimar mais de uma folha), então nas raras páginas
-    // que passam de uma folha de conteúdo esse número em tela pode ficar
-    // defasado — o número de verdade em cada folha do PDF baixado é
-    // escrito à parte, direto pelo jsPDF (ver numerarPaginaPdf), e esse
-    // sim está sempre correto. Escondido durante a captura de cada
-    // página (baixarRelatorioPDF), senão ficaria duplicado no PDF.
+    // olhar aqui sem baixar o PDF. O número de verdade em cada folha do
+    // PDF baixado é escrito à parte, direto pelo jsPDF (ver
+    // numerarPaginaPdf) — escondido durante a captura de cada página
+    // (baixarRelatorioPDF), senão ficaria duplicado no PDF.
     let selo = pagina.querySelector(':scope > .rel-num-pagina-canto');
     if (!selo) {
       selo = document.createElement('div');
@@ -2367,9 +2431,7 @@ function numerarPaginasIndice(container) {
       pagina.appendChild(selo);
     }
     selo.textContent = numeroAtual;
-
-    const altura = pagina.getBoundingClientRect().height;
-    numeroAtual += Math.max(1, Math.round(altura / paginaAlturaPx));
+    numeroAtual += 1;
   });
 
   container.querySelectorAll('.rel-num-pagina[data-alvo]').forEach(span => {
