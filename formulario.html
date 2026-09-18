@@ -316,18 +316,26 @@
 
 <!-- MODAL DE CONFIRMAÇÃO DADOS -->
 <div id="confirmModal" class="modal-overlay">
-  <div class="modal-card">
-    <h3>Confirme seus dados</h3>
-    <div class="summary-list">
-      <div class="summary-item"><strong>Nome:</strong> <span id="sumNome"></span></div>
-      <div class="summary-item"><strong>Data e Horário:</strong> <span id="sumDataHora"></span></div>
-      <div class="summary-item"><strong>Cidade:</strong> <span id="sumCidade"></span></div>
-      <div class="summary-item"><strong>WhatsApp:</strong> <span id="sumWhatsapp"></span></div>
-      <div class="summary-item"><strong>E-mail:</strong> <span id="sumEmail"></span></div>
+  <div class="modal-card" id="confirmModalCard">
+    <div id="confirmStepDados">
+      <h3>Confirme seus dados</h3>
+      <div class="summary-list">
+        <div class="summary-item"><strong>Nome:</strong> <span id="sumNome"></span></div>
+        <div class="summary-item"><strong>Data e Horário:</strong> <span id="sumDataHora"></span></div>
+        <div class="summary-item"><strong>Cidade:</strong> <span id="sumCidade"></span></div>
+        <div class="summary-item"><strong>WhatsApp:</strong> <span id="sumWhatsapp"></span></div>
+        <div class="summary-item"><strong>E-mail:</strong> <span id="sumEmail"></span></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="fecharConfirmacao()">Corrigir</button>
+        <button type="button" class="btn-primary" id="btnFinalSubmit" onclick="enviarParaSupabase()">Confirmar e Enviar</button>
+      </div>
     </div>
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" onclick="fecharConfirmacao()">Corrigir</button>
-      <button type="button" class="btn-primary" id="btnFinalSubmit" onclick="enviarParaSupabase()">Confirmar e Enviar</button>
+    <div id="confirmStepSucesso" style="display: none; text-align: center;">
+      <h3>Dados enviados com sucesso!</h3>
+      <p id="sucessoMensagem" style="font-size: 13px; color: var(--text-main); margin-bottom: 24px; line-height: 1.6;">
+        Recebemos suas informações. Redirecionando...
+      </p>
     </div>
   </div>
 </div>
@@ -437,6 +445,8 @@
 
   function fecharConfirmacao() {
     document.getElementById('confirmModal').style.display = 'none';
+    document.getElementById('confirmStepDados').style.display = 'block';
+    document.getElementById('confirmStepSucesso').style.display = 'none';
   }
 
   async function enviarParaSupabase() {
@@ -488,13 +498,22 @@
           }
         }
 
-        alert('Dados enviados com sucesso!');
-        fecharConfirmacao();
         document.getElementById('clientForm').reset();
         selectedGeo = { lat: null, lon: null, name: '' };
 
+        document.getElementById('confirmStepDados').style.display = 'none';
+        document.getElementById('confirmStepSucesso').style.display = 'block';
+
         if (cfgData && cfgData.redirect_url) {
-          window.location.href = cfgData.redirect_url;
+          document.getElementById('sucessoMensagem').innerText = 'Recebemos suas informações. Redirecionando...';
+          setTimeout(() => {
+            window.location.href = cfgData.redirect_url;
+          }, 1800);
+        } else {
+          document.getElementById('sucessoMensagem').innerText = 'Recebemos suas informações. Em breve entraremos em contato.';
+          setTimeout(() => {
+            fecharConfirmacao();
+          }, 2500);
         }
 
       } else {
