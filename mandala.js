@@ -18,6 +18,27 @@ function calcularFusoPorLongitude(lon) {
   return Math.round(lon / 15);
 }
 
+/* Mede a altura de VERDADE do #top-bar e aplica no espaçador logo depois
+   dele (#top-bar-espacador) — só tem efeito quando body.topbar-fixo está
+   ativo (fora do modo Mandala/Radix, ver abrirModuloTecnica em
+   supabase.js), que é quando o #top-bar vira position:fixed e sai do
+   fluxo normal da página. Medida em JS, não um valor fixo no CSS, porque
+   a altura muda com o tamanho da tela (ex.: os ícones podem quebrar
+   linha em aparelhos bem estreitos). Reage a redimensionamento também. */
+function ajustarEspacadorTopBar() {
+  const topBar = document.getElementById('top-bar');
+  const espacador = document.getElementById('top-bar-espacador');
+  if (!topBar || !espacador) return;
+  espacador.style.height = document.body.classList.contains('topbar-fixo') ? topBar.offsetHeight + 'px' : '';
+  if (typeof ajustarEspacadoresBarraFixaRelatorio === 'function') ajustarEspacadoresBarraFixaRelatorio();
+}
+window.ajustarEspacadorTopBar = ajustarEspacadorTopBar;
+
+if (!window.topBarResizeHandlerAdicionado) {
+  window.topBarResizeHandlerAdicionado = true;
+  window.addEventListener('resize', ajustarEspacadorTopBar);
+}
+
 let selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
 let editSelectedCityGeo = null;
 

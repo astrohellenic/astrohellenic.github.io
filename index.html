@@ -359,6 +359,31 @@ body {
             overflow: hidden;
         }
 
+        /* Fora do modo Mandala/Radix (ver body.topbar-fixo, alternada em
+           abrirModuloTecnica), o #top-bar vira de verdade position:fixed —
+           assim dá pra trocar de ferramenta a qualquer momento, mesmo
+           rolado bem fundo numa tela longa (ex.: o Relatório), sem
+           precisar sair da tela atual pra enxergar os ícones. No modo
+           Mandala ele continua no fluxo normal, de propósito: a mandala
+           usa a altura de #main-stage como referência pra encolher (ver
+           CLAUDE.md), e mexer nisso lá arriscaria quebrar esse cálculo. */
+        body.topbar-fixo #top-bar {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            width: auto; /* #top-bar tem width:100% na regra base — sem isso, com left+right também setados, o width:100% "vence" e a barra transborda 10px pra fora da tela */
+            z-index: 60;
+            margin-bottom: 0;
+        }
+
+        /* Reserva o espaço que o #top-bar deixou de ocupar no fluxo normal
+           ao virar fixed — a altura de verdade é medida em JS
+           (ajustarEspacadorTopBar, em mandala.js), porque muda com o
+           tamanho da tela. */
+        #top-bar-espacador { display: none; }
+        body.topbar-fixo #top-bar-espacador { display: block; margin-bottom: 10px; }
+
         .top-bar-controls {
             display: flex;
             align-items: center;
@@ -687,6 +712,13 @@ body {
             </div>
         </div>
         <!-- fecha o #top-bar -->
+        <!-- Só existe (com altura) fora do modo Mandala/Radix, quando o
+             #top-bar vira position:fixed (ver body.topbar-fixo) — reserva
+             o espaço que ele deixou de ocupar no fluxo normal, senão a
+             tela de baixo nasceria escondida atrás dele. Altura medida em
+             JS (ajustarEspacadorTopBar, em mandala.js), igual ao mesmo
+             padrão já usado nas barras fixas do Relatório. -->
+        <div id="top-bar-espacador"></div>
 
         <!-- TELA DA MANDALA: agrupa o desenho + os controles exclusivos dela -->
         <div id="mandala-screen" style="position: relative; flex: 1; display: flex; overflow: hidden;">
@@ -913,10 +945,10 @@ body {
      arquivos, atualize o "?v=" dele (só dele, não precisa dos outros)
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260918a"></script>
+<script src="supabase.js?v=20260918b"></script>
 <script src="planetIcons.js?v=20260916"></script>
 <script src="tabelaTecnica.js?v=20260917d"></script>
-<script src="mandala.js?v=20260918a"></script>
+<script src="mandala.js?v=20260918b"></script>
 <script src="isopsefia.js?v=20260917"></script>
 <script src="profeccao.js?v=20260917b"></script>
 <script src="revolucao.js?v=20260916"></script>
@@ -926,7 +958,7 @@ body {
 <script src="lotes-calculadora.js?v=20260916"></script>
 <script src="horas.js?v=20260917b"></script>
 <script src="perguntas.js?v=20260916"></script>
-<script src="relatorio.js?v=20260918h"></script>
+<script src="relatorio.js?v=20260918i"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
      de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão

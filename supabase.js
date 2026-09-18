@@ -820,6 +820,16 @@ function abrirModuloTecnica(modulo) {
   // módulo pro outro (a mandala continua recebendo "scroll" de volta).
   if (cRadix) cRadix.style.overflowY = (modulo === 'mandala' || modulo === 'radix') ? '' : 'visible';
 
+  // Fora do modo Mandala/Radix, o #top-bar (ícones das ferramentas) vira
+  // position:fixed (ver body.topbar-fixo no index.html) — assim o
+  // astrólogo pode trocar de ferramenta a qualquer momento, mesmo rolado
+  // bem fundo numa tela longa (ex.: editando um Relatório), sem precisar
+  // sair da tela atual só pra enxergar os ícones. No modo Mandala ele
+  // continua no fluxo normal, de propósito (ver o comentário da regra
+  // CSS "body.topbar-fixo #top-bar").
+  document.body.classList.toggle('topbar-fixo', !(modulo === 'mandala' || modulo === 'radix'));
+  if (typeof ajustarEspacadorTopBar === 'function') ajustarEspacadorTopBar();
+
 // 1. MANDALA / MAPA NATAL (Globinho)
 if (modulo === 'mandala' || modulo === 'radix') {
   if (cRadix) cRadix.style.display = 'block';
