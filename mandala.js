@@ -1405,8 +1405,20 @@ window.onload = function() {
     carregarCeuDoMomento();
   }
 
-  const ultimoModulo = localStorage.getItem('astro_ultimo_modulo');
-  if (ultimoModulo && ultimoModulo !== 'mandala' && typeof abrirModuloTecnica === 'function') {
+  // Sempre chama abrirModuloTecnica, mesmo quando o último módulo foi a
+  // própria Mandala/Radix: é ELA quem põe "modo-mandala" no body (só
+  // acontece aqui, nunca no HTML estático) e restaura o overflowY do
+  // #mandala-container pro padrão do CSS. Sem isso, a mandala abria sem
+  // altura de referência pra encolher (max-height:100% sem efeito) e
+  // ficava esparramada/cortada até o astrólogo trocar de ferramenta e
+  // voltar — o que é quando abrirModuloTecnica('mandala'/'radix') roda
+  // de verdade. Nesse ponto currentCalculatedData ainda não chegou (o
+  // fetch acima ainda está em andamento), então o renderMandala() que
+  // abrirModuloTecnica dispara não faz nada; o desenho de fato acontece
+  // depois, quando executarCalculo() terminar, já com o container no
+  // tamanho certo.
+  const ultimoModulo = localStorage.getItem('astro_ultimo_modulo') || 'mandala';
+  if (typeof abrirModuloTecnica === 'function') {
     try { abrirModuloTecnica(ultimoModulo); } catch (e) { console.error(e); }
   }
 
