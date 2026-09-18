@@ -67,6 +67,19 @@ body.modo-mandala, html.modo-mandala {
   overflow: hidden;
 }
 
+/* Rolagem horizontal do #mandala-container, só no modo Mandala/Radix (ver
+   botões de zoom em mandala.js, injetarControleZoomMandala/ajustarZoomMandala):
+   com zoom acima de 100% a imagem passa a ser mais larga que a tela, e sem
+   isso ela simplesmente cortava nas laterais sem jeito de rolar até lá.
+   Escopado só a ".modo-mandala" de propósito — #mandala-container também é
+   reaproveitado por outros módulos (Tabela Técnica, Profecção etc., que
+   rodam fora desse modo) e dar overflow-x nele ali também repetiria o
+   problema já documentado no CLAUDE.md do overflow "fantasma" quebrando
+   position:sticky nesses módulos. */
+body.modo-mandala #mandala-container {
+  overflow-x: auto;
+}
+
 body {
   display: flex;
   position: relative;
@@ -948,7 +961,7 @@ body {
 <script src="supabase.js?v=20260918b"></script>
 <script src="planetIcons.js?v=20260916"></script>
 <script src="tabelaTecnica.js?v=20260917d"></script>
-<script src="mandala.js?v=20260918c"></script>
+<script src="mandala.js?v=20260918d"></script>
 <script src="isopsefia.js?v=20260917"></script>
 <script src="profeccao.js?v=20260917b"></script>
 <script src="revolucao.js?v=20260916"></script>
