@@ -1040,12 +1040,17 @@ function injetarEstilosEditorRelatorio() {
   const style = document.createElement('style');
   style.id = 'relatorio-editor-estilos';
   style.textContent = `
-      /* Travada no topo (position: sticky) — assim Editar, Prévia e Salvar
-         continuam visíveis o tempo todo, por mais que o formulário (ou a
-         prévia) role pra baixo. "top: 0" gruda logo depois do padding do
-         próprio container que rola (#mandala-container aqui dentro), que é
-         o ancestral com scroll mais próximo. */
-      .rel-editor-tabs { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #e2d9c2; margin-bottom: 20px; position: sticky; top: 0; z-index: 6; background: var(--bg-main, #f8fafc); padding: 10px 0; }
+      /* Travada no topo com position:fixed (não mais sticky) — presa direto
+         na tela, sem depender de qual elemento é "o ancestral com scroll"
+         (isso variava demais entre navegador/aparelho e nunca ficou 100%
+         confiável). Como um elemento fixed sai do fluxo normal da página,
+         #relEditorEspacadorBarra logo abaixo dela (ver renderizarTelaEditorRelatorio)
+         reserva o mesmo espaço que ela ocupa, pra nada ficar escondido
+         atrás — a altura exata é medida e aplicada em JS (ver
+         ajustarEspacadorBarraFixaEditor), já que ela muda com o tamanho
+         da tela. */
+      .rel-editor-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; justify-content: center; gap: 12px; border-bottom: 1px solid #e2d9c2; background: var(--bg-main, #f8fafc); padding: 10px 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+      .rel-editor-tabs-conteudo { width: 100%; max-width: 720px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
       .rel-editor-tabs-grupo { display: flex; gap: 4px; }
       .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; }
       .rel-editor-tab.ativa { color: #103b70; border-bottom-color: #103b70; }
@@ -1058,6 +1063,30 @@ function injetarEstilosEditorRelatorio() {
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: #fffbeb; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #9a6d18; font-weight: 600; }
   `;
   document.head.appendChild(style);
+}
+
+/* Mede a altura de VERDADE de cada barra fixa do módulo de Relatório
+   (a do editor — Editar/Prévia/Salvar — e a do relatório final — Voltar/
+   Editar/Baixar PDF) e aplica essa altura no espaçador logo abaixo de
+   cada uma — como as duas são position:fixed (fora do fluxo normal da
+   página, ver o comentário em ".rel-editor-tabs"/".rel-toolbar"), sem
+   esse espaçador o conteúdo seguinte ficaria escondido atrás delas.
+   Medida em JS, não um valor fixo no CSS, porque a altura muda com o
+   tamanho da tela (ex.: quebra pra duas linhas em aparelhos bem
+   estreitos). Só uma das duas existe por vez (telas diferentes), então
+   é seguro chamar sempre pelas duas — a que não existe agora é ignorada. */
+function ajustarEspacadoresBarraFixaRelatorio() {
+  [['relEditorTabsFixa', 'relEditorEspacadorBarra'], ['relToolbarFixa', 'relToolbarEspacador']].forEach(([idBarra, idEspacador]) => {
+    const barra = document.getElementById(idBarra);
+    const espacador = document.getElementById(idEspacador);
+    if (barra && espacador) espacador.style.height = barra.offsetHeight + 'px';
+  });
+}
+window.ajustarEspacadoresBarraFixaRelatorio = ajustarEspacadoresBarraFixaRelatorio;
+
+if (!window.relatorioResizeBarraHandlerAdicionado) {
+  window.relatorioResizeBarraHandlerAdicionado = true;
+  window.addEventListener('resize', ajustarEspacadoresBarraFixaRelatorio);
 }
 
 /* Editor de MODELO (genérico, compartilhado por todos os clientes) —
@@ -1190,17 +1219,24 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
         <div style="width: 76px;"></div>
       </div>
 
-      <div class="rel-editor-tabs" style="max-width: 720px; margin: 0 auto;">
-        <div class="rel-editor-tabs-grupo">
-          <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
-          <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
-            <i class="fa-solid fa-eye"></i> Prévia
+      <div class="rel-editor-tabs" id="relEditorTabsFixa">
+        <div class="rel-editor-tabs-conteudo">
+          <div class="rel-editor-tabs-grupo">
+            <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
+            <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
+              <i class="fa-solid fa-eye"></i> Prévia
+            </button>
+          </div>
+          <button type="button" class="rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">
+            <i class="fa-solid fa-floppy-disk"></i> ${escapeHtml(config.rotuloSalvar)}
           </button>
         </div>
-        <button type="button" class="rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">
-          <i class="fa-solid fa-floppy-disk"></i> ${escapeHtml(config.rotuloSalvar)}
-        </button>
       </div>
+      <!-- Como a barra acima é position:fixed (fora do fluxo normal), este
+           espaçador reserva o mesmo espaço que ela ocupa, senão o início do
+           formulário/prévia ficaria escondido atrás dela. Altura real
+           medida e aplicada logo abaixo, em JS (ajustarEspacadorBarraFixaEditor). -->
+      <div id="relEditorEspacadorBarra"></div>
 
       <div id="relEditorFormPane">
         <div style="max-width: 720px; margin: 0 auto;">
@@ -1239,6 +1275,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   `;
   inicializarQuillsPendentes();
   atualizarPreviewCapaEditor();
+  ajustarEspacadoresBarraFixaRelatorio();
 
   // Reconstrução pós-prévia: a prévia já veio pronta (foi gerada ANTES da
   // mandala apagar a tela) — só exibe, direto na aba Prévia, sem gerar de
@@ -1725,10 +1762,11 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
   const conteudoHtml = montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
 
   const htmlRelatorio = `
-    <div class="rel-toolbar no-print">
+    <div class="rel-toolbar no-print" id="relToolbarFixa">
       <button type="button" class="btn-secondary" onclick="voltarConfigRelatorio()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
       <button type="button" id="relBtnBaixarPdf" class="btn-primary" onclick="baixarRelatorioPDF()"><i class="fa-solid fa-file-arrow-down"></i> Baixar PDF</button>
     </div>
+    <div id="relToolbarEspacador" class="no-print"></div>
 
     <div class="rel-viewer">
       ${conteudoHtml}
@@ -1737,7 +1775,9 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
 
   container.innerHTML = htmlRelatorio;
   container.scrollTop = 0;
+  window.scrollTo(0, 0); // fora do modo Mandala quem rola de verdade é a página, não o container
   numerarPaginasIndice(container);
+  ajustarEspacadoresBarraFixaRelatorio();
 }
 
 /* Monta o nome do arquivo baixado a partir do nome do modelo + o cliente
@@ -2084,7 +2124,11 @@ function injetarEstilosRelatorio() {
   const style = document.createElement('style');
   style.id = 'relatorio-estilos';
   style.textContent = `
-      .rel-toolbar { display: flex; justify-content: center; gap: 10px; padding: 12px; position: sticky; top: 0; background: #f1f5f9; z-index: 5; border-bottom: 1px solid #e2d9c2; }
+      /* position:fixed, não sticky — ver a nota em CLAUDE.md sobre por que
+         sticky não é confiável nesse layout (mesmo motivo da barra do
+         editor, .rel-editor-tabs). #relToolbarEspacador logo depois dela
+         no HTML reserva o espaço que ela ocupa. */
+      .rel-toolbar { display: flex; justify-content: center; gap: 10px; padding: 12px; position: fixed; top: 0; left: 0; right: 0; background: #f1f5f9; z-index: 50; border-bottom: 1px solid #e2d9c2; }
       .rel-toolbar button { display: flex; align-items: center; gap: 6px; }
       .rel-viewer { background: #e5e7eb; padding: 24px 12px; }
 

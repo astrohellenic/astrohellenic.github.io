@@ -34,17 +34,41 @@ regra do CSS, que não usa `!important`); ao reabrir Mandala/Radix, o
 estilo inline é limpo (`= ''`) e o container volta a herdar o
 `overflow-y` normal do CSS.
 
-**Isso já está corrigido de forma central** — não precisa (nem deve) ser
-repetido módulo por módulo. Qualquer `position: sticky` novo dentro de
-`#mandala-container`, em qualquer módulo que não seja Mandala/Radix, já
-funciona corretamente sem nenhum ajuste extra, porque a correção já
-libera a rolagem real da página pra ele. Só reconsiderar esse ponto se:
-- um módulo novo precisar de rolagem *interna* própria (like Mandala) em
-  vez de rolagem de página — nesse caso ele precisaria entrar na mesma
-  condição que hoje só cobre `'mandala'`/`'radix'`;
-- ou se a estrutura de `abrirModuloTecnica` mudar de lugar/for
-  substituída por outra forma de trocar módulo.
+Essa correção **ficou valendo** (não precisa repetir módulo por módulo,
+é feita uma vez em `abrirModuloTecnica`) e é útil por si só — mas na
+prática, **não bastou** pra destravar o `position: sticky` no celular
+(testado em dois navegadores, inclusive aba anônima, pelo astrólogo que
+usa o site). Ou tem mais alguma coisa entrando na jogada (algum
+comportamento específico de Safari/iOS com sticky dentro de flex, por
+exemplo) que não foi totalmente identificada, ou simplesmente
+`position: sticky` é frágil demais nesse layout pra confiar.
 
-Histórico: PRs #103 e #104 no repo (#103 tratou só metade do problema —
-uma rolagem aninhada própria da tela do editor de Relatório; #104 é a
-correção de verdade, descrita acima).
+## Conclusão prática: NÃO use `position: sticky` pra barra sempre-visível — use `position: fixed` + espaçador medido em JS
+
+Depois de duas tentativas com `sticky` (mexendo na rolagem aninhada da
+tela e depois no overflow do `#mandala-container`) sem sucesso real no
+aparelho do usuário, a solução que funcionou de verdade (barra
+Editar/Prévia/Salvar do editor de Relatório, `relatorio.js`,
+`renderizarTelaEditorRelatorio`) foi abandonar `sticky` e usar:
+
+1. A barra em si: `position: fixed; top: 0; left: 0; right: 0;` — presa
+   direto na tela (viewport), sem depender de qual ancestral "conta"
+   como scroll container. Full-width, com um `<div>` interno
+   (`max-width` + `margin: 0 auto`) pra centralizar o conteúdo.
+2. Como um elemento `fixed` sai do fluxo normal da página, um
+   **espaçador** (`<div>` vazio) logo depois dela no HTML reserva o
+   mesmo espaço que ela ocupa — senão o conteúdo seguinte nasce
+   escondido atrás dela.
+3. A altura do espaçador é **medida em JS** (`barra.offsetHeight`), não
+   chutada em CSS, porque muda com o tamanho da tela (ex.: a barra pode
+   quebrar em duas linhas em aparelhos bem estreitos) — recalculada de
+   novo em `resize` (ver `ajustarEspacadorBarraFixaEditor`).
+
+Pra qualquer ferramenta futura que precise de uma barra ou controle
+sempre visível durante a rolagem: comece direto por `position: fixed` +
+espaçador medido em JS, nesse padrão. Não vale a pena gastar tempo
+tentando fazer `position: sticky` funcionar nesse layout de novo.
+
+Histórico: PRs #103, #104 e #106 no repo (#103 e #104 foram as tentativas
+com `sticky`, incompletas na prática; #106 trocou pra `position: fixed`,
+que resolveu de fato).
