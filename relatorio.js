@@ -568,6 +568,29 @@ async function iniciarModuloRelatorio() {
     return;
   }
 
+  // RETOMAR DE ONDE PAROU — o astrólogo pode ter só ido dar uma olhada em
+  // outra ferramenta (Mandala, Profecção etc.) pra decidir o que escrever,
+  // sem trocar de cliente. Nesse caso volta direto pro relatório que
+  // estava aberto, em vez de reiniciar do zero (escolher modelo/cliente de
+  // novo) — o relatório só "fecha" de verdade quando o astrólogo clica em
+  // "Voltar" (ver voltarConfigRelatorio/voltarDoEditorRascunho, que zeram
+  // currentRascunhoId/relatorioEditorAlvoAtual de propósito).
+  const mesmoCliente = typeof currentMapaId !== 'undefined' && currentMapaId;
+  const alvoEditor = window.relatorioEditorAlvoAtual;
+  const cacheRascunho = window.relatorioRascunhoEmEdicao;
+  if (mesmoCliente && alvoEditor && alvoEditor.tipo === 'rascunho' && cacheRascunho
+      && cacheRascunho.id === alvoEditor.id && cacheRascunho.mapa_id === currentMapaId) {
+    const abaParaRetomar = window.relatorioAbaEditorAtiva;
+    window.relatorioRascunhoEmEdicao = null; // relê do banco — pode ter autosave mais recente que o cache
+    await abrirEditorRascunhoRelatorio(alvoEditor.id, { retomando: true });
+    if (abaParaRetomar === 'previa') mudarAbaEditorModelo('previa');
+    return;
+  }
+  if (mesmoCliente && !alvoEditor && typeof currentRascunhoId !== 'undefined' && currentRascunhoId) {
+    await abrirRascunhoRelatorio(currentRascunhoId);
+    return;
+  }
+
   container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Carregando seus modelos de relatório...</div>`;
 
   const [presets, rascunhos] = await Promise.all([
@@ -1079,12 +1102,21 @@ function injetarEstilosEditorRelatorio() {
    Medida em JS, não um valor fixo no CSS, porque a altura muda com o
    tamanho da tela (ex.: quebra pra duas linhas em aparelhos bem
    estreitos). Só uma das duas existe por vez (telas diferentes), então
-   é seguro chamar sempre pelas duas — a que não existe agora é ignorada. */
+   é seguro chamar sempre pelas duas — a que não existe agora é ignorada.
+
+   Também empurra as duas pra baixo do #top-bar (agora fixo também fora
+   do modo Mandala — ver body.topbar-fixo no index.html), com 10px de
+   respiro, pra nunca cobrir os ícones das ferramentas. */
 function ajustarEspacadoresBarraFixaRelatorio() {
+  const topBar = document.getElementById('top-bar');
+  const offsetTopoBarra = topBar ? Math.max(0, topBar.getBoundingClientRect().bottom) + 10 : 0;
+
   [['relEditorTabsFixa', 'relEditorEspacadorBarra'], ['relToolbarFixa', 'relToolbarEspacador']].forEach(([idBarra, idEspacador]) => {
     const barra = document.getElementById(idBarra);
     const espacador = document.getElementById(idEspacador);
-    if (barra && espacador) espacador.style.height = barra.offsetHeight + 'px';
+    if (!barra || !espacador) return;
+    barra.style.top = offsetTopoBarra + 'px';
+    espacador.style.height = barra.offsetHeight + 'px';
   });
 }
 window.ajustarEspacadoresBarraFixaRelatorio = ajustarEspacadoresBarraFixaRelatorio;
@@ -1114,7 +1146,10 @@ if (!window.relatorioScrollPreviaHandlerAdicionado) {
 function abrirEditorPresetRelatorio(idx, opcoes) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset) return;
-  if (!opcoes || !opcoes.blocosOverride) window.relatorioPreviaScrollY = 0; // abertura nova, não reconstrução pós-prévia
+  if (!opcoes || (!opcoes.blocosOverride && !opcoes.retomando)) {
+    window.relatorioPreviaScrollY = 0; // abertura nova de verdade — não reconstrução nem retomada
+    window.relatorioAbaEditorAtiva = 'editar';
+  }
   window.relatorioEditorAlvoAtual = { tipo: 'preset', idx };
   renderizarTelaEditorRelatorio(preset, opcoes, {
     tituloTela: 'Editar Modelo',
@@ -1145,7 +1180,10 @@ async function abrirEditorRascunhoRelatorio(rascunhoId, opcoes) {
   }
 
   window.relatorioEditorAlvoAtual = { tipo: 'rascunho', id: rascunhoId };
-  if (!opcoes.blocosOverride) window.relatorioPreviaScrollY = 0; // abertura nova, não reconstrução pós-prévia
+  if (!opcoes.blocosOverride && !opcoes.retomando) {
+    window.relatorioPreviaScrollY = 0; // abertura nova de verdade — não reconstrução nem retomada
+    window.relatorioAbaEditorAtiva = 'editar';
+  }
   const objetoEditavel = { nome: rascunho.titulo || rascunho.nome, blocos: rascunho.blocos || [] };
   renderizarTelaEditorRelatorio(objetoEditavel, opcoes, {
     tituloTela: `Editar Relatório de ${rascunho.nome}`,
@@ -1681,6 +1719,7 @@ window.atualizarPreviaEditorModelo = atualizarPreviaEditorModelo;
    aqui como se fazia antes. Voltar pra "editar" continua sendo uma troca
    simples: o painel do formulário já está montado no DOM. */
 function mudarAbaEditorModelo(aba) {
+  window.relatorioAbaEditorAtiva = aba; // lembrada pra retomar na mesma aba (ver iniciarModuloRelatorio)
   if (aba === 'previa') {
     atualizarPreviaEditorModelo();
     return;
