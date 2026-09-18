@@ -147,7 +147,7 @@ function abrirNavegacaoConfiguracoes() {
       <!-- OPÇÃO: CAPTAÇÃO DE CLIENTES -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesCaptacao()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-bullhorn" style="color: #c59b27;"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M2,9 L9,9 L16,3 V21 L9,15 L2,15 Z"/><path d="M3,15 V19 H6 V15"/><path d="M19,8 Q22.5,12 19,16"/></svg>
           <span style="font-size: 13px; font-weight: 600; color: #103b70;">Captação de Clientes</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
@@ -156,7 +156,7 @@ function abrirNavegacaoConfiguracoes() {
       <!-- OPÇÃO: SEGURANÇA E CONTA -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesSeguranca()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-shield-halved" style="color: #c59b27;"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M12,2 L4,5 V11 C4,16 8,19.5 12,21 C16,19.5 20,16 20,11 V5 Z"/></svg>
           <span style="font-size: 13px; font-weight: 600; color: #103b70;">Segurança e Conta</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
@@ -165,7 +165,7 @@ function abrirNavegacaoConfiguracoes() {
       <!-- OPÇÃO: APARÊNCIA -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAparencia()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-palette" style="color: #c59b27;"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M12,3 C6.5,3 2,7 2,12 C2,16 5,19 8.5,19 C10,19 10.3,17.7 9.6,16.8 C8.8,15.8 9.5,14.3 11,14.3 H14.5 C18.6,14.3 22,11.4 22,8.5 C22,5.4 17.5,3 12,3 Z"/><circle cx="7" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1.3" fill="currentColor" stroke="none"/><circle cx="17" cy="9" r="1.3" fill="currentColor" stroke="none"/></svg>
           <span style="font-size: 13px; font-weight: 600; color: #103b70;">Aparência</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
@@ -174,7 +174,7 @@ function abrirNavegacaoConfiguracoes() {
       <!-- OPÇÃO: RELATÓRIOS -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesRelatorio()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-pdf" style="color: #c59b27;"></i>
+          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M14,4 H40 L50,14 V60 H14 Z" stroke-linejoin="round"/><path d="M40,4 V14 H50" stroke-linejoin="round"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
           <span style="font-size: 13px; font-weight: 600; color: #103b70;">Relatórios</span>
         </div>
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
