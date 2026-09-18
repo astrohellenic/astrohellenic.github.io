@@ -1128,7 +1128,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   injetarEstilosEditorRelatorio();
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
 
       <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <button type="button" onclick="${config.aoVoltarJs}" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 700;">
