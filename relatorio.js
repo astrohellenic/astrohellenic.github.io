@@ -390,6 +390,69 @@ async function persistirCapturasRelatorio(client, userId, mapaId) {
   return resultado;
 }
 
+/* Lê, direto do banco, o "pool" de capturas de um cliente (mapa) —
+   união das capturas salvas em TODOS os rascunhos daquele mapa_id,
+   deduplicada por dataUrl (uma mesma URL permanente do Storage não
+   aparece duas vezes mesmo se estiver salva em mais de um rascunho).
+   É assim que a mesma captura feita numa ferramenta fica disponível pra
+   qualquer relatório daquele cliente (Retificação, Mapa Natal etc.) sem
+   precisar refazer a captura — mas nunca aparece pra outro cliente,
+   porque a busca é sempre filtrada por mapa_id. Sem tabela nova: só
+   agrega o que cada rascunho já guarda na própria coluna `capturas`. */
+async function carregarCapturasPooladasDoMapa(mapaId) {
+  const vazio = {};
+  const client = relatorioSupabaseClient();
+  if (!client || !mapaId) return vazio;
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return vazio;
+
+    const { data, error } = await client
+      .from('relatorio_rascunhos')
+      .select('capturas')
+      .eq('user_id', user.id)
+      .eq('mapa_id', mapaId);
+    if (error || !data) return vazio;
+
+    const pool = {};
+    const vistosPorFerramenta = {};
+    data.forEach(row => {
+      const capturasRow = row.capturas || {};
+      Object.keys(capturasRow).forEach(toolId => {
+        const lista = Array.isArray(capturasRow[toolId]) ? capturasRow[toolId] : [capturasRow[toolId]];
+        pool[toolId] = pool[toolId] || [];
+        vistosPorFerramenta[toolId] = vistosPorFerramenta[toolId] || new Set();
+        lista.forEach(captura => {
+          if (!captura || !captura.dataUrl || vistosPorFerramenta[toolId].has(captura.dataUrl)) return;
+          vistosPorFerramenta[toolId].add(captura.dataUrl);
+          pool[toolId].push(captura);
+        });
+      });
+    });
+    Object.keys(pool).forEach(toolId => {
+      pool[toolId].sort((a, b) => (a.capturadoEm || 0) - (b.capturadoEm || 0));
+    });
+    return pool;
+  } catch (e) {
+    return vazio;
+  }
+}
+window.carregarCapturasPooladasDoMapa = carregarCapturasPooladasDoMapa;
+
+/* Chamada sempre que o mapa em tela muda (ver aplicarDadosDoPerfilNoMapa,
+   em mandala.js) — repõe window.relatorioCapturas com o pool de VERDADE
+   desse cliente, assim que a busca no banco terminar. Só aplica o
+   resultado se o astrólogo continuar no mesmo mapa quando a busca
+   voltar (senão ele já trocou de cliente de novo nesse meio-tempo, e
+   aplicar aqui "roubaria" a captura de quem está na tela agora). */
+async function recarregarCapturasDoMapaAtivo(mapaId) {
+  const pool = await carregarCapturasPooladasDoMapa(mapaId);
+  if (typeof currentMapaId !== 'undefined' && currentMapaId === mapaId) {
+    window.relatorioCapturas = pool;
+  }
+}
+window.recarregarCapturasDoMapaAtivo = recarregarCapturasDoMapaAtivo;
+
 /* Salva o rascunho do mapa atualmente carregado — chamada
    automaticamente ao final de gerarRelatorioCompleto, sem bloquear a
    prévia (roda em segundo plano). Não faz nada se o mapa em tela ainda
@@ -481,7 +544,13 @@ async function abrirRascunhoRelatorio(rascunhoId) {
     // tela) — agora que sabemos que é justamente ESTE rascunho, reafirma.
     currentRascunhoId = rascunho.id;
 
-    window.relatorioCapturas = rascunho.capturas || {};
+    // Pool de capturas do CLIENTE (mapa_id), não só as desse rascunho —
+    // assim uma captura feita enquanto editava outro relatório dela (ex.:
+    // Mapa Natal) já aparece disponível aqui também (ex.: Retificação).
+    window.relatorioCapturas = await carregarCapturasPooladasDoMapa(rascunho.mapa_id);
+    // Guardado pra abrirEditorRascunhoRelatorio reaproveitar sem refazer a
+    // consulta ao banco quando o astrólogo clicar em "Editar" a seguir.
+    window.relatorioRascunhoEmEdicao = rascunho;
     await gerarRelatorioCompleto({ nome: rascunho.titulo || rascunho.nome, blocos: rascunho.blocos || [] });
   } catch (e) {
     alert('Erro de conexão ao abrir o rascunho.');
@@ -901,37 +970,94 @@ function injetarEstilosEditorRelatorio() {
   document.head.appendChild(style);
 }
 
+/* Editor de MODELO (genérico, compartilhado por todos os clientes) —
+   grava em relatorio_presets. Usado pela lista "Modelos de Relatório". */
+function abrirEditorPresetRelatorio(idx, opcoes) {
+  const preset = (window.relatorioPresetsCarregados || [])[idx];
+  if (!preset) return;
+  window.relatorioEditorAlvoAtual = { tipo: 'preset', idx };
+  renderizarTelaEditorRelatorio(preset, opcoes, {
+    tituloTela: 'Editar Modelo',
+    labelNome: 'Nome do Modelo',
+    labelAdicionar: 'Adicionar ao Modelo',
+    rotuloSalvar: 'Salvar Modelo',
+    aoVoltarJs: 'iniciarModuloRelatorio()'
+  });
+}
+window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
+
+/* Editor do RELATÓRIO DE UM CLIENTE ESPECÍFICO (um rascunho) — grava em
+   relatorio_rascunhos, nunca em relatorio_presets: editar aqui nunca
+   muda o modelo genérico nem o relatório de nenhum outro cliente. Busca
+   o rascunho completo (com blocos) só na primeira vez; a reconstrução
+   pós-prévia reaproveita o que já foi buscado (ver window.
+   relatorioRascunhoEmEdicao, preenchido também por abrirRascunhoRelatorio). */
+async function abrirEditorRascunhoRelatorio(rascunhoId, opcoes) {
+  opcoes = opcoes || {};
+  let rascunho = window.relatorioRascunhoEmEdicao;
+  if (!rascunho || rascunho.id !== rascunhoId) {
+    const container = document.getElementById('mandala-container');
+    if (container) container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o relatório...</div>`;
+    rascunho = await carregarRascunhoPorId(rascunhoId);
+    if (!rascunho) { alert('Não foi possível carregar este relatório.'); iniciarModuloRelatorio(); return; }
+    window.relatorioRascunhoEmEdicao = rascunho;
+  }
+
+  window.relatorioEditorAlvoAtual = { tipo: 'rascunho', id: rascunhoId };
+  const objetoEditavel = { nome: rascunho.titulo || rascunho.nome, blocos: rascunho.blocos || [] };
+  renderizarTelaEditorRelatorio(objetoEditavel, opcoes, {
+    tituloTela: `Editar Relatório de ${rascunho.nome}`,
+    labelNome: 'Título deste Relatório',
+    labelAdicionar: 'Adicionar a este Relatório',
+    rotuloSalvar: 'Salvar Alterações',
+    aoVoltarJs: `abrirRascunhoRelatorio('${rascunhoId}')`
+  });
+}
+window.abrirEditorRascunhoRelatorio = abrirEditorRascunhoRelatorio;
+
+/* Reabre o editor no alvo (preset ou rascunho) que está em edição agora
+   — usada pela reconstrução pós-prévia e por qualquer outro fluxo que
+   precise voltar pro editor sem saber, de antemão, qual dos dois tipos
+   está aberto. */
+function reabrirEditorRelatorioAtual(opcoes) {
+  const alvo = window.relatorioEditorAlvoAtual;
+  if (!alvo) return;
+  if (alvo.tipo === 'preset') abrirEditorPresetRelatorio(alvo.idx, opcoes);
+  else abrirEditorRascunhoRelatorio(alvo.id, opcoes);
+}
+
 /* "opcoes" (opcional) é usada SÓ pela reconstrução pós-prévia (ver
    atualizarPreviaEditorModelo): reabre a tela do editor não a partir do
-   preset salvo, mas com o que estava em edição na hora — texto,
+   que estava salvo, mas com o que estava em edição na hora — texto,
    ordenação, nome, capa — pra nada que o astrólogo digitou se perder.
    Precisa disso porque desenhar a mandala pra "fotografar" o PNG da
    prévia usa #mandala-container como área de trabalho (ver
    renderizarMandalasDoPreset/renderMandala em mandala.js), o mesmo
    container onde a tela inteira do editor está montada — ou seja, gerar
    a prévia apaga a tela por baixo dos panos, e só dá pra devolver a
-   experiência de "não saiu da tela" reconstruindo tudo de novo depois. */
-function abrirEditorPresetRelatorio(idx, opcoes) {
-  const preset = (window.relatorioPresetsCarregados || [])[idx];
-  if (!preset) return;
+   experiência de "não saiu da tela" reconstruindo tudo de novo depois.
+
+   "objetoEditavel" é sempre {nome, blocos} — tanto faz se veio de um
+   preset ou do rascunho de um cliente; quem sabe onde salvar de volta é
+   só salvarEdicaoRelatorioAtual, olhando window.relatorioEditorAlvoAtual. */
+function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   opcoes = opcoes || {};
 
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  window.relatorioEditorIdxAtual = idx;
-
   const catalogoPorId = {};
   RELATORIO_CATALOGO_BLOCOS.forEach(b => { catalogoPorId[b.id] = b; });
 
-  const blocosAtuais = opcoes.blocosOverride || preset.blocos || [];
-  const nomeAtual = opcoes.nomeOverride != null ? opcoes.nomeOverride : preset.nome;
-  const capaFonteAtual = opcoes.capaFonteOverride || obterCapaFonte(preset.blocos);
+  const blocosAtuais = opcoes.blocosOverride || objetoEditavel.blocos || [];
+  const nomeAtual = opcoes.nomeOverride != null ? opcoes.nomeOverride : objetoEditavel.nome;
+  const capaFonteAtual = opcoes.capaFonteOverride || obterCapaFonte(objetoEditavel.blocos);
   const mapaBlocosAtuais = {};
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
 
-  // Linhas na ordem JÁ SALVA do preset — catálogo e personalizados
-  // misturados, exatamente como o astrólogo deixou da última vez. O
+  // Linhas na ordem JÁ SALVA (do modelo ou do relatório do cliente,
+  // tanto faz) — catálogo e personalizados misturados, exatamente como
+  // o astrólogo deixou da última vez. O
   // bloco "__capa__" tem seletor próprio (relatorioCapaSeletorHtml),
   // não entra nessa lista reordenável.
   const linhasOrdenadas = blocosAtuais.filter(bloco => bloco.type !== 'capa').map(bloco => {
@@ -970,10 +1096,10 @@ function abrirEditorPresetRelatorio(idx, opcoes) {
     <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
 
       <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <button type="button" onclick="iniciarModuloRelatorio()" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 700;">
+        <button type="button" onclick="${config.aoVoltarJs}" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 700;">
           <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
         </button>
-        <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">Editar Modelo</h2>
+        <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(config.tituloTela)}</h2>
         <div style="width: 76px;"></div>
       </div>
 
@@ -986,7 +1112,7 @@ function abrirEditorPresetRelatorio(idx, opcoes) {
 
       <div id="relEditorFormPane">
         <div style="max-width: 720px; margin: 0 auto;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Modelo</label>
+          <label style="font-size: 11px; font-weight: 600; color: #64748b;">${escapeHtml(config.labelNome)}</label>
           <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(nomeAtual)}" style="margin-bottom: 18px; font-size: 13px;">
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
@@ -998,7 +1124,7 @@ function abrirEditorPresetRelatorio(idx, opcoes) {
           <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
 
           ${linhasParaAdicionar ? `
-            <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">Adicionar ao Modelo</div>
+            <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
             <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
               Marque pra incluir — entra no fim da lista de cima, aí é só usar as setas pra colocar no lugar certo.
             </div>
@@ -1013,8 +1139,8 @@ function abrirEditorPresetRelatorio(idx, opcoes) {
             Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
           </div>
 
-          <button onclick="salvarEdicaoPresetRelatorio(${idx})" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
-            Salvar Modelo
+          <button onclick="salvarEdicaoRelatorioAtual()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px;">
+            ${escapeHtml(config.rotuloSalvar)}
           </button>
         </div>
       </div>
@@ -1044,7 +1170,6 @@ function abrirEditorPresetRelatorio(idx, opcoes) {
     if (abaPreviaBtn) abaPreviaBtn.classList.add('ativa');
   }
 }
-window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
 
 /* SELETOR "MANDALA DA CAPA" — fica separado da lista reordenável de
    blocos porque não é uma página do relatório, é só metadado de qual
@@ -1110,7 +1235,7 @@ window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 
 /* Lê o estado ATUAL do formulário do editor (linhas reordenáveis, cada
    Quill, e o catálogo marcado pra adicionar) e devolve a lista de blocos
-   — SEM tocar no Supabase. Usada tanto por salvarEdicaoPresetRelatorio
+   — SEM tocar no Supabase. Usada tanto por salvarEdicaoRelatorioAtual
    (que ainda acrescenta o bloco de capa e grava de verdade) quanto pela
    prévia sob demanda (atualizarPreviaEditorModelo), que precisa
    exatamente do mesmo resultado sem persistir nada. A ordem devolvida é
@@ -1170,13 +1295,19 @@ function lerBlocosDoEditor() {
   return blocos;
 }
 
-/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA. */
-async function salvarEdicaoPresetRelatorio(idx) {
-  const preset = (window.relatorioPresetsCarregados || [])[idx];
-  if (!preset) return;
+/* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA —
+   em relatorio_presets se o alvo é um modelo genérico, ou só naquele
+   relatorio_rascunhos se o alvo é o relatório de um cliente específico
+   (ver window.relatorioEditorAlvoAtual, decidido em abrirEditorPresetRelatorio/
+   abrirEditorRascunhoRelatorio). Nunca escreve nos dois ao mesmo tempo —
+   é exatamente essa separação que garante que editar o relatório de uma
+   cliente não altera o modelo nem o relatório de outra. */
+async function salvarEdicaoRelatorioAtual() {
+  const alvo = window.relatorioEditorAlvoAtual;
+  if (!alvo) return;
 
   const nome = document.getElementById('relEditorNome').value.trim();
-  if (!nome) { alert("Informe um nome pro modelo."); return; }
+  if (!nome) { alert("Informe um nome."); return; }
 
   const novosBlocos = lerBlocosDoEditor();
   if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
@@ -1189,6 +1320,28 @@ async function salvarEdicaoPresetRelatorio(idx) {
   const client = relatorioSupabaseClient();
   if (!client) return;
 
+  if (alvo.tipo === 'rascunho') {
+    try {
+      const { data: { user } } = await client.auth.getUser();
+      if (!user) { alert("Sessão não identificada."); return; }
+      const { error } = await client
+        .from('relatorio_rascunhos')
+        .update({ titulo: nome, blocos: novosBlocos, updated_at: new Date().toISOString() })
+        .eq('id', alvo.id)
+        .eq('user_id', user.id);
+      if (error) { alert("Erro ao salvar o relatório: " + error.message); return; }
+      // Força reler do banco na próxima abertura, em vez de reaproveitar
+      // o cache antigo (window.relatorioRascunhoEmEdicao).
+      window.relatorioRascunhoEmEdicao = null;
+      abrirRascunhoRelatorio(alvo.id);
+    } catch (e) {
+      alert("Erro de conexão ao salvar o relatório.");
+    }
+    return;
+  }
+
+  const preset = (window.relatorioPresetsCarregados || [])[alvo.idx];
+  if (!preset) return;
   try {
     if (preset.id) {
       const { error } = await client
@@ -1209,7 +1362,7 @@ async function salvarEdicaoPresetRelatorio(idx) {
     alert("Erro de conexão ao salvar modelo.");
   }
 }
-window.salvarEdicaoPresetRelatorio = salvarEdicaoPresetRelatorio;
+window.salvarEdicaoRelatorioAtual = salvarEdicaoRelatorioAtual;
 
 /* PRÉVIA AO VIVO DO MODELO (sob demanda, ao clicar na aba "Prévia") —
    gera o relatório a partir do que está NA TELA agora (lerBlocosDoEditor),
@@ -1229,10 +1382,10 @@ window.salvarEdicaoPresetRelatorio = salvarEdicaoPresetRelatorio;
    baixo dos panos (é assim que "some" e parece "voltar pra tela inicial",
    mostrando a mandala ao vivo por cima de tudo). Por isso lemos TUDO que
    precisamos do formulário ANTES dessa chamada, e reconstruímos a tela
-   inteira depois (abrirEditorPresetRelatorio com as opções de override),
+   inteira depois (reabrirEditorRelatorioAtual com as opções de override),
    já com a prévia pronta — sem gerar de novo, senão a mandala apagaria a
    tela outra vez. */
-async function atualizarPreviaEditorModelo(idx) {
+async function atualizarPreviaEditorModelo() {
   const pane = document.getElementById('relEditorPreviaPane');
   if (!pane) return;
 
@@ -1258,12 +1411,12 @@ async function atualizarPreviaEditorModelo(idx) {
   const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
   const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
-      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar Modelo" na aba Editar quando estiver satisfeito.
+      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Volte pra aba Editar e clique no botão de salvar quando estiver satisfeito.
     </div>
     <div class="rel-viewer">${conteudoHtml}</div>
   `;
 
-  abrirEditorPresetRelatorio(idx, {
+  reabrirEditorRelatorioAtual({
     blocosOverride: blocosCorpo,
     nomeOverride: nomeCampo,
     capaFonteOverride: capaFonte,
@@ -1280,7 +1433,7 @@ window.atualizarPreviaEditorModelo = atualizarPreviaEditorModelo;
    simples: o painel do formulário já está montado no DOM. */
 function mudarAbaEditorModelo(aba) {
   if (aba === 'previa') {
-    atualizarPreviaEditorModelo(window.relatorioEditorIdxAtual);
+    atualizarPreviaEditorModelo();
     return;
   }
 
@@ -1342,9 +1495,27 @@ async function gerarRelatorioCompleto(preset) {
 
   montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
 
-  // Salva o rascunho em segundo plano — não trava a prévia que acabou
-  // de aparecer na tela nem precisa de nenhum botão "Salvar".
-  salvarRascunhoRelatorio(preset);
+  // A prévia já está na tela nesse ponto — o que vem a seguir só decide
+  // se o botão "Editar" aparece, nunca atrasa o que o astrólogo já está
+  // vendo. Espera terminar (em vez de "atirar e esquecer") porque só
+  // depois disso currentRascunhoId existe de verdade pra um rascunho
+  // recém-criado.
+  await salvarRascunhoRelatorio(preset);
+  adicionarBotaoEditarNaToolbarRelatorio();
+}
+
+/* Acrescenta o botão "Editar" na barra do relatório já em tela — só
+   depois de confirmar que este mapa tem, de fato, um rascunho salvo pra
+   editar (currentRascunhoId). Sem isso (ex.: "Céu do Momento", que não
+   tem cliente salvo pra vincular um rascunho) não tem o que abrir no
+   editor, então o botão nem aparece. */
+function adicionarBotaoEditarNaToolbarRelatorio() {
+  const toolbar = document.querySelector('.rel-toolbar');
+  if (!toolbar || !currentRascunhoId || document.getElementById('relBtnEditarRascunho')) return;
+  const botaoVoltar = toolbar.querySelector('button');
+  const html = `<button type="button" id="relBtnEditarRascunho" class="btn-secondary" onclick="abrirEditorRascunhoRelatorio('${currentRascunhoId}')"><i class="fa-solid fa-pen"></i> Editar</button>`;
+  if (botaoVoltar) botaoVoltar.insertAdjacentHTML('afterend', html);
+  else toolbar.insertAdjacentHTML('afterbegin', html);
 }
 
 /* Calcula os 7 lotes diretamente dos dados já carregados, sem precisar
@@ -1387,6 +1558,15 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 }
 
 function voltarConfigRelatorio() {
+  // Zera qual rascunho estava em edição: sem isso, escolher outro modelo
+  // no seletor e clicar "Gerar Relatório" de novo ia ATUALIZAR o mesmo
+  // rascunho de antes (ex.: transformar o de "Retificação de Mapa" no de
+  // "Mapa Natal Clássico") em vez de começar um relatório novo e
+  // separado pro mesmo cliente. Só quando o astrólogo abre um rascunho
+  // específico pela lista (abrirRascunhoRelatorio) é que currentRascunhoId
+  // volta a apontar pra ele.
+  currentRascunhoId = null;
+  window.relatorioEditorAlvoAtual = null;
   // Recarrega do zero (modelos + rascunhos) em vez de reusar o que já
   // estava em memória — garante que a lista de rascunhos apareça
   // atualizada com o que acabou de ser gerado.

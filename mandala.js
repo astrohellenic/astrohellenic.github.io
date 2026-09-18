@@ -336,11 +336,26 @@ function aplicarDadosDoPerfilNoMapa(c) {
     }
   }
 
+  const mapaAnteriorId = currentMapaId;
+
   currentSubjectName = c.nome || "Nativo";
   currentCustomCode = c.codigo || null;
   currentMapaId = c.id || null;
   currentRascunhoId = null;
   window.currentMapType = c.tipo || "Natal";
+
+  // Capturas de tela do Relatório (window.relatorioCapturas) são só do
+  // cliente cujo mapa está em tela — trocando de cliente, limpa NA HORA
+  // (nunca mostra a captura de outro cliente nem por um instante) e busca
+  // em segundo plano o pool de capturas de verdade deste cliente (ver
+  // carregarCapturasPooladasDoMapa em relatorio.js), pra continuar
+  // podendo reaproveitar o que já foi capturado pra ele antes.
+  if (currentMapaId !== mapaAnteriorId) {
+    window.relatorioCapturas = {};
+    if (currentMapaId && typeof recarregarCapturasDoMapaAtivo === 'function') {
+      recarregarCapturasDoMapaAtivo(currentMapaId);
+    }
+  }
   currentMoment = new Date(ano, mes - 1, dia, hora, min);
 
   const lat = parseFloat(c.latitude) || -23.5505;
@@ -439,11 +454,19 @@ function confirmarNovoMapaModal() {
   const latFinal = selectedCityGeo.lat;
   const lonFinal = selectedCityGeo.lon;
 
+  const mapaAnteriorId = currentMapaId;
+
   currentSubjectName = nome;
   currentCustomCode = codigoFinal;
   currentMapaId = null; // ainda não tem id — só ganha um depois que salvarNovoMapaAutomaticamente() inserir e devolver a linha
   currentRascunhoId = null;
   window.currentMapType = "Natal";
+
+  // Mesma lógica de isolamento de aplicarDadosDoPerfilNoMapa: um cliente
+  // novo nunca começa com as capturas de tela de quem estava carregado
+  // antes. Sem pool pra buscar ainda (mapaId só existe depois do insert
+  // em salvarNovoMapaAutomaticamente), então só limpa.
+  if (mapaAnteriorId) window.relatorioCapturas = {};
   currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
   currentGeo = { lat: latFinal, lon: lonFinal, fuso: fusoReal, city: cidadeFinal };
 
@@ -528,10 +551,15 @@ function carregarCeuDoMomento() {
   const menuHere = document.getElementById('menu-here-now');
   if (menuHere) menuHere.classList.add('active');
   try { localStorage.removeItem('astro_ultimo_perfil'); } catch (e) {}
+  const mapaAnteriorId = currentMapaId;
   currentSubjectName = "Agora";
   currentCustomCode = null;
   currentMapaId = null;
   currentRascunhoId = null;
+  // Mesma lógica de isolamento de aplicarDadosDoPerfilNoMapa: "Céu do
+  // Momento" não tem cliente nenhum, então nunca deve carregar capturas
+  // de quem estava em tela antes.
+  if (mapaAnteriorId) window.relatorioCapturas = {};
   window.currentMapType = "Trânsito";
   currentMoment = new Date();
 
