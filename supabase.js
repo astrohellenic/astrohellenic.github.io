@@ -12,6 +12,8 @@ let customFolders = ["Clientes"];
 let cachedFolderData = [];
 let selectedMapIds = new Set();
 let isSelectionMode = false;
+let currentSortField = 'codigo';
+let currentSortDirection = 'asc';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -976,8 +978,19 @@ async function abrirConteudoPasta(nomePasta) {
     </div>
 
     <div style="padding: 10px 12px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
+      <div class="search-box-container" style="margin-bottom: 8px;">
+        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)" style="flex: 1; min-width: 0; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
+      </div>
       <div class="search-box-container" style="margin-bottom: 0;">
-        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)" style="border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
+        <select id="sortFieldSelect" class="modal-select" onchange="aplicarOrdenacaoLista(this.value)" title="Ordenar por" style="width: auto; flex: 1; min-width: 0; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70; font-size: 11px; padding: 8px 6px;">
+          <option value="codigo" ${currentSortField === 'codigo' ? 'selected' : ''}>Código</option>
+          <option value="nome" ${currentSortField === 'nome' ? 'selected' : ''}>Nome</option>
+          <option value="cidade" ${currentSortField === 'cidade' ? 'selected' : ''}>Cidade</option>
+          <option value="tipo" ${currentSortField === 'tipo' ? 'selected' : ''}>Tipo</option>
+        </select>
+        <button type="button" id="sortDirectionBtn" class="icon-btn" onclick="alternarDirecaoOrdenacao()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 0 12px; cursor: pointer; flex: 0 0 auto;">
+          <i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}" style="color: #c59b27;"></i>
+        </button>
       </div>
     </div>
 
@@ -1007,20 +1020,6 @@ async function carregarMapasDoBanco(nomePasta) {
       .eq('pasta', nomePasta);
 
     if (!error && Array.isArray(data)) {
-      data.sort((a, b) => {
-        const codA = parseInt(a.codigo, 10);
-        const codB = parseInt(b.codigo, 10);
-
-        const temCodA = !isNaN(codA);
-        const temCodB = !isNaN(codB);
-
-        if (temCodA && temCodB) return codA - codB;
-        if (temCodA) return -1;
-        if (temCodB) return 1;
-
-        return (a.nome || '').localeCompare(b.nome || '', 'pt-BR');
-      });
-
       cachedFolderData = data.map(item => ({
         id: item.id,
         pasta: item.pasta || activeFolder,
@@ -1035,11 +1034,65 @@ async function carregarMapasDoBanco(nomePasta) {
         whatsapp: item.whatsapp || null,
         email: item.email || null
       }));
+      ordenarCachedFolderData();
       renderListaMapas(cachedFolderData);
     }
   } catch (err) {
     console.error("Erro ao carregar mapas:", err);
   }
+}
+
+/* ORDENAÇÃO DA LISTA DE CLIENTES (campo + direção escolhidos pelo usuário) */
+function compararValoresOrdenacao(a, b, campo) {
+  if (campo === 'codigo') {
+    const codA = parseInt(a.codigo, 10);
+    const codB = parseInt(b.codigo, 10);
+
+    const temCodA = !isNaN(codA);
+    const temCodB = !isNaN(codB);
+
+    if (temCodA && temCodB) return codA - codB;
+    if (temCodA) return -1;
+    if (temCodB) return 1;
+
+    return (a.nome || '').localeCompare(b.nome || '', 'pt-BR');
+  }
+
+  if (campo === 'cidade') return (a.cidade || '').localeCompare(b.cidade || '', 'pt-BR');
+  if (campo === 'tipo') return (a.tipo || '').localeCompare(b.tipo || '', 'pt-BR');
+
+  // 'nome' e qualquer outro caso caem no padrão alfabético por nome
+  return (a.nome || '').localeCompare(b.nome || '', 'pt-BR');
+}
+
+function ordenarCachedFolderData() {
+  cachedFolderData.sort((a, b) => {
+    const resultado = compararValoresOrdenacao(a, b, currentSortField);
+    return currentSortDirection === 'desc' ? -resultado : resultado;
+  });
+}
+
+function reordenarERenderizar() {
+  ordenarCachedFolderData();
+  const inputEl = document.getElementById('filterClientsInput');
+  executarBuscaLocal(inputEl ? inputEl.value : '');
+}
+
+function aplicarOrdenacaoLista(campo) {
+  currentSortField = campo;
+  reordenarERenderizar();
+}
+
+function alternarDirecaoOrdenacao() {
+  currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+
+  const btn = document.getElementById('sortDirectionBtn');
+  if (btn) {
+    btn.title = currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente';
+    btn.innerHTML = `<i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}" style="color: #c59b27;"></i>`;
+  }
+
+  reordenarERenderizar();
 }
 
 function renderListaMapas(lista) {
