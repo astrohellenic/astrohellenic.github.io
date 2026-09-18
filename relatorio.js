@@ -95,6 +95,12 @@ RELATORIO_LOTES_ORDEM.forEach(loteKey => {
   };
 });
 
+/* Texto de encerramento PADRÃO — só serve de ponto de partida pra quem
+   ainda não personalizou o dele (ver o bloco "__encerramento__" logo
+   abaixo, e o fallback em montarConteudoRelatorioHtml pra relatórios
+   salvos antes desse bloco existir). */
+const RELATORIO_ENCERRAMENTO_PADRAO = '<p>Caso tenha alguma dúvida ou queira complementar seu autoconhecimento através de previsões com técnicas como Revolução Solar ou Liberação Zodiacal, basta entrar em contato.</p><p>Espero ter contribuído para seu autoconhecimento e que você alcance seus objetivos e tenha grande paz interior.</p><p>Namastê 🙏</p>';
+
 /* CONJUNTO DE BLOCOS PADRÃO — o relatório "Mapa Natal Clássico" original.
    Serve de modelo pra quando o astrólogo cria um preset novo, e é usado
    pra semear automaticamente o primeiro preset de quem ainda não tem
@@ -126,7 +132,14 @@ const RELATORIO_BLOCOS_PADRAO = [
   {
     id: 'casas-fortuna', type: 'texto', titulo: 'Casas a partir do Lote da Fortuna',
     corpo: 'A rotação do mapa para posicionar o Lote da Fortuna como a Casa 1 estabelece uma matriz secundária e altamente especializada na astrologia clássica. Esta técnica, fundamentada nos escritos de Vettius Valens, consiste em utilizar o signo onde o lote está localizado como o novo ponto de partida para a contagem das doze casas, criando um sistema de referência voltado estritamente para a dimensão material, física e factual da existência.\n\nEnquanto a estrutura natal radical descreve a jornada geral da vida, este mapa derivado funciona como um biombo voltado para a engenharia da contingência. Ao reorganizar as casas a partir da Fortuna, os planetas assumem novos papéis e responsabilidades, revelando a arquitetura oculta da subsistência, da prosperidade, do corpo físico e dos eventos fortuitos. É através desta disposição que se mapeiam com precisão os eixos de aquisição, os momentos de ápice e os cenários onde a sorte ou os desafios materiais se manifestarão de forma concreta.\n\nPortanto, a análise deste mapa com a Fortuna na primeira casa oferece uma leitura focada na realidade prática e nas circunstâncias externas que cruzam o caminho do nativo — indispensável para decodificar como o fluxo da matéria, os recursos e os acasos do destino governarão a vida profissional e a capacidade de sustentação ao longo do tempo.'
-  }
+  },
+  /* Bloco invisível na lista reordenável (tem seu próprio campo, fixo no
+     fim do editor — ver relatorioEncerramentoHtml) que guarda o texto de
+     encerramento do relatório: sempre a última página, junto com o
+     rodapé de contato (nome/telefone/e-mail, esses sim vindos do perfil
+     em Configurações). Fica dentro de "blocos" pelo mesmo motivo do
+     "__capa__": não precisa de coluna nova no Supabase. */
+  { id: '__encerramento__', type: 'encerramento', corpo: RELATORIO_ENCERRAMENTO_PADRAO }
 ];
 
 /* CATÁLOGO COMPLETO DE BLOCOS QUE O EDITOR DE MODELO OFERECE — diferente
@@ -243,6 +256,15 @@ window.limparCapturasRelatorio = limparCapturasRelatorio;
 function obterCapaFonte(blocos) {
   const blocoCapa = (blocos || []).find(b => b.type === 'capa');
   return (blocoCapa && blocoCapa.fonte) || 'mandala_natal';
+}
+
+/* Lê, dos blocos do preset/rascunho, o texto de encerramento (ver o
+   bloco invisível "__encerramento__" em RELATORIO_BLOCOS_PADRAO) — cai
+   no texto padrão pra quem salvou o relatório antes desse bloco existir
+   (mantém exatamente o que já saía impresso, só que agora editável). */
+function obterEncerramento(blocos) {
+  const bloco = (blocos || []).find(b => b.type === 'encerramento');
+  return (bloco && bloco.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 }
 
 /* Resolve a fonte escolhida pra imagem de fato usada na capa: as duas
@@ -1325,15 +1347,16 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const blocosAtuais = opcoes.blocosOverride || objetoEditavel.blocos || [];
   const nomeAtual = opcoes.nomeOverride != null ? opcoes.nomeOverride : objetoEditavel.nome;
   const capaFonteAtual = opcoes.capaFonteOverride || obterCapaFonte(objetoEditavel.blocos);
+  const encerramentoAtual = opcoes.encerramentoOverride != null ? opcoes.encerramentoOverride : obterEncerramento(objetoEditavel.blocos);
   const mapaBlocosAtuais = {};
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
 
   // Linhas na ordem JÁ SALVA (do modelo ou do relatório do cliente,
   // tanto faz) — catálogo e personalizados misturados, exatamente como
-  // o astrólogo deixou da última vez. O
-  // bloco "__capa__" tem seletor próprio (relatorioCapaSeletorHtml),
-  // não entra nessa lista reordenável.
-  const linhasOrdenadas = blocosAtuais.filter(bloco => bloco.type !== 'capa').map(bloco => {
+  // o astrólogo deixou da última vez. "__capa__" e "__encerramento__"
+  // têm campo próprio, fixo (relatorioCapaSeletorHtml/relatorioEncerramentoHtml),
+  // não entram nessa lista reordenável.
+  const linhasOrdenadas = blocosAtuais.filter(bloco => bloco.type !== 'capa' && bloco.type !== 'encerramento').map(bloco => {
     if (bloco.type === 'ferramenta') {
       const idFerramenta = bloco.ferramentaId || bloco.id;
       const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[idFerramenta];
@@ -1360,7 +1383,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   // depois de usadas, porque só entram uma vez.
   const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS
     .filter(padrao => {
-      if (padrao.type === 'capa') return false;
+      if (padrao.type === 'capa' || padrao.type === 'encerramento') return false;
       const info = padrao.type === 'ferramenta' ? RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] : null;
       const repetivel = info && info.capturada;
       return repetivel || !mapaBlocosAtuais[padrao.id];
@@ -1430,6 +1453,8 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
             Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
           </div>
+
+          ${relatorioEncerramentoHtml(encerramentoAtual)}
         </div>
       </div>
 
@@ -1530,6 +1555,28 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
   `;
 }
 
+/* TEXTO DE ENCERRAMENTO — igual à capa, fica separado da lista
+   reordenável porque não é uma página do meio do relatório: é sempre a
+   ÚLTIMA, fixa, junto com o rodapé de contato (esse sim vem do perfil
+   em Configurações > Relatórios, não daqui). Reaproveita o mesmo
+   mecanismo de Quill "pendente" dos blocos de texto comuns (ver
+   relatorioLinhaEditorHtml/inicializarQuillsPendentes), só que com um id
+   fixo em vez de um por bloco. */
+function relatorioEncerramentoHtml(corpoAtual) {
+  window.relatorioQuillPendentes = window.relatorioQuillPendentes || {};
+  window.relatorioQuillPendentes['__encerramento__'] = { corpo: corpoAtual || '', formato: 'rich' };
+
+  return `
+    <div style="margin: 24px 0 10px;">
+      <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px;">Texto de Encerramento</div>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 10px; line-height: 1.5;">
+        Aparece sempre na ÚLTIMA página do relatório, junto com seu nome/telefone/e-mail (esses vêm de Configurações → Relatórios).
+      </div>
+      <div id="quill-mount-__encerramento__" class="rel-quill-mount"></div>
+    </div>
+  `;
+}
+
 /* Atualiza a explicação/miniatura abaixo do seletor de capa conforme a
    opção escolhida. Só a Mandala Personalizada tem uma miniatura de
    verdade (é uma captura de tela já pronta, salva em memória) — as
@@ -1617,14 +1664,17 @@ function lerBlocosDoEditor() {
   return blocos;
 }
 
-/* Lê os blocos do editor já com o bloco de capa incluído — usada tanto
-   pelo salvamento manual quanto pelo autosave do rascunho, pra nunca
-   duas implementações divergirem de como isso é montado. */
+/* Lê os blocos do editor já com os campos fixos incluídos (capa e texto
+   de encerramento) — usada tanto pelo salvamento manual quanto pelo
+   autosave do rascunho, pra nunca duas implementações divergirem de
+   como isso é montado. */
 function lerBlocosComCapaDoEditor() {
   const blocos = lerBlocosDoEditor();
   if (!blocos.length) return blocos;
   const capaFonteSelect = document.getElementById('relCapaFonte');
   blocos.push({ id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' });
+  const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
+  blocos.push({ id: '__encerramento__', type: 'encerramento', corpo: quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO });
   return blocos;
 }
 
@@ -1824,13 +1874,18 @@ async function atualizarPreviaEditorModelo() {
   const nomeCampo = (document.getElementById('relEditorNome').value || '').trim();
   const capaFonteSelect = document.getElementById('relCapaFonte');
   const capaFonte = capaFonteSelect ? capaFonteSelect.value : 'mandala_natal';
+  const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
+  const encerramentoCorpo = quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO;
 
   const blocosCorpo = lerBlocosDoEditor();
   if (!blocosCorpo.length) {
     pane.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
-  const blocosComCapa = blocosCorpo.concat([{ id: '__capa__', type: 'capa', fonte: capaFonte }]);
+  const blocosComCapa = blocosCorpo.concat([
+    { id: '__capa__', type: 'capa', fonte: capaFonte },
+    { id: '__encerramento__', type: 'encerramento', corpo: encerramentoCorpo }
+  ]);
   const presetPreview = { nome: nomeCampo || 'Modelo sem nome', blocos: blocosComCapa };
 
   const perfil = await carregarPerfilRelatorio();
@@ -1850,6 +1905,7 @@ async function atualizarPreviaEditorModelo() {
     blocosOverride: blocosCorpo,
     nomeOverride: nomeCampo,
     capaFonteOverride: capaFonte,
+    encerramentoOverride: encerramentoCorpo,
     previaProntaHtml
   });
 }
@@ -2015,10 +2071,13 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
     : '';
   const rodapeAstrologo = [perfil.nome, perfil.telefone, perfil.email].filter(Boolean);
   const capaClasseCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-capa-ceu' : '';
-  // O bloco "__capa__" só guarda a escolha da mandala da capa — não é uma
-  // página do corpo do relatório, então nunca entra no map abaixo.
-  const blocos = (preset.blocos || []).filter(b => b.type !== 'capa');
+  // "__capa__" e "__encerramento__" só guardam metadado/texto fixo (a
+  // escolha da mandala da capa, o texto de fechamento) — não são páginas
+  // do corpo do relatório, então nunca entram no map abaixo.
+  const blocos = (preset.blocos || []).filter(b => b.type !== 'capa' && b.type !== 'encerramento');
   const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2);
+  const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
+  const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
   const itensIndice = [];
   const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice })).join('');
@@ -2053,11 +2112,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
 
     <!-- ENCERRAMENTO -->
     <section class="rel-page rel-page-encerramento" data-pg="encerramento">
-      <div class="rel-corpo">
-        <p>Caso tenha alguma dúvida ou queira complementar seu autoconhecimento através de previsões com técnicas como Revolução Solar ou Liberação Zodiacal, basta entrar em contato.</p>
-        <p>Espero ter contribuído para seu autoconhecimento e que você alcance seus objetivos e tenha grande paz interior.</p>
-        <p>Namastê 🙏</p>
-      </div>
+      <div class="rel-corpo">${corpoEncerramento}</div>
       ${rodapeAstrologo.length ? `
         <div class="rel-rodape-astrologo">
           ${perfil.nome ? `<div class="rel-rodape-nome">${escapeHtml(perfil.nome)}</div>` : ''}
