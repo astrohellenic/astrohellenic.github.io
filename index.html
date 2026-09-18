@@ -474,6 +474,20 @@ body {
             cursor: pointer;
         }
 
+        /* No celular, #mandala-controls-overlay (canto direito: ASC, Adicionar
+           ao Relatório, zoom e stepper de tempo) ficou largo demais e passou
+           a cobrir #mandala-actions-overlay (canto esquerdo: salvar, atualizar
+           momento, Revolução Solar) — os dois têm o mesmo top:10px inline e,
+           por vir depois no HTML, o da direita é desenhado por cima. Empurra
+           o da esquerda pra linha de baixo só nessa largura de tela; precisa
+           de !important porque o top:10px é inline no elemento (mais
+           específico que uma regra normal de CSS). */
+        @media (max-width: 600px) {
+            #mandala-actions-overlay {
+                top: 56px !important;
+            }
+        }
+
         /* PALCO DA MANDALA: no tema "Céu", fundo roxo, continuação do
            espaço sideral desenhado dentro da própria mandala. Só se aplica
            com body.tema-ceu (o tema é por usuário, alternado em
