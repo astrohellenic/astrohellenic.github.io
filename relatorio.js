@@ -178,9 +178,55 @@ function adicionarCapturaRelatorio(toolId, dataUrl) {
   const atuais = capturasDaFerramenta(toolId);
   atuais.push({ dataUrl, capturadoEm: Date.now() });
   window.relatorioCapturas[toolId] = atuais;
+  // GRAVA de verdade a captura recém-tirada (sobe pro Storage e atualiza
+  // a coluna `capturas` do rascunho) — sem isso ela ficava só como
+  // data URL na memória da aba, e uma captura usada numa posição que já
+  // existia no relatório (ex.: a 1ª de uma ferramenta, index 0) nunca
+  // disparava o autosave de blocos (nada mudou nos blocos em si), então
+  // nunca era salva de verdade: sumia pra sempre no próximo recarregar
+  // da página, sem jeito nenhum de trazer de volta (a imagem original só
+  // existe nessa data URL, que se perde com a aba).
+  agendarPersistenciaCapturasRelatorio();
   return atuais.length;
 }
 window.adicionarCapturaRelatorio = adicionarCapturaRelatorio;
+
+/* Sobe pro Storage qualquer captura ainda só em memória (data URL) e
+   grava o pool resultante na coluna `capturas` do rascunho atual — a
+   mesma lógica de persistirCapturasRelatorio usada por
+   salvarRascunhoRelatorio, só que disparável a qualquer momento (não só
+   quando o relatório inteiro é gerado), pra nenhuma captura nova ficar
+   deixada só na memória até a próxima vez que a página recarregar. */
+let relatorioPersistirCapturasTimeout = null;
+function agendarPersistenciaCapturasRelatorio() {
+  clearTimeout(relatorioPersistirCapturasTimeout);
+  relatorioPersistirCapturasTimeout = setTimeout(persistirCapturasNoRascunhoAtual, 1200);
+}
+
+async function persistirCapturasNoRascunhoAtual() {
+  if (typeof currentRascunhoId === 'undefined' || !currentRascunhoId) return;
+  if (typeof currentMapaId === 'undefined' || !currentMapaId) return;
+  const client = relatorioSupabaseClient();
+  if (!client) return;
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return;
+    const capturasPersistidas = await persistirCapturasRelatorio(client, user.id, currentMapaId);
+    window.relatorioCapturas = capturasPersistidas;
+    const { error } = await client
+      .from('relatorio_rascunhos')
+      .update({ capturas: capturasPersistidas, updated_at: new Date().toISOString() })
+      .eq('id', currentRascunhoId)
+      .eq('user_id', user.id);
+    if (!error) {
+      const cache = window.relatorioRascunhoEmEdicao;
+      if (cache && cache.id === currentRascunhoId) cache.capturas = capturasPersistidas;
+    }
+  } catch (e) {
+    console.error('Erro ao persistir capturas do relatório:', e);
+  }
+}
+window.persistirCapturasNoRascunhoAtual = persistirCapturasNoRascunhoAtual;
 
 /* Remove TODAS as capturas já adicionadas de uma ferramenta (usado pelo
    ícone de lixeira no editor de modelo, pra desfazer uma captura feita
@@ -1421,36 +1467,40 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   }
 }
 
-/* Espera as <img> da Prévia (mandalas, capturas de ferramenta — um
-   relatório longo tem várias) carregarem antes de rolar pra posição
-   lembrada. Um único requestAnimationFrame não bastava: ele roda bem
-   antes das imagens carregarem, quando a página ainda está "curta"
-   (imagens sem altura ainda) — o navegador clampa o scrollTo pra perto
-   do topo, e como as imagens só terminam de carregar (e esticar a
-   página pro tamanho final) depois disso, a posição nunca se corrigia
-   por conta própria. Por isso a rolagem sempre parecia "esquecida",
-   voltando pro topo mesmo com a posição certa guardada. */
+/* Reaplica scrollTo(0, targetY) quadro a quadro por uma janela curta —
+   em vez de esperar (com Promise.all) TODAS as <img> da Prévia
+   carregarem antes de rolar uma única vez. As capturas de ferramenta já
+   persistidas são URL do Storage (não mais data URL), então "esperar
+   carregar" passa a depender de rede de verdade: num relatório longo
+   (dezenas de páginas, várias capturas), se UMA imagem estiver fora da
+   tela e o navegador atrasar/adiar essa requisição (comum em Safari/
+   iPad pra imagens longe da viewport), o Promise.all nunca resolvia — a
+   rolagem ficava pra sempre esperando, e por fora parecia que "sempre
+   volta pro topo e não sai mais de lá".
+   Reaplicar o scroll em todo frame, por alguns segundos, se corrige por
+   conta própria conforme cada imagem individual termina de carregar e
+   estica a página — SEM desistir só porque a página "já está no máximo
+   que dá pra rolar agora": logo no início, antes de qualquer imagem
+   carregar, esse máximo é bem menor que o final (a imagem ainda não
+   reservou altura nenhuma), e parar aí de novo seria o MESMO bug, só
+   que na posição errada em vez do topo. Só desiste mesmo depois do
+   tempo máximo — aceitando, nesse caso, o que der pra rolar até então. */
 function restaurarScrollPreviaQuandoImagensCarregarem(painel, targetY) {
-  const imgs = Array.from(painel.querySelectorAll('img'));
-  const prontas = imgs.map(img => {
-    if (img.complete) return Promise.resolve();
-    return new Promise(resolve => {
-      img.addEventListener('load', resolve, { once: true });
-      img.addEventListener('error', resolve, { once: true });
-    });
-  });
+  if (!targetY) { window.scrollTo(0, 0); return; }
 
-  Promise.all(prontas).then(() => {
-    // +1 frame: o navegador só recalcula a altura final da página depois
-    // do load da imagem, não no próprio instante do evento.
-    requestAnimationFrame(() => {
-      window.scrollTo(0, targetY);
-      // Reaplica de novo na volta seguinte — cobre ajustes tardios de
-      // layout (ex.: fontes/numeração de página) que ainda mexam na
-      // altura por um frame depois do scroll acima.
-      requestAnimationFrame(() => window.scrollTo(0, targetY));
-    });
-  });
+  const inicio = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const DURACAO_MAX_MS = 4000;
+
+  function tentar() {
+    window.scrollTo(0, targetY);
+
+    const chegouNoAlvo = Math.abs(window.scrollY - targetY) < 2;
+    const agora = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+    if (chegouNoAlvo || (agora - inicio) > DURACAO_MAX_MS) return;
+    requestAnimationFrame(tentar);
+  }
+  requestAnimationFrame(tentar);
 }
 
 /* SELETOR "MANDALA DA CAPA" — fica separado da lista reordenável de
@@ -1587,9 +1637,19 @@ async function gravarBlocosNoRascunho(rascunhoId, nome, blocos) {
   try {
     const { data: { user } } = await client.auth.getUser();
     if (!user) return false;
+    // Aproveita toda gravação de blocos (autosave ou "Salvar Agora") pra
+    // também subir pro Storage qualquer captura ainda só em memória —
+    // reforça agendarPersistenciaCapturasRelatorio (ver adicionarCapturaRelatorio)
+    // pros casos em que a captura nova só passa a valer por causa de um
+    // bloco/instância que mudou junto (ex.: "+" numa ferramenta pra usar
+    // a próxima captura vazia).
+    const capturasPersistidas = typeof currentMapaId !== 'undefined' && currentMapaId
+      ? await persistirCapturasRelatorio(client, user.id, currentMapaId)
+      : (window.relatorioCapturas || {});
+    window.relatorioCapturas = capturasPersistidas;
     const { error } = await client
       .from('relatorio_rascunhos')
-      .update({ titulo: nome, blocos, updated_at: new Date().toISOString() })
+      .update({ titulo: nome, blocos, capturas: capturasPersistidas, updated_at: new Date().toISOString() })
       .eq('id', rascunhoId)
       .eq('user_id', user.id);
     if (!error) {
@@ -1602,6 +1662,7 @@ async function gravarBlocosNoRascunho(rascunhoId, nome, blocos) {
       if (cache && cache.id === rascunhoId) {
         cache.titulo = nome;
         cache.blocos = blocos;
+        cache.capturas = capturasPersistidas;
       }
     }
     return !error;
@@ -2107,7 +2168,32 @@ async function baixarRelatorioPDF() {
       pagina.style.boxShadow = 'none';
       pagina.style.margin = '0';
       if (seloNumero) seloNumero.style.display = 'none';
-      const canvas = await html2canvas(pagina, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+
+      // Um texto personalizado bem comprido faz essa página crescer bem
+      // mais alta que uma folha A4 (de propósito — ver comentário
+      // abaixo, que depois fatia isso em várias folhas). Só que
+      // html2canvas cria UM canvas do tamanho da página inteira ANTES de
+      // fatiar, e em "scale: 2" isso pode passar do limite de área de
+      // canvas que Safari/iPad aceita (por volta de 4096px num dos
+      // lados, dependendo do aparelho) — quando passa, o navegador não
+      // avisa nada, só devolve um canvas em branco/cortado a partir daí,
+      // e é isso que fazia o texto que não cabia numa folha só
+      // "simplesmente não aparecer" em vez de virar a página seguinte.
+      // Reduz a escala só quando a página é alta o suficiente pra
+      // esbarrar nesse limite — páginas normais (a grande maioria)
+      // continuam em scale:2, nítidas como sempre.
+      const LIMITE_DIMENSAO_CANVAS_PX = 4000;
+      const larguraNaturalPx = pagina.scrollWidth;
+      const alturaNaturalPx = pagina.scrollHeight;
+      let escalaCaptura = 2;
+      if (larguraNaturalPx * escalaCaptura > LIMITE_DIMENSAO_CANVAS_PX || alturaNaturalPx * escalaCaptura > LIMITE_DIMENSAO_CANVAS_PX) {
+        escalaCaptura = Math.max(1, Math.min(
+          LIMITE_DIMENSAO_CANVAS_PX / larguraNaturalPx,
+          LIMITE_DIMENSAO_CANVAS_PX / alturaNaturalPx
+        ));
+      }
+
+      const canvas = await html2canvas(pagina, { scale: escalaCaptura, useCORS: true, backgroundColor: '#ffffff' });
       pagina.style.boxShadow = boxShadowOriginal;
       pagina.style.margin = margemOriginal;
       if (seloNumero) seloNumero.style.display = '';
