@@ -812,6 +812,51 @@ async function capturarMandalaAtualParaRelatorio() {
 }
 window.capturarMandalaAtualParaRelatorio = capturarMandalaAtualParaRelatorio;
 
+/* ZOOM DA MANDALA (botões +/-) — pra quem está num computador sem
+   touchscreen, sem gesto de pinça disponível pra ampliar. Escala só a
+   IMAGEM da mandala via CSS transform, sem tocar no zoom do navegador
+   (que ampliaria a tela inteira) e sem interferir no pinça do iPad, que
+   continua funcionando do mesmo jeito de sempre.
+   Fica no #mandala-controls-overlay entre o botão "Adicionar ao
+   Relatório" e o stepper de tempo (ver injetarControleZoomMandala). */
+const MANDALA_ZOOM_MIN = 50;
+const MANDALA_ZOOM_MAX = 200;
+const MANDALA_ZOOM_PASSO = 10;
+let mandalaZoomPercent = 100;
+
+function ajustarZoomMandala(delta) {
+  mandalaZoomPercent = Math.max(MANDALA_ZOOM_MIN, Math.min(MANDALA_ZOOM_MAX, mandalaZoomPercent + delta));
+  const img = document.getElementById('mandalaImg');
+  if (img) img.style.transform = `scale(${(mandalaZoomPercent / 100).toFixed(2)})`;
+  const label = document.getElementById('mandalaZoomLabel');
+  if (label) label.textContent = `${mandalaZoomPercent}%`;
+}
+window.ajustarZoomMandala = ajustarZoomMandala;
+
+function injetarControleZoomMandala() {
+  const overlay = document.getElementById('mandala-controls-overlay');
+  if (!overlay || document.getElementById('mandalaZoomContainer')) return;
+
+  const zoomContainer = document.createElement('div');
+  zoomContainer.id = 'mandalaZoomContainer';
+  zoomContainer.style.cssText = "background: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; padding: 4px 6px; display: flex; align-items: center; gap: 6px;";
+  zoomContainer.innerHTML = `
+    <button type="button" onclick="ajustarZoomMandala(-${MANDALA_ZOOM_PASSO})" title="Diminuir zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid #c59b27; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #103b70; font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">－</button>
+    <span id="mandalaZoomLabel" style="min-width: 34px; text-align: center; font-size: 11px; font-weight: 700; color: #103b70; font-variant-numeric: tabular-nums;">${mandalaZoomPercent}%</span>
+    <button type="button" onclick="ajustarZoomMandala(${MANDALA_ZOOM_PASSO})" title="Aumentar zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid #c59b27; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #103b70; font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">＋</button>
+  `;
+
+  // Entre o botão de Relatório e o stepper de tempo — nunca no início da
+  // barra (antes do ícone de rotação de Casa 1) nem no fim (depois do
+  // stepper), pra não embaralhar a ordem dos controles já existentes.
+  const relatorioBtn = document.getElementById('mandalaRelatorioBtnContainer');
+  if (relatorioBtn) {
+    relatorioBtn.after(zoomContainer);
+  } else {
+    overlay.appendChild(zoomContainer);
+  }
+}
+
 function renderMandala(dadosNovos, onReady) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
@@ -819,6 +864,7 @@ function renderMandala(dadosNovos, onReady) {
 
   injetarBotaoRotacaoNaBarraSuperior();
   injetarBotaoRelatorioNaBarraSuperior();
+  injetarControleZoomMandala();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
@@ -1336,8 +1382,8 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
        lastRenderedPngUrl = canvas.toDataURL('image/png');
 
           container.innerHTML = `
-  <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; position: relative;">
-    <img src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+  <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
+    <img id="mandalaImg" src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: center center; transition: transform 120ms ease-out;">
   </div>
 `;
      
