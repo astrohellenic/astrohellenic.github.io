@@ -804,8 +804,21 @@ function abrirModuloTecnica(modulo) {
   if (cRev) cRev.style.display = 'none';
   if (cOverlay) cOverlay.style.display = 'none';
   if (cActionsOverlay) cActionsOverlay.style.display = 'none';
-   
+
   document.body.classList.toggle('modo-mandala', modulo === 'mandala' || modulo === 'radix');
+
+  // #mandala-container tem "overflow-y: scroll" fixo no CSS (precisa disso
+  // só no modo Mandala/Radix, pra imagem da mandala ter uma altura de
+  // referência pra encolher — ver o comentário de ":not(.modo-mandala)"
+  // no index.html). Fora desse modo é a PÁGINA (body/html) que rola de
+  // verdade; mas só ter "overflow-y: scroll" já basta pro navegador tratar
+  // #mandala-container como o "ancestral com rolagem" de qualquer
+  // position:sticky lá dentro (ex.: a barra do editor de Relatório) —
+  // mesmo ele nunca rolando de fato nesse modo, o que fazia a barra
+  // grudar num lugar que não acompanha a rolagem real da tela. Corrige
+  // aqui, no único lugar que troca de módulo, pra nunca vazar de um
+  // módulo pro outro (a mandala continua recebendo "scroll" de volta).
+  if (cRadix) cRadix.style.overflowY = (modulo === 'mandala' || modulo === 'radix') ? '' : 'visible';
 
 // 1. MANDALA / MAPA NATAL (Globinho)
 if (modulo === 'mandala' || modulo === 'radix') {
