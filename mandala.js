@@ -621,6 +621,33 @@ function ajustarTempo(direcao) {
   executarCalculo();
 }
 
+/* PERSISTÊNCIA DA UNIDADE DO STEPPER DE TEMPO DA MANDALA (SEGUNDO/MINUTO/
+   HORA/DIA/MÊS/ANO) — sem isso, todo reload volta pro "Dia" fixo no
+   <option selected> do HTML, mesmo que o astrólogo estivesse navegando por
+   minuto (ex.: numa retificação de mapa). Guarda a última unidade usada e
+   restaura em window.onload, antes de qualquer outra coisa mexer no select. */
+const STORAGE_KEY_STEP_UNIT = 'astro_ultima_unidade_stepper';
+
+function restaurarUnidadeStepperMandala() {
+  const select = document.getElementById('stepUnit');
+  if (!select) return;
+  try {
+    const unidadeSalva = localStorage.getItem(STORAGE_KEY_STEP_UNIT);
+    if (unidadeSalva && Array.from(select.options).some(opt => opt.value === unidadeSalva)) {
+      select.value = unidadeSalva;
+    }
+  } catch (e) {}
+}
+
+if (!window.stepUnitChangeHandlerAdicionado) {
+  window.stepUnitChangeHandlerAdicionado = true;
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'stepUnit') {
+      try { localStorage.setItem(STORAGE_KEY_STEP_UNIT, e.target.value); } catch (err) {}
+    }
+  });
+}
+
 async function executarCalculo() {
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
@@ -1357,6 +1384,8 @@ function salvarImagemMandala() {
 }
 
 window.onload = function() {
+  restaurarUnidadeStepperMandala();
+
   if (typeof carregarPastasSalvas === 'function') {
     try { carregarPastasSalvas(); } catch(e) { console.error(e); }
   }
