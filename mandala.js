@@ -1383,7 +1383,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
-    <img id="mandalaImg" src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: center center; transition: transform 120ms ease-out;">
+    <img id="mandalaImg" src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: top center; transition: transform 120ms ease-out;">
   </div>
 `;
      
