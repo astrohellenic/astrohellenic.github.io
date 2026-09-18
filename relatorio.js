@@ -2394,27 +2394,36 @@ function renderBlocoRelatorio(bloco, opts) {
   return '';
 }
 
-/* QUEBRA DE PÁGINA DE VERDADE: um bloco de texto (.rel-corpo) mais alto
-   que uma folha A4 crescia numa .rel-page só, cada vez mais alta — sem
-   nenhuma quebra visível, então na tela parecia "uma caixa gigante" e só
-   virava várias folhas na hora de gerar o PDF, fatiando a IMAGEM já
-   fotografada dessa caixa (ver baixarRelatorioPDF). Essa fatia era cega
-   ao conteúdo (cortava no meio de qualquer altura, texto incluso) e não
-   aparecia na prévia em tela — dava pra digitar um bloco enorme sem
-   nenhuma pista de quantas folhas ele ia realmente ocupar.
+/* QUEBRA DE PÁGINA DE VERDADE: um bloco de texto (.rel-corpo) OU o
+   Índice (.rel-indice, uma lista à parte — não é um ".rel-corpo", por
+   isso precisa ser considerado à parte aqui) mais alto que uma folha A4
+   crescia numa .rel-page só, cada vez mais alta — sem nenhuma quebra
+   visível, então na tela parecia "uma caixa gigante" e só virava várias
+   folhas na hora de gerar o PDF, fatiando a IMAGEM já fotografada dessa
+   caixa (ver baixarRelatorioPDF). Essa fatia era cega ao conteúdo
+   (cortava no meio de qualquer altura, linha do índice inclusa) e não
+   aparecia na prévia em tela — um relatório de muitas páginas (índice
+   comprido) saía com o índice cortado ao meio de qualquer jeito no PDF,
+   mesmo com a prévia em tela parecendo caber tudo numa página só.
    Agora, depois que o conteúdo está montado na tela (preciso do layout
-   de verdade pra medir a altura de cada parágrafo), caminha pelos
-   filhos de CADA .rel-corpo e, assim que a soma passaria do espaço de
-   uma folha, cria uma NOVA .rel-page (mesma classe, mesmo estilo) logo
-   depois e continua ali — movendo os elementos de verdade, não
-   copiando. O resultado: cada .rel-page passa a ser mesmo UMA folha, na
-   tela e no PDF (que nem precisa mais fatiar imagem nessas páginas). */
+   de verdade pra medir a altura de cada parágrafo/linha), caminha pelos
+   filhos de CADA .rel-corpo/.rel-indice e, assim que a soma passaria do
+   espaço de uma folha, cria uma NOVA .rel-page (mesma classe, mesmo
+   estilo) logo depois e continua ali — movendo os elementos de
+   verdade, não copiando. O resultado: cada .rel-page passa a ser mesmo
+   UMA folha, na tela e no PDF (que nem precisa mais fatiar imagem
+   nessas páginas). */
 function dividirPaginasLongasEmFolhas(container) {
   const paginas = Array.from(container.querySelectorAll('.rel-viewer > .rel-page'));
 
   paginas.forEach(pagina => {
     const corpo = pagina.querySelector(':scope > .rel-corpo');
-    if (!corpo || !corpo.children.length) return; // só divide bloco de texto corrido
+    const indice = pagina.querySelector(':scope > .rel-indice');
+    const blocoConteudo = corpo || indice;
+    if (!blocoConteudo || !blocoConteudo.children.length) return; // só divide bloco de texto corrido ou o índice
+
+    const classeConteudo = corpo ? 'rel-corpo' : 'rel-indice';
+    const tagConteudo = corpo ? 'div' : 'ul';
 
     // Orçamento de altura de UMA folha, no tamanho em que a página está
     // sendo exibida agora (a mesma proporção A4 que o CSS já aplica na
@@ -2429,21 +2438,22 @@ function dividirPaginasLongasEmFolhas(container) {
     const tabelaExtra = pagina.querySelector(':scope > .rel-tabela-wrap');
 
     let paginaAtual = pagina;
-    let corpoAtual = corpo;
+    let corpoAtual = blocoConteudo;
     let alturaUsada = h1Original ? h1Original.getBoundingClientRect().height + 26 : 0; // 26px = margin-bottom do .rel-h1
 
-    Array.from(corpo.children).forEach(filho => {
+    Array.from(blocoConteudo.children).forEach(filho => {
       // getBoundingClientRect() nunca inclui a margem do próprio elemento
       // (só a caixa de borda) — sem somar o margin-bottom aqui, cada
-      // parágrafo era subcontado por ele, e a folha acabava passando do
-      // orçamento por várias vezes essa margem (perceptível já com umas
-      // 20 linhas: 20 × 14px ≈ 280px de sobra, quase 1/4 de folha).
+      // parágrafo/linha era subcontado por ele, e a folha acabava
+      // passando do orçamento por várias vezes essa margem (perceptível
+      // já com umas 20 linhas: 20 × 14px ≈ 280px de sobra, quase 1/4 de
+      // folha).
       const alturaFilho = filho.getBoundingClientRect().height + parseFloat(getComputedStyle(filho).marginBottom || 0);
       if (alturaUsada > 0 && alturaUsada + alturaFilho > orcamentoConteudoPx && corpoAtual.children.length > 0) {
         const novaPagina = document.createElement('section');
         novaPagina.className = pagina.className;
-        const novoCorpo = document.createElement('div');
-        novoCorpo.className = 'rel-corpo';
+        const novoCorpo = document.createElement(tagConteudo);
+        novoCorpo.className = classeConteudo;
         novaPagina.appendChild(novoCorpo);
         paginaAtual.after(novaPagina);
         paginaAtual = novaPagina;
