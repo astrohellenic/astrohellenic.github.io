@@ -895,6 +895,7 @@ function removerBlocoEditor(iconEl, id) {
 
   linha.remove();
   if (window.relatorioQuillInstancias) delete window.relatorioQuillInstancias[id];
+  agendarAutoSalvarRelatorio();
 
   if (ehCustom) return; // bloco personalizado não pertence a nenhum catálogo pra voltar
 
@@ -952,6 +953,7 @@ function moverBlocoEditor(btn, direcao) {
   if (!alvo || !alvo.classList.contains('rel-editor-linha')) return;
   if (direcao < 0) linha.parentElement.insertBefore(linha, alvo);
   else linha.parentElement.insertBefore(alvo, linha);
+  agendarAutoSalvarRelatorio();
 }
 window.moverBlocoEditor = moverBlocoEditor;
 
@@ -988,6 +990,7 @@ function adicionarInstanciaFerramentaEditor(ferramentaId, rotulo) {
   container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({
     id: novoId, tipo: 'ferramenta', rotulo, ferramentaId, capturaIndex: existentes
   }));
+  agendarAutoSalvarRelatorio();
 }
 window.adicionarInstanciaFerramentaEditor = adicionarInstanciaFerramentaEditor;
 
@@ -1016,12 +1019,14 @@ function adicionarItemCatalogoAoEditor(id, tipo) {
   const itemCatalogo = document.querySelector(`[data-adicionar-id="${id}"]`);
   if (itemCatalogo) itemCatalogo.remove();
   relatorioAtualizarVisibilidadeAdicionar();
+  agendarAutoSalvarRelatorio();
 }
 window.adicionarItemCatalogoAoEditor = adicionarItemCatalogoAoEditor;
 
 /* Acrescenta um bloco de texto personalizado em branco no fim da lista
-   reordenável (só entra no modelo de verdade quando "Salvar Modelo" for
-   clicado) — dá pra mover ele com as setas assim que for criado. */
+   reordenável — dá pra mover ele com as setas assim que for criado. Vazio
+   ainda não entra em nenhum salvamento (ver lerBlocosDoEditor), só
+   depois que o astrólogo escrever algo nele. */
 function adicionarBlocoCustomizadoEditor() {
   const container = document.getElementById('relEditorOrdenavel');
   if (!container) return;
@@ -1089,18 +1094,35 @@ if (!window.relatorioResizeBarraHandlerAdicionado) {
   window.addEventListener('resize', ajustarEspacadoresBarraFixaRelatorio);
 }
 
+/* Guarda continuamente até onde a Prévia do editor foi rolada — só
+   enquanto ela está de fato visível na tela (senão ficaria registrando
+   também a rolagem de qualquer outra tela do site). Restaurado ao
+   reabrir a Prévia (ver o requestAnimationFrame logo depois de
+   "painelPrevia.innerHTML = opcoes.previaProntaHtml", mais acima). */
+if (!window.relatorioScrollPreviaHandlerAdicionado) {
+  window.relatorioScrollPreviaHandlerAdicionado = true;
+  window.addEventListener('scroll', () => {
+    const painelPrevia = document.getElementById('relEditorPreviaPane');
+    if (painelPrevia && painelPrevia.style.display !== 'none') {
+      window.relatorioPreviaScrollY = window.scrollY;
+    }
+  }, { passive: true });
+}
+
 /* Editor de MODELO (genérico, compartilhado por todos os clientes) —
    grava em relatorio_presets. Usado pela lista "Modelos de Relatório". */
 function abrirEditorPresetRelatorio(idx, opcoes) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset) return;
+  if (!opcoes || !opcoes.blocosOverride) window.relatorioPreviaScrollY = 0; // abertura nova, não reconstrução pós-prévia
   window.relatorioEditorAlvoAtual = { tipo: 'preset', idx };
   renderizarTelaEditorRelatorio(preset, opcoes, {
     tituloTela: 'Editar Modelo',
     labelNome: 'Nome do Modelo',
     labelAdicionar: 'Adicionar ao Modelo',
     rotuloSalvar: 'Salvar Modelo',
-    aoVoltarJs: 'iniciarModuloRelatorio()'
+    aoVoltarJs: 'iniciarModuloRelatorio()',
+    avisoAutosave: '' // modelo genérico: sem autosave, de propósito — precisa do clique em "Salvar Modelo"
   });
 }
 window.abrirEditorPresetRelatorio = abrirEditorPresetRelatorio;
@@ -1123,16 +1145,32 @@ async function abrirEditorRascunhoRelatorio(rascunhoId, opcoes) {
   }
 
   window.relatorioEditorAlvoAtual = { tipo: 'rascunho', id: rascunhoId };
+  if (!opcoes.blocosOverride) window.relatorioPreviaScrollY = 0; // abertura nova, não reconstrução pós-prévia
   const objetoEditavel = { nome: rascunho.titulo || rascunho.nome, blocos: rascunho.blocos || [] };
   renderizarTelaEditorRelatorio(objetoEditavel, opcoes, {
     tituloTela: `Editar Relatório de ${rascunho.nome}`,
     labelNome: 'Título deste Relatório',
     labelAdicionar: 'Adicionar a este Relatório',
-    rotuloSalvar: 'Salvar Alterações',
-    aoVoltarJs: `abrirRascunhoRelatorio('${rascunhoId}')`
+    rotuloSalvar: 'Salvar Agora',
+    aoVoltarJs: `voltarDoEditorRascunho('${rascunhoId}')`,
+    avisoAutosave: '<i class="fa-solid fa-circle-check"></i> Suas alterações são salvas automaticamente — o botão "Salvar Agora" é só pra forçar na hora, se quiser.'
   });
 }
 window.abrirEditorRascunhoRelatorio = abrirEditorRascunhoRelatorio;
+
+/* Botão "Voltar" do editor de um rascunho — antes de sair de fato, força
+   qualquer autosave ainda pendente (debounce) a gravar AGORA, senão as
+   últimas mudanças (dentro da janela curta do debounce) se perderiam ao
+   trocar de tela. */
+async function voltarDoEditorRascunho(rascunhoId) {
+  if (relatorioAutoSalvarTimeout) {
+    clearTimeout(relatorioAutoSalvarTimeout);
+    relatorioAutoSalvarTimeout = null;
+    await autoSalvarRascunhoAtual();
+  }
+  abrirRascunhoRelatorio(rascunhoId);
+}
+window.voltarDoEditorRascunho = voltarDoEditorRascunho;
 
 /* Reabre o editor no alvo (preset ou rascunho) que está em edição agora
    — usada pela reconstrução pós-prévia e por qualquer outro fluxo que
@@ -1243,6 +1281,8 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           <label style="font-size: 11px; font-weight: 600; color: #64748b;">${escapeHtml(config.labelNome)}</label>
           <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(nomeAtual)}" style="margin-bottom: 18px; font-size: 13px;">
 
+          ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: #166534; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
+
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
 
           <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
@@ -1293,6 +1333,16 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     }
     if (abaEditarBtn) abaEditarBtn.classList.remove('ativa');
     if (abaPreviaBtn) abaPreviaBtn.classList.add('ativa');
+
+    // Volta a Prévia pro ponto exato de onde o astrólogo parou da última
+    // vez que rolou ela (ver o listener de "scroll" mais abaixo) — sem
+    // isso, cada vez que voltava aqui (ex.: depois de editar um texto)
+    // a tela recomeçava do topo, obrigando a rolar de novo um relatório
+    // que pode ter dezenas de páginas. requestAnimationFrame espera o
+    // layout da prévia (imagens já prontas, mas o navegador ainda
+    // recalculando altura) assentar antes de rolar, senão a posição sai
+    // errada.
+    requestAnimationFrame(() => window.scrollTo(0, window.relatorioPreviaScrollY || 0));
   }
 }
 
@@ -1409,13 +1459,113 @@ function lerBlocosDoEditor() {
   return blocos;
 }
 
+/* Lê os blocos do editor já com o bloco de capa incluído — usada tanto
+   pelo salvamento manual quanto pelo autosave do rascunho, pra nunca
+   duas implementações divergirem de como isso é montado. */
+function lerBlocosComCapaDoEditor() {
+  const blocos = lerBlocosDoEditor();
+  if (!blocos.length) return blocos;
+  const capaFonteSelect = document.getElementById('relCapaFonte');
+  blocos.push({ id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' });
+  return blocos;
+}
+
+/* Grava título+blocos direto num rascunho (relatório de um cliente) —
+   usada tanto pelo clique manual em "Salvar" quanto pelo autosave.
+   Devolve true/false (sucesso), sem mostrar alerta — quem chama decide
+   como avisar (ou não) o astrólogo. */
+async function gravarBlocosNoRascunho(rascunhoId, nome, blocos) {
+  const client = relatorioSupabaseClient();
+  if (!client) return false;
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return false;
+    const { error } = await client
+      .from('relatorio_rascunhos')
+      .update({ titulo: nome, blocos, updated_at: new Date().toISOString() })
+      .eq('id', rascunhoId)
+      .eq('user_id', user.id);
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* AUTOSAVE do relatório de um cliente (nunca de um modelo genérico —
+   editar um modelo continua exigindo o clique manual em "Salvar
+   Modelo", de propósito, já que é uma ação mais rara e que vale a pena
+   confirmar antes de gravar por cima do modelo compartilhado).
+
+   Disparada (ver os listeners de "input"/"change" mais abaixo, e as
+   chamadas diretas em mover/remover/adicionar bloco) sempre que algo
+   muda no editor — mas só GRAVA de verdade depois de uma pausa curta
+   sem novas mudanças (debounce), pra não salvar a cada letra digitada. */
+let relatorioAutoSalvarTimeout = null;
+function agendarAutoSalvarRelatorio() {
+  const alvo = window.relatorioEditorAlvoAtual;
+  if (!alvo || alvo.tipo !== 'rascunho') return;
+  clearTimeout(relatorioAutoSalvarTimeout);
+  relatorioAutoSalvarTimeout = setTimeout(autoSalvarRascunhoAtual, 1200);
+}
+window.agendarAutoSalvarRelatorio = agendarAutoSalvarRelatorio;
+
+/* Faz a gravação de verdade do autosave — sem fechar a tela nem mostrar
+   alerta de erro (autosave é silencioso; se falhar, a próxima mudança
+   agenda uma nova tentativa sozinha). Só mostra uma confirmação sutil
+   no botão de salvar quando dá certo. */
+async function autoSalvarRascunhoAtual() {
+  const alvo = window.relatorioEditorAlvoAtual;
+  if (!alvo || alvo.tipo !== 'rascunho') return;
+  if (!document.getElementById('relEditorOrdenavel')) return; // saiu da tela no meio do debounce
+
+  const nomeInput = document.getElementById('relEditorNome');
+  const nome = nomeInput && nomeInput.value.trim();
+  if (!nome) return;
+
+  const blocos = lerBlocosComCapaDoEditor();
+  if (blocos.length <= 1) return; // só o bloco de capa, nada de conteúdo ainda
+
+  const ok = await gravarBlocosNoRascunho(alvo.id, nome, blocos);
+  if (ok) mostrarIndicadorSalvoRelatorio();
+}
+window.autoSalvarRascunhoAtual = autoSalvarRascunhoAtual;
+
+/* Confirmação visual rápida e discreta no próprio botão de salvar — só
+   pra dar segurança de que salvou, sem interromper o astrólogo com
+   nenhum alerta. */
+function mostrarIndicadorSalvoRelatorio() {
+  const btn = document.querySelector('.rel-editor-btn-salvar');
+  if (!btn) return;
+  if (!btn.dataset.rotuloOriginal) btn.dataset.rotuloOriginal = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvo';
+  clearTimeout(window.relatorioIndicadorSalvoTimeout);
+  window.relatorioIndicadorSalvoTimeout = setTimeout(() => {
+    if (btn.dataset.rotuloOriginal) btn.innerHTML = btn.dataset.rotuloOriginal;
+  }, 1500);
+}
+
+/* Delegados uma única vez (nunca por render do editor, pra não empilhar
+   listener repetido toda vez que a tela é reconstruída) — cobrem
+   digitação nos textos/Quill/nome/título, checkboxes de incluir/excluir
+   bloco e o seletor de capa. Reordenar, adicionar e remover bloco (ações
+   por clique de botão, sem evento de input/change) chamam
+   agendarAutoSalvarRelatorio() direto onde acontecem. */
+if (!window.relatorioAutoSalvarListenersAdicionados) {
+  window.relatorioAutoSalvarListenersAdicionados = true;
+  document.addEventListener('input', (e) => {
+    if (e.target.closest && e.target.closest('#relEditorFormPane')) agendarAutoSalvarRelatorio();
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.closest && e.target.closest('#relEditorFormPane')) agendarAutoSalvarRelatorio();
+  });
+}
+
 /* MONTA OS BLOCOS A PARTIR DO QUE FOI MARCADO/EDITADO NO EDITOR E SALVA —
-   em relatorio_presets se o alvo é um modelo genérico, ou só naquele
-   relatorio_rascunhos se o alvo é o relatório de um cliente específico
-   (ver window.relatorioEditorAlvoAtual, decidido em abrirEditorPresetRelatorio/
-   abrirEditorRascunhoRelatorio). Nunca escreve nos dois ao mesmo tempo —
-   é exatamente essa separação que garante que editar o relatório de uma
-   cliente não altera o modelo nem o relatório de outra. */
+   em relatorio_presets se o alvo é um modelo genérico (fecha a tela e
+   volta pra lista de modelos ao terminar); no rascunho de um cliente, o
+   autosave já vem gravando sozinho o tempo todo, então aqui só força
+   salvar AGORA (útil antes de fechar o navegador, por exemplo) e mostra
+   a confirmação — sem fechar nem navegar pra lugar nenhum. */
 async function salvarEdicaoRelatorioAtual() {
   const alvo = window.relatorioEditorAlvoAtual;
   if (!alvo) return;
@@ -1423,36 +1573,21 @@ async function salvarEdicaoRelatorioAtual() {
   const nome = document.getElementById('relEditorNome').value.trim();
   if (!nome) { alert("Informe um nome."); return; }
 
-  const novosBlocos = lerBlocosDoEditor();
-  if (!novosBlocos.length) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
+  if (alvo.tipo === 'rascunho') {
+    const blocos = lerBlocosComCapaDoEditor();
+    if (blocos.length <= 1) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
+    const ok = await gravarBlocosNoRascunho(alvo.id, nome, blocos);
+    if (!ok) { alert("Erro ao salvar o relatório. Tente de novo."); return; }
+    clearTimeout(relatorioAutoSalvarTimeout);
+    mostrarIndicadorSalvoRelatorio();
+    return;
+  }
 
-  // O seletor de capa fica fora da lista reordenável (não é uma página do
-  // corpo) — entra por último, já validado que há conteúdo de verdade.
-  const capaFonteSelect = document.getElementById('relCapaFonte');
-  novosBlocos.push({ id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' });
+  const novosBlocos = lerBlocosComCapaDoEditor();
+  if (novosBlocos.length <= 1) { alert("Marque ou crie pelo menos um item pra entrar no relatório."); return; }
 
   const client = relatorioSupabaseClient();
   if (!client) return;
-
-  if (alvo.tipo === 'rascunho') {
-    try {
-      const { data: { user } } = await client.auth.getUser();
-      if (!user) { alert("Sessão não identificada."); return; }
-      const { error } = await client
-        .from('relatorio_rascunhos')
-        .update({ titulo: nome, blocos: novosBlocos, updated_at: new Date().toISOString() })
-        .eq('id', alvo.id)
-        .eq('user_id', user.id);
-      if (error) { alert("Erro ao salvar o relatório: " + error.message); return; }
-      // Força reler do banco na próxima abertura, em vez de reaproveitar
-      // o cache antigo (window.relatorioRascunhoEmEdicao).
-      window.relatorioRascunhoEmEdicao = null;
-      abrirRascunhoRelatorio(alvo.id);
-    } catch (e) {
-      alert("Erro de conexão ao salvar o relatório.");
-    }
-    return;
-  }
 
   const preset = (window.relatorioPresetsCarregados || [])[alvo.idx];
   if (!preset) return;
