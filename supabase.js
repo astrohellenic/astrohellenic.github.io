@@ -805,6 +805,28 @@ function abrirModuloTecnica(modulo) {
   if (cOverlay) cOverlay.style.display = 'none';
   if (cActionsOverlay) cActionsOverlay.style.display = 'none';
 
+  // Esvazia #mandala-container ANTES de trocar as classes/CSS do modo —
+  // ele é reaproveitado por quase todos os módulos (Mandala, Tabela
+  // Técnica, Profecção, Relatório etc.), então sem isso o HTML do módulo
+  // ANTERIOR ficava ali dentro por um instante (só escondido via
+  // display:none) até o novo módulo terminar de reconstruir o próprio
+  // conteúdo. Módulos com uma etapa assíncrona no meio (a mandala, que
+  // gera a imagem via SVG->Image->Canvas antes de substituir o innerHTML
+  // — ver renderMandala) dão tempo do navegador pintar esse conteúdo
+  // antigo já sob as classes/CSS do modo NOVO (ex.: texto de relatório
+  // espremido no layout de altura travada do modo-mandala), um flash
+  // feio e quebrado entre uma ferramenta e outra. Um spinner neutro aqui
+  // garante que, quando o container reaparecer, nunca mostre restos de
+  // outro módulo — o próprio init do módulo novo substitui isso em
+  // seguida pelo conteúdo de verdade (ou por um loading próprio dele).
+  if (cRadix) {
+    cRadix.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37;"></i>
+      </div>
+    `;
+  }
+
   document.body.classList.toggle('modo-mandala', modulo === 'mandala' || modulo === 'radix');
 
   // #mandala-container tem "overflow-y: scroll" fixo no CSS (precisa disso
