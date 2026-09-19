@@ -101,7 +101,7 @@ Histórico: PRs #103, #104 e #106 no repo (#103 e #104 foram as tentativas
 com `sticky`, incompletas na prática; #106 trocou pra `position: fixed`,
 que resolveu de fato).
 
-## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal) — PROBLEMA AINDA ABERTO, várias tentativas já fracassaram
+## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal) — RESOLVIDO, é `pan-y` e só `pan-y`
 
 Essas tabelas (`matrizOuterScroll`/`painelPrincipalOuterScroll` em
 `tabelaTecnica.js`, `profMensalOuterScroll` em `profeccao.js`) são mais
@@ -113,58 +113,55 @@ disponível, pra abrir já "caber na tela" em vez de gigante e cortada —
 e, como a escala reduz tudo proporcionalmente (é texto/vetor), o
 usuário consegue ler os detalhes de novo dando zoom com o dedo.
 
-**Estado atual (19/09/2026), de propósito voltado pro original:** SEM
-nenhum `touch-action` nesses wrappers — Tabela Técnica sem nada,
-Profecção Mensal com `touch-action: pan-y` (que já existia antes de
-qualquer uma das tentativas abaixo). Isso significa que **o bug
-original relatado continua sem correção**: tocar na tabela e arrastar
-pra rolar a página verticalmente pode não funcionar (fica ambíguo entre
-rolar a página e rolar o wrapper, que tem `overflow-x:auto` mesmo sendo
-`overflow-y:hidden`; o iOS às vezes escolhe a segunda opção e não rola
-nada). Foi deixado assim **de propósito**, a pedido do astrólogo, depois
-que as tentativas abaixo pioraram a situação em vez de melhorar.
+**A configuração correta, já confirmada pelo astrólogo, é
+`touch-action: pan-y` nesses três wrappers — nada mais, nada menos.**
+Foi resolvida de fato pela primeira vez no commit `ec8bdd9` (manhã de
+17/09/2026): "Os contêineres de rolagem horizontal das tabelas...
+capturavam parte do gesto de pinça como rolagem interna, fazendo as
+tabelas escorregarem de lado enquanto o usuário tentava ampliar/reduzir
+a página com os dedos. touch-action: pan-y restringe esses contêineres
+à rolagem vertical, deixando o pinch-zoom da página passar livremente."
+Restringir o wrapper a **só** `pan-y` faz o gesto de pinça (e até um
+arrasto lateral de um dedo só) **não ser capturado por ele de jeito
+nenhum**, escapando pra ser tratado no nível da página — é isso que
+impede a tabela de "escorregar"/"dançar" de lado. A rolagem vertical da
+página continua funcionando tocando na tabela (o `pan-y` permite, e
+como o wrapper tem `overflow-y:hidden` — nada pra rolar internamente —
+o gesto sobe pro ancestral, a página).
 
-**Requisito inegociável pra qualquer correção futura aqui:** essas
-tabelas TÊM que continuar dando pra ampliar com pinça-pra-zoom (celular,
-tela pequena, texto pequeno demais sem isso) E TÊM que abrir já
-encolhidas/legíveis (o auto-encolhimento acima) E a rolagem da página
-tocando na tabela precisa funcionar. As três coisas ao mesmo tempo,
-sempre — não é aceitável resolver uma sacrificando outra. Se não achar
-uma solução que mantenha as três, **não publicar nada** — melhor deixar
-o bug de rolagem em aberto (estado atual) do que trocar por outro.
+**Erro que já aconteceu uma vez, não repetir:** no mesmo dia
+(17/09/2026, à tarde), tentando resolver uma queixa *diferente*
+("pinça bloqueado"), um commit posterior (`72cdb58`) **removeu esse
+`touch-action` por completo** da Tabela Técnica, sem perceber que
+reabria a dança que `ec8bdd9` já tinha corrigido de manhã. Isso ficou
+sem ninguém notar por um bom tempo (a Profecção Mensal nunca perdeu o
+`pan-y` dela, só a Tabela Técnica ficou sem) até o astrólogo reportar
+de novo "a tabela dançando" numa sessão seguinte (18-19/09/2026) — e aí
+teve uma sessão inteira de tentativas erradas (`manipulation`, `pan-x
+pan-y`, trocar `transform` por `zoom`) até alguém finalmente comparar
+com o histórico de commits e achar que `ec8bdd9` já tinha resolvido
+isso da forma mais simples possível. **Antes de investigar esse bug do
+zero, sempre conferir primeiro se já não tem a resposta no `git log`
+do arquivo** (`git log -p -- tabelaTecnica.js`) — economiza uma sessão
+inteira de tentativa e erro.
 
-Tentativas já feitas nessa mesma sessão, todas descartadas — **não
-repetir nenhuma delas**:
+Variações tentadas e descartadas nessa sessão de retrabalho (não
+repetir nenhuma):
 
-- **`touch-action: manipulation`** (= pan-x + pan-y + pinch-zoom):
-  resolve a rolagem da página E mantém o pinça, mas faz a tabela
-  "dançar" — o tamanho/posição pula sozinho ao tocar. Teoria inicial
-  (não totalmente confirmada) era que seria só com dois dedos/pinça,
-  mas o astrólogo confirmou que acontece **com um dedo só**, arrastando
-  a tabela pra um lado ou pro outro. Causa provável: o auto-encolhimento
-  usa `transform` (só pintura, não layout), então o JS precisa fixar a
-  altura do wrapper à mão (calculada a partir da escala) — isso conflita
-  com o gesto nativo do navegador de alguma forma ainda não totalmente
-  entendida.
-- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`): tentativa de tirar
-  só o pinça achando que ele era a causa da dança. Piorou — dançou
-  igual ou pior, inclusive na Profecção Mensal (que nunca tinha dançado
-  antes de qualquer uma dessas tentativas). **Nunca tirar o pinça como
-  "solução" pra dança — não resolve, e além disso pinça é obrigatório
-  no app.**
+- **`touch-action: manipulation`** (pan-x + pan-y + pinch-zoom): volta
+  a deixar o wrapper capturar parte do gesto de pinça/arrasto lateral
+  como se fosse rolagem própria — exatamente o que `ec8bdd9` identificou
+  como causa da dança. Reproduz o bug.
+- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`): mesma coisa, ainda
+  pior — com um wrapper que aceita pan-x, ele ativamente tenta rolar a
+  si mesmo horizontalmente a cada arrasto, mesmo de um dedo só.
 - **Trocar `transform: scale` por `zoom`** no auto-encolhimento (só na
-  Tabela Técnica, tentativa de eliminar a necessidade de fixar altura à
-  mão): distorceu a tabela (ficou retangular/esticada em vez de
-  proporcional) e descasou o tamanho entre Matriz e Painel (que antes
-  saíam do mesmo tamanho visual). Também descartado.
+  Tabela Técnica): distorceu a tabela (ficou retangular/esticada em vez
+  de proporcional) e descasou o tamanho entre Matriz e Painel. Não
+  precisa disso — `pan-y` sozinho já resolve sem tocar no
+  auto-encolhimento.
 
-**Se for mexer nisso de novo:** a via mais provável de dar certo é
-implementar o pinça-zoom à mão em JS (capturar os dois toques com
-`touchstart`/`touchmove` e ajustar o próprio `transform: scale`, em vez
-de depender de `touch-action` + gesto nativo do navegador) — assim dá
-pra controlar os três requisitos ao mesmo tempo sem depender do
-comportamento ambíguo do navegador. É trabalho de verdade (não é só
-trocar uma linha de CSS), então antes de tentar qualquer coisa: avisar
-o astrólogo que vai ser uma mudança maior, pedir autorização, e **testar
-uma coisa de cada vez**, confirmando com ele a cada passo antes de
-publicar — não emendar três tentativas diferentes numa sessão só.
+**Conclusão prática:** `touch-action: pan-y` (nada mais) nos três
+wrappers, ponto final. Não precisa de pinça implementado à mão em JS,
+não precisa trocar `transform` por `zoom` — o problema nunca foi o
+auto-encolhimento, era só essa uma linha de `touch-action`.
