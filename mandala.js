@@ -12,10 +12,78 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/* CÁLCULO EXATO DO FUSO BASEADO NA LONGITUDE */
+/* CÁLCULO APROXIMADO DO FUSO BASEADO NA LONGITUDE (fatia de 15° em 15°) —
+   usado só como último recurso, quando calcularFusoPreciso não consegue
+   determinar o fuso de verdade (ver função abaixo). NÃO reflete o fuso
+   político real: fronteiras de fuso não seguem a longitude (ex.: o Rio
+   Grande do Sul inteiro usa o mesmo -3 de São Paulo, mesmo estando bem
+   mais a oeste do meridiano de -45°), e por isso essa fórmula errava o
+   fuso de qualquer lugar longe o bastante do meridiano de referência do
+   seu próprio fuso — foi a causa do Ascendente errado relatado por uma
+   cliente nascida em São Luiz Gonzaga, RS (a fórmula dava -4, o certo é
+   -3). */
 function calcularFusoPorLongitude(lon) {
   if (lon === undefined || lon === null || isNaN(lon)) return -3;
   return Math.round(lon / 15);
+}
+
+/* CÁLCULO PRECISO DO FUSO, PRO MUNDO INTEIRO, RESPEITANDO A DATA
+   ---------------------------------------------------------------
+   Em vez de aproximar por longitude, acha o fuso IANA real do ponto
+   geográfico (ex.: "America/Sao_Paulo") usando a biblioteca tz-lookup.js
+   (vendorizada localmente em tz-lookup.js — pacote npm "tz-lookup",
+   licença CC0, dados de fronteira de fuso do timezone-boundary-builder;
+   ver https://github.com/darkskyapp/tz-lookup). Isso já resolve o fuso
+   político certo em qualquer país, não só o Brasil.
+
+   Só saber o fuso IANA não basta: o deslocamento de UTC de um mesmo
+   lugar muda com a data por causa do horário de verão (o Brasil teve
+   horário de verão até 2019; a maioria dos outros países que usa
+   tem regras próprias e históricas). offsetMinutosNaData usa o Intl
+   nativo do navegador — que já carrega o histórico completo de cada
+   fuso — pra achar o deslocamento certo NA data de nascimento
+   específica, não no deslocamento de hoje.
+
+   Nunca lança erro: se a biblioteca não tiver carregado ou o Intl
+   falhar por qualquer motivo (navegador muito antigo etc.), cai de
+   volta pro cálculo por longitude de sempre — nunca deixa de retornar
+   um fuso. */
+function calcularFusoPreciso(lat, lon, ano, mes, dia, hora, minuto) {
+  try {
+    if (typeof tzlookup !== 'function') throw new Error('tz-lookup.js não carregado');
+    const zonaIana = tzlookup(lat, lon);
+    const offsetMin = offsetMinutosNaData(zonaIana, ano, mes, dia, hora, minuto);
+    if (isNaN(offsetMin)) throw new Error('offset inválido');
+    return offsetMin / 60;
+  } catch (e) {
+    return calcularFusoPorLongitude(lon);
+  }
+}
+
+/* Deslocamento de UTC (em minutos) de um fuso IANA num instante local
+   específico. Técnica padrão: "chuta" que os números informados (ano,
+   mes, dia, hora, minuto) já são um instante UTC, formata esse instante
+   no fuso alvo e mede a diferença — isso dá o deslocamento. Repete uma
+   segunda vez usando essa primeira estimativa pra refinar o chute
+   (cobre os raros casos em cima da própria virada do horário de
+   verão). */
+function offsetMinutosNaData(zonaIana, ano, mes, dia, hora, minuto) {
+  const formatador = new Intl.DateTimeFormat('en-US', {
+    timeZone: zonaIana, hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+  function deslocamentoPara(instanteUTC) {
+    const partes = formatador.formatToParts(new Date(instanteUTC));
+    const m = {};
+    partes.forEach(p => { if (p.type !== 'literal') m[p.type] = parseInt(p.value, 10); });
+    if (m.hour === 24) m.hour = 0;
+    const comoUTC = Date.UTC(m.year, m.month - 1, m.day, m.hour, m.minute, m.second);
+    return (comoUTC - instanteUTC) / 60000;
+  }
+  const chuteUTC = Date.UTC(ano, mes - 1, dia, hora, minuto, 0);
+  const primeiroOffset = deslocamentoPara(chuteUTC);
+  return deslocamentoPara(chuteUTC - primeiroOffset * 60000);
 }
 
 /* Mede a altura de VERDADE do #top-bar e aplica no espaçador logo depois
@@ -381,7 +449,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
 
   const lat = parseFloat(c.latitude) || -23.5505;
   const lon = parseFloat(c.longitude) || -46.6333;
-  const fusoCalc = c.fuso !== undefined ? parseFloat(c.fuso) : calcularFusoPorLongitude(lon);
+  const fusoCalc = c.fuso !== undefined ? parseFloat(c.fuso) : calcularFusoPreciso(lat, lon, ano, mes, dia, hora, min);
   const cidade = c.cidade || "Localidade não informada";
 
   currentGeo = { lat, lon, fuso: fusoCalc, city: cidade };
@@ -469,7 +537,7 @@ function confirmarNovoMapaModal() {
   const partesHora = horaStr.split(':');
   const h = partesHora[0] || 12, m = partesHora[1] || 0;
 
-  const fusoReal = selectedCityGeo.fuso !== undefined ? selectedCityGeo.fuso : calcularFusoPorLongitude(selectedCityGeo.lon);
+  const fusoReal = calcularFusoPreciso(selectedCityGeo.lat, selectedCityGeo.lon, parseInt(ano), parseInt(mes), parseInt(dia), parseInt(h), parseInt(m));
   const codigoFinal = codDigitado !== "" ? codDigitado : null;
   const cidadeFinal = selectedCityGeo.name;
   const latFinal = selectedCityGeo.lat;
@@ -590,7 +658,8 @@ function carregarCeuDoMomento() {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         const nomeCidade = await obterNomeCidade(lat, lon);
-        currentGeo = { lat, lon, fuso: calcularFusoPorLongitude(lon), city: nomeCidade };
+        const fusoPreciso = calcularFusoPreciso(lat, lon, currentMoment.getFullYear(), currentMoment.getMonth() + 1, currentMoment.getDate(), currentMoment.getHours(), currentMoment.getMinutes());
+        currentGeo = { lat, lon, fuso: fusoPreciso, city: nomeCidade };
         executarCalculo();
       },
       () => {

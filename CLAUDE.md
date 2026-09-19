@@ -205,3 +205,62 @@ repetir nenhuma):
 wrappers, ponto final. Não precisa de pinça implementado à mão em JS,
 não precisa trocar `transform` por `zoom` — o problema nunca foi o
 auto-encolhimento, era só essa uma linha de `touch-action`.
+
+## Fuso horário do mapa nunca vinha do fuso político real — só de uma fórmula de longitude (19/09/2026)
+
+Até essa sessão, `calcularFusoPorLongitude(lon)` (`mandala.js`) era a
+**única** forma de determinar o fuso de um mapa: `Math.round(lon / 15)`,
+uma fatia matemática de 15° em 15°. Isso funciona "por acaso" pra quem
+nasce perto do meridiano de referência do próprio fuso (São
+Paulo/Brasília, perto de -45°), mas erra silenciosamente pra qualquer
+lugar mais afastado dele que ainda está no mesmo fuso político — por
+exemplo, o Rio Grande do Sul inteiro (perto de -54°) cai fora da faixa
+de -45°±7,5° e a fórmula devolve -4 em vez do -3 correto. Foi assim que
+uma cliente nascida em São Luiz Gonzaga, RS apareceu com Ascendente em
+Câncer em vez de Gêmeos — o erro de 1h no fuso desloca o Ascendente o
+suficiente pra trocar de signo.
+
+Também importa: o campo `fuso` **nunca foi salvo no banco** (tabela
+`mapas`, nem na criação em `salvarNovoMapaAutomaticamente` nem na edição
+em `salvarEdicaoMapaModal`, ambos só gravam `latitude`/`longitude`), e o
+formulário público (`formulario.html`) também nunca grava fuso. Ou seja,
+`calcularFusoPorLongitude` não era um fallback raro — era o caminho
+**sempre** percorrido, pra todo mapa salvo, toda vez que ele é reaberto.
+
+**Correção:** nova função `calcularFusoPreciso(lat, lon, ano, mes, dia,
+hora, minuto)` em `mandala.js`, usada nos pontos onde o fuso é
+realmente determinado (`aplicarDadosDoPerfilNoMapa`,
+`confirmarNovoMapaModal`, `carregarCeuDoMomento`):
+
+1. Acha o fuso IANA real do ponto (ex.: `America/Sao_Paulo`,
+   `America/Manaus`) com a biblioteca `tz-lookup.js`, vendorizada na
+   raiz do repo (pacote npm `tz-lookup`, licença CC0, ~73KB, dados do
+   [timezone-boundary-builder](https://github.com/evansiroky/timezone-boundary-builder)).
+   Isso já resolve o fuso certo em qualquer país do mundo, não só no
+   Brasil — sem precisar de nenhuma API externa em tempo de execução
+   (a biblioteca é só dados+função, roda 100% no navegador do
+   astrólogo/cliente).
+2. Com o fuso IANA em mãos, usa o `Intl.DateTimeFormat` **nativo do
+   navegador** (que já carrega o histórico completo de cada fuso) pra
+   achar o deslocamento de UTC certo **na data de nascimento**, não no
+   de hoje — importante porque o Brasil teve horário de verão até 2019
+   (e a maioria dos países que usa tem seu próprio histórico). É por
+   isso que a correção não podia ser só "tabela de fuso fixo por
+   estado": duas pessoas nascidas no mesmo lugar em datas diferentes
+   podem ter deslocamentos de UTC diferentes.
+3. Nunca lança erro — qualquer falha (biblioteca não carregada, `Intl`
+   indisponível, coordenada inválida) cai de volta pro
+   `calcularFusoPorLongitude` de sempre, que continua existindo como
+   último recurso. Os outros lugares do código que só usam
+   `calcularFusoPorLongitude` como fallback de emergência (em
+   `direcoes.js`, `liberacao.js`, `lotes-calculadora.js`,
+   `tabelaTecnica.js` e em dois pontos do próprio `mandala.js`) foram
+   **deixados como estavam** — na prática nunca mais deviam ser
+   acionados, já que `currentGeo.fuso` agora sempre nasce correto; não
+   havia necessidade de tocar nesses arquivos.
+
+Testado manualmente (fora do navegador, via Node, simulando `Intl` e a
+biblioteca) contra vários casos: São Luiz Gonzaga/RS em 28/03/1992 dá
+-3 (confirmado pelo astrólogo); Manaus dá -4; Nova York alterna -5/-4
+entre inverno e verão (horário de verão americano); Lisboa alterna
+0/+1; coordenada inválida cai no fallback sem travar.
