@@ -633,18 +633,19 @@ function renderPainelTecnico(data, containerId) {
         const outerScroll = document.getElementById(outerScrollId);
         const scaleBox = document.getElementById(scaleBoxId);
         const wrapper = document.getElementById(wrapperId);
-        if (!scaleBox || !wrapper) return;
+        if (!scaleBox || !wrapper) return 1;
         wrapper.style.transform = '';
         scaleBox.style.width = '';
         scaleBox.style.height = '';
         if (outerScroll) outerScroll.style.height = '';
         const naturalW = wrapper.offsetWidth;
         const naturalH = wrapper.offsetHeight;
+        let escalaBase = 1;
         if (availableWidth > 0 && naturalW > availableWidth) {
-          const escala = availableWidth / naturalW;
-          const scaledH = naturalH * escala;
-          wrapper.style.transform = `scale(${escala})`;
-          scaleBox.style.width = (naturalW * escala) + 'px';
+          escalaBase = availableWidth / naturalW;
+          const scaledH = naturalH * escalaBase;
+          wrapper.style.transform = `scale(${escalaBase})`;
+          scaleBox.style.width = (naturalW * escalaBase) + 'px';
           scaleBox.style.height = scaledH + 'px';
           // Com uma <table> diretamente dentro de um elemento com transform,
           // o contêiner com overflow-x:auto calcula a própria altura usando o
@@ -652,10 +653,115 @@ function renderPainelTecnico(data, containerId) {
           // também fixamos a altura dele aqui, em vez de deixar em "auto".
           if (outerScroll) outerScroll.style.height = scaledH + 'px';
         }
+        return escalaBase;
       }
 
-      encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper');
-      encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper');
+      /* PINÇA-PRA-ZOOM IMPLEMENTADA À MÃO, direto em cima da Matriz/Painel.
+         Por quê: touch-action nativo do navegador (qualquer valor que inclua
+         pinch-zoom: "manipulation", "pan-x pan-y") deixa esse wrapper
+         "participar" do gesto de duas pontas como se fosse rolagem própria,
+         e ele desliza de lado sozinho ("dança") — touch-action: pan-y sozinho
+         resolve a dança, mas aí o navegador não deixa mais dar pinça
+         NENHUMA em cima da tabela (só funciona encostando fora dela, nas
+         bordas). Astrólogo pediu as duas coisas ao mesmo tempo: sem dançar E
+         com pinça funcionando em cima da própria tabela — só dá com um
+         pinça nosso, feito em JS, que ignora completamente o gesto nativo
+         (touch-action continua "pan-y", então o navegador nunca entra em
+         cena) e ajusta o mesmo transform:scale do auto-encolhimento acima,
+         mantendo o ponto entre os dois dedos parado embaixo deles (senão o
+         zoom "puxa" a tela pro canto e o usuário perde de vista o que
+         queria ver de perto). Arrastar com UM dedo na horizontal (depois de
+         já ter dado zoom) também é tratado aqui, porque touch-action: pan-y
+         não deixa o navegador rolar a tabela de lado sozinho. */
+      function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase) {
+        const outerScroll = document.getElementById(outerScrollId);
+        const scaleBox = document.getElementById(scaleBoxId);
+        const wrapper = document.getElementById(wrapperId);
+        if (!outerScroll || !scaleBox || !wrapper) return;
+
+        const ESCALA_MAX = Math.max(escalaBase * 6, 2.5);
+        let escalaAtual = escalaBase;
+
+        function aplicarEscala(escala) {
+          escalaAtual = Math.max(escalaBase, Math.min(escala, ESCALA_MAX));
+          const naturalW = wrapper.offsetWidth;
+          const naturalH = wrapper.offsetHeight;
+          wrapper.style.transform = `scale(${escalaAtual})`;
+          scaleBox.style.width = (naturalW * escalaAtual) + 'px';
+          scaleBox.style.height = (naturalH * escalaAtual) + 'px';
+          outerScroll.style.height = (naturalH * escalaAtual) + 'px';
+          return escalaAtual;
+        }
+
+        function distancia(t1, t2) {
+          return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        }
+
+        let pinchDistInicial = 0, pinchEscalaInicial = escalaBase;
+        let pinchMidXInicial = 0, pinchMidYInicial = 0;
+        let pinchScrollLeftInicial = 0;
+
+        let arrastoAtivo = false, arrastoX0 = 0, arrastoY0 = 0, arrastoScrollLeft0 = 0, arrastoDirecaoDefinida = false;
+
+        outerScroll.addEventListener('touchstart', function (e) {
+          if (e.touches.length === 2) {
+            arrastoAtivo = false;
+            pinchDistInicial = distancia(e.touches[0], e.touches[1]);
+            pinchEscalaInicial = escalaAtual;
+            const rect = outerScroll.getBoundingClientRect();
+            pinchMidXInicial = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+            pinchMidYInicial = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+            pinchScrollLeftInicial = outerScroll.scrollLeft;
+          } else if (e.touches.length === 1) {
+            pinchDistInicial = 0;
+            arrastoAtivo = true;
+            arrastoDirecaoDefinida = false;
+            arrastoX0 = e.touches[0].clientX;
+            arrastoY0 = e.touches[0].clientY;
+            arrastoScrollLeft0 = outerScroll.scrollLeft;
+          }
+        }, { passive: true });
+
+        outerScroll.addEventListener('touchmove', function (e) {
+          if (e.touches.length === 2 && pinchDistInicial > 0) {
+            e.preventDefault();
+            const novaDist = distancia(e.touches[0], e.touches[1]);
+            const escalaAntes = escalaAtual;
+            const conteudoX = (pinchScrollLeftInicial + pinchMidXInicial) / pinchEscalaInicial;
+            const conteudoY = pinchMidYInicial / pinchEscalaInicial;
+            const novaEscala = aplicarEscala(pinchEscalaInicial * (novaDist / pinchDistInicial));
+            outerScroll.scrollLeft = conteudoX * novaEscala - pinchMidXInicial;
+            // A caixa cresce/encolhe a partir do topo (transform-origin: top
+            // left) sem se mover na página — então rolar a PÁGINA compensa
+            // o quanto o ponto tocado "desceu" ou "subiu" por causa do zoom,
+            // mantendo-o embaixo dos dedos em vez de fugir tela abaixo/acima.
+            window.scrollBy(0, conteudoY * (novaEscala - escalaAntes));
+          } else if (e.touches.length === 1 && arrastoAtivo) {
+            const dx = e.touches[0].clientX - arrastoX0;
+            const dy = e.touches[0].clientY - arrastoY0;
+            if (!arrastoDirecaoDefinida) {
+              if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+              arrastoDirecaoDefinida = true;
+              // Só assume o gesto se for claramente mais horizontal que
+              // vertical — senão deixa o navegador rolar a página (pan-y)
+              // normalmente, sem interferir.
+              if (Math.abs(dx) <= Math.abs(dy)) { arrastoAtivo = false; return; }
+            }
+            e.preventDefault();
+            outerScroll.scrollLeft = arrastoScrollLeft0 - dx;
+          }
+        }, { passive: false });
+
+        outerScroll.addEventListener('touchend', function (e) {
+          if (e.touches.length < 2) pinchDistInicial = 0;
+          if (e.touches.length < 1) arrastoAtivo = false;
+        });
+      }
+
+      const escalaBaseMatriz = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper');
+      const escalaBasePainel = encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper');
+      ativarPinchZoomTabela('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', escalaBaseMatriz);
+      ativarPinchZoomTabela('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', escalaBasePainel);
     }
   } catch (err) {
     const container = document.getElementById(containerId);

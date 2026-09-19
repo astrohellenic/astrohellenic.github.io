@@ -101,7 +101,47 @@ Histórico: PRs #103, #104 e #106 no repo (#103 e #104 foram as tentativas
 com `sticky`, incompletas na prática; #106 trocou pra `position: fixed`,
 que resolveu de fato).
 
-## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal) — RESOLVIDO, é `pan-y` e só `pan-y`
+## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal)
+
+**Atualização (19/09/2026, à noite) — `pan-y` sozinho NÃO é suficiente:**
+a nota abaixo (do mesmo dia, mais cedo) tratava `touch-action: pan-y`
+como solução definitiva porque resolvia a dança — só que criou um
+problema novo, que o astrólogo só notou ao testar de verdade: com
+`pan-y`, o navegador para de reconhecer pinça-pra-zoom **em cima do
+próprio wrapper** (só funciona encostando fora dele, tipo no cabeçalho,
+e depois é preciso procurar o trecho específico da tabela rolando —
+inviável quando o que se quer ver é um ponto específico e pequeno no
+meio da tabela). Sem-dançar E com-pinça-na-própria-tabela ao mesmo
+tempo **não é possível só com CSS/touch-action nativo** — as duas
+coisas usam o mesmo mecanismo do navegador, que ou captura o gesto de
+duas pontas (dança, porque briga com o `transform:scale` do
+auto-encolhimento) ou não captura nada (sem dança, mas sem pinça na
+tabela também).
+
+**Solução de verdade, implementada em `tabelaTecnica.js` dentro de
+`renderPainelTecnico`:** manter `touch-action: pan-y` nos wrappers (pra
+rolagem vertical da página continuar normal) e implementar o
+pinça-pra-zoom **à mão em JS** (função `ativarPinchZoomTabela`,
+`touchstart`/`touchmove`/`touchend` com `e.preventDefault()`), em vez
+de depender do gesto nativo do navegador pra isso. Como o `touch-action`
+nunca deixa o navegador participar, não tem mais briga nenhuma com o
+`transform:scale` — o próprio `transform:scale` do auto-encolhimento
+(a variável de escala) é ajustado diretamente pelo nosso código a cada
+`touchmove` de dois dedos, com o ponto entre os dedos mantido fixo na
+tela (rolando `outerScroll.scrollLeft` e a página via `window.scrollBy`
+pra compensar). Também implementa arrastar com um dedo só na horizontal
+(pra navegar depois de já ter dado zoom), só ativado quando o gesto é
+claramente mais horizontal que vertical, pra não brigar com a rolagem
+vertical normal da página.
+
+Isso resolve as três exigências ao mesmo tempo: abre encolhida (auto-
+encolhimento intacto), não dança (touch-action nativo nunca entra em
+ação), e dá pra ampliar tocando em qualquer lugar da própria tabela
+(pinça implementado à mão). Só foi feito na Tabela Técnica até agora —
+a Profecção Mensal continua só com `pan-y` puro (sem pinça na própria
+tabela), porque não foi pedido mexer nela.
+
+### Histórico (texto original de mais cedo no mesmo dia, mantido por contexto)
 
 Essas tabelas (`matrizOuterScroll`/`painelPrincipalOuterScroll` em
 `tabelaTecnica.js`, `profMensalOuterScroll` em `profeccao.js`) são mais
