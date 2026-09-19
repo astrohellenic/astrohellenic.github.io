@@ -468,7 +468,7 @@ function renderPainelTecnico(data, containerId) {
     let html = `
       <div style="width: 100%;">
       <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
-        <button onclick="capturarTelaParaRelatorio('tabela_tecnica', 'painel-tecnico-container', 'Painel Técnico de Natividades')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+        <button onclick="capturarPainelTecnicoParaRelatorio()" title="Adiciona esta tela como um bloco no Relatório (a captura sai em tamanho natural, sem o zoom que você deu na tela, pra sair nítida no PDF)" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
@@ -774,6 +774,67 @@ function renderPainelTecnico(data, containerId) {
     }
   }
 }
+
+/* Captura o Painel Técnico pro Relatório — mas ANTES desfaz temporariamente
+   o zoom/encolhimento (transform:scale) da Matriz de Visibilidade e do
+   Painel Principal, tira a "foto" com html2canvas e só então restaura
+   exatamente o zoom/rolagem que o astrólogo tinha na tela.
+
+   Por quê: html2canvas tem um bug conhecido com overflow-x:auto + um
+   filho com transform:scale ao mesmo tempo (o padrão exato usado pelo
+   auto-encolhimento/pinça-pra-zoom dessas duas tabelas) — o resultado
+   observado foi a imagem capturada saindo com fragmentos cortados/
+   duplicados da tabela no topo da página do relatório. Capturando sem
+   nenhum transform ativo (tamanho natural — maior e mais nítido, o que
+   só ajuda a qualidade no PDF) esse bug desaparece. IMPORTANTE: isso não
+   mexe em nada do código de toque/pinça em si (touch-action,
+   ativarPinchZoomTabela) nem muda o que aparece na tela pro astrólogo —
+   só usa um estado sem escala pelo instante da captura, e desfaz tudo
+   logo depois. */
+async function capturarPainelTecnicoParaRelatorio() {
+  const elemento = document.getElementById('painel-tecnico-container');
+  if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+
+  const alvos = [
+    { outer: 'matrizOuterScroll', box: 'matrizScaleBox', wrapper: 'matrizVisibilidadeWrapper' },
+    { outer: 'painelPrincipalOuterScroll', box: 'painelPrincipalScaleBox', wrapper: 'painelPrincipalWrapper' }
+  ];
+
+  const estadosOriginais = alvos.map(({ outer, box, wrapper }) => {
+    const outerEl = document.getElementById(outer);
+    const boxEl = document.getElementById(box);
+    const wrapperEl = document.getElementById(wrapper);
+    const original = {
+      outerEl, boxEl, wrapperEl,
+      outerHeight: outerEl ? outerEl.style.height : '',
+      outerScrollLeft: outerEl ? outerEl.scrollLeft : 0,
+      boxWidth: boxEl ? boxEl.style.width : '',
+      boxHeight: boxEl ? boxEl.style.height : '',
+      wrapperTransform: wrapperEl ? wrapperEl.style.transform : ''
+    };
+    if (wrapperEl) wrapperEl.style.transform = '';
+    if (boxEl) { boxEl.style.width = ''; boxEl.style.height = ''; }
+    if (outerEl) outerEl.style.height = '';
+    return original;
+  });
+
+  try {
+    const canvas = await html2canvas(elemento, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    const total = adicionarCapturaRelatorio('tabela_tecnica', canvas.toDataURL('image/png'));
+    alert(`"Painel Técnico de Natividades" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar Painel Técnico ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    estadosOriginais.forEach(({ outerEl, boxEl, wrapperEl, outerHeight, outerScrollLeft, boxWidth, boxHeight, wrapperTransform }) => {
+      if (wrapperEl) wrapperEl.style.transform = wrapperTransform;
+      if (boxEl) { boxEl.style.width = boxWidth; boxEl.style.height = boxHeight; }
+      if (outerEl) { outerEl.style.height = outerHeight; outerEl.scrollLeft = outerScrollLeft; }
+    });
+  }
+}
+window.capturarPainelTecnicoParaRelatorio = capturarPainelTecnicoParaRelatorio;
 
 /* FUNÇÃO DE INICIALIZAÇÃO CHAMADA PELO BOTÃO DA BARRA */
 function iniciarModuloTabelaTecnica() {
