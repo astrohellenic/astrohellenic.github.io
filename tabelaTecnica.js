@@ -723,19 +723,23 @@ function renderPainelTecnico(data, containerId) {
         }, { passive: true });
 
         outerScroll.addEventListener('touchmove', function (e) {
-          if (e.touches.length === 2 && pinchDistInicial > 0) {
+          if (e.touches.length === 2 && pinchDistInicial > 15) {
             e.preventDefault();
             const novaDist = distancia(e.touches[0], e.touches[1]);
-            const escalaAntes = escalaAtual;
             const conteudoX = (pinchScrollLeftInicial + pinchMidXInicial) / pinchEscalaInicial;
-            const conteudoY = pinchMidYInicial / pinchEscalaInicial;
+            // Só ajusta a rolagem HORIZONTAL do próprio wrapper (scrollLeft
+            // não move a posição do wrapper na tela, então é seguro). NÃO
+            // mexe na rolagem da página (window.scrollBy) — isso aqui é de
+            // propósito: rolar a página muda a posição do próprio wrapper
+            // na tela no meio do gesto, invalidando os pontos de referência
+            // guardados no touchstart e realimentando um erro a cada frame
+            // — foi exatamente isso que causava a tabela "dançar" na
+            // primeira versão desse código. Sem essa parte, o ponto do
+            // zoom pode "andar" um pouco na vertical enquanto amplia, mas
+            // não dança, e o usuário ainda pode rolar a página normalmente
+            // (com um dedo) depois de soltar o pinça pra ajustar.
             const novaEscala = aplicarEscala(pinchEscalaInicial * (novaDist / pinchDistInicial));
             outerScroll.scrollLeft = conteudoX * novaEscala - pinchMidXInicial;
-            // A caixa cresce/encolhe a partir do topo (transform-origin: top
-            // left) sem se mover na página — então rolar a PÁGINA compensa
-            // o quanto o ponto tocado "desceu" ou "subiu" por causa do zoom,
-            // mantendo-o embaixo dos dedos em vez de fugir tela abaixo/acima.
-            window.scrollBy(0, conteudoY * (novaEscala - escalaAntes));
           } else if (e.touches.length === 1 && arrastoAtivo) {
             const dx = e.touches[0].clientX - arrastoX0;
             const dy = e.touches[0].clientY - arrastoY0;
