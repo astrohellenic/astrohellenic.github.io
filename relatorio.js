@@ -1253,8 +1253,9 @@ function injetarEstilosEditorRelatorio() {
          atrás — a altura exata é medida e aplicada em JS (ver
          ajustarEspacadorBarraFixaEditor), já que ela muda com o tamanho
          da tela. */
-      .rel-editor-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; justify-content: center; gap: 12px; border-bottom: 1px solid #e2d9c2; background: var(--bg-main, #f8fafc); padding: 10px 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-      .rel-editor-tabs-conteudo { width: 100%; max-width: 720px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .rel-editor-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e2d9c2; background: var(--bg-main, #f8fafc); padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+      .rel-editor-btn-voltar-fixo { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer; font-size: 14px; padding: 0; }
+      .rel-editor-tabs-conteudo { flex: 1; min-width: 0; max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
       .rel-editor-tabs-grupo { display: flex; gap: 4px; }
       .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; }
       .rel-editor-tab.ativa { color: #103b70; border-bottom-color: #103b70; }
@@ -1486,15 +1487,14 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   container.innerHTML = `
     <div style="width: 100%; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
 
-      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <button type="button" onclick="${config.aoVoltarJs}" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 700;">
-          <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
-        </button>
+      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(config.tituloTela)}</h2>
-        <div style="width: 76px;"></div>
       </div>
 
       <div class="rel-editor-tabs" id="relEditorTabsFixa">
+        <button type="button" class="rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
         <div class="rel-editor-tabs-conteudo">
           <div class="rel-editor-tabs-grupo">
             <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
