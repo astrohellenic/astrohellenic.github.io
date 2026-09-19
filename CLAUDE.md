@@ -107,16 +107,28 @@ mesmo ciclo de novo:
   (Trocar o `transform: scale` por `zoom` pra eliminar essa altura
   fixada à mão TAMBÉM não é o caminho: foi tentado e distorceu a
   tabela / descasou o tamanho entre Matriz e Painel — não repetir.)
-- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`): rola a página
-  normal ao tocar na tabela, sem travar, e sem o bug de "dançar" (já
-  que nenhum pinça nativo entra em conflito com a altura fixada à
-  mão). Só sacrifica o pinça-pra-zoom nessas tabelas especificamente —
-  aceitável porque elas já abrem encolhidas/legíveis pelo próprio
-  auto-encolhimento; pra ampliar de verdade, teria que ser um pinça
-  implementado à mão em JS (nunca feito), não o nativo do navegador.
+- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`) — **tentado e
+  descartado**: a ideia era que, sem nenhum pinça nativo brigando com a
+  altura fixada à mão, a tabela pararia de "dançar". Na prática, piorou:
+  com dois dedos na tela e pinça DESLIGADO, o navegador parece
+  interpretar os dois toques como dois arrastos concorrentes (um puxando
+  a tabela pra um lado, o outro pro outro) — e isso também aparece como
+  a tabela "indo pra lá e pra cá". Apareceu inclusive na Profecção
+  Mensal, que nunca tinha dançado com `manipulation`. **Pinça-pra-zoom
+  não é opcional nesse app — é celular/tela pequena, sem ele não dá pra
+  ler a tabela. Não tirar o pinça de novo pra tentar resolver a dança.**
 
-**Conclusão prática:** é essa a configuração que funciona nesses três
-wrappers — `touch-action: pan-x pan-y`. Não tentar `manipulation` nem
-trocar `transform` por `zoom` de novo nesse padrão específico
-(wrapper `overflow-x:auto` + filho escalado por JS pra caber na
-tela); os dois já foram tentados e pioraram.
+**Conclusão prática (revisada):** `touch-action: manipulation` nos três
+wrappers. Resolve a rolagem da página E mantém o pinça, que é
+obrigatório. A Matriz de Visibilidade e o Painel Técnico (Tabela
+Técnica) ainda podem "dançar" um pouco com esse valor — causa provável:
+o auto-encolhimento usa `transform: scale` (só pintura, não layout), e
+por isso o JS fixa a altura do wrapper à mão; o pinça nativo tentando
+ampliar por cima dessa altura fixa parece ser a causa. Ainda **não
+achamos uma correção real pra isso que não troque uma dor de cabeça por
+outra** — já foi tentado trocar `transform` por `zoom` (distorceu a
+tabela, tamanhos de Matriz e Painel descasaram) e tirar o pinça
+(piorou, ver acima). Se for mexer nisso de novo, a via mais provável é
+implementar o pinça-zoom à mão em JS (capturar os dois toques e ajustar
+o próprio `transform: scale`, em vez de depender do gesto nativo do
+navegador) — não repetir as duas tentativas acima.
