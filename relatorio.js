@@ -708,7 +708,10 @@ function renderRelatorioSetup(container, presets, rascunhos) {
           ${g.itens.map(r => `
             <div onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid #e2d9c2; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? '#fffdf5' : '#ffffff'};">
               <span style="font-size: 12px; color: #475569;">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
-              <i class="fa-solid fa-chevron-right" style="color: #c59b27; font-size: 11px;"></i>
+              <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                <i class="fa-solid fa-trash" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" style="color: #dc2626; cursor: pointer; font-size: 12px;" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)"></i>
+                <i class="fa-solid fa-chevron-right" style="color: #c59b27; font-size: 11px;"></i>
+              </div>
             </div>
           `).join('')}
         </div>
@@ -811,6 +814,38 @@ async function excluirPresetRelatorio(idx) {
   }
 }
 window.excluirPresetRelatorio = excluirPresetRelatorio;
+
+/* Exclui um RASCUNHO (o relatório de UM cliente específico, listado em
+   "Relatórios em Andamento") — nunca mexe em relatorio_presets, só
+   nessa linha específica de relatorio_rascunhos. */
+async function excluirRascunhoRelatorio(rascunhoId, rotulo) {
+  if (!rascunhoId) return;
+  if (!confirm(`Excluir o relatório "${rotulo}"? Essa ação não pode ser desfeita.`)) return;
+
+  const client = relatorioSupabaseClient();
+  if (!client) return;
+
+  try {
+    const { error } = await client.from('relatorio_rascunhos').delete().eq('id', rascunhoId);
+    if (error) { alert("Erro ao excluir: " + error.message); return; }
+
+    // Se o relatório excluído era o que estava aberto/em edição, zera o
+    // estado — senão o "retomar de onde parou" (ver iniciarModuloRelatorio)
+    // tentaria reabrir um rascunho que não existe mais.
+    if (typeof currentRascunhoId !== 'undefined' && currentRascunhoId === rascunhoId) currentRascunhoId = null;
+    if (window.relatorioEditorAlvoAtual && window.relatorioEditorAlvoAtual.tipo === 'rascunho' && window.relatorioEditorAlvoAtual.id === rascunhoId) {
+      window.relatorioEditorAlvoAtual = null;
+    }
+    if (window.relatorioRascunhoEmEdicao && window.relatorioRascunhoEmEdicao.id === rascunhoId) {
+      window.relatorioRascunhoEmEdicao = null;
+    }
+
+    iniciarModuloRelatorio();
+  } catch (e) {
+    alert("Erro de conexão ao excluir relatório.");
+  }
+}
+window.excluirRascunhoRelatorio = excluirRascunhoRelatorio;
 
 /* EDITOR DE UM MODELO: cada bloco (do catálogo ou personalizado) vira uma
    linha reordenável — checkbox pra incluir/excluir, título e corpo
