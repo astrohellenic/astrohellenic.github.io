@@ -1081,7 +1081,7 @@
                 <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
             </div>
 
-            <div id="profMensalOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; margin-top: 10px;">
+            <div id="profMensalOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; margin-top: 10px; touch-action: pan-x pan-y;">
               <div id="profMensalScaleBox">
               <div id="profMensalWrapper" style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; transform-origin: top left;">
                 <table id="profMensalTable" style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">

@@ -72,3 +72,51 @@ tentando fazer `position: sticky` funcionar nesse layout de novo.
 Histórico: PRs #103, #104 e #106 no repo (#103 e #104 foram as tentativas
 com `sticky`, incompletas na prática; #106 trocou pra `position: fixed`,
 que resolveu de fato).
+
+## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal)
+
+Essas tabelas (`matrizOuterScroll`/`painelPrincipalOuterScroll` em
+`tabelaTecnica.js`, `profMensalOuterScroll` em `profeccao.js`) são mais
+largas que a tela, então: (1) o wrapper tem `overflow-x: auto;
+overflow-y: hidden` pra rolar só na horizontal, e (2) a tabela em si
+tem um auto-encolhimento em JS (`encolherTabelaParaCaber`/equivalente)
+que aplica `transform: scale(...)` calculado a partir da largura
+disponível, pra abrir já "caber na tela" em vez de gigante e cortada —
+e, como a escala reduz tudo proporcionalmente (é texto/vetor), o
+usuário consegue ler os detalhes de novo dando zoom com o dedo.
+
+Testado à exaustão (várias sessões, PRs/commits diferentes) tentando
+acertar a combinação de `touch-action` nesse wrapper, sem repetir o
+mesmo ciclo de novo:
+
+- **Sem nenhum `touch-action`** (deixando o padrão `auto`): no
+  aparelho do astrólogo, tocar na tabela e arrastar pra rolar a
+  **página** verticalmente trava — o gesto fica ambíguo entre "rolar a
+  página" e "rolar este elemento" (que tem `overflow-x:auto`, mesmo
+  sendo `overflow-y:hidden`), e o iOS às vezes escolhe a segunda opção
+  e não rola nada.
+- **`touch-action: manipulation`** (= pan-x + pan-y + pinch-zoom):
+  resolve a rolagem da página **e** libera o pinça-pra-zoom nativo —
+  mas faz a tabela "dançar" (o tamanho pula sozinho ao tocar/rolar).
+  Causa: o auto-encolhimento usa `transform`, que só afeta a pintura,
+  não o layout — por isso o JS precisa fixar a altura do wrapper à mão
+  (calculada a partir da escala). Com o pinça nativo liberado, o gesto
+  de zoom do sistema tenta ampliar esse conteúdo escalado por cima de
+  uma altura que não acompanha, e os dois mecanismos de zoom (o nosso
+  via `transform`, o do sistema via pinça) brigam pelo mesmo elemento.
+  (Trocar o `transform: scale` por `zoom` pra eliminar essa altura
+  fixada à mão TAMBÉM não é o caminho: foi tentado e distorceu a
+  tabela / descasou o tamanho entre Matriz e Painel — não repetir.)
+- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`): rola a página
+  normal ao tocar na tabela, sem travar, e sem o bug de "dançar" (já
+  que nenhum pinça nativo entra em conflito com a altura fixada à
+  mão). Só sacrifica o pinça-pra-zoom nessas tabelas especificamente —
+  aceitável porque elas já abrem encolhidas/legíveis pelo próprio
+  auto-encolhimento; pra ampliar de verdade, teria que ser um pinça
+  implementado à mão em JS (nunca feito), não o nativo do navegador.
+
+**Conclusão prática:** é essa a configuração que funciona nesses três
+wrappers — `touch-action: pan-x pan-y`. Não tentar `manipulation` nem
+trocar `transform` por `zoom` de novo nesse padrão específico
+(wrapper `overflow-x:auto` + filho escalado por JS pra caber na
+tela); os dois já foram tentados e pioraram.
