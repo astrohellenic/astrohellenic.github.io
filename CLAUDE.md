@@ -3,6 +3,34 @@
 Anotações de coisas não óbvias descobertas na prática, pra não repetir o
 mesmo problema (ou o mesmo diagnóstico) da próxima vez.
 
+## Regra de ouro: não trocar 10 coisas boas por 1 coisa resolvida
+
+Pedido pra resolver UM problema específico não é autorização pra mexer
+em ferramentas/arquivos que não foram citados, nem pra aceitar que a
+correção quebre algo que já funcionava. Se a única solução encontrada
+pra um bug troca esse bug por outro (ou estraga algo que estava bom em
+outro lugar), **isso não é uma solução** — é hora de parar e avisar o
+astrólogo, não de publicar a troca. "Resolver o problema" significa sair
+com aquele problema a menos e **nada** a mais quebrado, mesmo que isso
+signifique deixar o problema original em aberto por enquanto.
+
+Regras específicas que vieram de sessões onde isso foi ignorado (dia
+18-19/09/2026, ver a seção de `touch-action` abaixo pro caso concreto):
+
+- **Não mexer em arquivo/ferramenta que não foi mencionado no pedido**,
+  mesmo que pareça ter "o mesmo problema" por semelhança de código. Se
+  achar que outro lugar tem o mesmo bug, avisar e perguntar antes, não
+  corrigir de bandeja junto.
+- **Não publicar (`git push`) na `main` sem o astrólogo pedir
+  explicitamente** cada vez — não vale um "pode colocar" de uma vez
+  virar autorização permanente pras próximas mudanças da sessão.
+- Testar e errar em CSS de gesto de toque (`touch-action`, zoom por
+  transform etc.) **custa caro**: cada tentativa consome uma rodada
+  inteira de "publica → ele testa no aparelho dele → volta com o
+  resultado", que é lento e gasta a cota dele. Antes de propor uma
+  correção nessa área, ler primeiro se já existe alguma nota aqui sobre
+  o mesmo elemento/padrão.
+
 ## `#mandala-container` e `position: sticky` fora do modo Mandala
 
 `#mandala-container` (o painel principal onde cada módulo desenha sua
@@ -73,7 +101,7 @@ Histórico: PRs #103, #104 e #106 no repo (#103 e #104 foram as tentativas
 com `sticky`, incompletas na prática; #106 trocou pra `position: fixed`,
 que resolveu de fato).
 
-## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal)
+## `touch-action` nos wrappers `overflow-x: auto` das tabelas largas (Matriz de Visibilidade, Painel Técnico, Profecção Mensal) — PROBLEMA AINDA ABERTO, várias tentativas já fracassaram
 
 Essas tabelas (`matrizOuterScroll`/`painelPrincipalOuterScroll` em
 `tabelaTecnica.js`, `profMensalOuterScroll` em `profeccao.js`) são mais
@@ -85,50 +113,58 @@ disponível, pra abrir já "caber na tela" em vez de gigante e cortada —
 e, como a escala reduz tudo proporcionalmente (é texto/vetor), o
 usuário consegue ler os detalhes de novo dando zoom com o dedo.
 
-Testado à exaustão (várias sessões, PRs/commits diferentes) tentando
-acertar a combinação de `touch-action` nesse wrapper, sem repetir o
-mesmo ciclo de novo:
+**Estado atual (19/09/2026), de propósito voltado pro original:** SEM
+nenhum `touch-action` nesses wrappers — Tabela Técnica sem nada,
+Profecção Mensal com `touch-action: pan-y` (que já existia antes de
+qualquer uma das tentativas abaixo). Isso significa que **o bug
+original relatado continua sem correção**: tocar na tabela e arrastar
+pra rolar a página verticalmente pode não funcionar (fica ambíguo entre
+rolar a página e rolar o wrapper, que tem `overflow-x:auto` mesmo sendo
+`overflow-y:hidden`; o iOS às vezes escolhe a segunda opção e não rola
+nada). Foi deixado assim **de propósito**, a pedido do astrólogo, depois
+que as tentativas abaixo pioraram a situação em vez de melhorar.
 
-- **Sem nenhum `touch-action`** (deixando o padrão `auto`): no
-  aparelho do astrólogo, tocar na tabela e arrastar pra rolar a
-  **página** verticalmente trava — o gesto fica ambíguo entre "rolar a
-  página" e "rolar este elemento" (que tem `overflow-x:auto`, mesmo
-  sendo `overflow-y:hidden`), e o iOS às vezes escolhe a segunda opção
-  e não rola nada.
+**Requisito inegociável pra qualquer correção futura aqui:** essas
+tabelas TÊM que continuar dando pra ampliar com pinça-pra-zoom (celular,
+tela pequena, texto pequeno demais sem isso) E TÊM que abrir já
+encolhidas/legíveis (o auto-encolhimento acima) E a rolagem da página
+tocando na tabela precisa funcionar. As três coisas ao mesmo tempo,
+sempre — não é aceitável resolver uma sacrificando outra. Se não achar
+uma solução que mantenha as três, **não publicar nada** — melhor deixar
+o bug de rolagem em aberto (estado atual) do que trocar por outro.
+
+Tentativas já feitas nessa mesma sessão, todas descartadas — **não
+repetir nenhuma delas**:
+
 - **`touch-action: manipulation`** (= pan-x + pan-y + pinch-zoom):
-  resolve a rolagem da página **e** libera o pinça-pra-zoom nativo —
-  mas faz a tabela "dançar" (o tamanho pula sozinho ao tocar/rolar).
-  Causa: o auto-encolhimento usa `transform`, que só afeta a pintura,
-  não o layout — por isso o JS precisa fixar a altura do wrapper à mão
-  (calculada a partir da escala). Com o pinça nativo liberado, o gesto
-  de zoom do sistema tenta ampliar esse conteúdo escalado por cima de
-  uma altura que não acompanha, e os dois mecanismos de zoom (o nosso
-  via `transform`, o do sistema via pinça) brigam pelo mesmo elemento.
-  (Trocar o `transform: scale` por `zoom` pra eliminar essa altura
-  fixada à mão TAMBÉM não é o caminho: foi tentado e distorceu a
-  tabela / descasou o tamanho entre Matriz e Painel — não repetir.)
-- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`) — **tentado e
-  descartado**: a ideia era que, sem nenhum pinça nativo brigando com a
-  altura fixada à mão, a tabela pararia de "dançar". Na prática, piorou:
-  com dois dedos na tela e pinça DESLIGADO, o navegador parece
-  interpretar os dois toques como dois arrastos concorrentes (um puxando
-  a tabela pra um lado, o outro pro outro) — e isso também aparece como
-  a tabela "indo pra lá e pra cá". Apareceu inclusive na Profecção
-  Mensal, que nunca tinha dançado com `manipulation`. **Pinça-pra-zoom
-  não é opcional nesse app — é celular/tela pequena, sem ele não dá pra
-  ler a tabela. Não tirar o pinça de novo pra tentar resolver a dança.**
+  resolve a rolagem da página E mantém o pinça, mas faz a tabela
+  "dançar" — o tamanho/posição pula sozinho ao tocar. Teoria inicial
+  (não totalmente confirmada) era que seria só com dois dedos/pinça,
+  mas o astrólogo confirmou que acontece **com um dedo só**, arrastando
+  a tabela pra um lado ou pro outro. Causa provável: o auto-encolhimento
+  usa `transform` (só pintura, não layout), então o JS precisa fixar a
+  altura do wrapper à mão (calculada a partir da escala) — isso conflita
+  com o gesto nativo do navegador de alguma forma ainda não totalmente
+  entendida.
+- **`touch-action: pan-x pan-y`** (sem `pinch-zoom`): tentativa de tirar
+  só o pinça achando que ele era a causa da dança. Piorou — dançou
+  igual ou pior, inclusive na Profecção Mensal (que nunca tinha dançado
+  antes de qualquer uma dessas tentativas). **Nunca tirar o pinça como
+  "solução" pra dança — não resolve, e além disso pinça é obrigatório
+  no app.**
+- **Trocar `transform: scale` por `zoom`** no auto-encolhimento (só na
+  Tabela Técnica, tentativa de eliminar a necessidade de fixar altura à
+  mão): distorceu a tabela (ficou retangular/esticada em vez de
+  proporcional) e descasou o tamanho entre Matriz e Painel (que antes
+  saíam do mesmo tamanho visual). Também descartado.
 
-**Conclusão prática (revisada):** `touch-action: manipulation` nos três
-wrappers. Resolve a rolagem da página E mantém o pinça, que é
-obrigatório. A Matriz de Visibilidade e o Painel Técnico (Tabela
-Técnica) ainda podem "dançar" um pouco com esse valor — causa provável:
-o auto-encolhimento usa `transform: scale` (só pintura, não layout), e
-por isso o JS fixa a altura do wrapper à mão; o pinça nativo tentando
-ampliar por cima dessa altura fixa parece ser a causa. Ainda **não
-achamos uma correção real pra isso que não troque uma dor de cabeça por
-outra** — já foi tentado trocar `transform` por `zoom` (distorceu a
-tabela, tamanhos de Matriz e Painel descasaram) e tirar o pinça
-(piorou, ver acima). Se for mexer nisso de novo, a via mais provável é
-implementar o pinça-zoom à mão em JS (capturar os dois toques e ajustar
-o próprio `transform: scale`, em vez de depender do gesto nativo do
-navegador) — não repetir as duas tentativas acima.
+**Se for mexer nisso de novo:** a via mais provável de dar certo é
+implementar o pinça-zoom à mão em JS (capturar os dois toques com
+`touchstart`/`touchmove` e ajustar o próprio `transform: scale`, em vez
+de depender de `touch-action` + gesto nativo do navegador) — assim dá
+pra controlar os três requisitos ao mesmo tempo sem depender do
+comportamento ambíguo do navegador. É trabalho de verdade (não é só
+trocar uma linha de CSS), então antes de tentar qualquer coisa: avisar
+o astrólogo que vai ser uma mudança maior, pedir autorização, e **testar
+uma coisa de cada vez**, confirmando com ele a cada passo antes de
+publicar — não emendar três tentativas diferentes numa sessão só.
