@@ -405,9 +405,9 @@ function agendaGerarHorariosDisponiveis(dataISO, regrasDisponibilidade, agendame
    create table agendamentos (
      id uuid primary key default gen_random_uuid(),
      user_id uuid references auth.users(id) not null,
-     mapa_id uuid,
+     mapa_id text, -- id de "mapas" (não é uuid nesse projeto, por isso text)
      cliente_nome text,
-     servico_id uuid,
+     servico_id text, -- id de "relatorio_presets" (idem)
      servico_nome text,
      data date not null,
      hora_inicio time not null,
