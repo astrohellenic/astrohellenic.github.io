@@ -14,6 +14,45 @@ astrólogo, não de publicar a troca. "Resolver o problema" significa sair
 com aquele problema a menos e **nada** a mais quebrado, mesmo que isso
 signifique deixar o problema original em aberto por enquanto.
 
+## Regra de ouro 2: nada de `localStorage` pra estado que devia estar no Supabase
+
+Esse software tem Supabase pra guardar estado — **qualquer preferência ou
+configuração do astrólogo tem que ser salva lá, não em `localStorage`**,
+mesmo que pareça "só um detalhezinho de interface". `localStorage` é por
+navegador/aparelho: o que é salvo ali num Chrome do computador não
+aparece no Safari do celular, nem em outro navegador — é exatamente esse
+tipo de sumiço inexplicável ("configurei e não ficou salvo") que confunde
+o astrólogo quando ele testa em mais de um lugar.
+
+Caso concreto (20/09/2026): a ordenação da lista de clientes (campo +
+direção) foi corrigida uma primeira vez salvando em
+`localStorage.setItem('astro_sort_field'/'astro_sort_direction', ...)`
+— resolvia o sintoma testado na hora (a ordem sumia ao recarregar a
+página), mas continuava sumindo ao trocar de navegador, porque nunca
+tinha ido pro Supabase. Teve que ser corrigido de novo, dessa vez
+salvando em `configuracoes.ordenacao_clientes_campo`/
+`ordenacao_clientes_direcao` (mesmo padrão de `tema_mandala` e
+`estilo_planetas`, carregado após o login em `carregarOrdenacaoClientes`
+e salvo em `salvarOrdenacaoClientes`).
+
+**Antes de usar `localStorage` pra qualquer coisa nova, perguntar: "isso
+é uma preferência do astrólogo, ou é só estado de navegação da aba
+atual?"** Preferência (ordenação, tema, filtros salvos, qualquer
+configuração) → Supabase, sempre. `localStorage` só serve pra coisa que
+é mesmo específica daquele navegador/aparelho por natureza — e mesmo
+assim, na dúvida, perguntar antes em vez de assumir.
+
+Usos de `localStorage` que já existem no código (checar com o astrólogo
+se algum desses também devia estar no Supabase, em vez de presumir que
+estão certos só por já existirem):
+- `astro_keep_logged` — se o "manter conectado" fica marcado (checkbox
+  de login).
+- `astro_ultimo_modulo` — qual ferramenta (Mandala, Relatório etc.)
+  estava aberta, pra voltar nela ao recarregar.
+- `astro_ultimo_perfil` — qual mapa/cliente estava aberto.
+- `relatorioUltimoPreset` — qual modelo de relatório foi usado por
+  último.
+
 Regras específicas que vieram de sessões onde isso foi ignorado (dia
 18-19/09/2026, ver a seção de `touch-action` abaixo pro caso concreto):
 
