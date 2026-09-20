@@ -222,6 +222,11 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
   const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
   const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
+  /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
+     desenho, no lugar do Ascendente — mesma lógica de rotação de
+     alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
+     não tem opção "ASC": a Liberação sempre gira em torno de um lote. */
+  const loteCasa1 = (opcoes.loteCasa1 !== undefined) ? opcoes.loteCasa1 : null;
 
   const goldColor = "#c59b27";
   const sufixo = `zr${wheelInstanceCounterZR++}`;
@@ -239,7 +244,12 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
 
   const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
-  const house1RefAbs = ascAbs;
+
+  let house1RefAbs = ascAbs;
+  if (loteCasa1) {
+    const targetLot = lotes.find(l => l.key === loteCasa1);
+    if (targetLot) house1RefAbs = targetLot.deg;
+  }
 
   const outerRingItems = [];
   PLANETS_DEF.forEach(p => {
@@ -843,8 +853,8 @@ function renderLiberacaoUI() {
       </div>
 
       <div style="width: 100%; margin: 0 0 20px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
-        <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
-        ${gerarMandalaNatalZR(currentCalculatedData)}
+        <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
+        ${gerarMandalaNatalZR(currentCalculatedData, { loteCasa1: selectedZRPhase })}
       </div>
   `;
 
