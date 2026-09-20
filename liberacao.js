@@ -226,6 +226,11 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const l2SignIdx = (opcoes.l2SignIdx !== undefined) ? opcoes.l2SignIdx : null;
   const l3SignIdx = (opcoes.l3SignIdx !== undefined) ? opcoes.l3SignIdx : null;
   const l4SignIdx = (opcoes.l4SignIdx !== undefined) ? opcoes.l4SignIdx : null;
+  /* Salto (Lysis) do subperíodo ativo de cada nível — L1 nunca tem,
+     só L2/L3/L4 (que subdividem um período anterior). */
+  const l2Salto = Boolean(opcoes.l2Salto);
+  const l3Salto = Boolean(opcoes.l3Salto);
+  const l4Salto = Boolean(opcoes.l4Salto);
   /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
      desenho, no lugar do Ascendente — mesma lógica de rotação de
      alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
@@ -458,6 +463,31 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     svg += `<g transform="translate(${pPico.x}, ${pPico.y})">
         <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
         <text x="0" y="3.2" font-size="8" font-weight="800" fill="#b45309" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
+    </g>`;
+  });
+
+  /* RÓTULOS DE SALTO — mesma lógica visual do PICO (badge na mesma
+     faixa de raio das barrinhas, por cima delas), só que o salto é por
+     nível (só L2/L3/L4 podem cair num subperíodo de Lysis) — por isso,
+     igual às coroas dos regentes, o número do(s) nível(is) em salto
+     fica escrito acima do badge, e quando mais de um nível cai no
+     mesmo signo eles dividem um badge só (números unidos por "-"). */
+  const niveisSaltoPorSignoZR = {};
+  [[2, l2SignIdx, l2Salto], [3, l3SignIdx, l3Salto], [4, l4SignIdx, l4Salto]].forEach(([nivel, signIdx, salto]) => {
+    if (!salto || signIdx === null || signIdx === undefined) return;
+    if (!niveisSaltoPorSignoZR[signIdx]) niveisSaltoPorSignoZR[signIdx] = [];
+    niveisSaltoPorSignoZR[signIdx].push(nivel);
+  });
+
+  Object.keys(niveisSaltoPorSignoZR).forEach(signIdxKey => {
+    const signIdx = Number(signIdxKey);
+    const aScreenSalto = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+    const pSalto = polarToCart(cx, cy, rPicoZR, aScreenSalto);
+    const rotuloNiveisSalto = niveisSaltoPorSignoZR[signIdxKey].join('-');
+    svg += `<g transform="translate(${pSalto.x}, ${pSalto.y})">
+        <text x="0" y="-11" font-size="8" font-weight="900" fill="#7f1d1d" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="#991b1b" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
     </g>`;
   });
 
@@ -844,6 +874,11 @@ function renderLiberacaoUI() {
   let l2HighlightSignIdx = null;
   let l3HighlightSignIdx = null;
   let l4HighlightSignIdx = null;
+  /* L1 nunca tem salto (é o topo da hierarquia, não subdivide nada) —
+     só L2/L3/L4 podem cair num subperíodo de Lysis. */
+  let l2HighlightIsLysis = false;
+  let l3HighlightIsLysis = false;
+  let l4HighlightIsLysis = false;
   {
     let detStart = new Date(currentMoment);
     for (let i = 0; i < 12; i++) {
@@ -857,13 +892,18 @@ function renderLiberacaoUI() {
         detSubL2.forEach((sub, sIdx) => {
           if (expandedL2Key === `${i}_${sIdx}`) {
             l2HighlightSignIdx = sub.signIdx;
+            l2HighlightIsLysis = Boolean(sub.isLysis);
             const detSubL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
             detSubL3.forEach((subL3, l3Idx) => {
               if (expandedL3Key === `${i}_${sIdx}_${l3Idx}`) {
                 l3HighlightSignIdx = subL3.signIdx;
+                l3HighlightIsLysis = Boolean(subL3.isLysis);
                 const detSubL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
                 const l4Ativo = detSubL4.find(subL4 => hoje >= subL4.start && hoje < subL4.end);
-                if (l4Ativo) l4HighlightSignIdx = l4Ativo.signIdx;
+                if (l4Ativo) {
+                  l4HighlightSignIdx = l4Ativo.signIdx;
+                  l4HighlightIsLysis = Boolean(l4Ativo.isLysis);
+                }
               }
             });
           }
@@ -943,7 +983,10 @@ function renderLiberacaoUI() {
             l1SignIdx: l1HighlightSignIdx,
             l2SignIdx: l2HighlightSignIdx,
             l3SignIdx: l3HighlightSignIdx,
-            l4SignIdx: l4HighlightSignIdx
+            l4SignIdx: l4HighlightSignIdx,
+            l2Salto: l2HighlightIsLysis,
+            l3Salto: l3HighlightIsLysis,
+            l4Salto: l4HighlightIsLysis
           })}
         </div>
       </div>
