@@ -656,7 +656,8 @@ body {
             z-index: 1000;
         }
         .modal-box {
-            background: #ffffff;
+            background: var(--bg-card);
+            color: var(--text-dark);
             width: 460px;
             border-radius: 8px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -678,7 +679,8 @@ body {
             border-radius: 6px;
             font-size: 13px;
             outline: none;
-            background: #fff;
+            background: var(--bg-card);
+            color: var(--text-dark);
         }
         .modal-textarea {
             width: 100%;
@@ -690,13 +692,15 @@ body {
             font-family: monospace;
             outline: none;
             resize: vertical;
+            background: var(--bg-card);
+            color: var(--text-dark);
         }
         .city-results {
             max-height: 120px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            background: #fafafa;
+            background: var(--bg-card);
             display: none;
         }
         .city-item {
@@ -705,7 +709,7 @@ body {
             cursor: pointer;
             border-bottom: 1px solid var(--border-color);
         }
-        .city-item:hover { background: #f1f5f9; }
+        .city-item:hover { background: var(--bg-hover); }
         .modal-actions {
             display: flex;
             justify-content: flex-end;
@@ -966,10 +970,10 @@ body {
             
             <div>
                 <div style="margin-bottom: 12px;">
-  <label style="font-size: 11px; font-weight: 600; color: #64748b;">Salvar na Pasta</label>
+  <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Salvar na Pasta</label>
   <select id="modalPasta" class="modal-select"></select>
 </div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Tipo de Mapa</label>
                 <select id="modalTipoMapa" class="modal-select">
                     <option value="Natal" selected>Natal</option>
                     <option value="Revolução Solar">Revolução Solar</option>
@@ -981,34 +985,34 @@ body {
             </div>
 
             <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Código (Opcional)</label>
                 <input type="text" id="modalCodigo" class="modal-input" placeholder="Ex: 0011 (deixe em branco se não tiver)">
             </div>
             <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Identificação</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Nome Completo / Identificação</label>
                 <input type="text" id="modalNome" class="modal-input" placeholder="Ex: Eryell Souza">
             </div>
             <div style="display: flex; gap: 8px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
+                    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Data (DD/MM/AAAA)</label>
                     <input type="text" id="modalData" class="modal-input" placeholder="Ex: 11/06/1999">
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
+                    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Horário (HH:MM)</label>
                     <input type="text" id="modalHora" class="modal-input" placeholder="Ex: 18:28">
                 </div>
             </div>
             <div style="position: relative;">
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento / Evento</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Cidade de Nascimento / Evento</label>
                 <input type="text" id="modalCidadeInput" class="modal-input" placeholder="Digite a cidade (ex: Mauá, SP)..." oninput="pesquisarCidadesAutocomplete(this.value, 'cityResultsList')">
                 <div id="cityResultsList" class="city-results"></div>
             </div>
             <div>
-    <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
+    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">WhatsApp (Opcional)</label>
     <input type="text" id="modalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
 </div>
 <div>
-    <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
+    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">E-mail (Opcional)</label>
     <input type="email" id="modalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
 </div>
             <div class="modal-actions">
@@ -1026,10 +1030,10 @@ body {
             
             <div>
                 <div style="margin-bottom: 12px;">
-  <label style="font-size: 11px; font-weight: 600; color: #64748b;">Pasta</label>
+  <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Pasta</label>
   <select id="editModalPasta" class="modal-select"></select>
 </div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Tipo de Mapa</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Tipo de Mapa</label>
                 <select id="editModalTipoMapa" class="modal-select">
                     <option value="Natal">Natal</option>
                     <option value="Revolução Solar">Revolução Solar</option>
@@ -1041,34 +1045,34 @@ body {
             </div>
 
             <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Código (Opcional)</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Código (Opcional)</label>
                 <input type="text" id="editModalCodigo" class="modal-input">
             </div>
             <div>
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome Completo / Identificação</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Nome Completo / Identificação</label>
                 <input type="text" id="editModalNome" class="modal-input">
             </div>
             <div style="display: flex; gap: 8px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data (DD/MM/AAAA)</label>
+                    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Data (DD/MM/AAAA)</label>
                     <input type="text" id="editModalData" class="modal-input">
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário (HH:MM)</label>
+                    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Horário (HH:MM)</label>
                     <input type="text" id="editModalHora" class="modal-input" placeholder="Ex: 18:28">
                 </div>
             </div>
             <div style="position: relative;">
-                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cidade de Nascimento / Evento</label>
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Cidade de Nascimento / Evento</label>
                 <input type="text" id="editModalCidadeInput" class="modal-input" oninput="pesquisarCidadesAutocomplete(this.value, 'editCityResultsList', true)">
                 <div id="editCityResultsList" class="city-results"></div>
             </div>
             <div>
-    <label style="font-size: 11px; font-weight: 600; color: #64748b;">WhatsApp (Opcional)</label>
+    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">WhatsApp (Opcional)</label>
     <input type="text" id="editModalWhatsapp" class="modal-input" placeholder="Ex: 11999999999">
 </div>
 <div>
-    <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail (Opcional)</label>
+    <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">E-mail (Opcional)</label>
     <input type="email" id="editModalEmail" class="modal-input" placeholder="Ex: cliente@email.com">
 </div>
             <div class="modal-actions">
@@ -1082,7 +1086,7 @@ body {
     <div id="modalImportOverlay">
         <div class="modal-box">
             <div class="modal-title">Importar Lista de Clientes em Massa</div>
-            <p style="font-size: 11px; color: #64748b;">Cole abaixo a sua lista. Aceita formatos como:<br><b>0011 - Eryell Souza, 11/06/1999, 18:28, Mauá</b></p>
+            <p style="font-size: 11px; color: var(--text-muted);">Cole abaixo a sua lista. Aceita formatos como:<br><b>0011 - Eryell Souza, 11/06/1999, 18:28, Mauá</b></p>
             <textarea id="importTextArea" class="modal-textarea" placeholder="Exemplo:
 0011 - Eryell Souza, 11/06/1999, 18:28, Mauá
 0012 - João Silva, 05/08/1985, 09:15, São Paulo"></textarea>
