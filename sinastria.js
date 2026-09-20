@@ -299,7 +299,7 @@
        não desenham nada. */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+            return { svg: `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
         }
 
         const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
@@ -359,7 +359,18 @@
             const raio = base + (item.rOffset || 0);
             if (raio > maxRaioItens) maxRaioItens = raio;
         });
-        const R_canvas = Math.max(maxRaioItens + 50, R_OuterLine + 40);
+        /* rCanvasNatural é o quanto ESSE mapa (só ele) precisa de margem pra
+           caber sem cortar nenhum planeta/lote empilhado. Como os anéis da
+           mandala (R.Aspects, pR etc.) são sempre desenhados no mesmo
+           tamanho fixo em pixels, quem precisa de mais margem (mapa com mais
+           planetas colados, empilhados pra fora) acaba com um viewBox maior
+           — e como o SVG sempre ocupa 100% da largura do card, um viewBox
+           maior faz a mandala aparecer MENOR na tela. Pra duas mandalas
+           lado a lado (Sinastria) ficarem do mesmo tamanho, quem chama esta
+           função pode forçar as duas a usarem o mesmo canvas (o maior dos
+           dois) via opcoes.rCanvasMinimo — ver gerarMandalasComEscalaIgual. */
+        const rCanvasNatural = Math.max(maxRaioItens + 50, R_OuterLine + 40);
+        const R_canvas = Math.max(rCanvasNatural, opcoes.rCanvasMinimo || 0);
         const cx = R_canvas, cy = R_canvas;
         const canvasSize = R_canvas * 2;
 
@@ -582,12 +593,32 @@
         }
 
         svg += `</svg>`;
-        return svg;
+        return { svg, rCanvas: rCanvasNatural };
     }
 
     /* ===== FIM DO BLOCO COPIADO DE profeccao.js ===== */
 
     /* ===== A PARTIR DAQUI: LÓGICA PRÓPRIA DA SINASTRIA ===== */
+
+    /* Gera as duas mandalas (esquerda/direita) já na MESMA escala visual:
+       desenha as duas uma vez pra descobrir de qual delas precisa de mais
+       margem (rCanvas natural maior) e, se precisar, redesenha só a menor
+       forçando o mesmo canvas da maior — assim as duas ficam do mesmo
+       tamanho na tela, nunca cortando planeta nenhuma das duas. */
+    function gerarMandalasComEscalaIgual(dadosEsquerda, dadosDireita) {
+        const resEsquerda = gerarMandalaSVG(dadosEsquerda, {});
+        const resDireita = gerarMandalaSVG(dadosDireita, {});
+        const rCanvasFinal = Math.max(resEsquerda.rCanvas, resDireita.rCanvas);
+
+        const svgEsquerda = (resEsquerda.rCanvas < rCanvasFinal)
+            ? gerarMandalaSVG(dadosEsquerda, { rCanvasMinimo: rCanvasFinal }).svg
+            : resEsquerda.svg;
+        const svgDireita = (resDireita.rCanvas < rCanvasFinal)
+            ? gerarMandalaSVG(dadosDireita, { rCanvasMinimo: rCanvasFinal }).svg
+            : resDireita.svg;
+
+        return { svgEsquerda, svgDireita };
+    }
 
     // Estado só desta aba/sessão (não persiste no Supabase nem no
     // localStorage): é "estado de navegação da ferramenta atual", não uma
@@ -814,7 +845,15 @@
         const geoA = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo : { lat: -23.5505, lon: -46.6333, fuso: -3, city: 'São Paulo, SP' };
 
         let cardEsquerdaHtml;
+        let cardDireitaHtml;
+
         if (sinastriaSegundoMapa) {
+            // As duas mandalas são geradas juntas pra ficarem na MESMA escala
+            // visual (ver gerarMandalasComEscalaIgual) — senão quem tem mais
+            // planetas colados (precisa de mais margem) aparece menor que a
+            // outra, mesmo os dois cartões tendo a mesma largura.
+            const { svgEsquerda, svgDireita } = gerarMandalasComEscalaIgual(sinastriaSegundoMapa.dados, currentCalculatedData);
+
             cardEsquerdaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                     <div style="display: flex; justify-content: flex-end; margin-bottom: 6px;">
@@ -825,7 +864,16 @@
                     <div style="text-align: center; margin-bottom: 8px;">
                         ${sinastriaLinhaInfo(sinastriaSegundoMapa.nome, sinastriaSegundoMapa.codigo, sinastriaSegundoMapa.moment, sinastriaSegundoMapa.geo)}
                     </div>
-                    ${gerarMandalaSVG(sinastriaSegundoMapa.dados, {})}
+                    ${svgEsquerda}
+                </div>
+            `;
+
+            cardDireitaHtml = `
+                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    <div style="text-align: center; margin-bottom: 8px;">
+                        ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
+                    </div>
+                    ${svgDireita}
                 </div>
             `;
         } else {
@@ -840,16 +888,16 @@
                     </div>
                 </div>
             `;
-        }
 
-        const cardDireitaHtml = `
-            <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <div style="text-align: center; margin-bottom: 8px;">
-                    ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
+            cardDireitaHtml = `
+                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    <div style="text-align: center; margin-bottom: 8px;">
+                        ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
+                    </div>
+                    ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                 </div>
-                ${gerarMandalaSVG(currentCalculatedData, {})}
-            </div>
-        `;
+            `;
+        }
 
         container.innerHTML = `
             <div style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
