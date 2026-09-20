@@ -86,12 +86,12 @@ function atualizarJanelaRS() {
     for (let a = anoNasc; a <= anoNasc + 120; a++) {
       const idade = a - anoNasc;
       const selecionado = a === anoAlvoRS;
-      const bg = selecionado ? '#f1f5f9' : '#ffffff';
+      const bg = selecionado ? 'var(--bg-hover)' : 'var(--bg-card)';
       const classeSel = selecionado ? 'ano-item-selecionado' : '';
-      const check = selecionado ? '<i class="fa-solid fa-check" style="color: #103b70;"></i>' : '';
+      const check = selecionado ? '<i class="fa-solid fa-check" style="color: var(--primary-blue);"></i>' : '';
 
       htmlLista += `
-        <div class="${classeSel}" onclick="selecionarAnoRS(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${bg}; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155;">
+        <div class="${classeSel}" onclick="selecionarAnoRS(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${bg}; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted-2);">
           <span><strong>${a}</strong>, ${idade} anos</span>
           ${check}
         </div>

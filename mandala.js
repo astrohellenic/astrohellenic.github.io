@@ -830,11 +830,11 @@ function injetarBotaoRotacaoNaBarraSuperior() {
 
     btnContainer.innerHTML = `
     <div style="position: relative; display: inline-block;">
-      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 36px; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
         ${iconContent}
       </button>
-      <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
-        <div onclick="alternarRotacaoCasa1('ASC')" style="padding: 6px 0; cursor: pointer; text-align: center; font-size: 11px; font-weight: 800; color: #103b70;">ASC</div>
+      <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
+        <div onclick="alternarRotacaoCasa1('ASC')" style="padding: 6px 0; cursor: pointer; text-align: center; font-size: 11px; font-weight: 800; color: var(--primary-blue);">ASC</div>
         <div onclick="alternarRotacaoCasa1('fortune')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg></div>
         <div onclick="alternarRotacaoCasa1('spirit')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg></div>
         <div onclick="alternarRotacaoCasa1('mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">☿</text></svg></div>
@@ -867,8 +867,8 @@ function injetarBotaoRelatorioNaBarraSuperior() {
   btn.id = 'mandalaRelatorioBtnContainer';
   btn.type = 'button';
   btn.title = 'Adiciona a mandala ao Relatório, exatamente do jeito que está agora (com a rotação de Casa 1 escolhida)';
-  btn.style.cssText = "width: 32px; height: 36px; background: #fffdf5; border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);";
-  btn.innerHTML = '<i class="fa-solid fa-file-circle-plus" style="color: #103b70; font-size: 14px;"></i>';
+  btn.style.cssText = "width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);";
+  btn.innerHTML = '<i class="fa-solid fa-file-circle-plus" style="color: var(--primary-blue); font-size: 14px;"></i>';
   btn.onclick = capturarMandalaAtualParaRelatorio;
   rotationContainer.after(btn);
 }
@@ -908,11 +908,11 @@ function injetarControleZoomMandala() {
 
   const zoomContainer = document.createElement('div');
   zoomContainer.id = 'mandalaZoomContainer';
-  zoomContainer.style.cssText = "background: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; padding: 4px 6px; display: flex; align-items: center; gap: 6px;";
+  zoomContainer.style.cssText = "background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px 6px; display: flex; align-items: center; gap: 6px;";
   zoomContainer.innerHTML = `
-    <button type="button" onclick="ajustarZoomMandala(-${MANDALA_ZOOM_PASSO})" title="Diminuir zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid #c59b27; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #103b70; font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">－</button>
-    <span id="mandalaZoomLabel" style="min-width: 34px; text-align: center; font-size: 11px; font-weight: 700; color: #103b70; font-variant-numeric: tabular-nums;">${mandalaZoomPercent}%</span>
-    <button type="button" onclick="ajustarZoomMandala(${MANDALA_ZOOM_PASSO})" title="Aumentar zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid #c59b27; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #103b70; font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">＋</button>
+    <button type="button" onclick="ajustarZoomMandala(-${MANDALA_ZOOM_PASSO})" title="Diminuir zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--gold-primary); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary-blue); font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">－</button>
+    <span id="mandalaZoomLabel" style="min-width: 34px; text-align: center; font-size: 11px; font-weight: 700; color: var(--primary-blue); font-variant-numeric: tabular-nums;">${mandalaZoomPercent}%</span>
+    <button type="button" onclick="ajustarZoomMandala(${MANDALA_ZOOM_PASSO})" title="Aumentar zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--gold-primary); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary-blue); font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">＋</button>
   `;
 
   // Entre o botão de Relatório e o stepper de tempo — nunca no início da
@@ -1055,6 +1055,25 @@ function renderMandala(dadosNovos, onReady) {
      nunca escolheu) — controla só a decoração de céu/espaço sideral. O
      tamanho e o layout do desenho continuam iguais nos dois temas. */
   const temaCeu = (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
+
+  /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
+     index.html). Só afeta o cabeçalho discreto do PNG (cartão creme com
+     nome/data/hora) — o disco da mandala em si (casas, planetas, graus)
+     continua sempre no fundo branco de sempre: a tinta usada nele (azul-
+     marinho, preto) foi desenhada pra fundo claro, e não faz parte desta
+     etapa mudar isso. Como este SVG vira imagem (Blob -> <img>, ver
+     abaixo), variável CSS (var(--x)) NÃO funciona aqui dentro — teria que
+     existir dentro do próprio SVG. Por isso as cores vêm resolvidas em
+     hexadecimal, no par exato usado em :root/:root.tema-escuro (index.html). */
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const corCabecalhoPng = {
+    fundo: modoEscuro ? '#1c1917' : '#fffdf5',
+    borda: modoEscuro ? '#d9ae3f' : '#c59b27',
+    titulo: modoEscuro ? '#8ab4e8' : '#103b70',
+    dataCidade: modoEscuro ? '#c3cad4' : '#475569',
+    zodiaco: modoEscuro ? '#a3aab3' : '#64748b',
+    sect: modoEscuro ? '#f0c869' : '#9a6d18',
+  };
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -1230,13 +1249,13 @@ ${temaCeu ? `
 
   /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
   svg += `<g id="png-discreet-header">
-    <!-- Fundo Creme e Borda Dourada Estendidos quase até o fim -->
-    <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="#fffdf5" stroke="#c59b27" stroke-width="2" />
+    <!-- Fundo (creme/escuro conforme o modo) e Borda Dourada Estendidos quase até o fim -->
+    <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="${corCabecalhoPng.fundo}" stroke="${corCabecalhoPng.borda}" stroke-width="2" />
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
-    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="#103b70">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="#475569">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="#64748b">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="#9a6d18" font-weight="700">  ${sectText}</tspan></text>
+    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${corCabecalhoPng.titulo}">${escapeHtml(headerTitle)}</text>
+    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${corCabecalhoPng.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
+        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${corCabecalhoPng.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${corCabecalhoPng.sect}" font-weight="700">  ${sectText}</tspan></text>
   </g>`;
 
   const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;

@@ -73,6 +73,7 @@
   --gold-dark: #9a6d18;
   --text-dark: #103b70;      /* Texto em azul */
   --text-muted: #64748b;     /* Texto secundário/legenda */
+  --text-muted-2: #475569;   /* Texto secundário mais forte (ex.: data/cidade no cabeçalho da mandala) */
   --text-faint: #94a3b8;     /* Texto terciário (ex.: "nenhum item encontrado") */
   --text-disabled: #b8b09a;  /* Texto de botão desabilitado */
   --border-color: #e2d9c2;   /* Borda dourada suave */
@@ -89,8 +90,9 @@
    astrólogo pediu explicitamente que "seguir o tema do dispositivo" só
    faça sentido por aparelho — ver CLAUDE.md antes de "corrigir" isso pra
    Supabase por semelhança com a Regra de ouro 2.
-   Só cobre o MENU LATERAL (#sidebar e o que ele desenha) por enquanto —
-   as demais ferramentas ainda usam cor cravada e não reagem a isso. */
+   Cobre o menu lateral, a barra superior e (parcialmente) a Mandala —
+   ver comentário em #main-stage sobre o que ainda fica de fora dela.
+   As demais ferramentas ainda usam cor cravada e não reagem a isso. */
 :root.tema-escuro {
   --bg-main: #1c1917;
   --bg-sidebar: #1c1917;
@@ -103,6 +105,7 @@
   --gold-dark: #f0c869;
   --text-dark: #8ab4e8;
   --text-muted: #a3aab3;
+  --text-muted-2: #c3cad4;
   --text-faint: #7d858f;
   --text-disabled: #6b6558;
   --border-color: #3a352c;
@@ -407,11 +410,16 @@ body {
         .delete-btn { color: var(--danger); }
 
            /* ÁREA PRINCIPAL DA MANDALA */
+        /* Fundo compartilhado por TODAS as ferramentas (Mandala, Profecção,
+           Tabela Técnica, Relatório etc.) — por isso já reage ao tema
+           escuro mesmo antes de cada ferramenta ganhar sua própria migração:
+           o "chão" fica escuro, mas o conteúdo de cada ferramenta (ainda em
+           cor cravada) continua sobre cartões claros até a vez dela chegar. */
         #main-stage {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-color: #ffffff;
+            background-color: var(--bg-main);
             position: relative;
             width: 100%;
             padding: 10px;
@@ -863,19 +871,19 @@ body {
                 </button>
                 <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
 
-                                <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: #fffdf5; border: 1px solid #103b70; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
-                  <div style="padding: 10px 14px; border-bottom: 1px solid #c59b27; background: #fffdf5; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                    <span style="font-size: 10px; text-transform: uppercase; color: #c59b27; font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
-                    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: #103b70; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
+                                <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
+                  <div style="padding: 10px 14px; border-bottom: 1px solid var(--gold-primary); background: var(--bg-main); border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                    <span style="font-size: 10px; text-transform: uppercase; color: var(--gold-primary); font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
+                    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: var(--primary-blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
                   </div>
-                  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fffdf5;">
+                  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--bg-main);">
                     <div>
-                      <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">Retorno Solar</span>
-                      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: #103b70;">Selecione...</span>
+                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Retorno Solar</span>
+                      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: var(--primary-blue);">Selecione...</span>
                     </div>
-                    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: #64748b;"></i>
+                    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: var(--text-muted);"></i>
                   </div>
-                  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid #c59b27; background: #fffdf5; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
+                  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid var(--gold-primary); background: var(--bg-main); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
                 </div>
             </div>
 
