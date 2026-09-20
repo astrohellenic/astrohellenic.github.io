@@ -42,9 +42,10 @@ configuração) → Supabase, sempre. `localStorage` só serve pra coisa que
 é mesmo específica daquele navegador/aparelho por natureza — e mesmo
 assim, na dúvida, perguntar antes em vez de assumir.
 
-Usos de `localStorage` que já existem no código (checar com o astrólogo
-se algum desses também devia estar no Supabase, em vez de presumir que
-estão certos só por já existirem):
+Usos de `localStorage` que já existem no código, revisados com o
+astrólogo em 20/09/2026 — ele confirmou que esses são "estado de
+navegação da aba", diferente de preferência, e devem **continuar em
+`localStorage`** (não migrar pro Supabase):
 - `astro_keep_logged` — se o "manter conectado" fica marcado (checkbox
   de login).
 - `astro_ultimo_modulo` — qual ferramenta (Mandala, Relatório etc.)
@@ -52,6 +53,12 @@ estão certos só por já existirem):
 - `astro_ultimo_perfil` — qual mapa/cliente estava aberto.
 - `relatorioUltimoPreset` — qual modelo de relatório foi usado por
   último.
+
+Ou seja, a régua não é "localStorage é sempre errado" — é "preferência/
+configuração consciente do astrólogo (algo que ele foi lá e escolheu,
+esperando que valha em qualquer lugar que ele use o site) vai pro
+Supabase; estado de 'onde eu estava' pra retomar a navegação na mesma
+aba/aparelho pode continuar local".
 
 Regras específicas que vieram de sessões onde isso foi ignorado (dia
 18-19/09/2026, ver a seção de `touch-action` abaixo pro caso concreto):
