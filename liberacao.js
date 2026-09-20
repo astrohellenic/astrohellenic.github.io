@@ -7,6 +7,20 @@ let expandedL1Index = null; // Detectado automaticamente com base no momento atu
 let expandedL2Key = null; // Guarda a chave do L2 expandido (ex: "0_2")
 let expandedL3Key = null; // Guarda a chave do L3 expandido (ex: "0_2_1")
 
+/* Quais partes da tela vão junto quando "Adicionar ao Relatório" é
+   clicado — igual à ideia da Calculadora de Lotes (o astrólogo escolhe
+   o que entra), só que aqui são só duas partes (mandala e árvore) em
+   vez de um quadrinho por item. Cabeçalho (título + nome/data) sempre
+   vai junto, não é opcional. */
+let liberacaoIncluirMandalaRelatorio = true;
+let liberacaoIncluirTabelaRelatorio = true;
+
+function alternarLiberacaoIncluirNoRelatorio(parte, marcado) {
+  if (parte === 'mandala') liberacaoIncluirMandalaRelatorio = marcado;
+  else if (parte === 'tabela') liberacaoIncluirTabelaRelatorio = marcado;
+}
+window.alternarLiberacaoIncluirNoRelatorio = alternarLiberacaoIncluirNoRelatorio;
+
 // Anos Helenísticos (Valens): Áries(15), Touro(8), Gêmeos(20), Câncer(25), Leão(19), Virgem(20), Libra(8), Escorpião(15), Sagitário(12), Capricórnio(27), Aquário(30), Peixes(12)
 const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12];
 
@@ -982,35 +996,50 @@ function renderLiberacaoUI() {
 
   let html = `
     <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
-        <button onclick="capturarTelaParaRelatorio('liberacao_' + selectedZRPhase, 'liberacao-container', 'Liberação Zodiacal — ' + (typeof RELATORIO_LOT_NOMES !== 'undefined' ? RELATORIO_LOT_NOMES[selectedZRPhase] : selectedZRPhase))" title="Adiciona esta tela, exatamente do jeito que está agora (para o lote ativo), como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-bottom: 8px; padding: 0 20px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #103b70; font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a mandala quando adicionar ao Relatório">
+            <input type="checkbox" ${liberacaoIncluirMandalaRelatorio ? 'checked' : ''} onchange="alternarLiberacaoIncluirNoRelatorio('mandala', this.checked)" style="width: 14px; height: 14px; cursor: pointer;"> Mandala
+          </label>
+          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #103b70; font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a árvore (L1-L4) quando adicionar ao Relatório">
+            <input type="checkbox" ${liberacaoIncluirTabelaRelatorio ? 'checked' : ''} onchange="alternarLiberacaoIncluirNoRelatorio('tabela', this.checked)" style="width: 14px; height: 14px; cursor: pointer;"> Tabela
+          </label>
+        </div>
+        <button onclick="capturarLiberacaoParaRelatorio()" title="Adiciona a mandala e/ou a árvore ao Relatório, conforme as caixinhas marcadas ao lado" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
     <div class="lib-outer" id="liberacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
 
-      <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-        Liberação Zodiacal
-      </h3>
+      <div id="liberacaoHeaderCapture">
+        <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+          Liberação Zodiacal
+        </h3>
 
-      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do lote ativo à direita (mesma caixa/menu com rolagem e ícones já usada em Decênios e Circumambulações) -->
-      <div class="lib-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
-        <div>
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        </div>
-        <div style="position: relative; flex-shrink: 0;">
-          <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
-            ${getLotIconSVG(selectedZRPhase)}
-          </button>
-          <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
-            ${loteMenuRowsHTML}
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do lote ativo à direita (mesma caixa/menu com rolagem e ícones já usada em Decênios e Circumambulações) -->
+        <div class="lib-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+          <div>
+            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+            <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+          </div>
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
+              ${getLotIconSVG(selectedZRPhase)}
+            </button>
+            <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+              ${loteMenuRowsHTML}
+            </div>
           </div>
         </div>
       </div>
 
-      <div style="width: 100%; margin: 0 0 20px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
-        <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
+      <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+          <div style="font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; text-transform: uppercase;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
+          <button type="button" onclick="salvarMandalaLiberacaoEmPNG()" title="Salvar esta mandala (com o cabeçalho) como um arquivo PNG" style="width: 22px; height: 22px; border-radius: 5px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0;">
+            <i class="fa-solid fa-download" style="font-size: 10px;"></i>
+          </button>
+        </div>
         <div style="max-width: 480px; margin: 0 auto;">
           ${gerarMandalaNatalZR(currentCalculatedData, {
             loteCasa1: selectedZRPhase,
@@ -1024,6 +1053,8 @@ function renderLiberacaoUI() {
           })}
         </div>
       </div>
+
+      <div id="liberacaoArvoreCapture">
   `;
 
   let currentStart = new Date(currentMoment);
@@ -1209,6 +1240,7 @@ function renderLiberacaoUI() {
   }
 
   html += `
+      </div>
     </div>
     </div>
   `;
@@ -1216,6 +1248,87 @@ function renderLiberacaoUI() {
   container.innerHTML = html;
   encolherTabelasLZRVisiveis(container);
 }
+
+/* Monta, fora da tela, um bloco só com o cabeçalho (sempre) + mandala
+   e/ou árvore (conforme as caixinhas marcadas) e manda pro relatório —
+   mesma ideia da Calculadora de Lotes (capturarLotesSelecionadosParaRelatorio):
+   o astrólogo escolhe um subconjunto da tela, não a tela inteira toda
+   vez. Clona os elementos (não move os originais) pra não bagunçar a
+   tela real enquanto captura. */
+async function capturarLiberacaoParaRelatorio() {
+  if (!liberacaoIncluirMandalaRelatorio && !liberacaoIncluirTabelaRelatorio) {
+    alert('Marque a caixinha de "Mandala" e/ou "Tabela" antes de adicionar ao relatório.');
+    return;
+  }
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+
+  const header = document.getElementById('liberacaoHeaderCapture');
+  const mandala = document.getElementById('liberacaoMandalaCapture');
+  const arvore = document.getElementById('liberacaoArvoreCapture');
+  if (!header) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+
+  const temp = document.createElement('div');
+  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
+  temp.appendChild(header.cloneNode(true));
+  if (liberacaoIncluirMandalaRelatorio && mandala) temp.appendChild(mandala.cloneNode(true));
+  if (liberacaoIncluirTabelaRelatorio && arvore) temp.appendChild(arvore.cloneNode(true));
+  document.body.appendChild(temp);
+
+  try {
+    const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    const partes = [];
+    if (liberacaoIncluirMandalaRelatorio) partes.push('Mandala');
+    if (liberacaoIncluirTabelaRelatorio) partes.push('Tabela');
+    const rotuloLote = (typeof RELATORIO_LOT_NOMES !== 'undefined' && RELATORIO_LOT_NOMES[selectedZRPhase]) || selectedZRPhase;
+    const total = adicionarCapturaRelatorio('liberacao_' + selectedZRPhase, canvas.toDataURL('image/png'));
+    alert(`Liberação Zodiacal — ${rotuloLote} (${partes.join(' + ')}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar a Liberação Zodiacal ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    document.body.removeChild(temp);
+  }
+}
+window.capturarLiberacaoParaRelatorio = capturarLiberacaoParaRelatorio;
+
+/* Salva a mandala natal da Liberação como um arquivo PNG, com o
+   cabeçalho (título + nome/data do mapa) junto na imagem — mesma
+   técnica de conversão SVG→canvas→PNG do "salvar imagem" da mandala
+   principal (mandala.js), só que via html2canvas (o SVG aqui é só uma
+   peça dentro do card, junto de textos HTML normais, não a tela
+   inteira dedicada que mandala.js tem pra si). Acionado por um botão
+   (não por clique direito): no iPad do astrólogo não tem botão direito
+   de mouse, então um ícone visível é o único jeito confiável de chegar
+   nessa função. */
+async function salvarMandalaLiberacaoEmPNG() {
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+
+  const header = document.getElementById('liberacaoHeaderCapture');
+  const mandala = document.getElementById('liberacaoMandalaCapture');
+  if (!header || !mandala) { alert('Mandala não encontrada para salvar.'); return; }
+
+  const temp = document.createElement('div');
+  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
+  temp.appendChild(header.cloneNode(true));
+  temp.appendChild(mandala.cloneNode(true));
+  document.body.appendChild(temp);
+
+  try {
+    const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    const rotuloLote = ((typeof RELATORIO_LOT_NOMES !== 'undefined' && RELATORIO_LOT_NOMES[selectedZRPhase]) || selectedZRPhase).replace(/\s+/g, '_');
+    const nomeSujeito = (currentSubjectName || 'Mapa').replace(/\s+/g, '_');
+    const link = document.createElement('a');
+    link.download = `Liberacao_Zodiacal_${nomeSujeito}_${rotuloLote}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (err) {
+    console.error('Erro ao salvar a mandala da Liberação em PNG:', err);
+    alert('Não foi possível salvar a imagem da mandala.');
+  } finally {
+    document.body.removeChild(temp);
+  }
+}
+window.salvarMandalaLiberacaoEmPNG = salvarMandalaLiberacaoEmPNG;
 
 /* ENCOLHE TABELAS LARGAS DEMAIS (L2/L3/L4) PARA CABEREM NA TELA (SEM CORTE),
    EM VEZ DE FICAREM TRAVADAS/CORTADAS EM TELAS ESTREITAS — mesma técnica
