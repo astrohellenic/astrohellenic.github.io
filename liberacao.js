@@ -451,40 +451,58 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   svg += desenharFaixaDestaque(l2SignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
   svg += desenharFaixaDestaque(l1SignIdx, "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
 
-  /* RÓTULOS DE PICO — mesmos signos (casas 1, 4, 7 e 10 a partir da
-     Fortuna) já marcados com o badge "PICO" na tabela da Liberação,
-     em qualquer lote. Ficam na mesma faixa de raio das barrinhas
-     coloridas dos níveis, desenhados por cima delas — igual aos
-     planetas, que também vêm por cima das camadas anteriores. */
-  const rPicoZR = R_OuterLine + 23;
-  picoSignsZR.forEach(signIdx => {
-    const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
-    const pPico = polarToCart(cx, cy, rPicoZR, aScreenPico);
-    svg += `<g transform="translate(${pPico.x}, ${pPico.y})">
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="#b45309" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
-    </g>`;
-  });
+  /* RÓTULOS DE PICO E SALTO — ficam na mesma faixa de raio das
+     barrinhas coloridas dos níveis, desenhados por cima delas, igual
+     aos planetas. PICO: mesmos signos (casas 1, 4, 7 e 10 a partir da
+     Fortuna) já marcados na tabela, em qualquer lote. SALTO: só
+     L2/L3/L4 podem cair num subperíodo de Lysis (L1 é o topo da
+     hierarquia, nunca salta) — igual às coroas dos regentes, o número
+     do(s) nível(is) em salto fica escrito acima do badge, e quando
+     mais de um nível cai no mesmo signo eles dividem um badge só
+     (números unidos por "-").
 
-  /* RÓTULOS DE SALTO — mesma lógica visual do PICO (badge na mesma
-     faixa de raio das barrinhas, por cima delas), só que o salto é por
-     nível (só L2/L3/L4 podem cair num subperíodo de Lysis) — por isso,
-     igual às coroas dos regentes, o número do(s) nível(is) em salto
-     fica escrito acima do badge, e quando mais de um nível cai no
-     mesmo signo eles dividem um badge só (números unidos por "-"). */
+     Quando o MESMO signo tem pico e salto ao mesmo tempo, os dois
+     badges se sobreporiam nesse raio — por isso são deslocados um em
+     relação ao outro: um acima/abaixo do outro quando o signo cai do
+     lado esquerdo/direito da roda (ângulo mais horizontal), e um do
+     lado do outro quando cai em cima/embaixo (ângulo mais vertical). */
+  const rPicoZR = R_OuterLine + 23;
+  const signosComPicoZR = new Set(picoSignsZR);
+
   const niveisSaltoPorSignoZR = {};
   [[2, l2SignIdx, l2Salto], [3, l3SignIdx, l3Salto], [4, l4SignIdx, l4Salto]].forEach(([nivel, signIdx, salto]) => {
     if (!salto || signIdx === null || signIdx === undefined) return;
     if (!niveisSaltoPorSignoZR[signIdx]) niveisSaltoPorSignoZR[signIdx] = [];
     niveisSaltoPorSignoZR[signIdx].push(nivel);
   });
+  const signosComSaltoZR = new Set(Object.keys(niveisSaltoPorSignoZR).map(Number));
+
+  function deslocamentoBadgesZR(signIdx) {
+    const aScreen = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+    const rad = aScreen * Math.PI / 180;
+    const ladoEsquerdoOuDireito = Math.abs(Math.cos(rad)) > Math.abs(Math.sin(rad));
+    return ladoEsquerdoOuDireito
+      ? { pico: { x: 0, y: -14 }, salto: { x: 0, y: 14 } }
+      : { pico: { x: -19, y: 0 }, salto: { x: 19, y: 0 } };
+  }
+
+  picoSignsZR.forEach(signIdx => {
+    const desloc = signosComSaltoZR.has(signIdx) ? deslocamentoBadgesZR(signIdx).pico : { x: 0, y: 0 };
+    const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+    const pPico = polarToCart(cx, cy, rPicoZR, aScreenPico);
+    svg += `<g transform="translate(${pPico.x + desloc.x}, ${pPico.y + desloc.y})">
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="#b45309" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
+    </g>`;
+  });
 
   Object.keys(niveisSaltoPorSignoZR).forEach(signIdxKey => {
     const signIdx = Number(signIdxKey);
+    const desloc = signosComPicoZR.has(signIdx) ? deslocamentoBadgesZR(signIdx).salto : { x: 0, y: 0 };
     const aScreenSalto = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
     const pSalto = polarToCart(cx, cy, rPicoZR, aScreenSalto);
     const rotuloNiveisSalto = niveisSaltoPorSignoZR[signIdxKey].join('-');
-    svg += `<g transform="translate(${pSalto.x}, ${pSalto.y})">
+    svg += `<g transform="translate(${pSalto.x + desloc.x}, ${pSalto.y + desloc.y})">
         <text x="0" y="-11" font-size="8" font-weight="900" fill="#7f1d1d" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
         <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
         <text x="0" y="3.2" font-size="8" font-weight="800" fill="#991b1b" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
