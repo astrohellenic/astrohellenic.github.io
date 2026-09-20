@@ -17,7 +17,7 @@ const MONOLINE_ZODIAC_SVGS_TABELA = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="7" y1="32" x2="57" y2="32"></line>`
 ];
 
-const SIGN_COLORS_TABELA = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
+const SIGN_COLORS_TABELA = ["var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)", "var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)", "var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)"];
 
 const EGYPTIAN_TERMS_TABELA = [
   [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
@@ -186,18 +186,24 @@ function getPlanet3DSVG(planetId) {
   return planetSVGs[planetId] || '';
 }
 
+/* Ícones plotados na tabela (marcadores de lote/nodo/sizígia/ângulo) — ao
+   contrário dos ícones de controle fixos (barra superior etc.), estes ficam
+   sentados em cima de células que agora mudam de cor com o tema, então
+   precisam da mesma tinta clara/escura do disco da Mandala (mesmo padrão:
+   fundo do círculo e traço/texto via var(--...), funciona aqui porque este
+   HTML entra direto no DOM, sem virar imagem como a Mandala). */
 function getItemSVG(key) {
   const itemSVGs = {
-    'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`,
-    'spirit': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#fffdf5" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`,
-    'venus': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♀</text></svg>`,
-    'mercury': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">☿</text></svg>`,
-    'mars': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♂</text></svg>`,
-    'jupiter': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♃</text></svg>`,
-    'saturn': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♄</text></svg>`,
-    'Nodo Norte': `<span style="font-size: 16px; font-weight: bold; color: #000000;">☊</span>`,
-    'Nodo Sul': `<span style="font-size: 16px; font-weight: bold; color: #000000;">☋</span>`,
-    'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#000000" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#000000"/><circle cx="0" cy="0" r="2.3" fill="#000000"/></svg>`,
+    'fortune': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--primary-blue)" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="var(--primary-blue)" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="var(--primary-blue)" stroke-width="1.5"/></svg>`,
+    'spirit': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="var(--primary-blue)" text-anchor="middle" stroke="var(--bg-card)" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`,
+    'venus': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">♀</text></svg>`,
+    'mercury': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">☿</text></svg>`,
+    'mars': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">♂</text></svg>`,
+    'jupiter': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">♃</text></svg>`,
+    'saturn': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">♄</text></svg>`,
+    'Nodo Norte': `<span style="font-size: 16px; font-weight: bold; color: var(--aspect-conjuncao);">☊</span>`,
+    'Nodo Sul': `<span style="font-size: 16px; font-weight: bold; color: var(--aspect-conjuncao);">☋</span>`,
+    'Sizígia': `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="var(--aspect-conjuncao)" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="var(--aspect-conjuncao)"/><circle cx="0" cy="0" r="2.3" fill="var(--aspect-conjuncao)"/></svg>`,
     'ASC': getAnguloCirculoSVG('ASC'),
     'DSC': getAnguloCirculoSVG('DSC'),
     'MC': getAnguloCirculoSVG('MC'),
@@ -206,10 +212,10 @@ function getItemSVG(key) {
   return itemSVGs[key] || `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
 }
 
-/* ÍCONE DO ASC/DSC/MC/IC: mesmo círculo branco com contorno preto usado
-   para esses pontos na mandala. */
+/* ÍCONE DO ASC/DSC/MC/IC: mesmo círculo usado para esses pontos na mandala
+   (fundo/contorno seguem o tema, ver comentário acima de getItemSVG). */
 function getAnguloCirculoSVG(label) {
-  return `<svg width="24" height="24" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">${label}</text></svg>`;
+  return `<svg width="24" height="24" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--aspect-conjuncao)" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="var(--aspect-conjuncao)" text-anchor="middle">${label}</text></svg>`;
 }
 
 /* NOMES POR EXTENSO DE CADA PONTO, PARA A COLUNA "PONTO" DO PAINEL TÉCNICO */
@@ -338,52 +344,52 @@ function renderMatrizVisibilidadeHTML(data) {
 
     const styleBase = "display: inline-block; vertical-align: middle;";
 
-    if (diff === 0) { // Conjunção (Preto)
-      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    if (diff === 0) { // Conjunção
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><circle cx="8" cy="12" r="5" fill="none" stroke="var(--aspect-conjuncao)" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="var(--aspect-conjuncao)" stroke-width="2.2" stroke-linecap="round"/></svg>`;
     }
     if (diff === 2) { // Sextil (Azul claro)
-      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="var(--aspect-sextil)" stroke-width="2.5" stroke-linecap="round"/></svg>`;
     }
     if (diff === 3) { // Quadratura (Vermelho)
-      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><rect x="3" y="3" width="14" height="14" fill="none" stroke="var(--aspect-quadratura)" stroke-width="2.5"/></svg>`;
     }
     if (diff === 4) { // Trígono (Azul escuro)
-      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
+      return `<svg width="14" height="14" viewBox="0 0 20 20" style="${styleBase}"><polygon points="10,2 19,17 1,17" fill="none" stroke="var(--aspect-trigono)" stroke-width="2.5"/></svg>`;
     }
     if (diff === 6) { // Oposição (Vinho)
-      return `<svg width="16" height="14" viewBox="0 0 24 20" style="${styleBase}"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
+      return `<svg width="16" height="14" viewBox="0 0 24 20" style="${styleBase}"><circle cx="5" cy="10" r="4" fill="none" stroke="var(--aspect-oposicao)" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="var(--aspect-oposicao)" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="var(--aspect-oposicao)" stroke-width="2.2"/></svg>`;
     }
     return '';
   }
 
   let h = `
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
     <div id="matrizOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; touch-action: pan-y;">
       <div id="matrizScaleBox" style="display: inline-block;">
-      <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
-        <table class="tabela-enxuta" style="font-size: 11px; background: #ffffff;">
+      <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden; transform-origin: top left;">
+        <table class="tabela-enxuta" style="font-size: 11px; background: var(--bg-card);">
           <thead>
             <tr>
-              <th style="width: 40px; background-color: #fffdf5;"></th>
+              <th style="width: 40px; background-color: var(--bg-main);"></th>
   `;
 
   colunas.forEach(c => {
-    h += `<th style="padding: 6px 4px; vertical-align: middle; border: 1px solid #1e5fa4; background-color: #fffdf5;">${getMatrixIcon(c)}</th>`;
+    h += `<th style="padding: 6px 4px; vertical-align: middle; border: 1px solid var(--table-border); background-color: var(--bg-main);">${getMatrixIcon(c)}</th>`;
   });
   h += `</tr></thead><tbody>`;
 
   colunas.forEach((row, i) => {
-    h += `<tr><td style="font-weight: bold; background: #fffdf5; vertical-align: middle; border: 1px solid #1e5fa4; text-align: center; padding: 6px 4px;">${getMatrixIcon(row)}</td>`;
+    h += `<tr><td style="font-weight: bold; background: var(--bg-main); vertical-align: middle; border: 1px solid var(--table-border); text-align: center; padding: 6px 4px;">${getMatrixIcon(row)}</td>`;
     colunas.forEach((col, j) => {
       if (j <= i) {
-        h += `<td style="background: #f7f5ed; color: #b5aea2; border: 1px solid #1e5fa4;">-</td>`;
+        h += `<td style="background: var(--bg-hover); color: var(--text-disabled); border: 1px solid var(--table-border);">-</td>`;
       } else {
         const asp = getAspecto(posicoes[row.key], posicoes[col.key]);
-        let colorStyle = '#0f172a';
-        if (asp === 'σ') colorStyle = '#103b70';
-        else if (asp === '☐' || asp === '☍') colorStyle = '#dc2626';
-        else if (asp === 'Δ' || asp === '*') colorStyle = '#2563eb';
-        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle; border: 1px solid #1e5fa4; text-align: center;">${asp}</td>`;
+        let colorStyle = 'var(--text-dark)';
+        if (asp === 'σ') colorStyle = 'var(--primary-blue)';
+        else if (asp === '☐' || asp === '☍') colorStyle = 'var(--danger)';
+        else if (asp === 'Δ' || asp === '*') colorStyle = 'var(--primary-blue)';
+        h += `<td style="font-weight: bold; color: ${colorStyle}; vertical-align: middle; border: 1px solid var(--table-border); text-align: center;">${asp}</td>`;
       }
     });
     h += `</tr>`;
@@ -472,26 +478,26 @@ function renderPainelTecnico(data, containerId) {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-      <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+      <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
       <style>
         .tabela-enxuta {
           width: 100%;
           border-collapse: collapse;
           font-family: 'Montserrat', sans-serif;
-          background: #ffffff;
+          background: var(--bg-card);
           font-size: 12px;
-          color: #0f172a;
+          color: var(--text-dark);
         }
         .tabela-enxuta th, .tabela-enxuta td {
-          border: 1px solid #1e5fa4;
+          border: 1px solid var(--table-border);
           padding: 8px 10px;
           text-align: center;
           vertical-align: middle;
         }
         .tabela-enxuta th {
-          background-color: #fffdf5;
+          background-color: var(--bg-main);
           font-weight: 700;
-          color: #103b70;
+          color: var(--primary-blue);
           text-transform: uppercase;
           font-size: 11px;
           letter-spacing: 0.5px;
@@ -499,28 +505,28 @@ function renderPainelTecnico(data, containerId) {
         .col-ponto { white-space: nowrap; }
         .col-signo { white-space: nowrap; }
         .col-grau { font-weight: 600; white-space: nowrap; }
-        .col-lat { font-weight: 600; color: #475569; white-space: nowrap; }
-        .col-termo { font-weight: bold; color: #c59b27; font-size: 14px; white-space: nowrap; }
+        .col-lat { font-weight: 600; color: var(--text-muted-2); white-space: nowrap; }
+        .col-termo { font-weight: bold; color: var(--gold-primary); font-size: 14px; white-space: nowrap; }
         .col-dodec-signo { white-space: nowrap; }
         .col-dodec-grau { font-weight: 600; white-space: nowrap; }
       </style>
 
-      <h3 style="text-align: center; font-family: 'Cinzel', serif; color: #103b70; font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
+      <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
-      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), com o dia/hora planetários à direita -->
-      <div id="painelTecnicoHeader" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
+      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala, com o dia/hora planetários à direita -->
+      <div id="painelTecnicoHeader" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
         <div>
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
         </div>
         ${horasInfo ? `
         <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
           <div style="text-align: center;">
-            <div style="font-size: 10px; font-weight: 700; color: #103b70; text-transform: uppercase;">Dia</div>
+            <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
             ${getPlanet3DSVG(horasInfo.dayRulerId)}
           </div>
           <div style="text-align: center;">
-            <div style="font-size: 10px; font-weight: 700; color: #103b70; text-transform: uppercase;">Hora</div>
+            <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
             ${getPlanet3DSVG(horasInfo.hourRulerId)}
           </div>
         </div>` : ''}
@@ -532,7 +538,7 @@ function renderPainelTecnico(data, containerId) {
     html += `
       <div id="painelPrincipalOuterScroll" style="overflow-x: auto; overflow-y: hidden; margin: 24px 0; text-align: center; touch-action: pan-y;">
         <div id="painelPrincipalScaleBox" style="display: inline-block;">
-        <div id="painelPrincipalWrapper" style="display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; transform-origin: top left;">
+        <div id="painelPrincipalWrapper" style="display: inline-block; text-align: left; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden; transform-origin: top left;">
           <table class="tabela-enxuta">
             <thead>
               <tr>
@@ -554,7 +560,7 @@ function renderPainelTecnico(data, containerId) {
     listaElementos.forEach(el => {
       let iconHTML = '';
       let absDeg = el.abs;
-      let retroSymbol = el.retro ? `<span style="color: #dc2626; font-weight: 900; margin-left: 2px;">℞</span>` : '';
+      let retroSymbol = el.retro ? `<span style="color: var(--danger); font-weight: 900; margin-left: 2px;">℞</span>` : '';
       let pointName = '';
 
       if (el.type === 'planet') {
@@ -579,7 +585,7 @@ function renderPainelTecnico(data, containerId) {
           <td class="col-ponto">
             <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
               ${iconHTML}
-              <span style="font-size: 9px; font-weight: 600; color: #103b70; line-height: 1.1;">${escapeHtml(pointName)}</span>
+              <span style="font-size: 9px; font-weight: 600; color: var(--primary-blue); line-height: 1.1;">${escapeHtml(pointName)}</span>
             </div>
           </td>
           <td class="col-signo">${signoSVG}</td>
@@ -770,7 +776,7 @@ function renderPainelTecnico(data, containerId) {
   } catch (err) {
     const container = document.getElementById(containerId);
     if (container) {
-      container.innerHTML = `<div style="padding: 15px; color: #dc2626; text-align: center; font-weight: bold; background: #fef2f2; border: 1px solid #fca5a5; margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro no Painel Técnico: ${err.message}</div>`;
+      container.innerHTML = `<div style="padding: 15px; color: var(--danger); text-align: center; font-weight: bold; background: var(--danger-bg); border: 1px solid var(--danger-border); margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro no Painel Técnico: ${err.message}</div>`;
     }
   }
 }
@@ -820,7 +826,11 @@ async function capturarPainelTecnicoParaRelatorio() {
   });
 
   try {
-    const canvas = await html2canvas(elemento, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    // Fallback só pra eventuais áreas transparentes na captura — o fundo de
+    // verdade do container já é var(--bg-main) (inline), então acompanha o
+    // modo atual em vez de cravar sempre o creme do Tema Claro.
+    const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
+    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
     const total = adicionarCapturaRelatorio('tabela_tecnica', canvas.toDataURL('image/png'));
     alert(`"Painel Técnico de Natividades" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
