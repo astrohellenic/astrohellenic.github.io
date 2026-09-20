@@ -25,7 +25,7 @@ let agendaDisponibilidadeCache = [];
 let agendaAgendamentosCache = [];
 let agendaMapasCache = [];
 let agendaServicosCache = [];
-let agendaConfigCache = { duracao: 60, intervalo: 0 };
+let agendaConfigCache = { duracao: 60, intervalo: 0, pastasVisiveis: null };
 
 /* PONTO DE ENTRADA DO MÓDULO — chamado por abrirModuloTecnica('agenda') (supabase.js) */
 async function iniciarModuloAgenda() {
@@ -47,9 +47,9 @@ async function iniciarModuloAgenda() {
     const [dispRes, agsRes, mapasRes, servicosRes, configRes] = await Promise.all([
       supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
       supabaseClient.from('agendamentos').select('*').eq('user_id', user.id).gte('data', hojeISO).order('data', { ascending: true }).order('hora_inicio', { ascending: true }),
-      supabaseClient.from('mapas').select('id, nome').order('nome', { ascending: true }),
+      supabaseClient.from('mapas').select('id, nome, codigo, pasta').order('nome', { ascending: true }),
       supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
-      supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos').eq('user_id', user.id).maybeSingle()
+      supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
     ]);
 
     // As duas tabelas novas são essenciais — sem elas não tem como mostrar
@@ -63,11 +63,23 @@ async function iniciarModuloAgenda() {
 
     agendaDisponibilidadeCache = dispRes.data || [];
     agendaAgendamentosCache = agsRes.data || [];
-    agendaMapasCache = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
+    const todosOsMapas = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
     agendaServicosCache = (!servicosRes.error && servicosRes.data) ? servicosRes.data : [];
+
+    // pastasVisiveis null = ainda não configurado -> mostra todas as pastas
+    // (comportamento de antes, pra não sumir cliente sem o astrólogo pedir).
+    const pastasVisiveis = (!configRes.error && configRes.data && Array.isArray(configRes.data.agenda_pastas_visiveis))
+      ? configRes.data.agenda_pastas_visiveis
+      : null;
+
+    agendaMapasCache = pastasVisiveis
+      ? todosOsMapas.filter(m => pastasVisiveis.includes(m.pasta))
+      : todosOsMapas;
+
     agendaConfigCache = {
       duracao: (!configRes.error && configRes.data && configRes.data.agenda_duracao_padrao_minutos) || 60,
-      intervalo: (!configRes.error && configRes.data && configRes.data.agenda_intervalo_minutos) || 0
+      intervalo: (!configRes.error && configRes.data && configRes.data.agenda_intervalo_minutos) || 0,
+      pastasVisiveis: pastasVisiveis
     };
 
     renderAgendaSetup(container, {
@@ -76,7 +88,8 @@ async function iniciarModuloAgenda() {
       mapas: agendaMapasCache,
       servicos: agendaServicosCache,
       duracaoPadrao: agendaConfigCache.duracao,
-      intervaloPadrao: agendaConfigCache.intervalo
+      intervaloPadrao: agendaConfigCache.intervalo,
+      pastasVisiveis: pastasVisiveis
     });
   } catch (e) {
     console.error('Erro ao carregar a agenda:', e);
@@ -122,8 +135,24 @@ function renderAgendaSetup(container, ctx) {
   }).join('');
 
   const opcoesClientes = mapas.length
-    ? mapas.map(m => `<option value="${m.id}">${escapeHtml(m.nome)}</option>`).join('')
-    : '<option value="">Nenhum cliente cadastrado ainda</option>';
+    ? mapas.map(m => {
+        const rotulo = m.codigo ? `${m.codigo} - ${m.nome}` : m.nome;
+        return `<option value="${m.id}" data-nome="${escapeHtml(m.nome)}">${escapeHtml(rotulo)}</option>`;
+      }).join('')
+    : '<option value="">Nenhum cliente nas pastas visíveis</option>';
+
+  const pastasParaExibir = (typeof customFolders !== 'undefined' && Array.isArray(customFolders)) ? customFolders : [];
+  const blocoPastas = pastasParaExibir.length
+    ? pastasParaExibir.map(pasta => {
+        const marcada = !ctx.pastasVisiveis || ctx.pastasVisiveis.includes(pasta);
+        return `
+          <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #103b70; cursor: pointer;">
+            <input type="checkbox" class="agPastaCheckbox" value="${escapeHtml(pasta)}" ${marcada ? 'checked' : ''}>
+            ${escapeHtml(pasta)}
+          </label>
+        `;
+      }).join('')
+    : '<div style="font-size: 11px; color: #64748b;">Nenhuma pasta encontrada.</div>';
 
   const opcoesServicos = servicos.length
     ? servicos.map(s => `<option value="${s.id}">${escapeHtml(s.nome)}</option>`).join('')
@@ -172,6 +201,17 @@ function renderAgendaSetup(container, ctx) {
 
         <button onclick="salvarDisponibilidadeAgenda()" style="width: 100%; margin-top: 14px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
           Salvar Disponibilidade
+        </button>
+      </div>
+
+      <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Pastas Visíveis no Agendamento</div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
+          Marque só as pastas que têm clientes de verdade — desmarque as que usa pra teste, perguntas etc. Sem marcar nada, mostra clientes de todas as pastas.
+        </div>
+        ${blocoPastas}
+        <button onclick="salvarPastasVisiveisAgenda()" style="width: 100%; margin-top: 8px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+          Salvar Pastas Visíveis
         </button>
       </div>
 
@@ -246,6 +286,30 @@ async function salvarDisponibilidadeAgenda() {
   }
 }
 
+/* SALVA QUAIS PASTAS ENTRAM NO SELETOR DE CLIENTE DO NOVO AGENDAMENTO.
+   Antes de salvar pela primeira vez (coluna ainda null), mostra clientes
+   de TODAS as pastas — ver o "null = todas" em iniciarModuloAgenda. Depois
+   de salvar, vale exatamente o que ficou marcado (inclusive nenhuma, se
+   for esse o caso). */
+async function salvarPastasVisiveisAgenda() {
+  const marcadas = Array.from(document.querySelectorAll('.agPastaCheckbox:checked')).map(c => c.value);
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, agenda_pastas_visiveis: marcadas }, { onConflict: 'user_id' });
+
+    if (error) { alert("Erro ao salvar pastas visíveis: " + error.message); return; }
+
+    await iniciarModuloAgenda();
+  } catch (e) {
+    alert("Erro de conexão ao salvar pastas visíveis.");
+  }
+}
+
 /* RECALCULA OS HORÁRIOS LIVRES PRA DATA ESCOLHIDA NO FORM DE NOVO AGENDAMENTO */
 async function atualizarHorariosDisponiveisAgenda() {
   const dataStr = document.getElementById('agNovaData').value;
@@ -290,7 +354,8 @@ async function confirmarNovoAgendamento() {
   if (!horaInicio) { alert("Selecione um horário disponível."); return; }
 
   const horaFim = agendaSomarMinutosAoHorario(horaInicio, agendaConfigCache.duracao);
-  const clienteNome = clienteSelect.options[clienteSelect.selectedIndex].text;
+  const opcaoCliente = clienteSelect.options[clienteSelect.selectedIndex];
+  const clienteNome = opcaoCliente.dataset.nome || opcaoCliente.text;
   const servicoNome = servicoSelect.options[servicoSelect.selectedIndex].text;
 
   try {
@@ -386,7 +451,8 @@ function agendaGerarHorariosDisponiveis(dataISO, regrasDisponibilidade, agendame
 
    alter table configuracoes
      add column if not exists agenda_duracao_padrao_minutos integer,
-     add column if not exists agenda_intervalo_minutos integer;
+     add column if not exists agenda_intervalo_minutos integer,
+     add column if not exists agenda_pastas_visiveis jsonb;
 
    create table agenda_disponibilidade (
      id uuid primary key default gen_random_uuid(),
