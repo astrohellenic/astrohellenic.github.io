@@ -299,14 +299,45 @@
        não desenham nada. */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return { svg: `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
+            return { svg: `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
         }
 
         const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
         const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
         const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
 
-        const goldColor = "#c59b27";
+        /* Mesma "tinta" clara/escura de mandala.js/profeccao.js/liberacao.js
+           (esta função segue a mesma arquitetura de renderMandala) — cores
+           resolvidas em hexadecimal porque este SVG acaba virando <img>
+           (ver converterSinastriaMandalasEmImagem logo depois do render),
+           então var(--x) não seria enxergado por quem lê o canvas depois.
+           ELEMENT_SIGN_COLORS fica sombreado só aqui dentro (a versão do
+           módulo continua intocada).
+
+           fundoDisco/halo (escuro) usam --bg-card (#262220), NÃO --bg-main
+           (#1c1917): as duas mandalas ficam cada uma dentro do seu próprio
+           cartão (ver renderSinastriaTela, background: var(--bg-card)) —
+           mesmo cuidado já documentado no CLAUDE.md a respeito da Liberação
+           Zodiacal, pra não deixar uma margem clara (o "quadrado" por trás
+           do disco redondo) aparecer entre a borda dourada do cartão e o
+           disco escuro. */
+        const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+        const tinta = modoEscuro ? {
+            fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
+            inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
+            aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
+            elementoFogo: '#ff6b4a', elementoTerra: '#c9863f', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
+            dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
+        } : {
+            fundoDisco: '#ffffff', dourado: '#c59b27', douradoCasas: '#aa820a', halo: '#ffffff',
+            inkForte: '#000000', inkPlaneta: '#0f172a', navio: '#103b70', linhaConectora: '#94a3b8',
+            aspectoOposicao: '#881337', aspectoTrigono: '#1d4ed8', aspectoQuadratura: '#e84118', aspectoSextil: '#0ea5e9',
+            elementoFogo: '#e84118', elementoTerra: '#8b4513', elementoAr: '#0ea5e9', elementoAgua: '#1d4ed8',
+            dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
+        };
+        const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
+
+        const goldColor = tinta.dourado;
         const sufixo = `sw${wheelInstanceCounter++}`;
 
         const ascAbs = dados.Ascendente.grau_absoluto;
@@ -332,11 +363,11 @@
             });
         });
         if (nodeAbs > 0) {
-            outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-            outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+            outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+            outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
         }
         if (syzAbs > 0) {
-            outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+            outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
         }
         lotes.forEach(lot => {
             outerRingItems.push({ type: "lot", label: lot.label, lotType: lot.type, sym: lot.sym, deg: lot.deg, color: goldColor, aScreen: eclToScreenAngle(lot.deg, house1RefAbs) });
@@ -376,7 +407,7 @@
 
         let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
-            <rect width="${canvasSize}" height="${canvasSize}" fill="#ffffff"/>`;
+            <rect width="${canvasSize}" height="${canvasSize}" fill="${tinta.fundoDisco}"/>`;
 
         function desenharFatiaDestaque(signIdx, cor) {
             if (signIdx === null || signIdx === undefined) return '';
@@ -395,7 +426,7 @@
         svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
         svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
 
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
+        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
         const occupiedSigns = new Set();
         PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
@@ -405,10 +436,10 @@
                 let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
                 if (diff > 6) diff = 12 - diff;
                 let col = null;
-                if (diff === 6) col = "#881337";
-                else if (diff === 4) col = "#1d4ed8";
-                else if (diff === 3) col = "#e84118";
-                else if (diff === 2) col = "#0ea5e9";
+                if (diff === 6) col = tinta.aspectoOposicao;
+                else if (diff === 4) col = tinta.aspectoTrigono;
+                else if (diff === 3) col = tinta.aspectoQuadratura;
+                else if (diff === 2) col = tinta.aspectoSextil;
                 if (col) {
                     const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
                     const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
@@ -423,26 +454,26 @@
 
         const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
         const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-        svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+        svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
         const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
         const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-        svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+        svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
         const rEixoInterno = R.SignSector - 12;
         const eixosInternos = [
-            { label: "ASC", deg: ascAbs, color: "#000000" },
-            { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000" },
-            { label: "MC", deg: mcAbs, color: "#000000" },
-            { label: "IC", deg: (mcAbs + 180) % 360, color: "#000000" }
+            { label: "ASC", deg: ascAbs, color: tinta.inkForte },
+            { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
+            { label: "MC", deg: mcAbs, color: tinta.inkForte },
+            { label: "IC", deg: (mcAbs + 180) % 360, color: tinta.inkForte }
         ];
         eixosInternos.forEach(eixo => {
             const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
             const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
             svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${eixo.color}" stroke-width="1.8"/>
+                <circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${eixo.color}" stroke-width="1.8"/>
                 <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
-                <text x="0" y="18" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+                <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
             </g>`;
         });
 
@@ -456,7 +487,7 @@
         for (let i = 0; i < 12; i++) {
             const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
             const pNum = polarToCart(cx, cy, 122, aMid);
-            svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+            svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
             const pSym = polarToCart(cx, cy, 166, aMid);
             svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
@@ -466,7 +497,7 @@
             for (let d = 0; d < 12; d++) {
                 const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
                 const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
+                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
                 const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
                 svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
             }
@@ -520,7 +551,7 @@
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
         if (sunItem) {
             const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="#ffffff"/>`;
+            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="${tinta.fundoDisco}"/>`;
             svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
         }
 
@@ -534,27 +565,27 @@
             const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
             if (item.type === "node") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-                    <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+                    <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+                    <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
             } else if (item.type === "syzygy") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+                    <circle cx="0" cy="0" r="12" fill="${tinta.fundoDisco}" stroke="none"/>
                     <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
                     <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
                     <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-                    <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+                    <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
             } else if (item.type === "lot") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
                 if (item.lotType === "fortune") {
-                    svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
+                    svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
                 } else if (item.lotType === "spirit") {
-                    svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+                    svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
                 } else {
-                    svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
+                    svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
                 }
-                svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+                svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
             }
         });
 
@@ -566,14 +597,14 @@
                 const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
                 const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
                 const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-                svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+                svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
                 const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
                 const planetSvgContent = fragmentoPlaneta3D(item.id, sufixo);
                 let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
                     <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-                    <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+                    <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
                 </g>`;
             });
 
@@ -641,9 +672,9 @@
         const cidade = (geo && geo.city) ? geo.city : 'Local n/i';
         const titulo = codigo ? `${codigo} ${nome}` : nome;
         return `
-            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; margin-bottom: 2px;">${escapeHtml(titulo || 'Sem Nome')}</div>
-            <div style="font-size: 11px; color: #475569; font-weight: 500;">${diaSemana} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted})</div>
-            <div style="font-size: 11px; color: #64748b;">${escapeHtml(cidade)}</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: var(--primary-blue); margin-bottom: 2px;">${escapeHtml(titulo || 'Sem Nome')}</div>
+            <div style="font-size: 11px; color: var(--text-muted-2); font-weight: 500;">${diaSemana} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted})</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(cidade)}</div>
         `;
     }
 
@@ -760,12 +791,12 @@
                 sinastriaRenderizarListaPicker(sinastriaFiltrarPorPastaAtual(sinastriaListaMapas));
             } else {
                 const cont = document.getElementById('sinastriaListaContainer');
-                if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #dc2626;">Erro ao carregar a lista de mapas.</div>`;
+                if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--danger);">Erro ao carregar a lista de mapas.</div>`;
             }
         } catch (e) {
             console.error("Erro ao carregar mapas para a Sinastria:", e);
             const cont = document.getElementById('sinastriaListaContainer');
-            if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #dc2626;">Erro de conexão.</div>`;
+            if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--danger);">Erro de conexão.</div>`;
         } finally {
             sinastriaCarregandoLista = false;
         }
@@ -793,16 +824,16 @@
         pastasOrdenadas.forEach(pasta => {
             const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
             html += `
-                <div onclick="sinastriaAbrirPasta('${pastaAttrEscapada}')" style="margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <div onclick="sinastriaAbrirPasta('${pastaAttrEscapada}')" style="margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
-                        <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(pasta)}</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
+                        <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(pasta)}</span>
                     </div>
-                    <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+                    <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
                 </div>
             `;
         });
-        cont.innerHTML = html || `<div style="padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">Nenhuma pasta encontrada.</div>`;
+        cont.innerHTML = html || `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--text-faint);">Nenhuma pasta encontrada.</div>`;
     }
 
     window.sinastriaAbrirPasta = function(pasta) {
@@ -822,7 +853,7 @@
         if (!cont) return;
 
         if (!lista || lista.length === 0) {
-            cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">Nenhum mapa encontrado.</div>`;
+            cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--text-faint);">Nenhum mapa encontrado.</div>`;
             return;
         }
 
@@ -831,9 +862,9 @@
             const cod = item.codigo ? `${item.codigo} - ` : '';
             const cidStr = item.cidade || 'Local n/i';
             html += `
-                <div onclick="sinastriaSelecionarMapa(${item.id})" style="margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; padding: 8px 10px; cursor: pointer;">
-                    <div style="color: #103b70; font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
-                    <div style="color: #64748b; font-size: 10px; margin-top: 2px;">${escapeHtml(cidStr)}</div>
+                <div onclick="sinastriaSelecionarMapa(${item.id})" style="margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); padding: 8px 10px; cursor: pointer;">
+                    <div style="color: var(--primary-blue); font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+                    <div style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">${escapeHtml(cidStr)}</div>
                 </div>
             `;
         });
@@ -858,11 +889,11 @@
         if (!row) return;
 
         const cont = document.getElementById('sinastriaListaContainer');
-        if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Calculando mapa...</div>`;
+        if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Calculando mapa...</div>`;
 
         const resultado = await sinastriaCalcularDadosMapa(row);
         if (!resultado) {
-            if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #dc2626;">Erro ao calcular esse mapa. Toque para tentar de novo.</div>`;
+            if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--danger);">Erro ao calcular esse mapa. Toque para tentar de novo.</div>`;
             return;
         }
 
@@ -905,7 +936,7 @@
             const { svgEsquerda, svgDireita } = gerarMandalasComEscalaIgual(sinastriaSegundoMapa.dados, currentCalculatedData);
 
             cardEsquerdaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                     <div style="text-align: center; margin-bottom: 8px;">
                         ${sinastriaLinhaInfo(sinastriaSegundoMapa.nome, sinastriaSegundoMapa.codigo, sinastriaSegundoMapa.moment, sinastriaSegundoMapa.geo)}
                     </div>
@@ -914,7 +945,7 @@
             `;
 
             cardDireitaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                     <div style="text-align: center; margin-bottom: 8px;">
                         ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
                     </div>
@@ -925,24 +956,24 @@
             // Dentro de uma pasta: cabeçalho com "voltar" + nome da pasta,
             // busca (filtra só dentro dela) e a lista de clientes.
             cardEsquerdaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
+                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <button onclick="sinastriaVoltarPastas()" title="Voltar às pastas" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; flex-shrink: 0;">
-                            <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i>
+                        <button onclick="sinastriaVoltarPastas()" title="Voltar às pastas" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; flex-shrink: 0;">
+                            <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i>
                         </button>
-                        <div style="font-family: 'Cinzel', serif; font-size: 13px; color: #103b70; font-weight: 700; text-transform: uppercase; flex: 1; text-align: center;">${escapeHtml(sinastriaPastaSelecionada)}</div>
+                        <div style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; flex: 1; text-align: center;">${escapeHtml(sinastriaPastaSelecionada)}</div>
                     </div>
                     <div class="search-box-container" style="margin-bottom: 10px;">
-                        <input type="text" id="sinastriaBuscaInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="sinastriaFiltrarLista(this.value)" style="width: 100%; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
+                        <input type="text" id="sinastriaBuscaInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="sinastriaFiltrarLista(this.value)" style="width: 100%; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); color: var(--primary-blue);">
                     </div>
-                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid #e2d9c2; border-radius: 8px; background: #fffdf5;">
-                        <div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Carregando mapas...</div>
+                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main);">
+                        <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando mapas...</div>
                     </div>
                 </div>
             `;
 
             cardDireitaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                     <div style="text-align: center; margin-bottom: 8px;">
                         ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
                     </div>
@@ -954,16 +985,16 @@
             // (mesma fonte que a barra lateral usa), pra facilitar achar o
             // mapa certo em vez de uma lista única com todo mundo junto.
             cardEsquerdaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
-                    <div style="font-family: 'Cinzel', serif; font-size: 13px; color: #103b70; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Selecione a Pasta</div>
-                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid #e2d9c2; border-radius: 8px; background: #fffdf5;">
-                        <div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Carregando pastas...</div>
+                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
+                    <div style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Selecione a Pasta</div>
+                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main);">
+                        <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando pastas...</div>
                     </div>
                 </div>
             `;
 
             cardDireitaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                     <div style="text-align: center; margin-bottom: 8px;">
                         ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
                     </div>
@@ -985,7 +1016,7 @@
            nunca aparecer na própria imagem gerada. */
         const trocarBtnHtml = sinastriaSegundoMapa ? `
             <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-                <button onclick="sinastriaTrocarMapa()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+                <button onclick="sinastriaTrocarMapa()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
                     <i class="fa-solid fa-arrow-right-arrow-left"></i> Trocar Mapa
                 </button>
             </div>
@@ -1006,9 +1037,9 @@
             : mandalasHtml;
 
         container.innerHTML = `
-            <div style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
+            <div style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
                 <div style="text-align: center; margin-bottom: 16px;">
-                    <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Sinastria</h2>
+                    <h2 style="font-family: 'Cinzel', serif; color: var(--primary-blue); margin: 0; font-size: 18px; text-transform: uppercase;">Sinastria</h2>
                 </div>
                 ${trocarBtnHtml}
                 ${blocoMandalasHtml}
@@ -1039,7 +1070,8 @@
         if (!host) return;
 
         try {
-            const canvas = await html2canvas(host, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+            const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
+            const canvas = await html2canvas(host, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
             if (!document.getElementById('sinastriaMandalasImgHost')) return; // a tela já mudou (trocou de mapa/módulo) enquanto convertia
             host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Sinastria — duas mandalas lado a lado" style="width: 100%; height: auto; display: block;">`;
         } catch (err) {
@@ -1053,7 +1085,7 @@
         if (!container) return;
 
         if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: #dc2626; font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--danger); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
             return;
         }
 
