@@ -784,8 +784,8 @@
         }
 
         svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
-        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 14, R_OuterLine + 22);
-        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 14, R_OuterLine + 22);
+        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 24, R_OuterLine + 32);
 
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
         if (sunItem) {
