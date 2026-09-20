@@ -47,7 +47,7 @@ async function iniciarModuloAgenda() {
     const [dispRes, agsRes, mapasRes, servicosRes, configRes] = await Promise.all([
       supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
       supabaseClient.from('agendamentos').select('*').eq('user_id', user.id).gte('data', hojeISO).order('data', { ascending: true }).order('hora_inicio', { ascending: true }),
-      supabaseClient.from('mapas').select('id, nome, codigo, pasta').order('nome', { ascending: true }),
+      supabaseClient.from('mapas').select('id, nome, codigo, pasta, cidade, tipo'),
       supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
       supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
     ]);
@@ -75,6 +75,17 @@ async function iniciarModuloAgenda() {
     agendaMapasCache = pastasVisiveis
       ? todosOsMapas.filter(m => pastasVisiveis.includes(m.pasta))
       : todosOsMapas;
+
+    // Mesma ordem escolhida na tela de Pastas (currentSortField/
+    // currentSortDirection e compararValoresOrdenacao vêm de supabase.js,
+    // já carregado nessa página) — assim o cliente aparece na mesma
+    // posição relativa nos dois lugares.
+    if (typeof compararValoresOrdenacao === 'function') {
+      agendaMapasCache.sort((a, b) => {
+        const resultado = compararValoresOrdenacao(a, b, currentSortField);
+        return currentSortDirection === 'desc' ? -resultado : resultado;
+      });
+    }
 
     agendaConfigCache = {
       duracao: (!configRes.error && configRes.data && configRes.data.agenda_duracao_padrao_minutos) || 60,

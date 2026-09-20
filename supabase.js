@@ -12,8 +12,15 @@ let customFolders = ["Clientes"];
 let cachedFolderData = [];
 let selectedMapIds = new Set();
 let isSelectionMode = false;
-let currentSortField = 'codigo';
-let currentSortDirection = 'asc';
+// Lidos do localStorage pra lembrar a ordenação escolhida entre uma
+// abertura do app e outra (antes ficava só na memória da aba e voltava
+// pro padrão toda vez que a página recarregava).
+let currentSortField = (function () {
+  try { return localStorage.getItem('astro_sort_field') || 'codigo'; } catch (e) { return 'codigo'; }
+})();
+let currentSortDirection = (function () {
+  try { return localStorage.getItem('astro_sort_direction') || 'asc'; } catch (e) { return 'asc'; }
+})();
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -1220,11 +1227,13 @@ function reordenarERenderizar() {
 
 function aplicarOrdenacaoLista(campo) {
   currentSortField = campo;
+  try { localStorage.setItem('astro_sort_field', campo); } catch (e) {}
   reordenarERenderizar();
 }
 
 function alternarDirecaoOrdenacao() {
   currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+  try { localStorage.setItem('astro_sort_direction', currentSortDirection); } catch (e) {}
 
   const btn = document.getElementById('sortDirectionBtn');
   if (btn) {
