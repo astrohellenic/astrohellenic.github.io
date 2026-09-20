@@ -571,10 +571,10 @@ async function abrirConfiguracoesCaptacao() {
       <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e2d9c2;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
           <label style="font-size: 12px; font-weight: 700; color: #103b70;">Serviços Oferecidos</label>
-          <button onclick="abrirModalServico()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;">+ Serviço</button>
+          <button onclick="criarServico()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;">+ Serviço</button>
         </div>
         <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
-          Cadastre os serviços que você presta (nome, descrição, valor e duração).
+          Cadastre os nomes dos serviços que você presta. Cada serviço vira também um modelo de relatório disponível em Relatório → Modelos, onde você edita o conteúdo dele.
         </div>
         <div id="servicosListContainer">
           <div style="font-size: 11px; color: #64748b; padding: 8px 0;">Carregando serviços...</div>
@@ -716,27 +716,31 @@ async function salvarConfiguracoesCaptacao() {
 
 /* ==========================================
    CADASTRO DE SERVIÇOS
-   ========================================== */
+   Reaproveita a MESMA tabela que o módulo de Relatório usa pra "Modelo de
+   Relatório" (relatorio_presets: id, user_id, nome, blocos) — um serviço
+   cadastrado aqui é, no banco, o mesmo registro que aparece como modelo
+   em Relatório > Modelos. A tela do Relatório (relatorio.js) não é
+   tocada por nada disso: aqui só criamos/renomeamos/apagamos pelo nome,
+   e o conteúdo (blocos) continua sendo editado só lá.
+
+   Por enquanto só o nome é pedido (sem valor/duração) — o astrólogo
+   pediu pra deixar esses campos de fora nesta etapa. */
 
 let cachedServicos = [];
 
-/* CARREGA OS SERVIÇOS DO ASTRÓLOGO LOGADO E RENDERIZA A LISTA */
+/* CARREGA OS SERVIÇOS (=PRESETS DE RELATÓRIO) DO ASTRÓLOGO LOGADO E RENDERIZA A LISTA */
 async function carregarServicos() {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
 
     const { data, error } = await supabaseClient
-      .from('servicos')
-      .select('*')
+      .from('relatorio_presets')
+      .select('id, nome')
       .eq('user_id', user.id)
       .order('nome', { ascending: true });
 
-    if (!error && Array.isArray(data)) {
-      cachedServicos = data;
-    } else {
-      cachedServicos = [];
-    }
+    cachedServicos = (!error && Array.isArray(data)) ? data : [];
   } catch (e) {
     console.error("Erro ao carregar serviços:", e);
     cachedServicos = [];
@@ -754,116 +758,72 @@ function renderServicosList() {
     return;
   }
 
-  container.innerHTML = cachedServicos.map(servico => {
-    const partesDetalhe = [];
-    if (servico.valor !== null && servico.valor !== undefined && servico.valor !== '') {
-      const valorNum = Number(servico.valor);
-      if (!isNaN(valorNum)) partesDetalhe.push(`R$ ${valorNum.toFixed(2).replace('.', ',')}`);
-    }
-    if (servico.duracao_minutos !== null && servico.duracao_minutos !== undefined && servico.duracao_minutos !== '') {
-      partesDetalhe.push(`${servico.duracao_minutos} min`);
-    }
-    const detalhe = partesDetalhe.join(' · ');
-
-    return `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</div>
-          ${detalhe ? `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">${escapeHtml(detalhe)}</div>` : ''}
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
-          <i class="fa-solid fa-pen" onclick="abrirModalServico('${servico.id}')" title="Editar serviço" style="color: #103b70; cursor: pointer;"></i>
-          <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: #dc2626; cursor: pointer;"></i>
-        </div>
+  container.innerHTML = cachedServicos.map(servico => `
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
+      <span style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</span>
+      <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
+        <i class="fa-solid fa-pen" onclick="editarNomeServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Renomear serviço" style="color: #103b70; cursor: pointer;"></i>
+        <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: #dc2626; cursor: pointer;"></i>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
-/* ABRE O MODAL DE SERVIÇO (NOVO OU EDIÇÃO, SE PASSAR UM ID) */
-function abrirModalServico(id) {
-  const titulo = document.getElementById('modalServicoTitulo');
-  const campoId = document.getElementById('servicoModalId');
-  const campoNome = document.getElementById('servicoModalNome');
-  const campoDescricao = document.getElementById('servicoModalDescricao');
-  const campoValor = document.getElementById('servicoModalValor');
-  const campoDuracao = document.getElementById('servicoModalDuracao');
-
-  if (id) {
-    const servico = cachedServicos.find(s => String(s.id) === String(id));
-    if (!servico) return;
-    titulo.innerText = "Editar Serviço";
-    campoId.value = servico.id;
-    campoNome.value = servico.nome || '';
-    campoDescricao.value = servico.descricao || '';
-    campoValor.value = (servico.valor !== null && servico.valor !== undefined) ? servico.valor : '';
-    campoDuracao.value = (servico.duracao_minutos !== null && servico.duracao_minutos !== undefined) ? servico.duracao_minutos : '';
-  } else {
-    titulo.innerText = "Novo Serviço";
-    campoId.value = '';
-    campoNome.value = '';
-    campoDescricao.value = '';
-    campoValor.value = '';
-    campoDuracao.value = '';
-  }
-
-  document.getElementById('modalServicoOverlay').style.display = "flex";
-}
-
-/* FECHA O MODAL DE SERVIÇO */
-function fecharModalServico() {
-  document.getElementById('modalServicoOverlay').style.display = "none";
-}
-
-/* SALVA (CRIA OU ATUALIZA) UM SERVIÇO NO SUPABASE */
-async function salvarServico() {
-  const id = document.getElementById('servicoModalId').value.trim();
-  const nome = document.getElementById('servicoModalNome').value.trim();
-  const descricao = document.getElementById('servicoModalDescricao').value.trim();
-  const valorStr = document.getElementById('servicoModalValor').value.trim();
-  const duracaoStr = document.getElementById('servicoModalDuracao').value.trim();
-
-  if (!nome) { alert("Informe o nome do serviço."); return; }
-
-  const valor = valorStr ? parseFloat(valorStr) : null;
-  const duracaoMinutos = duracaoStr ? parseInt(duracaoStr, 10) : null;
+/* CRIA UM NOVO SERVIÇO — insere em relatorio_presets com os blocos padrão
+   (mesma semente usada ao criar um modelo novo em Relatório > Modelos),
+   pra já nascer utilizável como modelo caso o astrólogo abra o Relatório. */
+async function criarServico() {
+  const nome = prompt("Nome do novo serviço (ex: Mapa Natal Clássico):");
+  if (!nome || !nome.trim()) return;
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Sessão não identificada."); return; }
 
-    const registro = {
-      user_id: user.id,
-      nome: nome,
-      descricao: descricao || null,
-      valor: valor,
-      duracao_minutos: duracaoMinutos
-    };
-
-    let error;
-    if (id) {
-      ({ error } = await supabaseClient.from('servicos').update(registro).eq('id', id));
-    } else {
-      ({ error } = await supabaseClient.from('servicos').insert([registro]));
-    }
+    const blocosPadrao = (typeof RELATORIO_BLOCOS_PADRAO !== 'undefined') ? RELATORIO_BLOCOS_PADRAO : [];
+    const { error } = await supabaseClient
+      .from('relatorio_presets')
+      .insert({ user_id: user.id, nome: nome.trim(), blocos: blocosPadrao });
 
     if (!error) {
-      fecharModalServico();
       await carregarServicos();
     } else {
-      alert("Erro ao salvar serviço: " + error.message);
+      alert("Erro ao criar serviço: " + error.message);
     }
   } catch (e) {
-    alert("Erro de conexão ao salvar serviço.");
+    alert("Erro de conexão ao criar serviço.");
   }
 }
 
-/* APAGA UM SERVIÇO (COM CONFIRMAÇÃO) */
+/* RENOMEIA UM SERVIÇO JÁ EXISTENTE (só o nome — o conteúdo do modelo
+   continua sendo editado em Relatório > Modelos) */
+async function editarNomeServico(id, nomeAtual) {
+  const novoNome = prompt("Novo nome do serviço:", nomeAtual);
+  if (!novoNome || !novoNome.trim() || novoNome.trim() === nomeAtual) return;
+
+  try {
+    const { error } = await supabaseClient
+      .from('relatorio_presets')
+      .update({ nome: novoNome.trim(), updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (!error) {
+      await carregarServicos();
+    } else {
+      alert("Erro ao renomear serviço: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao renomear serviço.");
+  }
+}
+
+/* APAGA UM SERVIÇO (COM CONFIRMAÇÃO) — remove a linha de relatorio_presets,
+   então some também da lista de modelos em Relatório */
 async function apagarServico(id, nome) {
   if (!confirm(`Tem certeza que deseja apagar o serviço "${nome}"? Essa ação não pode ser desfeita.`)) return;
 
   try {
-    const { error } = await supabaseClient.from('servicos').delete().eq('id', id);
+    const { error } = await supabaseClient.from('relatorio_presets').delete().eq('id', id);
     if (!error) {
       await carregarServicos();
     } else {
