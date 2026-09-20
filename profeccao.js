@@ -568,14 +568,46 @@
        com sombra e mancha de combustão), só sem a faixa de céu/espaço sideral. */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+            return `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
         }
 
         const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
         const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
         const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
 
-        const goldColor = "#c59b27";
+        /* Mesma "tinta" clara/escura de mandala.js/liberacao.js (esta função
+           segue a mesma arquitetura de renderMandala/gerarMandalaNatalZR) —
+           cores resolvidas em hexadecimal porque este SVG acaba virando <img>
+           (ver converterProfeccaoMandalasEmImagem logo depois do render),
+           então var(--x) não seria enxergado por quem lê o canvas depois.
+           ELEMENT_SIGN_COLORS fica sombreado só aqui dentro (a versão do
+           módulo, usada por getSignSvgHtml no cabeçalho e na tabela mensal
+           fora da imagem, continua intocada).
+
+           fundoDisco/halo (escuro) usam --bg-card (#262220), NÃO --bg-main
+           (#1c1917): as duas mandalas (Revolução Solar e Mapa Natal) ficam
+           cada uma dentro do seu próprio cartão (ver iniciarModuloProfeccao,
+           background: var(--bg-card)) — mesmo cuidado já documentado no
+           CLAUDE.md a respeito da Liberação Zodiacal, pra não deixar uma
+           margem clara aparecer entre a borda dourada do cartão e o disco
+           escuro. */
+        const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+        const tinta = modoEscuro ? {
+            fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
+            inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
+            aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
+            elementoFogo: '#ff6b4a', elementoTerra: '#c9863f', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
+            dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
+        } : {
+            fundoDisco: '#ffffff', dourado: '#c59b27', douradoCasas: '#aa820a', halo: '#ffffff',
+            inkForte: '#000000', inkPlaneta: '#0f172a', navio: '#103b70', linhaConectora: '#94a3b8',
+            aspectoOposicao: '#881337', aspectoTrigono: '#1d4ed8', aspectoQuadratura: '#e84118', aspectoSextil: '#0ea5e9',
+            elementoFogo: '#e84118', elementoTerra: '#8b4513', elementoAr: '#0ea5e9', elementoAgua: '#1d4ed8',
+            dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
+        };
+        const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
+
+        const goldColor = tinta.dourado;
         const sufixo = `w${wheelInstanceCounter++}`;
 
         const ascAbs = dados.Ascendente.grau_absoluto;
@@ -601,11 +633,11 @@
             });
         });
         if (nodeAbs > 0) {
-            outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-            outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+            outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+            outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
         }
         if (syzAbs > 0) {
-            outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+            outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
         }
         lotes.forEach(lot => {
             outerRingItems.push({ type: "lot", label: lot.label, lotType: lot.type, sym: lot.sym, deg: lot.deg, color: goldColor, aScreen: eclToScreenAngle(lot.deg, house1RefAbs) });
@@ -634,7 +666,7 @@
 
         let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
-            <rect width="${canvasSize}" height="${canvasSize}" fill="#ffffff"/>`;
+            <rect width="${canvasSize}" height="${canvasSize}" fill="${tinta.fundoDisco}"/>`;
 
         /* DESTAQUE DE SIGNO (fatia inteira, do centro até a borda externa,
            por baixo de todo o resto do desenho) — usado para marcar o signo
@@ -657,7 +689,7 @@
         svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
         svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
 
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
+        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
         const occupiedSigns = new Set();
         PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
@@ -667,10 +699,10 @@
                 let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
                 if (diff > 6) diff = 12 - diff;
                 let col = null;
-                if (diff === 6) col = "#881337";
-                else if (diff === 4) col = "#1d4ed8";
-                else if (diff === 3) col = "#e84118";
-                else if (diff === 2) col = "#0ea5e9";
+                if (diff === 6) col = tinta.aspectoOposicao;
+                else if (diff === 4) col = tinta.aspectoTrigono;
+                else if (diff === 3) col = tinta.aspectoQuadratura;
+                else if (diff === 2) col = tinta.aspectoSextil;
                 if (col) {
                     const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
                     const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
@@ -685,26 +717,26 @@
 
         const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
         const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-        svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+        svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
         const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
         const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-        svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+        svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
         const rEixoInterno = R.SignSector - 12;
         const eixosInternos = [
-            { label: "ASC", deg: ascAbs, color: "#000000" },
-            { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000" },
-            { label: "MC", deg: mcAbs, color: "#000000" },
-            { label: "IC", deg: (mcAbs + 180) % 360, color: "#000000" }
+            { label: "ASC", deg: ascAbs, color: tinta.inkForte },
+            { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
+            { label: "MC", deg: mcAbs, color: tinta.inkForte },
+            { label: "IC", deg: (mcAbs + 180) % 360, color: tinta.inkForte }
         ];
         eixosInternos.forEach(eixo => {
             const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
             const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
             svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${eixo.color}" stroke-width="1.8"/>
+                <circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${eixo.color}" stroke-width="1.8"/>
                 <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
-                <text x="0" y="18" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+                <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
             </g>`;
         });
 
@@ -718,7 +750,7 @@
         for (let i = 0; i < 12; i++) {
             const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
             const pNum = polarToCart(cx, cy, 122, aMid);
-            svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+            svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
             const pSym = polarToCart(cx, cy, 166, aMid);
             svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
@@ -728,7 +760,7 @@
             for (let d = 0; d < 12; d++) {
                 const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
                 const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
+                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
                 const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
                 svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
             }
@@ -794,7 +826,7 @@
                parcialmente transparente, então sem isso a fatia verde/amarela do
                signo destacado (desenhada bem atrás) vazaria através dela e sujaria
                o dourado puro da mancha. */
-            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="#ffffff"/>`;
+            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="${tinta.fundoDisco}"/>`;
             svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
         }
 
@@ -808,27 +840,27 @@
             const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
             if (item.type === "node") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-                    <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+                    <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+                    <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
             } else if (item.type === "syzygy") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+                    <circle cx="0" cy="0" r="12" fill="${tinta.fundoDisco}" stroke="none"/>
                     <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
                     <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
                     <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-                    <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+                    <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
             } else if (item.type === "lot") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
                 if (item.lotType === "fortune") {
-                    svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
+                    svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
                 } else if (item.lotType === "spirit") {
-                    svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+                    svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
                 } else {
-                    svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
+                    svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
                 }
-                svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+                svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
             }
         });
 
@@ -840,14 +872,14 @@
                 const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
                 const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
                 const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-                svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+                svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
                 const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
                 const planetSvgContent = fragmentoPlaneta3D(item.id, sufixo);
                 let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
                     <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-                    <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+                    <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
                 </g>`;
             });
 
@@ -876,7 +908,7 @@
         if (!container) return;
 
         if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: #dc2626; font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--danger); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
             return;
         }
 
@@ -980,12 +1012,12 @@
                 <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
                     ${horasInfo.dayRulerId ? `
                     <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: #103b70;">DIA</div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">DIA</div>
                         ${getPlanet3DSVG(horasInfo.dayRulerId, 28)}
                     </div>` : ''}
                     ${horasInfo.hourRulerId ? `
                     <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: #103b70;">HORA</div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">HORA</div>
                         ${getPlanet3DSVG(horasInfo.hourRulerId, 28)}
                     </div>` : ''}
                 </div>`;
@@ -1012,10 +1044,10 @@
             const diaHoraRSHTML = blocoDiaHora('RS', horasInfoRS);
 
             linhaRSHTML = `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2d9c2; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
                 <div style="flex: 1 1 260px;">
-                    <div style="font-size: 12px; color: #475569; font-weight: 500;">${diaSemanaRS} • ${diaRSFmt}/${mesRSFmt}/${anoRSFmt} às ${horaRSFmt}:${minRSFmt} (${fusoRSFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa de Revolução Solar <span style="color: #9a6d18; font-weight: 700;">• ${sectRSText}</span></div>
+                    <div style="font-size: 12px; color: var(--text-muted-2); font-weight: 500;">${diaSemanaRS} • ${diaRSFmt}/${mesRSFmt}/${anoRSFmt} às ${horaRSFmt}:${minRSFmt} (${fusoRSFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa de Revolução Solar <span style="color: var(--gold-dark); font-weight: 700;">• ${sectRSText}</span></div>
                 </div>
                 ${diaHoraRSHTML}
             </div>`;
@@ -1030,18 +1062,18 @@
         </div>
     <div id="profeccao-container"
          oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;"
-         style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
+         style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
         <div style="text-align: center; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 6px;">
-                <button onclick="mudarAnoProfeccao(-1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
+                <button onclick="mudarAnoProfeccao(-1)" style="background: var(--bg-main); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
 
-                <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
+                <h2 style="font-family: 'Cinzel', serif; color: var(--primary-blue); margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
 
-                <button onclick="mudarAnoProfeccao(1)" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
+                <button onclick="mudarAnoProfeccao(1)" style="background: var(--bg-main); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
             </div>
 
-            <div style="font-size: 13px; color: #103b70;">
+            <div style="font-size: 13px; color: var(--primary-blue);">
                 <strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}
             </div>
         </div>
@@ -1064,12 +1096,12 @@
              porque o bloco mistura texto HTML normal (o cabeçalho) com as duas
              mandalas em SVG. -->
         <div id="profeccaoMandalasImgHost">
-        <div style="background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
-            <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin-bottom: 2px;">${escapeHtmlProf(headerTitle)}</div>
+        <div style="background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
+            <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin-bottom: 2px;">${escapeHtmlProf(headerTitle)}</div>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
                 <div style="flex: 1 1 260px;">
-                    <div style="font-size: 12px; color: #475569; font-weight: 500;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: #9a6d18; font-weight: 700;">• ${sectNatalText}</span></div>
+                    <div style="font-size: 12px; color: var(--text-muted-2); font-weight: 500;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: var(--gold-dark); font-weight: 700;">• ${sectNatalText}</span></div>
                 </div>
                 ${diaHoraNatalHTML}
             </div>
@@ -1077,26 +1109,26 @@
         </div>
 
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
-            <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
+            <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: var(--primary-blue); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
                 ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
             </div>
-            <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
+            <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: var(--primary-blue); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
                 ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
             </div>
         </div>
         </div>
 
-        <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
-            <div style="border-bottom: 1px solid #e2d9c2; padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: #103b70; font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
+        <div style="background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: var(--primary-blue); font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
             </div>
 
             <div id="profMensalOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; margin-top: 10px; touch-action: pan-y;">
               <div id="profMensalScaleBox">
-              <div id="profMensalWrapper" style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; overflow: hidden; transform-origin: top left;">
-                <table id="profMensalTable" style="width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px;">
+              <div id="profMensalWrapper" style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; overflow: hidden; transform-origin: top left;">
+                <table id="profMensalTable" style="width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px;">
                     <thead>
                         <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
                             <th style="padding: 10px 12px; text-align: center;">Mês</th>
@@ -1111,10 +1143,10 @@
         monthlyCache.forEach((m, i) => {
             const mSign = SIGNS[m.signIdx];
             const isExpanded = (window.expandedProfeccaoMes === i);
-            const bgRow = isExpanded ? '#e0e7ff' : (i % 2 === 0 ? '#ffffff' : '#fffdf5');
+            const bgRow = isExpanded ? '#e0e7ff' : (i % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-main)');
 
             html += `
-                <tr onclick="alternarMesProfeccao(${i})" style="border-bottom: 1px solid #e2d9c2; background-color: ${bgRow}; cursor: pointer; user-select: none;">
+                <tr onclick="alternarMesProfeccao(${i})" style="border-bottom: 1px solid var(--border-color); background-color: ${bgRow}; cursor: pointer; user-select: none;">
                     <td style="padding: 10px 12px; text-align: center;"><strong>Mês ${m.monthNum}</strong></td>
                     <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtml(m.signIdx, 20)}</td>
                     <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
@@ -1210,7 +1242,8 @@
         if (!host) return;
 
         try {
-            const canvas = await html2canvas(host, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+            const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
+            const canvas = await html2canvas(host, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
             if (!document.getElementById('profeccaoMandalasImgHost')) return; // a tela já mudou (outro ano/módulo) enquanto convertia
             host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Profecção Anual — Revolução Solar e Mapa Natal" style="width: 100%; height: auto; display: block;">`;
         } catch (err) {
