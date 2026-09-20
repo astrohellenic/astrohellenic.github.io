@@ -187,6 +187,15 @@ function abrirNavegacaoConfiguracoes() {
         <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
       </div>
 
+      <!-- OPÇÃO: AGENDA -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAgenda()">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><rect x="8" y="12" width="48" height="44" rx="4"/><line x1="8" y1="24" x2="56" y2="24"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Agenda</span>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+      </div>
+
     </div>
   `;
 }
@@ -838,6 +847,203 @@ async function apagarServico(id, nome) {
     }
   } catch (e) {
     alert("Erro de conexão ao apagar serviço.");
+  }
+}
+
+/* ==========================================
+   SUB-TELA: AGENDA (disponibilidade + pastas visíveis)
+   Fica em Configurações, separado da ferramenta Agenda em si
+   (agendamento.js), que mostra só o formulário de novo agendamento e a
+   lista dos já marcados — essas duas coisas aqui são "configura uma vez
+   e não mexe mais", então não poluem a tela de uso do dia a dia.
+   AGENDA_DIAS_SEMANA e as caches (agendaDisponibilidadeCache etc.) vêm
+   de agendamento.js, já carregado na mesma página.
+   ========================================== */
+async function abrirConfiguracoesAgenda() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+      </button>
+      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">AGENDA</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+      <div id="cfgAgendaConteudo" style="font-size: 11px; color: #64748b; padding: 8px 0;">Carregando...</div>
+    </div>
+  `;
+
+  await carregarConfiguracoesAgenda();
+}
+
+/* CARREGA DISPONIBILIDADE + PASTAS VISÍVEIS E RENDERIZA OS DOIS CARDS */
+async function carregarConfiguracoesAgenda() {
+  const container = document.getElementById('cfgAgendaConteudo');
+  if (!container) return;
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { container.innerHTML = `<div>Sessão não identificada.</div>`; return; }
+
+    const [dispRes, configRes] = await Promise.all([
+      supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
+      supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
+    ]);
+
+    if (dispRes.error) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 16px 0;">
+          As tabelas de agenda ainda não existem no Supabase deste projeto. Rode o SQL de configuração (ver agendamento.js) e recarregue a página.
+        </div>
+      `;
+      return;
+    }
+
+    const disponibilidade = dispRes.data || [];
+    const duracaoPadrao = (!configRes.error && configRes.data && configRes.data.agenda_duracao_padrao_minutos) || 60;
+    const intervaloPadrao = (!configRes.error && configRes.data && configRes.data.agenda_intervalo_minutos) || 0;
+    const pastasVisiveis = (!configRes.error && configRes.data && Array.isArray(configRes.data.agenda_pastas_visiveis))
+      ? configRes.data.agenda_pastas_visiveis
+      : null;
+
+    const blocoDias = AGENDA_DIAS_SEMANA.map((nomeDia, idx) => {
+      const regra = disponibilidade.find(r => r.dia_semana === idx);
+      return `
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <input type="checkbox" id="agDia${idx}" ${regra ? 'checked' : ''} onchange="document.getElementById('agHoraBloco${idx}').style.display = this.checked ? 'flex' : 'none';">
+          <label for="agDia${idx}" style="font-size: 12px; font-weight: 600; color: #103b70; width: 66px; flex-shrink: 0;">${nomeDia}</label>
+          <div id="agHoraBloco${idx}" style="display: ${regra ? 'flex' : 'none'}; gap: 6px; align-items: center;">
+            <input type="time" id="agInicio${idx}" class="modal-input" style="width: 100px;" value="${regra ? regra.hora_inicio.slice(0, 5) : '09:00'}">
+            <span style="font-size: 11px; color: #64748b;">até</span>
+            <input type="time" id="agFim${idx}" class="modal-input" style="width: 100px;" value="${regra ? regra.hora_fim.slice(0, 5) : '18:00'}">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const pastasParaExibir = (typeof customFolders !== 'undefined' && Array.isArray(customFolders)) ? customFolders : [];
+    const blocoPastas = pastasParaExibir.length
+      ? pastasParaExibir.map(pasta => {
+          const marcada = !pastasVisiveis || pastasVisiveis.includes(pasta);
+          return `
+            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #103b70; cursor: pointer;">
+              <input type="checkbox" class="agPastaCheckbox" value="${escapeHtml(pasta)}" ${marcada ? 'checked' : ''}>
+              ${escapeHtml(pasta)}
+            </label>
+          `;
+        }).join('')
+      : '<div style="font-size: 11px; color: #64748b;">Nenhuma pasta encontrada.</div>';
+
+    container.innerHTML = `
+      <div style="margin-bottom: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">Sua Disponibilidade</div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 14px; line-height: 1.4;">
+          Marque os dias que você atende e o horário de cada um. Usado pra calcular os horários livres na ferramenta Agenda.
+        </div>
+
+        ${blocoDias}
+
+        <div style="display: flex; gap: 8px; margin-top: 14px;">
+          <div style="flex: 1;">
+            <label style="font-size: 11px; font-weight: 600; color: #64748b;">Duração de cada atendimento (min)</label>
+            <input type="number" id="agDuracaoPadrao" class="modal-input" min="5" step="5" value="${duracaoPadrao}">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 11px; font-weight: 600; color: #64748b;">Intervalo entre atendimentos (min)</label>
+            <input type="number" id="agIntervaloPadrao" class="modal-input" min="0" step="5" value="${intervaloPadrao}">
+          </div>
+        </div>
+
+        <button onclick="salvarDisponibilidadeAgenda()" style="width: 100%; margin-top: 14px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+          Salvar Disponibilidade
+        </button>
+      </div>
+
+      <div style="padding-top: 16px; border-top: 1px solid #e2d9c2;">
+        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">Pastas Visíveis no Agendamento</div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
+          Marque só as pastas que têm clientes de verdade — desmarque as que usa pra teste, perguntas etc. Sem marcar nada, mostra clientes de todas as pastas.
+        </div>
+        ${blocoPastas}
+        <button onclick="salvarPastasVisiveisAgenda()" style="width: 100%; margin-top: 8px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+          Salvar Pastas Visíveis
+        </button>
+      </div>
+    `;
+  } catch (e) {
+    console.error('Erro ao carregar configurações de agenda:', e);
+    container.innerHTML = `<div>Erro de conexão ao carregar.</div>`;
+  }
+}
+
+/* SALVA A DISPONIBILIDADE (substitui todas as regras do usuário pelas
+   marcadas agora) + a duração/intervalo padrão (na tabela configuracoes) */
+async function salvarDisponibilidadeAgenda() {
+  const novasRegras = [];
+  for (let dia = 0; dia <= 6; dia++) {
+    const checkbox = document.getElementById(`agDia${dia}`);
+    if (!checkbox || !checkbox.checked) continue;
+    const inicio = document.getElementById(`agInicio${dia}`).value;
+    const fim = document.getElementById(`agFim${dia}`).value;
+    if (!inicio || !fim) continue;
+    if (inicio >= fim) { alert(`No dia ${AGENDA_DIAS_SEMANA[dia]}, o horário final precisa ser depois do inicial.`); return; }
+    novasRegras.push({ dia_semana: dia, hora_inicio: inicio, hora_fim: fim });
+  }
+
+  const duracaoPadrao = parseInt(document.getElementById('agDuracaoPadrao').value, 10) || 60;
+  const intervaloPadrao = parseInt(document.getElementById('agIntervaloPadrao').value, 10) || 0;
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error: erroDelete } = await supabaseClient.from('agenda_disponibilidade').delete().eq('user_id', user.id);
+    if (erroDelete) { alert("Erro ao salvar disponibilidade: " + erroDelete.message); return; }
+
+    if (novasRegras.length) {
+      const { error: erroInsert } = await supabaseClient
+        .from('agenda_disponibilidade')
+        .insert(novasRegras.map(r => ({ ...r, user_id: user.id })));
+      if (erroInsert) { alert("Erro ao salvar disponibilidade: " + erroInsert.message); return; }
+    }
+
+    const { error: erroConfig } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, agenda_duracao_padrao_minutos: duracaoPadrao, agenda_intervalo_minutos: intervaloPadrao }, { onConflict: 'user_id' });
+    if (erroConfig) { alert("Erro ao salvar duração/intervalo: " + erroConfig.message); return; }
+
+    alert("Disponibilidade salva com sucesso!");
+    await carregarConfiguracoesAgenda();
+  } catch (e) {
+    alert("Erro de conexão ao salvar disponibilidade.");
+  }
+}
+
+/* SALVA QUAIS PASTAS ENTRAM NO SELETOR DE CLIENTE DO NOVO AGENDAMENTO.
+   Antes de salvar pela primeira vez (coluna ainda null), mostra clientes
+   de TODAS as pastas — ver o "null = todas" em iniciarModuloAgenda. Depois
+   de salvar, vale exatamente o que ficou marcado (inclusive nenhuma, se
+   for esse o caso). */
+async function salvarPastasVisiveisAgenda() {
+  const marcadas = Array.from(document.querySelectorAll('.agPastaCheckbox:checked')).map(c => c.value);
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, agenda_pastas_visiveis: marcadas }, { onConflict: 'user_id' });
+
+    if (error) { alert("Erro ao salvar pastas visíveis: " + error.message); return; }
+
+    alert("Pastas visíveis salvas com sucesso!");
+    await carregarConfiguracoesAgenda();
+  } catch (e) {
+    alert("Erro de conexão ao salvar pastas visíveis.");
   }
 }
 
