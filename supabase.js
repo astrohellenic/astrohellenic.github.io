@@ -12,15 +12,13 @@ let customFolders = ["Clientes"];
 let cachedFolderData = [];
 let selectedMapIds = new Set();
 let isSelectionMode = false;
-// Lidos do localStorage pra lembrar a ordenação escolhida entre uma
-// abertura do app e outra (antes ficava só na memória da aba e voltava
-// pro padrão toda vez que a página recarregava).
-let currentSortField = (function () {
-  try { return localStorage.getItem('astro_sort_field') || 'codigo'; } catch (e) { return 'codigo'; }
-})();
-let currentSortDirection = (function () {
-  try { return localStorage.getItem('astro_sort_direction') || 'asc'; } catch (e) { return 'asc'; }
-})();
+// Valor-padrão até carregarOrdenacaoClientes (chamada após o login, junto
+// de carregarTemaMandala/carregarEstiloPlanetas) trazer o que está salvo
+// na CONTA do astrólogo — usa a tabela configuracoes, não localStorage,
+// porque precisa valer em qualquer navegador/aparelho que ele usar, não
+// só no que fez a mudança.
+let currentSortField = 'codigo';
+let currentSortDirection = 'asc';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -1431,15 +1429,46 @@ function reordenarERenderizar() {
   executarBuscaLocal(inputEl ? inputEl.value : '');
 }
 
+/* CARREGA A ORDENAÇÃO SALVA NA CONTA (chamado logo após o login, igual
+   carregarTemaMandala/carregarEstiloPlanetas) */
+async function carregarOrdenacaoClientes(userId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('ordenacao_clientes_campo, ordenacao_clientes_direcao')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data) {
+      if (data.ordenacao_clientes_campo) currentSortField = data.ordenacao_clientes_campo;
+      if (data.ordenacao_clientes_direcao) currentSortDirection = data.ordenacao_clientes_direcao;
+    }
+  } catch (e) {
+    console.error("Erro ao carregar ordenação de clientes:", e);
+  }
+}
+
+/* SALVA A ORDENAÇÃO ESCOLHIDA NA CONTA — dispara em segundo plano (sem
+   travar a reordenação, que já acontece na hora, localmente) */
+async function salvarOrdenacaoClientes() {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+    await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, ordenacao_clientes_campo: currentSortField, ordenacao_clientes_direcao: currentSortDirection }, { onConflict: 'user_id' });
+  } catch (e) {
+    console.error("Erro ao salvar ordenação de clientes:", e);
+  }
+}
+
 function aplicarOrdenacaoLista(campo) {
   currentSortField = campo;
-  try { localStorage.setItem('astro_sort_field', campo); } catch (e) {}
   reordenarERenderizar();
+  salvarOrdenacaoClientes();
 }
 
 function alternarDirecaoOrdenacao() {
   currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-  try { localStorage.setItem('astro_sort_direction', currentSortDirection); } catch (e) {}
 
   const btn = document.getElementById('sortDirectionBtn');
   if (btn) {
@@ -1448,6 +1477,7 @@ function alternarDirecaoOrdenacao() {
   }
 
   reordenarERenderizar();
+  salvarOrdenacaoClientes();
 }
 
 function renderListaMapas(lista) {
