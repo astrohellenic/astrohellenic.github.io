@@ -578,7 +578,7 @@ async function abrirRascunhoRelatorio(rascunhoId) {
   const container = document.getElementById('mandala-container');
   if (!client || !container) return;
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o rascunho...</div>`;
+  container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o rascunho...</div>`;
 
   try {
     const rascunho = await carregarRascunhoPorId(rascunhoId);
@@ -632,7 +632,7 @@ async function iniciarModuloRelatorio() {
   if (!container) return;
 
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
-    container.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para gerar o Relatório.</div>`;
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para gerar o Relatório.</div>`;
     return;
   }
 
@@ -665,7 +665,7 @@ async function iniciarModuloRelatorio() {
     return;
   }
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Carregando seus modelos de relatório...</div>`;
+  container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Carregando seus modelos de relatório...</div>`;
 
   const [presets, rascunhos] = await Promise.all([
     carregarOuSemearPresetsRelatorio(),
@@ -700,17 +700,17 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   });
 
   const listaRascunhosHTML = gruposRascunhos.length ? `
-    <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
-      <label style="font-size: 11px; font-weight: 600; color: #64748b; display: block; margin-bottom: 10px;">Relatórios em Andamento</label>
+    <div style="max-width: 480px; margin: 0 auto 20px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+      <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 10px;">Relatórios em Andamento</label>
       ${gruposRascunhos.map(g => `
         <div style="margin-bottom: 10px;">
-          <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 4px;">${escapeHtml(g.nome)}</div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">${escapeHtml(g.nome)}</div>
           ${g.itens.map(r => `
-            <div onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid #e2d9c2; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? '#fffdf5' : '#ffffff'};">
-              <span style="font-size: 12px; color: #475569;">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
+            <div onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? 'var(--bg-main)' : 'var(--bg-card)'};">
+              <span style="font-size: 12px; color: var(--text-muted-2);">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
               <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-                <i class="fa-solid fa-trash" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" style="color: #dc2626; cursor: pointer; font-size: 12px;" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)"></i>
-                <i class="fa-solid fa-chevron-right" style="color: #c59b27; font-size: 11px;"></i>
+                <i class="fa-solid fa-trash" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" style="color: var(--danger); cursor: pointer; font-size: 12px;" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)"></i>
+                <i class="fa-solid fa-chevron-right" style="color: var(--gold-primary); font-size: 11px;"></i>
               </div>
             </div>
           `).join('')}
@@ -720,21 +720,21 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   ` : '';
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">Relatório</h2>
-        <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
+      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Relatório</h2>
+        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
           ${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}
         </div>
       </div>
 
       ${listaRascunhosHTML}
 
-      <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Modelo de Relatório</label>
+      <div style="max-width: 480px; margin: 0 auto 20px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Modelo de Relatório</label>
         <select id="relPresetEscolhido" class="modal-select" style="margin-bottom: 6px;">${opcoesPreset}</select>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">
           O logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral. O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
         </div>
 
@@ -743,12 +743,12 @@ function renderRelatorioSetup(container, presets, rascunhos) {
         </button>
       </div>
 
-      <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
+      <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Modelos de Relatório</div>
-          <button onclick="criarNovoPresetRelatorio()" style="font-size: 11px; font-weight: 700; color: #103b70; padding: 6px 10px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Novo</button>
+          <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Modelos de Relatório</div>
+          <button onclick="criarNovoPresetRelatorio()" style="font-size: 11px; font-weight: 700; color: var(--primary-blue); padding: 6px 10px; border: 1px solid var(--gold-primary); border-radius: 6px; background: var(--bg-card); cursor: pointer;">+ Novo</button>
         </div>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
           Cada modelo escolhe quais textos e ferramentas entram no relatório, e com que conteúdo.
         </div>
         <div id="relListaModelos">${listaModelosHTML}</div>
@@ -762,11 +762,11 @@ function renderRelatorioSetup(container, presets, rascunhos) {
 
 function renderizarListaModelosRelatorioHTML(presets) {
   return presets.map((p, idx) => `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 6px;">
-      <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(p.nome)}</span>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 6px;">
+      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(p.nome)}</span>
       <div style="display: flex; gap: 12px;">
-        <i class="fa-solid fa-pen" style="color: #103b70; cursor: pointer; font-size: 12px;" onclick="abrirEditorPresetRelatorio(${idx})" title="Editar"></i>
-        ${presets.length > 1 ? `<i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 12px;" onclick="excluirPresetRelatorio(${idx})" title="Excluir"></i>` : ''}
+        <i class="fa-solid fa-pen" style="color: var(--primary-blue); cursor: pointer; font-size: 12px;" onclick="abrirEditorPresetRelatorio(${idx})" title="Editar"></i>
+        ${presets.length > 1 ? `<i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 12px;" onclick="excluirPresetRelatorio(${idx})" title="Excluir"></i>` : ''}
       </div>
     </div>
   `).join('');
@@ -855,7 +855,7 @@ window.excluirRascunhoRelatorio = excluirRascunhoRelatorio;
    Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
    espaço pra digitar os textos. */
 function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, formato, ferramentaId, capturaIndex, rotuloIndice }) {
-  const setaCss = 'width: 26px; height: 20px; border: 1px solid #c59b27; background: #ffffff; color: #103b70; border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
+  const setaCss = 'width: 26px; height: 20px; border: 1px solid var(--gold-primary); background: var(--bg-card); color: var(--primary-blue); border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
   const setas = `
     <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
       <button type="button" onclick="moverBlocoEditor(this, -1)" title="Mover para cima" style="${setaCss}">▲</button>
@@ -886,10 +886,10 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
         : 'sem captura pra esta posição';
       const rotuloEscapado = escapeHtml(info.label).replace(/'/g, '&#39;');
       extrasCapturada = `
-        <span style="font-size: 11px; font-weight: 700; color: ${temImagemNestaLinha ? '#103b70' : '#b45309'}; background: ${temImagemNestaLinha ? '#f1f5f9' : '#fffbeb'}; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;">
+        <span style="font-size: 11px; font-weight: 700; color: ${temImagemNestaLinha ? 'var(--primary-blue)' : 'var(--gold-dark)'}; background: ${temImagemNestaLinha ? 'var(--bg-hover)' : 'var(--warning-bg)'}; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;">
           ${rotuloBadge}
         </span>
-        <i class="fa-solid fa-plus" style="color: #103b70; cursor: pointer; font-size: 12px; flex-shrink: 0;" title="Adicionar mais uma página desta ferramenta em outro lugar do relatório" onclick="adicionarInstanciaFerramentaEditor('${idFerramenta}', '${rotuloEscapado}')"></i>
+        <i class="fa-solid fa-plus" style="color: var(--primary-blue); cursor: pointer; font-size: 12px; flex-shrink: 0;" title="Adicionar mais uma página desta ferramenta em outro lugar do relatório" onclick="adicionarInstanciaFerramentaEditor('${idFerramenta}', '${rotuloEscapado}')"></i>
       `;
     }
 
@@ -903,16 +903,16 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
     const rotuloIndiceAtual = rotuloIndice || tituloIndicePadrao;
 
     return `
-      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px; padding: 12px 14px;">
+      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}" style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 8px; padding: 12px 14px;">
         <div style="display: flex; align-items: center; gap: 10px;">
           ${setas}
           <input type="checkbox" data-bloco-check="${id}" checked>
-          <span style="flex: 1; font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(rotulo)}</span>
+          <span style="flex: 1; font-size: 13px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(rotulo)}</span>
           ${extrasCapturada}
-          <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="removerBlocoEditor(this, '${id}')"></i>
+          <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="removerBlocoEditor(this, '${id}')"></i>
         </div>
         <div style="margin-top: 8px; padding-left: 36px;">
-          <label style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Nome no Índice</label>
+          <label style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Nome no Índice</label>
           <input type="text" data-bloco-titulo-indice="${id}" class="modal-input" value="${escapeHtml(rotuloIndiceAtual)}" style="font-size: 12.5px; padding: 6px 8px; margin-top: 2px;">
         </div>
       </div>
@@ -932,12 +932,12 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
   window.relatorioQuillPendentes[id] = { corpo: corpo || '', formato: formato || 'texto' };
 
   return `
-    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}" style="border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; margin-bottom: 8px; overflow: hidden;">
+    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}" style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 8px; overflow: hidden;">
       <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
-        <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? '#9a6d18' : '#103b70'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
-        <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerBlocoEditor(this, '${id}')"></i>
+        <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? 'var(--gold-dark)' : 'var(--primary-blue)'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
+        <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerBlocoEditor(this, '${id}')"></i>
       </div>
       <div class="rel-editor-campos" style="padding: 0 14px 14px;">
         <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}" style="margin-bottom: 8px; font-size: 13px;">
@@ -1045,7 +1045,7 @@ function abrirSeletorImagemCapturaQuill(quill) {
     <div class="rel-seletor-imagem-box">
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <span class="modal-title">Inserir imagem de uma captura</span>
-        <i class="fa-solid fa-xmark" style="cursor: pointer; color: #64748b; font-size: 16px;" id="relSeletorImagemFechar"></i>
+        <i class="fa-solid fa-xmark" style="cursor: pointer; color: var(--text-muted); font-size: 16px;" id="relSeletorImagemFechar"></i>
       </div>
       <div class="rel-seletor-imagem-lista">${gruposHtml}</div>
     </div>
@@ -1145,8 +1145,8 @@ function relatorioAtualizarVisibilidadeAdicionar() {
 function relatorioItemCatalogoHtml(padrao) {
   const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
   return `
-    <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed #c59b27; border-radius: 8px; background: #fffdf5; margin-bottom: 8px; cursor: pointer;">
-      <span style="font-size: 13px; font-weight: 600; color: #103b70;">+ ${escapeHtml(rotulo || padrao.id)}</span>
+    <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed var(--gold-primary); border-radius: 8px; background: var(--bg-main); margin-bottom: 8px; cursor: pointer;">
+      <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">+ ${escapeHtml(rotulo || padrao.id)}</span>
     </div>
   `;
 }
@@ -1178,7 +1178,7 @@ function limparCapturasEditor(toolId, iconEl) {
   limparCapturasRelatorio(toolId);
   const linha = iconEl.closest('.rel-editor-linha');
   const badge = linha && linha.querySelector('[data-badge-capturas]');
-  if (badge) { badge.textContent = 'sem captura'; badge.style.color = '#b45309'; badge.style.background = '#fffbeb'; }
+  if (badge) { badge.textContent = 'sem captura'; badge.style.color = 'var(--gold-dark)'; badge.style.background = 'var(--warning-bg)'; }
   iconEl.remove();
 }
 window.limparCapturasEditor = limparCapturasEditor;
@@ -1288,32 +1288,38 @@ function injetarEstilosEditorRelatorio() {
          atrás — a altura exata é medida e aplicada em JS (ver
          ajustarEspacadorBarraFixaEditor), já que ela muda com o tamanho
          da tela. */
-      .rel-editor-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e2d9c2; background: var(--bg-main, #f8fafc); padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-      .rel-editor-btn-voltar-fixo { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer; font-size: 14px; padding: 0; }
+      .rel-editor-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-main); padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+      .rel-editor-btn-voltar-fixo { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); cursor: pointer; font-size: 14px; padding: 0; }
       .rel-editor-tabs-conteudo { flex: 1; min-width: 0; max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
       .rel-editor-tabs-grupo { display: flex; gap: 4px; }
-      .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; }
-      .rel-editor-tab.ativa { color: #103b70; border-bottom-color: #103b70; }
+      .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); }
+      .rel-editor-tab.ativa { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
       .rel-editor-btn-salvar { background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 9px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
 
+      /* .rel-quill-mount (barra de ferramentas + área de texto do Quill) e
+         .rel-seletor-imagem-item (miniatura de captura) ficam de propósito
+         sempre claros, mesmo no Tema Escuro: são o "papel" do relatório —
+         o texto ali dentro é exatamente o que vira PDF/imagem pro cliente
+         (ver injetarEstilosRelatorio/montarConteudoRelatorioHtml, sempre
+         brancos), então não fazem sentido escurecer só na tela de edição. */
       .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
 
-      .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: #fffbeb; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #9a6d18; font-weight: 600; }
+      .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
 
       /* Modal do seletor "Inserir imagem de uma captura" (botão extra na
          barra do Quill) — mesmo padrão visual dos modais do site
          (.modal-box do CSS global), só que montado por JS porque a lista
          de capturas muda a cada abertura. */
       #relSeletorImagemOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-      .rel-seletor-imagem-box { background: #ffffff; width: 100%; max-width: 640px; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+      .rel-seletor-imagem-box { background: var(--bg-card); width: 100%; max-width: 640px; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
       .rel-seletor-imagem-lista { overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-      .rel-seletor-imagem-grupo-titulo { font-size: 11px; font-weight: 700; color: #9a6d18; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
+      .rel-seletor-imagem-grupo-titulo { font-size: 11px; font-weight: 700; color: var(--gold-dark); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
       .rel-seletor-imagem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-      .rel-seletor-imagem-item { border: 1px solid #e2d9c2; border-radius: 8px; overflow: hidden; cursor: pointer; background: #fffdf5; }
-      .rel-seletor-imagem-item:hover { border-color: #c59b27; }
+      .rel-seletor-imagem-item { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg-main); }
+      .rel-seletor-imagem-item:hover { border-color: var(--gold-primary); }
       .rel-seletor-imagem-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
   `;
   document.head.appendChild(style);
@@ -1399,7 +1405,7 @@ async function abrirEditorRascunhoRelatorio(rascunhoId, opcoes) {
   let rascunho = window.relatorioRascunhoEmEdicao;
   if (!rascunho || rascunho.id !== rascunhoId) {
     const container = document.getElementById('mandala-container');
-    if (container) container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o relatório...</div>`;
+    if (container) container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o relatório...</div>`;
     rascunho = await carregarRascunhoPorId(rascunhoId);
     if (!rascunho) { alert('Não foi possível carregar este relatório.'); iniciarModuloRelatorio(); return; }
     window.relatorioRascunhoEmEdicao = rascunho;
@@ -1520,10 +1526,10 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   injetarEstilosEditorRelatorio();
 
   container.innerHTML = `
-    <div style="width: 100%; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(config.tituloTela)}</h2>
+      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(config.tituloTela)}</h2>
       </div>
 
       <div class="rel-editor-tabs" id="relEditorTabsFixa">
@@ -1550,32 +1556,32 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
 
       <div id="relEditorFormPane">
         <div style="max-width: 720px; margin: 0 auto;">
-          <label style="font-size: 11px; font-weight: 600; color: #64748b;">${escapeHtml(config.labelNome)}</label>
+          <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">${escapeHtml(config.labelNome)}</label>
           <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(nomeAtual)}" style="margin-bottom: 18px; font-size: 13px;">
 
-          ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: #166534; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
+          ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: var(--success-text); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
 
-          <div style="font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.5;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
             Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
           </div>
 
           <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
 
           <div id="relAdicionarSecao" style="${linhasParaAdicionar ? '' : 'display: none;'}">
-            <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
-            <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
               Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
             </div>
             <div id="relAdicionarLista">${linhasParaAdicionar}</div>
           </div>
 
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
-            <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
-            <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: #103b70; padding: 8px 12px; border: 1px solid #c59b27; border-radius: 6px; background: #ffffff; cursor: pointer;">+ Adicionar</button>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
+            <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: var(--primary-blue); padding: 8px 12px; border: 1px solid var(--gold-primary); border-radius: 6px; background: var(--bg-card); cursor: pointer;">+ Adicionar</button>
           </div>
-          <div style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
             Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
           </div>
 
@@ -1669,9 +1675,9 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
   const opcoesHtml = opcoes.map(o => `<option value="${o.valor}" ${o.valor === capaFonteAtual ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
 
   return `
-    <div style="background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
-      <label style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em;">Mandala da Capa</label>
-      <div style="font-size: 11.5px; color: #64748b; margin: 4px 0 8px; line-height: 1.5;">
+    <div style="background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Mandala da Capa</label>
+      <div style="font-size: 11.5px; color: var(--text-muted); margin: 4px 0 8px; line-height: 1.5;">
         Escolhe qual imagem aparece na capa deste modelo — pra você nunca ficar no escuro sobre o que vai ser gerado.
       </div>
       <select id="relCapaFonte" class="modal-select" onchange="atualizarPreviewCapaEditor()">${opcoesHtml}</select>
@@ -1693,8 +1699,8 @@ function relatorioEncerramentoHtml(corpoAtual) {
 
   return `
     <div style="margin: 24px 0 10px;">
-      <div style="font-size: 13px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px;">Texto de Encerramento</div>
-      <div style="font-size: 12px; color: #64748b; margin-bottom: 10px; line-height: 1.5;">
+      <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px;">Texto de Encerramento</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5;">
         Aparece sempre na ÚLTIMA página do relatório, junto com seu nome/telefone/e-mail (esses vêm de Configurações → Relatórios).
       </div>
       <div id="quill-mount-__encerramento__" class="rel-quill-mount"></div>
@@ -1719,22 +1725,22 @@ function atualizarPreviewCapaEditor() {
     if (capturas.length) {
       const ultima = capturas[capturas.length - 1];
       wrap.innerHTML = `
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">${capturas.length > 1 ? `Vai a mais recente das ${capturas.length} capturadas:` : 'Prévia da captura:'}</div>
-        <img src="${ultima.dataUrl}" style="max-width: 160px; max-height: 160px; border: 1px solid #e2d9c2; border-radius: 8px; display: block;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">${capturas.length > 1 ? `Vai a mais recente das ${capturas.length} capturadas:` : 'Prévia da captura:'}</div>
+        <img src="${ultima.dataUrl}" style="max-width: 160px; max-height: 160px; border: 1px solid var(--border-color); border-radius: 8px; display: block;">
       `;
     } else {
-      wrap.innerHTML = `<div style="font-size: 11.5px; color: #b45309;">Nenhuma imagem capturada ainda pra essa opção. Abra a Mandala, deixe a rotação de Casa 1 do jeito que quer mostrar e clique no botão de "Adicionar ao Relatório" ao lado da rotação — depois volte aqui.</div>`;
+      wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--gold-dark);">Nenhuma imagem capturada ainda pra essa opção. Abra a Mandala, deixe a rotação de Casa 1 do jeito que quer mostrar e clique no botão de "Adicionar ao Relatório" ao lado da rotação — depois volte aqui.</div>`;
     }
     return;
   }
 
   if (valor === 'nenhuma') {
-    wrap.innerHTML = `<div style="font-size: 11.5px; color: #64748b;">A capa vai mostrar só o título do relatório, sem nenhuma imagem.</div>`;
+    wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--text-muted);">A capa vai mostrar só o título do relatório, sem nenhuma imagem.</div>`;
     return;
   }
 
   const nomePagina = valor === 'mandala_natal' ? 'Mapa Natal' : 'Mandala com a Fortuna';
-  wrap.innerHTML = `<div style="font-size: 11.5px; color: #64748b;">Calculada na hora, a partir dos dados do cliente carregado — sai igual à própria página "${nomePagina}" deste relatório (se ela estiver marcada como página aqui embaixo).</div>`;
+  wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--text-muted);">Calculada na hora, a partir dos dados do cliente carregado — sai igual à própria página "${nomePagina}" deste relatório (se ela estiver marcada como página aqui embaixo).</div>`;
 }
 window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 
@@ -1994,7 +2000,7 @@ async function atualizarPreviaEditorModelo() {
   const pane = document.getElementById('relEditorPreviaPane');
   if (!pane) return;
 
-  pane.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando a prévia...</div>`;
+  pane.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando a prévia...</div>`;
 
   const nomeCampo = (document.getElementById('relEditorNome').value || '').trim();
   const capaFonteSelect = document.getElementById('relCapaFonte');
@@ -2004,7 +2010,7 @@ async function atualizarPreviaEditorModelo() {
 
   const blocosCorpo = lerBlocosDoEditor();
   if (!blocosCorpo.length) {
-    pane.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
+    pane.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
   const blocosComCapa = blocosCorpo.concat([
@@ -2096,7 +2102,7 @@ async function gerarRelatorioCompleto(preset) {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando o relatório...</div>`;
+  container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando o relatório...</div>`;
 
   const perfil = await carregarPerfilRelatorio();
   const blocos = preset.blocos || [];
@@ -2721,9 +2727,18 @@ function injetarEstilosRelatorio() {
          sticky não é confiável nesse layout (mesmo motivo da barra do
          editor, .rel-editor-tabs). #relToolbarEspacador logo depois dela
          no HTML reserva o espaço que ela ocupa. */
-      .rel-toolbar { display: flex; justify-content: center; gap: 10px; padding: 12px; position: fixed; top: 0; left: 0; right: 0; background: #f1f5f9; z-index: 50; border-bottom: 1px solid #e2d9c2; }
+      .rel-toolbar { display: flex; justify-content: center; gap: 10px; padding: 12px; position: fixed; top: 0; left: 0; right: 0; background: var(--bg-main); z-index: 50; border-bottom: 1px solid var(--border-color); }
       .rel-toolbar button { display: flex; align-items: center; gap: 6px; }
-      .rel-viewer { background: #e5e7eb; padding: 24px 12px; }
+      /* .btn-secondary é global (também usado nos modais .modal-box, que
+         ainda não fazem parte do tema escuro) — sobrescrito só aqui dentro
+         da barra do relatório, pra não escurecer um botão que continua
+         sobre um modal claro em outro lugar do site. */
+      .rel-toolbar .btn-secondary { background: var(--bg-card); color: var(--primary-blue); }
+      /* .rel-viewer é só a "mesa" cinza atrás das folhas — as folhas em si
+         (.rel-page e tudo dentro dela, mais abaixo) ficam de propósito
+         sempre brancas/creme, porque são exatamente o que vira PDF/imagem
+         pro cliente (mesmo motivo do .rel-quill-mount lá em cima). */
+      .rel-viewer { background: var(--viewer-bg); padding: 24px 12px; }
 
       .rel-page {
         position: relative;
