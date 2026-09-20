@@ -820,7 +820,7 @@ async function editarNomeServico(id, nomeAtual) {
 /* APAGA UM SERVIÇO (COM CONFIRMAÇÃO) — remove a linha de relatorio_presets,
    então some também da lista de modelos em Relatório */
 async function apagarServico(id, nome) {
-  if (!confirm(`Tem certeza que deseja apagar o serviço "${nome}"? Essa ação não pode ser desfeita.`)) return;
+  if (!confirm(`Tem certeza que deseja apagar o serviço "${nome}"?\n\nIsso também vai apagar o modelo de relatório vinculado a ele (o mesmo usado em Relatório → Modelos). Essa ação não pode ser desfeita.`)) return;
 
   try {
     const { error } = await supabaseClient.from('relatorio_presets').delete().eq('id', id);

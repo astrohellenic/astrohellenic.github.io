@@ -800,7 +800,7 @@ window.criarNovoPresetRelatorio = criarNovoPresetRelatorio;
 async function excluirPresetRelatorio(idx) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset || !preset.id) return;
-  if (!confirm(`Excluir o modelo "${preset.nome}"? Essa ação não pode ser desfeita.`)) return;
+  if (!confirm(`Excluir o modelo "${preset.nome}"?\n\nIsso também vai apagar o serviço vinculado a ele (o mesmo cadastrado em Configurações → Captação de Clientes → Serviços). Essa ação não pode ser desfeita.`)) return;
 
   const client = relatorioSupabaseClient();
   if (!client) return;
