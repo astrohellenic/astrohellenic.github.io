@@ -1616,6 +1616,8 @@ function renderListaMapas(lista) {
     const cod = item.codigo ? `${item.codigo} - ` : '';
     const tipoStr = item.tipo ? ` ${item.tipo}` : '';
     const dataStr = item.dataNascimento || "Data n/i";
+    const horaStr = item.horaNascimento || "";
+    const dataHoraStr = horaStr ? `${dataStr} às ${horaStr}` : dataStr;
     const cidStr = item.cidade || "Local n/i";
     const isChecked = selectedMapIds.has(item.id) ? 'checked' : '';
 
@@ -1628,7 +1630,7 @@ function renderListaMapas(lista) {
         ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer; accent-color: #103b70;">` : ''}
         <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
           <div class="client-name" style="color: #103b70; font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #c59b27; margin-left: 6px;">${escapeHtml(tipoStr)}</span></div>
-          <div class="client-meta" style="color: #64748b; font-size: 10px; margin-top: 2px;">${escapeHtml(dataStr)} • ${escapeHtml(cidStr)}</div>
+          <div class="client-meta" style="color: #64748b; font-size: 10px; margin-top: 2px;">${escapeHtml(dataHoraStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
           <div class="card-actions" style="display: flex; gap: 6px; align-items: center;">
