@@ -1046,6 +1046,11 @@ if (modulo === 'mandala' || modulo === 'radix') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloRelatorio === 'function') iniciarModuloRelatorio();
   }
+  // 11. AGENDA (disponibilidade + agendamentos — ainda sem Google Agenda)
+  else if (modulo === 'agenda') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloAgenda === 'function') iniciarModuloAgenda();
+  }
 }
 
 /* NÍVEL 2C: TELA DE PASTAS COM "IMPORTAR EM MASSA" NO TOPO */
