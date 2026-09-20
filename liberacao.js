@@ -98,8 +98,8 @@ function getLotIconSVG(lotKey) {
 let wheelInstanceCounterZR = 0;
 
 /* Regente de cada signo (mesma ordem/fonte de SIGNS em profeccao.js) —
-   só usado se algum dia opcoes.profectedSignIdx for passado, para
-   desenhar a coroa sobre o regente do signo profectado do ano. */
+   usado para desenhar a coroa sobre o regente do signo destacado de
+   cada nível (L1/L2/L3/L4) da Liberação Zodiacal. */
 const SIGNS_RULERS_ZR = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
 
 function construirDefsPlanetasZR(sufixo) {
@@ -226,7 +226,6 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const l2SignIdx = (opcoes.l2SignIdx !== undefined) ? opcoes.l2SignIdx : null;
   const l3SignIdx = (opcoes.l3SignIdx !== undefined) ? opcoes.l3SignIdx : null;
   const l4SignIdx = (opcoes.l4SignIdx !== undefined) ? opcoes.l4SignIdx : null;
-  const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
   /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
      desenho, no lugar do Ascendente — mesma lógica de rotação de
      alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
@@ -500,20 +499,32 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       </g>`;
     });
 
-  if (profectedSignIdx !== null && SIGNS_RULERS_ZR[profectedSignIdx]) {
-    const rulerId = SIGNS_RULERS_ZR[profectedSignIdx];
+  /* COROA SOBRE O REGENTE DE CADA NÍVEL DESTACADO (L1/L2/L3/L4). Quando
+     o mesmo planeta rege mais de um nível ao mesmo tempo, ele recebe
+     UMA coroa só (não uma empilhada em cima da outra) — o número acima
+     da coroa é que muda, juntando os níveis com "-" (ex.: "1-3"). */
+  const niveisPorRegenteZR = {};
+  [[1, l1SignIdx], [2, l2SignIdx], [3, l3SignIdx], [4, l4SignIdx]].forEach(([nivel, signIdx]) => {
+    if (signIdx === null || signIdx === undefined || !SIGNS_RULERS_ZR[signIdx]) return;
+    const rulerId = SIGNS_RULERS_ZR[signIdx];
+    if (!niveisPorRegenteZR[rulerId]) niveisPorRegenteZR[rulerId] = [];
+    niveisPorRegenteZR[rulerId].push(nivel);
+  });
+
+  Object.keys(niveisPorRegenteZR).forEach(rulerId => {
     const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
-    if (rulerItem) {
-      const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
-      const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
-      svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-          <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
-          <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
-          <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
-          <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
-      </g>`;
-    }
-  }
+    if (!rulerItem) return;
+    const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
+    const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
+    const rotuloNiveis = niveisPorRegenteZR[rulerId].join('-');
+    svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
+        <text x="0" y="-11" font-size="9" font-weight="900" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2.5" paint-order="stroke fill">${rotuloNiveis}</text>
+        <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
+        <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
+        <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
+        <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
+    </g>`;
+  });
 
   svg += `</svg>`;
   return svg;
