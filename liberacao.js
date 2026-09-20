@@ -1012,24 +1012,25 @@ function renderLiberacaoUI() {
     <div class="lib-outer" id="liberacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
 
       <div id="liberacaoHeaderCapture">
-        <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-          Liberação Zodiacal
-        </h3>
-
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do lote ativo à direita (mesma caixa/menu com rolagem e ícones já usada em Decênios e Circumambulações) -->
-        <div class="lib-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
-          <div>
-            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-            <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-          </div>
+        <!-- Título + seletor de lote ativo lado a lado. O cabeçalho antigo (contorno dourado + nome/data/local do cliente) foi removido daqui porque ficou redundante: essas mesmas informações agora aparecem dentro do card da mandala logo abaixo (ver liberacaoMandalaImgHost), que é o que vira <img> pro toque-longo salvar em PNG. -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+          <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin: 0; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+            Liberação Zodiacal
+          </h3>
           <div style="position: relative; flex-shrink: 0;">
-            <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
+            <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 34px; height: 34px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
               ${getLotIconSVG(selectedZRPhase)}
             </button>
-            <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+            <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 38px; left: 50%; transform: translateX(-50%); background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
               ${loteMenuRowsHTML}
             </div>
           </div>
+        </div>
+
+        <!-- Nome/data/local do cliente: escondido na tela (já aparece dentro do card da mandala, ver liberacaoMandalaImgHost), mas mantido aqui pra continuar entrando na imagem exportada pro Relatório quando só "Tabela" é marcada (sem "Mandala") — senão essa combinação perderia o contexto de nome/data/local. capturarLiberacaoParaRelatorio torna este bloco visível só na cópia clonada usada pra exportar. -->
+        <div id="liberacaoHeaderClientInfo" style="display: none; text-align: center; margin-bottom: 12px;">
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
         </div>
       </div>
 
@@ -1279,7 +1280,13 @@ async function capturarLiberacaoParaRelatorio() {
 
   const temp = document.createElement('div');
   temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
-  temp.appendChild(header.cloneNode(true));
+  const headerClone = header.cloneNode(true);
+  // Nome/data/local ficam escondidos na tela (redundantes com o card da mandala). Só precisam aparecer aqui na imagem exportada quando a mandala (que já traz essa mesma informação) não entrar — senão duplicaria na própria imagem.
+  if (!liberacaoIncluirMandalaRelatorio) {
+    const clientInfoClone = headerClone.querySelector('#liberacaoHeaderClientInfo');
+    if (clientInfoClone) clientInfoClone.style.display = 'block';
+  }
+  temp.appendChild(headerClone);
   if (liberacaoIncluirMandalaRelatorio && mandala) temp.appendChild(mandala.cloneNode(true));
   if (liberacaoIncluirTabelaRelatorio && arvore) temp.appendChild(arvore.cloneNode(true));
   document.body.appendChild(temp);
