@@ -226,11 +226,15 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const l2SignIdx = (opcoes.l2SignIdx !== undefined) ? opcoes.l2SignIdx : null;
   const l3SignIdx = (opcoes.l3SignIdx !== undefined) ? opcoes.l3SignIdx : null;
   const l4SignIdx = (opcoes.l4SignIdx !== undefined) ? opcoes.l4SignIdx : null;
-  /* Salto (Lysis) do subperíodo ativo de cada nível — L1 nunca tem,
-     só L2/L3/L4 (que subdividem um período anterior). */
-  const l2Salto = Boolean(opcoes.l2Salto);
-  const l3Salto = Boolean(opcoes.l3Salto);
-  const l4Salto = Boolean(opcoes.l4Salto);
+  /* Signo onde vai cair o Salto (Lysis) de cada nível, dentro do
+     período ATIVO do nível pai — independente de "agora" já ter
+     chegado lá ou não (estrutural, não temporal: mesma lógica do
+     PICO, só que a referência do salto é o signo ativo do nível
+     acima, não a Fortuna). null quando o período pai é curto demais
+     pra sequer chegar num salto. L1 nunca tem (não subdivide nada). */
+  const l2SaltoSignIdx = (opcoes.l2SaltoSignIdx !== undefined) ? opcoes.l2SaltoSignIdx : null;
+  const l3SaltoSignIdx = (opcoes.l3SaltoSignIdx !== undefined) ? opcoes.l3SaltoSignIdx : null;
+  const l4SaltoSignIdx = (opcoes.l4SaltoSignIdx !== undefined) ? opcoes.l4SaltoSignIdx : null;
   /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
      desenho, no lugar do Ascendente — mesma lógica de rotação de
      alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
@@ -454,12 +458,16 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   /* RÓTULOS DE PICO E SALTO — ficam na mesma faixa de raio das
      barrinhas coloridas dos níveis, desenhados por cima delas, igual
      aos planetas. PICO: mesmos signos (casas 1, 4, 7 e 10 a partir da
-     Fortuna) já marcados na tabela, em qualquer lote. SALTO: só
-     L2/L3/L4 podem cair num subperíodo de Lysis (L1 é o topo da
-     hierarquia, nunca salta) — igual às coroas dos regentes, o número
-     do(s) nível(is) em salto fica escrito acima do badge, e quando
-     mais de um nível cai no mesmo signo eles dividem um badge só
-     (números unidos por "-").
+     Fortuna) já marcados na tabela, em qualquer lote. SALTO: estrutural,
+     não temporal — mostra onde o Lysis de cada nível VAI cair dentro do
+     período ativo do nível pai, independente de "agora" já ter chegado
+     lá ou não (é por isso que o signo do salto pode aparecer sem
+     nenhuma faixa colorida por baixo: pode não ser o período
+     selecionado no momento, só o que vai virar salto mais adiante
+     dentro do mesmo ciclo). L1 nunca tem (não subdivide nada). Igual às
+     coroas dos regentes, o número do(s) nível(is) em salto fica escrito
+     acima do badge, e quando mais de um nível cai no mesmo signo eles
+     dividem um badge só (números unidos por "-").
 
      Quando o MESMO signo tem pico e salto ao mesmo tempo, os dois
      badges se sobreporiam nesse raio — por isso são deslocados um em
@@ -470,8 +478,8 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const signosComPicoZR = new Set(picoSignsZR);
 
   const niveisSaltoPorSignoZR = {};
-  [[2, l2SignIdx, l2Salto], [3, l3SignIdx, l3Salto], [4, l4SignIdx, l4Salto]].forEach(([nivel, signIdx, salto]) => {
-    if (!salto || signIdx === null || signIdx === undefined) return;
+  [[2, l2SaltoSignIdx], [3, l3SaltoSignIdx], [4, l4SaltoSignIdx]].forEach(([nivel, signIdx]) => {
+    if (signIdx === null || signIdx === undefined) return;
     if (!niveisSaltoPorSignoZR[signIdx]) niveisSaltoPorSignoZR[signIdx] = [];
     niveisSaltoPorSignoZR[signIdx].push(nivel);
   });
@@ -892,11 +900,15 @@ function renderLiberacaoUI() {
   let l2HighlightSignIdx = null;
   let l3HighlightSignIdx = null;
   let l4HighlightSignIdx = null;
-  /* L1 nunca tem salto (é o topo da hierarquia, não subdivide nada) —
-     só L2/L3/L4 podem cair num subperíodo de Lysis. */
-  let l2HighlightIsLysis = false;
-  let l3HighlightIsLysis = false;
-  let l4HighlightIsLysis = false;
+  /* Onde o Lysis de cada nível VAI cair, dentro do período ativo do
+     nível pai — estrutural, não temporal: existe mesmo que "agora"
+     ainda não tenha chegado nesse subperíodo específico (ou nunca vá
+     chegar, se o salto cair fora do período pai). null quando o
+     período pai é curto demais pra sequer conter um salto. L1 nunca
+     tem (é o topo da hierarquia, não subdivide nada). */
+  let l2SaltoSignIdx = null;
+  let l3SaltoSignIdx = null;
+  let l4SaltoSignIdx = null;
   {
     let detStart = new Date(currentMoment);
     for (let i = 0; i < 12; i++) {
@@ -907,21 +919,25 @@ function renderLiberacaoUI() {
       if (i === expandedL1Index) {
         l1HighlightSignIdx = detSign;
         const detSubL2 = calcularSubperiodosL2(detSign, detStart, detYears);
+        const lysisL2 = detSubL2.find(sub => sub.isLysis);
+        if (lysisL2) l2SaltoSignIdx = lysisL2.signIdx;
+
         detSubL2.forEach((sub, sIdx) => {
           if (expandedL2Key === `${i}_${sIdx}`) {
             l2HighlightSignIdx = sub.signIdx;
-            l2HighlightIsLysis = Boolean(sub.isLysis);
             const detSubL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
+            const lysisL3 = detSubL3.find(subL3 => subL3.isLysis);
+            if (lysisL3) l3SaltoSignIdx = lysisL3.signIdx;
+
             detSubL3.forEach((subL3, l3Idx) => {
               if (expandedL3Key === `${i}_${sIdx}_${l3Idx}`) {
                 l3HighlightSignIdx = subL3.signIdx;
-                l3HighlightIsLysis = Boolean(subL3.isLysis);
                 const detSubL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
+                const lysisL4 = detSubL4.find(subL4 => subL4.isLysis);
+                if (lysisL4) l4SaltoSignIdx = lysisL4.signIdx;
+
                 const l4Ativo = detSubL4.find(subL4 => hoje >= subL4.start && hoje < subL4.end);
-                if (l4Ativo) {
-                  l4HighlightSignIdx = l4Ativo.signIdx;
-                  l4HighlightIsLysis = Boolean(l4Ativo.isLysis);
-                }
+                if (l4Ativo) l4HighlightSignIdx = l4Ativo.signIdx;
               }
             });
           }
@@ -1002,9 +1018,9 @@ function renderLiberacaoUI() {
             l2SignIdx: l2HighlightSignIdx,
             l3SignIdx: l3HighlightSignIdx,
             l4SignIdx: l4HighlightSignIdx,
-            l2Salto: l2HighlightIsLysis,
-            l3Salto: l3HighlightIsLysis,
-            l4Salto: l4HighlightIsLysis
+            l2SaltoSignIdx: l2SaltoSignIdx,
+            l3SaltoSignIdx: l3SaltoSignIdx,
+            l4SaltoSignIdx: l4SaltoSignIdx
           })}
         </div>
       </div>
