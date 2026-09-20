@@ -626,6 +626,7 @@
     let sinastriaSegundoMapa = null; // { nome, codigo, cidade, moment, geo, dados }
     let sinastriaListaMapas = null;
     let sinastriaCarregandoLista = false;
+    let sinastriaPastaSelecionada = null; // null = mostrando a lista de pastas
 
     function sinastriaLinhaInfo(nome, codigo, momentDate, geo) {
         const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -735,10 +736,12 @@
     /* Busca (uma vez por visita ao módulo) todos os mapas salvos, de todas
        as pastas — mesmo padrão de agendamento.js (iniciarModuloAgenda), que
        também precisa de uma lista de clientes sem passar pela navegação por
-       pastas da barra lateral. */
+       pastas da barra lateral. A navegação em si (escolher a pasta antes de
+       ver os clientes) é feita aqui dentro, filtrando essa lista já
+       carregada — não refaz a busca no Supabase a cada pasta aberta. */
     async function sinastriaGarantirListaCarregada() {
         if (sinastriaListaMapas) {
-            sinastriaRenderizarListaPicker(sinastriaListaMapas);
+            sinastriaRenderizarListaPicker(sinastriaFiltrarPorPastaAtual(sinastriaListaMapas));
             return;
         }
         if (sinastriaCarregandoLista) return;
@@ -754,7 +757,7 @@
                 if (typeof compararValoresOrdenacao === 'function') {
                     sinastriaListaMapas.sort((a, b) => compararValoresOrdenacao(a, b, 'nome'));
                 }
-                sinastriaRenderizarListaPicker(sinastriaListaMapas);
+                sinastriaRenderizarListaPicker(sinastriaFiltrarPorPastaAtual(sinastriaListaMapas));
             } else {
                 const cont = document.getElementById('sinastriaListaContainer');
                 if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #dc2626;">Erro ao carregar a lista de mapas.</div>`;
@@ -767,6 +770,52 @@
             sinastriaCarregandoLista = false;
         }
     }
+
+    // Mesmo critério de carregarMapasDoBanco (supabase.js): só os mapas com
+    // pasta exatamente igual à pasta aberta.
+    function sinastriaFiltrarPorPastaAtual(lista) {
+        if (!sinastriaPastaSelecionada) return lista;
+        return lista.filter(item => item.pasta === sinastriaPastaSelecionada);
+    }
+
+    /* Lista de pastas (mesma fonte que a barra lateral usa: customFolders,
+       de supabase.js) — mostrada antes da lista de clientes, pra ficar mais
+       fácil achar o mapa certo em vez de rolar uma lista única com todos os
+       clientes de todas as pastas juntos. */
+    function sinastriaRenderizarPastas() {
+        const cont = document.getElementById('sinastriaListaContainer');
+        if (!cont) return;
+
+        const pastas = (typeof customFolders !== 'undefined' && Array.isArray(customFolders) && customFolders.length > 0) ? customFolders : ['Clientes'];
+        const pastasOrdenadas = [...pastas].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+        let html = '';
+        pastasOrdenadas.forEach(pasta => {
+            const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
+            html += `
+                <div onclick="sinastriaAbrirPasta('${pastaAttrEscapada}')" style="margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
+                        <span style="font-size: 12px; font-weight: 700; color: #103b70;">${escapeHtml(pasta)}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+                </div>
+            `;
+        });
+        cont.innerHTML = html || `<div style="padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">Nenhuma pasta encontrada.</div>`;
+    }
+
+    window.sinastriaAbrirPasta = function(pasta) {
+        sinastriaPastaSelecionada = pasta;
+        const container = document.getElementById('mandala-container');
+        if (container) renderSinastriaTela(container);
+    };
+
+    window.sinastriaVoltarPastas = function() {
+        sinastriaPastaSelecionada = null;
+        const container = document.getElementById('mandala-container');
+        if (container) renderSinastriaTela(container);
+    };
 
     function sinastriaRenderizarListaPicker(lista) {
         const cont = document.getElementById('sinastriaListaContainer');
@@ -794,7 +843,8 @@
     window.sinastriaFiltrarLista = function(query) {
         if (!sinastriaListaMapas) return;
         const q = (query || '').toLowerCase().trim();
-        const filtrada = !q ? sinastriaListaMapas : sinastriaListaMapas.filter(item => {
+        const base = sinastriaFiltrarPorPastaAtual(sinastriaListaMapas);
+        const filtrada = !q ? base : base.filter(item => {
             return (item.nome || '').toLowerCase().includes(q)
                 || (item.codigo ? String(item.codigo).toLowerCase().includes(q) : false)
                 || (item.cidade || '').toLowerCase().includes(q);
@@ -871,15 +921,43 @@
                     ${svgDireita}
                 </div>
             `;
-        } else {
+        } else if (sinastriaPastaSelecionada) {
+            // Dentro de uma pasta: cabeçalho com "voltar" + nome da pasta,
+            // busca (filtra só dentro dela) e a lista de clientes.
             cardEsquerdaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
-                    <div style="font-family: 'Cinzel', serif; font-size: 13px; color: #103b70; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Selecione o Segundo Mapa</div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                        <button onclick="sinastriaVoltarPastas()" title="Voltar às pastas" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; flex-shrink: 0;">
+                            <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i>
+                        </button>
+                        <div style="font-family: 'Cinzel', serif; font-size: 13px; color: #103b70; font-weight: 700; text-transform: uppercase; flex: 1; text-align: center;">${escapeHtml(sinastriaPastaSelecionada)}</div>
+                    </div>
                     <div class="search-box-container" style="margin-bottom: 10px;">
-                        <input type="text" id="sinastriaBuscaInput" class="client-search-input" placeholder="Buscar cliente..." oninput="sinastriaFiltrarLista(this.value)" style="width: 100%; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
+                        <input type="text" id="sinastriaBuscaInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="sinastriaFiltrarLista(this.value)" style="width: 100%; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
                     </div>
                     <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid #e2d9c2; border-radius: 8px; background: #fffdf5;">
                         <div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Carregando mapas...</div>
+                    </div>
+                </div>
+            `;
+
+            cardDireitaHtml = `
+                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    <div style="text-align: center; margin-bottom: 8px;">
+                        ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
+                    </div>
+                    ${gerarMandalaSVG(currentCalculatedData, {}).svg}
+                </div>
+            `;
+        } else {
+            // Ainda sem pasta escolhida: mostra a lista de pastas primeiro
+            // (mesma fonte que a barra lateral usa), pra facilitar achar o
+            // mapa certo em vez de uma lista única com todo mundo junto.
+            cardEsquerdaHtml = `
+                <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
+                    <div style="font-family: 'Cinzel', serif; font-size: 13px; color: #103b70; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Selecione a Pasta</div>
+                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid #e2d9c2; border-radius: 8px; background: #fffdf5;">
+                        <div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Carregando pastas...</div>
                     </div>
                 </div>
             `;
@@ -937,10 +1015,12 @@
             </div>
         `;
 
-        if (!sinastriaSegundoMapa) {
+        if (sinastriaSegundoMapa) {
+            converterSinastriaMandalasEmImagem();
+        } else if (sinastriaPastaSelecionada) {
             sinastriaGarantirListaCarregada();
         } else {
-            converterSinastriaMandalasEmImagem();
+            sinastriaRenderizarPastas();
         }
     }
 
