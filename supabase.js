@@ -548,12 +548,13 @@ function reRenderizarModuloAtivo() {
 /* ORDEM DOS BOTÕES DA BARRA SUPERIOR (Configurações > Aparência)
    As chaves abaixo são as mesmas do atributo data-modulo-key de cada botão
    dentro de #top-bar .top-bar-controls, em index.html. */
-const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'isopsefia', 'agenda'];
+const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'isopsefia', 'agenda'];
 
 const ROTULOS_BOTOES_TOPO = {
   relatorio: 'Relatório',
   tabelaTecnica: 'Tabela Técnica',
   mandala: 'Natal',
+  sinastria: 'Sinastria',
   direcoes: 'Direções Primárias',
   liberacao: 'Liberação Zodiacal',
   decenios: 'Decênios',
@@ -1383,6 +1384,11 @@ if (modulo === 'mandala' || modulo === 'radix') {
   else if (modulo === 'agenda') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloAgenda === 'function') iniciarModuloAgenda();
+  }
+  // 12. SINASTRIA (mandala dupla: mapa em tela + segundo mapa escolhido)
+  else if (modulo === 'sinastria') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloSinastria === 'function') iniciarModuloSinastria();
   }
 }
 
