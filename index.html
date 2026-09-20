@@ -657,21 +657,21 @@ body {
             </button>
             <div class="top-bar-controls">
                 <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
-                <button class="icon-btn" onclick="abrirModuloTecnica('relatorio')" title="Relatório"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="relatorio" onclick="abrirModuloTecnica('relatorio')" title="Relatório"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M14,4 H40 L50,14 V60 H14 Z" stroke-linejoin="round"/>
   <path d="M40,4 V14 H50" stroke-linejoin="round"/>
   <line x1="21" y1="28" x2="43" y2="28"/>
   <line x1="21" y1="38" x2="43" y2="38"/>
   <line x1="21" y1="48" x2="35" y2="48"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('tabelaTecnica')" title="Tabela Técnica"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="tabelaTecnica" onclick="abrirModuloTecnica('tabelaTecnica')" title="Tabela Técnica"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <rect x="8" y="12" width="48" height="40" rx="3"/>
   <line x1="8" y1="24" x2="56" y2="24"/>
   <line x1="8" y1="36" x2="56" y2="36"/>
   <line x1="24" y1="12" x2="24" y2="52"/>
   <line x1="40" y1="12" x2="40" y2="52"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('mandala')" title="Natal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="mandala" onclick="abrirModuloTecnica('mandala')" title="Natal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="32" cy="32" r="26"/>
   <circle cx="32" cy="32" r="12"/>
   <line x1="32" y1="6" x2="32" y2="58"/>
@@ -679,24 +679,24 @@ body {
   <line x1="14" y1="14" x2="50" y2="50"/>
   <line x1="50" y1="14" x2="14" y2="50"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('direcoes')" title="Direções Primárias"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="direcoes" onclick="abrirModuloTecnica('direcoes')" title="Direções Primárias"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M 32 8 A 24 24 0 1 1 10 24"/>
   <polyline points="18,16 10,24 6,14"/>
   <circle cx="32" cy="32" r="3" fill="currentColor" stroke="none"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('liberacao')" title="Liberação Zodiacal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="liberacao" onclick="abrirModuloTecnica('liberacao')" title="Liberação Zodiacal"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
   <rect x="14" y="28" width="36" height="28" rx="5"/>
   <path d="M22,28 V18 A12,12 0 0 1 44,10"/>
   <circle cx="32" cy="40" r="3" fill="currentColor" stroke="none"/>
   <line x1="32" y1="43" x2="32" y2="49"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('decenios')" title="Decênios"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="decenios" onclick="abrirModuloTecnica('decenios')" title="Decênios"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M14,6 H50 M14,58 H50"/>
   <path d="M16,6 C16,24 48,24 48,6"/>
   <path d="M16,58 C16,40 48,40 48,58"/>
   <path d="M28,26 L36,26 L32,32 Z" fill="currentColor" stroke="none"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('profeccao')" title="Profecção"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="profeccao" onclick="abrirModuloTecnica('profeccao')" title="Profecção"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="32" cy="32" r="26"/>
   <line x1="32" y1="6" x2="32" y2="58"/>
   <line x1="6" y1="32" x2="58" y2="32"/>
@@ -705,7 +705,7 @@ body {
   <path d="M32,32 L48,20" stroke-width="3.5"/>
   <polyline points="42,18 48,20 46,26" stroke-width="3.5"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('lotes')" title="Calculadora de Lotes"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="lotes" onclick="abrirModuloTecnica('lotes')" title="Calculadora de Lotes"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <rect x="10" y="4" width="44" height="56" rx="4"/>
   <line x1="16" y1="14" x2="48" y2="14"/>
   <circle cx="19" cy="28" r="2.5" fill="currentColor" stroke="none"/>
@@ -718,7 +718,7 @@ body {
   <circle cx="32" cy="48" r="2.5" fill="currentColor" stroke="none"/>
   <circle cx="45" cy="48" r="2.5" fill="currentColor" stroke="none"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('horas')" title="Horas Planetárias"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="horas" onclick="abrirModuloTecnica('horas')" title="Horas Planetárias"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="32" cy="32" r="26"/>
   <line x1="32" y1="32" x2="32" y2="15"/>
   <line x1="32" y1="32" x2="45" y2="32"/>
@@ -727,7 +727,7 @@ body {
   <line x1="8" y1="32" x2="12" y2="32"/>
   <line x1="52" y1="32" x2="56" y2="32"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('isopsefia')" title="Isopsefia"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="isopsefia" onclick="abrirModuloTecnica('isopsefia')" title="Isopsefia"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M10,54 L23,10 L36,54"/>
   <line x1="15" y1="38" x2="31" y2="38"/>
   <line x1="40" y1="34" x2="50" y2="34"/>
@@ -735,7 +735,7 @@ body {
   <path d="M55,18 L60,14 L60,54"/>
   <line x1="54" y1="54" x2="62" y2="54"/>
 </svg></button>
-                <button class="icon-btn" onclick="abrirModuloTecnica('agenda')" title="Agenda"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <button class="icon-btn" data-modulo-key="agenda" onclick="abrirModuloTecnica('agenda')" title="Agenda"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <rect x="8" y="12" width="48" height="44" rx="4"/>
   <line x1="8" y1="24" x2="56" y2="24"/>
   <line x1="20" y1="6" x2="20" y2="18"/>
@@ -984,7 +984,7 @@ body {
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tz-lookup.js?v=20260919"></script>
-<script src="supabase.js?v=20260920d"></script>
+<script src="supabase.js?v=20260920e"></script>
 <script src="planetIcons.js?v=20260916"></script>
 <script src="tabelaTecnica.js?v=20260919g"></script>
 <script src="mandala.js?v=20260919"></script>
@@ -1341,6 +1341,7 @@ body:not(.modo-mandala) #main-stage {
         if (typeof carregarTemaMandala === 'function') carregarTemaMandala(user.id);
         if (typeof carregarEstiloPlanetas === 'function') carregarEstiloPlanetas(user.id);
         if (typeof carregarOrdenacaoClientes === 'function') carregarOrdenacaoClientes(user.id);
+        if (typeof carregarOrdemBotoesTopo === 'function') carregarOrdemBotoesTopo(user.id);
 
         /* Confirma a sessão com o servidor em segundo plano, sem travar a
            tela: só interrompe o usuário se o token realmente não for mais
