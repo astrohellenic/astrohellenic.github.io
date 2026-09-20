@@ -915,13 +915,15 @@ function renderLiberacaoUI() {
 
       <div style="width: 100%; margin: 0 0 20px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
         <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
-        ${gerarMandalaNatalZR(currentCalculatedData, {
-          loteCasa1: selectedZRPhase,
-          l1SignIdx: l1HighlightSignIdx,
-          l2SignIdx: l2HighlightSignIdx,
-          l3SignIdx: l3HighlightSignIdx,
-          l4SignIdx: l4HighlightSignIdx
-        })}
+        <div style="max-width: 480px; margin: 0 auto;">
+          ${gerarMandalaNatalZR(currentCalculatedData, {
+            loteCasa1: selectedZRPhase,
+            l1SignIdx: l1HighlightSignIdx,
+            l2SignIdx: l2HighlightSignIdx,
+            l3SignIdx: l3HighlightSignIdx,
+            l4SignIdx: l4HighlightSignIdx
+          })}
+        </div>
       </div>
   `;
 
