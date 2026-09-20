@@ -158,7 +158,7 @@ const MONOLINE_ZODIAC_SVGS_DIRECOES = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="7" y1="32" x2="57" y2="32"></line>`
 ];
 
-const SIGN_COLORS_DIRECOES = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
+const SIGN_COLORS_DIRECOES = ["var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)", "var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)", "var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)"];
 
 function getSignSVGDir(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
@@ -180,9 +180,13 @@ function formatarDataBRDir(data) {
   return `${d}/${m}/${a}`;
 }
 
+/* Ícones plotados na pauta (marcadores de lote/sizígia/ângulo) — mesmo
+   critério da Tabela Técnica: ficam em cima de fundo que muda com o tema,
+   então usam as mesmas var(--...) já definidas em index.html (funciona
+   porque este SVG é HTML de verdade no DOM, não vira imagem). */
 function getItemSVGDir(key) {
   if (key === 'Syz' || key === 'Sizígia') {
-    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="#000000" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="#000000"/><circle cx="0" cy="0" r="2.3" fill="#000000"/></svg>`;
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="var(--aspect-conjuncao)" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="var(--aspect-conjuncao)"/><circle cx="0" cy="0" r="2.3" fill="var(--aspect-conjuncao)"/></svg>`;
   }
 
   const lotConfig = {
@@ -194,20 +198,20 @@ function getItemSVGDir(key) {
   };
 
   if (key === 'fortune') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="var(--primary-blue)" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="var(--primary-blue)" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="var(--primary-blue)" stroke-width="1.5"/></svg>`;
   }
   if (key === 'spirit') {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" fill="#103b70" text-anchor="middle">Φ</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" fill="var(--primary-blue)" text-anchor="middle">Φ</text></svg>`;
   }
 
   const cfg = lotConfig[key];
   if (cfg) {
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="#103b70" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="#103b70" text-anchor="middle">${cfg.sym}</text></svg>`;
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">${cfg.sym}</text></svg>`;
   }
 
   if (key === 'ASC' || key === 'DSC' || key === 'MC' || key === 'IC') {
-    /* Mesmo círculo preto sobre fundo branco usado para esses pontos na mandala e no Painel Técnico. */
-    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">${key}</text></svg>`;
+    /* Mesmo círculo usado para esses pontos na mandala e no Painel Técnico. */
+    return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--aspect-conjuncao)" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="var(--aspect-conjuncao)" text-anchor="middle">${key}</text></svg>`;
   }
 
   return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
@@ -224,16 +228,16 @@ function getAfetaCursorSVG(key) {
 /* SÍMBOLOS DOS ASPECTOS EM SVG VETORIAL */
 function getAspectSymbolSVGDir(type) {
   switch (type) {
-    case 'conj': 
-      return `<svg width="11" height="11" viewBox="0 0 20 20"><circle cx="8" cy="12" r="5" fill="none" stroke="#000000" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="#000000" stroke-width="2.2" stroke-linecap="round"/></svg>`;
-    case 'sex': 
-      return `<svg width="11" height="11" viewBox="0 0 20 20"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/></svg>`;
-    case 'squ': 
-      return `<svg width="11" height="11" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="none" stroke="#e84118" stroke-width="2.5"/></svg>`;
-    case 'tri': 
-      return `<svg width="11" height="11" viewBox="0 0 20 20"><polygon points="10,2 19,17 1,17" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`;
-    case 'opp': 
-      return `<svg width="13" height="11" viewBox="0 0 24 20"><circle cx="5" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="#881337" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="#881337" stroke-width="2.2"/></svg>`;
+    case 'conj':
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><circle cx="8" cy="12" r="5" fill="none" stroke="var(--aspect-conjuncao)" stroke-width="2.2"/><line x1="12" y1="8" x2="18" y2="2" stroke="var(--aspect-conjuncao)" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    case 'sex':
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><path d="M10 2v16M3 6l14 8M3 14L17 6" stroke="var(--aspect-sextil)" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+    case 'squ':
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="none" stroke="var(--aspect-quadratura)" stroke-width="2.5"/></svg>`;
+    case 'tri':
+      return `<svg width="11" height="11" viewBox="0 0 20 20"><polygon points="10,2 19,17 1,17" fill="none" stroke="var(--aspect-trigono)" stroke-width="2.5"/></svg>`;
+    case 'opp':
+      return `<svg width="13" height="11" viewBox="0 0 24 20"><circle cx="5" cy="10" r="4" fill="none" stroke="var(--aspect-oposicao)" stroke-width="2.2"/><line x1="9" y1="10" x2="15" y2="10" stroke="var(--aspect-oposicao)" stroke-width="2.2"/><circle cx="19" cy="10" r="4" fill="none" stroke="var(--aspect-oposicao)" stroke-width="2.2"/></svg>`;
     default: return '';
   }
 }
@@ -508,7 +512,7 @@ function renderCircumambulaçõesUI() {
     let rowHtml = '';
 
     // Moldura da Pauta
-    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" rx="8" ry="8" fill="#ffffff" stroke="#1e5fa4" stroke-width="1.2"/>`;
+    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" rx="8" ry="8" fill="var(--bg-card)" stroke="var(--table-border)" stroke-width="1.2"/>`;
 
     // Ícone Monoline do Signo
     rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
@@ -522,10 +526,10 @@ function renderCircumambulaçõesUI() {
     const yBaseline   = yOffset + Math.round(55 * k); // Linha Guia Central (Régua de Graus)
 
     // LINHA TRACEJADA DA PISTA SUPERIOR (ASPECTOS)
-    rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="#c59b27" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="var(--gold-primary)" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
 
     // LINHA GUIA CENTRAL (RÉGUA DE GRAUS)
-    rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="#c59b27" stroke-width="1.8"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="var(--gold-primary)" stroke-width="1.8"/>`;
 
     // DENTINHOS VISÍVEIS DE TODOS OS 30 GRAUS
     const tickShort = Math.round(4 * k);
@@ -544,7 +548,7 @@ function renderCircumambulaçõesUI() {
         tickY2 = yBaseline + tickTall;
         strokeW = 1.8;
         opacity = 1.0;
-        rowHtml += `<text x="${xDeg}" y="${yBaseline - tickLabelOffset}" font-size="9" font-weight="700" fill="#94a3b8" text-anchor="middle">${d}°</text>`;
+        rowHtml += `<text x="${xDeg}" y="${yBaseline - tickLabelOffset}" font-size="9" font-weight="700" fill="var(--text-faint)" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
         tickY1 = yBaseline - tickMed;
         tickY2 = yBaseline + tickMed;
@@ -552,7 +556,7 @@ function renderCircumambulaçõesUI() {
         opacity = 0.85;
       }
 
-      rowHtml += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="#c59b27" stroke-width="${strokeW}" opacity="${opacity}"/>`;
+      rowHtml += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="var(--gold-primary)" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
     // BLOCOS DOS 5 TERMOS COMPLETOS
@@ -564,14 +568,14 @@ function renderCircumambulaçõesUI() {
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="#ffffff" stroke="#c59b27" stroke-width="1"/>`;
+      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="var(--bg-card)" stroke="var(--gold-primary)" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
-      rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.termPlanetSym}</text>`;
+      rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="var(--gold-primary)" text-anchor="middle">${term.termPlanetSym}</text>`;
 
       if (term.startYearsOld !== null && term.startDate !== null) {
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="#103b70" text-anchor="start">${term.startYearsOld} anos</text>`;
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="#64748b" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="var(--primary-blue)" text-anchor="start">${term.startYearsOld} anos</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="var(--text-muted)" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
 
@@ -601,11 +605,11 @@ function renderCircumambulaçõesUI() {
       const yShift = currentLevel * rayLevelShift;
       const yTop = yAspectLine - yShift;
 
-      rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="#c59b27" stroke-width="0.8" opacity="0.7"/>`;
+      rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="var(--gold-primary)" stroke-width="0.8" opacity="0.7"/>`;
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="#103b70" text-anchor="middle">${r.yearsOld} anos</text>`;
-      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="#64748b" text-anchor="middle">${r.exactDate}</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--primary-blue)" text-anchor="middle">${r.yearsOld} anos</text>`;
+      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
 
@@ -625,9 +629,9 @@ function renderCircumambulaçõesUI() {
       const natalTop = yOffset + Math.round(10 * k);
       const natalBottom = yOffset + boxHeight - Math.round(6 * k);
 
-      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="#e84118" stroke-width="2"/>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="#e84118" text-anchor="start">0.0 anos</text>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="#e84118" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="var(--element-fogo)" stroke-width="2"/>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--element-fogo)" text-anchor="start">0.0 anos</text>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--element-fogo)" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
@@ -642,7 +646,7 @@ function renderCircumambulaçõesUI() {
         const hojeTop = yOffset + Math.round(10 * k);
         const hojeBottom = yOffset + boxHeight - Math.round(6 * k);
 
-        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="#103b70" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--primary-blue)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
       }
     });
@@ -705,23 +709,23 @@ function renderCircumambulaçõesUI() {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-    <div class="dir-outer" id="circumambulacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+    <div class="dir-outer" id="circumambulacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-        <h3 class="dir-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+        <h3 class="dir-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), 2 linhas à esquerda + seletor do afeta à direita. Mesma caixa/menu com rolagem e ícones (não texto) já usada no seletor de Casa 1 da mandala. -->
-        <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px;">
+        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala, 2 linhas à esquerda + seletor do afeta à direita. Mesma caixa/menu com rolagem e ícones (não texto) já usada no seletor de Casa 1 da mandala. -->
+        <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px;">
           <div>
-            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-            <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+            <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
           </div>
           <div style="position: relative; flex-shrink: 0;">
-            <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Afeta Direcionado">
+            <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: var(--bg-main); color: var(--primary-blue); border: 1px solid var(--gold-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Afeta Direcionado">
               ${iconAtualHTML}
             </button>
-            <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 42px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+            <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 42px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
               ${afetaMenuRowsHTML}
             </div>
           </div>

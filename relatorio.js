@@ -288,7 +288,12 @@ async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
   if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
 
   try {
-    const canvas = await html2canvas(elemento, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    // Fallback só pra eventuais áreas transparentes na captura — o fundo de
+    // verdade de cada ferramenta já vem do próprio elemento (var(--bg-main)
+    // nas que já têm tema escuro); acompanha o modo atual em vez de cravar
+    // sempre o creme do Tema Claro.
+    const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
+    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
     const total = adicionarCapturaRelatorio(toolId, canvas.toDataURL('image/png'));
     alert(`"${rotulo}" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
