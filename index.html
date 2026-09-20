@@ -520,7 +520,7 @@ body {
         }
 
         /* MODAIS PERSONALIZADOS */
-        #modalOverlay, #modalEditOverlay, #modalImportOverlay {
+        #modalOverlay, #modalEditOverlay, #modalImportOverlay, #modalServicoOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.5);
@@ -938,6 +938,37 @@ body {
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="fecharModalImportacaoTexto()">Cancelar</button>
                 <button type="button" class="btn-primary" onclick="processarImportacaoTextoEmMassa()">Importar Todos</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO/EDIÇÃO DE SERVIÇO -->
+    <div id="modalServicoOverlay">
+        <div class="modal-box">
+            <div class="modal-title" id="modalServicoTitulo">Novo Serviço</div>
+            <input type="hidden" id="servicoModalId">
+
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Nome do Serviço</label>
+                <input type="text" id="servicoModalNome" class="modal-input" placeholder="Ex: Mapa Astral Completo">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: 600; color: #64748b;">Descrição (Opcional)</label>
+                <textarea id="servicoModalDescricao" class="modal-textarea" style="height: 90px;" placeholder="Descreva o que está incluso neste serviço..."></textarea>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Valor - R$ (Opcional)</label>
+                    <input type="number" id="servicoModalValor" class="modal-input" placeholder="Ex: 150.00" min="0" step="0.01">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b;">Duração - min (Opcional)</label>
+                    <input type="number" id="servicoModalDuracao" class="modal-input" placeholder="Ex: 60" min="0" step="1">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="fecharModalServico()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="salvarServico()">Salvar Serviço</button>
             </div>
         </div>
     </div>

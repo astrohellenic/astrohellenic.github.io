@@ -567,10 +567,25 @@ async function abrirConfiguracoesCaptacao() {
         Salvar Configurações
       </button>
 
+      <!-- SERVIÇOS OFERECIDOS -->
+      <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e2d9c2;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label style="font-size: 12px; font-weight: 700; color: #103b70;">Serviços Oferecidos</label>
+          <button onclick="abrirModalServico()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;">+ Serviço</button>
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+          Cadastre os serviços que você presta (nome, descrição, valor e duração).
+        </div>
+        <div id="servicosListContainer">
+          <div style="font-size: 11px; color: #64748b; padding: 8px 0;">Carregando serviços...</div>
+        </div>
+      </div>
+
     </div>
   `;
 
   await carregarConfiguracoesCaptacao();
+  await carregarServicos();
 }
 
 /* CARREGA AS CONFIGURAÇÕES DE CAPTAÇÃO DO SUPABASE E EXIBE PREVIEW */
@@ -696,6 +711,166 @@ async function salvarConfiguracoesCaptacao() {
     }
   } catch (e) {
     alert("Erro de conexão ao salvar configurações.");
+  }
+}
+
+/* ==========================================
+   CADASTRO DE SERVIÇOS
+   ========================================== */
+
+let cachedServicos = [];
+
+/* CARREGA OS SERVIÇOS DO ASTRÓLOGO LOGADO E RENDERIZA A LISTA */
+async function carregarServicos() {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabaseClient
+      .from('servicos')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('nome', { ascending: true });
+
+    if (!error && Array.isArray(data)) {
+      cachedServicos = data;
+    } else {
+      cachedServicos = [];
+    }
+  } catch (e) {
+    console.error("Erro ao carregar serviços:", e);
+    cachedServicos = [];
+  }
+  renderServicosList();
+}
+
+/* RENDERIZA A LISTA DE SERVIÇOS CADASTRADOS */
+function renderServicosList() {
+  const container = document.getElementById('servicosListContainer');
+  if (!container) return;
+
+  if (!cachedServicos || cachedServicos.length === 0) {
+    container.innerHTML = `<div style="font-size: 11px; color: #64748b; padding: 8px 0;">Nenhum serviço cadastrado ainda.</div>`;
+    return;
+  }
+
+  container.innerHTML = cachedServicos.map(servico => {
+    const partesDetalhe = [];
+    if (servico.valor !== null && servico.valor !== undefined && servico.valor !== '') {
+      const valorNum = Number(servico.valor);
+      if (!isNaN(valorNum)) partesDetalhe.push(`R$ ${valorNum.toFixed(2).replace('.', ',')}`);
+    }
+    if (servico.duracao_minutos !== null && servico.duracao_minutos !== undefined && servico.duracao_minutos !== '') {
+      partesDetalhe.push(`${servico.duracao_minutos} min`);
+    }
+    const detalhe = partesDetalhe.join(' · ');
+
+    return `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</div>
+          ${detalhe ? `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">${escapeHtml(detalhe)}</div>` : ''}
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
+          <i class="fa-solid fa-pen" onclick="abrirModalServico('${servico.id}')" title="Editar serviço" style="color: #103b70; cursor: pointer;"></i>
+          <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: #dc2626; cursor: pointer;"></i>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ABRE O MODAL DE SERVIÇO (NOVO OU EDIÇÃO, SE PASSAR UM ID) */
+function abrirModalServico(id) {
+  const titulo = document.getElementById('modalServicoTitulo');
+  const campoId = document.getElementById('servicoModalId');
+  const campoNome = document.getElementById('servicoModalNome');
+  const campoDescricao = document.getElementById('servicoModalDescricao');
+  const campoValor = document.getElementById('servicoModalValor');
+  const campoDuracao = document.getElementById('servicoModalDuracao');
+
+  if (id) {
+    const servico = cachedServicos.find(s => String(s.id) === String(id));
+    if (!servico) return;
+    titulo.innerText = "Editar Serviço";
+    campoId.value = servico.id;
+    campoNome.value = servico.nome || '';
+    campoDescricao.value = servico.descricao || '';
+    campoValor.value = (servico.valor !== null && servico.valor !== undefined) ? servico.valor : '';
+    campoDuracao.value = (servico.duracao_minutos !== null && servico.duracao_minutos !== undefined) ? servico.duracao_minutos : '';
+  } else {
+    titulo.innerText = "Novo Serviço";
+    campoId.value = '';
+    campoNome.value = '';
+    campoDescricao.value = '';
+    campoValor.value = '';
+    campoDuracao.value = '';
+  }
+
+  document.getElementById('modalServicoOverlay').style.display = "flex";
+}
+
+/* FECHA O MODAL DE SERVIÇO */
+function fecharModalServico() {
+  document.getElementById('modalServicoOverlay').style.display = "none";
+}
+
+/* SALVA (CRIA OU ATUALIZA) UM SERVIÇO NO SUPABASE */
+async function salvarServico() {
+  const id = document.getElementById('servicoModalId').value.trim();
+  const nome = document.getElementById('servicoModalNome').value.trim();
+  const descricao = document.getElementById('servicoModalDescricao').value.trim();
+  const valorStr = document.getElementById('servicoModalValor').value.trim();
+  const duracaoStr = document.getElementById('servicoModalDuracao').value.trim();
+
+  if (!nome) { alert("Informe o nome do serviço."); return; }
+
+  const valor = valorStr ? parseFloat(valorStr) : null;
+  const duracaoMinutos = duracaoStr ? parseInt(duracaoStr, 10) : null;
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const registro = {
+      user_id: user.id,
+      nome: nome,
+      descricao: descricao || null,
+      valor: valor,
+      duracao_minutos: duracaoMinutos
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await supabaseClient.from('servicos').update(registro).eq('id', id));
+    } else {
+      ({ error } = await supabaseClient.from('servicos').insert([registro]));
+    }
+
+    if (!error) {
+      fecharModalServico();
+      await carregarServicos();
+    } else {
+      alert("Erro ao salvar serviço: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar serviço.");
+  }
+}
+
+/* APAGA UM SERVIÇO (COM CONFIRMAÇÃO) */
+async function apagarServico(id, nome) {
+  if (!confirm(`Tem certeza que deseja apagar o serviço "${nome}"? Essa ação não pode ser desfeita.`)) return;
+
+  try {
+    const { error } = await supabaseClient.from('servicos').delete().eq('id', id);
+    if (!error) {
+      await carregarServicos();
+    } else {
+      alert("Erro ao apagar serviço: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao apagar serviço.");
   }
 }
 
