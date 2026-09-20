@@ -931,6 +931,78 @@ function renderMandala(dadosNovos, onReady) {
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
 
+  /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
+     index.html). Como este SVG vira imagem (Blob -> <img>, ver abaixo),
+     variável CSS (var(--x)) NÃO funciona aqui dentro (confirmado com teste
+     isolado antes de mexer) — teria que existir dentro do próprio SVG. Por
+     isso as cores vêm resolvidas em hexadecimal, no par exato usado em
+     :root/:root.tema-escuro (index.html) quando o papel é o mesmo (fundo
+     creme, dourado, azul-marinho); e em tons novos, pensados só pra esse
+     desenho, quando o papel é diferente (linhas de aspecto, elementos dos
+     signos etc. — ver "tinta" logo abaixo). */
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const corCabecalhoPng = {
+    fundo: modoEscuro ? '#1c1917' : '#fffdf5',
+    borda: modoEscuro ? '#d9ae3f' : '#c59b27',
+    titulo: modoEscuro ? '#8ab4e8' : '#103b70',
+    dataCidade: modoEscuro ? '#c3cad4' : '#475569',
+    zodiaco: modoEscuro ? '#a3aab3' : '#64748b',
+    sect: modoEscuro ? '#f0c869' : '#9a6d18',
+  };
+
+  /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
+     Tema Claro é exatamente a paleta de sempre (nada muda). No Tema
+     Escuro, o fundo do disco também escurece — o que obriga a inverter o
+     "halo": os textos de grau/eixo/casa usam paint-order="stroke fill"
+     com um contorno pra continuar legíveis por cima de linhas/glifos
+     coloridos atrás deles, não por cima do fundo da página. Contorno
+     branco atrás de tinta escura (Tema Claro) vira contorno escuro atrás
+     de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
+     mancha branca em volta de cada número no meio do disco escuro. */
+  const tinta = modoEscuro ? {
+    fundoDisco: '#1c1917',
+    dourado: '#d9ae3f',
+    douradoCasas: '#e8c667',
+    halo: '#1c1917',
+    inkForte: '#e8e6df',
+    inkPlaneta: '#e8e6df',
+    navio: '#8ab4e8',
+    linhaConectora: '#6b7280',
+    aspectoOposicao: '#fb7185',
+    aspectoTrigono: '#60a5fa',
+    aspectoQuadratura: '#ff6b4a',
+    aspectoSextil: '#38bdf8',
+    elementoFogo: '#ff6b4a',
+    elementoTerra: '#c9863f',
+    elementoAr: '#38bdf8',
+    elementoAgua: '#60a5fa',
+    dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
+  } : {
+    fundoDisco: '#ffffff',
+    dourado: '#c59b27',
+    douradoCasas: '#aa820a',
+    halo: '#ffffff',
+    inkForte: '#000000',
+    inkPlaneta: '#0f172a',
+    navio: '#103b70',
+    linhaConectora: '#94a3b8',
+    aspectoOposicao: '#881337',
+    aspectoTrigono: '#1d4ed8',
+    aspectoQuadratura: '#e84118',
+    aspectoSextil: '#0ea5e9',
+    elementoFogo: '#e84118',
+    elementoTerra: '#8b4513',
+    elementoAr: '#0ea5e9',
+    elementoAgua: '#1d4ed8',
+    dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
+  };
+
+  /* Sombra só das siglas ELEMENT_SIGN_COLORS usada NESTA função — não é o
+     mesmo objeto global (const ELEMENT_SIGN_COLORS lá em cima, fora da
+     função), que continua intocado porque liberacao.js também lê ele
+     direto e ainda não faz parte desta etapa. */
+  const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
+
   injetarBotaoRotacaoNaBarraSuperior();
   injetarBotaoRelatorioNaBarraSuperior();
   injetarControleZoomMandala();
@@ -981,7 +1053,7 @@ function renderMandala(dadosNovos, onReady) {
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  const goldColor = "#c59b27";
+  const goldColor = tinta.dourado;
   const pR = 390;
 
   /* UNIFICANDO TODOS OS ITENS DA ÓRBITA EXTERNA (Planetas + Eixos + Nodos + Sizígia + Lotes).
@@ -1007,13 +1079,13 @@ function renderMandala(dadosNovos, onReady) {
 
   /* 3. Adiciona Nodos */
   if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
   }
 
   /* 4. Adiciona Sizígia */
   if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
   }
 
   /* 5. Adiciona os 7 Lotes */
@@ -1055,25 +1127,6 @@ function renderMandala(dadosNovos, onReady) {
      nunca escolheu) — controla só a decoração de céu/espaço sideral. O
      tamanho e o layout do desenho continuam iguais nos dois temas. */
   const temaCeu = (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
-
-  /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
-     index.html). Só afeta o cabeçalho discreto do PNG (cartão creme com
-     nome/data/hora) — o disco da mandala em si (casas, planetas, graus)
-     continua sempre no fundo branco de sempre: a tinta usada nele (azul-
-     marinho, preto) foi desenhada pra fundo claro, e não faz parte desta
-     etapa mudar isso. Como este SVG vira imagem (Blob -> <img>, ver
-     abaixo), variável CSS (var(--x)) NÃO funciona aqui dentro — teria que
-     existir dentro do próprio SVG. Por isso as cores vêm resolvidas em
-     hexadecimal, no par exato usado em :root/:root.tema-escuro (index.html). */
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const corCabecalhoPng = {
-    fundo: modoEscuro ? '#1c1917' : '#fffdf5',
-    borda: modoEscuro ? '#d9ae3f' : '#c59b27',
-    titulo: modoEscuro ? '#8ab4e8' : '#103b70',
-    dataCidade: modoEscuro ? '#c3cad4' : '#475569',
-    zodiaco: modoEscuro ? '#a3aab3' : '#64748b',
-    sect: modoEscuro ? '#f0c869' : '#9a6d18',
-  };
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -1224,7 +1277,7 @@ function renderMandala(dadosNovos, onReady) {
       </radialGradient>` : ''}
     </defs>
 
-    <rect width="${width}" height="${height}" fill="#ffffff"/>
+    <rect width="${width}" height="${height}" fill="${tinta.fundoDisco}"/>
 ${temaCeu ? `
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule
@@ -1261,16 +1314,16 @@ ${temaCeu ? `
   const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
   if (horasInfo) {
     if (horasInfo.dayRulerId && PLANET_3D_SVGS[horasInfo.dayRulerId]) {
-      svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">DIA</text>
+      svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${corCabecalhoPng.titulo}" text-anchor="start">DIA</text>
       <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
-      svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="#103b70" text-anchor="start">HORA</text>
+      svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${corCabecalhoPng.titulo}" text-anchor="start">HORA</text>
       <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
     }
   }
 
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
   const occupiedSigns = new Set();
   PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
@@ -1280,10 +1333,10 @@ ${temaCeu ? `
       let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
       if (diff > 6) diff = 12 - diff;
       let col = null;
-      if (diff === 6) col = "#881337";      // Oposição (Vinho)
-else if (diff === 4) col = "#1d4ed8"; // Trígono (Azul escuro)
-else if (diff === 3) col = "#e84118"; // Quadratura (Vermelho vivo)
-else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
+      if (diff === 6) col = tinta.aspectoOposicao;      // Oposição (Vinho)
+else if (diff === 4) col = tinta.aspectoTrigono; // Trígono (Azul escuro)
+else if (diff === 3) col = tinta.aspectoQuadratura; // Quadratura (Vermelho vivo)
+else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
       if (col) {
         const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
@@ -1299,20 +1352,20 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
 
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
   const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
   const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
   const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
      /* DESENHO DOS 4 EIXOS NA PARTE INTERNA (ENCUSTADOS NO ANEL) */
   const rEixoInterno = R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
 
   const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: "#000000" },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000" },
-    { label: "MC",  deg: mcAbs, color: "#000000" },
-    { label: "IC",  deg: (mcAbs + 180) % 360, color: "#000000" }
+    { label: "ASC", deg: ascAbs, color: tinta.inkForte },
+    { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
+    { label: "MC",  deg: mcAbs, color: tinta.inkForte },
+    { label: "IC",  deg: (mcAbs + 180) % 360, color: tinta.inkForte }
   ];
 
   eixosInternos.forEach(eixo => {
@@ -1320,9 +1373,9 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${eixo.color}" stroke-width="1.8"/>
+      <circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${eixo.color}" stroke-width="1.8"/>
       <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
-      <text x="0" y="18" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+      <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
     </g>`;
   });
 
@@ -1336,7 +1389,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
     const pSym = polarToCart(cx, cy, 166, aMid);
     svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
@@ -1346,7 +1399,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
     for (let d = 0; d < 12; d++) {
       const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
+      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
       const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
       svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
     }
@@ -1359,7 +1412,7 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
       const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
       svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
       const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-      svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="#c59b27" text-anchor="middle">${term.p}</text>`;
+      svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="${goldColor}" text-anchor="middle">${term.p}</text>`;
       prev = term.deg;
     });
   }
@@ -1403,27 +1456,27 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
 
     if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+        <circle cx="0" cy="0" r="12" fill="${tinta.fundoDisco}" stroke="none"/>
         <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
         <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
         <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
       if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
       }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
 
@@ -1441,14 +1494,14 @@ else if (diff === 2) col = "#0ea5e9"; // Sextil (Azul claro)
 
       const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
       const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
       const planetSvgContent = planetIconFragment(item.id);
       let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-        <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+        <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
 
