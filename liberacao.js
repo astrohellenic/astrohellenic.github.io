@@ -97,11 +97,6 @@ function getLotIconSVG(lotKey) {
 
 let wheelInstanceCounterZR = 0;
 
-/* Regente de cada signo (mesma ordem/fonte de SIGNS em profeccao.js) —
-   só usado se algum dia opcoes.profectedSignIdx for passado, para
-   desenhar a coroa sobre o regente do signo profectado do ano. */
-const SIGNS_RULERS_ZR = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
-
 function construirDefsPlanetasZR(sufixo) {
   return `
       <filter id="glyphShadow_${sufixo}" x="-30%" y="-30%" width="160%" height="160%">
@@ -210,18 +205,22 @@ function fragmentoPlaneta3DZR(planetId, sufixo) {
 }
 
 /* Gera a mandala natal completa em SVG — cópia fiel de gerarMandalaSVG
-   (profeccao.js). Aceita as mesmas opções de destaque (profectedSignIdx,
-   highlightAscSignIdx, highlightMesAbertoSignIdx) para poder, num passo
-   futuro, destacar os signos abertos na árvore da Liberação Zodiacal —
-   por ora chamada sem nenhuma delas, só para exibir o mapa natal puro. */
+   (profeccao.js), incluindo os destaques de signo (fatia semitransparente
+   do centro até a borda + faixa sólida na borda externa). Em vez dos
+   destaques de Profecção (ano profectado/ASC da RS/mês aberto), aqui são
+   os 4 níveis da árvore da Liberação Zodiacal que estiverem abertos no
+   momento (L1/L2/L3/L4) — mesmos tons e transparência de profeccao.js
+   pros 3 primeiros (verde, amarelo, azul/índigo), com um 4º tom (grafite)
+   criado no mesmo padrão pro L4, que não existia lá. */
 function gerarMandalaNatalZR(dados, opcoes = {}) {
   if (!dados || !dados.Ascendente) {
     return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
   }
 
-  const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
-  const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
-  const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
+  const l1SignIdx = (opcoes.l1SignIdx !== undefined) ? opcoes.l1SignIdx : null;
+  const l2SignIdx = (opcoes.l2SignIdx !== undefined) ? opcoes.l2SignIdx : null;
+  const l3SignIdx = (opcoes.l3SignIdx !== undefined) ? opcoes.l3SignIdx : null;
+  const l4SignIdx = (opcoes.l4SignIdx !== undefined) ? opcoes.l4SignIdx : null;
   /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
      desenho, no lugar do Ascendente — mesma lógica de rotação de
      alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
@@ -286,7 +285,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     const raio = base + (item.rOffset || 0);
     if (raio > maxRaioItens) maxRaioItens = raio;
   });
-  const R_canvas = Math.max(maxRaioItens + 50, R_OuterLine + 40);
+  const R_canvas = Math.max(maxRaioItens + 50, R_OuterLine + 55);
   const cx = R_canvas, cy = R_canvas;
   const canvasSize = R_canvas * 2;
 
@@ -307,9 +306,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, "rgba(224, 231, 255, 0.6)");
-  svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
-  svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
+  svg += desenharFatiaDestaque(l1SignIdx, "rgba(163, 230, 53, 0.4)");
+  svg += desenharFatiaDestaque(l2SignIdx, "rgba(254, 240, 138, 0.5)");
+  svg += desenharFatiaDestaque(l3SignIdx, "rgba(224, 231, 255, 0.6)");
+  svg += desenharFatiaDestaque(l4SignIdx, "rgba(148, 163, 184, 0.45)");
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -429,9 +429,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
-  svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 14, R_OuterLine + 22);
-  svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+  svg += desenharFaixaDestaque(l1SignIdx, "#65a30d", R_OuterLine + 4, R_OuterLine + 12);
+  svg += desenharFaixaDestaque(l2SignIdx, "#eab308", R_OuterLine + 14, R_OuterLine + 22);
+  svg += desenharFaixaDestaque(l3SignIdx, "#6366f1", R_OuterLine + 24, R_OuterLine + 32);
+  svg += desenharFaixaDestaque(l4SignIdx, "#475569", R_OuterLine + 34, R_OuterLine + 42);
 
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
   if (sunItem) {
@@ -492,21 +493,6 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
           <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
-
-  if (profectedSignIdx !== null && SIGNS_RULERS_ZR[profectedSignIdx]) {
-    const rulerId = SIGNS_RULERS_ZR[profectedSignIdx];
-    const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
-    if (rulerItem) {
-      const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
-      const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
-      svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-          <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
-          <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
-          <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
-          <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
-      </g>`;
-    }
-  }
 
   svg += `</svg>`;
   return svg;
@@ -791,6 +777,49 @@ function renderLiberacaoUI() {
     }
   }
 
+  /* DESCOBRE O SIGNO ABERTO DE CADA NÍVEL (L1/L2/L3/L4), PRA PINTAR A
+     MANDALA NO TOPO COM O MESMO TOM DA LINHA CORRESPONDENTE NA ÁRVORE
+     ABAIXO. Espelha exatamente as mesmas condições (isExpanded/
+     isL2Expanded/isL3Expanded, e "hoje" pro L4) que o loop de
+     renderização mais abaixo usa pra decidir qual linha pintar — precisa
+     ser calculado aqui porque a mandala é desenhada antes da árvore.
+     L4 não tem estado de expansão próprio (as linhas L4 aparecem todas
+     de uma vez, sem acordeão): "ativo" ali significa a única linha cujo
+     intervalo contém o momento atual. */
+  let l1HighlightSignIdx = null;
+  let l2HighlightSignIdx = null;
+  let l3HighlightSignIdx = null;
+  let l4HighlightSignIdx = null;
+  {
+    let detStart = new Date(currentMoment);
+    for (let i = 0; i < 12; i++) {
+      const detSign = (startSignIdx + i) % 12;
+      const detYears = ZR_SIGN_YEARS[detSign];
+      const detEnd = calcularDataFimZR(detStart, detYears);
+
+      if (i === expandedL1Index) {
+        l1HighlightSignIdx = detSign;
+        const detSubL2 = calcularSubperiodosL2(detSign, detStart, detYears);
+        detSubL2.forEach((sub, sIdx) => {
+          if (expandedL2Key === `${i}_${sIdx}`) {
+            l2HighlightSignIdx = sub.signIdx;
+            const detSubL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
+            detSubL3.forEach((subL3, l3Idx) => {
+              if (expandedL3Key === `${i}_${sIdx}_${l3Idx}`) {
+                l3HighlightSignIdx = subL3.signIdx;
+                const detSubL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
+                const l4Ativo = detSubL4.find(subL4 => hoje >= subL4.start && hoje < subL4.end);
+                if (l4Ativo) l4HighlightSignIdx = l4Ativo.signIdx;
+              }
+            });
+          }
+        });
+      }
+
+      detStart = new Date(detEnd);
+    }
+  }
+
   const lotesInfo = [
     { key: "fortune" },
     { key: "spirit" },
@@ -854,7 +883,13 @@ function renderLiberacaoUI() {
 
       <div style="width: 100%; margin: 0 0 20px; background: #fffdf7; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
         <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
-        ${gerarMandalaNatalZR(currentCalculatedData, { loteCasa1: selectedZRPhase })}
+        ${gerarMandalaNatalZR(currentCalculatedData, {
+          loteCasa1: selectedZRPhase,
+          l1SignIdx: l1HighlightSignIdx,
+          l2SignIdx: l2HighlightSignIdx,
+          l3SignIdx: l3HighlightSignIdx,
+          l4SignIdx: l4HighlightSignIdx
+        })}
       </div>
   `;
 
@@ -874,7 +909,7 @@ function renderLiberacaoUI() {
 
     html += `
       <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: #ffffff;">
-        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #1e5fa4' : 'none'};">
+        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? 'rgba(163, 230, 53, 0.4)' : '#ffffff'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #1e5fa4' : 'none'};">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
@@ -919,7 +954,7 @@ function renderLiberacaoUI() {
         }
 
         html += `
-          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid #1e5fa4; background-color: ${isL2Expanded ? '#fefcf2' : bgRow}; cursor: pointer;">
+          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid #1e5fa4; background-color: ${isL2Expanded ? 'rgba(254, 240, 138, 0.5)' : bgRow}; cursor: pointer;">
             <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
             <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses (${sub.days} Dias)</td>
             <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.start)}</td>
@@ -960,7 +995,7 @@ function renderLiberacaoUI() {
             }
 
             html += `
-              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #cbd5e1; background-color: ${isL3Expanded ? '#e0e7ff' : bgRowL3}; cursor: pointer;">
+              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #cbd5e1; background-color: ${isL3Expanded ? 'rgba(224, 231, 255, 0.6)' : bgRowL3}; cursor: pointer;">
                 <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
                 <td style="padding: 6px; font-weight: 600; color: #103b70;">${subL3.days} Dias</td>
                 <td style="padding: 6px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
@@ -988,7 +1023,8 @@ function renderLiberacaoUI() {
               `;
 
               subperiodosL4.forEach((subL4, l4Idx) => {
-                const bgRowL4 = l4Idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const isL4Ativo = (hoje >= subL4.start && hoje < subL4.end);
+                const bgRowL4 = isL4Ativo ? 'rgba(148, 163, 184, 0.45)' : (l4Idx % 2 === 0 ? '#ffffff' : '#f8fafc');
                 const isPeakL4 = angularSignsFromFort.includes(subL4.signIdx);
 
                 let statusL4 = "";
