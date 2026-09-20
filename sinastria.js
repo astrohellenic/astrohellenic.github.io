@@ -856,11 +856,6 @@
 
             cardEsquerdaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 6px;">
-                        <button onclick="sinastriaTrocarMapa()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-                            <i class="fa-solid fa-arrow-right-arrow-left"></i> Trocar Mapa
-                        </button>
-                    </div>
                     <div style="text-align: center; margin-bottom: 8px;">
                         ${sinastriaLinhaInfo(sinastriaSegundoMapa.nome, sinastriaSegundoMapa.codigo, sinastriaSegundoMapa.moment, sinastriaSegundoMapa.geo)}
                     </div>
@@ -899,19 +894,77 @@
             `;
         }
 
+        const mandalasHtml = `
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px;">
+                ${cardEsquerdaHtml}
+                ${cardDireitaHtml}
+            </div>
+        `;
+
+        /* O botão "Trocar Mapa" fica FORA do bloco que vira imagem (ver
+           sinastriaMandalasImgHost logo abaixo) — igual ao botão "Adicionar
+           ao Relatório" da Profecção, que fica num container à parte pra
+           nunca aparecer na própria imagem gerada. */
+        const trocarBtnHtml = sinastriaSegundoMapa ? `
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                <button onclick="sinastriaTrocarMapa()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Trocar Mapa
+                </button>
+            </div>
+        ` : '';
+
+        /* Com os dois mapas escolhidos, as duas mandalas + cabeçalhos ficam
+           dentro de um host com id próprio (sinastriaMandalasImgHost) que,
+           logo depois do render, converterSinastriaMandalasEmImagem() troca
+           por uma <img> de verdade — mesma técnica da Profecção
+           (converterProfeccaoMandalasEmImagem) e da Liberação Zodiacal: uma
+           vez virando <img>, o toque longo do navegador/SO já oferece
+           "Salvar Imagem" sozinho, sem precisar de nenhum botão. O
+           oncontextmenu cobre o caso de desktop (clique direito). Enquanto
+           só um dos dois mapas está escolhido (a busca ainda em tela), não
+           faz sentido nenhum virar imagem — ainda não tem o que salvar. */
+        const blocoMandalasHtml = sinastriaSegundoMapa
+            ? `<div id="sinastriaMandalasImgHost" oncontextmenu="event.preventDefault(); salvarModuloEmPNG('sinastriaMandalasImgHost', 'sinastria'); return false;">${mandalasHtml}</div>`
+            : mandalasHtml;
+
         container.innerHTML = `
             <div style="width: 100%; padding: 20px; background-color: var(--bg-main, #fffdf5); font-family: 'Montserrat', sans-serif;">
                 <div style="text-align: center; margin-bottom: 16px;">
                     <h2 style="font-family: 'Cinzel', serif; color: #103b70; margin: 0; font-size: 18px; text-transform: uppercase;">Sinastria</h2>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px;">
-                    ${cardEsquerdaHtml}
-                    ${cardDireitaHtml}
-                </div>
+                ${trocarBtnHtml}
+                ${blocoMandalasHtml}
             </div>
         `;
 
-        if (!sinastriaSegundoMapa) sinastriaGarantirListaCarregada();
+        if (!sinastriaSegundoMapa) {
+            sinastriaGarantirListaCarregada();
+        } else {
+            converterSinastriaMandalasEmImagem();
+        }
+    }
+
+    /* Converte o bloco das duas mandalas (+ cabeçalhos) numa <img> de
+       verdade logo depois do render — mesma técnica de
+       converterProfeccaoMandalasEmImagem em profeccao.js: via html2canvas,
+       porque o bloco mistura texto HTML normal (os cabeçalhos) com SVG (as
+       mandalas), então não dá pra usar o drawImage direto que mandala.js
+       usa pra SVG isolado. Silenciosa: se falhar (html2canvas não
+       carregou, por exemplo), o cabeçalho e as mandalas em HTML/SVG cru
+       continuam visíveis normalmente — só se perde o toque-longo-pra-salvar
+       nesse caso. */
+    async function converterSinastriaMandalasEmImagem() {
+        if (typeof html2canvas !== 'function') return;
+        const host = document.getElementById('sinastriaMandalasImgHost');
+        if (!host) return;
+
+        try {
+            const canvas = await html2canvas(host, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+            if (!document.getElementById('sinastriaMandalasImgHost')) return; // a tela já mudou (trocou de mapa/módulo) enquanto convertia
+            host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Sinastria — duas mandalas lado a lado" style="width: 100%; height: auto; display: block;">`;
+        } catch (err) {
+            console.error('Erro ao converter as mandalas da Sinastria em imagem:', err);
+        }
     }
 
     /* PONTO DE ENTRADA DO MÓDULO — chamado por abrirModuloTecnica('sinastria') (supabase.js) */
