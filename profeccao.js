@@ -1053,6 +1053,17 @@
              (com o regente de dia/hora da RS colado nela). Cada bloco
              dia/hora fica sempre junto do texto ao qual pertence, inclusive
              quando a tela é estreita e tudo empilha. -->
+        <!-- id próprio (profeccaoMandalasImgHost): depois do render, esse bloco
+             (cabeçalho + as duas mandalas) é convertido numa <img> de verdade
+             via converterProfeccaoMandalasEmImagem() — mesma técnica da
+             Liberação Zodiacal (liberacao.js, converterMandalaLiberacaoEmImagem),
+             que por sua vez segue a ideia da mandala principal (mandala.js): uma
+             vez virando <img>, o toque longo do navegador/SO já oferece "Salvar
+             Imagem" sozinho, sem precisar de nenhum botão. Aqui precisa de
+             html2canvas (não dá pra usar o drawImage direto de mandala.js)
+             porque o bloco mistura texto HTML normal (o cabeçalho) com as duas
+             mandalas em SVG. -->
+        <div id="profeccaoMandalasImgHost">
         <div style="background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
             <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin-bottom: 2px;">${escapeHtmlProf(headerTitle)}</div>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
@@ -1074,6 +1085,7 @@
                 <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
                 ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
             </div>
+        </div>
         </div>
 
         <div style="background: linear-gradient(145deg, #ffffff 0%, #fffdf7 100%); border: 2px solid #c59b27; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
@@ -1113,6 +1125,7 @@
 
         html += `</tbody></table></div></div></div></div></div></div>`;
         container.innerHTML = html;
+        converterProfeccaoMandalasEmImagem();
 
         // Em telas estreitas, em vez de deixar a tabela cortada com rolagem
         // interna, encolhe ela (mantendo a proporção) até caber inteira na
@@ -1178,6 +1191,30 @@
                 scaleBox.style.height = '';
                 outerScroll.style.height = '';
             }
+        }
+    }
+
+    /* Converte o cabeçalho + as duas mandalas (RS e Natal) numa <img> de
+       verdade logo depois do render — mesma técnica de
+       converterMandalaLiberacaoEmImagem em liberacao.js: via html2canvas,
+       porque o bloco mistura texto HTML normal (o cabeçalho) com SVG (as
+       mandalas), então não dá pra usar o drawImage direto que mandala.js usa
+       pra SVG isolado. Uma vez virando <img>, o toque longo do navegador/SO
+       já oferece "Salvar Imagem" sozinho, sem precisar de nenhum botão.
+       Silenciosa: se falhar (html2canvas não carregou, por exemplo), o
+       cabeçalho e as mandalas em HTML/SVG cru continuam visíveis normalmente
+       — só se perde o toque-longo-pra-salvar nesse caso. */
+    async function converterProfeccaoMandalasEmImagem() {
+        if (typeof html2canvas !== 'function') return;
+        const host = document.getElementById('profeccaoMandalasImgHost');
+        if (!host) return;
+
+        try {
+            const canvas = await html2canvas(host, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+            if (!document.getElementById('profeccaoMandalasImgHost')) return; // a tela já mudou (outro ano/módulo) enquanto convertia
+            host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Profecção Anual — Revolução Solar e Mapa Natal" style="width: 100%; height: auto; display: block;">`;
+        } catch (err) {
+            console.error('Erro ao converter o cabeçalho e as mandalas da Profecção em imagem:', err);
         }
     }
 
