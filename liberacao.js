@@ -266,10 +266,20 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
      acaba virando <img> (ver converterMandalaLiberacaoEmImagem logo
      depois do render), então var(--x) não seria enxergado por quem lê o
      canvas depois. ELEMENT_SIGN_COLORS fica sombreado só aqui dentro
-     (a versão global, de mandala.js, continua intocada). */
+     (a versão global, de mandala.js, continua intocada).
+
+     fundoDisco/halo (escuro) usam --bg-card (#262220), NÃO --bg-main
+     (#1c1917) como em mandala.js — diferença de propósito, não descuido:
+     aqui o disco fica dentro de um cartão próprio (#liberacaoMandalaCapture,
+     fundo var(--bg-card)), enquanto na Mandala principal o disco fica
+     direto sobre #main-stage (fundo var(--bg-main)), sem cartão por
+     baixo. No Tema Claro os dois fundos são o mesmo branco (#ffffff),
+     por isso esse descasamento nunca apareceu antes de existir tema
+     escuro — usar --bg-main aqui deixava uma "moldura" mais clara entre
+     a borda dourada do cartão e o quadrado escuro do disco. */
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const tinta = modoEscuro ? {
-    fundoDisco: '#1c1917', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#1c1917',
+    fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
     inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
     aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
     elementoFogo: '#ff6b4a', elementoTerra: '#c9863f', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
