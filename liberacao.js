@@ -97,6 +97,11 @@ function getLotIconSVG(lotKey) {
 
 let wheelInstanceCounterZR = 0;
 
+/* Regente de cada signo (mesma ordem/fonte de SIGNS em profeccao.js) —
+   só usado se algum dia opcoes.profectedSignIdx for passado, para
+   desenhar a coroa sobre o regente do signo profectado do ano. */
+const SIGNS_RULERS_ZR = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
+
 function construirDefsPlanetasZR(sufixo) {
   return `
       <filter id="glyphShadow_${sufixo}" x="-30%" y="-30%" width="160%" height="160%">
@@ -221,6 +226,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const l2SignIdx = (opcoes.l2SignIdx !== undefined) ? opcoes.l2SignIdx : null;
   const l3SignIdx = (opcoes.l3SignIdx !== undefined) ? opcoes.l3SignIdx : null;
   const l4SignIdx = (opcoes.l4SignIdx !== undefined) ? opcoes.l4SignIdx : null;
+  const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
   /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
      desenho, no lugar do Ascendente — mesma lógica de rotação de
      alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
@@ -493,6 +499,21 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
           <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
+
+  if (profectedSignIdx !== null && SIGNS_RULERS_ZR[profectedSignIdx]) {
+    const rulerId = SIGNS_RULERS_ZR[profectedSignIdx];
+    const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
+    if (rulerItem) {
+      const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
+      const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
+      svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
+          <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
+          <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
+          <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
+          <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
+      </g>`;
+    }
+  }
 
   svg += `</svg>`;
   return svg;
