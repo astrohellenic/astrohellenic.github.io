@@ -205,7 +205,23 @@ function abrirConfiguracoesAparencia() {
 
   const temaAtual = window.temaMandala || 'claro';
   const estiloPlanetasAtual = window.estiloPlanetas || 'simples';
+  const ordemBotoesAtual = completarOrdemBotoesTopo(window.ordemBotoesTopo);
   const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? '#103b70' : '#e2d9c2'}; border-radius: 8px; background: #ffffff; cursor: pointer;`;
+  const botaoSetaStyle = (desabilitado) => `width: 28px; height: 28px; border: 1px solid #c59b27; border-radius: 6px; background: ${desabilitado ? '#f1ede0' : '#ffffff'}; color: ${desabilitado ? '#b8b09a' : '#103b70'}; cursor: ${desabilitado ? 'default' : 'pointer'}; display: flex; align-items: center; justify-content: center;`;
+
+  const htmlOrdemBotoes = ordemBotoesAtual.map((chave, idx) => {
+    const primeiro = idx === 0;
+    const ultimo = idx === ordemBotoesAtual.length - 1;
+    return `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin-bottom: 6px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
+        <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(ROTULOS_BOTOES_TOPO[chave] || chave)}</span>
+        <div style="display: flex; gap: 6px;">
+          <button onclick="moverBotaoTopo('${chave}', -1)" ${primeiro ? 'disabled' : ''} title="Mover para cima" style="${botaoSetaStyle(primeiro)}"><i class="fa-solid fa-chevron-up"></i></button>
+          <button onclick="moverBotaoTopo('${chave}', 1)" ${ultimo ? 'disabled' : ''} title="Mover para baixo" style="${botaoSetaStyle(ultimo)}"><i class="fa-solid fa-chevron-down"></i></button>
+        </div>
+      </div>
+    `;
+  }).join('');
 
   sidebar.innerHTML = `
     <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
@@ -268,6 +284,18 @@ function abrirConfiguracoesAparencia() {
         </div>
         ${estiloPlanetasAtual === 'esferico' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
       </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 8px;">
+        <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+          Escolha a ordem dos botões de ferramenta na barra superior. Use as setas ▲▼ pra mover cada um.
+        </div>
+      </div>
+      <div style="margin-bottom: 8px;">
+        ${htmlOrdemBotoes}
+      </div>
+      <button onclick="salvarOrdemBotoesTopo(ORDEM_BOTOES_TOPO_PADRAO)" style="width: 100%; background: #ffffff; color: #103b70; border: 1px solid #c59b27; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+        Restaurar ordem padrão
+      </button>
 
     </div>
   `;
@@ -515,6 +543,100 @@ function reRenderizarModuloAtivo() {
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
   const modulo = window.moduloTecnicoAtivo || 'mandala';
   if (typeof abrirModuloTecnica === 'function') abrirModuloTecnica(modulo);
+}
+
+/* ORDEM DOS BOTÕES DA BARRA SUPERIOR (Configurações > Aparência)
+   As chaves abaixo são as mesmas do atributo data-modulo-key de cada botão
+   dentro de #top-bar .top-bar-controls, em index.html. */
+const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'isopsefia', 'agenda'];
+
+const ROTULOS_BOTOES_TOPO = {
+  relatorio: 'Relatório',
+  tabelaTecnica: 'Tabela Técnica',
+  mandala: 'Natal',
+  direcoes: 'Direções Primárias',
+  liberacao: 'Liberação Zodiacal',
+  decenios: 'Decênios',
+  profeccao: 'Profecção',
+  lotes: 'Calculadora de Lotes',
+  horas: 'Horas Planetárias',
+  isopsefia: 'Isopsefia',
+  agenda: 'Agenda'
+};
+
+/* Completa uma ordem salva com chaves novas que não existiam quando ela foi
+   salva (ex.: um botão adicionado à barra depois), colocando-as no fim, e
+   descarta chaves que não existem mais. */
+function completarOrdemBotoesTopo(ordem) {
+  const base = Array.isArray(ordem) ? ordem.filter(chave => ORDEM_BOTOES_TOPO_PADRAO.includes(chave)) : [];
+  ORDEM_BOTOES_TOPO_PADRAO.forEach(chave => {
+    if (!base.includes(chave)) base.push(chave);
+  });
+  return base;
+}
+
+/* Reordena de verdade os botões dentro de #top-bar .top-bar-controls,
+   movendo os elementos já existentes (appendChild move, não clona — os
+   onclick continuam funcionando normalmente). */
+function aplicarOrdemBotoesTopo(ordem) {
+  const container = document.querySelector('#top-bar .top-bar-controls');
+  if (!container) return;
+  completarOrdemBotoesTopo(ordem).forEach(chave => {
+    const btn = container.querySelector(`[data-modulo-key="${chave}"]`);
+    if (btn) container.appendChild(btn);
+  });
+}
+
+/* CARREGA A ORDEM DOS BOTÕES DA BARRA SUPERIOR DO SUPABASE (chamado logo após o login) */
+async function carregarOrdemBotoesTopo(userId) {
+  let ordem = ORDEM_BOTOES_TOPO_PADRAO;
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('ordem_botoes_topo')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data && Array.isArray(data.ordem_botoes_topo) && data.ordem_botoes_topo.length > 0) {
+      ordem = data.ordem_botoes_topo;
+    }
+  } catch (e) {
+    console.error("Erro ao carregar ordem dos botões da barra superior:", e);
+  }
+  window.ordemBotoesTopo = completarOrdemBotoesTopo(ordem);
+  aplicarOrdemBotoesTopo(window.ordemBotoesTopo);
+}
+
+/* SALVA A ORDEM DOS BOTÕES DA BARRA SUPERIOR ESCOLHIDA E ATUALIZA A TELA NA HORA */
+async function salvarOrdemBotoesTopo(novaOrdem) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, ordem_botoes_topo: novaOrdem }, { onConflict: 'user_id' });
+
+    if (!error) {
+      window.ordemBotoesTopo = novaOrdem;
+      aplicarOrdemBotoesTopo(novaOrdem);
+      abrirConfiguracoesAparencia();
+    } else {
+      alert("Erro ao salvar ordem dos botões: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar ordem dos botões.");
+  }
+}
+
+/* USADO PELAS SETAS ▲▼ DA TELA DE APARÊNCIA: troca a posição de uma chave
+   com a vizinha (direcao: -1 sobe, +1 desce) e salva. */
+function moverBotaoTopo(chave, direcao) {
+  const ordemAtual = completarOrdemBotoesTopo(window.ordemBotoesTopo);
+  const i = ordemAtual.indexOf(chave);
+  const j = i + direcao;
+  if (i === -1 || j < 0 || j >= ordemAtual.length) return;
+  [ordemAtual[i], ordemAtual[j]] = [ordemAtual[j], ordemAtual[i]];
+  salvarOrdemBotoesTopo(ordemAtual);
 }
 
 /* SUB-TELA: CAPTAÇÃO DE CLIENTES COM UPLOAD DIRETO */
