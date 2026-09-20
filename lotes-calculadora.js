@@ -40,9 +40,15 @@ function svgComoImagemLotes(svgInterno, largura, altura, viewBox) {
   return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
 }
 
+/* Vira <img> (ver svgComoImagemLotes), então não enxerga var(--x) do CSS —
+   a cor certa (clara/escura) precisa vir já resolvida em hexadecimal. */
 function getSignSVGLotes(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  const interno = `<g style="color: ${SIGN_COLORS_LOTES[signIndex]};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const cores = modoEscuro
+    ? ["#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa"]
+    : SIGN_COLORS_LOTES;
+  const interno = `<g style="color: ${cores[signIndex]};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
   return svgComoImagemLotes(interno, size, size, '0 0 64 64');
 }
 
@@ -54,18 +60,22 @@ function getPlanet3DSVGLotes(planetId, size = 26) {
   return '';
 }
 
-/* Mesmo círculo preto sobre fundo branco usado para ASC/DSC/MC/IC na mandala e no Painel Técnico. */
+/* Mesmo círculo preto sobre fundo branco usado para ASC/DSC/MC/IC na mandala e no Painel Técnico — cores resolvidas em hex pelo mesmo motivo do comentário acima (vira <img>). */
 function getASCIconSVGLotes(size = 22) {
-  const interno = `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text>`;
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const fundo = modoEscuro ? '#262220' : '#ffffff';
+  const tinta = modoEscuro ? '#e8e6df' : '#000000';
+  const interno = `<circle cx="0" cy="0" r="10" fill="${fundo}" stroke="${tinta}" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="${tinta}" text-anchor="middle">ASC</text>`;
   return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 
 /* Ícone genérico de lote (mesmo padrão de círculo + símbolo usado em liberacao.js/direcoes.js), com uma abreviação curta no lugar de um único glifo planetário quando o lote combina mais de um termo.
-   Cor gravada direto no SVG (#103b70): como <img> não herda currentColor de
-   fora, precisa vir com a cor já dentro — mesma cor usada em todos os
-   lugares que chamam esta função (ver renderLoteCardHTML/renderSeletorLotes). */
+   Cor gravada direto no SVG: como <img> não herda currentColor nem var(--x)
+   de fora, precisa vir com a cor já resolvida em hexadecimal dentro dela —
+   mesma cor usada em todos os lugares que chamam esta função (ver
+   renderLoteCardHTML/renderSeletorLotes). */
 function getLoteAbbrevIconSVG(abbrev, size = 22) {
-  const cor = '#103b70';
+  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
   const len = (abbrev || '').length;
   const fontSize = len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6));
   const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" text-anchor="middle">${abbrev}</text>`;
@@ -73,13 +83,13 @@ function getLoteAbbrevIconSVG(abbrev, size = 22) {
 }
 
 function getLoteFortunaIconSVG(size = 22) {
-  const cor = '#103b70';
+  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
   const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${cor}" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${cor}" stroke-width="1.8"/>`;
   return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 
 function getLoteEspiritoIconSVG(size = 22) {
-  const cor = '#103b70';
+  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
   const interno = `<text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="${cor}" text-anchor="middle">Φ</text>`;
   return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
@@ -356,24 +366,24 @@ function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
     <input type="checkbox" data-lote-relatorio-key="${opts.key}" ${lotesSelecionadosRelatorio.has(opts.key) ? 'checked' : ''} onchange="alternarSelecaoLoteRelatorio('${opts.key}', this.checked)" title="Selecionar para o Relatório" style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;">
   ` : '';
   const removerHTML = opts.onRemover ? `
-    <i class="fa-solid fa-trash" style="color: #dc2626; cursor: pointer; font-size: 11px; margin-left: auto; flex-shrink: 0;" title="Remover este lote salvo" onclick="${opts.onRemover}"></i>
+    <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 11px; margin-left: auto; flex-shrink: 0;" title="Remover este lote salvo" onclick="${opts.onRemover}"></i>
   ` : '';
   return `
-    <div style="border: 1px solid #c59b27; border-radius: 10px; background: #ffffff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+    <div style="border: 1px solid var(--gold-primary); border-radius: 10px; background: var(--bg-card); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         ${checkboxHTML}
-        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #103b70; flex-shrink: 0;">${iconHTML}</div>
-        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 12.5px; color: #103b70; line-height: 1.25; flex: 1;">${escapeHtml(nome)}</div>
+        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); flex-shrink: 0;">${iconHTML}</div>
+        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 12.5px; color: var(--primary-blue); line-height: 1.25; flex: 1;">${escapeHtml(nome)}</div>
         ${removerHTML}
       </div>
-      <div style="display: flex; align-items: center; gap: 8px; background: #fffdf5; border: 1px solid #e5d5a1; border-radius: 8px; padding: 6px 10px;">
+      <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px;">
         ${getSignSVGLotes(signo, 22)}
         <div>
-          <div style="font-size: 12.5px; font-weight: 700; color: #103b70;">${SIGN_NAMES_LOTES[signo]} ${formatDegMin(deg)}</div>
-          <div style="font-size: 10.5px; color: #64748b; font-weight: 600;">Casa ${casa}</div>
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--primary-blue);">${SIGN_NAMES_LOTES[signo]} ${formatDegMin(deg)}</div>
+          <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Casa ${casa}</div>
         </div>
       </div>
-      <div style="font-size: 10px; color: #64748b; font-style: italic; line-height: 1.35;">${escapeHtml(legenda)}</div>
+      <div style="font-size: 10px; color: var(--text-muted); font-style: italic; line-height: 1.35;">${escapeHtml(legenda)}</div>
     </div>
   `;
 }
@@ -381,12 +391,12 @@ function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
 function renderSeletorLotes(menuId, iconHTML, menuRowsHTML, label) {
   return `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-      <span style="font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">${label}</span>
+      <span style="font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">${label}</span>
       <div style="position: relative;">
-        <button type="button" onclick="document.querySelectorAll('.lotesCalcMenu').forEach(m => { if (m.id !== '${menuId}') m.style.display = 'none'; }); const menu = document.getElementById('${menuId}'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 42px; height: 42px; border-radius: 8px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button type="button" onclick="document.querySelectorAll('.lotesCalcMenu').forEach(m => { if (m.id !== '${menuId}') m.style.display = 'none'; }); const menu = document.getElementById('${menuId}'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 42px; height: 42px; border-radius: 8px; background: var(--bg-main); color: var(--primary-blue); border: 1px solid var(--gold-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;">
           ${iconHTML}
         </button>
-        <div id="${menuId}" class="lotesCalcMenu" style="display: none; position: absolute; top: 46px; left: 50%; transform: translateX(-50%); background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 44px; max-height: 240px; overflow-y: auto; box-sizing: border-box;">
+        <div id="${menuId}" class="lotesCalcMenu" style="display: none; position: absolute; top: 46px; left: 50%; transform: translateX(-50%); background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 44px; max-height: 240px; overflow-y: auto; box-sizing: border-box;">
           ${menuRowsHTML}
         </div>
       </div>
@@ -442,12 +452,12 @@ function renderToggleSeitaLotes(isDayAuto) {
     { val: 'false', label: 'Noite', icon: '☽', ativo: lotesCalcManualSect === false }
   ];
   const buttons = opts.map(o => {
-    return `<button type="button" onclick="alternarLotesSeitaManual(${o.val})" style="padding: 0 10px; height: 42px; font-size: 10.5px; font-weight: 700; border: 1px solid #c59b27; border-left: none; background: ${o.ativo ? '#103b70' : '#fffdf5'}; color: ${o.ativo ? '#ffffff' : '#103b70'}; cursor: pointer;">${o.icon} ${o.label}</button>`;
+    return `<button type="button" onclick="alternarLotesSeitaManual(${o.val})" style="padding: 0 10px; height: 42px; font-size: 10.5px; font-weight: 700; border: 1px solid var(--gold-primary); border-left: none; background: ${o.ativo ? '#103b70' : 'var(--bg-main)'}; color: ${o.ativo ? '#ffffff' : 'var(--primary-blue)'}; cursor: pointer;">${o.icon} ${o.label}</button>`;
   }).join('');
   return `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-      <span style="font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">Seita</span>
-      <div style="display: flex; border-radius: 8px; overflow: hidden; border-left: 1px solid #c59b27;">${buttons}</div>
+      <span style="font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Seita</span>
+      <div style="display: flex; border-radius: 8px; overflow: hidden; border-left: 1px solid var(--gold-primary);">${buttons}</div>
     </div>
   `;
 }
@@ -457,7 +467,7 @@ function iniciarModuloLotes() {
   if (!container) return;
 
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
-    container.innerHTML = `<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Calculadora de Lotes.</div>`;
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Calculadora de Lotes.</div>`;
     return;
   }
 
@@ -487,16 +497,16 @@ function renderLotesUI() {
   const minH = String(currentMoment.getMinutes()).padStart(2, '0');
 
   let html = `
-    <div class="lotes-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+    <div class="lotes-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <h3 class="lotes-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+      <h3 class="lotes-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
         Calculadora de Lotes
       </h3>
 
-      <div class="lotes-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; background: #fffdf5; border: 2px solid #c59b27; border-radius: 10px; padding: 10px 16px; flex-wrap: wrap;">
+      <div class="lotes-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; flex-wrap: wrap;">
         <div>
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)} • <strong style="color: #b45309;">${isDayAuto ? 'Natividade Diurna' : 'Natividade Noturna'}</strong></div>
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)} • <strong style="color: var(--badge-text);">${isDayAuto ? 'Natividade Diurna' : 'Natividade Noturna'}</strong></div>
         </div>
         <button type="button" onclick="capturarLotesSelecionadosParaRelatorio()" title="Adiciona os lotes marcados (caixinha em cada quadrinho) como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif; flex-shrink: 0;">
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
@@ -505,8 +515,8 @@ function renderLotesUI() {
 
       <!-- PARTE 1: LOTES PRÉ-CALCULADOS -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px;">Parte 1 — Lotes Pré-Calculados</span>
-        <div style="flex: 1; height: 1px; background: #c59b27; opacity: 0.5;"></div>
+        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px;">Parte 1 — Lotes Pré-Calculados</span>
+        <div style="flex: 1; height: 1px; background: var(--gold-primary); opacity: 0.5;"></div>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
@@ -516,8 +526,8 @@ function renderLotesUI() {
       ${lotesCustomSalvos.length ? `
       <!-- LOTES SALVOS DA CALCULADORA LIVRE -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px;">Lotes Salvos (Calculadora Livre)</span>
-        <div style="flex: 1; height: 1px; background: #c59b27; opacity: 0.5;"></div>
+        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px;">Lotes Salvos (Calculadora Livre)</span>
+        <div style="flex: 1; height: 1px; background: var(--gold-primary); opacity: 0.5;"></div>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
@@ -549,7 +559,7 @@ function renderLotesUI() {
   ];
 
   const startMenuRows = startPointOptions.map(o =>
-    `<div onclick="alternarLotesStartPoint('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: #103b70;">${getPontoIconHTMLLotes(o.key, lotesPart1, 22)}</div>`
+    `<div onclick="alternarLotesStartPoint('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--primary-blue);">${getPontoIconHTMLLotes(o.key, lotesPart1, 22)}</div>`
   ).join('');
   const planetAMenuRows = planetOptions.map(o =>
     `<div onclick="alternarLotesPlanetA('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVGLotes(o.key, 22)}</div>`
@@ -567,16 +577,16 @@ function renderLotesUI() {
   html += `
       <!-- PARTE 2: CALCULADORA LIVRE -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px;">Parte 2 — Calculadora Livre</span>
-        <div style="flex: 1; height: 1px; background: #c59b27; opacity: 0.5;"></div>
+        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px;">Parte 2 — Calculadora Livre</span>
+        <div style="flex: 1; height: 1px; background: var(--gold-primary); opacity: 0.5;"></div>
       </div>
 
-      <div style="background: #ffffff; border: 1px solid #c59b27; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 16px;">
         <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 22px;">
           ${renderSeletorLotes('lotesStartMenu', startIconHTML, startMenuRows, 'Ponto de Partida')}
-          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: #c59b27; margin-top: 20px;">+</div>
+          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: var(--gold-primary); margin-top: 20px;">+</div>
           ${renderSeletorLotes('lotesPlanetAMenu', planetAIconHTML, planetAMenuRows, 'Planeta A')}
-          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: #c59b27; margin-top: 20px;">−</div>
+          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: var(--gold-primary); margin-top: 20px;">−</div>
           ${renderSeletorLotes('lotesPlanetBMenu', planetBIconHTML, planetBMenuRows, 'Planeta B')}
           ${renderToggleSeitaLotes(isDayAuto)}
         </div>
@@ -624,9 +634,9 @@ async function capturarLotesSelecionadosParaRelatorio() {
   }
 
   const temp = document.createElement('div');
-  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
+  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: var(--bg-main); font-family: "Montserrat", sans-serif;';
   temp.innerHTML = `
-    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin-top: 0; margin-bottom: 14px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Lotes Selecionados</h3>
+    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 14px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Lotes Selecionados</h3>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
       ${selecionados.map(l => renderLoteCardHTML(l.iconHTML, l.nome, l.deg, p.asc, l.legenda)).join('')}
     </div>
@@ -634,7 +644,11 @@ async function capturarLotesSelecionadosParaRelatorio() {
   document.body.appendChild(temp);
 
   try {
-    const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    // Fallback só pra eventuais áreas transparentes — acompanha o modo
+    // atual em vez de cravar sempre o creme do Tema Claro (mesmo padrão
+    // de capturarTelaParaRelatorio em relatorio.js).
+    const modoEscuroCapturaLotes = document.documentElement.classList.contains('tema-escuro');
+    const canvas = await html2canvas(temp, { backgroundColor: modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`${selecionados.length} lote(s) adicionado(s) ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
