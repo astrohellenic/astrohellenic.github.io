@@ -351,7 +351,7 @@ function iniciarModuloHoras(containerIdAlvo) {
   const nextSunrise = sunNextAstro ? sunNextAstro.sunrise : null;
 
   if (!sunrise || !sunset || !nextSunrise) {
-    container.innerHTML = `<p style="color: #dc2626; text-align: center;">Erro ao calcular o horário solar.</p>`;
+    container.innerHTML = `<p style="color: var(--danger); text-align: center;">Erro ao calcular o horário solar.</p>`;
     return;
   }
 
@@ -411,7 +411,7 @@ function iniciarModuloHoras(containerIdAlvo) {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-    <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif; text-align: center; box-sizing: border-box;">
+    <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif; text-align: center; box-sizing: border-box;">
     <style>
       #horas-container, #horas-container * { box-sizing: border-box; }
       #horas-container .horas-card {
@@ -419,13 +419,13 @@ function iniciarModuloHoras(containerIdAlvo) {
         max-width: 480px;
         margin: 0 auto;
         text-align: left;
-        background: #fffdf5;
+        background: var(--bg-main);
         border-radius: 12px;
         padding: 16px;
       }
       #horas-container .horas-card-inner {
-        background: #ffffff;
-        border: 2px solid #c59b27;
+        background: var(--bg-card);
+        border: 2px solid var(--gold-primary);
         border-radius: 10px;
         padding: 20px;
         font-family: 'Montserrat', sans-serif;
@@ -448,7 +448,7 @@ function iniciarModuloHoras(containerIdAlvo) {
         align-items: center;
         justify-content: center;
         background: var(--bg-main);
-        border: 2px solid #1e5fa4;
+        border: 2px solid var(--table-border);
         border-radius: 10px;
         padding: 20px;
       }
@@ -557,11 +557,11 @@ function iniciarModuloHoras(containerIdAlvo) {
         <div class="horas-atual-box">
           <div class="horas-atual-linha">
             <div style="text-align: center;">
-              <div style="font-size: 13px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Dia</div>
+              <div style="font-size: 13px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Dia</div>
               ${getPlanet3DSVG(firstPlanetId, 100)}
             </div>
             <div style="text-align: center;">
-              <div style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Hora</div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Hora</div>
               ${getPlanet3DSVG(horaAtual.planet.id, 48)}
             </div>
           </div>
@@ -577,7 +577,7 @@ function iniciarModuloHoras(containerIdAlvo) {
     <div class="horas-table-scroll">
     <table>
       <thead>
-        <tr style="border-bottom: 2px solid #c59b27; text-align: left; color: var(--text-dark);">
+        <tr style="border-bottom: 2px solid var(--gold-primary); text-align: left; color: var(--text-dark);">
           <th></th>
           <th>Período</th>
           <th>Regente</th>
@@ -591,7 +591,7 @@ function iniciarModuloHoras(containerIdAlvo) {
   hoursSchedule.forEach(item => {
     const bgRow = item.isCurrent ? "background-color: var(--bg-main); font-weight: 700;" : "";
     html += `
-      <tr style="border-bottom: 1px solid #103B70; ${bgRow}">
+      <tr style="border-bottom: 1px solid var(--primary-blue); ${bgRow}">
         <td>${item.index}ª</td>
         <td>${item.period === 'diurna' ? '☀️' : '🌙'}</td>
         <td data-col="regente">
