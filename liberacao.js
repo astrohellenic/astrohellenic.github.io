@@ -249,6 +249,13 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
 
+  /* Signos de PICO (casas 1, 4, 7 e 10 a partir do signo da Fortuna) —
+     mesma lógica/fonte de angularSignsFromFort em renderLiberacaoUI,
+     sempre a partir da Fortuna, nunca do lote escolhido pra Casa 1 do
+     desenho (loteCasa1) nem do lote ativo na árvore (selectedZRPhase). */
+  const fortSignIdxZR = Math.floor(lotes.find(l => l.key === "fortune").deg / 30);
+  const picoSignsZR = [fortSignIdxZR, (fortSignIdxZR + 3) % 12, (fortSignIdxZR + 6) % 12, (fortSignIdxZR + 9) % 12];
+
   let house1RefAbs = ascAbs;
   if (loteCasa1) {
     const targetLot = lotes.find(l => l.key === loteCasa1);
@@ -438,6 +445,21 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   svg += desenharFaixaDestaque(l3SignIdx, "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
   svg += desenharFaixaDestaque(l2SignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
   svg += desenharFaixaDestaque(l1SignIdx, "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
+
+  /* RÓTULOS DE PICO — mesmos signos (casas 1, 4, 7 e 10 a partir da
+     Fortuna) já marcados com o badge "PICO" na tabela da Liberação,
+     em qualquer lote. Ficam na mesma faixa de raio das barrinhas
+     coloridas dos níveis, desenhados por cima delas — igual aos
+     planetas, que também vêm por cima das camadas anteriores. */
+  const rPicoZR = R_OuterLine + 23;
+  picoSignsZR.forEach(signIdx => {
+    const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+    const pPico = polarToCart(cx, cy, rPicoZR, aScreenPico);
+    svg += `<g transform="translate(${pPico.x}, ${pPico.y})">
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="#b45309" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
+    </g>`;
+  });
 
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
   if (sunItem) {
