@@ -159,15 +159,19 @@ function renderAgendaSetup(container, ctx) {
     : '<option value="">Nenhum serviço cadastrado ainda</option>';
 
   const listaAgendamentosHTML = agendamentos.length
-    ? agendamentos.map(a => `
+    ? agendamentos.map(a => {
+        const servicoDataHora = `${escapeHtml(a.servico_nome || 'Serviço')} — ${agendaFormatarDataBR(a.data)} às ${a.hora_inicio.slice(0, 5)}`;
+        const rotuloCancelar = escapeHtml((a.cliente_nome || 'Cliente') + ' — ' + (a.servico_nome || 'Serviço') + ' — ' + agendaFormatarDataBR(a.data) + ' ' + a.hora_inicio.slice(0, 5)).replace(/'/g, "\\'");
+        return `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
         <div style="min-width: 0;">
-          <div style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(a.cliente_nome || 'Cliente')} — ${escapeHtml(a.servico_nome || 'Serviço')}</div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${agendaFormatarDataBR(a.data)} às ${a.hora_inicio.slice(0, 5)}</div>
+          <div style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(a.cliente_nome || 'Cliente')}</div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${servicoDataHora}</div>
         </div>
-        <i class="fa-solid fa-trash" onclick="apagarAgendamento('${a.id}', '${escapeHtml((a.cliente_nome || 'Cliente') + ' — ' + agendaFormatarDataBR(a.data) + ' ' + a.hora_inicio.slice(0, 5)).replace(/'/g, "\\'")}')" title="Cancelar agendamento" style="color: #dc2626; cursor: pointer; margin-left: 8px; flex-shrink: 0;"></i>
+        <i class="fa-solid fa-trash" onclick="apagarAgendamento('${a.id}', '${rotuloCancelar}')" title="Cancelar agendamento" style="color: #dc2626; cursor: pointer; margin-left: 8px; flex-shrink: 0;"></i>
       </div>
-    `).join('')
+    `;
+      }).join('')
     : `<div style="font-size: 11px; color: #64748b; padding: 8px 0;">Nenhum agendamento futuro ainda.</div>`;
 
   container.innerHTML = `
