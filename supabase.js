@@ -74,26 +74,26 @@ function renderMenuPrincipal() {
   let htmlPastas = '';
   pastasOrdenadas.forEach(pasta => {
     htmlPastas += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
         <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="abrirConteudoPasta('${pasta}')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(pasta)}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta" style="color: #103b70; cursor: pointer;"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta" style="color: #dc2626; cursor: pointer;"></i>
+          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta" style="color: var(--primary-blue); cursor: pointer;"></i>
+          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta" style="color: var(--danger); cursor: pointer;"></i>
         </div>
       </div>
     `;
   });
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <h1 class="sidebar-title" style="color: #103b70; font-family: 'Cinzel', serif; font-weight: 800;">Astro Hellenic</h1>
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <h1 class="sidebar-title" style="color: var(--primary-blue); font-family: 'Cinzel', serif; font-weight: 800;">Astro Hellenic</h1>
     </div>
-    <div style="flex: 1; overflow-y: auto; background: #fffdf5;">
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
-        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
+    <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar);">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
+        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); cursor: pointer;">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="26" cy="16" r="9"/>
             <path d="M10,54 C10,38 17,32 26,32 C35,32 42,38 42,54"/>
@@ -101,7 +101,7 @@ function renderMenuPrincipal() {
             <line x1="42" y1="38" x2="58" y2="38"/>
           </svg>
         </button>
-        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
+        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); cursor: pointer;">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10,38 V54 A4,4 0 0 0 14,58 H50 A4,4 0 0 0 54,54 V38"/>
             <polyline points="10,38 24,38 28,46 36,46 40,38 54,38"/>
@@ -109,7 +109,7 @@ function renderMenuPrincipal() {
             <polyline points="20,24 32,36 44,24"/>
           </svg>
         </button>
-        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #c59b27; cursor: pointer;">
+        <button onclick="abrirNavegacaoConfiguracoes()" title="Configurações" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); cursor: pointer;">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="32" cy="32" r="16"/>
             <circle cx="32" cy="32" r="6"/>
@@ -125,9 +125,9 @@ function renderMenuPrincipal() {
         </button>
       </div>
 
-      <div style="padding: 8px 16px; border-top: 1px solid #e2d9c2; background: #fffdf5; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 11px; font-weight: 700; color: #103b70; text-transform: uppercase;">Pastas</span>
-        <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-weight: 700; cursor: pointer;">+ Pasta</button>
+      <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); background: var(--bg-sidebar); display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Pastas</span>
+        <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 4px 8px; font-weight: 700; cursor: pointer;">+ Pasta</button>
       </div>
       ${htmlPastas}
     </div>
@@ -140,58 +140,58 @@ function abrirNavegacaoConfiguracoes() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar ao menu" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i> Voltar
       </button>
-      <span style="font-size: 12px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">CONFIGURAÇÕES</span>
+      <span style="font-size: 12px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">CONFIGURAÇÕES</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; background: #fffdf5; padding: 8px 0;">
+    <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar); padding: 8px 0;">
       
       <!-- OPÇÃO: CAPTAÇÃO DE CLIENTES -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesCaptacao()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesCaptacao()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M2,9 L9,9 L16,3 V21 L9,15 L2,15 Z"/><path d="M3,15 V19 H6 V15"/><path d="M19,8 Q22.5,12 19,16"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Captação de Clientes</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M2,9 L9,9 L16,3 V21 L9,15 L2,15 Z"/><path d="M3,15 V19 H6 V15"/><path d="M19,8 Q22.5,12 19,16"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">Captação de Clientes</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
       </div>
 
       <!-- OPÇÃO: SEGURANÇA E CONTA -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesSeguranca()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesSeguranca()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M12,2 L4,5 V11 C4,16 8,19.5 12,21 C16,19.5 20,16 20,11 V5 Z"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Segurança e Conta</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M12,2 L4,5 V11 C4,16 8,19.5 12,21 C16,19.5 20,16 20,11 V5 Z"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">Segurança e Conta</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
       </div>
 
       <!-- OPÇÃO: APARÊNCIA -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAparencia()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAparencia()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M12,3 C6.5,3 2,7 2,12 C2,16 5,19 8.5,19 C10,19 10.3,17.7 9.6,16.8 C8.8,15.8 9.5,14.3 11,14.3 H14.5 C18.6,14.3 22,11.4 22,8.5 C22,5.4 17.5,3 12,3 Z"/><circle cx="7" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1.3" fill="currentColor" stroke="none"/><circle cx="17" cy="9" r="1.3" fill="currentColor" stroke="none"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Aparência</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M12,3 C6.5,3 2,7 2,12 C2,16 5,19 8.5,19 C10,19 10.3,17.7 9.6,16.8 C8.8,15.8 9.5,14.3 11,14.3 H14.5 C18.6,14.3 22,11.4 22,8.5 C22,5.4 17.5,3 12,3 Z"/><circle cx="7" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1.3" fill="currentColor" stroke="none"/><circle cx="17" cy="9" r="1.3" fill="currentColor" stroke="none"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">Aparência</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
       </div>
 
       <!-- OPÇÃO: RELATÓRIOS -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesRelatorio()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesRelatorio()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M14,4 H40 L50,14 V60 H14 Z" stroke-linejoin="round"/><path d="M40,4 V14 H50" stroke-linejoin="round"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Relatórios</span>
+          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M14,4 H40 L50,14 V60 H14 Z" stroke-linejoin="round"/><path d="M40,4 V14 H50" stroke-linejoin="round"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">Relatórios</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
       </div>
 
       <!-- OPÇÃO: AGENDA -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAgenda()">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConfiguracoesAgenda()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><rect x="8" y="12" width="48" height="44" rx="4"/><line x1="8" y1="24" x2="56" y2="24"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">Agenda</span>
+          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><rect x="8" y="12" width="48" height="44" rx="4"/><line x1="8" y1="24" x2="56" y2="24"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">Agenda</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
       </div>
 
     </div>
@@ -205,16 +205,18 @@ function abrirConfiguracoesAparencia() {
 
   const temaAtual = window.temaMandala || 'claro';
   const estiloPlanetasAtual = window.estiloPlanetas || 'simples';
+  let modoCorAtual = 'auto';
+  try { modoCorAtual = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
   const ordemBotoesAtual = completarOrdemBotoesTopo(window.ordemBotoesTopo);
-  const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? '#103b70' : '#e2d9c2'}; border-radius: 8px; background: #ffffff; cursor: pointer;`;
-  const botaoSetaStyle = (desabilitado) => `width: 28px; height: 28px; border: 1px solid #c59b27; border-radius: 6px; background: ${desabilitado ? '#f1ede0' : '#ffffff'}; color: ${desabilitado ? '#b8b09a' : '#103b70'}; cursor: ${desabilitado ? 'default' : 'pointer'}; display: flex; align-items: center; justify-content: center;`;
+  const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? 'var(--primary-blue)' : 'var(--border-color)'}; border-radius: 8px; background: var(--bg-card); cursor: pointer;`;
+  const botaoSetaStyle = (desabilitado) => `width: 28px; height: 28px; border: 1px solid var(--gold-primary); border-radius: 6px; background: ${desabilitado ? 'var(--bg-disabled)' : 'var(--bg-card)'}; color: ${desabilitado ? 'var(--text-disabled)' : 'var(--primary-blue)'}; cursor: ${desabilitado ? 'default' : 'pointer'}; display: flex; align-items: center; justify-content: center;`;
 
   const htmlOrdemBotoes = ordemBotoesAtual.map((chave, idx) => {
     const primeiro = idx === 0;
     const ultimo = idx === ordemBotoesAtual.length - 1;
     return `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin-bottom: 6px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
-        <span style="font-size: 12px; font-weight: 600; color: #103b70;">${escapeHtml(ROTULOS_BOTOES_TOPO[chave] || chave)}</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin-bottom: 6px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
+        <span style="font-size: 12px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(ROTULOS_BOTOES_TOPO[chave] || chave)}</span>
         <div style="display: flex; gap: 6px;">
           <button onclick="moverBotaoTopo('${chave}', -1)" ${primeiro ? 'disabled' : ''} title="Mover para cima" style="${botaoSetaStyle(primeiro)}"><i class="fa-solid fa-chevron-up"></i></button>
           <button onclick="moverBotaoTopo('${chave}', 1)" ${ultimo ? 'disabled' : ''} title="Mover para baixo" style="${botaoSetaStyle(ultimo)}"><i class="fa-solid fa-chevron-down"></i></button>
@@ -224,76 +226,116 @@ function abrirConfiguracoesAparencia() {
   }).join('');
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">APARÊNCIA</span>
+      <span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">APARÊNCIA</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-sidebar);">
 
-      <div style="font-size: 11px; color: #64748b; margin-bottom: 16px; line-height: 1.4;">
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+        Escolha entre tela clara e escura. É uma preferência <strong>deste navegador/aparelho</strong> —
+        não fica salva na sua conta, porque cada aparelho pode ter uma preferência diferente.
+        Ainda só o menu lateral (este que você está vendo agora) muda de verdade; as demais telas
+        seguem sendo ajustadas aos poucos.
+      </div>
+
+      <div onclick="salvarModoCor('claro')" style="${opcaoStyle(modoCorAtual === 'claro')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-sun" style="color: var(--gold-primary);"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Claro</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Sempre com fundo claro, não importa o aparelho</div>
+          </div>
+        </div>
+        ${modoCorAtual === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+      </div>
+
+      <div onclick="salvarModoCor('escuro')" style="${opcaoStyle(modoCorAtual === 'escuro')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-moon" style="color: var(--gold-primary);"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Escuro</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Sempre com fundo escuro, não importa o aparelho</div>
+          </div>
+        </div>
+        ${modoCorAtual === 'escuro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+      </div>
+
+      <div onclick="salvarModoCor('auto')" style="${opcaoStyle(modoCorAtual === 'auto')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-circle-half-stroke" style="color: var(--gold-primary);"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Automático</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Acompanha o tema claro/escuro configurado neste aparelho</div>
+          </div>
+        </div>
+        ${modoCorAtual === 'auto' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-muted); margin: 20px 0 16px; line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 16px;">
         Escolha como a mandala é exibida. Essa preferência fica salva na sua conta.
       </div>
 
       <div onclick="salvarTemaMandala('claro')" style="${opcaoStyle(temaAtual === 'claro')}">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-sun" style="color: #c59b27;"></i>
+          <i class="fa-solid fa-sun" style="color: var(--gold-primary);"></i>
           <div>
-            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Tema Claro</div>
-            <div style="font-size: 11px; color: #64748b;">Fundo branco, sem céu nem espaço sideral</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Tema Claro</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Fundo branco, sem céu nem espaço sideral</div>
           </div>
         </div>
-        ${temaAtual === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+        ${temaAtual === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
       <div onclick="salvarTemaMandala('ceu')" style="${opcaoStyle(temaAtual === 'ceu')}">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-star" style="color: #c59b27;"></i>
+          <i class="fa-solid fa-star" style="color: var(--gold-primary);"></i>
           <div>
-            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Tema Céu</div>
-            <div style="font-size: 11px; color: #64748b;">Céu diurno/noturno e espaço sideral ao redor da mandala</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Tema Céu</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Céu diurno/noturno e espaço sideral ao redor da mandala</div>
           </div>
         </div>
-        ${temaAtual === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+        ${temaAtual === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
-      <div style="font-size: 11px; color: #64748b; margin: 20px 0 16px; line-height: 1.4;">
+      <div style="font-size: 11px; color: var(--text-muted); margin: 20px 0 16px; line-height: 1.4;">
         Escolha como os 7 planetas clássicos aparecem em toda a ferramenta (mandala, horas planetárias, tabela técnica, decênios, profecção e direções).
       </div>
 
       <div onclick="salvarEstiloPlanetas('simples')" style="${opcaoStyle(estiloPlanetasAtual === 'simples')}">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 20px; color: #c59b27; width: 20px; text-align: center;">☉</span>
+          <span style="font-size: 20px; color: var(--gold-primary); width: 20px; text-align: center;">☉</span>
           <div>
-            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Planetas Ícones Simples</div>
-            <div style="font-size: 11px; color: #64748b;">Glifos planetários, iguais aos usados nos termos egípcios</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Planetas Ícones Simples</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Glifos planetários, iguais aos usados nos termos egípcios</div>
           </div>
         </div>
-        ${estiloPlanetasAtual === 'simples' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+        ${estiloPlanetasAtual === 'simples' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
       <div onclick="salvarEstiloPlanetas('esferico')" style="${opcaoStyle(estiloPlanetasAtual === 'esferico')}">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-circle-dot" style="color: #c59b27;"></i>
+          <i class="fa-solid fa-circle-dot" style="color: var(--gold-primary);"></i>
           <div>
-            <div style="font-size: 13px; font-weight: 700; color: #103b70;">Planetas Ícones Esféricos</div>
-            <div style="font-size: 11px; color: #64748b;">Ilustrações 3D com gradiente para cada planeta</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Planetas Ícones Esféricos</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Ilustrações 3D com gradiente para cada planeta</div>
           </div>
         </div>
-        ${estiloPlanetasAtual === 'esferico' ? '<i class="fa-solid fa-circle-check" style="color:#103b70;"></i>' : ''}
+        ${estiloPlanetasAtual === 'esferico' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
       <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 8px;">
-        <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
           Escolha a ordem dos botões de ferramenta na barra superior. Use as setas ▲▼ pra mover cada um.
         </div>
       </div>
       <div style="margin-bottom: 8px;">
         ${htmlOrdemBotoes}
       </div>
-      <button onclick="salvarOrdemBotoesTopo(ORDEM_BOTOES_TOPO_PADRAO)" style="width: 100%; background: #ffffff; color: #103b70; border: 1px solid #c59b27; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+      <button onclick="salvarOrdemBotoesTopo(ORDEM_BOTOES_TOPO_PADRAO)" style="width: 100%; background: var(--bg-card); color: var(--primary-blue); border: 1px solid var(--gold-primary); padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
         Restaurar ordem padrão
       </button>
 
@@ -307,43 +349,43 @@ async function abrirConfiguracoesRelatorio() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">RELATÓRIOS</span>
+      <span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">RELATÓRIOS</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-sidebar);">
 
-      <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em;">Seu Perfil nos Relatórios</div>
-      <div style="font-size: 11px; color: #64748b; margin-bottom: 14px; line-height: 1.4;">
+      <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em;">Seu Perfil nos Relatórios</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
         Logo e dados de contato que aparecem nos relatórios gerados — podem ser diferentes do logo usado na Captação de Clientes.
       </div>
 
       <div id="relCfgLogoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
-        <img id="relCfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #c59b27; border-radius: 8px; padding: 4px; background: #ffffff;">
+        <img id="relCfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px; background: var(--bg-card);">
       </div>
       <input type="file" id="relCfgLogoFile" accept="image/*" onchange="fazerUploadLogoRelatorio(this)" style="display: none;">
-      <button onclick="document.getElementById('relCfgLogoFile').click()" style="width: 100%; background: #ffffff; color: #103b70; border: 1px dashed #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
-        <i class="fa-solid fa-upload" style="color: #c59b27;"></i> <span id="relCfgBtnUploadText">Selecionar Logo do Relatório</span>
+      <button onclick="document.getElementById('relCfgLogoFile').click()" style="width: 100%; background: var(--bg-card); color: var(--primary-blue); border: 1px dashed var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+        <i class="fa-solid fa-upload" style="color: var(--gold-primary);"></i> <span id="relCfgBtnUploadText">Selecionar Logo do Relatório</span>
       </button>
       <input type="hidden" id="relCfgLogoUrl">
 
-      <label style="font-size: 11px; font-weight: 600; color: #64748b;">Seu nome / marca</label>
+      <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Seu nome / marca</label>
       <input type="text" id="relCfgNome" class="modal-input" style="margin-bottom: 10px;" placeholder="Ex: Cassio Farias - Astrólogo">
 
-      <label style="font-size: 11px; font-weight: 600; color: #64748b;">Telefone / WhatsApp</label>
+      <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Telefone / WhatsApp</label>
       <input type="text" id="relCfgTelefone" class="modal-input" style="margin-bottom: 10px;" placeholder="Ex: 11970404508">
 
-      <label style="font-size: 11px; font-weight: 600; color: #64748b;">E-mail</label>
+      <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">E-mail</label>
       <input type="email" id="relCfgEmail" class="modal-input" style="margin-bottom: 16px;" placeholder="Ex: contato@email.com">
 
-      <button onclick="salvarPerfilRelatorio()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+      <button onclick="salvarPerfilRelatorio()" style="width: 100%; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
         Salvar Perfil
       </button>
 
-      <div style="font-size: 11px; color: #64748b; margin-top: 16px; line-height: 1.4; border-top: 1px solid #e2d9c2; padding-top: 14px;">
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 16px; line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 14px;">
         Os modelos de relatório (quais textos e ferramentas entram, e a edição de cada um) ficam na própria tela do <strong>Relatório</strong>, junto de onde você escolhe qual usar — assim tem mais espaço de tela pra editar os textos.
       </div>
 
@@ -450,6 +492,19 @@ async function salvarPerfilRelatorio() {
   } catch (e) {
     alert("Erro de conexão ao salvar perfil.");
   }
+}
+
+/* SALVA O MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) ESCOLHIDO NA TELA
+   APARÊNCIA. É preferência do NAVEGADOR/APARELHO (localStorage), não da
+   conta — diferente de tema_mandala/estilo_planetas logo abaixo, que são
+   por conta no Supabase. Isso é deliberado: "seguir o tema do aparelho"
+   só faz sentido por aparelho, não tem como isso "valer" num aparelho
+   diferente. window.aplicarModoCor vem do script inline em index.html
+   (roda antes de supabase.js, pra já aplicar o tema certo sem piscar). */
+function salvarModoCor(modo) {
+  try { localStorage.setItem('astro_modo_cor', modo); } catch (e) {}
+  if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(modo);
+  abrirConfiguracoesAparencia();
 }
 
 /* CARREGA O TEMA DA MANDALA DO SUPABASE (chamado logo após o login) */
@@ -646,42 +701,42 @@ async function abrirConfiguracoesCaptacao() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">CAPTAÇÃO DE CLIENTES</span>
+      <span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">CAPTAÇÃO DE CLIENTES</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-sidebar);">
       
-      <div style="font-size: 11px; color: #64748b; margin-bottom: 16px; line-height: 1.4;">
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
         Configure o formulário externo de coleta de dados dos seus clientes.
       </div>
 
       <!-- LOGOTIPO (UPLOAD DIRETO + PREVIEW) -->
       <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
+        <label style="font-size: 12px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 4px;">Logotipo do Formulário</label>
         
         <div id="logoPreviewContainer" style="margin-bottom: 8px; text-align: center; display: none;">
-          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid #c59b27; border-radius: 8px; padding: 4px; background: #ffffff;">
+          <img id="cfgLogoPreview" src="" alt="Preview Logo" style="max-height: 60px; max-width: 100%; border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px; background: var(--bg-card);">
         </div>
 
         <input type="file" id="cfgLogoFile" accept="image/*" onchange="fazerUploadLogo(this)" style="display: none;">
-        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: #ffffff; color: #103b70; border: 1px dashed #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <i class="fa-solid fa-upload" style="color: #c59b27;"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
+        <button onclick="document.getElementById('cfgLogoFile').click()" style="width: 100%; background: var(--bg-card); color: var(--primary-blue); border: 1px dashed var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i class="fa-solid fa-upload" style="color: var(--gold-primary);"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
         </button>
         <input type="hidden" id="cfgLogoUrl">
       </div>
       
       <!-- LINK DO FORMULÁRIO PÚBLICO -->
       <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 6px;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 6px;">
           Seu Link Exclusivo do Formulário
         </label>
         <div style="display: flex; gap: 8px;">
-          <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background-color: #ffffff; color: #103b70;" />
-          <button type="button" onclick="copiarLinkFormulario()" style="padding: 8px 16px; background-color: #103b70; color: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+          <input type="text" id="cfgPublicFormUrl" readonly style="width: 100%; padding: 8px 12px; border: 1px solid var(--gold-primary); border-radius: 8px; font-size: 12px; background-color: var(--bg-card); color: var(--primary-blue);" />
+          <button type="button" onclick="copiarLinkFormulario()" style="padding: 8px 16px; background-color: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
             Copiar
           </button>
         </div>
@@ -689,32 +744,32 @@ async function abrirConfiguracoesCaptacao() {
 
       <!-- WEBHOOK -->
       <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">URL do Webhook (Integração)</label>
-        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 4px;">URL do Webhook (Integração)</label>
+        <input type="url" id="cfgWebhookUrl" placeholder="https://hook.make.com/..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--gold-primary); border-radius: 8px; font-size: 12px; background: var(--bg-card); color: var(--primary-blue); box-sizing: border-box;">
       </div>
 
       <!-- REDIRECIONAMENTO -->
       <div style="margin-bottom: 20px;">
-        <label style="font-size: 12px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
-        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 4px;">Link de Redirecionamento</label>
+        <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--gold-primary); border-radius: 8px; font-size: 12px; background: var(--bg-card); color: var(--primary-blue); box-sizing: border-box;">
       </div>
 
       <!-- BOTÃO SALVAR -->
-      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+      <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
         Salvar Configurações
       </button>
 
       <!-- SERVIÇOS OFERECIDOS -->
-      <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e2d9c2;">
+      <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border-color);">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: #103b70;">Serviços Oferecidos</label>
-          <button onclick="criarServico()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;">+ Serviço</button>
+          <label style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">Serviços Oferecidos</label>
+          <button onclick="criarServico()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;">+ Serviço</button>
         </div>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
           Cadastre os nomes dos serviços que você presta. Cada serviço vira também um modelo de relatório disponível em Relatório → Modelos, onde você edita o conteúdo dele.
         </div>
         <div id="servicosListContainer">
-          <div style="font-size: 11px; color: #64748b; padding: 8px 0;">Carregando serviços...</div>
+          <div style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Carregando serviços...</div>
         </div>
       </div>
 
@@ -891,16 +946,16 @@ function renderServicosList() {
   if (!container) return;
 
   if (!cachedServicos || cachedServicos.length === 0) {
-    container.innerHTML = `<div style="font-size: 11px; color: #64748b; padding: 8px 0;">Nenhum serviço cadastrado ainda.</div>`;
+    container.innerHTML = `<div style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Nenhum serviço cadastrado ainda.</div>`;
     return;
   }
 
   container.innerHTML = cachedServicos.map(servico => `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
-      <span style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</span>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
+      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</span>
       <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
-        <i class="fa-solid fa-pen" onclick="editarNomeServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Renomear serviço" style="color: #103b70; cursor: pointer;"></i>
-        <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: #dc2626; cursor: pointer;"></i>
+        <i class="fa-solid fa-pen" onclick="editarNomeServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Renomear serviço" style="color: var(--primary-blue); cursor: pointer;"></i>
+        <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: var(--danger); cursor: pointer;"></i>
       </div>
     </div>
   `).join('');
@@ -985,15 +1040,15 @@ async function abrirConfiguracoesAgenda() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">AGENDA</span>
+      <span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">AGENDA</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
-      <div id="cfgAgendaConteudo" style="font-size: 11px; color: #64748b; padding: 8px 0;">Carregando...</div>
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-sidebar);">
+      <div id="cfgAgendaConteudo" style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Carregando...</div>
     </div>
   `;
 
@@ -1035,10 +1090,10 @@ async function carregarConfiguracoesAgenda() {
       return `
         <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
           <input type="checkbox" id="agDia${idx}" ${regra ? 'checked' : ''} onchange="document.getElementById('agHoraBloco${idx}').style.display = this.checked ? 'flex' : 'none';" style="flex-shrink: 0;">
-          <label for="agDia${idx}" style="font-size: 11px; font-weight: 600; color: #103b70; width: 58px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nomeDia}</label>
+          <label for="agDia${idx}" style="font-size: 11px; font-weight: 600; color: var(--primary-blue); width: 58px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nomeDia}</label>
           <div id="agHoraBloco${idx}" style="display: ${regra ? 'flex' : 'none'}; gap: 3px; align-items: center; min-width: 0;">
             <input type="time" id="agInicio${idx}" class="modal-input" style="width: 78px; padding: 6px 4px; font-size: 12px;" value="${regra ? regra.hora_inicio.slice(0, 5) : '09:00'}">
-            <span style="font-size: 10px; color: #64748b; flex-shrink: 0;">até</span>
+            <span style="font-size: 10px; color: var(--text-muted); flex-shrink: 0;">até</span>
             <input type="time" id="agFim${idx}" class="modal-input" style="width: 78px; padding: 6px 4px; font-size: 12px;" value="${regra ? regra.hora_fim.slice(0, 5) : '18:00'}">
           </div>
         </div>
@@ -1050,18 +1105,18 @@ async function carregarConfiguracoesAgenda() {
       ? pastasParaExibir.map(pasta => {
           const marcada = !pastasVisiveis || pastasVisiveis.includes(pasta);
           return `
-            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #103b70; cursor: pointer;">
+            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--primary-blue); cursor: pointer;">
               <input type="checkbox" class="agPastaCheckbox" value="${escapeHtml(pasta)}" ${marcada ? 'checked' : ''}>
               ${escapeHtml(pasta)}
             </label>
           `;
         }).join('')
-      : '<div style="font-size: 11px; color: #64748b;">Nenhuma pasta encontrada.</div>';
+      : '<div style="font-size: 11px; color: var(--text-muted);">Nenhuma pasta encontrada.</div>';
 
     container.innerHTML = `
       <div style="margin-bottom: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">Sua Disponibilidade</div>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 14px; line-height: 1.4;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">Sua Disponibilidade</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
           Marque os dias que você atende e o horário de cada um. Usado pra calcular os horários livres na ferramenta Agenda.
         </div>
 
@@ -1069,27 +1124,27 @@ async function carregarConfiguracoesAgenda() {
 
         <div style="display: flex; gap: 8px; margin-top: 14px;">
           <div style="flex: 1;">
-            <label style="font-size: 11px; font-weight: 600; color: #64748b;">Duração de cada atendimento (min)</label>
+            <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Duração de cada atendimento (min)</label>
             <input type="number" id="agDuracaoPadrao" class="modal-input" min="5" step="5" value="${duracaoPadrao}">
           </div>
           <div style="flex: 1;">
-            <label style="font-size: 11px; font-weight: 600; color: #64748b;">Intervalo entre atendimentos (min)</label>
+            <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Intervalo entre atendimentos (min)</label>
             <input type="number" id="agIntervaloPadrao" class="modal-input" min="0" step="5" value="${intervaloPadrao}">
           </div>
         </div>
 
-        <button onclick="salvarDisponibilidadeAgenda()" style="width: 100%; margin-top: 14px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        <button onclick="salvarDisponibilidadeAgenda()" style="width: 100%; margin-top: 14px; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
           Salvar Disponibilidade
         </button>
       </div>
 
-      <div style="padding-top: 16px; border-top: 1px solid #e2d9c2;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">Pastas Visíveis no Agendamento</div>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
+      <div style="padding-top: 16px; border-top: 1px solid var(--border-color);">
+        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px;">Pastas Visíveis no Agendamento</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
           Marque só as pastas que têm clientes de verdade — desmarque as que usa pra teste, perguntas etc. Sem marcar nada, mostra clientes de todas as pastas.
         </div>
         ${blocoPastas}
-        <button onclick="salvarPastasVisiveisAgenda()" style="width: 100%; margin-top: 8px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        <button onclick="salvarPastasVisiveisAgenda()" style="width: 100%; margin-top: 8px; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
           Salvar Pastas Visíveis
         </button>
       </div>
@@ -1188,38 +1243,38 @@ async function abrirConfiguracoesSeguranca() {
   const manterLogado = localStorage.getItem('astro_keep_logged') === 'true';
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i> Voltar
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="abrirNavegacaoConfiguracoes()" title="Voltar" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i> Voltar
       </button>
-      <span style="font-size: 11px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">SEGURANÇA E CONTA</span>
+      <span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">SEGURANÇA E CONTA</span>
       <div style="width: 24px;"></div>
     </div>
-    <div style="flex: 1; overflow-y: auto; padding: 16px; background: #fffdf5;">
+    <div style="flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-sidebar);">
       
       <!-- USUÁRIO CONECTADO -->
-      <div style="margin-bottom: 20px; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #c59b27;">
-        <div style="font-size: 11px; font-weight: 700; color: #c59b27; text-transform: uppercase; margin-bottom: 4px;">Conta Conectada</div>
-        <div style="font-size: 13px; font-weight: 600; color: #103b70; word-break: break-all;">${escapeHtml(userEmail)}</div>
+      <div style="margin-bottom: 20px; background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--gold-primary);">
+        <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 4px;">Conta Conectada</div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--primary-blue); word-break: break-all;">${escapeHtml(userEmail)}</div>
       </div>
 
       <!-- OPÇÃO MANTER LOGADO -->
-      <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2d9c2; padding-bottom: 12px;">
-        <span style="font-size: 13px; font-weight: 600; color: #103b70;">Manter-se logado</span>
-        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #103b70;">
+      <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">Manter-se logado</span>
+        <input type="checkbox" id="keepLoggedToggle" ${manterLogado ? 'checked' : ''} onchange="alternarManterLogado(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-blue);">
       </div>
 
       <!-- ALTERAR SENHA -->
       <div style="margin-bottom: 24px;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; margin-bottom: 8px;">Alterar Senha</div>
-        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 13px; margin-bottom: 8px; box-sizing: border-box; background: #ffffff; color: #103b70;">
-        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 8px;">Alterar Senha</div>
+        <input type="password" id="cfgNewPassword" placeholder="Nova senha" style="width: 100%; padding: 8px 10px; border: 1px solid var(--gold-primary); border-radius: 8px; font-size: 13px; margin-bottom: 8px; box-sizing: border-box; background: var(--bg-card); color: var(--primary-blue);">
+        <button onclick="trocarSenhaUsuario()" style="width: 100%; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
           Atualizar Senha
         </button>
       </div>
 
       <!-- LOGOUT (SAIR) -->
-      <button onclick="fazerLogout()" style="width: 100%; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <button onclick="fazerLogout()" style="width: 100%; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
         <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
       </button>
 
@@ -1400,17 +1455,17 @@ function abrirNavegacaoPastas() {
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   let html = `
-     <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <span style="font-size: 13px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">PASTAS</span>
-      <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: #ffffff; border: 1px solid #c59b27; color: #103b70; border-radius: 8px; padding: 4px 10px; font-weight: 700; cursor: pointer;">+ Pasta</button>
+     <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <span style="font-size: 13px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">PASTAS</span>
+      <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 4px 10px; font-weight: 700; cursor: pointer;">+ Pasta</button>
     </div>
-    <div style="flex: 1; overflow-y: auto; background: #fffdf5; padding: 4px 0;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; cursor: pointer;" onclick="abrirModalImportacaoTexto()">
+    <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar); padding: 4px 0;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); cursor: pointer;" onclick="abrirModalImportacaoTexto()">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: #c59b27;"></i>
-          <span style="font-size: 13px; font-weight: 700; color: #103b70;">Importar Lista em Massa</span>
+          <i class="fa-solid fa-file-import" style="color: var(--gold-primary);"></i>
+          <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Importar Lista em Massa</span>
         </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27;"></i>
+        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
       </div>
   `;
 
@@ -1418,15 +1473,15 @@ function abrirNavegacaoPastas() {
     const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
 
     html += `
-       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; cursor: pointer; transition: all 0.15s ease;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
+       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c59b27; flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: #103b70;">${escapeHtml(pasta)}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
+          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(pasta)}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta" style="color: #103b70; cursor: pointer;"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta" style="color: #dc2626; cursor: pointer;"></i>
-          <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: #c59b27; margin-left: 4px;"></i>
+          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta" style="color: var(--primary-blue); cursor: pointer;"></i>
+          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta" style="color: var(--danger); cursor: pointer;"></i>
+          <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary); margin-left: 4px;"></i>
         </div>
       </div>
     `;
@@ -1446,44 +1501,44 @@ async function abrirConteudoPasta(nomePasta) {
   if (!sidebar) return;
 
     sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: #fffdf5; border-bottom: 2px solid #c59b27;">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas" style="color: #103b70; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: #c59b27;"></i>
+    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
+      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
+        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i>
       </button>
-      <span style="font-size: 13px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif; letter-spacing: 0.5px;">${escapeHtml(nomePasta)}</span>
-      <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px; background: #fee2e2; padding: 4px 8px; cursor: pointer;">
+      <span style="font-size: 13px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">${escapeHtml(nomePasta)}</span>
+      <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: var(--danger); border: 1px solid var(--danger-border); border-radius: 8px; background: var(--danger-bg); padding: 4px 8px; cursor: pointer;">
         <i class="fa-solid fa-trash-can"></i>
       </button>
     </div>
 
-    <div style="padding: 10px 12px; border-bottom: 1px solid #e2d9c2; background: #fffdf5;">
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
       <div class="search-box-container" style="margin-bottom: 8px;">
-        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)" style="flex: 1; min-width: 0; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70;">
+        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)" style="flex: 1; min-width: 0; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); color: var(--primary-blue);">
       </div>
       <div class="search-box-container" style="margin-bottom: 0;">
-        <select id="sortFieldSelect" class="modal-select" onchange="aplicarOrdenacaoLista(this.value)" title="Ordenar por" style="width: auto; flex: 1; min-width: 0; border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; color: #103b70; font-size: 11px; padding: 8px 6px;">
+        <select id="sortFieldSelect" class="modal-select" onchange="aplicarOrdenacaoLista(this.value)" title="Ordenar por" style="width: auto; flex: 1; min-width: 0; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); color: var(--primary-blue); font-size: 11px; padding: 8px 6px;">
           <option value="codigo" ${currentSortField === 'codigo' ? 'selected' : ''}>Código</option>
           <option value="nome" ${currentSortField === 'nome' ? 'selected' : ''}>Nome</option>
           <option value="cidade" ${currentSortField === 'cidade' ? 'selected' : ''}>Cidade</option>
           <option value="tipo" ${currentSortField === 'tipo' ? 'selected' : ''}>Tipo</option>
         </select>
-        <button type="button" id="sortDirectionBtn" class="icon-btn" onclick="alternarDirecaoOrdenacao()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="border: 1px solid #c59b27; border-radius: 8px; background: #ffffff; padding: 0 12px; cursor: pointer; flex: 0 0 auto;">
-          <i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}" style="color: #c59b27;"></i>
+        <button type="button" id="sortDirectionBtn" class="icon-btn" onclick="alternarDirecaoOrdenacao()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 0 12px; cursor: pointer; flex: 0 0 auto;">
+          <i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}" style="color: var(--gold-primary);"></i>
         </button>
       </div>
     </div>
 
-    <div id="selectionActionBar" style="display: none; padding: 8px 12px; background: #fee2e2; border-bottom: 1px solid #fca5a5; justify-content: space-between; align-items: center; margin: 4px 8px; border-radius: 8px;">
-      <label style="font-size: 11px; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-        <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)" style="accent-color: #dc2626;"> Selecionar Todos
+    <div id="selectionActionBar" style="display: none; padding: 8px 12px; background: var(--danger-bg); border-bottom: 1px solid var(--danger-border); justify-content: space-between; align-items: center; margin: 4px 8px; border-radius: 8px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--danger-text); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)" style="accent-color: var(--danger);"> Selecionar Todos
       </label>
-      <button onclick="confirmarExclusaoSelecionados()" style="background: #dc2626; color: #fff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+      <button onclick="confirmarExclusaoSelecionados()" style="background: var(--danger); color: #fff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
         Apagar (<span id="selectedCount">0</span>)
       </button>
     </div>
 
-    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0; background: #fffdf5;">
-      <div style="padding: 16px; text-align: center; font-size: 12px; color: #103b70;"><i class="fa-solid fa-spinner fa-spin" style="color: #c59b27;"></i> Carregando mapas...</div>
+    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0; background: var(--bg-sidebar);">
+      <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando mapas...</div>
     </div>
   `;
 
@@ -1613,7 +1668,7 @@ function renderListaMapas(lista) {
   if (!container) return;
 
   if (!lista || lista.length === 0) {
-    container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">Nenhum mapa encontrado.</div>`;
+    container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--text-faint);">Nenhum mapa encontrado.</div>`;
     return;
   }
 
@@ -1632,11 +1687,11 @@ function renderListaMapas(lista) {
     const linkWhats = numWhats ? (numWhats.length <= 11 ? `55${numWhats}` : numWhats) : '';
 
     html += `
-      <div class="client-card-item" id="card-item-${index}" style="margin: 4px 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff; padding: 10px 12px; transition: all 0.15s ease;">
-        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer; accent-color: #103b70;">` : ''}
+      <div class="client-card-item" id="card-item-${index}" style="margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); padding: 10px 12px; transition: all 0.15s ease;">
+        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer; accent-color: var(--primary-blue);">` : ''}
         <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
-          <div class="client-name" style="color: #103b70; font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: #c59b27; margin-left: 6px;">${escapeHtml(tipoStr)}</span></div>
-          <div class="client-meta" style="color: #64748b; font-size: 10px; margin-top: 2px;">${escapeHtml(dataHoraStr)} • ${escapeHtml(cidStr)}</div>
+          <div class="client-name" style="color: var(--primary-blue); font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: var(--gold-primary); margin-left: 6px;">${escapeHtml(tipoStr)}</span></div>
+          <div class="client-meta" style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">${escapeHtml(dataHoraStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
           <div class="card-actions" style="display: flex; gap: 6px; align-items: center;">
@@ -1646,14 +1701,14 @@ function renderListaMapas(lista) {
               </button>
             ` : ''}
             ${item.email ? `
-              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail" style="color: #c59b27; background: transparent; border: none; cursor: pointer;">
+              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail" style="color: var(--gold-primary); background: transparent; border: none; cursor: pointer;">
                 <i class="fa-solid fa-envelope"></i>
               </button>
             ` : ''}
-            <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar" style="color: #103b70; background: transparent; border: none; cursor: pointer;">
+            <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar" style="color: var(--primary-blue); background: transparent; border: none; cursor: pointer;">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar" style="color: #dc2626; background: transparent; border: none; cursor: pointer;">
+            <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar" style="color: var(--danger); background: transparent; border: none; cursor: pointer;">
               <i class="fa-solid fa-trash"></i>
             </button>
           </div>

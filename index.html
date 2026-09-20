@@ -4,7 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
-    
+
+    <!-- MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) — aplicado o mais cedo possível,
+         antes do resto da página desenhar, pra não piscar claro e trocar pra
+         escuro um instante depois. Preferência do NAVEGADOR (localStorage),
+         não da conta — ver comentário maior sobre isso junto de
+         ":root.tema-escuro" no <style> abaixo. window.aplicarModoCor fica
+         exposta pra supabase.js reusar quando o astrólogo troca de opção
+         na tela Configurações > Aparência. -->
+    <script>
+    (function() {
+      var mediaEscuro = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      var listenerAtivo = null;
+
+      function calcularEscuro(modo) {
+        if (modo === 'escuro') return true;
+        if (modo === 'claro') return false;
+        return !!(mediaEscuro && mediaEscuro.matches);
+      }
+
+      function aplicarModoCor(modo) {
+        document.documentElement.classList.toggle('tema-escuro', calcularEscuro(modo));
+        if (!mediaEscuro) return;
+        if (listenerAtivo) mediaEscuro.removeEventListener('change', listenerAtivo);
+        listenerAtivo = null;
+        if (modo === 'auto') {
+          listenerAtivo = function(e) { document.documentElement.classList.toggle('tema-escuro', e.matches); };
+          mediaEscuro.addEventListener('change', listenerAtivo);
+        }
+      }
+
+      var modoSalvo = 'auto';
+      try { modoSalvo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
+      aplicarModoCor(modoSalvo);
+      window.aplicarModoCor = aplicarModoCor;
+    })();
+    </script>
+
     <!-- FAVICON -->
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
@@ -28,11 +64,52 @@
 :root {
   --bg-main: #fffdf5;        /* Fundo creme oficial */
   --bg-sidebar: #fffdf5;     /* Fundo do menu creme */
+  --bg-card: #ffffff;        /* Fundo de cartão/botão/input (era branco cravado) */
+  --bg-hover: #f7f5ed;       /* Fundo de hover de item de menu/aba */
+  --bg-selected: #fdf6e2;    /* Fundo de item selecionado (cliente ativo) */
+  --bg-disabled: #f1ede0;    /* Fundo de botão desabilitado (setas de ordem) */
   --primary-blue: #103b70;   /* Azul clássico */
   --gold-primary: #c59b27;   /* Dourado oficial */
   --gold-dark: #9a6d18;
   --text-dark: #103b70;      /* Texto em azul */
+  --text-muted: #64748b;     /* Texto secundário/legenda */
+  --text-faint: #94a3b8;     /* Texto terciário (ex.: "nenhum item encontrado") */
+  --text-disabled: #b8b09a;  /* Texto de botão desabilitado */
   --border-color: #e2d9c2;   /* Borda dourada suave */
+  --danger: #dc2626;         /* Vermelho de ação destrutiva (apagar) */
+  --danger-bg: #fee2e2;      /* Fundo do "modo selecionar para apagar" */
+  --danger-border: #fca5a5;
+  --danger-text: #991b1b;
+}
+
+/* TEMA ESCURO — ligado via classe em <html>, definida em aplicarModoCor()
+   (index.html, script inline no <head>, e supabase.js/salvarModoCor). É
+   preferência do NAVEGADOR/APARELHO (localStorage, chave astro_modo_cor),
+   não da conta: diferente de tema_mandala/estilo_planetas (Supabase), o
+   astrólogo pediu explicitamente que "seguir o tema do dispositivo" só
+   faça sentido por aparelho — ver CLAUDE.md antes de "corrigir" isso pra
+   Supabase por semelhança com a Regra de ouro 2.
+   Só cobre o MENU LATERAL (#sidebar e o que ele desenha) por enquanto —
+   as demais ferramentas ainda usam cor cravada e não reagem a isso. */
+:root.tema-escuro {
+  --bg-main: #1c1917;
+  --bg-sidebar: #1c1917;
+  --bg-card: #262220;
+  --bg-hover: #322c26;
+  --bg-selected: #2d2a1a;
+  --bg-disabled: #2a2620;
+  --primary-blue: #8ab4e8;
+  --gold-primary: #d9ae3f;
+  --gold-dark: #f0c869;
+  --text-dark: #8ab4e8;
+  --text-muted: #a3aab3;
+  --text-faint: #7d858f;
+  --text-disabled: #6b6558;
+  --border-color: #3a352c;
+  --danger: #f87171;
+  --danger-bg: #3a1f1f;
+  --danger-border: #6b3232;
+  --danger-text: #f4a8a8;
 }
 
 * {
@@ -123,8 +200,8 @@ body {
   width: 320px;
   height: 100vh;
   height: 100dvh;
-  background: #fffdf5;
-  border-right: 2px solid #c59b27;
+  background: var(--bg-sidebar);
+  border-right: 2px solid var(--gold-primary);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -144,8 +221,8 @@ body {
 
 .sidebar-header {
   padding: 16px;
-  border-bottom: 2px solid #c59b27;
-  background: #fffdf5;
+  border-bottom: 2px solid var(--gold-primary);
+  background: var(--bg-sidebar);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -155,7 +232,7 @@ body {
             font-family: 'Cinzel', serif;
             font-size: 18px;
             font-weight: 800;
-            color: #103b70;
+            color: var(--primary-blue);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -163,14 +240,14 @@ body {
         .menu-list {
             list-style: none;
             padding: 8px 0;
-            border-bottom: 1px solid #e2d9c2;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .menu-item {
             padding: 12px 16px;
             font-size: 13px;
             font-weight: 600;
-            color: #103b70;
+            color: var(--primary-blue);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -179,12 +256,12 @@ body {
         }
 
         .menu-item:hover, .menu-item.active {
-            background: #f7f5ed;
-            color: #9a6d18;
+            background: var(--bg-hover);
+            color: var(--gold-dark);
         }
 
         .menu-item i {
-            color: #9a6d18;
+            color: var(--gold-dark);
         }
 
         .database-section {
@@ -193,7 +270,7 @@ body {
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background: #fffdf5;
+            background: var(--bg-sidebar);
         }
 
         .folders-container {
@@ -203,17 +280,17 @@ body {
             overflow-x: auto;
             padding-bottom: 8px;
             margin-bottom: 8px;
-            border-bottom: 1px solid #e2d9c2;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .folder-tab-btn {
-            background: #ffffff;
-            border: 1px solid #c59b27;
+            background: var(--bg-card);
+            border: 1px solid var(--gold-primary);
             border-radius: 6px;
             padding: 6px 8px;
             font-size: 11px;
             font-weight: 700;
-            color: #103b70;
+            color: var(--primary-blue);
             cursor: pointer;
             white-space: nowrap;
             display: flex;
@@ -223,7 +300,7 @@ body {
         }
 
         .folder-tab-btn:hover {
-            background: #f7f5ed;
+            background: var(--bg-hover);
         }
 
         .folder-tab-btn.active {
@@ -239,16 +316,16 @@ body {
             transition: opacity 0.15s;
         }
         .folder-action-icon:hover { opacity: 1; }
-        .folder-delete-icon:hover { color: #dc2626; }
+        .folder-delete-icon:hover { color: var(--danger); }
 
         .add-folder-btn {
             font-size: 11px;
             font-weight: 700;
-            color: #103b70;
+            color: var(--primary-blue);
             padding: 6px 8px;
-            border: 1px solid #c59b27;
+            border: 1px solid var(--gold-primary);
             border-radius: 6px;
-            background: #ffffff;
+            background: var(--bg-card);
             cursor: pointer;
             white-space: nowrap;
         }
@@ -262,24 +339,25 @@ body {
         .client-search-input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #c59b27;
+            border: 1px solid var(--gold-primary);
             border-radius: 6px;
             font-size: 12px;
             outline: none;
-            background: #ffffff;
+            background: var(--bg-card);
+            color: var(--primary-blue);
         }
 
         .client-list-container {
             flex: 1;
             overflow-y: auto;
-            border: 1px solid #e2d9c2;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
-            background: #ffffff;
+            background: var(--bg-card);
         }
 
         .client-card-item {
             padding: 10px 12px;
-            border-bottom: 1px solid #e2d9c2;
+            border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -288,24 +366,24 @@ body {
         }
 
         .client-card-item:hover {
-            background: #f7f5ed;
+            background: var(--bg-hover);
         }
 
         .client-card-item.selected {
-            background: #fdf6e2;
-            border-left: 4px solid #103b70;
+            background: var(--bg-selected);
+            border-left: 4px solid var(--primary-blue);
         }
 
         .client-name {
             font-size: 12px;
             font-weight: 700;
-            color: #103b70;
+            color: var(--primary-blue);
         }
 
         .client-meta {
             font-size: 10px;
             font-weight: 500;
-            color: #64748b;
+            color: var(--text-muted);
             margin-top: 2px;
         }
 
@@ -325,8 +403,8 @@ body {
             transition: opacity 0.15s;
         }
         .action-record-btn:hover { opacity: 1; }
-        .edit-btn { color: #103b70; }
-        .delete-btn { color: #dc2626; }
+        .edit-btn { color: var(--primary-blue); }
+        .delete-btn { color: var(--danger); }
 
            /* ÁREA PRINCIPAL DA MANDALA */
         #main-stage {
@@ -632,7 +710,7 @@ body {
 
             <div class="search-box-container">
                 <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar por código ou nome..." oninput="executarBuscaLocalOuRemota(this.value)" onkeypress="if(event.key==='Enter') buscarDiretoPorCodigoOuNome()">
-                <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: #fafafa;" title="Buscar">
+                <button type="button" onclick="buscarDiretoPorCodigoOuNome()" class="icon-btn" style="border: 1px solid var(--border-color); background: var(--bg-card);" title="Buscar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </div>
@@ -640,7 +718,7 @@ body {
             <div id="searchStatusFeedback" style="font-size: 10px; font-weight: 600; min-height: 14px; margin-bottom: 4px;"></div>
 
             <div id="clientsListContainer" class="client-list-container">
-                <div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">
+                <div style="padding: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
                     <i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Carregando...
                 </div>
             </div>
