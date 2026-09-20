@@ -312,10 +312,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFatiaDestaque(l1SignIdx, "rgba(163, 230, 53, 0.4)");
-  svg += desenharFatiaDestaque(l2SignIdx, "rgba(254, 240, 138, 0.5)");
-  svg += desenharFatiaDestaque(l3SignIdx, "rgba(224, 231, 255, 0.6)");
   svg += desenharFatiaDestaque(l4SignIdx, "rgba(148, 163, 184, 0.45)");
+  svg += desenharFatiaDestaque(l3SignIdx, "rgba(224, 231, 255, 0.6)");
+  svg += desenharFatiaDestaque(l2SignIdx, "rgba(254, 240, 138, 0.5)");
+  svg += desenharFatiaDestaque(l1SignIdx, "rgba(163, 230, 53, 0.4)");
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -435,10 +435,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFaixaDestaque(l1SignIdx, "#65a30d", R_OuterLine + 4, R_OuterLine + 12);
-  svg += desenharFaixaDestaque(l2SignIdx, "#eab308", R_OuterLine + 14, R_OuterLine + 22);
-  svg += desenharFaixaDestaque(l3SignIdx, "#6366f1", R_OuterLine + 24, R_OuterLine + 32);
-  svg += desenharFaixaDestaque(l4SignIdx, "#475569", R_OuterLine + 34, R_OuterLine + 42);
+  svg += desenharFaixaDestaque(l4SignIdx, "#475569", R_OuterLine + 4, R_OuterLine + 12);
+  svg += desenharFaixaDestaque(l3SignIdx, "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
+  svg += desenharFaixaDestaque(l2SignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+  svg += desenharFaixaDestaque(l1SignIdx, "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
 
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
   if (sunItem) {
