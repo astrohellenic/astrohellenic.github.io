@@ -910,13 +910,13 @@ async function carregarConfiguracoesAgenda() {
     const blocoDias = AGENDA_DIAS_SEMANA.map((nomeDia, idx) => {
       const regra = disponibilidade.find(r => r.dia_semana === idx);
       return `
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <input type="checkbox" id="agDia${idx}" ${regra ? 'checked' : ''} onchange="document.getElementById('agHoraBloco${idx}').style.display = this.checked ? 'flex' : 'none';">
-          <label for="agDia${idx}" style="font-size: 12px; font-weight: 600; color: #103b70; width: 66px; flex-shrink: 0;">${nomeDia}</label>
-          <div id="agHoraBloco${idx}" style="display: ${regra ? 'flex' : 'none'}; gap: 6px; align-items: center;">
-            <input type="time" id="agInicio${idx}" class="modal-input" style="width: 100px;" value="${regra ? regra.hora_inicio.slice(0, 5) : '09:00'}">
-            <span style="font-size: 11px; color: #64748b;">até</span>
-            <input type="time" id="agFim${idx}" class="modal-input" style="width: 100px;" value="${regra ? regra.hora_fim.slice(0, 5) : '18:00'}">
+        <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+          <input type="checkbox" id="agDia${idx}" ${regra ? 'checked' : ''} onchange="document.getElementById('agHoraBloco${idx}').style.display = this.checked ? 'flex' : 'none';" style="flex-shrink: 0;">
+          <label for="agDia${idx}" style="font-size: 11px; font-weight: 600; color: #103b70; width: 58px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nomeDia}</label>
+          <div id="agHoraBloco${idx}" style="display: ${regra ? 'flex' : 'none'}; gap: 3px; align-items: center; min-width: 0;">
+            <input type="time" id="agInicio${idx}" class="modal-input" style="width: 78px; padding: 6px 4px; font-size: 12px;" value="${regra ? regra.hora_inicio.slice(0, 5) : '09:00'}">
+            <span style="font-size: 10px; color: #64748b; flex-shrink: 0;">até</span>
+            <input type="time" id="agFim${idx}" class="modal-input" style="width: 78px; padding: 6px 4px; font-size: 12px;" value="${regra ? regra.hora_fim.slice(0, 5) : '18:00'}">
           </div>
         </div>
       `;
