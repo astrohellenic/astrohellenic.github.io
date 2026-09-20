@@ -58,9 +58,15 @@ function svgComoImagemZR(svgInterno, largura, altura, viewBox) {
   return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
 }
 
+/* Vira <img> (ver svgComoImagemZR), então não enxerga var(--x) do CSS —
+   a cor certa (clara/escura) precisa vir já resolvida em hexadecimal. */
 function getSignSVGZR(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  const interno = `<g style="color: ${SIGN_COLORS_ZR[signIndex]};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const cores = modoEscuro
+    ? ["#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa"]
+    : SIGN_COLORS_ZR;
+  const interno = `<g style="color: ${cores[signIndex]};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
   return svgComoImagemZR(interno, size, size, '0 0 64 64');
 }
 
@@ -68,9 +74,9 @@ function getLotIconSVG(lotKey) {
   // As duas telas que usam esse ícone (o menu de lotes e o botão "Lote
   // Ativo") sempre pintam com essa mesma cor — por isso dá pra gravar a
   // cor direto no SVG (teria que ser assim de qualquer jeito: uma <img>
-  // isolada não herda "currentColor" de fora, precisa vir com a cor já
-  // dentro dela).
-  const cor = '#103b70';
+  // isolada não herda "currentColor" nem var(--x) de fora, precisa vir
+  // com a cor já resolvida em hexadecimal dentro dela).
+  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
   let interno;
   if (lotKey === 'fortune') {
     interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${cor}" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${cor}" stroke-width="1.8"/>`;
@@ -233,7 +239,7 @@ function fragmentoPlaneta3DZR(planetId, sufixo) {
    criado no mesmo padrão pro L4, que não existia lá. */
 function gerarMandalaNatalZR(dados, opcoes = {}) {
   if (!dados || !dados.Ascendente) {
-    return `<div style="padding: 40px 10px; text-align: center; color: #94a3b8; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+    return `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
   }
 
   const l1SignIdx = (opcoes.l1SignIdx !== undefined) ? opcoes.l1SignIdx : null;
@@ -255,7 +261,33 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
      não tem opção "ASC": a Liberação sempre gira em torno de um lote. */
   const loteCasa1 = (opcoes.loteCasa1 !== undefined) ? opcoes.loteCasa1 : null;
 
-  const goldColor = "#c59b27";
+  /* Mesma "tinta" clara/escura de mandala.js (esta função é cópia fiel
+     de renderMandala) — cores resolvidas em hexadecimal porque este SVG
+     acaba virando <img> (ver converterMandalaLiberacaoEmImagem logo
+     depois do render), então var(--x) não seria enxergado por quem lê o
+     canvas depois. ELEMENT_SIGN_COLORS fica sombreado só aqui dentro
+     (a versão global, de mandala.js, continua intocada). */
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const tinta = modoEscuro ? {
+    fundoDisco: '#1c1917', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#1c1917',
+    inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
+    aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
+    elementoFogo: '#ff6b4a', elementoTerra: '#c9863f', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
+    dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
+    picoBg: '#4a3a12', picoBorder: '#d99a2b', picoText: '#f0b35c',
+    saltoBg: '#3a1f1f', saltoBorder: '#6b3232', saltoText: '#f4a8a8', saltoLabel: '#f4a8a8',
+  } : {
+    fundoDisco: '#ffffff', dourado: '#c59b27', douradoCasas: '#aa820a', halo: '#ffffff',
+    inkForte: '#000000', inkPlaneta: '#0f172a', navio: '#103b70', linhaConectora: '#94a3b8',
+    aspectoOposicao: '#881337', aspectoTrigono: '#1d4ed8', aspectoQuadratura: '#e84118', aspectoSextil: '#0ea5e9',
+    elementoFogo: '#e84118', elementoTerra: '#8b4513', elementoAr: '#0ea5e9', elementoAgua: '#1d4ed8',
+    dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
+    picoBg: '#fef3c7', picoBorder: '#f59e0b', picoText: '#b45309',
+    saltoBg: '#fee2e2', saltoBorder: '#f87171', saltoText: '#991b1b', saltoLabel: '#7f1d1d',
+  };
+  const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
+
+  const goldColor = tinta.dourado;
   const sufixo = `zr${wheelInstanceCounterZR++}`;
 
   const ascAbs = dados.Ascendente.grau_absoluto;
@@ -293,11 +325,11 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     });
   });
   if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: "#000000", aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: "#000000", aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
+    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
   }
   if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: "#000000", aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
+    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
   }
   lotes.forEach(lot => {
     outerRingItems.push({ type: "lot", label: lot.label, lotType: lot.type, sym: lot.sym, deg: lot.deg, color: goldColor, aScreen: eclToScreenAngle(lot.deg, house1RefAbs) });
@@ -326,7 +358,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
 
   let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
       <defs>${construirDefsPlanetasZR(sufixo)}</defs>
-      <rect width="${canvasSize}" height="${canvasSize}" fill="#ffffff"/>`;
+      <rect width="${canvasSize}" height="${canvasSize}" fill="${tinta.fundoDisco}"/>`;
 
   function desenharFatiaDestaque(signIdx, cor) {
     if (signIdx === null || signIdx === undefined) return '';
@@ -346,7 +378,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   svg += desenharFatiaDestaque(l2SignIdx, "rgba(254, 240, 138, 0.5)");
   svg += desenharFatiaDestaque(l1SignIdx, "rgba(163, 230, 53, 0.4)");
 
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="#ffffff" stroke="${goldColor}" stroke-width="2"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
   const occupiedSigns = new Set();
   PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
@@ -356,10 +388,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
       if (diff > 6) diff = 12 - diff;
       let col = null;
-      if (diff === 6) col = "#881337";
-      else if (diff === 4) col = "#1d4ed8";
-      else if (diff === 3) col = "#e84118";
-      else if (diff === 2) col = "#0ea5e9";
+      if (diff === 6) col = tinta.aspectoOposicao;
+      else if (diff === 4) col = tinta.aspectoTrigono;
+      else if (diff === 3) col = tinta.aspectoQuadratura;
+      else if (diff === 2) col = tinta.aspectoSextil;
       if (col) {
         const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
         const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
@@ -374,26 +406,26 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
 
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
   const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
   const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
   const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="#000000" stroke-width="2.5"/>`;
+  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
 
   const rEixoInterno = R.SignSector - 12;
   const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: "#000000" },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: "#000000" },
-    { label: "MC", deg: mcAbs, color: "#000000" },
-    { label: "IC", deg: (mcAbs + 180) % 360, color: "#000000" }
+    { label: "ASC", deg: ascAbs, color: tinta.inkForte },
+    { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
+    { label: "MC", deg: mcAbs, color: tinta.inkForte },
+    { label: "IC", deg: (mcAbs + 180) % 360, color: tinta.inkForte }
   ];
   eixosInternos.forEach(eixo => {
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="${eixo.color}" stroke-width="1.8"/>
+        <circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${eixo.color}" stroke-width="1.8"/>
         <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
-        <text x="0" y="18" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+        <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
     </g>`;
   });
 
@@ -407,7 +439,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="#aa820a" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
     const pSym = polarToCart(cx, cy, 166, aMid);
     svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
@@ -417,7 +449,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     for (let d = 0; d < 12; d++) {
       const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="rgba(170,130,10,0.3)" stroke-width="0.8"/>`;
+      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
       const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
       svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
     }
@@ -513,8 +545,8 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
     const pPico = polarToCart(cx, cy, rPicoZR, aScreenPico);
     svg += `<g transform="translate(${pPico.x + desloc.x}, ${pPico.y + desloc.y})">
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="#b45309" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${tinta.picoBg}" stroke="${tinta.picoBorder}" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${tinta.picoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
     </g>`;
   });
 
@@ -525,16 +557,16 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     const pSalto = polarToCart(cx, cy, rPicoZR, aScreenSalto);
     const rotuloNiveisSalto = niveisSaltoPorSignoZR[signIdxKey].join('-');
     svg += `<g transform="translate(${pSalto.x + desloc.x}, ${pSalto.y + desloc.y})">
-        <text x="0" y="-11" font-size="8" font-weight="900" fill="#7f1d1d" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="#991b1b" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
+        <text x="0" y="-11" font-size="8" font-weight="900" fill="${tinta.saltoLabel}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${tinta.saltoBg}" stroke="${tinta.saltoBorder}" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${tinta.saltoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
     </g>`;
   });
 
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
   if (sunItem) {
     const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="#ffffff"/>`;
+    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="${tinta.fundoDisco}"/>`;
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
   }
 
@@ -548,27 +580,27 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
     if (item.type === "node") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="#ffffff" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-          <text x="0" y="19" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+          <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+          <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          <circle cx="0" cy="0" r="12" fill="#ffffff" stroke="none"/>
+          <circle cx="0" cy="0" r="12" fill="${tinta.fundoDisco}" stroke="none"/>
           <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
           <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
           <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-          <text x="0" y="21" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+          <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
       if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${item.sym}</text>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
       }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="#000000" text-anchor="middle" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
   });
 
@@ -580,14 +612,14 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
       const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
       const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="1.2"/>`;
+      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
       const planetSvgContent = fragmentoPlaneta3DZR(item.id, sufixo);
       let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
           <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-          <text x="0" y="27" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+          <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
 
@@ -610,7 +642,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
     const rotuloNiveis = niveisPorRegenteZR[rulerId].join('-');
     svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-        <text x="0" y="-11" font-size="9" font-weight="900" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2.5" paint-order="stroke fill">${rotuloNiveis}</text>
+        <text x="0" y="-11" font-size="9" font-weight="900" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2.5" paint-order="stroke fill">${rotuloNiveis}</text>
         <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
         <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
         <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
@@ -991,17 +1023,17 @@ function renderLiberacaoUI() {
 
   const loteMenuRowsHTML = lotesInfo.map(l => {
     const label = loteLabelsZR[l.key] || l.key;
-    return `<div onclick="alternarLoteLiberacao('${l.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: #103b70;">${getLotIconSVG(l.key)}</div>`;
+    return `<div onclick="alternarLoteLiberacao('${l.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--primary-blue);">${getLotIconSVG(l.key)}</div>`;
   }).join('');
 
   let html = `
     <div style="width: 100%;">
       <div style="display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-bottom: 8px; padding: 0 20px; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #103b70; font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a mandala quando adicionar ao Relatório">
+          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--primary-blue); font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a mandala quando adicionar ao Relatório">
             <input type="checkbox" ${liberacaoIncluirMandalaRelatorio ? 'checked' : ''} onchange="alternarLiberacaoIncluirNoRelatorio('mandala', this.checked)" style="width: 14px; height: 14px; cursor: pointer;"> Mandala
           </label>
-          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #103b70; font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a árvore (L1-L4) quando adicionar ao Relatório">
+          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--primary-blue); font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a árvore (L1-L4) quando adicionar ao Relatório">
             <input type="checkbox" ${liberacaoIncluirTabelaRelatorio ? 'checked' : ''} onchange="alternarLiberacaoIncluirNoRelatorio('tabela', this.checked)" style="width: 14px; height: 14px; cursor: pointer;"> Tabela
           </label>
         </div>
@@ -1009,19 +1041,19 @@ function renderLiberacaoUI() {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-    <div class="lib-outer" id="liberacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: #fffdf5; font-family: 'Montserrat', sans-serif;">
+    <div class="lib-outer" id="liberacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <div id="liberacaoHeaderCapture">
         <!-- Título + seletor de lote ativo lado a lado. O cabeçalho antigo (contorno dourado + nome/data/local do cliente) foi removido daqui porque ficou redundante: essas mesmas informações agora aparecem dentro do card da mandala logo abaixo (ver liberacaoMandalaImgHost), que é o que vira <img> pro toque-longo salvar em PNG. -->
         <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
-          <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; margin: 0; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+          <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin: 0; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
             Liberação Zodiacal
           </h3>
           <div style="position: relative; flex-shrink: 0;">
-            <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 34px; height: 34px; border-radius: 6px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
+            <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 34px; height: 34px; border-radius: 6px; background: var(--bg-main); color: var(--primary-blue); border: 1px solid var(--gold-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
               ${getLotIconSVG(selectedZRPhase)}
             </button>
-            <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 38px; left: 50%; transform: translateX(-50%); background: #fffdf5; border: 1px solid #c59b27; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+            <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 38px; left: 50%; transform: translateX(-50%); background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
               ${loteMenuRowsHTML}
             </div>
           </div>
@@ -1029,12 +1061,12 @@ function renderLiberacaoUI() {
 
         <!-- Nome/data/local do cliente: escondido na tela (já aparece dentro do card da mandala, ver liberacaoMandalaImgHost), mas mantido aqui pra continuar entrando na imagem exportada pro Relatório quando só "Tabela" é marcada (sem "Mandala") — senão essa combinação perderia o contexto de nome/data/local. capturarLiberacaoParaRelatorio torna este bloco visível só na cópia clonada usada pra exportar. -->
         <div id="liberacaoHeaderClientInfo" style="display: none; text-align: center; margin-bottom: 12px;">
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: #475569; font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
         </div>
       </div>
 
-      <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
+      <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
         <!-- id próprio (liberacaoMandalaImgHost): depois do render, essa
              div é convertida numa <img> com o mesmo mecanismo do "salvar
              imagem" da mandala principal (mandala.js) — sem botão nenhum
@@ -1045,9 +1077,9 @@ function renderLiberacaoUI() {
              já vir com esse contexto, sem precisar do resto da tela. -->
         <div id="liberacaoMandalaImgHost">
           <div style="text-align: center; margin-bottom: 8px;">
-            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70;">${escapeHtml(headerTitle)}</div>
-            <div style="font-size: 10.5px; color: #475569; font-weight: 500; margin-top: 1px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-            <div style="font-family: 'Cinzel', serif; font-size: 11px; color: #103b70; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
+            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+            <div style="font-size: 10.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 1px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 11px; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; margin-top: 4px;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
           </div>
           <div style="max-width: 480px; margin: 0 auto;">
             ${gerarMandalaNatalZR(currentCalculatedData, {
@@ -1077,22 +1109,22 @@ function renderLiberacaoUI() {
     const subperiodosL2 = calcularSubperiodosL2(currSign, currentStart, durationYears);
 
     const isPeakL1 = angularSignsFromFort.includes(currSign);
-    let peakBadgeL1 = isPeakL1 
-      ? `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; margin-left: 8px;">PICO</span>` 
+    let peakBadgeL1 = isPeakL1
+      ? `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; margin-left: 8px;">PICO</span>`
       : ``;
 
     html += `
-      <div style="margin-bottom: 12px; border: 1px solid #c59b27; border-radius: 8px; overflow: hidden; background: #ffffff;">
-        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? 'rgba(163, 230, 53, 0.4)' : '#ffffff'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid #1e5fa4' : 'none'};">
+      <div style="margin-bottom: 12px; border: 1px solid var(--gold-primary); border-radius: 8px; overflow: hidden; background: var(--bg-card);">
+        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? 'rgba(163, 230, 53, 0.4)' : 'var(--bg-card)'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid var(--table-border)' : 'none'};">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
-              <strong style="color: #103b70; font-family: 'Cinzel', serif; font-size: 13px;">L1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</strong>
-              <span style="font-size: 12px; color: #64748b; margin-left: 6px;">${durationYears} Anos</span>
+              <strong style="color: var(--primary-blue); font-family: 'Cinzel', serif; font-size: 13px;">L1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</strong>
+              <span style="font-size: 12px; color: var(--text-muted); margin-left: 6px;">${durationYears} Anos</span>
               ${peakBadgeL1}
             </div>
           </div>
-          <div style="font-size: 12px; font-weight: 600; color: #334155;">
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted-3);">
             ${formatarDataBR(currentStart)} a ${formatarDataBR(currentEnd)}
           </div>
         </div>
@@ -1100,8 +1132,8 @@ function renderLiberacaoUI() {
 
     if (isExpanded) {
       html += `
-        <div style="padding: 10px; background: #ffffff;">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #1e5fa4; border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: #ffffff;">
+        <div style="padding: 10px; background: var(--bg-card);">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--table-border); border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: var(--bg-card);">
             <thead>
               <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
                 <th style="padding: 8px;">L2 Subperíodo</th>
@@ -1116,23 +1148,23 @@ function renderLiberacaoUI() {
 
       subperiodosL2.forEach((sub, sIdx) => {
         const isL2Expanded = (expandedL2Key === `${i}_${sIdx}`);
-        const bgRow = sIdx % 2 === 0 ? '#ffffff' : '#fffdf5';
+        const bgRow = sIdx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-main)';
         const isPeakL2 = angularSignsFromFort.includes(sub.signIdx);
 
         let statusL2 = "";
         if (sub.isLysis) {
-          statusL2 += `<span style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; margin-right: 4px;">SALTO</span>`;
+          statusL2 += `<span style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; margin-right: 4px;">SALTO</span>`;
         }
         if (isPeakL2) {
-          statusL2 += `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">PICO</span>`;
+          statusL2 += `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">PICO</span>`;
         }
 
         html += `
-          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid #1e5fa4; background-color: ${isL2Expanded ? 'rgba(254, 240, 138, 0.5)' : bgRow}; cursor: pointer;">
+          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid var(--table-border); background-color: ${isL2Expanded ? 'rgba(254, 240, 138, 0.5)' : bgRow}; cursor: pointer;">
             <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
-            <td style="padding: 8px; font-weight: 600; color: #103b70;">${sub.months} Meses (${sub.days} Dias)</td>
-            <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.start)}</td>
-            <td style="padding: 8px; color: #334155;">${formatarDataBR(sub.end)}</td>
+            <td style="padding: 8px; font-weight: 600; color: var(--primary-blue);">${sub.months} Meses (${sub.days} Dias)</td>
+            <td style="padding: 8px; color: var(--text-muted-3);">${formatarDataBR(sub.start)}</td>
+            <td style="padding: 8px; color: var(--text-muted-3);">${formatarDataBR(sub.end)}</td>
             <td style="padding: 8px; text-align: center;">${statusL2}</td>
           </tr>
         `;
@@ -1141,8 +1173,8 @@ function renderLiberacaoUI() {
           const subperiodosL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
           html += `
             <tr>
-              <td colspan="5" style="padding: 8px 12px; background: #faf8f0; border-bottom: 1px solid #e5d5a1;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #103b70; border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: #ffffff;">
+              <td colspan="5" style="padding: 8px 12px; background: var(--bg-hover); border-bottom: 1px solid var(--border-color);">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--primary-blue); border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: var(--bg-card);">
                   <thead>
                     <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
                       <th style="padding: 6px;">L3 Subperíodo</th>
@@ -1157,23 +1189,23 @@ function renderLiberacaoUI() {
 
           subperiodosL3.forEach((subL3, l3Idx) => {
             const isL3Expanded = (expandedL3Key === `${i}_${sIdx}_${l3Idx}`);
-            const bgRowL3 = l3Idx % 2 === 0 ? '#ffffff' : '#f0f4f9';
+            const bgRowL3 = l3Idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-hover)';
             const isPeakL3 = angularSignsFromFort.includes(subL3.signIdx);
 
             let statusL3 = "";
             if (subL3.isLysis) {
-              statusL3 += `<span style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px; margin-right: 4px;">SALTO</span>`;
+              statusL3 += `<span style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px; margin-right: 4px;">SALTO</span>`;
             }
             if (isPeakL3) {
-              statusL3 += `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px;">PICO</span>`;
+              statusL3 += `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px;">PICO</span>`;
             }
 
             html += `
-              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid #cbd5e1; background-color: ${isL3Expanded ? 'rgba(224, 231, 255, 0.6)' : bgRowL3}; cursor: pointer;">
+              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid var(--table-border-soft); background-color: ${isL3Expanded ? 'rgba(224, 231, 255, 0.6)' : bgRowL3}; cursor: pointer;">
                 <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
-                <td style="padding: 6px; font-weight: 600; color: #103b70;">${subL3.days} Dias</td>
-                <td style="padding: 6px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
-                <td style="padding: 6px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
+                <td style="padding: 6px; font-weight: 600; color: var(--primary-blue);">${subL3.days} Dias</td>
+                <td style="padding: 6px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
+                <td style="padding: 6px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
                 <td style="padding: 6px; text-align: center;">${statusL3}</td>
               </tr>
             `;
@@ -1182,8 +1214,8 @@ function renderLiberacaoUI() {
               const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
               html += `
                 <tr>
-                  <td colspan="5" style="padding: 6px 10px; background: #transparent; border-bottom: 1px solid #cbd5e1;">
-                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #94a3b8; border-radius: 6px; overflow: hidden; font-size: 10px; text-align: center; background: #ffffff;">
+                  <td colspan="5" style="padding: 6px 10px; border-bottom: 1px solid var(--table-border-soft);">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--table-border-soft); border-radius: 6px; overflow: hidden; font-size: 10px; text-align: center; background: var(--bg-card);">
                       <thead>
                         <tr style="background-color: #475569; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px;">
                           <th style="padding: 5px;">L4 Subperíodo</th>
@@ -1198,23 +1230,23 @@ function renderLiberacaoUI() {
 
               subperiodosL4.forEach((subL4, l4Idx) => {
                 const isL4Ativo = (hoje >= subL4.start && hoje < subL4.end);
-                const bgRowL4 = isL4Ativo ? 'rgba(148, 163, 184, 0.45)' : (l4Idx % 2 === 0 ? '#ffffff' : '#f8fafc');
+                const bgRowL4 = isL4Ativo ? 'rgba(148, 163, 184, 0.45)' : (l4Idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-hover)');
                 const isPeakL4 = angularSignsFromFort.includes(subL4.signIdx);
 
                 let statusL4 = "";
                 if (subL4.isLysis) {
-                  statusL4 += `<span style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px; margin-right: 3px;">SALTO</span>`;
+                  statusL4 += `<span style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px; margin-right: 3px;">SALTO</span>`;
                 }
                 if (isPeakL4) {
-                  statusL4 += `<span style="background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px;">PICO</span>`;
+                  statusL4 += `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px;">PICO</span>`;
                 }
 
                 html += `
-                  <tr style="border-bottom: 1px solid #cbd5e1; background-color: ${bgRowL4};">
+                  <tr style="border-bottom: 1px solid var(--table-border-soft); background-color: ${bgRowL4};">
                     <td style="padding: 5px; text-align: center;">${getSignSVGZR(subL4.signIdx, 16)}</td>
-                    <td style="padding: 5px; font-weight: 600; color: #103b70;">${subL4.hours} Horas</td>
-                    <td style="padding: 5px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
-                    <td style="padding: 5px; color: #334155; line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
+                    <td style="padding: 5px; font-weight: 600; color: var(--primary-blue);">${subL4.hours} Horas</td>
+                    <td style="padding: 5px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
+                    <td style="padding: 5px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
                     <td style="padding: 5px; text-align: center;">${statusL4}</td>
                   </tr>
                 `;
@@ -1278,8 +1310,9 @@ async function capturarLiberacaoParaRelatorio() {
   const arvore = document.getElementById('liberacaoArvoreCapture');
   if (!header) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
 
+  const modoEscuroCapturaLib = document.documentElement.classList.contains('tema-escuro');
   const temp = document.createElement('div');
-  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
+  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: ${modoEscuroCapturaLib ? '#1c1917' : '#fffdf5'}; font-family: "Montserrat", sans-serif;`;
   const headerClone = header.cloneNode(true);
   // Nome/data/local ficam escondidos na tela (redundantes com o card da mandala). Só precisam aparecer aqui na imagem exportada quando a mandala (que já traz essa mesma informação) não entrar — senão duplicaria na própria imagem.
   if (!liberacaoIncluirMandalaRelatorio) {
@@ -1292,7 +1325,7 @@ async function capturarLiberacaoParaRelatorio() {
   document.body.appendChild(temp);
 
   try {
-    const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
+    const canvas = await html2canvas(temp, { backgroundColor: modoEscuroCapturaLib ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
     const partes = [];
     if (liberacaoIncluirMandalaRelatorio) partes.push('Mandala');
     if (liberacaoIncluirTabelaRelatorio) partes.push('Tabela');
@@ -1329,7 +1362,8 @@ async function converterMandalaLiberacaoEmImagem() {
   if (!host) return;
 
   try {
-    const canvas = await html2canvas(host, { backgroundColor: '#ffffff', scale: 2, useCORS: true });
+    const modoEscuroConversao = document.documentElement.classList.contains('tema-escuro');
+    const canvas = await html2canvas(host, { backgroundColor: modoEscuroConversao ? '#1c1917' : '#ffffff', scale: 2, useCORS: true });
     if (!document.getElementById('liberacaoMandalaImgHost')) return; // a tela já mudou (outro lote/módulo) enquanto convertia
     host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Mandala Natal — Liberação Zodiacal" style="width: 100%; height: auto; display: block;">`;
   } catch (err) {
