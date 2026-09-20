@@ -1034,23 +1034,32 @@ function renderLiberacaoUI() {
       </div>
 
       <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: #ffffff; border: 1.5px solid #c59b27; border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-          <div style="font-family: 'Cinzel', serif; font-size: 12px; color: #103b70; font-weight: 700; text-transform: uppercase;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
-          <button type="button" onclick="salvarMandalaLiberacaoEmPNG()" title="Salvar esta mandala (com o cabeçalho) como um arquivo PNG" style="width: 22px; height: 22px; border-radius: 5px; background: #fffdf5; color: #103b70; border: 1px solid #c59b27; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0;">
-            <i class="fa-solid fa-download" style="font-size: 10px;"></i>
-          </button>
-        </div>
-        <div style="max-width: 480px; margin: 0 auto;">
-          ${gerarMandalaNatalZR(currentCalculatedData, {
-            loteCasa1: selectedZRPhase,
-            l1SignIdx: l1HighlightSignIdx,
-            l2SignIdx: l2HighlightSignIdx,
-            l3SignIdx: l3HighlightSignIdx,
-            l4SignIdx: l4HighlightSignIdx,
-            l2SaltoSignIdx: l2SaltoSignIdx,
-            l3SaltoSignIdx: l3SaltoSignIdx,
-            l4SaltoSignIdx: l4SaltoSignIdx
-          })}
+        <!-- id próprio (liberacaoMandalaImgHost): depois do render, essa
+             div é convertida numa <img> com o mesmo mecanismo do "salvar
+             imagem" da mandala principal (mandala.js) — sem botão nenhum
+             pra isso, é só a mandala virar uma imagem de verdade, e o
+             toque longo do navegador/SO já oferece "salvar imagem"
+             sozinho, nativamente. O nome/data/hora repetido aqui (fora
+             do cabeçalho interativo lá em cima) é pra essa imagem salva
+             já vir com esse contexto, sem precisar do resto da tela. -->
+        <div id="liberacaoMandalaImgHost">
+          <div style="text-align: center; margin-bottom: 8px;">
+            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: #103b70;">${escapeHtml(headerTitle)}</div>
+            <div style="font-size: 10.5px; color: #475569; font-weight: 500; margin-top: 1px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 11px; color: #103b70; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
+          </div>
+          <div style="max-width: 480px; margin: 0 auto;">
+            ${gerarMandalaNatalZR(currentCalculatedData, {
+              loteCasa1: selectedZRPhase,
+              l1SignIdx: l1HighlightSignIdx,
+              l2SignIdx: l2HighlightSignIdx,
+              l3SignIdx: l3HighlightSignIdx,
+              l4SignIdx: l4HighlightSignIdx,
+              l2SaltoSignIdx: l2SaltoSignIdx,
+              l3SaltoSignIdx: l3SaltoSignIdx,
+              l4SaltoSignIdx: l4SaltoSignIdx
+            })}
+          </div>
         </div>
       </div>
 
@@ -1247,6 +1256,7 @@ function renderLiberacaoUI() {
 
   container.innerHTML = html;
   encolherTabelasLZRVisiveis(container);
+  converterMandalaLiberacaoEmImagem();
 }
 
 /* Monta, fora da tela, um bloco só com o cabeçalho (sempre) + mandala
@@ -1291,44 +1301,34 @@ async function capturarLiberacaoParaRelatorio() {
 }
 window.capturarLiberacaoParaRelatorio = capturarLiberacaoParaRelatorio;
 
-/* Salva a mandala natal da Liberação como um arquivo PNG, com o
-   cabeçalho (título + nome/data do mapa) junto na imagem — mesma
-   técnica de conversão SVG→canvas→PNG do "salvar imagem" da mandala
-   principal (mandala.js), só que via html2canvas (o SVG aqui é só uma
-   peça dentro do card, junto de textos HTML normais, não a tela
-   inteira dedicada que mandala.js tem pra si). Acionado por um botão
-   (não por clique direito): no iPad do astrólogo não tem botão direito
-   de mouse, então um ícone visível é o único jeito confiável de chegar
-   nessa função. */
-async function salvarMandalaLiberacaoEmPNG() {
-  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
-
-  const header = document.getElementById('liberacaoHeaderCapture');
-  const mandala = document.getElementById('liberacaoMandalaCapture');
-  if (!header || !mandala) { alert('Mandala não encontrada para salvar.'); return; }
-
-  const temp = document.createElement('div');
-  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: #fffdf5; font-family: "Montserrat", sans-serif;';
-  temp.appendChild(header.cloneNode(true));
-  temp.appendChild(mandala.cloneNode(true));
-  document.body.appendChild(temp);
+/* Converte o card da mandala (nome/data + "Casa 1: ..." + a roda) numa
+   <img> de verdade logo depois do render — mesma ideia do "salvar
+   imagem" da mandala principal (mandala.js): lá a tela inteira da
+   mandala já É uma <img src="data:image/png...">, então o toque longo
+   no iPad/celular já oferece "Salvar Imagem" sozinho, nativamente, sem
+   precisar de nenhum botão. Aqui a mandala é só uma peça dentro de uma
+   tela maior (cabeçalho interativo + árvore), então em vez de trocar a
+   tela inteira, só a div #liberacaoMandalaImgHost (que já nasce com o
+   SVG dentro, pra aparecer na hora, sem tela em branco) é convertida
+   pra imagem depois — via html2canvas, porque ali dentro tem texto
+   HTML normal (nome/data) junto do SVG, não só o SVG puro (o
+   drawImage direto de mandala.js só funciona pra SVG isolado).
+   Silenciosa: se falhar (html2canvas não carregou, por exemplo), o SVG
+   cru continua visível — o astrólogo só perde o toque-longo-pra-salvar
+   nesse caso, a mandala em si nunca desaparece. */
+async function converterMandalaLiberacaoEmImagem() {
+  if (typeof html2canvas !== 'function') return;
+  const host = document.getElementById('liberacaoMandalaImgHost');
+  if (!host) return;
 
   try {
-    const canvas = await html2canvas(temp, { backgroundColor: '#fffdf5', scale: 2, useCORS: true });
-    const rotuloLote = ((typeof RELATORIO_LOT_NOMES !== 'undefined' && RELATORIO_LOT_NOMES[selectedZRPhase]) || selectedZRPhase).replace(/\s+/g, '_');
-    const nomeSujeito = (currentSubjectName || 'Mapa').replace(/\s+/g, '_');
-    const link = document.createElement('a');
-    link.download = `Liberacao_Zodiacal_${nomeSujeito}_${rotuloLote}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const canvas = await html2canvas(host, { backgroundColor: '#ffffff', scale: 2, useCORS: true });
+    if (!document.getElementById('liberacaoMandalaImgHost')) return; // a tela já mudou (outro lote/módulo) enquanto convertia
+    host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Mandala Natal — Liberação Zodiacal" style="width: 100%; height: auto; display: block;">`;
   } catch (err) {
-    console.error('Erro ao salvar a mandala da Liberação em PNG:', err);
-    alert('Não foi possível salvar a imagem da mandala.');
-  } finally {
-    document.body.removeChild(temp);
+    console.error('Erro ao converter a mandala da Liberação em imagem:', err);
   }
 }
-window.salvarMandalaLiberacaoEmPNG = salvarMandalaLiberacaoEmPNG;
 
 /* ENCOLHE TABELAS LARGAS DEMAIS (L2/L3/L4) PARA CABEREM NA TELA (SEM CORTE),
    EM VEZ DE FICAREM TRAVADAS/CORTADAS EM TELAS ESTREITAS — mesma técnica
