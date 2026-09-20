@@ -573,7 +573,7 @@ body {
             display: flex;
             align-items: center;
             gap: 2px;
-            background: #ffffff;
+            background: var(--bg-card);
             border: 1px solid #d4af37;
             border-radius: 6px;
             padding: 2px 6px;
@@ -584,7 +584,7 @@ body {
             background: transparent;
             font-size: 11px;
             font-weight: 700;
-            color: #103b70;
+            color: var(--primary-blue);
             padding: 2px 4px;
             outline: none;
             cursor: pointer;
@@ -919,7 +919,7 @@ body {
 
             <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
             <div id="mandala-controls-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; align-items: center; gap: 8px;">
-                <div class="time-stepper" style="background: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; padding: 4px 8px; display: flex; align-items: center; gap: 6px;">
+                <div class="time-stepper" style="background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px 8px; display: flex; align-items: center; gap: 6px;">
                     <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
                     <select id="stepUnit" class="time-select">
                         <option value="second">Segundo</option>
@@ -1123,12 +1123,12 @@ body {
 <script src="sinastria.js?v=20260920d"></script>
 <script src="revolucao.js?v=20260920"></script>
 <script src="decenios.js?v=20260917"></script>
-<script src="direcoes.js?v=20260916b"></script>
+<script src="direcoes.js?v=20260920"></script>
 <script src="liberacao.js?v=20260920p"></script>
 <script src="lotes-calculadora.js?v=20260918p"></script>
 <script src="horas.js?v=20260919"></script>
 <script src="perguntas.js?v=20260916"></script>
-<script src="relatorio.js?v=20260920"></script>
+<script src="relatorio.js?v=20260920b"></script>
 <script src="agendamento.js?v=20260920e"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
