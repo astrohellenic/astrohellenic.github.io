@@ -331,148 +331,198 @@ function montarCabecalhoMandalaHTML(data, idOpcional) {
   `;
 }
 
-/* Em telas estreitas, em vez de deixar as tabelas cortadas com rolagem
-   interna, encolhe cada uma (mantendo a proporção) até caberem inteiras
-   na largura disponível — o usuário pode ampliar com o dedo para ver
-   os detalhes, já que o conteúdo é vetorial/texto e não perde nitidez.
-   Função de nível global (antes vivia só dentro de renderPainelTecnico)
-   pra poder ser reaproveitada por qualquer tela que precise do mesmo
-   encolhimento — ex.: a Matriz de Visibilidade sozinha na tela da
-   Mandala (matrizVisibilidade.js, toggleMatrizVisibilidadeNaMandala). */
-function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId, availableWidth) {
-  const outerScroll = document.getElementById(outerScrollId);
-  const scaleBox = document.getElementById(scaleBoxId);
-  const wrapper = document.getElementById(wrapperId);
-  if (!scaleBox || !wrapper) return 1;
-  wrapper.style.transform = '';
-  scaleBox.style.width = '';
-  scaleBox.style.height = '';
-  if (outerScroll) outerScroll.style.height = '';
-  const naturalW = wrapper.offsetWidth;
-  const naturalH = wrapper.offsetHeight;
-  let escalaBase = 1;
-  if (availableWidth > 0 && naturalW > availableWidth) {
-    escalaBase = availableWidth / naturalW;
-    const scaledH = naturalH * escalaBase;
-    wrapper.style.transform = `scale(${escalaBase})`;
-    scaleBox.style.width = (naturalW * escalaBase) + 'px';
-    scaleBox.style.height = scaledH + 'px';
-    // Com uma <table> (ou <svg>) diretamente dentro de um elemento com
-    // transform, o contêiner com overflow-x:auto calcula a própria altura
-    // usando o tamanho do conteúdo ANTES da escala (bug do navegador) —
-    // por isso também fixamos a altura dele aqui, em vez de deixar em "auto".
-    if (outerScroll) outerScroll.style.height = scaledH + 'px';
-  }
-  return escalaBase;
+/* Mede a largura de um texto renderizado numa fonte específica — usado
+   só pra calcular a largura de cada coluna do Painel Principal em SVG
+   (montarSVGPainelPrincipal, mais abaixo), que — ao contrário de uma
+   <table> HTML — não tem layout automático: cada célula precisa de
+   x/width explícitos. Canvas 2D reaproveitado entre chamadas. */
+let _canvasMedidaTextoTabela = null;
+function medirLarguraTextoTabela(texto, fontSizePx, fontWeight) {
+  if (!_canvasMedidaTextoTabela) _canvasMedidaTextoTabela = document.createElement('canvas');
+  const ctx = _canvasMedidaTextoTabela.getContext('2d');
+  ctx.font = `${fontWeight || 400} ${fontSizePx}px 'Montserrat', sans-serif`;
+  return ctx.measureText(texto).width;
 }
 
-/* PINÇA-PRA-ZOOM IMPLEMENTADA À MÃO, direto em cima da Matriz/Painel.
-   Por quê: touch-action nativo do navegador (qualquer valor que inclua
-   pinch-zoom: "manipulation", "pan-x pan-y") deixa esse wrapper
-   "participar" do gesto de duas pontas como se fosse rolagem própria,
-   e ele desliza de lado sozinho ("dança") — touch-action: pan-y sozinho
-   resolve a dança, mas aí o navegador não deixa mais dar pinça
-   NENHUMA em cima da tabela (só funciona encostando fora dela, nas
-   bordas). Astrólogo pediu as duas coisas ao mesmo tempo: sem dançar E
-   com pinça funcionando em cima da própria tabela — só dá com um
-   pinça nosso, feito em JS, que ignora completamente o gesto nativo
-   (touch-action continua "pan-y", então o navegador nunca entra em
-   cena) e ajusta o mesmo transform:scale do auto-encolhimento acima,
-   mantendo o ponto entre os dois dedos parado embaixo deles (senão o
-   zoom "puxa" a tela pro canto e o usuário perde de vista o que
-   queria ver de perto). Arrastar com UM dedo na horizontal (depois de
-   já ter dado zoom) também é tratado aqui, porque touch-action: pan-y
-   não deixa o navegador rolar a tabela de lado sozinho.
-   Função de nível global pelo mesmo motivo de encolherTabelaParaCaber
-   acima — já não dependia de nenhuma variável de fora, só mudou de
-   lugar (não repita essa lógica em outro arquivo; chame esta). */
-function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase) {
-  const outerScroll = document.getElementById(outerScrollId);
-  const scaleBox = document.getElementById(scaleBoxId);
-  const wrapper = document.getElementById(wrapperId);
-  if (!outerScroll || !scaleBox || !wrapper) return;
+/* Lê o width/height já declarado num fragmento "<svg width=... height=...
+   ...>...</svg>" — mesma extração que posicionarIconeMatrizSVG
+   (matrizVisibilidade.js) já faz por dentro; separada aqui porque
+   montarSVGPainelPrincipal precisa saber o tamanho do ícone ANTES de
+   decidir onde centralizá-lo (pra calcular a largura da coluna). */
+function extrairTamanhoIconeSVG(fragmentoSVG) {
+  const wMatch = fragmentoSVG.match(/width="([\d.]+)"/);
+  const hMatch = fragmentoSVG.match(/height="([\d.]+)"/);
+  return { w: wMatch ? parseFloat(wMatch[1]) : 24, h: hMatch ? parseFloat(hMatch[1]) : 24 };
+}
 
-  const ESCALA_MAX = Math.max(escalaBase * 6, 2.5);
-  let escalaAtual = escalaBase;
-
-  function aplicarEscala(escala) {
-    escalaAtual = Math.max(escalaBase, Math.min(escala, ESCALA_MAX));
-    const naturalW = wrapper.offsetWidth;
-    const naturalH = wrapper.offsetHeight;
-    wrapper.style.transform = `scale(${escalaAtual})`;
-    scaleBox.style.width = (naturalW * escalaAtual) + 'px';
-    scaleBox.style.height = (naturalH * escalaAtual) + 'px';
-    outerScroll.style.height = (naturalH * escalaAtual) + 'px';
-    return escalaAtual;
+/* Ícone da coluna "Ponto" — igual ao getMatrizIconeSVG (matrizVisibilidade.js,
+   mesma ideia, campos do objeto diferentes porque a lista de elementos
+   do Painel Principal usa outro formato): Nodo Norte/Sul, no getItemSVG
+   original, viram um <span> de HTML solto, que não existe dentro de um
+   <svg> puro — aqui viram <svg><text> de verdade, mesma cor/símbolo. */
+function getIconePontoTabelaSVG(el) {
+  if (el.type === 'planet') return getPlanet3DSVG(el.pId);
+  if (el.key === 'Nodo Norte' || el.key === 'Nodo Sul') {
+    const simbolo = el.key === 'Nodo Norte' ? '☊' : '☋';
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="6" font-size="17" font-weight="bold" fill="var(--aspect-conjuncao)" text-anchor="middle">${simbolo}</text></svg>`;
   }
+  return getItemSVG(el.key);
+}
 
-  function distancia(t1, t2) {
-    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-  }
+/* Reconstrói a tabela do Painel Principal (Ponto/Signo/Grau/Latitude/
+   Termo/Dodecatemória) em SVG puro — mesmo motivo e mesmo resultado que
+   a reescrita da Matriz de Visibilidade: sendo um <svg>, ela encolhe só
+   com CSS (max-width/height, como uma imagem) e usa o zoom nativo da
+   página, sem precisar de nenhuma caixinha de zoom calculada em JS nem
+   de bloquear o touch-action — que era exatamente o que fazia o
+   conteúdo ampliado ficar escondido atrás de uma margem ao dar zoom.
 
-  let pinchDistInicial = 0, pinchEscalaInicial = escalaBase;
-  let pinchMidXInicial = 0, pinchMidYInicial = 0;
-  let pinchScrollLeftInicial = 0;
+   Diferença da Matriz: lá o grid é uniforme (todas as células do mesmo
+   tamanho). Aqui as colunas têm conteúdos bem diferentes (ícone+nome,
+   signo, grau, latitude, termo, dodecatemória) — como um <svg> não tem
+   layout automático de tabela, a largura de cada coluna é medida na
+   mão (texto via medirLarguraTextoTabela, ícone via extrairTamanhoIconeSVG)
+   e só depois usada pra posicionar tudo, replicando o que uma <table>
+   HTML calcularia sozinha. */
+function montarSVGPainelPrincipal(listaElementos) {
+  const PAD_X = 10, PAD_Y = 8;
+  const F_HEADER = { size: 11, weight: 700 };
+  const F_PONTO_LABEL = { size: 9, weight: 600 };
+  const F_GRAU = { size: 12, weight: 600 };
+  const F_LAT = { size: 12, weight: 600 };
+  const F_TERMO = { size: 14, weight: 700 };
+  const F_DODEC_GRAU = { size: 12, weight: 600 };
+  const MARGEM_SEGURANCA = 4; // colchão pra pequenas imprecisões de medida (ex.: fonte ainda carregando)
 
-  let arrastoAtivo = false, arrastoX0 = 0, arrastoY0 = 0, arrastoScrollLeft0 = 0, arrastoDirecaoDefinida = false;
-
-  outerScroll.addEventListener('touchstart', function (e) {
-    if (e.touches.length === 2) {
-      arrastoAtivo = false;
-      pinchDistInicial = distancia(e.touches[0], e.touches[1]);
-      pinchEscalaInicial = escalaAtual;
-      const rect = outerScroll.getBoundingClientRect();
-      pinchMidXInicial = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-      pinchMidYInicial = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-      pinchScrollLeftInicial = outerScroll.scrollLeft;
-    } else if (e.touches.length === 1) {
-      pinchDistInicial = 0;
-      arrastoAtivo = true;
-      arrastoDirecaoDefinida = false;
-      arrastoX0 = e.touches[0].clientX;
-      arrastoY0 = e.touches[0].clientY;
-      arrastoScrollLeft0 = outerScroll.scrollLeft;
-    }
-  }, { passive: true });
-
-  outerScroll.addEventListener('touchmove', function (e) {
-    if (e.touches.length === 2 && pinchDistInicial > 15) {
-      e.preventDefault();
-      const novaDist = distancia(e.touches[0], e.touches[1]);
-      const conteudoX = (pinchScrollLeftInicial + pinchMidXInicial) / pinchEscalaInicial;
-      // Só ajusta a rolagem HORIZONTAL do próprio wrapper (scrollLeft
-      // não move a posição do wrapper na tela, então é seguro). NÃO
-      // mexe na rolagem da página (window.scrollBy) — isso aqui é de
-      // propósito: rolar a página muda a posição do próprio wrapper
-      // na tela no meio do gesto, invalidando os pontos de referência
-      // guardados no touchstart e realimentando um erro a cada frame
-      // — foi exatamente isso que causava a tabela "dançar" na
-      // primeira versão desse código. Sem essa parte, o ponto do
-      // zoom pode "andar" um pouco na vertical enquanto amplia, mas
-      // não dança, e o usuário ainda pode rolar a página normalmente
-      // (com um dedo) depois de soltar o pinça pra ajustar.
-      const novaEscala = aplicarEscala(pinchEscalaInicial * (novaDist / pinchDistInicial));
-      outerScroll.scrollLeft = conteudoX * novaEscala - pinchMidXInicial;
-    } else if (e.touches.length === 1 && arrastoAtivo) {
-      const dx = e.touches[0].clientX - arrastoX0;
-      const dy = e.touches[0].clientY - arrastoY0;
-      if (!arrastoDirecaoDefinida) {
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-        arrastoDirecaoDefinida = true;
-        // Só assume o gesto se for claramente mais horizontal que
-        // vertical — senão deixa o navegador rolar a página (pan-y)
-        // normalmente, sem interferir.
-        if (Math.abs(dx) <= Math.abs(dy)) { arrastoAtivo = false; return; }
-      }
-      e.preventDefault();
-      outerScroll.scrollLeft = arrastoScrollLeft0 - dx;
-    }
-  }, { passive: false });
-
-  outerScroll.addEventListener('touchend', function (e) {
-    if (e.touches.length < 2) pinchDistInicial = 0;
-    if (e.touches.length < 1) arrastoAtivo = false;
+  const linhas = listaElementos.map(el => {
+    const absDeg = el.abs;
+    const iconeSVG = getIconePontoTabelaSVG(el);
+    const pointName = el.type === 'planet' ? (NOMES_PONTOS_TABELA[el.pId] || el.pId) : (NOMES_PONTOS_TABELA[el.key] || el.key);
+    const signoSVG = getSignSVG(Math.floor(absDeg / 30), 18);
+    const grauBase = formatDegMinTabela(absDeg);
+    const temRetro = Boolean(el.retro);
+    const latFormatted = (el.type === 'planet') ? formatarLatitudeEcliptica(el.lat) : '-';
+    const termo = calcEgyptianTermTabela(absDeg);
+    const dodec = calcDodecatemoriaTabela(absDeg);
+    const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
+    return { iconeSVG, pointName, signoSVG, grauBase, temRetro, latFormatted, termo, dodecSignoSVG, dodecGrauFormatted: dodec.degFormatted };
   });
+
+  // Largura de cada coluna = o maior entre o rótulo do cabeçalho e o
+  // conteúdo de todas as linhas (igual a como uma <table> HTML decide
+  // sozinha a largura de cada coluna).
+  let wPonto = medirLarguraTextoTabela('PONTO', F_HEADER.size, F_HEADER.weight);
+  let wSigno = medirLarguraTextoTabela('SIGNO', F_HEADER.size, F_HEADER.weight);
+  let wGrau = medirLarguraTextoTabela('GRAU', F_HEADER.size, F_HEADER.weight);
+  let wLat = medirLarguraTextoTabela('LATITUDE', F_HEADER.size, F_HEADER.weight);
+  let wTermo = medirLarguraTextoTabela('TERMO', F_HEADER.size, F_HEADER.weight);
+  let wDodecSigno = medirLarguraTextoTabela('SIGNO', F_HEADER.size, F_HEADER.weight);
+  let wDodecGrau = medirLarguraTextoTabela('GRAU', F_HEADER.size, F_HEADER.weight);
+
+  const alturasLinha = [];
+  linhas.forEach(l => {
+    const iconeTam = extrairTamanhoIconeSVG(l.iconeSVG);
+    wPonto = Math.max(wPonto, iconeTam.w, medirLarguraTextoTabela(l.pointName, F_PONTO_LABEL.size, F_PONTO_LABEL.weight));
+    wSigno = Math.max(wSigno, extrairTamanhoIconeSVG(l.signoSVG).w);
+    wGrau = Math.max(wGrau, medirLarguraTextoTabela(l.grauBase + (l.temRetro ? ' ℞' : ''), F_GRAU.size, F_GRAU.weight));
+    wLat = Math.max(wLat, medirLarguraTextoTabela(l.latFormatted, F_LAT.size, F_LAT.weight));
+    wTermo = Math.max(wTermo, medirLarguraTextoTabela(l.termo, F_TERMO.size, F_TERMO.weight));
+    wDodecSigno = Math.max(wDodecSigno, extrairTamanhoIconeSVG(l.dodecSignoSVG).w);
+    wDodecGrau = Math.max(wDodecGrau, medirLarguraTextoTabela(l.dodecGrauFormatted, F_DODEC_GRAU.size, F_DODEC_GRAU.weight));
+
+    const alturaLabel = Math.ceil(F_PONTO_LABEL.size * 1.3);
+    alturasLinha.push(iconeTam.h + 2 + alturaLabel + PAD_Y * 2);
+  });
+
+  wPonto = Math.ceil(wPonto) + PAD_X * 2 + MARGEM_SEGURANCA;
+  wSigno = Math.ceil(wSigno) + PAD_X * 2 + MARGEM_SEGURANCA;
+  wGrau = Math.ceil(wGrau) + PAD_X * 2 + MARGEM_SEGURANCA;
+  wLat = Math.ceil(wLat) + PAD_X * 2 + MARGEM_SEGURANCA;
+  wTermo = Math.ceil(wTermo) + PAD_X * 2 + MARGEM_SEGURANCA;
+  wDodecSigno = Math.ceil(wDodecSigno) + PAD_X * 2 + MARGEM_SEGURANCA;
+  wDodecGrau = Math.ceil(wDodecGrau) + PAD_X * 2 + MARGEM_SEGURANCA;
+
+  const colX = { ponto: 0 };
+  colX.signo = colX.ponto + wPonto;
+  colX.grau = colX.signo + wSigno;
+  colX.lat = colX.grau + wGrau;
+  colX.termo = colX.lat + wLat;
+  colX.dodecSigno = colX.termo + wTermo;
+  colX.dodecGrau = colX.dodecSigno + wDodecSigno;
+  const totalW = colX.dodecGrau + wDodecGrau;
+
+  const alturaHeaderLinha = Math.ceil(F_HEADER.size * 1.3) + PAD_Y * 2;
+  const headerH = alturaHeaderLinha * 2;
+
+  const rowY = [];
+  let y = headerH;
+  alturasLinha.forEach(h => { rowY.push(y); y += h; });
+  const totalH = y;
+
+  const corBorda = 'var(--table-border)';
+  let svg = `<svg width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" style="display: inline-block; max-width: 100%; height: auto; font-family: 'Montserrat', sans-serif; border: 2px solid ${corBorda}; border-radius: 12px; overflow: hidden;">`;
+  svg += `<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="var(--bg-card)"/>`;
+
+  // Cabeçalho — Ponto/Signo/Grau/Latitude/Termo ocupam as duas linhas
+  // (equivalente ao rowspan="2" de antes); Dodecatemória ocupa as duas
+  // colunas da direita na linha 1 (equivalente ao colspan="2"), com
+  // Signo/Grau embaixo na linha 2.
+  function celulaHeader(x, y, w, h, texto) {
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--bg-main)" stroke="${corBorda}" stroke-width="1"/>` +
+      `<text x="${x + w / 2}" y="${y + h / 2}" font-size="${F_HEADER.size}" font-weight="${F_HEADER.weight}" letter-spacing="0.5" fill="var(--primary-blue)" text-anchor="middle" dominant-baseline="central">${texto}</text>`;
+  }
+  svg += celulaHeader(colX.ponto, 0, wPonto, headerH, 'PONTO');
+  svg += celulaHeader(colX.signo, 0, wSigno, headerH, 'SIGNO');
+  svg += celulaHeader(colX.grau, 0, wGrau, headerH, 'GRAU');
+  svg += celulaHeader(colX.lat, 0, wLat, headerH, 'LATITUDE');
+  svg += celulaHeader(colX.termo, 0, wTermo, headerH, 'TERMO');
+  svg += celulaHeader(colX.dodecSigno, 0, wDodecSigno + wDodecGrau, alturaHeaderLinha, 'DODECATEMÓRIA');
+  svg += celulaHeader(colX.dodecSigno, alturaHeaderLinha, wDodecSigno, alturaHeaderLinha, 'SIGNO');
+  svg += celulaHeader(colX.dodecGrau, alturaHeaderLinha, wDodecGrau, alturaHeaderLinha, 'GRAU');
+
+  // Corpo
+  linhas.forEach((l, i) => {
+    const y0 = rowY[i];
+    const h = alturasLinha[i];
+    const cy = y0 + h / 2;
+
+    function celula(x, w, conteudoSVG) {
+      return `<rect x="${x}" y="${y0}" width="${w}" height="${h}" fill="var(--bg-card)" stroke="${corBorda}" stroke-width="1"/>${conteudoSVG}`;
+    }
+
+    // Ponto: ícone em cima, nome embaixo
+    const iconeTam = extrairTamanhoIconeSVG(l.iconeSVG);
+    const alturaLabel = Math.ceil(F_PONTO_LABEL.size * 1.3);
+    const blocoAltura = iconeTam.h + 2 + alturaLabel;
+    const topoBloco = cy - blocoAltura / 2;
+    const iconePosicionado = posicionarIconeMatrizSVG(l.iconeSVG, colX.ponto + wPonto / 2, topoBloco + iconeTam.h / 2);
+    const labelPonto = `<text x="${colX.ponto + wPonto / 2}" y="${topoBloco + iconeTam.h + 2 + alturaLabel / 2}" font-size="${F_PONTO_LABEL.size}" font-weight="${F_PONTO_LABEL.weight}" fill="var(--primary-blue)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.pointName)}</text>`;
+    svg += celula(colX.ponto, wPonto, iconePosicionado + labelPonto);
+
+    // Signo
+    svg += celula(colX.signo, wSigno, posicionarIconeMatrizSVG(l.signoSVG, colX.signo + wSigno / 2, cy));
+
+    // Grau (com ℞ em vermelho quando retrógrado)
+    const textoGrau = l.temRetro
+      ? `${escapeHtml(l.grauBase)}<tspan fill="var(--danger)" font-weight="900"> ℞</tspan>`
+      : escapeHtml(l.grauBase);
+    svg += celula(colX.grau, wGrau, `<text x="${colX.grau + wGrau / 2}" y="${cy}" font-size="${F_GRAU.size}" font-weight="${F_GRAU.weight}" fill="var(--text-dark)" text-anchor="middle" dominant-baseline="central">${textoGrau}</text>`);
+
+    // Latitude
+    svg += celula(colX.lat, wLat, `<text x="${colX.lat + wLat / 2}" y="${cy}" font-size="${F_LAT.size}" font-weight="${F_LAT.weight}" fill="var(--text-muted-2)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.latFormatted)}</text>`);
+
+    // Termo
+    svg += celula(colX.termo, wTermo, `<text x="${colX.termo + wTermo / 2}" y="${cy}" font-size="${F_TERMO.size}" font-weight="${F_TERMO.weight}" fill="var(--gold-primary)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.termo)}</text>`);
+
+    // Dodecatemória — Signo
+    svg += celula(colX.dodecSigno, wDodecSigno, posicionarIconeMatrizSVG(l.dodecSignoSVG, colX.dodecSigno + wDodecSigno / 2, cy));
+
+    // Dodecatemória — Grau
+    svg += celula(colX.dodecGrau, wDodecGrau, `<text x="${colX.dodecGrau + wDodecGrau / 2}" y="${cy}" font-size="${F_DODEC_GRAU.size}" font-weight="${F_DODEC_GRAU.weight}" fill="var(--text-dark)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.dodecGrauFormatted)}</text>`);
+  });
+
+  svg += `</svg>`;
+  return svg;
 }
 
 function renderPainelTecnico(data, containerId) {
@@ -542,111 +592,14 @@ function renderPainelTecnico(data, containerId) {
         </button>
       </div>
       <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
-      <style>
-        .tabela-enxuta {
-          width: 100%;
-          border-collapse: collapse;
-          font-family: 'Montserrat', sans-serif;
-          background: var(--bg-card);
-          font-size: 12px;
-          color: var(--text-dark);
-        }
-        .tabela-enxuta th, .tabela-enxuta td {
-          border: 1px solid var(--table-border);
-          padding: 8px 10px;
-          text-align: center;
-          vertical-align: middle;
-        }
-        .tabela-enxuta th {
-          background-color: var(--bg-main);
-          font-weight: 700;
-          color: var(--primary-blue);
-          text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 0.5px;
-        }
-        .col-ponto { white-space: nowrap; }
-        .col-signo { white-space: nowrap; }
-        .col-grau { font-weight: 600; white-space: nowrap; }
-        .col-lat { font-weight: 600; color: var(--text-muted-2); white-space: nowrap; }
-        .col-termo { font-weight: bold; color: var(--gold-primary); font-size: 14px; white-space: nowrap; }
-        .col-dodec-signo { white-space: nowrap; }
-        .col-dodec-grau { font-weight: 600; white-space: nowrap; }
-      </style>
-
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
       ${montarCabecalhoMandalaHTML(data, 'painelTecnicoHeader')}
     `;
 
     html += `
-      <div id="painelPrincipalOuterScroll" style="overflow-x: auto; overflow-y: hidden; margin: 24px 0; text-align: center; touch-action: pan-y;">
-        <div id="painelPrincipalScaleBox" style="display: inline-block;">
-        <div id="painelPrincipalWrapper" style="display: inline-block; text-align: left; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden; transform-origin: top left;">
-          <table class="tabela-enxuta">
-            <thead>
-              <tr>
-                <th rowspan="2" class="col-ponto">Ponto</th>
-                <th rowspan="2" class="col-signo">Signo</th>
-                <th rowspan="2" class="col-grau">Grau</th>
-                <th rowspan="2" class="col-lat">Latitude</th>
-                <th rowspan="2" class="col-termo">Termo</th>
-                <th colspan="2">Dodecatemória</th>
-              </tr>
-              <tr>
-                <th class="col-dodec-signo">Signo</th>
-                <th class="col-dodec-grau">Grau</th>
-              </tr>
-            </thead>
-            <tbody>
-    `;
-
-    listaElementos.forEach(el => {
-      let iconHTML = '';
-      let absDeg = el.abs;
-      let retroSymbol = el.retro ? `<span style="color: var(--danger); font-weight: 900; margin-left: 2px;">℞</span>` : '';
-      let pointName = '';
-
-      if (el.type === 'planet') {
-        iconHTML = getPlanet3DSVG(el.pId);
-        pointName = NOMES_PONTOS_TABELA[el.pId] || el.pId;
-      } else {
-        iconHTML = getItemSVG(el.key);
-        pointName = NOMES_PONTOS_TABELA[el.key] || el.key;
-      }
-
-      const signIdx = Math.floor(absDeg / 30);
-      const signoSVG = getSignSVG(signIdx, 18);
-      const grauFormatted = `${formatDegMinTabela(absDeg)}${retroSymbol}`;
-      const latFormatted = (el.type === 'planet') ? formatarLatitudeEcliptica(el.lat) : '-';
-      const termo = calcEgyptianTermTabela(absDeg);
-
-      const dodec = calcDodecatemoriaTabela(absDeg);
-      const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
-
-      html += `
-        <tr>
-          <td class="col-ponto">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-              ${iconHTML}
-              <span style="font-size: 9px; font-weight: 600; color: var(--primary-blue); line-height: 1.1;">${escapeHtml(pointName)}</span>
-            </div>
-          </td>
-          <td class="col-signo">${signoSVG}</td>
-          <td class="col-grau">${grauFormatted}</td>
-          <td class="col-lat">${latFormatted}</td>
-          <td class="col-termo">${termo}</td>
-          <td class="col-dodec-signo">${dodecSignoSVG}</td>
-          <td class="col-dodec-grau">${dodec.degFormatted}</td>
-        </tr>
-      `;
-    });
-
-    html += `
-            </tbody>
-          </table>
-        </div>
-        </div>
+      <div id="painelPrincipalContainer" style="text-align: center; margin: 24px 0;">
+        ${montarSVGPainelPrincipal(listaElementos)}
       </div>
     `;
 
@@ -654,7 +607,7 @@ function renderPainelTecnico(data, containerId) {
     container.innerHTML = html;
 
     const headerEl = document.getElementById('painelTecnicoHeader');
-    const painelEl = document.getElementById('painelPrincipalWrapper');
+    const painelEl = document.querySelector('#painelPrincipalContainer svg');
 
     // Em telas estreitas a tabela rola dentro do próprio contêiner e sua
     // largura "natural" (offsetWidth) pode ultrapassar o espaço realmente
@@ -673,13 +626,13 @@ function renderPainelTecnico(data, containerId) {
     if (headerEl && painelEl) {
       headerEl.style.width = 'fit-content';
       const naturalWidth = headerEl.offsetWidth;
-      const painelWidth = painelEl.offsetWidth;
+      // painelEl é o <svg> raiz da tabela — offsetWidth é propriedade de
+      // HTMLElement, não existe em SVGElement (fica undefined), por isso
+      // mede com getBoundingClientRect() aqui, que funciona pros dois.
+      const painelWidth = painelEl.getBoundingClientRect().width;
       const finalWidth = Math.min(Math.max(naturalWidth, painelWidth), availableWidth);
       if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
     }
-
-    const escalaBasePainel = encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', availableWidth);
-    ativarPinchZoomTabela('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', escalaBasePainel);
   } catch (err) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -688,48 +641,18 @@ function renderPainelTecnico(data, containerId) {
   }
 }
 
-/* Captura o Painel Técnico pro Relatório — mas ANTES desfaz temporariamente
-   o zoom/encolhimento (transform:scale) da tabela, tira a "foto" com
-   html2canvas e só então restaura exatamente o zoom/rolagem que o
-   astrólogo tinha na tela.
-
-   Por quê: html2canvas tem um bug conhecido com overflow-x:auto + um
-   filho com transform:scale ao mesmo tempo (o padrão exato usado pelo
-   auto-encolhimento/pinça-pra-zoom dessa tabela) — o resultado
-   observado foi a imagem capturada saindo com fragmentos cortados/
-   duplicados da tabela no topo da página do relatório. Capturando sem
-   nenhum transform ativo (tamanho natural — maior e mais nítido, o que
-   só ajuda a qualidade no PDF) esse bug desaparece. IMPORTANTE: isso não
-   mexe em nada do código de toque/pinça em si (touch-action,
-   ativarPinchZoomTabela) nem muda o que aparece na tela pro astrólogo —
-   só usa um estado sem escala pelo instante da captura, e desfaz tudo
-   logo depois. */
+/* Captura o Painel Técnico pro Relatório, com html2canvas — igual ao
+   padrão usado em capturarMatrizVisibilidadeMandalaParaRelatorio
+   (matrizVisibilidade.js). Antes precisava desfazer/refazer um
+   transform:scale antes/depois de capturar (bug conhecido do html2canvas
+   com overflow:auto + transform:scale juntos, da caixinha de zoom que a
+   tabela tinha) — desde que o Painel Principal virou SVG puro, sem
+   caixinha nem transform nenhum (ver montarSVGPainelPrincipal), isso
+   deixou de ser necessário: é só capturar direto. */
 async function capturarPainelTecnicoParaRelatorio() {
   const elemento = document.getElementById('painel-tecnico-container');
   if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
-
-  const alvos = [
-    { outer: 'painelPrincipalOuterScroll', box: 'painelPrincipalScaleBox', wrapper: 'painelPrincipalWrapper' }
-  ];
-
-  const estadosOriginais = alvos.map(({ outer, box, wrapper }) => {
-    const outerEl = document.getElementById(outer);
-    const boxEl = document.getElementById(box);
-    const wrapperEl = document.getElementById(wrapper);
-    const original = {
-      outerEl, boxEl, wrapperEl,
-      outerHeight: outerEl ? outerEl.style.height : '',
-      outerScrollLeft: outerEl ? outerEl.scrollLeft : 0,
-      boxWidth: boxEl ? boxEl.style.width : '',
-      boxHeight: boxEl ? boxEl.style.height : '',
-      wrapperTransform: wrapperEl ? wrapperEl.style.transform : ''
-    };
-    if (wrapperEl) wrapperEl.style.transform = '';
-    if (boxEl) { boxEl.style.width = ''; boxEl.style.height = ''; }
-    if (outerEl) outerEl.style.height = '';
-    return original;
-  });
 
   try {
     // Fallback só pra eventuais áreas transparentes na captura — o fundo de
@@ -742,12 +665,6 @@ async function capturarPainelTecnicoParaRelatorio() {
   } catch (err) {
     console.error('Erro ao adicionar Painel Técnico ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
-  } finally {
-    estadosOriginais.forEach(({ outerEl, boxEl, wrapperEl, outerHeight, outerScrollLeft, boxWidth, boxHeight, wrapperTransform }) => {
-      if (wrapperEl) wrapperEl.style.transform = wrapperTransform;
-      if (boxEl) { boxEl.style.width = boxWidth; boxEl.style.height = boxHeight; }
-      if (outerEl) { outerEl.style.height = outerHeight; outerEl.scrollLeft = outerScrollLeft; }
-    });
   }
 }
 window.capturarPainelTecnicoParaRelatorio = capturarPainelTecnicoParaRelatorio;
