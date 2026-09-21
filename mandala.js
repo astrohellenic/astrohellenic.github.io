@@ -935,7 +935,7 @@ function injetarControleZoomMandala() {
   }
 }
 
-function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente) {
+function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -972,17 +972,35 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente) {
      retângulo visivelmente de cor diferente da capa ao redor. Com o
      fundo transparente, a mandala encaixa direto na cor que a própria
      capa já tem (ver --rel-capa-bg em relatorio.js), sem precisar
-     acertar cor nenhuma. Não mexe nos círculos internos menores que
-     também usam tinta.fundoDisco (mascarando cruzamento de linha atrás
-     de ícone de planeta/eixo) — só o retângulo grande de fundo. */
+     acertar cor nenhuma. Também some com o fundo dos círculos internos
+     menores (mascaram cruzamento de linha atrás de ícone de planeta/
+     eixo, e o círculo grande da área de aspectos no meio do disco) —
+     sem isso sobrava um "miolinho" sólido no centro da mandala mesmo
+     com o retângulo grande já transparente.
+
+     "corCabecalhoForcada" (opcional, hex "#rrggbb", só pra capa) troca
+     só o fundo da caixinha de nome/data/cidade — independente de
+     modoEscuro/tinta, porque o astrólogo pode querer uma cor pra essa
+     caixinha diferente da paleta clara/escura calculada pro resto do
+     disco (ver corCabecalho no bloco "__capa__", relatorio.js). A
+     legibilidade do texto/borda dentro dela é decidida pela luminância
+     DESSA cor específica, não pelo modoEscuro geral. */
   const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
+  const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
+  function luminanciaRelativaHexMandala(hex) {
+    if (!HEX_RE_MANDALA.test(hex)) return 1;
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  }
+  const cabecalhoValido = HEX_RE_MANDALA.test(corCabecalhoForcada) ? corCabecalhoForcada : null;
+  const cabecalhoEscuro = cabecalhoValido ? (luminanciaRelativaHexMandala(cabecalhoValido) < 0.5) : modoEscuro;
   const corCabecalhoPng = {
-    fundo: modoEscuro ? '#1c1917' : '#fffdf5',
-    borda: modoEscuro ? '#d9ae3f' : '#c59b27',
-    titulo: modoEscuro ? '#8ab4e8' : '#103b70',
-    dataCidade: modoEscuro ? '#c3cad4' : '#475569',
-    zodiaco: modoEscuro ? '#a3aab3' : '#64748b',
-    sect: modoEscuro ? '#f0c869' : '#9a6d18',
+    fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
+    borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27',
+    titulo: cabecalhoEscuro ? '#8ab4e8' : '#103b70',
+    dataCidade: cabecalhoEscuro ? '#c3cad4' : '#475569',
+    zodiaco: cabecalhoEscuro ? '#a3aab3' : '#64748b',
+    sect: cabecalhoEscuro ? '#f0c869' : '#9a6d18',
   };
 
   /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
@@ -1031,6 +1049,15 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente) {
     elementoAgua: '#1d4ed8',
     dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
   };
+
+  /* Usado em todo "fill" que hoje seria tinta.fundoDisco (o retângulo
+     grande de fundo E os círculos menores que mascaram cruzamento de
+     linha atrás de ícone/eixo/área de aspectos) — com fundoTransparente,
+     nenhum deles pinta nada, senão sobrava um "miolinho" sólido no meio
+     do disco mesmo com o fundo grande já transparente. Não mexe em
+     tinta.halo (o contorno do texto): esse é só uma linha fina, não um
+     bloco sólido, então não cria o mesmo problema de "quadrado" visível. */
+  const fundoDiscoEfetivo = fundoTransparente ? 'transparent' : tinta.fundoDisco;
 
   /* Sombra só das siglas ELEMENT_SIGN_COLORS usada NESTA função — não é o
      mesmo objeto global (const ELEMENT_SIGN_COLORS lá em cima, fora da
@@ -1312,7 +1339,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente) {
       </radialGradient>` : ''}
     </defs>
 
-    <rect width="${width}" height="${height}" fill="${fundoTransparente ? 'transparent' : tinta.fundoDisco}"/>
+    <rect width="${width}" height="${height}" fill="${fundoDiscoEfetivo}"/>
 ${temaCeu ? `
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule
@@ -1358,7 +1385,7 @@ ${temaCeu ? `
     }
   }
 
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
 
   const occupiedSigns = new Set();
   PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
@@ -1408,7 +1435,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${eixo.color}" stroke-width="1.8"/>
+      <circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${eixo.color}" stroke-width="1.8"/>
       <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
       <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
     </g>`;
@@ -1496,7 +1523,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="12" fill="${tinta.fundoDisco}" stroke="none"/>
+        <circle cx="0" cy="0" r="12" fill="${fundoDiscoEfetivo}" stroke="none"/>
         <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
         <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
         <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
@@ -1505,11 +1532,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     } else if (item.type === "lot") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
       if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
       } else if (item.lotType === "spirit") {
         svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
       } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
+        svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
       }
       svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
     }
