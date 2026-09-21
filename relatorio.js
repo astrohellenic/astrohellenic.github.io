@@ -267,12 +267,12 @@ function obterCapaFonte(blocos) {
    então fora do Tema Céu. 'custom' não tem cor fixa aqui — usa
    corFundo/corTitulo salvos no próprio bloco (ver resolverCoresCapaRelatorio). */
 const RELATORIO_PALETAS_CAPA = [
-  { id: 'classico', nome: 'Clássico', corFundo: '#ffffff', corTitulo: '#103b70' },
-  { id: 'azul_profundo', nome: 'Azul Profundo', corFundo: '#0b1f3f', corTitulo: '#d4af37' },
-  { id: 'esmeralda', nome: 'Verde Esmeralda', corFundo: '#0b3d2e', corTitulo: '#f2e6c9' },
-  { id: 'bordo', nome: 'Bordô', corFundo: '#3f0b17', corTitulo: '#e8c9a3' },
-  { id: 'dourado_suave', nome: 'Dourado Suave', corFundo: '#f7f1e3', corTitulo: '#8a5a12' },
-  { id: 'grafite', nome: 'Grafite', corFundo: '#1c1c1c', corTitulo: '#c9a227' }
+  { id: 'classico', nome: 'Clássico', corFundo: '#ffffff', corTitulo: '#103b70', corCabecalho: '#fffdf5' },
+  { id: 'azul_profundo', nome: 'Azul Profundo', corFundo: '#0b1f3f', corTitulo: '#d4af37', corCabecalho: '#0f2a52' },
+  { id: 'esmeralda', nome: 'Verde Esmeralda', corFundo: '#0b3d2e', corTitulo: '#f2e6c9', corCabecalho: '#0f4a37' },
+  { id: 'bordo', nome: 'Bordô', corFundo: '#3f0b17', corTitulo: '#e8c9a3', corCabecalho: '#4a0f1e' },
+  { id: 'dourado_suave', nome: 'Dourado Suave', corFundo: '#f7f1e3', corTitulo: '#8a5a12', corCabecalho: '#fffaf0' },
+  { id: 'grafite', nome: 'Grafite', corFundo: '#1c1c1c', corTitulo: '#c9a227', corCabecalho: '#242424' }
 ];
 const RELATORIO_PALETA_CAPA_PADRAO = 'classico';
 const RELATORIO_HEX_RE = /^#[0-9a-fA-F]{6}$/;
@@ -296,11 +296,12 @@ function resolverCoresCapaRelatorio(blocoCapa) {
   if (blocoCapa.paletaId === 'custom') {
     return {
       corFundo: RELATORIO_HEX_RE.test(blocoCapa.corFundo) ? blocoCapa.corFundo : '#ffffff',
-      corTitulo: RELATORIO_HEX_RE.test(blocoCapa.corTitulo) ? blocoCapa.corTitulo : '#103b70'
+      corTitulo: RELATORIO_HEX_RE.test(blocoCapa.corTitulo) ? blocoCapa.corTitulo : '#103b70',
+      corCabecalho: RELATORIO_HEX_RE.test(blocoCapa.corCabecalho) ? blocoCapa.corCabecalho : '#fffdf5'
     };
   }
   const paleta = RELATORIO_PALETAS_CAPA.find(p => p.id === blocoCapa.paletaId) || RELATORIO_PALETAS_CAPA[0];
-  return { corFundo: paleta.corFundo, corTitulo: paleta.corTitulo };
+  return { corFundo: paleta.corFundo, corTitulo: paleta.corTitulo, corCabecalho: paleta.corCabecalho };
 }
 
 /* Luminância aproximada (0 = preto, 1 = branco) de uma cor "#rrggbb" —
@@ -1587,6 +1588,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const paletaCapaAtual = opcoes.paletaCapaOverride || obterPaletaCapaId(objetoEditavel.blocos);
   const corFundoCapaAtual = opcoes.corFundoCapaOverride || blocoCapaAtual.corFundo;
   const corTituloCapaAtual = opcoes.corTituloCapaOverride || blocoCapaAtual.corTitulo;
+  const corCabecalhoCapaAtual = opcoes.corCabecalhoCapaOverride || blocoCapaAtual.corCabecalho;
   const encerramentoAtual = opcoes.encerramentoOverride != null ? opcoes.encerramentoOverride : obterEncerramento(objetoEditavel.blocos);
   const mapaBlocosAtuais = {};
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
@@ -1670,7 +1672,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: var(--success-text); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
-          ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual)}
+          ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual)}
 
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
             Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
@@ -1807,10 +1809,11 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
    carregarTemaMandala, chamado logo após o login) — dá pra avisar aqui,
    sem esperar nada, que o Tema Céu (quando ativo) sempre vence essa
    escolha na hora de gerar o relatório de verdade. */
-function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual) {
+function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual, corCabecalhoCustomAtual) {
   const ehCustom = paletaIdAtual === 'custom';
   const fundoCustom = RELATORIO_HEX_RE.test(corFundoCustomAtual) ? corFundoCustomAtual : '#ffffff';
   const tituloCustom = RELATORIO_HEX_RE.test(corTituloCustomAtual) ? corTituloCustomAtual : '#103b70';
+  const cabecalhoCustom = RELATORIO_HEX_RE.test(corCabecalhoCustomAtual) ? corCabecalhoCustomAtual : '#fffdf5';
 
   const swatchesHtml = RELATORIO_PALETAS_CAPA.map(p => {
     const ativa = !ehCustom && p.id === paletaIdAtual;
@@ -1853,6 +1856,13 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
           <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Título</label>
           <input type="color" id="relCapaCorTitulo" value="${tituloCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
         </div>
+        <div>
+          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Cabeçalho</label>
+          <input type="color" id="relCapaCorCabecalho" value="${cabecalhoCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+        </div>
+      </div>
+      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+        "Cabeçalho" é a cor de fundo da caixinha de nome/data/cidade que aparece dentro da imagem da mandala, na capa.
       </div>
       ${avisoCeu}
     </div>
@@ -2007,8 +2017,10 @@ function lerBlocosComCapaDoEditor() {
   if (blocoCapa.paletaId === 'custom') {
     const corFundoInput = document.getElementById('relCapaCorFundo');
     const corTituloInput = document.getElementById('relCapaCorTitulo');
+    const corCabecalhoInput = document.getElementById('relCapaCorCabecalho');
     blocoCapa.corFundo = corFundoInput ? corFundoInput.value : '#ffffff';
     blocoCapa.corTitulo = corTituloInput ? corTituloInput.value : '#103b70';
+    blocoCapa.corCabecalho = corCabecalhoInput ? corCabecalhoInput.value : '#fffdf5';
   }
   blocos.push(blocoCapa);
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
@@ -2216,8 +2228,10 @@ async function atualizarPreviaEditorModelo() {
   const paletaCapa = paletaIdSelect ? paletaIdSelect.value : RELATORIO_PALETA_CAPA_PADRAO;
   const corFundoInput = document.getElementById('relCapaCorFundo');
   const corTituloInput = document.getElementById('relCapaCorTitulo');
+  const corCabecalhoInput = document.getElementById('relCapaCorCabecalho');
   const corFundoCapa = corFundoInput ? corFundoInput.value : null;
   const corTituloCapa = corTituloInput ? corTituloInput.value : null;
+  const corCabecalhoCapa = corCabecalhoInput ? corCabecalhoInput.value : null;
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
   const encerramentoCorpo = quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -2230,6 +2244,7 @@ async function atualizarPreviaEditorModelo() {
   if (paletaCapa === 'custom') {
     blocoCapaPreview.corFundo = corFundoCapa;
     blocoCapaPreview.corTitulo = corTituloCapa;
+    blocoCapaPreview.corCabecalho = corCabecalhoCapa;
   }
   const blocosComCapa = blocosCorpo.concat([
     blocoCapaPreview,
@@ -2257,6 +2272,7 @@ async function atualizarPreviaEditorModelo() {
     paletaCapaOverride: paletaCapa,
     corFundoCapaOverride: corFundoCapa,
     corTituloCapaOverride: corTituloCapa,
+    corCabecalhoCapaOverride: corCabecalhoCapa,
     encerramentoOverride: encerramentoCorpo,
     previaProntaHtml
   });
@@ -2394,7 +2410,11 @@ function calcularLotesRelatorio() {
    tem, pintada por CSS (--rel-capa-bg), sem precisar "adivinhar"
    cor nenhuma pro desenho. estiloMandalaParaCapa ainda decide só a
    TINTA (números, linhas, halo) — clara ou escura — pra continuar
-   legível em cima do fundo escolhido.
+   legível em cima do fundo escolhido. A caixinha de nome/data/cidade
+   dentro da própria imagem (corCabecalhoPng em mandala.js) é a única
+   parte que NÃO fica transparente — ela usa a cor "Cabeçalho" salva no
+   modelo (resolverCoresCapaRelatorio), passada como 5º argumento de
+   renderMandala.
 
    Exceção: com o Tema Céu ativo, a capa não usa cópia nenhuma "sem
    fundo" — o CSS da capa já força roxo/dourado por cima de qualquer
@@ -2413,6 +2433,7 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 
   const blocoCapa = (blocos || []).find(b => b.type === 'capa');
   const estiloCapa = estiloMandalaParaCapa(blocoCapa);
+  const corCabecalhoCapa = resolverCoresCapaRelatorio(blocoCapa).corCabecalho;
   const temaCeuAtivo = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
   const precisaCapaSeparada = !temaCeuAtivo && (capaFonte === 'mandala_natal' || capaFonte === 'mandala_fortuna');
 
@@ -2420,14 +2441,14 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
     selectedHouse1Lot = 'ASC';
     png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
-      png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true));
+      png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa));
     }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
     png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
-      png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true));
+      png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa));
     }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
