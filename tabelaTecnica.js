@@ -283,24 +283,8 @@ function calcDodecatemoriaTabela(absDeg) {
    Função de nível global (antes vivia só dentro de renderPainelTecnico)
    pra poder ser reaproveitada por qualquer tela que precise do mesmo
    encolhimento — ex.: a Matriz de Visibilidade sozinha na tela da
-   Mandala (matrizVisibilidade.js, toggleMatrizVisibilidadeNaMandala).
-
-   "availableHeight" (opcional, só usado por quem passa) — no Painel
-   Técnico de sempre (chamado sem esse parâmetro) quem rola verticalmente
-   é a PÁGINA inteira, então o outerScroll pode crescer sem limite (é
-   assim que sempre funcionou, sem mudança nenhuma aqui pra esse caso).
-   Já a Matriz sozinha na tela da Mandala vive dentro de uma "vidraça" de
-   altura FIXA (#mandala-container, dentro de #mandala-screen/#main-stage
-   travados em 100dvh — só existem assim pra mandala se auto-encolher,
-   ver CLAUDE.md); nesse caso, deixar o outerScroll crescer do tamanho que
-   for (como sempre fez) significa que, ao dar zoom, o conteúdo que
-   deveria aparecer embaixo simplesmente cresce pra FORA da vidraça sem
-   ninguém rolar até lá — é a "matriz dá zoom só dentro de uma caixinha,
-   e as coisas somem" que o astrólogo reportou. Passando availableHeight,
-   o outerScroll ganha um teto (max-height) e rolagem vertical PRÓPRIA
-   (em vez de depender de um ancestral), que ativarPinchZoomTabela (logo
-   abaixo) sabe acompanhar durante o próprio gesto de pinça. */
-function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId, availableWidth, availableHeight) {
+   Mandala (matrizVisibilidade.js, toggleMatrizVisibilidadeNaMandala). */
+function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId, availableWidth) {
   const outerScroll = document.getElementById(outerScrollId);
   const scaleBox = document.getElementById(scaleBoxId);
   const wrapper = document.getElementById(wrapperId);
@@ -309,10 +293,6 @@ function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId, available
   scaleBox.style.width = '';
   scaleBox.style.height = '';
   if (outerScroll) outerScroll.style.height = '';
-  if (outerScroll && availableHeight > 0) {
-    outerScroll.style.maxHeight = availableHeight + 'px';
-    outerScroll.style.overflowY = 'auto';
-  }
   const naturalW = wrapper.offsetWidth;
   const naturalH = wrapper.offsetHeight;
   let escalaBase = 1;
@@ -326,8 +306,6 @@ function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId, available
     // transform, o contêiner com overflow-x:auto calcula a própria altura
     // usando o tamanho do conteúdo ANTES da escala (bug do navegador) —
     // por isso também fixamos a altura dele aqui, em vez de deixar em "auto".
-    // Quando availableHeight existe, o max-height acima já garante que
-    // isso nunca estoura a vidraça — só passa a rolar dentro dela.
     if (outerScroll) outerScroll.style.height = scaledH + 'px';
   }
   return escalaBase;
@@ -379,7 +357,7 @@ function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase)
 
   let pinchDistInicial = 0, pinchEscalaInicial = escalaBase;
   let pinchMidXInicial = 0, pinchMidYInicial = 0;
-  let pinchScrollLeftInicial = 0, pinchScrollTopInicial = 0;
+  let pinchScrollLeftInicial = 0;
 
   let arrastoAtivo = false, arrastoX0 = 0, arrastoY0 = 0, arrastoScrollLeft0 = 0, arrastoDirecaoDefinida = false;
 
@@ -392,7 +370,6 @@ function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase)
       pinchMidXInicial = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
       pinchMidYInicial = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
       pinchScrollLeftInicial = outerScroll.scrollLeft;
-      pinchScrollTopInicial = outerScroll.scrollTop;
     } else if (e.touches.length === 1) {
       pinchDistInicial = 0;
       arrastoAtivo = true;
@@ -415,23 +392,12 @@ function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase)
       // na tela no meio do gesto, invalidando os pontos de referência
       // guardados no touchstart e realimentando um erro a cada frame
       // — foi exatamente isso que causava a tabela "dançar" na
-      // primeira versão desse código.
+      // primeira versão desse código. Sem essa parte, o ponto do
+      // zoom pode "andar" um pouco na vertical enquanto amplia, mas
+      // não dança, e o usuário ainda pode rolar a página normalmente
+      // (com um dedo) depois de soltar o pinça pra ajustar.
       const novaEscala = aplicarEscala(pinchEscalaInicial * (novaDist / pinchDistInicial));
       outerScroll.scrollLeft = conteudoX * novaEscala - pinchMidXInicial;
-
-      // Rolagem VERTICAL — mesma matemática de cima, mas só tem efeito
-      // quando o próprio outerScroll ganhou altura própria pra rolar
-      // (encolherTabelaParaCaber recebeu "availableHeight" e deixou ele
-      // com overflow-y:auto — caso da Matriz sozinha na tela da Mandala,
-      // dentro de uma "vidraça" de altura fixa). No Painel Técnico de
-      // sempre, sem esse limite, scrollTop nunca sai de 0 e estas duas
-      // linhas não fazem nada — comportamento de lá continua idêntico.
-      // Sem isso, ao dar zoom o conteúdo cresce pra baixo/fora da
-      // vidraça sem ninguém rolar até lá, e o que devia estar embaixo do
-      // dedo simplesmente some (era exatamente esse o problema quando a
-      // Matriz passou a aparecer dentro da tela da Mandala).
-      const conteudoY = (pinchScrollTopInicial + pinchMidYInicial) / pinchEscalaInicial;
-      outerScroll.scrollTop = conteudoY * novaEscala - pinchMidYInicial;
     } else if (e.touches.length === 1 && arrastoAtivo) {
       const dx = e.touches[0].clientX - arrastoX0;
       const dy = e.touches[0].clientY - arrastoY0;
