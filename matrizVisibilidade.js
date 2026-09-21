@@ -309,9 +309,42 @@ function toggleMatrizVisibilidadeNaMandala() {
     if (botao) botao.classList.add('matriz-visibilidade-ativa');
     container.innerHTML = `
       <div style="width: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
-        ${renderMatrizVisibilidadeResponsivaHTML(currentCalculatedData)}
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+          <button onclick="capturarMatrizVisibilidadeMandalaParaRelatorio()" title="Adiciona esta tela como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+            <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+          </button>
+        </div>
+        <div id="matrizVisibilidadeMandalaContainer">
+          ${renderMatrizVisibilidadeResponsivaHTML(currentCalculatedData)}
+        </div>
       </div>
     `;
   }
 }
 window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
+
+/* Captura a Matriz de Visibilidade (só quando está no lugar da Mandala)
+   pro Relatório, com html2canvas — igual ao padrão já usado em
+   capturarPainelTecnicoParaRelatorio (tabelaTecnica.js) e
+   capturarMandalaAtualParaRelatorio (mandala.js). Mais simples que a do
+   Painel Técnico: aquela precisa desfazer/refazer um transform:scale
+   antes/depois de capturar (bug conhecido do html2canvas com
+   overflow:auto + transform:scale juntos) — aqui não existe transform
+   nenhum pra desfazer (ver renderMatrizVisibilidadeResponsivaHTML), só
+   captura direto. */
+async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
+  const elemento = document.getElementById('matrizVisibilidadeMandalaContainer');
+  if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+
+  try {
+    const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
+    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+    const total = adicionarCapturaRelatorio('matriz_visibilidade_mandala', canvas.toDataURL('image/png'));
+    alert(`"Matriz de Visibilidade" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar Matriz de Visibilidade ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarMatrizVisibilidadeMandalaParaRelatorio = capturarMatrizVisibilidadeMandalaParaRelatorio;

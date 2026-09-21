@@ -52,6 +52,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     capturada: true,
     telaOrigem: 'Ferramentas > Tabela Técnica'
   },
+  matriz_visibilidade_mandala: {
+    label: 'Matriz de Visibilidade (a que você deixou aberta no lugar da Mandala)',
+    tituloIndice: 'Matriz de Visibilidade (Theoria)',
+    capturada: true,
+    telaOrigem: 'a tela principal da Mandala (botão de Matriz de Visibilidade)'
+  },
   decenios: {
     label: 'Decênios Helenísticos (a tela que você deixou pronta na ferramenta)',
     tituloIndice: 'Decênios Helenísticos',
@@ -152,6 +158,7 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'circumambulacao', type: 'ferramenta' },
   { id: 'mandala_personalizada', type: 'ferramenta' },
   { id: 'tabela_tecnica', type: 'ferramenta' },
+  { id: 'matriz_visibilidade_mandala', type: 'ferramenta' },
   { id: 'decenios', type: 'ferramenta' },
   ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' })),
   { id: 'horas', type: 'ferramenta' },
