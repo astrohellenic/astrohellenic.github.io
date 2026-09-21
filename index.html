@@ -3,16 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Impede o navegador de guardar esta própria página (index.html) em
-         cache: diferente de tabelaTecnica.js/mandala.js/etc. (que têm
-         "?v=AAAAMMDD" pra forçar busca nova a cada mudança, ver comentário
-         mais abaixo), o HTML principal é sempre buscado pela mesma URL sem
-         query string nenhuma — então, sem isso, um navegador que resolvesse
-         guardar uma cópia velha da página nunca teria motivo pra descartá-la
-         sozinho, e uma correção de CSS/HTML inline (como no <style> abaixo)
-         podia continuar "sumida" pro usuário mesmo depois de publicada. -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
     <title>Astro Hellenic</title>
 
     <!-- MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) — aplicado o mais cedo possível,
