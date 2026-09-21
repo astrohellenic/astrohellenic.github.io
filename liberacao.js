@@ -1373,7 +1373,12 @@ async function converterMandalaLiberacaoEmImagem() {
 
   try {
     const modoEscuroConversao = document.documentElement.classList.contains('tema-escuro');
-    const canvas = await html2canvas(host, { backgroundColor: modoEscuroConversao ? '#1c1917' : '#ffffff', scale: 2, useCORS: true });
+    // backgroundColor precisa ser o fundo do CARTÃO (#liberacaoMandalaCapture,
+    // --bg-card), não o da página (--bg-main) — host é só um filho sem fundo
+    // próprio dentro do cartão; usar --bg-main aqui reproduzia a mesma
+    // "costura de cor" que 2b8c8d8 já tinha corrigido no fundoDisco do SVG,
+    // só que nessa outra camada (o preenchimento de base do html2canvas).
+    const canvas = await html2canvas(host, { backgroundColor: modoEscuroConversao ? '#262220' : '#ffffff', scale: 2, useCORS: true });
     if (!document.getElementById('liberacaoMandalaImgHost')) return; // a tela já mudou (outro lote/módulo) enquanto convertia
     host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Mandala Natal — Liberação Zodiacal" style="width: 100%; height: auto; display: block;">`;
   } catch (err) {
