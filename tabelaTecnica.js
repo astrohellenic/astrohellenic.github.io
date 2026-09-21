@@ -270,11 +270,66 @@ function calcDodecatemoriaTabela(absDeg) {
   };
 }
 
-/* A Matriz de Visibilidade (Theoria) foi separada pra matrizVisibilidade.js
-   (reconstruída em SVG lá) — esta função a chamou (renderPainelTecnico,
-   logo abaixo) continua chamando renderMatrizVisibilidadeHTML(data) do
-   jeito de sempre, sem mudar nada aqui; a definição da função é que
-   passou a vir do outro arquivo. */
+/* CABEÇALHO — cópia do conteúdo exato do cabeçalho desenhado dentro da
+   PRÓPRIA MANDALA (mandala.js, dentro de renderMandala, bloco
+   `<g id="png-discreet-header">`): nome, dia/data/hora/fuso, cidade, e a
+   terceira linha com "Zodíaco Tropical • Signos Inteiros • <tipo do
+   mapa> • Natividade Diurna/Noturna". Função de nível global (moveu de
+   matrizVisibilidade.js pra cá) porque agora é usada tanto pelo Painel
+   Técnico (aqui embaixo, em renderPainelTecnico) quanto pela Matriz de
+   Visibilidade quando ela aparece no lugar da Mandala
+   (matrizVisibilidade.js) — o pedido do astrólogo foi que esse cabeçalho
+   fosse padrão, idêntico, em todo canto que mostra essa informação, não
+   uma versão parecida por fora criada à parte em cada lugar (foi
+   exatamente isso que deu errado numa tentativa anterior).
+   "idOpcional" só existe pra manter o id "painelTecnicoHeader" de sempre
+   aqui no Painel Técnico (usado logo abaixo pra sincronizar a largura
+   com a tabela) — na Matriz não precisa de id nenhum. */
+function montarCabecalhoMandalaHTML(data, idOpcional) {
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+
+  const diasSemanaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemanaLabels[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const ano = currentMoment.getFullYear();
+  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const dia = String(currentMoment.getDate()).padStart(2, '0');
+  const hora = String(currentMoment.getHours()).padStart(2, '0');
+  const min = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  // Mesmo cálculo de isDay/sectText de renderMandala (mandala.js).
+  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+  const sunAbs = data.Sol ? data.Sol.grau_absoluto : 0;
+  const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
+  const sectText = isDay ? "Natividade Diurna" : "Natividade Noturna";
+
+  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
+  const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
+
+  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
+
+  return `
+    <div${idOpcional ? ` id="${idOpcional}"` : ''} style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
+      <div>
+        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+        <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+        <div style="font-size: 10.5px; color: var(--text-muted-2); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}  <span style="color: var(--primary-blue); font-weight: 700;">• ${sectText}</span></div>
+      </div>
+      ${horasInfo ? `
+      <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
+        <div style="text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
+          ${getPlanet3DSVG(horasInfo.dayRulerId)}
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
+          ${getPlanet3DSVG(horasInfo.hourRulerId)}
+        </div>
+      </div>` : ''}
+    </div>
+  `;
+}
 
 /* Em telas estreitas, em vez de deixar as tabelas cortadas com rolagem
    interna, encolhe cada uma (mantendo a proporção) até caberem inteiras
@@ -479,19 +534,6 @@ function renderPainelTecnico(data, containerId) {
       { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
     ];
 
-    /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa), incluindo o dia e a hora planetários já calculados pelo módulo de Horas Planetárias */
-    const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
-    const diasSemanaTabelaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    const diaSemanaFormatted = diasSemanaTabelaLabels[currentMoment.getDay()];
-    const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-    const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-    const anoH = currentMoment.getFullYear();
-    const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
-    const diaH = String(currentMoment.getDate()).padStart(2, '0');
-    const horaH = String(currentMoment.getHours()).padStart(2, '0');
-    const minH = String(currentMoment.getMinutes()).padStart(2, '0');
-    const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-
     let html = `
       <div style="width: 100%;">
       <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
@@ -534,27 +576,8 @@ function renderPainelTecnico(data, containerId) {
 
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
-      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala, com o dia/hora planetários à direita -->
-      <div id="painelTecnicoHeader" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
-        <div>
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        </div>
-        ${horasInfo ? `
-        <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
-          <div style="text-align: center;">
-            <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
-            ${getPlanet3DSVG(horasInfo.dayRulerId)}
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
-            ${getPlanet3DSVG(horasInfo.hourRulerId)}
-          </div>
-        </div>` : ''}
-      </div>
+      ${montarCabecalhoMandalaHTML(data, 'painelTecnicoHeader')}
     `;
-
-    html += renderMatrizVisibilidadeHTML(data);
 
     html += `
       <div id="painelPrincipalOuterScroll" style="overflow-x: auto; overflow-y: hidden; margin: 24px 0; text-align: center; touch-action: pan-y;">
@@ -631,32 +654,32 @@ function renderPainelTecnico(data, containerId) {
     container.innerHTML = html;
 
     const headerEl = document.getElementById('painelTecnicoHeader');
-    const matrizEl = document.getElementById('matrizVisibilidadeWrapper');
-    if (headerEl && matrizEl) {
+    const painelEl = document.getElementById('painelPrincipalWrapper');
+
+    // Em telas estreitas a tabela rola dentro do próprio contêiner e sua
+    // largura "natural" (offsetWidth) pode ultrapassar o espaço realmente
+    // visível na tela; sem esse limite o cabeçalho ficaria largo demais e a
+    // página inteira passaria a rolar na horizontal. Descontamos o padding do
+    // contêiner pai porque clientWidth inclui o padding, e um filho com esse
+    // valor "cru" como largura acaba ultrapassando a área de conteúdo real.
+    let availableWidth = Infinity;
+    if (headerEl && headerEl.parentElement) {
+      const parentStyles = getComputedStyle(headerEl.parentElement);
+      availableWidth = headerEl.parentElement.clientWidth
+        - parseFloat(parentStyles.paddingLeft || 0)
+        - parseFloat(parentStyles.paddingRight || 0);
+    }
+
+    if (headerEl && painelEl) {
       headerEl.style.width = 'fit-content';
       const naturalWidth = headerEl.offsetWidth;
-      const matrizWidth = matrizEl.offsetWidth;
-      // Em telas estreitas a Matriz de Visibilidade rola dentro do próprio contêiner
-      // e sua largura "natural" (offsetWidth) pode ultrapassar o espaço realmente
-      // visível na tela; sem esse limite o cabeçalho ficaria largo demais e a
-      // página inteira passaria a rolar na horizontal. Descontamos o padding do
-      // contêiner pai porque clientWidth inclui o padding, e um filho com esse
-      // valor "cru" como largura acaba ultrapassando a área de conteúdo real.
-      let availableWidth = Infinity;
-      if (headerEl.parentElement) {
-        const parentStyles = getComputedStyle(headerEl.parentElement);
-        availableWidth = headerEl.parentElement.clientWidth
-          - parseFloat(parentStyles.paddingLeft || 0)
-          - parseFloat(parentStyles.paddingRight || 0);
-      }
-      const finalWidth = Math.min(Math.max(naturalWidth, matrizWidth), availableWidth);
+      const painelWidth = painelEl.offsetWidth;
+      const finalWidth = Math.min(Math.max(naturalWidth, painelWidth), availableWidth);
       if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
-
-      const escalaBaseMatriz = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', availableWidth);
-      const escalaBasePainel = encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', availableWidth);
-      ativarPinchZoomTabela('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', escalaBaseMatriz);
-      ativarPinchZoomTabela('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', escalaBasePainel);
     }
+
+    const escalaBasePainel = encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', availableWidth);
+    ativarPinchZoomTabela('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', escalaBasePainel);
   } catch (err) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -666,13 +689,13 @@ function renderPainelTecnico(data, containerId) {
 }
 
 /* Captura o Painel Técnico pro Relatório — mas ANTES desfaz temporariamente
-   o zoom/encolhimento (transform:scale) da Matriz de Visibilidade e do
-   Painel Principal, tira a "foto" com html2canvas e só então restaura
-   exatamente o zoom/rolagem que o astrólogo tinha na tela.
+   o zoom/encolhimento (transform:scale) da tabela, tira a "foto" com
+   html2canvas e só então restaura exatamente o zoom/rolagem que o
+   astrólogo tinha na tela.
 
    Por quê: html2canvas tem um bug conhecido com overflow-x:auto + um
    filho com transform:scale ao mesmo tempo (o padrão exato usado pelo
-   auto-encolhimento/pinça-pra-zoom dessas duas tabelas) — o resultado
+   auto-encolhimento/pinça-pra-zoom dessa tabela) — o resultado
    observado foi a imagem capturada saindo com fragmentos cortados/
    duplicados da tabela no topo da página do relatório. Capturando sem
    nenhum transform ativo (tamanho natural — maior e mais nítido, o que
@@ -687,7 +710,6 @@ async function capturarPainelTecnicoParaRelatorio() {
   if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
 
   const alvos = [
-    { outer: 'matrizOuterScroll', box: 'matrizScaleBox', wrapper: 'matrizVisibilidadeWrapper' },
     { outer: 'painelPrincipalOuterScroll', box: 'painelPrincipalScaleBox', wrapper: 'painelPrincipalWrapper' }
   ];
 

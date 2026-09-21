@@ -8,28 +8,26 @@
    em SVG puro (antes era uma <table> HTML) — a mesma aparência de sempre,
    só que renderizada como um único <svg>, célula por célula.
 
-   Duas formas de mostrar essa Matriz, cada uma com sua própria função de
-   saída (ver o comentário grande mais abaixo, antes de
-   renderMatrizVisibilidadeResponsivaHTML, sobre POR QUE são diferentes):
-
-   1. `renderMatrizVisibilidadeHTML(data)` — dentro do Painel Técnico de
-      sempre (chamada por `renderPainelTecnico`, tabelaTecnica.js). NÃO
-      MUDOU: mesmo nome, mesmo contrato, mesmos três ids de sempre
-      (matrizOuterScroll / matrizScaleBox / matrizVisibilidadeWrapper),
-      que o auto-encolhimento e o pinça-pra-zoom à mão (ambos em
-      tabelaTecnica.js) esperam encontrar.
-
-   2. `renderMatrizVisibilidadeResponsivaHTML(data)` — usada só quando a
-      Matriz aparece no lugar da Mandala (toggleMatrizVisibilidadeNaMandala,
-      mais abaixo). Sem caixinha própria, sem cálculo de tamanho em JS,
-      sem bloquear o zoom nativo — encolhe só com CSS (como a imagem da
-      Mandala) e deixa o pinça nativo do navegador fazer o resto.
+   Existia só dentro do Painel Técnico; depois passou a existir SÓ no
+   lugar da Mandala (toggleMatrizVisibilidadeNaMandala, mais abaixo) —
+   o astrólogo pediu pra tirar do Painel Técnico de vez, porque ter a
+   Matriz em dois lugares diferentes (cada um com sua própria versão)
+   virou fonte de confusão e retrabalho. Hoje só existe
+   `renderMatrizVisibilidadeResponsivaHTML(data)`: sem caixinha própria,
+   sem cálculo de tamanho em JS, sem bloquear o zoom nativo — encolhe só
+   com CSS (como a imagem da Mandala) e deixa o pinça nativo do navegador
+   fazer o resto (ver o comentário grande antes dessa função).
 
    Ícones dos planetas (getPlanet3DSVG) e dos itens/lotes/ângulos
    (getItemSVG) continuam definidos em tabelaTecnica.js e são só
    reaproveitados aqui como funções globais — não foram duplicados, pra
    não correr o risco de alguém atualizar o desenho de um ícone só numa
-   das duas cópias no futuro. */
+   das duas cópias no futuro. O mesmo vale pro cabeçalho (nome/dia/data/
+   hora/fuso/cidade + regentes do Dia/Hora): `montarCabecalhoMandalaHTML`
+   também mora em tabelaTecnica.js, cópia idêntica do que a própria
+   Mandala mostra — o astrólogo foi claro que esse cabeçalho tem que ser
+   padrão em todo canto que o mostra, nunca uma versão parecida criada à
+   parte, e ter uma função só evita exatamente esse risco. */
 
 const MATRIZ_CELULA_TAM = 46;
 
@@ -218,110 +216,36 @@ function calcularDadosMatrizVisibilidade(data) {
   return { colunas, posicoes };
 }
 
-/* Ponto de entrada de sempre — mesmo nome, mesma assinatura e mesmos ids
-   de sempre (ver comentário no topo do arquivo), usado só dentro do
-   Painel Técnico. Não mudou nada no HTML que devolve. */
-function renderMatrizVisibilidadeHTML(data) {
-  const { colunas, posicoes } = calcularDadosMatrizVisibilidade(data);
-  const svgMatriz = montarSVGMatrizVisibilidade(colunas, posicoes);
-
-  return `
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
-    <div id="matrizOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; touch-action: pan-y;">
-      <div id="matrizScaleBox" style="display: inline-block;">
-      <div id="matrizVisibilidadeWrapper" style="display: inline-block; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden; transform-origin: top left;">
-        ${svgMatriz}
-      </div>
-      </div>
-    </div>
-  `;
-}
-
-/* VERSÃO RESPONSIVA — só pra quando a Matriz aparece no lugar da Mandala
-   (toggleMatrizVisibilidadeNaMandala, mais abaixo).
-
-   Por que é diferente da de cima: a versão do Painel Técnico usa uma
-   caixinha própria (matrizOuterScroll/matrizScaleBox/matrizVisibilidadeWrapper)
-   com tamanho calculado em JS e bloqueia o zoom nativo do navegador
+/* ÚNICA forma de mostrar a Matriz hoje — só no lugar da Mandala
+   (toggleMatrizVisibilidadeNaMandala, mais abaixo). Antes existia
+   também uma versão embutida no Painel Técnico, com uma caixinha própria
+   (matrizOuterScroll/matrizScaleBox/matrizVisibilidadeWrapper) de
+   tamanho calculado em JS que bloqueava o zoom nativo do navegador
    (touch-action: pan-y) de propósito, pra rodar um zoom "por conta
-   própria" só ali dentro. Isso existe desde a época em que a Matriz era
-   uma <table> HTML — e uma tabela não encolhe sozinha só com CSS (como
-   uma imagem encolhe), então alguém teve que inventar esse mecanismo à
-   parte. É exatamente essa caixinha (com fundo próprio, sempre do mesmo
-   tamanho) que faz o conteúdo ampliado ficar escondido atrás de uma
-   margem ao redor dela quando o astrólogo dá zoom — reportado por ele
-   várias vezes, nunca resolvido, porque nunca foi essa caixinha que
-   mudou, só a tabela por dentro dela.
+   própria" só ali dentro — isso vinha desde a época em que a Matriz era
+   uma <table> HTML, que não encolhe sozinha só com CSS (como uma imagem
+   encolhe). Era exatamente essa caixinha (com fundo próprio, sempre do
+   mesmo tamanho) que fazia o conteúdo ampliado ficar escondido atrás de
+   uma margem ao redor dela quando o astrólogo dava zoom — reportado
+   várias vezes, nunca resolvido, porque nunca era essa caixinha que
+   mudava, só a tabela por dentro dela. Removida de vez do Painel
+   Técnico (a pedido do astrólogo, pra não ter a Matriz duplicada em
+   dois lugares diferentes) — agora só existe esta versão, que se
+   comporta exatamente como a imagem da Mandala (mandalaImg, mandala.js):
+   nenhuma caixinha, nenhum cálculo — só max-width/height por CSS
+   (encolhe se não couber, nunca estica além do tamanho natural) e o
+   zoom nativo da PÁGINA (pinça do navegador, já liberado no <meta
+   viewport> deste site, ver o comentário de "[onclick] { touch-action:
+   manipulation }" no index.html) cuidando de ampliar e rolar — do jeito
+   que já funciona em todo canto deste app fora daqui. Sem competir com
+   o zoom nativo, não tem "dança" nem margem escondendo nada: o que sai
+   da vista, sai rolando a PÁGINA de verdade, não ficando preso atrás de
+   uma caixa.
 
-   Agora que a Matriz é um <svg> puro, ela PODE se comportar exatamente
-   como a imagem da Mandala (mandalaImg, mandala.js): nenhuma caixinha,
-   nenhum cálculo — só max-width/height por CSS (encolhe se não couber,
-   nunca estica além do tamanho natural) e o zoom nativo da PÁGINA (pinça
-   do navegador, já liberado no <meta viewport> deste site, ver o
-   comentário de "[onclick] { touch-action: manipulation }" no
-   index.html) cuidando de ampliar e rolar — do jeito que já funciona em
-   todo canto deste app fora daqui. Sem competir com o zoom nativo, não
-   tem "dança" nem margem escondendo nada: o que sai da vista, sai
-   rolando a PÁGINA de verdade, não ficando preso atrás de uma caixa. */
-
-/* CABEÇALHO — cópia do conteúdo exato do cabeçalho desenhado dentro da
-   PRÓPRIA MANDALA (mandala.js, dentro de renderMandala, bloco
-   `<g id="png-discreet-header">`): nome, dia/data/hora/fuso, cidade, e a
-   terceira linha com "Zodíaco Tropical • Signos Inteiros • <tipo do
-   mapa> • Natividade Diurna/Noturna" — essa terceira linha só existe no
-   cabeçalho de verdade da Mandala; o cabeçalho do Painel Técnico
-   (tabelaTecnica.js) é uma versão mais simples e diferente, criada à
-   parte, só parecida por fora — usar aquele por engano aqui foi o que
-   saiu errado numa tentativa anterior. Fica só embaixo da grade, no
-   mesmo lugar onde a própria Mandala mostra essa caixinha (abaixo do
-   desenho), pra dar a impressão de que só a "foto" trocou (mandala ↔
-   matriz) sem trocar de tela. */
-function montarCabecalhoMandalaHTML(data) {
-  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
-
-  const diasSemanaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const diaSemanaFormatted = diasSemanaLabels[currentMoment.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-
-  // Mesmo cálculo de isDay/sectText de renderMandala (mandala.js).
-  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
-  const sunAbs = data.Sol ? data.Sol.grau_absoluto : 0;
-  const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
-  const sectText = isDay ? "Natividade Diurna" : "Natividade Noturna";
-
-  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
-  const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
-
-  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-
-  return `
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 16px auto 0 auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
-      <div>
-        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-        <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        <div style="font-size: 10.5px; color: var(--text-muted-2); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}  <span style="color: var(--primary-blue); font-weight: 700;">• ${sectText}</span></div>
-      </div>
-      ${horasInfo ? `
-      <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
-        <div style="text-align: center;">
-          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
-          ${getPlanet3DSVG(horasInfo.dayRulerId)}
-        </div>
-        <div style="text-align: center;">
-          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
-          ${getPlanet3DSVG(horasInfo.hourRulerId)}
-        </div>
-      </div>` : ''}
-    </div>
-  `;
-}
-
+   `montarCabecalhoMandalaHTML` (o cabeçalho colado embaixo da grade)
+   mora em tabelaTecnica.js, não aqui — é a MESMA função que o Painel
+   Técnico também usa, cópia idêntica do cabeçalho de verdade da
+   Mandala; ver o comentário dela lá pra entender por quê. */
 function renderMatrizVisibilidadeResponsivaHTML(data) {
   const { colunas, posicoes } = calcularDadosMatrizVisibilidade(data);
   const svgMatriz = montarSVGMatrizVisibilidade(
