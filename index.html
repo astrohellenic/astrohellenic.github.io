@@ -38,6 +38,20 @@
       try { modoSalvo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
       aplicarModoCor(modoSalvo);
       window.aplicarModoCor = aplicarModoCor;
+
+      /* Reaplica de novo no DOMContentLoaded (sempre antes do window.onload
+         que desenha a mandala, em mandala.js) — cobre um bug conhecido do
+         WebKit/Safari onde, numa carga fria da página, matchMedia
+         ('prefers-color-scheme: dark') pode responder errado bem no
+         início da navegação e só se corrigir um instante depois. Como o
+         disco da mandala é desenhado uma vez só (vira um PNG fixo, não
+         reage a CSS depois de pronto), se a classe "tema-escuro" estiver
+         errada nesse instante inicial, o disco nasce com a cor errada
+         mesmo que a classe se corrija logo em seguida — daí o sintoma
+         "abre errado, só recarregando acerta". Só faz diferença quando
+         modoSalvo é 'auto' (depende do sistema); em 'claro'/'escuro'
+         fixos é a mesma leitura de sempre, sem custo. */
+      document.addEventListener('DOMContentLoaded', function() { aplicarModoCor(modoSalvo); });
     })();
     </script>
 
