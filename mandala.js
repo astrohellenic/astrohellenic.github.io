@@ -926,7 +926,7 @@ function injetarControleZoomMandala() {
   }
 }
 
-function renderMandala(dadosNovos, onReady) {
+function renderMandala(dadosNovos, onReady, estiloForcado) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -939,8 +939,19 @@ function renderMandala(dadosNovos, onReady) {
      :root/:root.tema-escuro (index.html) quando o papel é o mesmo (fundo
      creme, dourado, azul-marinho); e em tons novos, pensados só pra esse
      desenho, quando o papel é diferente (linhas de aspecto, elementos dos
-     signos etc. — ver "tinta" logo abaixo). */
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+     signos etc. — ver "tinta" logo abaixo).
+
+     "estiloForcado" ('claro'/'escuro', opcional) IGNORA esse menu e decide
+     sozinho — usado só pelo módulo de Relatório (ver renderizarMandalasDoPreset
+     em relatorio.js) pra desenhar a mandala que vai virar PNG dentro de um
+     PDF/imagem exportada, que não pode variar conforme o tema do
+     navegador/app está ligado ou não bem na hora em que o astrólogo aperta
+     "Gerar Relatório" — isso já causou capa branca com a mandala saindo com
+     fundo preto por baixo (o "papel" da mandala seguia o Tema Escuro do
+     menu, sem relação nenhuma com a cor da capa escolhida no modelo).
+     Sem esse parâmetro (uso normal, a mandala ao vivo na tela), o
+     comportamento é o de sempre: segue o Tema Escuro do menu. */
+  const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
   const corCabecalhoPng = {
     fundo: modoEscuro ? '#1c1917' : '#fffdf5',
     borda: modoEscuro ? '#d9ae3f' : '#c59b27',

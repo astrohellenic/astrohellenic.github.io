@@ -258,6 +258,89 @@ function obterCapaFonte(blocos) {
   return (blocoCapa && blocoCapa.fonte) || 'mandala_natal';
 }
 
+/* PALETAS DE CORES DA CAPA — combinações prontas (fundo + cor do
+   título) que o astrólogo escolhe por MODELO de relatório, guardadas no
+   mesmo bloco invisível "__capa__" que já guarda a fonte da mandala (ver
+   acima) — sem coluna nova no Supabase, é o mesmo jsonb de sempre.
+   'classico' é o padrão pra presets salvos antes dessa opção existir:
+   fundo branco + título azul, exatamente o único visual que existia até
+   então fora do Tema Céu. 'custom' não tem cor fixa aqui — usa
+   corFundo/corTitulo salvos no próprio bloco (ver resolverCoresCapaRelatorio). */
+const RELATORIO_PALETAS_CAPA = [
+  { id: 'classico', nome: 'Clássico', corFundo: '#ffffff', corTitulo: '#103b70' },
+  { id: 'azul_profundo', nome: 'Azul Profundo', corFundo: '#0b1f3f', corTitulo: '#d4af37' },
+  { id: 'esmeralda', nome: 'Verde Esmeralda', corFundo: '#0b3d2e', corTitulo: '#f2e6c9' },
+  { id: 'bordo', nome: 'Bordô', corFundo: '#3f0b17', corTitulo: '#e8c9a3' },
+  { id: 'dourado_suave', nome: 'Dourado Suave', corFundo: '#f7f1e3', corTitulo: '#8a5a12' },
+  { id: 'grafite', nome: 'Grafite', corFundo: '#1c1c1c', corTitulo: '#c9a227' }
+];
+const RELATORIO_PALETA_CAPA_PADRAO = 'classico';
+const RELATORIO_HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+/* Lê, do bloco "__capa__", a paleta escolhida pra ESTE modelo — cai no
+   'classico' pra quem salvou antes dessa opção existir. */
+function obterPaletaCapaId(blocos) {
+  const blocoCapa = (blocos || []).find(b => b.type === 'capa');
+  return (blocoCapa && blocoCapa.paletaId) || RELATORIO_PALETA_CAPA_PADRAO;
+}
+
+/* Resolve as duas cores de fato usadas na capa a partir do bloco
+   "__capa__" inteiro: paleta pronta (busca em RELATORIO_PALETAS_CAPA) ou
+   'custom' (usa corFundo/corTitulo salvos no próprio bloco). Nunca
+   devolve nada fora do formato "#rrggbb" — protege contra um valor
+   corrompido/antigo no banco virar CSS inválido ou injetado. O Tema Céu
+   NÃO entra aqui: ele é aplicado depois, por CSS com especificidade
+   maior (ver .rel-capa-ceu), sempre por cima da paleta do preset. */
+function resolverCoresCapaRelatorio(blocoCapa) {
+  blocoCapa = blocoCapa || {};
+  if (blocoCapa.paletaId === 'custom') {
+    return {
+      corFundo: RELATORIO_HEX_RE.test(blocoCapa.corFundo) ? blocoCapa.corFundo : '#ffffff',
+      corTitulo: RELATORIO_HEX_RE.test(blocoCapa.corTitulo) ? blocoCapa.corTitulo : '#103b70'
+    };
+  }
+  const paleta = RELATORIO_PALETAS_CAPA.find(p => p.id === blocoCapa.paletaId) || RELATORIO_PALETAS_CAPA[0];
+  return { corFundo: paleta.corFundo, corTitulo: paleta.corTitulo };
+}
+
+/* Luminância aproximada (0 = preto, 1 = branco) de uma cor "#rrggbb" —
+   só pra decidir se um fundo é "claro" ou "escuro" o bastante pra
+   escolher a variante certa da mandala (ver estiloMandalaParaCapa logo
+   abaixo). Fórmula perceptual simples (pesos de luminância de vídeo,
+   sem correção de gama) — não precisa de mais precisão que essa pra
+   decidir um "ou/ou" entre duas variantes de desenho. */
+function luminanciaRelativaHex(hex) {
+  if (!RELATORIO_HEX_RE.test(hex)) return 1;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+/* Decide se a mandala usada NA CAPA (não nas páginas do corpo, que
+   continuam sempre "claro" — ver renderizarMandalasDoPreset) deve sair
+   na variante clara ou escura do desenho (ver renderMandala/tinta em
+   mandala.js), a partir da cor de fundo ESCOLHIDA NO MODELO — nunca do
+   Tema Escuro do menu (Configurações > Aparência): essa é a causa do bug
+   "capa branca com quadrado preto da mandala atrás" quando o astrólogo
+   gera o relatório com o menu em modo escuro, já que antes a mandala
+   sempre seguia esse tema do menu, sem relação nenhuma com a cor da
+   capa. Fundo claro (paleta clara, ex.: Clássico) -> mandala clara,
+   pra "chamar o branco" e não sobrar quadrado nenhum visível; fundo
+   escuro (ex.: Grafite, ou uma paleta personalizada escura) -> mandala
+   escura, pra fundir com o resto da capa em vez de destacar um
+   quadrado claro por cima do escuro.
+
+   O Tema Céu é a ÚNICA exceção: quando ativo, SEMPRE força "claro" aqui
+   (ignorando a paleta do modelo) — é o mesmo "disco claro dentro do céu
+   estrelado" que já funciona hoje nesse tema, e nada nessa mudança pode
+   mexer nisso (ver a nota de "Regra de ouro" no CLAUDE.md). */
+function estiloMandalaParaCapa(blocoCapa) {
+  if (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') return 'claro';
+  const cores = resolverCoresCapaRelatorio(blocoCapa);
+  return luminanciaRelativaHex(cores.corFundo) < 0.5 ? 'escuro' : 'claro';
+}
+
 /* Lê, dos blocos do preset/rascunho, o texto de encerramento (ver o
    bloco invisível "__encerramento__" em RELATORIO_BLOCOS_PADRAO) — cai
    no texto padrão pra quem salvou o relatório antes desse bloco existir
@@ -271,15 +354,22 @@ function obterEncerramento(blocos) {
    mandalas calculadas na hora (png1/png2, iguais às usadas nas páginas
    próprias delas) ou a última captura salva da Mandala Personalizada —
    sem imagem nenhuma quando o astrólogo escolhe "nenhuma" ou a fonte
-   escolhida ainda não tem imagem disponível. */
-function imagemCapaRelatorio(capaFonte, png1, png2) {
-  if (capaFonte === 'mandala_fortuna') return png2 || null;
+   escolhida ainda não tem imagem disponível.
+
+   png1Capa/png2Capa (opcionais) são a variante "escura" da mesma
+   mandala, desenhada só quando a cor da capa pede (ver
+   estiloMandalaParaCapa/renderizarMandalasDoPreset) — sempre preferida
+   aqui quando existe, porque é a que combina com o fundo escolhido no
+   modelo; png1/png2 (sempre "claro") continuam sendo as mesmas usadas
+   nas páginas do corpo, que nunca mudam de estilo. */
+function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa) {
+  if (capaFonte === 'mandala_fortuna') return png2Capa || png2 || null;
   if (capaFonte === 'mandala_personalizada') {
     const capturas = capturasDaFerramenta('mandala_personalizada');
     return capturas.length ? capturas[capturas.length - 1].dataUrl : null;
   }
   if (capaFonte === 'nenhuma') return null;
-  return png1 || null; // 'mandala_natal', o padrão
+  return png1Capa || png1 || null; // 'mandala_natal', o padrão
 }
 
 async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
@@ -1326,6 +1416,15 @@ function injetarEstilosEditorRelatorio() {
       .rel-seletor-imagem-item { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg-main); }
       .rel-seletor-imagem-item:hover { border-color: var(--gold-primary); }
       .rel-seletor-imagem-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
+
+      /* Quadrinhos de paleta (ver relatorioPaletaCapaHtml/selecionarPaletaCapaEditor) */
+      .rel-capa-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+      .rel-capa-swatch { position: relative; width: 68px; cursor: pointer; text-align: center; }
+      .rel-capa-swatch-cor { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; }
+      .rel-capa-swatch-custom-icone { background: repeating-linear-gradient(45deg, #f1f5f9, #f1f5f9 6px, #e2e8f0 6px, #e2e8f0 12px); color: var(--text-muted); font-size: 15px; }
+      .rel-capa-swatch.ativa .rel-capa-swatch-cor { border-color: var(--primary-blue); box-shadow: 0 0 0 2px var(--primary-blue); }
+      .rel-capa-swatch-nome { font-size: 9.5px; font-weight: 600; color: var(--text-muted); margin-top: 4px; line-height: 1.3; }
+      .rel-capa-swatch-check { position: absolute; top: -6px; right: -4px; color: var(--primary-blue); background: var(--bg-card); border-radius: 50%; font-size: 14px; }
   `;
   document.head.appendChild(style);
 }
@@ -1484,6 +1583,10 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const blocosAtuais = opcoes.blocosOverride || objetoEditavel.blocos || [];
   const nomeAtual = opcoes.nomeOverride != null ? opcoes.nomeOverride : objetoEditavel.nome;
   const capaFonteAtual = opcoes.capaFonteOverride || obterCapaFonte(objetoEditavel.blocos);
+  const blocoCapaAtual = (objetoEditavel.blocos || []).find(b => b.type === 'capa') || {};
+  const paletaCapaAtual = opcoes.paletaCapaOverride || obterPaletaCapaId(objetoEditavel.blocos);
+  const corFundoCapaAtual = opcoes.corFundoCapaOverride || blocoCapaAtual.corFundo;
+  const corTituloCapaAtual = opcoes.corTituloCapaOverride || blocoCapaAtual.corTitulo;
   const encerramentoAtual = opcoes.encerramentoOverride != null ? opcoes.encerramentoOverride : obterEncerramento(objetoEditavel.blocos);
   const mapaBlocosAtuais = {};
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
@@ -1567,6 +1670,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: var(--success-text); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
+          ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual)}
 
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
             Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
@@ -1691,6 +1795,95 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
   `;
 }
 
+/* CORES DA CAPA — paleta pronta (clique num quadrinho) ou personalizada
+   (dois seletores de cor), por MODELO de relatório, guardada junto com a
+   "Mandala da Capa" no mesmo bloco invisível "__capa__" (ver
+   RELATORIO_PALETAS_CAPA/resolverCoresCapaRelatorio). O hidden
+   #relCapaPaletaId guarda a escolha atual — lido por
+   lerBlocosComCapaDoEditor/atualizarPreviaEditorModelo junto dos dois
+   color pickers, que só valem quando a paleta é 'custom'.
+
+   window.temaMandala já foi carregado antes da tela do editor abrir (ver
+   carregarTemaMandala, chamado logo após o login) — dá pra avisar aqui,
+   sem esperar nada, que o Tema Céu (quando ativo) sempre vence essa
+   escolha na hora de gerar o relatório de verdade. */
+function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual) {
+  const ehCustom = paletaIdAtual === 'custom';
+  const fundoCustom = RELATORIO_HEX_RE.test(corFundoCustomAtual) ? corFundoCustomAtual : '#ffffff';
+  const tituloCustom = RELATORIO_HEX_RE.test(corTituloCustomAtual) ? corTituloCustomAtual : '#103b70';
+
+  const swatchesHtml = RELATORIO_PALETAS_CAPA.map(p => {
+    const ativa = !ehCustom && p.id === paletaIdAtual;
+    return `
+      <div class="rel-capa-swatch${ativa ? ' ativa' : ''}" data-paleta-id="${p.id}" onclick="selecionarPaletaCapaEditor('${p.id}')" title="${escapeHtml(p.nome)}">
+        <div class="rel-capa-swatch-cor" style="background: ${p.corFundo};">
+          <span style="color: ${p.corTitulo};">Aa</span>
+        </div>
+        <div class="rel-capa-swatch-nome">${escapeHtml(p.nome)}</div>
+        ${ativa ? '<i class="fa-solid fa-circle-check rel-capa-swatch-check"></i>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  const avisoCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu')
+    ? `<div style="font-size: 11px; color: var(--gold-dark); margin-top: 8px; line-height: 1.5;"><i class="fa-solid fa-circle-info"></i> O Tema Céu está ativo na sua conta — enquanto ele estiver ligado, a capa sai sempre roxa com título dourado, e a cor escolhida aqui fica guardada mas não aparece. Desligue o Tema Céu em Configurações pra ver essa paleta valendo.</div>`
+    : `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">Se o Tema Céu (Configurações → Aparência) estiver ativo, a capa sai sempre roxa com título dourado, independente da cor escolhida aqui.</div>`;
+
+  return `
+    <div style="background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Cores da Capa</label>
+      <div style="font-size: 11.5px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.5;">
+        Escolhe a combinação de cor de fundo + título deste modelo. Fica salva junto com o modelo — cada serviço/relatório pode ter a sua.
+      </div>
+      <input type="hidden" id="relCapaPaletaId" value="${escapeHtml(paletaIdAtual)}">
+      <div class="rel-capa-swatches">
+        ${swatchesHtml}
+        <div class="rel-capa-swatch${ehCustom ? ' ativa' : ''}" data-paleta-id="custom" onclick="selecionarPaletaCapaEditor('custom')" title="Personalizada">
+          <div class="rel-capa-swatch-cor rel-capa-swatch-custom-icone"><i class="fa-solid fa-palette"></i></div>
+          <div class="rel-capa-swatch-nome">Personalizada</div>
+          ${ehCustom ? '<i class="fa-solid fa-circle-check rel-capa-swatch-check"></i>' : ''}
+        </div>
+      </div>
+      <div id="relCapaCustomWrap" style="${ehCustom ? '' : 'display: none;'} margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
+        <div>
+          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Fundo</label>
+          <input type="color" id="relCapaCorFundo" value="${fundoCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+        </div>
+        <div>
+          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Título</label>
+          <input type="color" id="relCapaCorTitulo" value="${tituloCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+        </div>
+      </div>
+      ${avisoCeu}
+    </div>
+  `;
+}
+
+/* Clique num quadrinho de paleta (ou em "Personalizada"): grava a escolha
+   no hidden, alterna qual quadrinho aparece marcado e mostra/esconde os
+   dois seletores de cor — sem reconstruir a tela inteira. Dispara o
+   autosave igual às outras ações por clique do editor (mover/remover
+   bloco), já que clique em <div> não passa pelo listener global de
+   "change" (esse só ouve elementos de formulário de verdade). */
+function selecionarPaletaCapaEditor(paletaId) {
+  const hidden = document.getElementById('relCapaPaletaId');
+  if (hidden) hidden.value = paletaId;
+
+  document.querySelectorAll('.rel-capa-swatch').forEach(el => {
+    const ativa = el.dataset.paletaId === paletaId;
+    el.classList.toggle('ativa', ativa);
+    const check = el.querySelector('.rel-capa-swatch-check');
+    if (ativa && !check) el.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-circle-check rel-capa-swatch-check"></i>');
+    if (!ativa && check) check.remove();
+  });
+
+  const customWrap = document.getElementById('relCapaCustomWrap');
+  if (customWrap) customWrap.style.display = paletaId === 'custom' ? 'flex' : 'none';
+
+  agendarAutoSalvarRelatorio();
+}
+window.selecionarPaletaCapaEditor = selecionarPaletaCapaEditor;
+
 /* TEXTO DE ENCERRAMENTO — igual à capa, fica separado da lista
    reordenável porque não é uma página do meio do relatório: é sempre a
    ÚLTIMA, fixa, junto com o rodapé de contato (esse sim vem do perfil
@@ -1808,7 +2001,16 @@ function lerBlocosComCapaDoEditor() {
   const blocos = lerBlocosDoEditor();
   if (!blocos.length) return blocos;
   const capaFonteSelect = document.getElementById('relCapaFonte');
-  blocos.push({ id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' });
+  const blocoCapa = { id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' };
+  const paletaIdSelect = document.getElementById('relCapaPaletaId');
+  blocoCapa.paletaId = paletaIdSelect ? paletaIdSelect.value : RELATORIO_PALETA_CAPA_PADRAO;
+  if (blocoCapa.paletaId === 'custom') {
+    const corFundoInput = document.getElementById('relCapaCorFundo');
+    const corTituloInput = document.getElementById('relCapaCorTitulo');
+    blocoCapa.corFundo = corFundoInput ? corFundoInput.value : '#ffffff';
+    blocoCapa.corTitulo = corTituloInput ? corTituloInput.value : '#103b70';
+  }
+  blocos.push(blocoCapa);
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
   blocos.push({ id: '__encerramento__', type: 'encerramento', corpo: quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO });
   return blocos;
@@ -2010,6 +2212,12 @@ async function atualizarPreviaEditorModelo() {
   const nomeCampo = (document.getElementById('relEditorNome').value || '').trim();
   const capaFonteSelect = document.getElementById('relCapaFonte');
   const capaFonte = capaFonteSelect ? capaFonteSelect.value : 'mandala_natal';
+  const paletaIdSelect = document.getElementById('relCapaPaletaId');
+  const paletaCapa = paletaIdSelect ? paletaIdSelect.value : RELATORIO_PALETA_CAPA_PADRAO;
+  const corFundoInput = document.getElementById('relCapaCorFundo');
+  const corTituloInput = document.getElementById('relCapaCorTitulo');
+  const corFundoCapa = corFundoInput ? corFundoInput.value : null;
+  const corTituloCapa = corTituloInput ? corTituloInput.value : null;
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
   const encerramentoCorpo = quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -2018,18 +2226,23 @@ async function atualizarPreviaEditorModelo() {
     pane.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
+  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa };
+  if (paletaCapa === 'custom') {
+    blocoCapaPreview.corFundo = corFundoCapa;
+    blocoCapaPreview.corTitulo = corTituloCapa;
+  }
   const blocosComCapa = blocosCorpo.concat([
-    { id: '__capa__', type: 'capa', fonte: capaFonte },
+    blocoCapaPreview,
     { id: '__encerramento__', type: 'encerramento', corpo: encerramentoCorpo }
   ]);
   const presetPreview = { nome: nomeCampo || 'Modelo sem nome', blocos: blocosComCapa };
 
   const perfil = await carregarPerfilRelatorio();
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
-  const { png1, png2 } = await renderizarMandalasDoPreset(blocosComCapa, capaFonte);
+  const { png1, png2, png1Capa, png2Capa } = await renderizarMandalasDoPreset(blocosComCapa, capaFonte);
 
   injetarEstilosRelatorio();
-  const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+  const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
   const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
       <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
@@ -2041,6 +2254,9 @@ async function atualizarPreviaEditorModelo() {
     blocosOverride: blocosCorpo,
     nomeOverride: nomeCampo,
     capaFonteOverride: capaFonte,
+    paletaCapaOverride: paletaCapa,
+    corFundoCapaOverride: corFundoCapa,
+    corTituloCapaOverride: corTituloCapa,
     encerramentoOverride: encerramentoCorpo,
     previaProntaHtml
   });
@@ -2114,9 +2330,9 @@ async function gerarRelatorioCompleto(preset) {
   const capaFonte = obterCapaFonte(blocos);
 
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
-  const { png1, png2 } = await renderizarMandalasDoPreset(blocos, capaFonte);
+  const { png1, png2, png1Capa, png2Capa } = await renderizarMandalasDoPreset(blocos, capaFonte);
 
-  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
 
   // A prévia já está na tela nesse ponto — o que vem a seguir só decide
   // se o botão "Editar" aparece, nunca atrasa o que o astrólogo já está
@@ -2157,7 +2373,22 @@ function calcularLotesRelatorio() {
 }
 
 /* Desenha só as mandalas que o preset realmente usa (pode ser nenhuma,
-   uma, ou as duas), restaurando a rotação da Casa 1 ao final. */
+   uma, ou as duas), restaurando a rotação da Casa 1 ao final.
+
+   As duas ('claro', forçado — ver renderMandala/estiloForcado em
+   mandala.js) nunca mudam de estilo com o Tema Escuro do MENU do
+   astrólogo: são as mesmas usadas nas páginas do corpo do relatório
+   (Mapa Natal/Mandala com a Fortuna), que ficam sobre o papel branco de
+   sempre — não fazia sentido essas páginas mudarem de aparência só
+   porque o astrólogo, sem querer, gerou o relatório com o menu do site
+   em modo escuro.
+
+   Quando a MESMA mandala também é a fonte da capa (capaFonte) e a cor
+   escolhida pro modelo pede a variante escura (ver
+   estiloMandalaParaCapa), desenha uma SEGUNDA cópia, só pra capa, dessa
+   vez forçada "escuro" — nunca reaproveita a de 'claro' de cima pra
+   capa nesse caso, senão viraria o mesmo bug de novo (mandala clara
+   destacando feio numa capa escura), só que ao contrário. */
 async function renderizarMandalasDoPreset(blocos, capaFonte) {
   // Calcula cada mandala se ela tiver página própria marcada no preset OU
   // se for a fonte escolhida pra capa (as duas coisas são independentes:
@@ -2165,19 +2396,29 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
   const precisaNatal = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_natal') || capaFonte === 'mandala_natal';
   const precisaFortuna = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_fortuna') || capaFonte === 'mandala_fortuna';
   const lotSalvo = selectedHouse1Lot;
-  let png1 = null, png2 = null;
+  let png1 = null, png2 = null, png1Capa = null, png2Capa = null;
+
+  const blocoCapa = (blocos || []).find(b => b.type === 'capa');
+  const estiloCapa = estiloMandalaParaCapa(blocoCapa);
+  const precisaVersaoEscuraDaCapa = estiloCapa === 'escuro';
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
-    png1 = await new Promise(resolve => renderMandala(null, resolve));
+    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
+    if (precisaVersaoEscuraDaCapa && capaFonte === 'mandala_natal') {
+      png1Capa = await new Promise(resolve => renderMandala(null, resolve, 'escuro'));
+    }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
-    png2 = await new Promise(resolve => renderMandala(null, resolve));
+    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
+    if (precisaVersaoEscuraDaCapa && capaFonte === 'mandala_fortuna') {
+      png2Capa = await new Promise(resolve => renderMandala(null, resolve, 'escuro'));
+    }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
 
-  return { png1, png2 };
+  return { png1, png2, png1Capa, png2Capa };
 }
 
 function voltarConfigRelatorio() {
@@ -2201,17 +2442,25 @@ function voltarConfigRelatorio() {
    — extraída de montarEExibirRelatorio pra ser reaproveitada também pela
    prévia sob demanda do editor de modelo (atualizarPreviaEditorModelo),
    garantindo que as duas usam exatamente a mesma renderização. */
-function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
+function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa) {
   const marcaHtml = perfil.logo_url
     ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
   const rodapeAstrologo = [perfil.nome, perfil.telefone, perfil.email].filter(Boolean);
   const capaClasseCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-capa-ceu' : '';
+  // Paleta de cor escolhida PARA ESTE MODELO (ver RELATORIO_PALETAS_CAPA) —
+  // aplicada via custom properties CSS, sempre calculada mesmo com o Tema
+  // Céu ativo: a regra ".rel-capa.rel-capa-ceu" tem especificidade maior
+  // que ".rel-capa" (que só lê essas variáveis), então o Céu vence sem
+  // precisar de nenhum "if" aqui — é só CSS puro decidindo por cima.
+  const blocoCapaCores = (preset.blocos || []).find(b => b.type === 'capa');
+  const coresCapa = resolverCoresCapaRelatorio(blocoCapaCores);
+  const estiloCapaCores = ` style="--rel-capa-bg: ${coresCapa.corFundo}; --rel-capa-titulo: ${coresCapa.corTitulo};"`;
   // "__capa__" e "__encerramento__" só guardam metadado/texto fixo (a
   // escolha da mandala da capa, o texto de fechamento) — não são páginas
   // do corpo do relatório, então nunca entram no map abaixo.
   const blocos = (preset.blocos || []).filter(b => b.type !== 'capa' && b.type !== 'encerramento');
-  const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2);
+  const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa);
   const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
   const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -2225,7 +2474,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   return `
     <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
          cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
-    <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa">
+    <section class="rel-page rel-capa${capaClasseCeu}" data-pg="capa"${estiloCapaCores}>
       <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
       ${imgCapa ? `
         <div class="rel-capa-centro">
@@ -2260,14 +2509,14 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   `;
 }
 
-function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa) {
   injetarEstilosRelatorio();
 
   // Guardado num global pra "Baixar PDF" (chamada só pelo onclick do botão
   // abaixo, sem parâmetro) saber o nome do modelo pro nome do arquivo.
   window.relatorioPresetAtual = preset;
 
-  const conteudoHtml = montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+  const conteudoHtml = montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
 
   const htmlRelatorio = `
     <div class="rel-toolbar no-print" id="relToolbarFixa">
@@ -2818,8 +3067,8 @@ function injetarEstilosRelatorio() {
          sobra, e a marca do astrólogo + "powered by" fixas no rodapé —
          por isso a página inteira (não só o conteúdo) precisa virar um
          flex column de cima a baixo. */
-      .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
+      .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
          altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
