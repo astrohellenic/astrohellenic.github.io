@@ -45,7 +45,7 @@ async function iniciarModuloAgenda() {
 
   container.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;">
-      <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37;"></i>
+      <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: var(--gold-primary);"></i>
     </div>
   `;
 
@@ -119,15 +119,15 @@ async function iniciarModuloAgenda() {
 /* MONTA A TELA INTEIRA (disponibilidade + novo agendamento + lista) */
 function renderAgendaSetup(container, ctx) {
   if (ctx.semSessao) {
-    container.innerHTML = `<div style="padding: 40px; text-align: center; font-size: 12px; color: #64748b;">Sessão não identificada.</div>`;
+    container.innerHTML = `<div style="padding: 40px; text-align: center; font-size: 12px; color: var(--text-muted);">Sessão não identificada.</div>`;
     return;
   }
 
   if (ctx.tabelasIndisponiveis) {
     container.innerHTML = `
-      <div style="max-width: 480px; margin: 40px auto; background: #fffdf5; border: 1.5px solid #d4af37; border-radius: 14px; padding: 24px; text-align: center;">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0 0 10px 0; text-transform: uppercase;">Agenda</h2>
-        <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">
+      <div style="max-width: 480px; margin: 40px auto; background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 24px; text-align: center;">
+        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0 0 10px 0; text-transform: uppercase;">Agenda</h2>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">
           As tabelas de agenda ainda não existem no Supabase deste projeto. Rode o SQL de configuração (o astrólogo já recebeu esse script) e recarregue a página.
         </p>
       </div>
@@ -146,7 +146,7 @@ function renderAgendaSetup(container, ctx) {
     : '<option value="">Nenhum cliente nas pastas visíveis</option>';
 
   const avisoSemDisponibilidade = disponibilidade.length === 0
-    ? `<div style="font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.4;">
+    ? `<div style="font-size: 11px; color: var(--badge-text); background: var(--badge-bg); border: 1px solid var(--badge-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.4;">
         Você ainda não configurou sua disponibilidade — vá em <strong>Configurações → Agenda</strong> pra escolher os dias/horários que atende antes de marcar um agendamento.
       </div>`
     : '';
@@ -160,42 +160,42 @@ function renderAgendaSetup(container, ctx) {
         const servicoDataHora = `${escapeHtml(a.servico_nome || 'Serviço')} — ${agendaFormatarDataBR(a.data)} às ${a.hora_inicio.slice(0, 5)}`;
         const rotuloCancelar = escapeHtml((a.cliente_nome || 'Cliente') + ' — ' + (a.servico_nome || 'Serviço') + ' — ' + agendaFormatarDataBR(a.data) + ' ' + a.hora_inicio.slice(0, 5)).replace(/'/g, "\\'");
         return `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2d9c2; border-radius: 8px; background: #ffffff;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
         <div style="min-width: 0;">
-          <div style="font-size: 12px; font-weight: 700; color: #103b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(a.cliente_nome || 'Cliente')}</div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${servicoDataHora}</div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(a.cliente_nome || 'Cliente')}</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${servicoDataHora}</div>
         </div>
-        <i class="fa-solid fa-trash" onclick="apagarAgendamento('${a.id}', '${rotuloCancelar}')" title="Cancelar agendamento" style="color: #dc2626; cursor: pointer; margin-left: 8px; flex-shrink: 0;"></i>
+        <i class="fa-solid fa-trash" onclick="apagarAgendamento('${a.id}', '${rotuloCancelar}')" title="Cancelar agendamento" style="color: var(--danger); cursor: pointer; margin-left: 8px; flex-shrink: 0;"></i>
       </div>
     `;
       }).join('')
-    : `<div style="font-size: 11px; color: #64748b; padding: 8px 0;">Nenhum agendamento futuro ainda.</div>`;
+    : `<div style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Nenhum agendamento futuro ainda.</div>`;
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">Agenda</h2>
-        <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
+      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Agenda</h2>
+        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
           Ainda sem sincronizar com a Google Agenda — por enquanto, tudo fica só aqui dentro.
         </div>
       </div>
 
-      <div style="max-width: 480px; margin: 0 auto 20px auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Novo Agendamento</div>
+      <div style="max-width: 480px; margin: 0 auto 20px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Novo Agendamento</div>
 
         ${avisoSemDisponibilidade}
 
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Cliente</label>
+        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Cliente</label>
         <select id="agNovoCliente" class="modal-select" style="margin-bottom: 10px;">${opcoesClientes}</select>
 
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Serviço</label>
+        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Serviço</label>
         <select id="agNovoServico" class="modal-select" style="margin-bottom: 10px;">${opcoesServicos}</select>
 
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Data</label>
+        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Data</label>
         <input type="date" id="agNovaData" class="modal-input" min="${hojeISO}" style="margin-bottom: 10px;" onchange="atualizarHorariosDisponiveisAgenda()">
 
-        <label style="font-size: 11px; font-weight: 600; color: #64748b;">Horário</label>
+        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Horário</label>
         <select id="agNovoHorario" class="modal-select" style="margin-bottom: 14px;"><option value="">Escolha uma data</option></select>
 
         <button onclick="confirmarNovoAgendamento()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
@@ -203,8 +203,8 @@ function renderAgendaSetup(container, ctx) {
         </button>
       </div>
 
-      <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid var(--border-color, #e2d9c2); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Próximos Agendamentos</div>
+      <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Próximos Agendamentos</div>
         ${listaAgendamentosHTML}
       </div>
 
