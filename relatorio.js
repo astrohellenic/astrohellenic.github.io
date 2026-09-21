@@ -344,15 +344,28 @@ function luminanciaRelativaHex(hex) {
 /* Decide se a mandala usada NA CAPA (não nas páginas do corpo, que
    continuam sempre "claro" — ver renderizarMandalasDoPreset) deve sair
    na variante clara ou escura do desenho (ver renderMandala/tinta em
-   mandala.js), a partir da cor de fundo ESCOLHIDA NO MODELO — nunca do
-   Tema Escuro do menu (Configurações > Aparência): essa é a causa do bug
-   "capa branca com quadrado preto da mandala atrás" quando o astrólogo
-   gera o relatório com o menu em modo escuro, já que antes a mandala
-   sempre seguia esse tema do menu, sem relação nenhuma com a cor da
-   capa. Fundo claro (paleta clara, ex.: Clássico) -> mandala clara,
-   pra "chamar o branco" e não sobrar quadrado nenhum visível; fundo
-   escuro (ex.: Grafite, ou uma paleta personalizada escura) -> mandala
-   escura, pra fundir com o resto da capa em vez de destacar um
+   mandala.js) — nunca do Tema Escuro do menu (Configurações >
+   Aparência): essa é a causa do bug "capa branca com quadrado preto da
+   mandala atrás" quando o astrólogo gera o relatório com o menu em modo
+   escuro, já que antes a mandala sempre seguia esse tema do menu, sem
+   relação nenhuma com a cor da capa.
+
+   A cor usada pro cálculo de contraste NÃO é sempre "corFundo": é a cor
+   que fica de fato ATRÁS dos números/linhas da mandala na hora de
+   imprimir — normalmente é a cor de fundo da capa (corFundo), mas com o
+   "círculo atrás da mandala" ligado (ver renderizarMandalasDoPreset/
+   corCirculoForcada em mandala.js), quem fica atrás da mandala não é
+   mais o fundo da capa, é o próprio círculo (ele é desenhado maior que
+   a mandala, cobrindo tudo atrás dela) — calcular pelo corFundo nesse
+   caso dava tinta clara numa capa escura com círculo branco (ou o
+   oposto), ilegível, reportado pelo astrólogo ("dá certo com o azul do
+   fundo, mas não dá certo com o branco que eu coloquei" no círculo).
+   Sem círculo, nada muda: continua calculando pelo corFundo de sempre,
+   porque aí sim é ele quem fica atrás da mandala.
+
+   Fundo/círculo claro (ex.: branco) -> mandala clara, pra "chamar o
+   branco" e não sobrar quadrado nenhum visível; fundo/círculo escuro
+   (ex.: Grafite) -> mandala escura, pra fundir em vez de destacar um
    quadrado claro por cima do escuro.
 
    O Tema Céu é a ÚNICA exceção: quando ativo, SEMPRE força "claro" aqui
@@ -362,7 +375,8 @@ function luminanciaRelativaHex(hex) {
 function estiloMandalaParaCapa(blocoCapa) {
   if (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') return 'claro';
   const cores = resolverCoresCapaRelatorio(blocoCapa);
-  return luminanciaRelativaHex(cores.corFundo) < 0.5 ? 'escuro' : 'claro';
+  const corDeFundoDaMandala = cores.temCirculo ? cores.corCirculo : cores.corFundo;
+  return luminanciaRelativaHex(corDeFundoDaMandala) < 0.5 ? 'escuro' : 'claro';
 }
 
 /* Lê, dos blocos do preset/rascunho, o texto de encerramento (ver o
