@@ -258,16 +258,34 @@ window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
 /* Mesmo encolhimento + pinça-pra-zoom do Painel Técnico (agora funções
    globais em tabelaTecnica.js, ver comentário lá), só que medindo a
    largura disponível a partir do próprio container cheio da tela (não
-   tem cabeçalho de Painel Técnico pra sincronizar largura aqui). */
+   tem cabeçalho de Painel Técnico pra sincronizar largura aqui) — e,
+   diferente do Painel Técnico, também passando uma ALTURA disponível:
+   aqui a Matriz vive dentro da "vidraça" de altura fixa da Mandala
+   (#mandala-container, dentro de #mandala-screen/#main-stage travados em
+   100dvh — só existem assim pra mandala se auto-encolher, ver CLAUDE.md),
+   não numa página que cresce à vontade. Sem avisar essa altura,
+   encolherTabelaParaCaber/ativarPinchZoomTabela deixavam o conteúdo
+   crescer pra fora da vidraça ao dar zoom, sem nada rolar até lá — era
+   a "matriz zoomando só dentro de uma caixinha, coisas somem" reportada
+   pelo astrólogo. */
 function ajustarMatrizVisibilidadeAoTamanhoDaTela() {
   const raiz = document.getElementById('matrizVisibilidadeNaMandala');
-  if (!raiz) return;
+  const container = document.getElementById('mandala-container');
+  const outerScroll = document.getElementById('matrizOuterScroll');
+  if (!raiz || !container || !outerScroll) return;
 
   const estilos = getComputedStyle(raiz);
   const availableWidth = raiz.clientWidth
     - parseFloat(estilos.paddingLeft || 0)
     - parseFloat(estilos.paddingRight || 0);
 
-  const escalaBase = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', availableWidth);
+  // Altura que ainda sobra, da posição onde a Matriz começa (abaixo do
+  // título) até o fundo visível de #mandala-container — com uma folga de
+  // 16px pra não colar no limite exato da vidraça.
+  const containerRect = container.getBoundingClientRect();
+  const outerScrollRect = outerScroll.getBoundingClientRect();
+  const availableHeight = (containerRect.bottom - outerScrollRect.top) - 16;
+
+  const escalaBase = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', availableWidth, availableHeight);
   ativarPinchZoomTabela('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', escalaBase);
 }
