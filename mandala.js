@@ -935,7 +935,7 @@ function injetarControleZoomMandala() {
   }
 }
 
-function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada) {
+function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -1340,6 +1340,26 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     </defs>
 
     <rect width="${width}" height="${height}" fill="${fundoDiscoEfetivo}"/>
+    ${HEX_RE_MANDALA.test(corCirculoForcada) ? `
+    <!-- "MEDALHÃO" ATRÁS DA MANDALA (ver corCirculoForcada, só usado pela
+         capa do Relatório) — desenhado exatamente em (cx, cy), o MESMO
+         centro matemático que toda a roda (casas, signos, aspectos) já
+         usa, com raio R_Ceu (já calculado acima grande o bastante pra
+         sempre cobrir o planeta/glow mais distante deste mapa, mais uma
+         folga de 12%). Faz de propósito ANTES de qualquer elemento da
+         roda ("svg +=" só começa depois desta linha), então fica
+         garantidamente por trás de tudo. Nunca fica descentralizado da
+         roda (diferente de tentar centralizar um círculo por CSS em
+         cima da imagem já pronta): não há adivinhação de posição
+         nenhuma — é literalmente o centro que o resto do desenho usa.
+         Raio = R_Ceu exato (sem folga extra): o SVG não tem margem
+         sobrando além dos "margemVertical" (10) já embutidos no cálculo
+         de cx/cy logo acima — um raio maior que R_Ceu passaria do
+         viewBox e cortaria o círculo nas laterais (o <svg> corta
+         conteúdo fora do viewBox por padrão). R_Ceu já é grande o
+         bastante pra cobrir até o planeta/glow mais distante do mapa
+         (é pra isso que ele foi calculado, mais acima). -->
+    <circle cx="${cx}" cy="${cy}" r="${R_Ceu}" fill="${corCirculoForcada}"/>` : ''}
 ${temaCeu ? `
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule

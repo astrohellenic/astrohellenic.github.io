@@ -344,15 +344,28 @@ function luminanciaRelativaHex(hex) {
 /* Decide se a mandala usada NA CAPA (não nas páginas do corpo, que
    continuam sempre "claro" — ver renderizarMandalasDoPreset) deve sair
    na variante clara ou escura do desenho (ver renderMandala/tinta em
-   mandala.js), a partir da cor de fundo ESCOLHIDA NO MODELO — nunca do
-   Tema Escuro do menu (Configurações > Aparência): essa é a causa do bug
-   "capa branca com quadrado preto da mandala atrás" quando o astrólogo
-   gera o relatório com o menu em modo escuro, já que antes a mandala
-   sempre seguia esse tema do menu, sem relação nenhuma com a cor da
-   capa. Fundo claro (paleta clara, ex.: Clássico) -> mandala clara,
-   pra "chamar o branco" e não sobrar quadrado nenhum visível; fundo
-   escuro (ex.: Grafite, ou uma paleta personalizada escura) -> mandala
-   escura, pra fundir com o resto da capa em vez de destacar um
+   mandala.js) — nunca do Tema Escuro do menu (Configurações >
+   Aparência): essa é a causa do bug "capa branca com quadrado preto da
+   mandala atrás" quando o astrólogo gera o relatório com o menu em modo
+   escuro, já que antes a mandala sempre seguia esse tema do menu, sem
+   relação nenhuma com a cor da capa.
+
+   A cor usada pro cálculo de contraste NÃO é sempre "corFundo": é a cor
+   que fica de fato ATRÁS dos números/linhas da mandala na hora de
+   imprimir — normalmente é a cor de fundo da capa (corFundo), mas com o
+   "círculo atrás da mandala" ligado (ver renderizarMandalasDoPreset/
+   corCirculoForcada em mandala.js), quem fica atrás da mandala não é
+   mais o fundo da capa, é o próprio círculo (ele é desenhado maior que
+   a mandala, cobrindo tudo atrás dela) — calcular pelo corFundo nesse
+   caso dava tinta clara numa capa escura com círculo branco (ou o
+   oposto), ilegível, reportado pelo astrólogo ("dá certo com o azul do
+   fundo, mas não dá certo com o branco que eu coloquei" no círculo).
+   Sem círculo, nada muda: continua calculando pelo corFundo de sempre,
+   porque aí sim é ele quem fica atrás da mandala.
+
+   Fundo/círculo claro (ex.: branco) -> mandala clara, pra "chamar o
+   branco" e não sobrar quadrado nenhum visível; fundo/círculo escuro
+   (ex.: Grafite) -> mandala escura, pra fundir em vez de destacar um
    quadrado claro por cima do escuro.
 
    O Tema Céu é a ÚNICA exceção: quando ativo, SEMPRE força "claro" aqui
@@ -362,7 +375,8 @@ function luminanciaRelativaHex(hex) {
 function estiloMandalaParaCapa(blocoCapa) {
   if (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') return 'claro';
   const cores = resolverCoresCapaRelatorio(blocoCapa);
-  return luminanciaRelativaHex(cores.corFundo) < 0.5 ? 'escuro' : 'claro';
+  const corDeFundoDaMandala = cores.temCirculo ? cores.corCirculo : cores.corFundo;
+  return luminanciaRelativaHex(corDeFundoDaMandala) < 0.5 ? 'escuro' : 'claro';
 }
 
 /* Lê, dos blocos do preset/rascunho, o texto de encerramento (ver o
@@ -1921,13 +1935,15 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
         Nas paletas prontas, a borda sai na mesma cor do título. Na Personalizada, dá pra escolher a cor da borda à parte, acima.
       </div>
 
-      <!-- CÍRCULO ATRÁS DA MANDALA: um disco colorido, do tamanho da
-           mandala, desenhado por CSS por trás dela (mandala continua
-           transparente por cima — ver renderMandala/fundoTransparente
-           em mandala.js) — dá o efeito de "medalhão" sem precisar
-           voltar a pintar fundo nenhum na imagem em si. Nas paletas
-           prontas usa a mesma cor do Cabeçalho (já combina); na
-           Personalizada, cor à parte (ver #relCapaCorCirculoWrap acima). -->
+      <!-- CÍRCULO ATRÁS DA MANDALA: um disco colorido desenhado DENTRO do
+           próprio SVG da mandala (ver corCirculoForcada em renderMandala,
+           mandala.js), exatamente no centro matemático (cx/cy) que a roda
+           inteira já usa — nunca por CSS em cima da imagem pronta, que
+           não tem como saber onde a roda de fato fica dentro do PNG (não
+           é o centro geométrico da imagem: sobra espaço embaixo pra
+           caixinha de nome/data/cidade). Nas paletas prontas usa a mesma
+           cor do Cabeçalho (já combina); na Personalizada, cor à parte
+           (ver #relCapaCorCirculoWrap acima). -->
       <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="relCapaTemCirculo" ${temCirculo ? 'checked' : ''} onchange="alternarCirculoCapaEditor(this.checked)" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary-blue);">
         <label for="relCapaTemCirculo" style="font-size: 12px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">Círculo colorido atrás da mandala</label>
@@ -2565,22 +2581,31 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 
   const blocoCapa = (blocos || []).find(b => b.type === 'capa');
   const estiloCapa = estiloMandalaParaCapa(blocoCapa);
-  const corCabecalhoCapa = resolverCoresCapaRelatorio(blocoCapa).corCabecalho;
+  const coresCapaParaMandala = resolverCoresCapaRelatorio(blocoCapa);
+  const corCabecalhoCapa = coresCapaParaMandala.corCabecalho;
   const temaCeuAtivo = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
   const precisaCapaSeparada = !temaCeuAtivo && (capaFonte === 'mandala_natal' || capaFonte === 'mandala_fortuna');
+  // O "círculo atrás da mandala" (medalhão) é desenhado DENTRO do SVG,
+  // no mesmo centro matemático (cx/cy) que a roda inteira já usa (ver
+  // corCirculoForcada em renderMandala/mandala.js) — nunca por CSS em
+  // cima da imagem pronta, que não tem como saber onde a roda de fato
+  // fica dentro da imagem (ela nunca é o centro geométrico do PNG: sobra
+  // espaço embaixo pra caixinha de nome/data/cidade). Só entra quando o
+  // astrólogo ligou o checkbox (temCirculo), fora do Tema Céu.
+  const corCirculoCapa = (!temaCeuAtivo && coresCapaParaMandala.temCirculo) ? coresCapaParaMandala.corCirculo : null;
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
     png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
-      png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa));
+      png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
     }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
     png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
-      png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa));
+      png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
     }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
@@ -2629,13 +2654,14 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   const temaCeuAtivoCapa = capaClasseCeu !== '';
   const capaComBorda = coresCapa.temBorda && !temaCeuAtivoCapa;
   const capaClasseBorda = capaComBorda ? ' rel-capa-com-borda' : '';
-  // Círculo atrás da mandala: mesma exceção do Tema Céu que a borda — sem
-  // efeito visível ali (o CSS já força roxo/dourado por cima), então nem
-  // entra na estrutura. O tamanho do título, por outro lado, é só
-  // tipografia (não é cor nem tema), então continua valendo mesmo com o
-  // Tema Céu ativo.
-  const capaComCirculo = coresCapa.temCirculo && !temaCeuAtivoCapa;
-  const estiloCapaCores = ` style="--rel-capa-bg: ${coresCapa.corFundo}; --rel-capa-titulo: ${coresCapa.corTitulo}; --rel-capa-titulo-tamanho: ${coresCapa.tamanhoTituloPx}px;${capaComBorda ? ` --rel-capa-borda: ${coresCapa.corBorda};` : ''}${capaComCirculo ? ` --rel-capa-circulo: ${coresCapa.corCirculo};` : ''}"`;
+  // O tamanho do título é só tipografia (não é cor nem tema), então
+  // continua valendo mesmo com o Tema Céu ativo. O "círculo atrás da
+  // mandala" NÃO entra aqui como CSS — ele é desenhado DENTRO do PNG da
+  // mandala (ver corCirculoCapa em renderizarMandalasDoPreset), porque
+  // só quem sabe onde o centro de verdade da roda fica dentro da imagem
+  // é o próprio desenho da mandala (nunca é o centro geométrico do PNG —
+  // sobra espaço embaixo pra caixinha de nome/data/cidade).
+  const estiloCapaCores = ` style="--rel-capa-bg: ${coresCapa.corFundo}; --rel-capa-titulo: ${coresCapa.corTitulo}; --rel-capa-titulo-tamanho: ${coresCapa.tamanhoTituloPx}px;${capaComBorda ? ` --rel-capa-borda: ${coresCapa.corBorda};` : ''}"`;
   // "__capa__" e "__encerramento__" só guardam metadado/texto fixo (a
   // escolha da mandala da capa, o texto de fechamento) — não são páginas
   // do corpo do relatório, então nunca entram no map abaixo.
@@ -2659,7 +2685,6 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
       <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
       ${imgCapa ? `
         <div class="rel-capa-centro">
-          ${capaComCirculo ? '<div class="rel-capa-circulo"></div>' : ''}
           <img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">
         </div>
       ` : '<div class="rel-capa-centro"></div>'}
@@ -3276,24 +3301,14 @@ function injetarEstilosRelatorio() {
       .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); padding: 5mm; }
       .rel-capa-moldura { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 8px; box-sizing: border-box; padding: 18mm 16mm; }
       .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
-      .rel-capa-centro { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+      .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
          altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
          "definida" pro navegador — no motor de impressão do Safari/iPad
          isso não resolvia direito e a porcentagem virava "sem limite",
          deixando a mandala esticar (achatada) até o tamanho que o
          max-width permitisse. Um valor fixo nunca depende disso. */
-      .rel-img-capa { max-width: 78mm; max-height: 140mm; position: relative; z-index: 1; }
-      /* CÍRCULO ATRÁS DA MANDALA (ver relatorioPaletaCapaHtml/
-         montarConteudoRelatorioHtml) — um disco de cor sólida, centrado
-         no mesmo ponto que a mandala já centraliza sozinha (flex
-         align-items/justify-content do .rel-capa-centro, que por isso
-         precisa de "position: relative" pra virar a referência desse
-         posicionamento absoluto). z-index explícito nos dois lados
-         garante que o círculo fica atrás mesmo sem depender da ordem no
-         HTML — sem isso, um elemento posicionado (o círculo) pintaria
-         por cima de um elemento normal (a imagem) por padrão do CSS. */
-      .rel-capa-circulo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85mm; height: 85mm; border-radius: 50%; background: var(--rel-capa-circulo, #fffdf5); z-index: 0; }
+      .rel-img-capa { max-width: 78mm; max-height: 140mm; }
       .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
       .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
       .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
