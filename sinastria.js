@@ -1010,12 +1010,21 @@
             </div>
         `;
 
-        /* O botão "Trocar Mapa" fica FORA do bloco que vira imagem (ver
-           sinastriaMandalasImgHost logo abaixo) — igual ao botão "Adicionar
-           ao Relatório" da Profecção, que fica num container à parte pra
-           nunca aparecer na própria imagem gerada. */
+        /* Os botões "Adicionar ao Relatório" e "Trocar Mapa" ficam FORA do
+           bloco que vira imagem (ver sinastriaMandalasImgHost logo abaixo)
+           — igual ao botão "Adicionar ao Relatório" da Profecção, que fica
+           num container à parte pra nunca aparecer na própria imagem
+           gerada. O de Relatório reaproveita capturarTelaParaRelatorio
+           (relatorio.js), o mesmo mecanismo genérico já usado por
+           Profecção/Circumambulação/Decênios/Horas/Isopsefia — captura
+           via html2canvas o container sinastriaMandalasImgHost (as duas
+           mandalas lado a lado, já com os cabeçalhos de cada uma), do
+           jeito que está na tela agora. */
         const trocarBtnHtml = sinastriaSegundoMapa ? `
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+                <button onclick="capturarTelaParaRelatorio('sinastria', 'sinastriaMandalasImgHost', 'Sinastria')" title="Adiciona as duas mandalas, lado a lado, exatamente como estão agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+                    <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+                </button>
                 <button onclick="sinastriaTrocarMapa()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
                     <i class="fa-solid fa-arrow-right-arrow-left"></i> Trocar Mapa
                 </button>

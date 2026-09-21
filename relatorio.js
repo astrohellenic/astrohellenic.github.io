@@ -81,6 +81,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     tituloIndice: 'Lotes Selecionados',
     capturada: true,
     telaOrigem: 'Ferramentas > Calculadora de Lotes'
+  },
+  sinastria: {
+    label: 'Sinastria (as duas mandalas lado a lado, exatamente como você deixou na tela)',
+    tituloIndice: 'Sinastria',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Sinastria'
   }
 };
 
@@ -163,7 +169,8 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' })),
   { id: 'horas', type: 'ferramenta' },
   { id: 'isopsefia', type: 'ferramenta' },
-  { id: 'lotes_calculados', type: 'ferramenta' }
+  { id: 'lotes_calculados', type: 'ferramenta' },
+  { id: 'sinastria', type: 'ferramenta' }
 ]);
 
 /* Guarda em memória (dura só a sessão atual, não persiste) as capturas
