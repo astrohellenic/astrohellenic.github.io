@@ -1185,7 +1185,12 @@ function medidorPaginaRelatorio() {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'relMedidorPaginaOculto';
-  el.style.cssText = 'position: fixed; top: 0; left: -99999px; width: 0; height: 0; overflow: visible;';
+  // width:210mm aqui (não 0): .rel-page usa "max-width:100%", que resolve
+  // contra a largura DESTE pai — com o pai a 0px, a folha inteira also
+  // colapsava pra 0px de largura, e a função desistia sempre achando que
+  // não tinha como medir (retornava [] sem nunca desenhar nenhuma linha,
+  // em qualquer navegador/cache).
+  el.style.cssText = 'position: fixed; top: 0; left: -99999px; width: 210mm; overflow: visible;';
   el.innerHTML = `
     <section class="rel-page" style="margin: 0;">
       <div class="rel-h1" id="relMedidorH1"></div>
