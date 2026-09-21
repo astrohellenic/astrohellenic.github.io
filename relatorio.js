@@ -3166,17 +3166,29 @@ function injetarEstilosRelatorio() {
          flex column de cima a baixo. */
       .rel-capa { display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); }
       /* BORDA (MOLDURA) DA CAPA — ver relatorioPaletaCapaHtml/montarConteudoRelatorioHtml.
-         A própria ".rel-page" já tem "padding: 18mm 16mm" (ver a regra
-         base bem acima); reaproveita essa margem de sempre como largura
-         da moldura, em vez de inventar um espaçamento novo: pinta a
-         página INTEIRA (incluindo o padding, que é onde o background
-         normalmente já pinta) com a cor da borda, e o retângulo de
-         dentro (".rel-capa-moldura", do tamanho do content-box, ou seja,
-         exatamente a área que sobra dentro do padding) recebe a cor de
-         fundo normal por cima — a cor da borda só sobra visível na faixa
-         do padding ao redor, como uma moldura. */
-      .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); }
-      .rel-capa-moldura { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 10px; box-sizing: border-box; }
+         Faixa FINA (5mm) de propósito — nada a ver com o padding normal
+         da página (18mm/16mm, ver ".rel-page" na regra base): a primeira
+         versão reaproveitava esse padding grande como largura da moldura
+         e saiu enorme/desproporcional (reportado pelo astrólogo). A cor
+         da borda pinta essa faixa fina (".rel-capa-com-borda" some com o
+         padding de sempre e usa um "padding" próprio, bem menor); o
+         retângulo de dentro (".rel-capa-moldura") recebe de volta o
+         mesmo respiro de sempre (18mm/16mm) pro título/mandala/rodapé
+         não mudarem de posição, só que agora dentro de um cartão com
+         cantos arredondados, com a cor da borda sobrando só naquela
+         faixa fina ao redor.
+
+         ".rel-capa-moldura" usa "flex: 1" (não "height: 100%") de
+         propósito — é o mesmo "flex: 1" que ".rel-capa-centro" já usa
+         duas linhas abaixo, e existe um motivo bem específico pra isso
+         (ver o comentário de ".rel-capa { height: 250mm }" no @media
+         print, mais abaixo): o motor de impressão do Safari/iPad já
+         demonstrou não repassar direito uma altura definida por
+         porcentagem ("height: 100%") pra dentro de um flexbox — foi
+         exatamente isso que fez a capa vazar pra uma segunda página
+         quase em branco quando a borda usava "height: 100%" aqui. */
+      .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); padding: 5mm; }
+      .rel-capa-moldura { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 8px; box-sizing: border-box; padding: 18mm 16mm; }
       .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
