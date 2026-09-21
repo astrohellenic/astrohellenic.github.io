@@ -63,6 +63,7 @@
 
 :root {
   --bg-main: #fffdf5;        /* Fundo creme oficial */
+  --bg-stage: #ffffff;       /* Fundo do #main-stage (chão atrás da mandala/ferramentas) — branco cravado no claro, só escurece no tema escuro (ver :root.tema-escuro) */
   --bg-sidebar: #fffdf5;     /* Fundo do menu creme */
   --bg-card: #ffffff;        /* Fundo de cartão/botão/input (era branco cravado) */
   --bg-hover: #f7f5ed;       /* Fundo de hover de item de menu/aba */
@@ -118,6 +119,7 @@
    As demais ferramentas ainda usam cor cravada e não reagem a isso. */
 :root.tema-escuro {
   --bg-main: #1c1917;
+  --bg-stage: #1c1917;       /* Igual a --bg-main no escuro — só no claro que difere (ver :root) */
   --bg-sidebar: #1c1917;
   --bg-card: #262220;
   --bg-hover: #322c26;
@@ -460,12 +462,17 @@ body {
            Tabela Técnica, Relatório etc.) — por isso já reage ao tema
            escuro mesmo antes de cada ferramenta ganhar sua própria migração:
            o "chão" fica escuro, mas o conteúdo de cada ferramenta (ainda em
-           cor cravada) continua sobre cartões claros até a vez dela chegar. */
+           cor cravada) continua sobre cartões claros até a vez dela chegar.
+           Usa --bg-stage (branco cravado no claro), não --bg-main (creme
+           do menu/topo): esse fundo sempre foi branco no modo claro, e
+           usar --bg-main aqui deixava a área ao redor da mandala/tabelas
+           com a mesma cor creme do menu, o que nunca foi a intenção — só
+           o "chão" reagir ao escuro, sem mudar a cor do claro. */
         #main-stage {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-color: var(--bg-main);
+            background-color: var(--bg-stage);
             position: relative;
             width: 100%;
             padding: 10px;
@@ -624,7 +631,8 @@ body {
            espaço sideral desenhado dentro da própria mandala. Só se aplica
            com body.tema-ceu (o tema é por usuário, alternado em
            Configurações > Aparência); no tema "Claro" (padrão) fica sem
-           fundo próprio, mostrando o creme normal do site. Fica só aqui
+           fundo próprio, mostrando o branco de --bg-stage (#main-stage).
+           Fica só aqui
            (não em #main-stage nem em body), então nunca aparece nas
            outras ferramentas — e a barra superior fixa, que tem fundo
            creme próprio, continua por cima sem ser afetada. */
