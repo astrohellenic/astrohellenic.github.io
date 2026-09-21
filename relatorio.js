@@ -80,6 +80,13 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     label: 'Lotes Selecionados (os quadrinhos que você marcar na Calculadora de Lotes — pré-calculados e os que você salvar)',
     tituloIndice: 'Lotes Selecionados',
     capturada: true,
+    // "Lotes Selecionados" é só o nome interno da ferramenta (aparece no
+    // Índice, pra navegação) — não faz sentido nenhum pro cliente, que só
+    // vai ver os quadrinhos dos lotes em si. Diferente de "Mapa Natal" ou
+    // "Profecção Anual" (títulos que fazem sentido como cabeçalho de
+    // página pro cliente ler), este esconde o <div class="rel-titulo-captura">
+    // que renderBlocoRelatorio bota por padrão acima de toda captura.
+    ocultarTituloNaPagina: true,
     telaOrigem: 'Ferramentas > Calculadora de Lotes'
   },
   sinastria: {
@@ -2968,9 +2975,10 @@ function renderBlocoRelatorio(bloco, opts) {
           </section>
         `;
       }
+      const tituloNaPaginaHtml = info.ocultarTituloNaPagina ? '' : `<div class="rel-titulo-captura">${escapeHtml(titulo)}</div>`;
       return `
         <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
-          <div class="rel-titulo-captura">${escapeHtml(titulo)}</div>
+          ${tituloNaPaginaHtml}
           <div class="rel-captura-corpo">
             <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
           </div>

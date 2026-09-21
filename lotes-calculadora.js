@@ -633,11 +633,24 @@ async function capturarLotesSelecionadosParaRelatorio() {
     return;
   }
 
+  /* Nem título embutido, nem largura fixa: o astrólogo pediu que a
+     imagem enviada ao relatório seja só os quadrinhos marcados, do
+     tamanho exato deles — sem um "Lotes Selecionados" escrito (o
+     relatório já mostra isso no Índice; virou rótulo duplicado, sem
+     sentido pro cliente ler) e sem sobrar fundo vazio quando é só 1 ou 2
+     lotes (a largura fixa de 900px, pensada pra caber vários lado a
+     lado, deixava um vão vazio à direita quando tinha menos que isso).
+     Largura calculada em função de quantos cartões cabem por linha
+     (até 3): 1 lote = 1 coluna, 2 = 2 colunas, 3+ = 3 colunas por linha
+     (quebrando pra linha de baixo se passar de 3). */
+  const CARD_W = 220, GAP = 12, PAD = 20;
+  const numCols = Math.min(selecionados.length, 3);
+  const larguraTotal = (numCols * CARD_W) + ((numCols - 1) * GAP) + (PAD * 2);
+
   const temp = document.createElement('div');
-  temp.style.cssText = 'position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: var(--bg-main); font-family: "Montserrat", sans-serif;';
+  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: ${larguraTotal}px; padding: ${PAD}px; background: var(--bg-main); font-family: "Montserrat", sans-serif;`;
   temp.innerHTML = `
-    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 14px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Lotes Selecionados</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+    <div style="display: grid; grid-template-columns: repeat(${numCols}, ${CARD_W}px); gap: ${GAP}px;">
       ${selecionados.map(l => renderLoteCardHTML(l.iconHTML, l.nome, l.deg, p.asc, l.legenda)).join('')}
     </div>
   `;
