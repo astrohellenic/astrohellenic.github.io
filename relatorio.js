@@ -1149,11 +1149,135 @@ function inicializarQuillsPendentes() {
       quill.clipboard.dangerouslyPasteHTML(paragrafos.map(p => `<p>${escapeHtml(p)}</p>`).join(''));
     }
     window.relatorioQuillInstancias[id] = quill;
+    criarOverlayQuebraPaginaQuill(id, quill);
   });
 
   window.relatorioQuillPendentes = {};
 }
 window.inicializarQuillsPendentes = inicializarQuillsPendentes;
+
+/* ===== INDICADOR DE QUEBRA DE PÁGINA AO VIVO, DENTRO DO PRÓPRIO QUILL =====
+   Antes disso, a única forma de saber onde o texto ia quebrar de página
+   era trocar pra aba "Prévia" e gerar o relatório inteiro de novo — sem
+   isso, a caixa do Quill cresce "lisa", sem fim de folha nenhum visível,
+   e o astrólogo não tinha como decidir o que reescrever/reorganizar pra
+   a quebra cair num lugar melhor.
+
+   Reaproveita a MESMA conta de dividirPaginasLongasEmFolhas (orçamento de
+   altura de uma folha A4, medido com a fonte/largura de verdade do
+   relatório — nunca a da caixa do Quill, que usa outra fonte/line-height
+   só pra ficar confortável de editar), só que sem mover nada: mede um
+   clone oculto do texto atual e devolve depois de qual parágrafo a
+   página muda. Como a quebra só acontece em fronteira de parágrafo (a
+   conta original nunca corta um <p> ao meio), o ÍNDICE do parágrafo é a
+   mesma coisa nos dois lugares mesmo a largura/fonte sendo diferentes —
+   só a ALTURA de cada parágrafo (calculada contra a fonte/largura reais)
+   depende da folha de verdade; a POSIÇÃO da linha-guia na tela usa a
+   posição desse mesmo parágrafo dentro da caixa visível do Quill. */
+
+/* Cria (uma vez só, reaproveitado por todo bloco de texto) o clone oculto
+   que serve de "régua": mesmas classes .rel-page/.rel-h1/.rel-corpo do
+   relatório de verdade (injetadas pelo <style> deste módulo), então
+   qualquer mudança de fonte/padding/margem no relatório real já vale
+   aqui também, sem precisar duplicar nenhum valor. */
+function medidorPaginaRelatorio() {
+  let el = document.getElementById('relMedidorPaginaOculto');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'relMedidorPaginaOculto';
+  el.style.cssText = 'position: fixed; top: 0; left: -99999px; width: 0; height: 0; overflow: visible;';
+  el.innerHTML = `
+    <section class="rel-page" style="margin: 0;">
+      <div class="rel-h1" id="relMedidorH1"></div>
+      <div class="rel-corpo" id="relMedidorCorpo"></div>
+    </section>
+  `;
+  document.body.appendChild(el);
+  return el;
+}
+
+/* Devolve os índices (0-based, entre os filhos de primeiro nível do
+   corpo) que COMEÇAM uma nova página. temBlocoH1 diferencia um bloco de
+   texto comum (sempre tem a caixa .rel-h1, mesmo com título vazio — ela
+   ocupa altura só pela borda/padding) do bloco de Encerramento (nunca
+   tem .rel-h1 nenhum, ver montarConteudoRelatorioHtml) — sem essa
+   distinção, um texto de título vazio contaria como "sem título", o que
+   subestimaria a altura já gasta na primeira página. */
+function calcularQuebrasDePaginaTexto(corpoHtml, tituloTexto, temBlocoH1) {
+  const medidor = medidorPaginaRelatorio();
+  const paginaEl = medidor.querySelector('.rel-page');
+  const h1El = medidor.querySelector('#relMedidorH1');
+  const corpoEl = medidor.querySelector('#relMedidorCorpo');
+
+  h1El.style.display = temBlocoH1 ? '' : 'none';
+  h1El.textContent = tituloTexto || '';
+  corpoEl.innerHTML = corpoHtml || '';
+
+  // Mesmo truque de dividirPaginasLongasEmFolhas: o orçamento de altura
+  // vem da LARGURA (estável) vezes a proporção A4 fixa (297/210) — nunca
+  // da altura renderizada da própria folha, que aqui cresceria sem
+  // limite junto com o conteúdo (é um clone fora da tela, sem quebra
+  // nenhuma até este cálculo terminar).
+  const larguraAtual = paginaEl.getBoundingClientRect().width;
+  if (!larguraAtual) return [];
+  const alturaFolhaPx = larguraAtual * (297 / 210);
+  const estiloPagina = getComputedStyle(paginaEl);
+  const orcamentoPx = alturaFolhaPx - parseFloat(estiloPagina.paddingTop) - parseFloat(estiloPagina.paddingBottom);
+
+  let alturaUsada = temBlocoH1 ? h1El.getBoundingClientRect().height + 26 : 0; // 26px = margin-bottom do .rel-h1
+  const indicesDeQuebra = [];
+  Array.from(corpoEl.children).forEach((filho, idx) => {
+    const alturaFilho = filho.getBoundingClientRect().height + parseFloat(getComputedStyle(filho).marginBottom || 0);
+    if (alturaUsada > 0 && alturaUsada + alturaFilho > orcamentoPx) {
+      indicesDeQuebra.push(idx);
+      alturaUsada = 0;
+    }
+    alturaUsada += alturaFilho;
+  });
+  return indicesDeQuebra;
+}
+
+/* Pluga o overlay num Quill recém-criado: recalcula (com debounce, pra
+   não medir a cada tecla) a cada mudança de texto, a cada mudança no
+   campo "Título" ao lado (ele entra no orçamento da primeira página) e
+   ao redimensionar a janela (a largura da caixa muda a posição das
+   linhas, mesmo a quebra em si não mudando de parágrafo). O overlay
+   nunca é filho de quill.root (isso vazaria pro HTML salvo do bloco) —
+   é um <div> à parte, irmão de .ql-editor dentro de .ql-container
+   (que o tema "snow" do Quill já deixa position:relative). */
+function criarOverlayQuebraPaginaQuill(id, quill) {
+  const mount = document.getElementById('quill-mount-' + id);
+  const container = mount ? mount.querySelector('.ql-container') : null;
+  if (!container) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'rel-quebra-pagina-overlay';
+  container.appendChild(overlay);
+
+  const temBlocoH1 = id !== '__encerramento__';
+  const tituloInput = temBlocoH1 ? document.querySelector(`[data-bloco-titulo="${id}"]`) : null;
+
+  function recalcular() {
+    if (!document.body.contains(mount)) return; // bloco removido da tela nesse meio tempo
+    const indices = calcularQuebrasDePaginaTexto(quill.root.innerHTML, tituloInput ? tituloInput.value : '', temBlocoH1);
+    const containerRect = container.getBoundingClientRect();
+    overlay.innerHTML = indices.map((idx, n) => {
+      const filho = quill.root.children[idx];
+      if (!filho) return '';
+      const top = filho.getBoundingClientRect().top - containerRect.top;
+      return `<div class="rel-quebra-pagina-linha" style="top: ${top}px;"><span>Página ${n + 2} começa aqui</span></div>`;
+    }).join('');
+  }
+
+  let timeoutRecalculo = null;
+  const agendarRecalculo = () => { clearTimeout(timeoutRecalculo); timeoutRecalculo = setTimeout(recalcular, 500); };
+
+  quill.on('text-change', agendarRecalculo);
+  if (tituloInput) tituloInput.addEventListener('input', agendarRecalculo);
+  window.addEventListener('resize', agendarRecalculo);
+
+  recalcular();
+}
 
 /* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
    deixa escolher entre as capturas já feitas em alguma ferramenta (ex.:
@@ -1460,6 +1584,20 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
+
+      /* Linha de "aqui quebra a página" sobreposta ao Quill (ver
+         criarOverlayQuebraPaginaQuill) — nunca é conteúdo de verdade
+         (fica por CIMA do texto, pointer-events:none, num container à
+         parte de quill.root), só um guia visual calculado contra o
+         medidor oculto (calcularQuebrasDePaginaTexto), que usa a fonte/
+         largura da folha de VERDADE (.rel-page/.rel-h1/.rel-corpo), bem
+         diferente da fonte da própria caixa do Quill (line-height 1.6
+         aqui vs. 1.85 no relatório final) — por isso nunca dá pra medir
+         direto na caixa visível, só usar o índice do parágrafo que essa
+         medição encontrar. */
+      .rel-quebra-pagina-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 5; }
+      .rel-quebra-pagina-linha { position: absolute; left: 8px; right: 8px; border-top: 2px dashed #c59b27; }
+      .rel-quebra-pagina-linha span { position: absolute; top: -9px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 4px; padding: 1px 6px; font-size: 9.5px; font-weight: 700; color: #9a6d18; white-space: nowrap; }
 
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
 
