@@ -2383,12 +2383,25 @@ function calcularLotesRelatorio() {
    porque o astrólogo, sem querer, gerou o relatório com o menu do site
    em modo escuro.
 
-   Quando a MESMA mandala também é a fonte da capa (capaFonte) e a cor
-   escolhida pro modelo pede a variante escura (ver
-   estiloMandalaParaCapa), desenha uma SEGUNDA cópia, só pra capa, dessa
-   vez forçada "escuro" — nunca reaproveita a de 'claro' de cima pra
-   capa nesse caso, senão viraria o mesmo bug de novo (mandala clara
-   destacando feio numa capa escura), só que ao contrário. */
+   Quando a MESMA mandala também é a fonte da capa (capaFonte), desenha
+   uma SEGUNDA cópia, só pra capa, com o fundo REMOVIDO (ver
+   fundoTransparente em renderMandala) — nunca reaproveita a de 'claro'
+   de cima pra capa: aquela tem um retângulo de fundo sólido (branco),
+   que só por acaso combinava com a capa "Clássico"; qualquer outra cor
+   de capa (até um creme quase branco) sobrava com uma borda vazando por
+   trás, exatamente o "quadrado" que o astrólogo via na imagem. Sem
+   fundo nenhum, a mandala encaixa direto na cor que a própria capa já
+   tem, pintada por CSS (--rel-capa-bg), sem precisar "adivinhar"
+   cor nenhuma pro desenho. estiloMandalaParaCapa ainda decide só a
+   TINTA (números, linhas, halo) — clara ou escura — pra continuar
+   legível em cima do fundo escolhido.
+
+   Exceção: com o Tema Céu ativo, a capa não usa cópia nenhuma "sem
+   fundo" — o CSS da capa já força roxo/dourado por cima de qualquer
+   paleta do modelo (ver montarConteudoRelatorioHtml), então a mandala
+   continua sendo a mesma cópia 'claro' de sempre, com o disco claro
+   "flutuando" dentro do céu estrelado — o visual de sempre desse tema,
+   que já funciona e não deve mudar aqui. */
 async function renderizarMandalasDoPreset(blocos, capaFonte) {
   // Calcula cada mandala se ela tiver página própria marcada no preset OU
   // se for a fonte escolhida pra capa (as duas coisas são independentes:
@@ -2400,20 +2413,21 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 
   const blocoCapa = (blocos || []).find(b => b.type === 'capa');
   const estiloCapa = estiloMandalaParaCapa(blocoCapa);
-  const precisaVersaoEscuraDaCapa = estiloCapa === 'escuro';
+  const temaCeuAtivo = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  const precisaCapaSeparada = !temaCeuAtivo && (capaFonte === 'mandala_natal' || capaFonte === 'mandala_fortuna');
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
     png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
-    if (precisaVersaoEscuraDaCapa && capaFonte === 'mandala_natal') {
-      png1Capa = await new Promise(resolve => renderMandala(null, resolve, 'escuro'));
+    if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
+      png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true));
     }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
     png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
-    if (precisaVersaoEscuraDaCapa && capaFonte === 'mandala_fortuna') {
-      png2Capa = await new Promise(resolve => renderMandala(null, resolve, 'escuro'));
+    if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
+      png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true));
     }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala

@@ -926,7 +926,7 @@ function injetarControleZoomMandala() {
   }
 }
 
-function renderMandala(dadosNovos, onReady, estiloForcado) {
+function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -950,7 +950,22 @@ function renderMandala(dadosNovos, onReady, estiloForcado) {
      fundo preto por baixo (o "papel" da mandala seguia o Tema Escuro do
      menu, sem relação nenhuma com a cor da capa escolhida no modelo).
      Sem esse parâmetro (uso normal, a mandala ao vivo na tela), o
-     comportamento é o de sempre: segue o Tema Escuro do menu. */
+     comportamento é o de sempre: segue o Tema Escuro do menu.
+
+     "fundoTransparente" (opcional, também só usado pelo Relatório) tira o
+     retângulo de fundo que cobre a imagem inteira (ver o <rect> logo
+     depois de "</defs>" mais abaixo) — sem ele, o PNG fica com um
+     "quadrado" de cor sólida atrás da mandala que só combinava por
+     coincidência com a capa branca "Clássico" (fundoDisco === '#ffffff'
+     por acaso igual à cor de fundo da capa); em qualquer outra cor de
+     capa (inclusive um "creme" quase branco, ou a variante 'escuro'
+     tentando aproximar um fundo escuro qualquer) sobrava uma borda/
+     retângulo visivelmente de cor diferente da capa ao redor. Com o
+     fundo transparente, a mandala encaixa direto na cor que a própria
+     capa já tem (ver --rel-capa-bg em relatorio.js), sem precisar
+     acertar cor nenhuma. Não mexe nos círculos internos menores que
+     também usam tinta.fundoDisco (mascarando cruzamento de linha atrás
+     de ícone de planeta/eixo) — só o retângulo grande de fundo. */
   const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
   const corCabecalhoPng = {
     fundo: modoEscuro ? '#1c1917' : '#fffdf5',
@@ -1288,7 +1303,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado) {
       </radialGradient>` : ''}
     </defs>
 
-    <rect width="${width}" height="${height}" fill="${tinta.fundoDisco}"/>
+    <rect width="${width}" height="${height}" fill="${fundoTransparente ? 'transparent' : tinta.fundoDisco}"/>
 ${temaCeu ? `
     <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
          direção, até a borda da tela (o "furo" no meio, via fill-rule
