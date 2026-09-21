@@ -875,7 +875,16 @@ function injetarBotaoRelatorioNaBarraSuperior() {
 
 async function capturarMandalaAtualParaRelatorio() {
   if (!currentCalculatedData) { alert('Nenhum mapa carregado pra adicionar ao relatório.'); return; }
-  const dataUrl = await new Promise(resolve => renderMandala(null, resolve));
+  // 'claro' + fundoTransparente: essa captura pode acabar tanto numa página
+  // do corpo do relatório (papel branco de sempre) quanto na CAPA (qualquer
+  // cor escolhida no modelo, decidida só depois, nem sempre no mesmo
+  // instante da captura) — sem fundo nenhum, encaixa nos dois lugares sem
+  // sobrar quadrado, e sem depender do Tema Escuro do menu que estava
+  // ligado ou não bem na hora em que o astrólogo clicou aqui (mesmo bug do
+  // "quadrado" da Mandala Natal/Fortuna, ver renderizarMandalasDoPreset em
+  // relatorio.js — só que aqui é capturado uma vez só, então usa sempre a
+  // tinta 'claro', a mais segura pro uso mais comum, que é o corpo). */
+  const dataUrl = await new Promise(resolve => renderMandala(null, resolve, 'claro', true));
   const total = adicionarCapturaRelatorio('mandala_personalizada', dataUrl);
   alert(`Mandala adicionada ao relatório, do jeito que está na tela agora (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
 }
