@@ -1885,7 +1885,7 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
            de fora sobra como uma moldura ao redor. Nas paletas prontas
            usa a mesma cor do título (já combina, sem precisar de campo
            novo); na Personalizada, o astrólogo escolhe a cor da borda à
-           parte (ver #relCapaCorBordaWrap acima). */
+           parte (ver #relCapaCorBordaWrap acima). -->
       <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="relCapaTemBorda" ${temBorda ? 'checked' : ''} onchange="alternarBordaCapaEditor(this.checked)" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary-blue);">
         <label for="relCapaTemBorda" style="font-size: 12px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">Capa com borda (moldura ao redor)</label>
