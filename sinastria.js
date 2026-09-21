@@ -1014,15 +1014,13 @@
            bloco que vira imagem (ver sinastriaMandalasImgHost logo abaixo)
            — igual ao botão "Adicionar ao Relatório" da Profecção, que fica
            num container à parte pra nunca aparecer na própria imagem
-           gerada. O de Relatório reaproveita capturarTelaParaRelatorio
-           (relatorio.js), o mesmo mecanismo genérico já usado por
-           Profecção/Circumambulação/Decênios/Horas/Isopsefia — captura
-           via html2canvas o container sinastriaMandalasImgHost (as duas
-           mandalas lado a lado, já com os cabeçalhos de cada uma), do
-           jeito que está na tela agora. */
+           gerada. O de Relatório chama sinastriaAdicionarAoRelatorio()
+           (definida logo depois de converterSinastriaMandalasEmImagem),
+           que reaproveita a <img> já gerada pra o toque-longo em vez de
+           tirar um segundo html2canvas do mesmo conteúdo. */
         const trocarBtnHtml = sinastriaSegundoMapa ? `
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
-                <button onclick="capturarTelaParaRelatorio('sinastria', 'sinastriaMandalasImgHost', 'Sinastria')" title="Adiciona as duas mandalas, lado a lado, exatamente como estão agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
+                <button onclick="sinastriaAdicionarAoRelatorio()" title="Adiciona as duas mandalas, lado a lado, exatamente como estão agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
                     <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
                 </button>
                 <button onclick="sinastriaTrocarMapa()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
@@ -1087,6 +1085,34 @@
             console.error('Erro ao converter as mandalas da Sinastria em imagem:', err);
         }
     }
+
+    /* Botão "Adicionar ao Relatório" da Sinastria — diferente da Profecção
+       (onde a imagem do relatório inclui a Profecção Mensal além das
+       mandalas) e da Liberação (onde o astrólogo escolhe por checkbox se
+       entra mandala, tabela, ou os dois), aqui o que vai pro relatório é
+       exatamente o mesmo conteúdo do sinastriaMandalasImgHost — nada mais,
+       nada menos. Então, em vez de chamar capturarTelaParaRelatorio (que
+       tiraria um SEGUNDO html2canvas do mesmo container, já convertido em
+       <img> por converterSinastriaMandalasEmImagem alguns instantes atrás),
+       reaproveita direto o src dessa <img> já pronta: mesma imagem,
+       processamento a menos, e garante que o que vai pro relatório é
+       pixel-idêntico ao que o astrólogo já vê na tela (e pode salvar na
+       galeria com toque longo).
+       Se a conversão ainda não tiver terminado por algum motivo (clique
+       muito rápido logo após trocar de mapa, ou html2canvas não carregou),
+       cai de volta no mecanismo genérico de sempre, que tira a captura na
+       hora — nunca fica sem enviar nada ao relatório. */
+    function sinastriaAdicionarAoRelatorio() {
+        const host = document.getElementById('sinastriaMandalasImgHost');
+        const img = host ? host.querySelector('img') : null;
+        if (img && img.src) {
+            const total = adicionarCapturaRelatorio('sinastria', img.src);
+            alert(`"Sinastria" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+            return;
+        }
+        capturarTelaParaRelatorio('sinastria', 'sinastriaMandalasImgHost', 'Sinastria');
+    }
+    window.sinastriaAdicionarAoRelatorio = sinastriaAdicionarAoRelatorio;
 
     /* PONTO DE ENTRADA DO MÓDULO — chamado por abrirModuloTecnica('sinastria') (supabase.js) */
     async function iniciarModuloSinastria() {
