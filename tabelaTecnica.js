@@ -420,6 +420,54 @@ function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase)
   });
 }
 
+/* CABEÇALHO PADRÃO COM OS DADOS DO MAPA (nome, dia/data/hora/fuso,
+   cidade, e os regentes do Dia/Hora planetários quando calculados) —
+   mesmo contorno/fundo do cabeçalho desenhado dentro da própria Mandala
+   (mandala.js, "png-discreet-header"), só que em HTML puro, porque aqui
+   entra direto no DOM (não precisa virar imagem). Extraído pra função
+   própria (antes só existia inline dentro de renderPainelTecnico) pra
+   poder ser reaproveitado também na Matriz de Visibilidade quando ela
+   aparece no lugar da Mandala (matrizVisibilidade.js) — a intenção ali é
+   dar a impressão de que só a "foto" trocou (mandala ↔ matriz) sem trocar
+   de tela, e pra isso a moldura (este cabeçalho) precisa ser a mesma nos
+   dois lugares.
+   "idOpcional" só existe pra manter o id "painelTecnicoHeader" de sempre
+   no Painel Técnico (usado logo abaixo pra sincronizar a largura com a
+   Matriz) — nos outros usos não precisa de id nenhum. */
+function montarCabecalhoInfoMapaHTML(idOpcional) {
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const diasSemanaTabelaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemanaTabelaLabels[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const anoH = currentMoment.getFullYear();
+  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const diaH = String(currentMoment.getDate()).padStart(2, '0');
+  const horaH = String(currentMoment.getHours()).padStart(2, '0');
+  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
+
+  return `
+    <div${idOpcional ? ` id="${idOpcional}"` : ''} style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
+      <div>
+        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
+        <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
+      </div>
+      ${horasInfo ? `
+      <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
+        <div style="text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
+          ${getPlanet3DSVG(horasInfo.dayRulerId)}
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
+          ${getPlanet3DSVG(horasInfo.hourRulerId)}
+        </div>
+      </div>` : ''}
+    </div>
+  `;
+}
+
 function renderPainelTecnico(data, containerId) {
   try {
     const container = document.getElementById(containerId);
@@ -479,19 +527,6 @@ function renderPainelTecnico(data, containerId) {
       { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
     ];
 
-    /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa), incluindo o dia e a hora planetários já calculados pelo módulo de Horas Planetárias */
-    const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
-    const diasSemanaTabelaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    const diaSemanaFormatted = diasSemanaTabelaLabels[currentMoment.getDay()];
-    const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-    const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-    const anoH = currentMoment.getFullYear();
-    const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
-    const diaH = String(currentMoment.getDate()).padStart(2, '0');
-    const horaH = String(currentMoment.getHours()).padStart(2, '0');
-    const minH = String(currentMoment.getMinutes()).padStart(2, '0');
-    const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-
     let html = `
       <div style="width: 100%;">
       <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
@@ -534,24 +569,7 @@ function renderPainelTecnico(data, containerId) {
 
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
-      <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala, com o dia/hora planetários à direita -->
-      <div id="painelTecnicoHeader" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
-        <div>
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        </div>
-        ${horasInfo ? `
-        <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
-          <div style="text-align: center;">
-            <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
-            ${getPlanet3DSVG(horasInfo.dayRulerId)}
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
-            ${getPlanet3DSVG(horasInfo.hourRulerId)}
-          </div>
-        </div>` : ''}
-      </div>
+      ${montarCabecalhoInfoMapaHTML('painelTecnicoHeader')}
     `;
 
     html += renderMatrizVisibilidadeHTML(data);

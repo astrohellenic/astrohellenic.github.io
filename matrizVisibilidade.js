@@ -271,11 +271,21 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
     ' display: inline-block; max-width: 100%; height: auto; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden;'
   );
 
+  /* Mesmo cabeçalho (nome/dia/data/hora/fuso/cidade + regentes do Dia/Hora)
+     que já aparece dentro da própria Mandala e do Painel Técnico
+     (montarCabecalhoInfoMapaHTML, tabelaTecnica.js) — repetido em cima E
+     embaixo da grade, igual a moldura que a Mandala já tem, pra dar a
+     impressão de que só a "foto" trocou (mandala ↔ matriz) sem trocar de
+     tela, como pedido pelo astrólogo. */
+  const cabecalhoInfoMapa = montarCabecalhoInfoMapaHTML();
+
   return `
+    ${cabecalhoInfoMapa}
     <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
     </div>
+    ${cabecalhoInfoMapa}
   `;
 }
 
