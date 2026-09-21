@@ -303,6 +303,44 @@ function resolverCoresCapaRelatorio(blocoCapa) {
   return { corFundo: paleta.corFundo, corTitulo: paleta.corTitulo };
 }
 
+/* Luminância aproximada (0 = preto, 1 = branco) de uma cor "#rrggbb" —
+   só pra decidir se um fundo é "claro" ou "escuro" o bastante pra
+   escolher a variante certa da mandala (ver estiloMandalaParaCapa logo
+   abaixo). Fórmula perceptual simples (pesos de luminância de vídeo,
+   sem correção de gama) — não precisa de mais precisão que essa pra
+   decidir um "ou/ou" entre duas variantes de desenho. */
+function luminanciaRelativaHex(hex) {
+  if (!RELATORIO_HEX_RE.test(hex)) return 1;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+/* Decide se a mandala usada NA CAPA (não nas páginas do corpo, que
+   continuam sempre "claro" — ver renderizarMandalasDoPreset) deve sair
+   na variante clara ou escura do desenho (ver renderMandala/tinta em
+   mandala.js), a partir da cor de fundo ESCOLHIDA NO MODELO — nunca do
+   Tema Escuro do menu (Configurações > Aparência): essa é a causa do bug
+   "capa branca com quadrado preto da mandala atrás" quando o astrólogo
+   gera o relatório com o menu em modo escuro, já que antes a mandala
+   sempre seguia esse tema do menu, sem relação nenhuma com a cor da
+   capa. Fundo claro (paleta clara, ex.: Clássico) -> mandala clara,
+   pra "chamar o branco" e não sobrar quadrado nenhum visível; fundo
+   escuro (ex.: Grafite, ou uma paleta personalizada escura) -> mandala
+   escura, pra fundir com o resto da capa em vez de destacar um
+   quadrado claro por cima do escuro.
+
+   O Tema Céu é a ÚNICA exceção: quando ativo, SEMPRE força "claro" aqui
+   (ignorando a paleta do modelo) — é o mesmo "disco claro dentro do céu
+   estrelado" que já funciona hoje nesse tema, e nada nessa mudança pode
+   mexer nisso (ver a nota de "Regra de ouro" no CLAUDE.md). */
+function estiloMandalaParaCapa(blocoCapa) {
+  if (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') return 'claro';
+  const cores = resolverCoresCapaRelatorio(blocoCapa);
+  return luminanciaRelativaHex(cores.corFundo) < 0.5 ? 'escuro' : 'claro';
+}
+
 /* Lê, dos blocos do preset/rascunho, o texto de encerramento (ver o
    bloco invisível "__encerramento__" em RELATORIO_BLOCOS_PADRAO) — cai
    no texto padrão pra quem salvou o relatório antes desse bloco existir
@@ -316,15 +354,22 @@ function obterEncerramento(blocos) {
    mandalas calculadas na hora (png1/png2, iguais às usadas nas páginas
    próprias delas) ou a última captura salva da Mandala Personalizada —
    sem imagem nenhuma quando o astrólogo escolhe "nenhuma" ou a fonte
-   escolhida ainda não tem imagem disponível. */
-function imagemCapaRelatorio(capaFonte, png1, png2) {
-  if (capaFonte === 'mandala_fortuna') return png2 || null;
+   escolhida ainda não tem imagem disponível.
+
+   png1Capa/png2Capa (opcionais) são a variante "escura" da mesma
+   mandala, desenhada só quando a cor da capa pede (ver
+   estiloMandalaParaCapa/renderizarMandalasDoPreset) — sempre preferida
+   aqui quando existe, porque é a que combina com o fundo escolhido no
+   modelo; png1/png2 (sempre "claro") continuam sendo as mesmas usadas
+   nas páginas do corpo, que nunca mudam de estilo. */
+function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa) {
+  if (capaFonte === 'mandala_fortuna') return png2Capa || png2 || null;
   if (capaFonte === 'mandala_personalizada') {
     const capturas = capturasDaFerramenta('mandala_personalizada');
     return capturas.length ? capturas[capturas.length - 1].dataUrl : null;
   }
   if (capaFonte === 'nenhuma') return null;
-  return png1 || null; // 'mandala_natal', o padrão
+  return png1Capa || png1 || null; // 'mandala_natal', o padrão
 }
 
 async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
@@ -2194,10 +2239,10 @@ async function atualizarPreviaEditorModelo() {
 
   const perfil = await carregarPerfilRelatorio();
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
-  const { png1, png2 } = await renderizarMandalasDoPreset(blocosComCapa, capaFonte);
+  const { png1, png2, png1Capa, png2Capa } = await renderizarMandalasDoPreset(blocosComCapa, capaFonte);
 
   injetarEstilosRelatorio();
-  const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+  const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
   const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
       <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
@@ -2285,9 +2330,9 @@ async function gerarRelatorioCompleto(preset) {
   const capaFonte = obterCapaFonte(blocos);
 
   const { lotes: lotesNatal, ascAbs: ascAbsNatal } = calcularLotesRelatorio();
-  const { png1, png2 } = await renderizarMandalasDoPreset(blocos, capaFonte);
+  const { png1, png2, png1Capa, png2Capa } = await renderizarMandalasDoPreset(blocos, capaFonte);
 
-  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+  montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
 
   // A prévia já está na tela nesse ponto — o que vem a seguir só decide
   // se o botão "Editar" aparece, nunca atrasa o que o astrólogo já está
@@ -2328,7 +2373,22 @@ function calcularLotesRelatorio() {
 }
 
 /* Desenha só as mandalas que o preset realmente usa (pode ser nenhuma,
-   uma, ou as duas), restaurando a rotação da Casa 1 ao final. */
+   uma, ou as duas), restaurando a rotação da Casa 1 ao final.
+
+   As duas ('claro', forçado — ver renderMandala/estiloForcado em
+   mandala.js) nunca mudam de estilo com o Tema Escuro do MENU do
+   astrólogo: são as mesmas usadas nas páginas do corpo do relatório
+   (Mapa Natal/Mandala com a Fortuna), que ficam sobre o papel branco de
+   sempre — não fazia sentido essas páginas mudarem de aparência só
+   porque o astrólogo, sem querer, gerou o relatório com o menu do site
+   em modo escuro.
+
+   Quando a MESMA mandala também é a fonte da capa (capaFonte) e a cor
+   escolhida pro modelo pede a variante escura (ver
+   estiloMandalaParaCapa), desenha uma SEGUNDA cópia, só pra capa, dessa
+   vez forçada "escuro" — nunca reaproveita a de 'claro' de cima pra
+   capa nesse caso, senão viraria o mesmo bug de novo (mandala clara
+   destacando feio numa capa escura), só que ao contrário. */
 async function renderizarMandalasDoPreset(blocos, capaFonte) {
   // Calcula cada mandala se ela tiver página própria marcada no preset OU
   // se for a fonte escolhida pra capa (as duas coisas são independentes:
@@ -2336,19 +2396,29 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
   const precisaNatal = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_natal') || capaFonte === 'mandala_natal';
   const precisaFortuna = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_fortuna') || capaFonte === 'mandala_fortuna';
   const lotSalvo = selectedHouse1Lot;
-  let png1 = null, png2 = null;
+  let png1 = null, png2 = null, png1Capa = null, png2Capa = null;
+
+  const blocoCapa = (blocos || []).find(b => b.type === 'capa');
+  const estiloCapa = estiloMandalaParaCapa(blocoCapa);
+  const precisaVersaoEscuraDaCapa = estiloCapa === 'escuro';
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
-    png1 = await new Promise(resolve => renderMandala(null, resolve));
+    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
+    if (precisaVersaoEscuraDaCapa && capaFonte === 'mandala_natal') {
+      png1Capa = await new Promise(resolve => renderMandala(null, resolve, 'escuro'));
+    }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
-    png2 = await new Promise(resolve => renderMandala(null, resolve));
+    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
+    if (precisaVersaoEscuraDaCapa && capaFonte === 'mandala_fortuna') {
+      png2Capa = await new Promise(resolve => renderMandala(null, resolve, 'escuro'));
+    }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
 
-  return { png1, png2 };
+  return { png1, png2, png1Capa, png2Capa };
 }
 
 function voltarConfigRelatorio() {
@@ -2372,7 +2442,7 @@ function voltarConfigRelatorio() {
    — extraída de montarEExibirRelatorio pra ser reaproveitada também pela
    prévia sob demanda do editor de modelo (atualizarPreviaEditorModelo),
    garantindo que as duas usam exatamente a mesma renderização. */
-function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
+function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa) {
   const marcaHtml = perfil.logo_url
     ? `<img src="${perfil.logo_url}" alt="Logo do astrólogo" class="rel-logo-astrologo">`
     : '';
@@ -2390,7 +2460,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   // escolha da mandala da capa, o texto de fechamento) — não são páginas
   // do corpo do relatório, então nunca entram no map abaixo.
   const blocos = (preset.blocos || []).filter(b => b.type !== 'capa' && b.type !== 'encerramento');
-  const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2);
+  const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa);
   const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
   const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -2439,14 +2509,14 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   `;
 }
 
-function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte) {
+function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa) {
   injetarEstilosRelatorio();
 
   // Guardado num global pra "Baixar PDF" (chamada só pelo onclick do botão
   // abaixo, sem parâmetro) saber o nome do modelo pro nome do arquivo.
   window.relatorioPresetAtual = preset;
 
-  const conteudoHtml = montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte);
+  const conteudoHtml = montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
 
   const htmlRelatorio = `
     <div class="rel-toolbar no-print" id="relToolbarFixa">
