@@ -8,7 +8,7 @@ const ZODIACO_ISOPSEFIA = [
 ];
 
 const SIGN_ELEMENTS_ISO = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
-const ELEMENT_SIGN_COLORS_ISO = { fire: "#e84118", earth: "#8b4513", air: "#0ea5e9", water: "#1d4ed8" };
+const ELEMENT_SIGN_COLORS_ISO = { fire: "var(--element-fogo)", earth: "var(--element-terra)", air: "var(--element-ar)", water: "var(--element-agua)" };
 
 const MONOLINE_ZODIAC_SVGS_ISO = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
@@ -145,7 +145,7 @@ function iniciarModuloIsopsefia() {
   if (!container) return;
 
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-    container.innerHTML = `<div style="padding: 24px; text-align: center; color: #dc2626; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Isopsefia.</div>`;
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--danger); font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Isopsefia.</div>`;
     return;
   }
 
@@ -163,28 +163,28 @@ function renderIsopsefiaUI(container) {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-    <div id="isopsefia-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main, #f8fafc); font-family: 'Montserrat', sans-serif;">
+    <div id="isopsefia-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <!-- CABEÇALHO PADRONIZADO -->
-      <div style="background: #fffdf5; padding: 16px 20px; border-radius: 14px; border: 1.5px solid #d4af37; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <div>
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #103b70; margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
-          <div style="font-size: 12px; color: #64748b; font-weight: 500; margin-top: 2px;">
+          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
+          <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
             Isopsefia Helenística • Vettius Valens
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #d4af37;">
-          <span style="font-size: 11px; font-weight: 700; color: #103b70; font-family: 'Cinzel', serif;">ASCENDENTE:</span>
+        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-card); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--gold-primary);">
+          <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); font-family: 'Cinzel', serif;">ASCENDENTE:</span>
           ${getSignSvgHtmlIso(ascIdx, 22)}
         </div>
       </div>
 
       <!-- ABAS INTERNAS -->
-      <div style="display: flex; gap: 8px; border-bottom: 1px solid #cbd5e1; margin-bottom: 20px;">
-        <button onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: #103b70; color: #fcf6ba;' : 'background: #e2e8f0; color: #475569;'}">Planilha Dinâmica</button>
-        <button onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: #103b70; color: #fcf6ba;' : 'background: #e2e8f0; color: #475569;'}">Análise Passo a Passo</button>
-        <button onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: #103b70; color: #fcf6ba;' : 'background: #e2e8f0; color: #475569;'}">Tabela Jônica Clássica</button>
+      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--table-border-soft); margin-bottom: 20px;">
+        <button onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Planilha Dinâmica</button>
+        <button onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Análise Passo a Passo</button>
+        <button onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Tabela Jônica Clássica</button>
       </div>
 
       <!-- CONTEÚDO DAS ABAS -->
@@ -261,12 +261,12 @@ function renderConteudoAbaAtual() {
 
   if (isoState.activeTab === 'planilha') {
     return `
-      <div style="background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #d4af37; margin-bottom: 16px; display: flex; gap: 8px;">
-        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none;" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
+      <div style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); margin-bottom: 16px; display: flex; gap: 8px;">
+        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--table-border-soft); border-radius: 6px; font-size: 13px; outline: none; background: var(--bg-card); color: var(--text-dark);" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
         <button onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Adicionar</button>
       </div>
 
-      <div style="background: #ffffff; border: 1px solid #d4af37; border-radius: 10px; overflow: hidden;">
+      <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
           <thead>
             <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
@@ -281,19 +281,19 @@ function renderConteudoAbaAtual() {
           </thead>
           <tbody>
             ${isoState.rows.length === 0 ? `
-              <tr><td colSpan="7" style="padding: 24px; text-align: center; color: #94a3b8;">Nenhum termo na planilha. Digite acima para começar.</td></tr>
+              <tr><td colSpan="7" style="padding: 24px; text-align: center; color: var(--text-faint);">Nenhum termo na planilha. Digite acima para começar.</td></tr>
             ` : isoState.rows.map((r, idx) => {
               const calc = calcularIsopsefiaData(r);
               const ativ = obterAtivacaoAstrologica(calc.resto, ascIdx);
               return `
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                  <td style="padding: 10px 12px; font-weight: 600; color: #1e293b;">${escapeHtml(r)}</td>
-                  <td style="padding: 10px 12px; font-size: 16px; font-family: serif; color: #103b70;">${calc.grego || '-'}</td>
-                  <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #0284c7;">${calc.bruto}</td>
-                  <td style="padding: 10px 12px; text-align: center; color: #64748b; font-family: monospace;">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
-                  <td style="padding: 10px 12px; text-align: center;"><span style="background: #fef08a; color: #854d0e; padding: 2px 8px; border-radius: 12px; font-weight: 700;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</span></td>
+                <tr style="border-bottom: 1px solid var(--table-border-soft);">
+                  <td style="padding: 10px 12px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(r)}</td>
+                  <td style="padding: 10px 12px; font-size: 16px; font-family: serif; color: var(--primary-blue);">${calc.grego || '-'}</td>
+                  <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: var(--element-ar);">${calc.bruto}</td>
+                  <td style="padding: 10px 12px; text-align: center; color: var(--text-muted); font-family: monospace;">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
+                  <td style="padding: 10px 12px; text-align: center;"><span style="background: var(--badge-bg); color: var(--badge-text); padding: 2px 8px; border-radius: 12px; font-weight: 700;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</span></td>
                   <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtmlIso(ativ.signIdx, 22)}</td>
-                  <td style="padding: 10px 12px; text-align: center;"><button onclick="removerTermoPlanilha(${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold;">Excluir</button></td>
+                  <td style="padding: 10px 12px; text-align: center;"><button onclick="removerTermoPlanilha(${idx})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">Excluir</button></td>
                 </tr>
               `;
             }).join('')}
@@ -308,23 +308,23 @@ function renderConteudoAbaAtual() {
     const ativ = obterAtivacaoAstrologica(calc.resto, ascIdx);
     return `
       <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <div style="flex: 2; min-width: 280px; background: #ffffff; padding: 20px; border-radius: 10px; border: 1px solid #d4af37;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 6px; font-family: 'Cinzel', serif;">DIGITE O NOME PARA DECOMPOSIÇÃO DETALHADA:</label>
-          <input type="text" value="${escapeHtml(isoState.singleInput)}" oninput="atualizarSingleInput(this.value)" placeholder="Ex: Alexandros" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; margin-bottom: 20px;">
+        <div style="flex: 2; min-width: 280px; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--gold-primary);">
+          <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 6px; font-family: 'Cinzel', serif;">DIGITE O NOME PARA DECOMPOSIÇÃO DETALHADA:</label>
+          <input type="text" value="${escapeHtml(isoState.singleInput)}" oninput="atualizarSingleInput(this.value)" placeholder="Ex: Alexandros" style="width: 100%; padding: 10px; border: 1px solid var(--table-border-soft); border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; margin-bottom: 20px; background: var(--bg-card); color: var(--text-dark);">
 
-          <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
-            <div style="background: #f8fafc; padding: 10px 14px; font-weight: 700; font-size: 12px; border-bottom: 1px solid #cbd5e1; color: #334155; font-family: 'Cinzel', serif;">Decomposição Letra por Letra</div>
-            ${calc.passos.length === 0 ? '<div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 12px;">Digite um nome para ver a análise.</div>' : calc.passos.map(p => `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
-                <div><strong>${p.letra}</strong> → <span style="font-size: 16px; color: #103b70; font-family: serif; font-weight: bold;">${p.grego}</span> <small style="color: #64748b;">(${p.nome})</small></div>
-                <div style="font-family: monospace; font-weight: 700; color: #1e293b;">+ ${p.valor}</div>
+          <div style="border: 1px solid var(--table-border-soft); border-radius: 6px; overflow: hidden;">
+            <div style="background: var(--bg-main); padding: 10px 14px; font-weight: 700; font-size: 12px; border-bottom: 1px solid var(--table-border-soft); color: var(--text-muted-3); font-family: 'Cinzel', serif;">Decomposição Letra por Letra</div>
+            ${calc.passos.length === 0 ? '<div style="padding: 20px; text-align: center; color: var(--text-faint); font-size: 12px;">Digite um nome para ver a análise.</div>' : calc.passos.map(p => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--table-border-soft); font-size: 13px;">
+                <div><strong>${p.letra}</strong> → <span style="font-size: 16px; color: var(--primary-blue); font-family: serif; font-weight: bold;">${p.grego}</span> <small style="color: var(--text-muted);">(${p.nome})</small></div>
+                <div style="font-family: monospace; font-weight: 700; color: var(--primary-blue);">+ ${p.valor}</div>
               </div>
             `).join('')}
           </div>
         </div>
 
         <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 16px;">
-          <div style="background: #103b70; color: #ffffff; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #d4af37;">
+          <div style="background: #103b70; color: #ffffff; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid var(--gold-primary);">
             <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-family: 'Cinzel', serif;">Palavra em Grego</span>
             <div style="font-size: 28px; font-family: serif; font-weight: bold; margin: 8px 0; color: #fcf6ba;">${calc.grego || '-'}</div>
             <div style="display: flex; justify-content: space-around; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
@@ -333,15 +333,15 @@ function renderConteudoAbaAtual() {
             </div>
           </div>
 
-          <div style="background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #d4af37; font-size: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-              <span style="color: #64748b;">Ascendente:</span>${getSignSvgHtmlIso(ascIdx, 20)}
+          <div style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--table-border-soft);">
+              <span style="color: var(--text-muted);">Ascendente:</span>${getSignSvgHtmlIso(ascIdx, 20)}
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-              <span style="color: #64748b;">Topos Ativado:</span><strong style="color: #854d0e;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--table-border-soft);">
+              <span style="color: var(--text-muted);">Topos Ativado:</span><strong style="color: var(--badge-text);">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
-              <span style="color: #64748b;">Signo Ativado:</span>${getSignSvgHtmlIso(ativ.signIdx, 20)}
+              <span style="color: var(--text-muted);">Signo Ativado:</span>${getSignSvgHtmlIso(ativ.signIdx, 20)}
             </div>
           </div>
         </div>
@@ -356,13 +356,13 @@ function renderConteudoAbaAtual() {
           if (!acc.find(item => item.grego === dados.grego)) acc.push({ ...dados, latino: latino.toUpperCase() });
           return acc;
         }, []).map(item => `
-          <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #d4af37; display: flex; align-items: center; justify-content: space-between;">
+          <div style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--gold-primary); display: flex; align-items: center; justify-content: space-between;">
             <div>
-              <strong style="font-size: 14px; color: #1e293b;">${item.latino}</strong>
-              <div style="font-size: 18px; color: #103b70; font-family: serif;">${item.grego}</div>
-              <small style="font-size: 10px; color: #64748b;">${item.nome}</small>
+              <strong style="font-size: 14px; color: var(--primary-blue);">${item.latino}</strong>
+              <div style="font-size: 18px; color: var(--primary-blue); font-family: serif;">${item.grego}</div>
+              <small style="font-size: 10px; color: var(--text-muted);">${item.nome}</small>
             </div>
-            <div style="background: #fef08a; color: #854d0e; font-family: monospace; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 12px;">${item.valor}</div>
+            <div style="background: var(--badge-bg); color: var(--badge-text); font-family: monospace; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 12px;">${item.valor}</div>
           </div>
         `).join('')}
       </div>
