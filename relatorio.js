@@ -277,6 +277,11 @@ const RELATORIO_PALETAS_CAPA = [
 const RELATORIO_PALETA_CAPA_PADRAO = 'classico';
 const RELATORIO_HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
+/* TAMANHOS DE TÍTULO DA CAPA — em px, o mesmo valor que hoje está
+   fixo em ".rel-titulo-capa" (30px) vira o padrão "medio". */
+const RELATORIO_TAMANHOS_TITULO_CAPA = { pequeno: 22, medio: 30, grande: 38, 'extra-grande': 46 };
+const RELATORIO_TAMANHO_TITULO_PADRAO = 'medio';
+
 /* Lê, do bloco "__capa__", a paleta escolhida pra ESTE modelo — cai no
    'classico' pra quem salvou antes dessa opção existir. */
 function obterPaletaCapaId(blocos) {
@@ -293,21 +298,33 @@ function obterPaletaCapaId(blocos) {
    maior (ver .rel-capa-ceu), sempre por cima da paleta do preset. */
 function resolverCoresCapaRelatorio(blocoCapa) {
   blocoCapa = blocoCapa || {};
-  // "temBorda" é independente da paleta escolhida (built-in ou 'custom') —
-  // o astrólogo liga/desliga a moldura pra qualquer uma das duas, não é
-  // uma opção "a mais" dentro só da paleta personalizada.
+  // "temBorda"/"temCirculo" são independentes da paleta escolhida
+  // (built-in ou 'custom') — o astrólogo liga/desliga cada um pra
+  // qualquer uma das duas, não são opções "a mais" só da Personalizada.
   const temBorda = blocoCapa.temBorda === true;
+  const temCirculo = blocoCapa.temCirculo === true;
+  const tamanhoTituloId = RELATORIO_TAMANHOS_TITULO_CAPA[blocoCapa.tamanhoTitulo] ? blocoCapa.tamanhoTitulo : RELATORIO_TAMANHO_TITULO_PADRAO;
+  const tamanhoTituloPx = RELATORIO_TAMANHOS_TITULO_CAPA[tamanhoTituloId];
   if (blocoCapa.paletaId === 'custom') {
     return {
       corFundo: RELATORIO_HEX_RE.test(blocoCapa.corFundo) ? blocoCapa.corFundo : '#ffffff',
       corTitulo: RELATORIO_HEX_RE.test(blocoCapa.corTitulo) ? blocoCapa.corTitulo : '#103b70',
       corCabecalho: RELATORIO_HEX_RE.test(blocoCapa.corCabecalho) ? blocoCapa.corCabecalho : '#fffdf5',
       corBorda: RELATORIO_HEX_RE.test(blocoCapa.corBorda) ? blocoCapa.corBorda : '#c59b27',
-      temBorda
+      corCirculo: RELATORIO_HEX_RE.test(blocoCapa.corCirculo) ? blocoCapa.corCirculo : '#fffdf5',
+      temBorda, temCirculo, tamanhoTituloId, tamanhoTituloPx
     };
   }
   const paleta = RELATORIO_PALETAS_CAPA.find(p => p.id === blocoCapa.paletaId) || RELATORIO_PALETAS_CAPA[0];
-  return { corFundo: paleta.corFundo, corTitulo: paleta.corTitulo, corCabecalho: paleta.corCabecalho, corBorda: paleta.corBorda, temBorda };
+  // O círculo não tem cor própria no catálogo de paletas prontas — reusa
+  // "corCabecalho" (já pensada pra ficar bem em cima do fundo daquela
+  // paleta), pelo mesmo motivo que a borda reusa "corTitulo": combinar
+  // sem precisar de mais um campo por paleta.
+  return {
+    corFundo: paleta.corFundo, corTitulo: paleta.corTitulo, corCabecalho: paleta.corCabecalho,
+    corBorda: paleta.corBorda, corCirculo: paleta.corCabecalho,
+    temBorda, temCirculo, tamanhoTituloId, tamanhoTituloPx
+  };
 }
 
 /* Luminância aproximada (0 = preto, 1 = branco) de uma cor "#rrggbb" —
@@ -1597,6 +1614,9 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const corCabecalhoCapaAtual = opcoes.corCabecalhoCapaOverride || blocoCapaAtual.corCabecalho;
   const corBordaCapaAtual = opcoes.corBordaCapaOverride || blocoCapaAtual.corBorda;
   const temBordaCapaAtual = opcoes.temBordaCapaOverride != null ? opcoes.temBordaCapaOverride : (blocoCapaAtual.temBorda === true);
+  const corCirculoCapaAtual = opcoes.corCirculoCapaOverride || blocoCapaAtual.corCirculo;
+  const temCirculoCapaAtual = opcoes.temCirculoCapaOverride != null ? opcoes.temCirculoCapaOverride : (blocoCapaAtual.temCirculo === true);
+  const tamanhoTituloCapaAtual = opcoes.tamanhoTituloCapaOverride || blocoCapaAtual.tamanhoTitulo;
   const encerramentoAtual = opcoes.encerramentoOverride != null ? opcoes.encerramentoOverride : obterEncerramento(objetoEditavel.blocos);
   const mapaBlocosAtuais = {};
   blocosAtuais.forEach(b => { mapaBlocosAtuais[b.id] = b; });
@@ -1680,7 +1700,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: var(--success-text); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
-          ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual)}
+          ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual, corCirculoCapaAtual, temCirculoCapaAtual, tamanhoTituloCapaAtual)}
 
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
             Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
@@ -1817,13 +1837,16 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
    carregarTemaMandala, chamado logo após o login) — dá pra avisar aqui,
    sem esperar nada, que o Tema Céu (quando ativo) sempre vence essa
    escolha na hora de gerar o relatório de verdade. */
-function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual, corCabecalhoCustomAtual, corBordaCustomAtual, temBordaAtual) {
+function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual, corCabecalhoCustomAtual, corBordaCustomAtual, temBordaAtual, corCirculoCustomAtual, temCirculoAtual, tamanhoTituloAtual) {
   const ehCustom = paletaIdAtual === 'custom';
   const fundoCustom = RELATORIO_HEX_RE.test(corFundoCustomAtual) ? corFundoCustomAtual : '#ffffff';
   const tituloCustom = RELATORIO_HEX_RE.test(corTituloCustomAtual) ? corTituloCustomAtual : '#103b70';
   const cabecalhoCustom = RELATORIO_HEX_RE.test(corCabecalhoCustomAtual) ? corCabecalhoCustomAtual : '#fffdf5';
   const bordaCustom = RELATORIO_HEX_RE.test(corBordaCustomAtual) ? corBordaCustomAtual : '#c59b27';
+  const circuloCustom = RELATORIO_HEX_RE.test(corCirculoCustomAtual) ? corCirculoCustomAtual : '#fffdf5';
   const temBorda = temBordaAtual === true;
+  const temCirculo = temCirculoAtual === true;
+  const tamanhoTitulo = RELATORIO_TAMANHOS_TITULO_CAPA[tamanhoTituloAtual] ? tamanhoTituloAtual : RELATORIO_TAMANHO_TITULO_PADRAO;
 
   const swatchesHtml = RELATORIO_PALETAS_CAPA.map(p => {
     const ativa = !ehCustom && p.id === paletaIdAtual;
@@ -1874,6 +1897,10 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
           <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Borda</label>
           <input type="color" id="relCapaCorBorda" value="${bordaCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
         </div>
+        <div id="relCapaCorCirculoWrap" style="${temCirculo ? '' : 'display: none;'}">
+          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Círculo</label>
+          <input type="color" id="relCapaCorCirculo" value="${circuloCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+        </div>
       </div>
       <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
         "Cabeçalho" é a cor de fundo da caixinha de nome/data/cidade que aparece dentro da imagem da mandala, na capa.
@@ -1893,7 +1920,35 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
       <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
         Nas paletas prontas, a borda sai na mesma cor do título. Na Personalizada, dá pra escolher a cor da borda à parte, acima.
       </div>
+
+      <!-- CÍRCULO ATRÁS DA MANDALA: um disco colorido, do tamanho da
+           mandala, desenhado por CSS por trás dela (mandala continua
+           transparente por cima — ver renderMandala/fundoTransparente
+           em mandala.js) — dá o efeito de "medalhão" sem precisar
+           voltar a pintar fundo nenhum na imagem em si. Nas paletas
+           prontas usa a mesma cor do Cabeçalho (já combina); na
+           Personalizada, cor à parte (ver #relCapaCorCirculoWrap acima). -->
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="relCapaTemCirculo" ${temCirculo ? 'checked' : ''} onchange="alternarCirculoCapaEditor(this.checked)" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary-blue);">
+        <label for="relCapaTemCirculo" style="font-size: 12px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">Círculo colorido atrás da mandala</label>
+      </div>
+      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+        Nas paletas prontas, o círculo sai na mesma cor do Cabeçalho. Na Personalizada, dá pra escolher a cor do círculo à parte, acima.
+      </div>
       ${avisoCeu}
+    </div>
+
+    <div style="background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Tamanho do Título</label>
+      <div style="font-size: 11.5px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.5;">
+        Controla só o tamanho do título na capa deste modelo — o resto do relatório não muda.
+      </div>
+      <select id="relCapaTamanhoTitulo" class="modal-select">
+        <option value="pequeno" ${tamanhoTitulo === 'pequeno' ? 'selected' : ''}>Pequeno</option>
+        <option value="medio" ${tamanhoTitulo === 'medio' ? 'selected' : ''}>Médio (padrão)</option>
+        <option value="grande" ${tamanhoTitulo === 'grande' ? 'selected' : ''}>Grande</option>
+        <option value="extra-grande" ${tamanhoTitulo === 'extra-grande' ? 'selected' : ''}>Extra Grande</option>
+      </select>
     </div>
   `;
 }
@@ -1935,6 +1990,14 @@ function alternarBordaCapaEditor(ligada) {
   if (wrap) wrap.style.display = ligada ? 'block' : 'none';
 }
 window.alternarBordaCapaEditor = alternarBordaCapaEditor;
+
+/* Mesma ideia de alternarBordaCapaEditor, pro checkbox do círculo atrás
+   da mandala. */
+function alternarCirculoCapaEditor(ligada) {
+  const wrap = document.getElementById('relCapaCorCirculoWrap');
+  if (wrap) wrap.style.display = ligada ? 'block' : 'none';
+}
+window.alternarCirculoCapaEditor = alternarCirculoCapaEditor;
 
 /* TEXTO DE ENCERRAMENTO — igual à capa, fica separado da lista
    reordenável porque não é uma página do meio do relatório: é sempre a
@@ -2061,13 +2124,19 @@ function lerBlocosComCapaDoEditor() {
     const corTituloInput = document.getElementById('relCapaCorTitulo');
     const corCabecalhoInput = document.getElementById('relCapaCorCabecalho');
     const corBordaInput = document.getElementById('relCapaCorBorda');
+    const corCirculoInput = document.getElementById('relCapaCorCirculo');
     blocoCapa.corFundo = corFundoInput ? corFundoInput.value : '#ffffff';
     blocoCapa.corTitulo = corTituloInput ? corTituloInput.value : '#103b70';
     blocoCapa.corCabecalho = corCabecalhoInput ? corCabecalhoInput.value : '#fffdf5';
     blocoCapa.corBorda = corBordaInput ? corBordaInput.value : '#c59b27';
+    blocoCapa.corCirculo = corCirculoInput ? corCirculoInput.value : '#fffdf5';
   }
   const temBordaInput = document.getElementById('relCapaTemBorda');
   blocoCapa.temBorda = temBordaInput ? temBordaInput.checked : false;
+  const temCirculoInput = document.getElementById('relCapaTemCirculo');
+  blocoCapa.temCirculo = temCirculoInput ? temCirculoInput.checked : false;
+  const tamanhoTituloSelect = document.getElementById('relCapaTamanhoTitulo');
+  blocoCapa.tamanhoTitulo = tamanhoTituloSelect ? tamanhoTituloSelect.value : RELATORIO_TAMANHO_TITULO_PADRAO;
   blocos.push(blocoCapa);
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
   blocos.push({ id: '__encerramento__', type: 'encerramento', corpo: quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO });
@@ -2277,11 +2346,17 @@ async function atualizarPreviaEditorModelo() {
   const corCabecalhoInput = document.getElementById('relCapaCorCabecalho');
   const corBordaInput = document.getElementById('relCapaCorBorda');
   const temBordaInput = document.getElementById('relCapaTemBorda');
+  const corCirculoInput = document.getElementById('relCapaCorCirculo');
+  const temCirculoInput = document.getElementById('relCapaTemCirculo');
+  const tamanhoTituloSelect = document.getElementById('relCapaTamanhoTitulo');
   const corFundoCapa = corFundoInput ? corFundoInput.value : null;
   const corTituloCapa = corTituloInput ? corTituloInput.value : null;
   const corCabecalhoCapa = corCabecalhoInput ? corCabecalhoInput.value : null;
   const corBordaCapa = corBordaInput ? corBordaInput.value : null;
   const temBordaCapa = temBordaInput ? temBordaInput.checked : false;
+  const corCirculoCapa = corCirculoInput ? corCirculoInput.value : null;
+  const temCirculoCapa = temCirculoInput ? temCirculoInput.checked : false;
+  const tamanhoTituloCapa = tamanhoTituloSelect ? tamanhoTituloSelect.value : RELATORIO_TAMANHO_TITULO_PADRAO;
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
   const encerramentoCorpo = quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -2290,12 +2365,13 @@ async function atualizarPreviaEditorModelo() {
     pane.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
-  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa };
+  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa, temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
   if (paletaCapa === 'custom') {
     blocoCapaPreview.corFundo = corFundoCapa;
     blocoCapaPreview.corTitulo = corTituloCapa;
     blocoCapaPreview.corCabecalho = corCabecalhoCapa;
     blocoCapaPreview.corBorda = corBordaCapa;
+    blocoCapaPreview.corCirculo = corCirculoCapa;
   }
   const blocosComCapa = blocosCorpo.concat([
     blocoCapaPreview,
@@ -2326,6 +2402,9 @@ async function atualizarPreviaEditorModelo() {
     corCabecalhoCapaOverride: corCabecalhoCapa,
     corBordaCapaOverride: corBordaCapa,
     temBordaCapaOverride: temBordaCapa,
+    corCirculoCapaOverride: corCirculoCapa,
+    temCirculoCapaOverride: temCirculoCapa,
+    tamanhoTituloCapaOverride: tamanhoTituloCapa,
     encerramentoOverride: encerramentoCorpo,
     previaProntaHtml
   });
@@ -2550,7 +2629,13 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   const temaCeuAtivoCapa = capaClasseCeu !== '';
   const capaComBorda = coresCapa.temBorda && !temaCeuAtivoCapa;
   const capaClasseBorda = capaComBorda ? ' rel-capa-com-borda' : '';
-  const estiloCapaCores = ` style="--rel-capa-bg: ${coresCapa.corFundo}; --rel-capa-titulo: ${coresCapa.corTitulo};${capaComBorda ? ` --rel-capa-borda: ${coresCapa.corBorda};` : ''}"`;
+  // Círculo atrás da mandala: mesma exceção do Tema Céu que a borda — sem
+  // efeito visível ali (o CSS já força roxo/dourado por cima), então nem
+  // entra na estrutura. O tamanho do título, por outro lado, é só
+  // tipografia (não é cor nem tema), então continua valendo mesmo com o
+  // Tema Céu ativo.
+  const capaComCirculo = coresCapa.temCirculo && !temaCeuAtivoCapa;
+  const estiloCapaCores = ` style="--rel-capa-bg: ${coresCapa.corFundo}; --rel-capa-titulo: ${coresCapa.corTitulo}; --rel-capa-titulo-tamanho: ${coresCapa.tamanhoTituloPx}px;${capaComBorda ? ` --rel-capa-borda: ${coresCapa.corBorda};` : ''}${capaComCirculo ? ` --rel-capa-circulo: ${coresCapa.corCirculo};` : ''}"`;
   // "__capa__" e "__encerramento__" só guardam metadado/texto fixo (a
   // escolha da mandala da capa, o texto de fechamento) — não são páginas
   // do corpo do relatório, então nunca entram no map abaixo.
@@ -2574,6 +2659,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
       <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
       ${imgCapa ? `
         <div class="rel-capa-centro">
+          ${capaComCirculo ? '<div class="rel-capa-circulo"></div>' : ''}
           <img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">
         </div>
       ` : '<div class="rel-capa-centro"></div>'}
@@ -3189,15 +3275,25 @@ function injetarEstilosRelatorio() {
          quase em branco quando a borda usava "height: 100%" aqui. */
       .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); padding: 5mm; }
       .rel-capa-moldura { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 8px; box-sizing: border-box; padding: 18mm 16mm; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: 30px; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
-      .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
+      .rel-capa-centro { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
          altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
          "definida" pro navegador — no motor de impressão do Safari/iPad
          isso não resolvia direito e a porcentagem virava "sem limite",
          deixando a mandala esticar (achatada) até o tamanho que o
          max-width permitisse. Um valor fixo nunca depende disso. */
-      .rel-img-capa { max-width: 78mm; max-height: 140mm; }
+      .rel-img-capa { max-width: 78mm; max-height: 140mm; position: relative; z-index: 1; }
+      /* CÍRCULO ATRÁS DA MANDALA (ver relatorioPaletaCapaHtml/
+         montarConteudoRelatorioHtml) — um disco de cor sólida, centrado
+         no mesmo ponto que a mandala já centraliza sozinha (flex
+         align-items/justify-content do .rel-capa-centro, que por isso
+         precisa de "position: relative" pra virar a referência desse
+         posicionamento absoluto). z-index explícito nos dois lados
+         garante que o círculo fica atrás mesmo sem depender da ordem no
+         HTML — sem isso, um elemento posicionado (o círculo) pintaria
+         por cima de um elemento normal (a imagem) por padrão do CSS. */
+      .rel-capa-circulo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85mm; height: 85mm; border-radius: 50%; background: var(--rel-capa-circulo, #fffdf5); z-index: 0; }
       .rel-marca-rodape { flex-shrink: 0; margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; break-inside: avoid; page-break-inside: avoid; }
       .rel-logo-astrologo { max-height: 46px; max-width: 220px; object-fit: contain; }
       .rel-powered-by { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
