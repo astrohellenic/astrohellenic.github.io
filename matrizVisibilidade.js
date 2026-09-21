@@ -8,16 +8,22 @@
    em SVG puro (antes era uma <table> HTML) — a mesma aparência de sempre,
    só que renderizada como um único <svg>, célula por célula.
 
-   Por que isso importa: `renderPainelTecnico` (tabelaTecnica.js) chama
-   `renderMatrizVisibilidadeHTML(data)` e cola o HTML retornado dentro do
-   Painel Técnico, exatamente como fazia antes — por isso essa função
-   PRECISA continuar com esse nome e devolvendo os mesmos três ids
-   (matrizOuterScroll / matrizScaleBox / matrizVisibilidadeWrapper), que é
-   o que o auto-encolhimento (`encolherTabelaParaCaber`) e o pinça-pra-zoom
-   à mão (`ativarPinchZoomTabela`), ambos em tabelaTecnica.js, esperam
-   encontrar — nenhum dos dois precisou mudar uma linha: eles só olham
-   offsetWidth/offsetHeight do wrapper e aplicam transform:scale nele, o
-   que funciona igual esteja lá dentro uma <table> ou um <svg>.
+   Duas formas de mostrar essa Matriz, cada uma com sua própria função de
+   saída (ver o comentário grande mais abaixo, antes de
+   renderMatrizVisibilidadeResponsivaHTML, sobre POR QUE são diferentes):
+
+   1. `renderMatrizVisibilidadeHTML(data)` — dentro do Painel Técnico de
+      sempre (chamada por `renderPainelTecnico`, tabelaTecnica.js). NÃO
+      MUDOU: mesmo nome, mesmo contrato, mesmos três ids de sempre
+      (matrizOuterScroll / matrizScaleBox / matrizVisibilidadeWrapper),
+      que o auto-encolhimento e o pinça-pra-zoom à mão (ambos em
+      tabelaTecnica.js) esperam encontrar.
+
+   2. `renderMatrizVisibilidadeResponsivaHTML(data)` — usada só quando a
+      Matriz aparece no lugar da Mandala (toggleMatrizVisibilidadeNaMandala,
+      mais abaixo). Sem caixinha própria, sem cálculo de tamanho em JS,
+      sem bloquear o zoom nativo — encolhe só com CSS (como a imagem da
+      Mandala) e deixa o pinça nativo do navegador fazer o resto.
 
    Ícones dos planetas (getPlanet3DSVG) e dos itens/lotes/ângulos
    (getItemSVG) continuam definidos em tabelaTecnica.js e são só
@@ -97,13 +103,16 @@ function getAspectoMatrizSVG(deg1, deg2) {
    vazio, igual à <th> vazia de antes), linha 0 e coluna 0 são os
    cabeçalhos com o ícone de cada ponto, e o resto é a matriz de aspectos
    propriamente dita (metade de baixo cinza com "-", porque é espelhada;
-   metade de cima com o glifo do aspecto quando existe um aspecto maior). */
-function montarSVGMatrizVisibilidade(colunas, posicoes) {
+   metade de cima com o glifo do aspecto quando existe um aspecto maior).
+   "estiloExtra" (opcional) é colado no final do style= do <svg> raiz —
+   usado só pela versão responsiva (mais abaixo) pra encolher via CSS puro
+   sem mexer em nada do que o Painel Técnico já espera daqui. */
+function montarSVGMatrizVisibilidade(colunas, posicoes, estiloExtra) {
   const N = colunas.length;
   const C = MATRIZ_CELULA_TAM;
   const total = (N + 1) * C;
 
-  let svg = `<svg width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" style="display: block; font-family: 'Montserrat', sans-serif;">`;
+  let svg = `<svg width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" style="display: block; font-family: 'Montserrat', sans-serif;${estiloExtra || ''}">`;
   svg += `<rect x="0" y="0" width="${total}" height="${total}" fill="var(--bg-card)"/>`;
 
   // Canto vazio (linha 0, coluna 0)
@@ -141,10 +150,13 @@ function montarSVGMatrizVisibilidade(colunas, posicoes) {
   return svg;
 }
 
-/* Ponto de entrada — mesmo nome, mesma assinatura e mesmos ids de sempre
-   (ver comentário no topo do arquivo). Calcula as posições de cada ponto
-   exatamente como o renderMatrizVisibilidadeHTML antigo calculava. */
-function renderMatrizVisibilidadeHTML(data) {
+/* As colunas/linhas da Matriz (cada ponto/planeta/lote/ângulo) e a
+   posição absoluta (0-360°) de cada um — cálculo único, compartilhado
+   pelas duas formas de mostrar a Matriz abaixo. Igual ao que existia
+   direto dentro do renderMatrizVisibilidadeHTML antigo, só que extraído
+   pra função própria pra não duplicar quando a versão responsiva
+   apareceu. */
+function calcularDadosMatrizVisibilidade(data) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
   const dscAbs = (ascAbs + 180) % 360;
@@ -203,6 +215,14 @@ function renderMatrizVisibilidadeHTML(data) {
     NodeN: nodeAbs, NodeS: (nodeAbs + 180) % 360, Syz: syzAbs, FORT: fortAbs, ESP: spirAbs, EROS: erosAbs, NEC: necAbs, AUD: courAbs, VIT: vicAbs, NÊM: nemAbs
   };
 
+  return { colunas, posicoes };
+}
+
+/* Ponto de entrada de sempre — mesmo nome, mesma assinatura e mesmos ids
+   de sempre (ver comentário no topo do arquivo), usado só dentro do
+   Painel Técnico. Não mudou nada no HTML que devolve. */
+function renderMatrizVisibilidadeHTML(data) {
+  const { colunas, posicoes } = calcularDadosMatrizVisibilidade(data);
   const svgMatriz = montarSVGMatrizVisibilidade(colunas, posicoes);
 
   return `
@@ -217,6 +237,48 @@ function renderMatrizVisibilidadeHTML(data) {
   `;
 }
 
+/* VERSÃO RESPONSIVA — só pra quando a Matriz aparece no lugar da Mandala
+   (toggleMatrizVisibilidadeNaMandala, mais abaixo).
+
+   Por que é diferente da de cima: a versão do Painel Técnico usa uma
+   caixinha própria (matrizOuterScroll/matrizScaleBox/matrizVisibilidadeWrapper)
+   com tamanho calculado em JS e bloqueia o zoom nativo do navegador
+   (touch-action: pan-y) de propósito, pra rodar um zoom "por conta
+   própria" só ali dentro. Isso existe desde a época em que a Matriz era
+   uma <table> HTML — e uma tabela não encolhe sozinha só com CSS (como
+   uma imagem encolhe), então alguém teve que inventar esse mecanismo à
+   parte. É exatamente essa caixinha (com fundo próprio, sempre do mesmo
+   tamanho) que faz o conteúdo ampliado ficar escondido atrás de uma
+   margem ao redor dela quando o astrólogo dá zoom — reportado por ele
+   várias vezes, nunca resolvido, porque nunca foi essa caixinha que
+   mudou, só a tabela por dentro dela.
+
+   Agora que a Matriz é um <svg> puro, ela PODE se comportar exatamente
+   como a imagem da Mandala (mandalaImg, mandala.js): nenhuma caixinha,
+   nenhum cálculo — só max-width/height por CSS (encolhe se não couber,
+   nunca estica além do tamanho natural) e o zoom nativo da PÁGINA (pinça
+   do navegador, já liberado no <meta viewport> deste site, ver o
+   comentário de "[onclick] { touch-action: manipulation }" no
+   index.html) cuidando de ampliar e rolar — do jeito que já funciona em
+   todo canto deste app fora daqui. Sem competir com o zoom nativo, não
+   tem "dança" nem margem escondendo nada: o que sai da vista, sai
+   rolando a PÁGINA de verdade, não ficando preso atrás de uma caixa. */
+function renderMatrizVisibilidadeResponsivaHTML(data) {
+  const { colunas, posicoes } = calcularDadosMatrizVisibilidade(data);
+  const svgMatriz = montarSVGMatrizVisibilidade(
+    colunas,
+    posicoes,
+    ' display: inline-block; max-width: 100%; height: auto; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden;'
+  );
+
+  return `
+    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+    <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
+      ${svgMatriz}
+    </div>
+  `;
+}
+
 /* BOTÃO "MATRIZ DE VISIBILIDADE" NA BARRA DE AÇÕES DA MANDALA
    (#mandala-actions-overlay, index.html — o mesmo containerzinho de
    Salvar/Atualizar Momento/Revolução Solar, que só aparece no modo
@@ -226,7 +288,7 @@ function renderMatrizVisibilidadeHTML(data) {
    desenhar a mandala.
 
    Em vez de guardar um "já está mostrando a Matriz?" numa variável
-   separada, pergunta direto pro DOM (existe #matrizVisibilidadeWrapper
+   separada, pergunta direto pro DOM (existe #matrizVisibilidadeResponsivaRoot
    ali dentro agora?) — assim não tem como esse estado ficar
    desincronizado do que está realmente na tela (ex.: se o astrólogo sair
    pra outro módulo e voltar pra Mandala por fora, sem usar este botão;
@@ -238,7 +300,7 @@ function toggleMatrizVisibilidadeNaMandala() {
   if (!container || typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
 
   const botao = document.getElementById('btn-matriz-visibilidade-mandala');
-  const jaMostrandoMatriz = !!document.getElementById('matrizVisibilidadeWrapper');
+  const jaMostrandoMatriz = !!document.getElementById('matrizVisibilidadeResponsivaRoot');
 
   if (jaMostrandoMatriz) {
     if (botao) botao.classList.remove('matriz-visibilidade-ativa');
@@ -246,28 +308,10 @@ function toggleMatrizVisibilidadeNaMandala() {
   } else {
     if (botao) botao.classList.add('matriz-visibilidade-ativa');
     container.innerHTML = `
-      <div id="matrizVisibilidadeNaMandala" style="width: 100%; min-height: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
-        ${renderMatrizVisibilidadeHTML(currentCalculatedData)}
+      <div style="width: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
+        ${renderMatrizVisibilidadeResponsivaHTML(currentCalculatedData)}
       </div>
     `;
-    ajustarMatrizVisibilidadeAoTamanhoDaTela();
   }
 }
 window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
-
-/* Mesmo encolhimento + pinça-pra-zoom do Painel Técnico (agora funções
-   globais em tabelaTecnica.js, ver comentário lá), só que medindo a
-   largura disponível a partir do próprio container cheio da tela (não
-   tem cabeçalho de Painel Técnico pra sincronizar largura aqui). */
-function ajustarMatrizVisibilidadeAoTamanhoDaTela() {
-  const raiz = document.getElementById('matrizVisibilidadeNaMandala');
-  if (!raiz) return;
-
-  const estilos = getComputedStyle(raiz);
-  const availableWidth = raiz.clientWidth
-    - parseFloat(estilos.paddingLeft || 0)
-    - parseFloat(estilos.paddingRight || 0);
-
-  const escalaBase = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', availableWidth);
-  ativarPinchZoomTabela('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', escalaBase);
-}
