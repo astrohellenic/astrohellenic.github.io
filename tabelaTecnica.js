@@ -276,6 +276,150 @@ function calcDodecatemoriaTabela(absDeg) {
    jeito de sempre, sem mudar nada aqui; a definição da função é que
    passou a vir do outro arquivo. */
 
+/* Em telas estreitas, em vez de deixar as tabelas cortadas com rolagem
+   interna, encolhe cada uma (mantendo a proporção) até caberem inteiras
+   na largura disponível — o usuário pode ampliar com o dedo para ver
+   os detalhes, já que o conteúdo é vetorial/texto e não perde nitidez.
+   Função de nível global (antes vivia só dentro de renderPainelTecnico)
+   pra poder ser reaproveitada por qualquer tela que precise do mesmo
+   encolhimento — ex.: a Matriz de Visibilidade sozinha na tela da
+   Mandala (matrizVisibilidade.js, toggleMatrizVisibilidadeNaMandala). */
+function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId, availableWidth) {
+  const outerScroll = document.getElementById(outerScrollId);
+  const scaleBox = document.getElementById(scaleBoxId);
+  const wrapper = document.getElementById(wrapperId);
+  if (!scaleBox || !wrapper) return 1;
+  wrapper.style.transform = '';
+  scaleBox.style.width = '';
+  scaleBox.style.height = '';
+  if (outerScroll) outerScroll.style.height = '';
+  const naturalW = wrapper.offsetWidth;
+  const naturalH = wrapper.offsetHeight;
+  let escalaBase = 1;
+  if (availableWidth > 0 && naturalW > availableWidth) {
+    escalaBase = availableWidth / naturalW;
+    const scaledH = naturalH * escalaBase;
+    wrapper.style.transform = `scale(${escalaBase})`;
+    scaleBox.style.width = (naturalW * escalaBase) + 'px';
+    scaleBox.style.height = scaledH + 'px';
+    // Com uma <table> (ou <svg>) diretamente dentro de um elemento com
+    // transform, o contêiner com overflow-x:auto calcula a própria altura
+    // usando o tamanho do conteúdo ANTES da escala (bug do navegador) —
+    // por isso também fixamos a altura dele aqui, em vez de deixar em "auto".
+    if (outerScroll) outerScroll.style.height = scaledH + 'px';
+  }
+  return escalaBase;
+}
+
+/* PINÇA-PRA-ZOOM IMPLEMENTADA À MÃO, direto em cima da Matriz/Painel.
+   Por quê: touch-action nativo do navegador (qualquer valor que inclua
+   pinch-zoom: "manipulation", "pan-x pan-y") deixa esse wrapper
+   "participar" do gesto de duas pontas como se fosse rolagem própria,
+   e ele desliza de lado sozinho ("dança") — touch-action: pan-y sozinho
+   resolve a dança, mas aí o navegador não deixa mais dar pinça
+   NENHUMA em cima da tabela (só funciona encostando fora dela, nas
+   bordas). Astrólogo pediu as duas coisas ao mesmo tempo: sem dançar E
+   com pinça funcionando em cima da própria tabela — só dá com um
+   pinça nosso, feito em JS, que ignora completamente o gesto nativo
+   (touch-action continua "pan-y", então o navegador nunca entra em
+   cena) e ajusta o mesmo transform:scale do auto-encolhimento acima,
+   mantendo o ponto entre os dois dedos parado embaixo deles (senão o
+   zoom "puxa" a tela pro canto e o usuário perde de vista o que
+   queria ver de perto). Arrastar com UM dedo na horizontal (depois de
+   já ter dado zoom) também é tratado aqui, porque touch-action: pan-y
+   não deixa o navegador rolar a tabela de lado sozinho.
+   Função de nível global pelo mesmo motivo de encolherTabelaParaCaber
+   acima — já não dependia de nenhuma variável de fora, só mudou de
+   lugar (não repita essa lógica em outro arquivo; chame esta). */
+function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase) {
+  const outerScroll = document.getElementById(outerScrollId);
+  const scaleBox = document.getElementById(scaleBoxId);
+  const wrapper = document.getElementById(wrapperId);
+  if (!outerScroll || !scaleBox || !wrapper) return;
+
+  const ESCALA_MAX = Math.max(escalaBase * 6, 2.5);
+  let escalaAtual = escalaBase;
+
+  function aplicarEscala(escala) {
+    escalaAtual = Math.max(escalaBase, Math.min(escala, ESCALA_MAX));
+    const naturalW = wrapper.offsetWidth;
+    const naturalH = wrapper.offsetHeight;
+    wrapper.style.transform = `scale(${escalaAtual})`;
+    scaleBox.style.width = (naturalW * escalaAtual) + 'px';
+    scaleBox.style.height = (naturalH * escalaAtual) + 'px';
+    outerScroll.style.height = (naturalH * escalaAtual) + 'px';
+    return escalaAtual;
+  }
+
+  function distancia(t1, t2) {
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
+
+  let pinchDistInicial = 0, pinchEscalaInicial = escalaBase;
+  let pinchMidXInicial = 0, pinchMidYInicial = 0;
+  let pinchScrollLeftInicial = 0;
+
+  let arrastoAtivo = false, arrastoX0 = 0, arrastoY0 = 0, arrastoScrollLeft0 = 0, arrastoDirecaoDefinida = false;
+
+  outerScroll.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 2) {
+      arrastoAtivo = false;
+      pinchDistInicial = distancia(e.touches[0], e.touches[1]);
+      pinchEscalaInicial = escalaAtual;
+      const rect = outerScroll.getBoundingClientRect();
+      pinchMidXInicial = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      pinchMidYInicial = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      pinchScrollLeftInicial = outerScroll.scrollLeft;
+    } else if (e.touches.length === 1) {
+      pinchDistInicial = 0;
+      arrastoAtivo = true;
+      arrastoDirecaoDefinida = false;
+      arrastoX0 = e.touches[0].clientX;
+      arrastoY0 = e.touches[0].clientY;
+      arrastoScrollLeft0 = outerScroll.scrollLeft;
+    }
+  }, { passive: true });
+
+  outerScroll.addEventListener('touchmove', function (e) {
+    if (e.touches.length === 2 && pinchDistInicial > 15) {
+      e.preventDefault();
+      const novaDist = distancia(e.touches[0], e.touches[1]);
+      const conteudoX = (pinchScrollLeftInicial + pinchMidXInicial) / pinchEscalaInicial;
+      // Só ajusta a rolagem HORIZONTAL do próprio wrapper (scrollLeft
+      // não move a posição do wrapper na tela, então é seguro). NÃO
+      // mexe na rolagem da página (window.scrollBy) — isso aqui é de
+      // propósito: rolar a página muda a posição do próprio wrapper
+      // na tela no meio do gesto, invalidando os pontos de referência
+      // guardados no touchstart e realimentando um erro a cada frame
+      // — foi exatamente isso que causava a tabela "dançar" na
+      // primeira versão desse código. Sem essa parte, o ponto do
+      // zoom pode "andar" um pouco na vertical enquanto amplia, mas
+      // não dança, e o usuário ainda pode rolar a página normalmente
+      // (com um dedo) depois de soltar o pinça pra ajustar.
+      const novaEscala = aplicarEscala(pinchEscalaInicial * (novaDist / pinchDistInicial));
+      outerScroll.scrollLeft = conteudoX * novaEscala - pinchMidXInicial;
+    } else if (e.touches.length === 1 && arrastoAtivo) {
+      const dx = e.touches[0].clientX - arrastoX0;
+      const dy = e.touches[0].clientY - arrastoY0;
+      if (!arrastoDirecaoDefinida) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        arrastoDirecaoDefinida = true;
+        // Só assume o gesto se for claramente mais horizontal que
+        // vertical — senão deixa o navegador rolar a página (pan-y)
+        // normalmente, sem interferir.
+        if (Math.abs(dx) <= Math.abs(dy)) { arrastoAtivo = false; return; }
+      }
+      e.preventDefault();
+      outerScroll.scrollLeft = arrastoScrollLeft0 - dx;
+    }
+  }, { passive: false });
+
+  outerScroll.addEventListener('touchend', function (e) {
+    if (e.touches.length < 2) pinchDistInicial = 0;
+    if (e.touches.length < 1) arrastoAtivo = false;
+  });
+}
+
 function renderPainelTecnico(data, containerId) {
   try {
     const container = document.getElementById(containerId);
@@ -508,145 +652,8 @@ function renderPainelTecnico(data, containerId) {
       const finalWidth = Math.min(Math.max(naturalWidth, matrizWidth), availableWidth);
       if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
 
-      // Em telas estreitas, em vez de deixar as tabelas cortadas com rolagem
-      // interna, encolhe cada uma (mantendo a proporção) até caberem inteiras
-      // na largura disponível — o usuário pode ampliar com o dedo para ver
-      // os detalhes, já que o conteúdo é vetorial/texto e não perde nitidez.
-      function encolherTabelaParaCaber(outerScrollId, scaleBoxId, wrapperId) {
-        const outerScroll = document.getElementById(outerScrollId);
-        const scaleBox = document.getElementById(scaleBoxId);
-        const wrapper = document.getElementById(wrapperId);
-        if (!scaleBox || !wrapper) return 1;
-        wrapper.style.transform = '';
-        scaleBox.style.width = '';
-        scaleBox.style.height = '';
-        if (outerScroll) outerScroll.style.height = '';
-        const naturalW = wrapper.offsetWidth;
-        const naturalH = wrapper.offsetHeight;
-        let escalaBase = 1;
-        if (availableWidth > 0 && naturalW > availableWidth) {
-          escalaBase = availableWidth / naturalW;
-          const scaledH = naturalH * escalaBase;
-          wrapper.style.transform = `scale(${escalaBase})`;
-          scaleBox.style.width = (naturalW * escalaBase) + 'px';
-          scaleBox.style.height = scaledH + 'px';
-          // Com uma <table> diretamente dentro de um elemento com transform,
-          // o contêiner com overflow-x:auto calcula a própria altura usando o
-          // tamanho da tabela ANTES da escala (bug do navegador) — por isso
-          // também fixamos a altura dele aqui, em vez de deixar em "auto".
-          if (outerScroll) outerScroll.style.height = scaledH + 'px';
-        }
-        return escalaBase;
-      }
-
-      /* PINÇA-PRA-ZOOM IMPLEMENTADA À MÃO, direto em cima da Matriz/Painel.
-         Por quê: touch-action nativo do navegador (qualquer valor que inclua
-         pinch-zoom: "manipulation", "pan-x pan-y") deixa esse wrapper
-         "participar" do gesto de duas pontas como se fosse rolagem própria,
-         e ele desliza de lado sozinho ("dança") — touch-action: pan-y sozinho
-         resolve a dança, mas aí o navegador não deixa mais dar pinça
-         NENHUMA em cima da tabela (só funciona encostando fora dela, nas
-         bordas). Astrólogo pediu as duas coisas ao mesmo tempo: sem dançar E
-         com pinça funcionando em cima da própria tabela — só dá com um
-         pinça nosso, feito em JS, que ignora completamente o gesto nativo
-         (touch-action continua "pan-y", então o navegador nunca entra em
-         cena) e ajusta o mesmo transform:scale do auto-encolhimento acima,
-         mantendo o ponto entre os dois dedos parado embaixo deles (senão o
-         zoom "puxa" a tela pro canto e o usuário perde de vista o que
-         queria ver de perto). Arrastar com UM dedo na horizontal (depois de
-         já ter dado zoom) também é tratado aqui, porque touch-action: pan-y
-         não deixa o navegador rolar a tabela de lado sozinho. */
-      function ativarPinchZoomTabela(outerScrollId, scaleBoxId, wrapperId, escalaBase) {
-        const outerScroll = document.getElementById(outerScrollId);
-        const scaleBox = document.getElementById(scaleBoxId);
-        const wrapper = document.getElementById(wrapperId);
-        if (!outerScroll || !scaleBox || !wrapper) return;
-
-        const ESCALA_MAX = Math.max(escalaBase * 6, 2.5);
-        let escalaAtual = escalaBase;
-
-        function aplicarEscala(escala) {
-          escalaAtual = Math.max(escalaBase, Math.min(escala, ESCALA_MAX));
-          const naturalW = wrapper.offsetWidth;
-          const naturalH = wrapper.offsetHeight;
-          wrapper.style.transform = `scale(${escalaAtual})`;
-          scaleBox.style.width = (naturalW * escalaAtual) + 'px';
-          scaleBox.style.height = (naturalH * escalaAtual) + 'px';
-          outerScroll.style.height = (naturalH * escalaAtual) + 'px';
-          return escalaAtual;
-        }
-
-        function distancia(t1, t2) {
-          return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-        }
-
-        let pinchDistInicial = 0, pinchEscalaInicial = escalaBase;
-        let pinchMidXInicial = 0, pinchMidYInicial = 0;
-        let pinchScrollLeftInicial = 0;
-
-        let arrastoAtivo = false, arrastoX0 = 0, arrastoY0 = 0, arrastoScrollLeft0 = 0, arrastoDirecaoDefinida = false;
-
-        outerScroll.addEventListener('touchstart', function (e) {
-          if (e.touches.length === 2) {
-            arrastoAtivo = false;
-            pinchDistInicial = distancia(e.touches[0], e.touches[1]);
-            pinchEscalaInicial = escalaAtual;
-            const rect = outerScroll.getBoundingClientRect();
-            pinchMidXInicial = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-            pinchMidYInicial = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-            pinchScrollLeftInicial = outerScroll.scrollLeft;
-          } else if (e.touches.length === 1) {
-            pinchDistInicial = 0;
-            arrastoAtivo = true;
-            arrastoDirecaoDefinida = false;
-            arrastoX0 = e.touches[0].clientX;
-            arrastoY0 = e.touches[0].clientY;
-            arrastoScrollLeft0 = outerScroll.scrollLeft;
-          }
-        }, { passive: true });
-
-        outerScroll.addEventListener('touchmove', function (e) {
-          if (e.touches.length === 2 && pinchDistInicial > 15) {
-            e.preventDefault();
-            const novaDist = distancia(e.touches[0], e.touches[1]);
-            const conteudoX = (pinchScrollLeftInicial + pinchMidXInicial) / pinchEscalaInicial;
-            // Só ajusta a rolagem HORIZONTAL do próprio wrapper (scrollLeft
-            // não move a posição do wrapper na tela, então é seguro). NÃO
-            // mexe na rolagem da página (window.scrollBy) — isso aqui é de
-            // propósito: rolar a página muda a posição do próprio wrapper
-            // na tela no meio do gesto, invalidando os pontos de referência
-            // guardados no touchstart e realimentando um erro a cada frame
-            // — foi exatamente isso que causava a tabela "dançar" na
-            // primeira versão desse código. Sem essa parte, o ponto do
-            // zoom pode "andar" um pouco na vertical enquanto amplia, mas
-            // não dança, e o usuário ainda pode rolar a página normalmente
-            // (com um dedo) depois de soltar o pinça pra ajustar.
-            const novaEscala = aplicarEscala(pinchEscalaInicial * (novaDist / pinchDistInicial));
-            outerScroll.scrollLeft = conteudoX * novaEscala - pinchMidXInicial;
-          } else if (e.touches.length === 1 && arrastoAtivo) {
-            const dx = e.touches[0].clientX - arrastoX0;
-            const dy = e.touches[0].clientY - arrastoY0;
-            if (!arrastoDirecaoDefinida) {
-              if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-              arrastoDirecaoDefinida = true;
-              // Só assume o gesto se for claramente mais horizontal que
-              // vertical — senão deixa o navegador rolar a página (pan-y)
-              // normalmente, sem interferir.
-              if (Math.abs(dx) <= Math.abs(dy)) { arrastoAtivo = false; return; }
-            }
-            e.preventDefault();
-            outerScroll.scrollLeft = arrastoScrollLeft0 - dx;
-          }
-        }, { passive: false });
-
-        outerScroll.addEventListener('touchend', function (e) {
-          if (e.touches.length < 2) pinchDistInicial = 0;
-          if (e.touches.length < 1) arrastoAtivo = false;
-        });
-      }
-
-      const escalaBaseMatriz = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper');
-      const escalaBasePainel = encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper');
+      const escalaBaseMatriz = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', availableWidth);
+      const escalaBasePainel = encolherTabelaParaCaber('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', availableWidth);
       ativarPinchZoomTabela('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', escalaBaseMatriz);
       ativarPinchZoomTabela('painelPrincipalOuterScroll', 'painelPrincipalScaleBox', 'painelPrincipalWrapper', escalaBasePainel);
     }

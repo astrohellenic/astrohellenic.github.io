@@ -606,6 +606,17 @@ body {
             color: #b45309;
         }
 
+        /* Fica "apertado" enquanto a Matriz de Visibilidade está no lugar
+           da Mandala (ver toggleMatrizVisibilidadeNaMandala, matrizVisibilidade.js) */
+        .icon-btn.matriz-visibilidade-ativa {
+            background: #103b70;
+            color: #fcf6ba;
+        }
+        .icon-btn.matriz-visibilidade-ativa:hover {
+            background: #0c2c54;
+            color: #fcf6ba;
+        }
+
         .time-stepper {
             display: flex;
             align-items: center;
@@ -941,6 +952,9 @@ body {
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
+                <button id="btn-matriz-visibilidade-mandala" class="icon-btn" onclick="toggleMatrizVisibilidadeNaMandala()" title="Matriz de Visibilidade">
+                    <i class="fa-solid fa-table-cells"></i>
+                </button>
                 <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
 
                                 <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
@@ -1156,10 +1170,10 @@ body {
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tz-lookup.js?v=20260919"></script>
-<script src="supabase.js?v=20260920h"></script>
+<script src="supabase.js?v=20260921a"></script>
 <script src="planetIcons.js?v=20260916"></script>
-<script src="matrizVisibilidade.js?v=20260921"></script>
-<script src="tabelaTecnica.js?v=20260921"></script>
+<script src="matrizVisibilidade.js?v=20260921a"></script>
+<script src="tabelaTecnica.js?v=20260921a"></script>
 <script src="mandala.js?v=20260921e"></script>
 <script src="isopsefia.js?v=20260920"></script>
 <script src="profeccao.js?v=20260920a"></script>

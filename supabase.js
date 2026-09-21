@@ -1331,6 +1331,14 @@ function abrirModuloTecnica(modulo) {
   if (cOverlay) cOverlay.style.display = 'none';
   if (cActionsOverlay) cActionsOverlay.style.display = 'none';
 
+  // #mandala-container está prestes a ser reconstruído do zero pro módulo
+  // "modulo" (seja qual for), então a Matriz de Visibilidade nunca
+  // continua ali dentro depois disso — zera a aparência "apertada" do
+  // botão que a mostra (matrizVisibilidade.js), senão ele ficava marcado
+  // como ativo mesmo depois de trocar de ferramenta e voltar pra Mandala.
+  const btnMatrizMandala = document.getElementById('btn-matriz-visibilidade-mandala');
+  if (btnMatrizMandala) btnMatrizMandala.classList.remove('matriz-visibilidade-ativa');
+
   // Esvazia #mandala-container ANTES de trocar as classes/CSS do modo —
   // ele é reaproveitado por quase todos os módulos (Mandala, Tabela
   // Técnica, Profecção, Relatório etc.), então sem isso o HTML do módulo

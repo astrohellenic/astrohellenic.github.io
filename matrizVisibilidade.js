@@ -216,3 +216,58 @@ function renderMatrizVisibilidadeHTML(data) {
     </div>
   `;
 }
+
+/* BOTÃO "MATRIZ DE VISIBILIDADE" NA BARRA DE AÇÕES DA MANDALA
+   (#mandala-actions-overlay, index.html — o mesmo containerzinho de
+   Salvar/Atualizar Momento/Revolução Solar, que só aparece no modo
+   Mandala/Radix). Ao tocar, mostra a Matriz no lugar do desenho da
+   mandala, dentro do MESMO #mandala-container (sem trocar de módulo/aba
+   — o topo continua marcando "Mandala"); ao tocar de novo, volta a
+   desenhar a mandala.
+
+   Em vez de guardar um "já está mostrando a Matriz?" numa variável
+   separada, pergunta direto pro DOM (existe #matrizVisibilidadeWrapper
+   ali dentro agora?) — assim não tem como esse estado ficar
+   desincronizado do que está realmente na tela (ex.: se o astrólogo sair
+   pra outro módulo e voltar pra Mandala por fora, sem usar este botão;
+   abrirModuloTecnica, em supabase.js, já reseta a classe visual do botão
+   nesse caso, mas mesmo que não resetasse, o próximo toque aqui ainda
+   acertaria sozinho, porque volta a checar o DOM). */
+function toggleMatrizVisibilidadeNaMandala() {
+  const container = document.getElementById('mandala-container');
+  if (!container || typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
+
+  const botao = document.getElementById('btn-matriz-visibilidade-mandala');
+  const jaMostrandoMatriz = !!document.getElementById('matrizVisibilidadeWrapper');
+
+  if (jaMostrandoMatriz) {
+    if (botao) botao.classList.remove('matriz-visibilidade-ativa');
+    if (typeof renderMandala === 'function') renderMandala();
+  } else {
+    if (botao) botao.classList.add('matriz-visibilidade-ativa');
+    container.innerHTML = `
+      <div id="matrizVisibilidadeNaMandala" style="width: 100%; min-height: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
+        ${renderMatrizVisibilidadeHTML(currentCalculatedData)}
+      </div>
+    `;
+    ajustarMatrizVisibilidadeAoTamanhoDaTela();
+  }
+}
+window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
+
+/* Mesmo encolhimento + pinça-pra-zoom do Painel Técnico (agora funções
+   globais em tabelaTecnica.js, ver comentário lá), só que medindo a
+   largura disponível a partir do próprio container cheio da tela (não
+   tem cabeçalho de Painel Técnico pra sincronizar largura aqui). */
+function ajustarMatrizVisibilidadeAoTamanhoDaTela() {
+  const raiz = document.getElementById('matrizVisibilidadeNaMandala');
+  if (!raiz) return;
+
+  const estilos = getComputedStyle(raiz);
+  const availableWidth = raiz.clientWidth
+    - parseFloat(estilos.paddingLeft || 0)
+    - parseFloat(estilos.paddingRight || 0);
+
+  const escalaBase = encolherTabelaParaCaber('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', availableWidth);
+  ativarPinchZoomTabela('matrizOuterScroll', 'matrizScaleBox', 'matrizVisibilidadeWrapper', escalaBase);
+}
