@@ -1279,8 +1279,16 @@ function calcularQuebrasDePaginaTexto(corpoHtml, tituloTexto, temBlocoH1) {
    é um <div> à parte, irmão de .ql-editor dentro de .ql-container
    (que o tema "snow" do Quill já deixa position:relative). */
 function criarOverlayQuebraPaginaQuill(id, quill) {
-  const mount = document.getElementById('quill-mount-' + id);
-  const container = mount ? mount.querySelector('.ql-container') : null;
+  // quill.container É o próprio <div id="quill-mount-...">, com as
+  // classes ql-container/ql-snow ACRESCENTADAS pelo Quill nele mesmo —
+  // o Quill nunca cria um wrapper novo com .ql-container como filho
+  // (esse era o bug: document.getElementById(...).querySelector('.ql-container')
+  // nunca achava nada, porque .ql-container não é filho do mount, É o
+  // mount; a busca sempre voltava null e a função desistia em silêncio,
+  // sem erro nenhum aparecer no console). Usar a propriedade oficial do
+  // Quill em vez de adivinhar a estrutura do DOM evita esse tipo de
+  // suposição errada de novo.
+  const container = quill.container;
   if (!container) return;
 
   const overlay = document.createElement('div');
@@ -1296,7 +1304,7 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
   const tituloInput = podeTerH1 ? document.querySelector(`[data-bloco-titulo="${id}"]`) : null;
 
   function recalcular() {
-    if (!document.body.contains(mount)) return; // bloco removido da tela nesse meio tempo
+    if (!document.body.contains(container)) return; // bloco removido da tela nesse meio tempo
     const tituloTexto = tituloInput ? tituloInput.value : '';
     const temBlocoH1 = podeTerH1 && Boolean(tituloTexto.trim());
     const indices = calcularQuebrasDePaginaTexto(quill.root.innerHTML, tituloTexto, temBlocoH1);
@@ -1341,9 +1349,16 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
    nos próprios botões da barra (negrito, cor etc.) não conta como
    perder o foco, o Quill já trata isso sozinho. */
 function ativarBarraFlutuanteQuill(id, quill) {
-  const mount = document.getElementById('quill-mount-' + id);
-  const toolbar = mount ? mount.querySelector('.ql-toolbar') : null;
+  // A barra de ferramentas NUNCA é filha do <div id="quill-mount-...">
+  // — o Quill cria ela como IRMÃ dele (o mount vira .ql-container nele
+  // mesmo, ver o comentário em criarOverlayQuebraPaginaQuill). Por isso
+  // busca pela API oficial (quill.getModule('toolbar').container) em
+  // vez de tentar achar ".ql-toolbar" dentro do mount, que nunca existe
+  // aí — essa suposição errada era o motivo dela nunca aparecer.
+  const toolbarModule = quill.getModule('toolbar');
+  const toolbar = toolbarModule ? toolbarModule.container : null;
   if (!toolbar) return;
+  const container = quill.container; // só pra medir a largura/posição horizontal certa
 
   const espacador = document.createElement('div');
   espacador.className = 'rel-quill-toolbar-espacador';
@@ -1352,10 +1367,10 @@ function ativarBarraFlutuanteQuill(id, quill) {
   function posicionar() {
     const tabsFixa = document.getElementById('relEditorTabsFixa');
     const topo = tabsFixa ? tabsFixa.getBoundingClientRect().bottom : 0;
-    const rectMount = mount.getBoundingClientRect();
+    const rectContainer = container.getBoundingClientRect();
     toolbar.style.top = topo + 'px';
-    toolbar.style.left = rectMount.left + 'px';
-    toolbar.style.width = rectMount.width + 'px';
+    toolbar.style.left = rectContainer.left + 'px';
+    toolbar.style.width = rectContainer.width + 'px';
   }
 
   function flutuar() {
@@ -1721,7 +1736,12 @@ function injetarEstilosEditorRelatorio() {
          por padrão (só aparece — display:block — quando a barra
          correspondente está flutuando). */
       .rel-quill-toolbar-espacador { display: none; }
-      .rel-quill-mount .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 40; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+      /* Sem ".rel-quill-mount" na frente de propósito: a barra do Quill
+         NUNCA é filha do mount (".rel-quill-mount .ql-toolbar" não
+         bate com nada — são elementos IRMÃOS, ver o comentário em
+         ativarBarraFlutuanteQuill), então um seletor descendente aqui
+         nunca teria efeito nenhum. */
+      .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 40; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
 
