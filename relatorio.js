@@ -3310,8 +3310,30 @@ async function baixarRelatorioPDF() {
       const pxPorMm = canvas.width / MM_A4_LARGURA;
       const alturaEquivalenteMm = canvas.height / pxPorMm;
 
-      if (alturaEquivalenteMm <= MM_A4_ALTURA + 2) { // +2mm de tolerância de arredondamento — cabe numa folha só
+      // .rel-page-captura (a página de uma ferramenta capturada — ex.:
+      // Painel Técnico) é, por design, SEMPRE uma folha só: o CSS dela
+      // (.rel-captura-corpo com flex:1 + max-height:100%) já existe
+      // exatamente pra nunca deixar a imagem passar da folha. Mesmo
+      // assim, uma sobra mínima (poucos milímetros, arredondamento de
+      // pixel na captura) já bastava pra cair no "else" abaixo e criar
+      // uma folha nova SÓ com esse restinho quase em branco — cada
+      // imagem dessas virava 2 páginas em vez de 1, descasando a
+      // numeração do Índice pra sempre depois dela. Como essas páginas
+      // nunca são pensadas pra continuar num "página 2", força sempre o
+      // caminho de folha única aqui — qualquer sobra mínima real fica
+      // só um pouco cortada na borda de baixo da imagem (imperceptível),
+      // nunca vira outra folha.
+      const nuncaFatiar = pagina.classList.contains('rel-page-captura');
+
+      if (nuncaFatiar || alturaEquivalenteMm <= MM_A4_ALTURA + 2) { // +2mm de tolerância de arredondamento — cabe numa folha só
         if (paginasPdfGeradas > 0) pdf.addPage();
+        // width/height aqui preservam a proporção natural da captura
+        // (é assim que alturaEquivalenteMm foi calculada). Se nuncaFatiar
+        // empurrou uma sobra real além da folha, o próprio limite físico
+        // da página do PDF corta o excesso (nunca aparece, nem vaza pra
+        // outra página) — bem diferente de espremer a imagem numa altura
+        // menor, que distorceria ela (esmagada), em vez de só cortar a
+        // pontinha de baixo.
         pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaEquivalenteMm, undefined, 'FAST');
         paginasPdfGeradas++;
         numerarPaginaPdf(pdf, paginasPdfGeradas, MM_A4_LARGURA, MM_A4_ALTURA);
