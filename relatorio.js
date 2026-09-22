@@ -1438,6 +1438,7 @@ function ativarBarraFlutuanteQuill(id, quill) {
     document.body.appendChild(toolbar); // escapa de vez do empilhamento de #mandala-container
     toolbar.classList.add('rel-quill-toolbar-flutuante');
     posicionar();
+    registrarBarraFlutuanteAtiva(toolbar, paiOriginal, espacador);
   }
 
   function pousar() {
@@ -1448,6 +1449,7 @@ function ativarBarraFlutuanteQuill(id, quill) {
     toolbar.style.width = '';
     espacador.style.display = 'none';
     paiOriginal.insertBefore(toolbar, espacador);
+    desregistrarBarraFlutuanteAtiva(toolbar);
   }
 
   quill.on('selection-change', range => {
@@ -1469,6 +1471,55 @@ function ativarBarraFlutuanteQuill(id, quill) {
   window.addEventListener('resize', () => {
     if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) posicionar();
   });
+}
+
+/* Registro de toda barra do Quill atualmente flutuando (movida pra
+   document.body, ver flutuar() acima) — existe só pra
+   observadorDeTrocaDeModulo (logo abaixo) saber quais barras existem e
+   limpar as que ficaram órfãs. */
+window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas || [];
+function registrarBarraFlutuanteAtiva(toolbar, paiOriginal, espacador) {
+  window.relatorioBarrasFlutuantesAtivas.push({ toolbar, paiOriginal, espacador });
+}
+function desregistrarBarraFlutuanteAtiva(toolbar) {
+  window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas.filter(item => item.toolbar !== toolbar);
+}
+
+/* BUG REAL: a barra flutuante escapa DE PROPÓSITO de #mandala-container
+   (document.body.appendChild em flutuar(), acima) — pra nunca mais
+   ficar presa atrás de nada por causa do z-index dele (ver o comentário
+   bem maior em ativarBarraFlutuanteQuill). Só que, exatamente por
+   morar fora dali, ela também escapa do "apagão": trocar de ferramenta
+   (abrirModuloTecnica) substitui o conteúdo INTEIRO de
+   #mandala-container de uma vez (container.innerHTML = ...), sem passar
+   por nenhum evento de blur/seleção do Quill — o bloco de texto (e o
+   "pai de origem" da barra) são destruídos, mas a barra em si, já fora
+   dali, sobrevive: fica presa na tela pra sempre, "fantasma", porque
+   nunca mais existe um clique fora que dispare pousar().
+
+   Correção: um ÚNICO observador (nunca um por bloco — encolheria a
+   lista de novo a cada Quill criado) vigia #mandala-container inteiro;
+   toda vez que o conteúdo dele muda, confere cada barra registrada
+   (registrarBarraFlutuanteAtiva) — se o "pai de origem" dela não está
+   mais no documento (foi apagado numa troca de módulo), a barra é
+   removida de vez da tela, em vez de tentar devolver ela pra um lugar
+   que não existe mais. */
+if (!window.relatorioObservadorTrocaModuloAtivo) {
+  window.relatorioObservadorTrocaModuloAtivo = true;
+  const observador = new MutationObserver(() => {
+    window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas.filter(item => {
+      if (document.body.contains(item.paiOriginal)) return true; // ainda tem pra onde voltar, mantém
+      item.toolbar.remove();
+      item.espacador.remove();
+      return false;
+    });
+  });
+  const iniciarObservador = () => {
+    const alvo = document.getElementById('mandala-container');
+    if (alvo) observador.observe(alvo, { childList: true, subtree: true });
+  };
+  if (document.getElementById('mandala-container')) iniciarObservador();
+  else document.addEventListener('DOMContentLoaded', iniciarObservador);
 }
 
 /* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
