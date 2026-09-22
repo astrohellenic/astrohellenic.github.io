@@ -1122,19 +1122,21 @@ function inicializarQuillsPendentes() {
       modules: {
         toolbar: {
           container: [
-            // "Tipo de Texto" (Normal/Título) — rótulos em PT via CSS (ver
-            // .ql-picker.ql-header em injetarEstilosEditorRelatorio). "Título"
-            // usa o header nível 2 do Quill (<h2>), o único nível
-            // oferecido: cada <h2> dentro do bloco vira sua PRÓPRIA linha
-            // no Índice (ver marcarTitulosInternosComId), apontando pra
-            // ele mesmo — não pro bloco inteiro. É o que permite um único
-            // bloco de texto ("Word-like", vários "capítulos" internos)
-            // preencher o Índice sozinho, sem precisar de um bloco por
-            // capítulo. Parágrafo "Normal" nunca entra no Índice.
-            [{ header: [2, false] }],
+            // "Tipo de Texto" (Normal/Título/Subtítulo) — rótulos em PT
+            // via CSS (ver .ql-picker.ql-header em
+            // injetarEstilosEditorRelatorio). "Título" (<h2>) e
+            // "Subtítulo" (<h3>) viram, cada um, sua PRÓPRIA linha no
+            // Índice (ver marcarTitulosInternosComId), apontando pra ele
+            // mesmo — não pro bloco inteiro. É o que permite um único
+            // bloco de texto ("Word-like", vários "capítulos"/
+            // "subcapítulos" internos) preencher o Índice sozinho, sem
+            // precisar de um bloco por capítulo. Parágrafo "Normal"
+            // nunca entra no Índice.
+            [{ header: [2, 3, false] }],
             ['bold', 'italic', 'underline'],
             [{ color: [] }],
             [{ size: ['12px', false, '18px', '26px'] }],
+            [{ align: [] }],
             [{ list: 'ordered' }, { list: 'bullet' }],
             ['image']
           ],
@@ -1191,6 +1193,21 @@ window.inicializarQuillsPendentes = inicializarQuillsPendentes;
    qualquer mudança de fonte/padding/margem no relatório real já vale
    aqui também, sem precisar duplicar nenhum valor. */
 function medidorPaginaRelatorio() {
+  // injetarEstilosRelatorio() é quem define .rel-page/.rel-h1/.rel-corpo
+  // (as classes que este medidor reaproveita) — só que ela só tinha sido
+  // chamada, até agora, na hora de montar a Prévia/PDF. Quem abria a aba
+  // "Editar" e nunca tinha visitado a Prévia NESSA sessão via um medidor
+  // sem CSS nenhum aplicado (nem largura de folha, nem padding, nem
+  // fonte/line-height do texto) — o cálculo rodava sem erro, só que
+  // contra métricas erradas, então o orçamento de altura de uma folha
+  // saía errado (sem o padding real subtraído, o "espaço disponível"
+  // parecia bem maior do que uma folha de verdade tem), e a linha de
+  // quebra podia demorar bem mais que o esperado pra aparecer — ou nunca
+  // aparecer com pouco texto. injetarEstilosRelatorio() já é blindada
+  // contra injetar duas vezes (guarda por id), então chamar aqui de novo
+  // não tem custo nenhum quando ela já rodou por outro caminho.
+  injetarEstilosRelatorio();
+
   let el = document.getElementById('relMedidorPaginaOculto');
   if (el) return el;
   el = document.createElement('div');
@@ -1603,7 +1620,7 @@ function injetarEstilosEditorRelatorio() {
          (ver injetarEstilosRelatorio/montarConteudoRelatorioHtml, sempre
          brancos), então não fazem sentido escurecer só na tela de edição. */
       /* Rótulos em português do seletor "Tipo de Texto" (ver o grupo
-         [{header:[2,false]}] na barra do Quill, inicializarQuillsPendentes)
+         [{header:[2,3,false]}] na barra do Quill, inicializarQuillsPendentes)
          — o Quill só sabe rotular em inglês ("Heading 2"/"Normal") sozinho;
          a troca de texto é feita via ::before, técnica padrão dele (o
          <span> real fica vazio, só o CSS desenha o texto). */
@@ -1611,7 +1628,9 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-mount .ql-picker.ql-header .ql-picker-item::before { content: 'Normal'; }
       .rel-quill-mount .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
       .rel-quill-mount .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: 'Título'; }
-      .rel-quill-mount .ql-picker.ql-header { width: 100px; }
+      .rel-quill-mount .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
+      .rel-quill-mount .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: 'Subtítulo'; }
+      .rel-quill-mount .ql-picker.ql-header { width: 110px; }
 
       .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
@@ -3096,15 +3115,18 @@ window.baixarRelatorioPDF = baixarRelatorioPDF;
    separados só pra aparecer no Índice — nunca teria como preencher o
    Índice com mais de UMA linha (a do próprio bloco). */
 function marcarTitulosInternosComId(corpoHtml, blocoId, itensIndice) {
-  if (!corpoHtml || corpoHtml.indexOf('<h2') === -1) return corpoHtml;
+  if (!corpoHtml || (corpoHtml.indexOf('<h2') === -1 && corpoHtml.indexOf('<h3') === -1)) return corpoHtml;
   const temp = document.createElement('div');
   temp.innerHTML = corpoHtml;
   let contador = 0;
-  temp.querySelectorAll('h2').forEach(h2 => {
+  // 'h2, h3' devolve os elementos na ordem em que aparecem no texto
+  // (não agrupados por tag) — Título e Subtítulo intercalados entram no
+  // Índice na mesma ordem em que o astrólogo escreveu.
+  temp.querySelectorAll('h2, h3').forEach(elTitulo => {
     contador++;
     const id = `rel-titulo-int-${blocoId}-${contador}`;
-    h2.id = id;
-    const texto = h2.textContent.trim();
+    elTitulo.id = id;
+    const texto = elTitulo.textContent.trim();
     if (texto) itensIndice.push({ titulo: texto, alvo: id });
   });
   return temp.innerHTML;
@@ -3487,14 +3509,28 @@ function injetarEstilosRelatorio() {
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
       .rel-corpo img { max-width: 100%; height: auto; display: block; margin: 4px auto 14px; border-radius: 8px; }
 
-      /* "Título" interno (ver [{header:[2,false]}] na barra do Quill) —
-         mais discreto que .rel-h1 (que é a caixa grande, com borda e
-         fundo, do topo de CADA bloco): este é só um subtítulo dentro do
-         texto corrido, pra dividir um bloco só de texto em "capítulos"
-         sem precisar de blocos separados. Cada um vira uma linha própria
-         no Índice (ver marcarTitulosInternosComId/numerarPaginasIndice). */
+      /* Alinhamento (ver [{align:[]}] na barra do Quill) — o Quill marca
+         o próprio parágrafo/título/item de lista com uma destas classes;
+         sem essa regra aqui, .rel-corpo p (acima) sempre ganhava com
+         text-align:justify fixo, e as outras opções da barra pareciam
+         "travadas"/sem efeito nenhum no relatório final (mesmo mudando
+         na tela do Quill). Mais específico (2 classes) que ".rel-corpo p"
+         (1 classe + 1 tag), então sobrescreve sem precisar de !important. */
+      .rel-corpo .ql-align-left { text-align: left; }
+      .rel-corpo .ql-align-center { text-align: center; }
+      .rel-corpo .ql-align-right { text-align: right; }
+      .rel-corpo .ql-align-justify { text-align: justify; }
+
+      /* "Título"/"Subtítulo" internos (ver [{header:[2,3,false]}] na
+         barra do Quill) — mais discretos que .rel-h1 (que é a caixa
+         grande, com borda e fundo, do topo de CADA bloco): são
+         subtítulos dentro do texto corrido, pra dividir um bloco só de
+         texto em "capítulos"/"subcapítulos" sem precisar de blocos
+         separados. Cada um vira uma linha própria no Índice (ver
+         marcarTitulosInternosComId/numerarPaginasIndice). */
       .rel-corpo h2 { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1.5px solid #c59b27; break-after: avoid; page-break-after: avoid; }
-      .rel-corpo h2:first-child { margin-top: 0; }
+      .rel-corpo h3 { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: #9a6d18; margin: 18px 0 8px; break-after: avoid; page-break-after: avoid; }
+      .rel-corpo h2:first-child, .rel-corpo h3:first-child { margin-top: 0; }
 
       /* Listas do texto rico (Quill) dentro de um bloco de texto — o
          resto da formatação (negrito, itálico, sublinhado, cor, tamanho)
