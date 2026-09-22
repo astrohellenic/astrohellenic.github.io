@@ -1404,7 +1404,21 @@ function ativarBarraFlutuanteQuill(id, quill) {
     paiOriginal.insertBefore(toolbar, espacador);
   }
 
-  quill.on('selection-change', range => { if (range) flutuar(); else pousar(); });
+  quill.on('selection-change', range => {
+    if (range) { flutuar(); return; }
+    // Perder a seleção (range=null) nem sempre quer dizer que o
+    // astrólogo saiu do bloco de texto: clicar no ÍCONE de um seletor
+    // da própria barra (Tipo de Texto, Cor) pra ABRIR o menu dele
+    // TAMBÉM reporta seleção nula aqui — diferente dos botões simples
+    // (negrito, itálico), que preservam a seleção sozinhos, os
+    // "pickers" do Quill não. Sem essa checagem, a barra voltava pro
+    // lugar de origem bem na hora de abrir o menu — some da tela e
+    // ainda perde o texto selecionado, impossível de escolher "Título"
+    // depois de selecionar algo. Só pousa de vez quando não tem NENHUM
+    // menu desses aberto na barra.
+    if (toolbar.querySelector('.ql-expanded')) return;
+    pousar();
+  });
 
   window.addEventListener('resize', () => {
     if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) posicionar();
