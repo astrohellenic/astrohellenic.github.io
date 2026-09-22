@@ -1162,7 +1162,6 @@ function inicializarQuillsPendentes() {
     }
     window.relatorioQuillInstancias[id] = quill;
     criarOverlayQuebraPaginaQuill(id, quill);
-    ativarBarraFlutuanteQuill(id, quill);
   });
 
   window.relatorioQuillPendentes = {};
@@ -1325,75 +1324,6 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
   window.addEventListener('resize', agendarRecalculo);
 
   recalcular();
-}
-
-/* Barra de formatação do Quill "flutua" (fixa, logo abaixo da barra
-   Editar/Prévia/Salvar) enquanto o astrólogo está digitando NESTE bloco
-   — sem isso, num bloco de texto comprido (o "Word-like" de um bloco só,
-   que pode passar de dezenas de páginas), rolar até o meio do texto
-   escondia a barra de formatação lá em cima, obrigando a rolar tudo de
-   volta só pra negritar uma palavra.
-
-   NUNCA usa position:sticky — ver a nota no CLAUDE.md deste repositório
-   sobre sticky não ser confiável nesse layout (já tentado 2x pra outros
-   elementos, sem sucesso real no aparelho do astrólogo, mesmo com
-   #mandala-container liberado). Usa o MESMO padrão que já funcionou de
-   verdade aqui (.rel-editor-tabs/.rel-toolbar, ver
-   ajustarEspacadoresBarraFixaRelatorio): position:fixed calculado em JS
-   + um espaçador que reserva o lugar dela no fluxo normal, senão o
-   texto pularia pra cima quando ela sai do fluxo.
-
-   Só a barra do bloco com FOCO flutua (Quill dispara 'selection-change'
-   com range=null ao perder o foco, e com um range de verdade ao
-   ganhar) — as dos outros blocos continuam no lugar de sempre; clicar
-   nos próprios botões da barra (negrito, cor etc.) não conta como
-   perder o foco, o Quill já trata isso sozinho. */
-function ativarBarraFlutuanteQuill(id, quill) {
-  // A barra de ferramentas NUNCA é filha do <div id="quill-mount-...">
-  // — o Quill cria ela como IRMÃ dele (o mount vira .ql-container nele
-  // mesmo, ver o comentário em criarOverlayQuebraPaginaQuill). Por isso
-  // busca pela API oficial (quill.getModule('toolbar').container) em
-  // vez de tentar achar ".ql-toolbar" dentro do mount, que nunca existe
-  // aí — essa suposição errada era o motivo dela nunca aparecer.
-  const toolbarModule = quill.getModule('toolbar');
-  const toolbar = toolbarModule ? toolbarModule.container : null;
-  if (!toolbar) return;
-  const container = quill.container; // só pra medir a largura/posição horizontal certa
-
-  const espacador = document.createElement('div');
-  espacador.className = 'rel-quill-toolbar-espacador';
-  toolbar.after(espacador);
-
-  function posicionar() {
-    const tabsFixa = document.getElementById('relEditorTabsFixa');
-    const topo = tabsFixa ? tabsFixa.getBoundingClientRect().bottom : 0;
-    const rectContainer = container.getBoundingClientRect();
-    toolbar.style.top = topo + 'px';
-    toolbar.style.left = rectContainer.left + 'px';
-    toolbar.style.width = rectContainer.width + 'px';
-  }
-
-  function flutuar() {
-    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) { posicionar(); return; }
-    espacador.style.height = toolbar.offsetHeight + 'px';
-    espacador.style.display = 'block';
-    toolbar.classList.add('rel-quill-toolbar-flutuante');
-    posicionar();
-  }
-
-  function pousar() {
-    toolbar.classList.remove('rel-quill-toolbar-flutuante');
-    toolbar.style.top = '';
-    toolbar.style.left = '';
-    toolbar.style.width = '';
-    espacador.style.display = 'none';
-  }
-
-  quill.on('selection-change', range => { if (range) flutuar(); else pousar(); });
-
-  window.addEventListener('resize', () => {
-    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) posicionar();
-  });
 }
 
 /* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
@@ -1728,20 +1658,6 @@ function injetarEstilosEditorRelatorio() {
       .rel-quebra-pagina-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 5; }
       .rel-quebra-pagina-linha { position: absolute; left: 8px; right: 8px; border-top: 2px dashed #c59b27; }
       .rel-quebra-pagina-linha span { position: absolute; top: -9px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 4px; padding: 1px 6px; font-size: 9.5px; font-weight: 700; color: #9a6d18; white-space: nowrap; }
-
-      /* Barra do Quill flutuante (ver ativarBarraFlutuanteQuill) — some
-         do fluxo normal (position:fixed) enquanto o bloco está com
-         foco; .rel-quill-toolbar-espacador reserva o espaço que ela
-         deixa vazio, senão o texto abaixo pularia pra cima. display:none
-         por padrão (só aparece — display:block — quando a barra
-         correspondente está flutuando). */
-      .rel-quill-toolbar-espacador { display: none; }
-      /* Sem ".rel-quill-mount" na frente de propósito: a barra do Quill
-         NUNCA é filha do mount (".rel-quill-mount .ql-toolbar" não
-         bate com nada — são elementos IRMÃOS, ver o comentário em
-         ativarBarraFlutuanteQuill), então um seletor descendente aqui
-         nunca teria efeito nenhum. */
-      .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 40; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
 
@@ -3620,7 +3536,15 @@ function injetarEstilosRelatorio() {
          texto em "capítulos"/"subcapítulos" sem precisar de blocos
          separados. Cada um vira uma linha própria no Índice (ver
          marcarTitulosInternosComId/numerarPaginasIndice). */
-      .rel-corpo h2 { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1.5px solid #c59b27; break-after: avoid; page-break-after: avoid; }
+      /* Mesma cara de caixa do .rel-h1 (contorno dourado, fundo, canto
+         arredondado, padding) — só um pouco menor, pra ainda dar pra
+         diferenciar do título do bloco (.rel-h1, o único por página). */
+      .rel-corpo h2 {
+        font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: uppercase; letter-spacing: 0.03em;
+        border: 1.5px solid #c59b27; border-radius: 8px; padding: 10px; margin: 22px 0 16px; background: #fffdf5;
+        break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid;
+      }
       .rel-corpo h3 { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: #9a6d18; margin: 18px 0 8px; break-after: avoid; page-break-after: avoid; }
       .rel-corpo h2:first-child, .rel-corpo h3:first-child { margin-top: 0; }
 
