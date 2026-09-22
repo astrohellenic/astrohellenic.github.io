@@ -1101,6 +1101,42 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
   `;
 }
 
+/* Roda fn() e, se a página tiver rolado sozinha por causa disso (efeito
+   colateral do navegador tentando manter um cursor/foco visível dentro
+   de um <div contenteditable>, ver evitarRolagemAoFormatar logo abaixo),
+   devolve a rolagem pra onde estava — sempre um quadro (rAF) depois,
+   porque é só aí que essa rolagem automática já aconteceu de verdade
+   (ela não é síncrona com fn()). */
+function executarSemMoverRolagem(fn) {
+  const scrollXAntes = window.scrollX, scrollYAntes = window.scrollY;
+  fn();
+  requestAnimationFrame(() => {
+    if (window.scrollX !== scrollXAntes || window.scrollY !== scrollYAntes) {
+      window.scrollTo(scrollXAntes, scrollYAntes);
+    }
+  });
+}
+
+/* Aplicar uma formatação pela barra (negrito, Título, alinhar ao centro
+   etc.) faz o Quill mexer no foco/seleção do <div contenteditable> por
+   baixo dos panos — e, META DO NAVEGADOR (não do Quill, não deste site):
+   sempre que o foco/cursor de um contenteditable muda, ele tenta manter
+   esse ponto visível na tela, rolando a página sozinho. Num bloco de
+   texto comprido (o "Word-like" de um bloco só), isso jogava a rolagem
+   pro topo do bloco a cada formatação aplicada — mesmo estando editando
+   a última linha. Captura a rolagem ANTES de qualquer mousedown na
+   barra (fase de captura: roda antes do próprio Quill decidir o que
+   fazer com o clique) e devolve depois, cobrindo QUALQUER controle da
+   barra (não só um botão específico). */
+function evitarRolagemAoFormatar(quill) {
+  const toolbarModule = quill.getModule('toolbar');
+  const toolbar = toolbarModule ? toolbarModule.container : null;
+  if (!toolbar) return;
+  toolbar.addEventListener('mousedown', () => {
+    executarSemMoverRolagem(() => {});
+  }, true);
+}
+
 /* Cria de fato os editores Quill pra cada linha de texto pendente (ver
    comentário acima) — chamar sempre depois de qualquer trecho de HTML que
    use relatorioLinhaEditorHtml pra um bloco de texto ter entrado no DOM.
@@ -1150,19 +1186,29 @@ function inicializarQuillsPendentes() {
       }
     });
 
+    // dangerouslyPasteHTML deixa o cursor no FIM do texto colado — e o
+    // navegador, sozinho, rola a página pra manter o cursor visível.
+    // Com o texto salvo sendo bem comprido (o "Word-like" de bloco
+    // único), isso abria a tela do editor já lá embaixo, no meio do
+    // texto, em vez de no topo do formulário — sem relação nenhuma com
+    // o que o astrólogo queria ver primeiro. executarSemMoverRolagem
+    // (definida logo abaixo) desfaz essa rolagem indesejada.
     const { corpo, formato } = pendentes[id];
-    if (formato === 'rich') {
-      quill.clipboard.dangerouslyPasteHTML(corpo || '');
-    } else if (corpo) {
-      // Mesma regra de parágrafo que o relatório final sempre usou pra
-      // texto puro (linha em branco separa parágrafos) — pra a prévia no
-      // Quill começar igual ao que já está publicado, sem surpresa.
-      const paragrafos = corpo.split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
-      quill.clipboard.dangerouslyPasteHTML(paragrafos.map(p => `<p>${escapeHtml(p)}</p>`).join(''));
-    }
+    executarSemMoverRolagem(() => {
+      if (formato === 'rich') {
+        quill.clipboard.dangerouslyPasteHTML(corpo || '');
+      } else if (corpo) {
+        // Mesma regra de parágrafo que o relatório final sempre usou pra
+        // texto puro (linha em branco separa parágrafos) — pra a prévia no
+        // Quill começar igual ao que já está publicado, sem surpresa.
+        const paragrafos = corpo.split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+        quill.clipboard.dangerouslyPasteHTML(paragrafos.map(p => `<p>${escapeHtml(p)}</p>`).join(''));
+      }
+    });
     window.relatorioQuillInstancias[id] = quill;
     criarOverlayQuebraPaginaQuill(id, quill);
     ativarBarraFlutuanteQuill(id, quill);
+    evitarRolagemAoFormatar(quill);
   });
 
   window.relatorioQuillPendentes = {};
