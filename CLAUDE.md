@@ -310,3 +310,71 @@ biblioteca) contra vários casos: São Luiz Gonzaga/RS em 28/03/1992 dá
 -3 (confirmado pelo astrólogo); Manaus dá -4; Nova York alterna -5/-4
 entre inverno e verão (horário de verão americano); Lisboa alterna
 0/+1; coordenada inválida cai no fallback sem travar.
+
+## Gerador de PDF do Relatório (`baixarRelatorioPDF`, `relatorio.js`) — o mecanismo em si é frágil demais, não adianta remendar de novo (22/09/2026)
+
+**Não tentar mais remendos pontuais nisso — a correção de verdade é
+trocar o gerador de PDF inteiro por um backend rodando Chrome
+headless (`page.pdf()`), não existe ainda. Enquanto isso não for
+feito, o astrólogo confirmou que vai continuar convivendo com esse
+bug, de propósito, em vez de gastar mais tentativas nele.**
+
+**O sintoma**: ao baixar o PDF, a página do Painel Técnico de
+Natividades (um bloco "capturado" — a imagem que a própria ferramenta
+tirou, ver `RELATORIO_FERRAMENTAS_DISPONIVEIS`) saía bagunçada — às
+vezes virando uma página extra quase em branco logo depois dela
+(descasando a numeração do Índice pra sempre dali em diante), às
+vezes — pelo relato mais recente do astrólogo — a própria imagem do
+Painel Técnico aparecendo **"atrás" de outras páginas** na Prévia
+depois de tentar baixar o PDF e voltar pra editar, com tudo
+desorganizado até ele editar/ajustar as coisas de novo pra "voltar pro
+lugar".
+
+**O que foi tentado nessa sessão (não resolveu)**: fizemos
+`.rel-page-captura` nunca entrar no caminho de fatiamento em várias
+folhas (`baixarRelatorioPDF`), só desenhando a imagem inteira e
+deixando o limite físico da página do PDF cortar qualquer sobra —
+testado isoladamente (CSS sozinho, `html2canvas` de verdade contra
+várias proporções de imagem, e `jsPDF` de verdade desenhando uma
+imagem maior que a folha) e tudo bateu certo nesses testes isolados.
+Mesmo assim, o astrólogo testou no site publicado e confirmou que o
+problema **continua idêntico** — o mecanismo de fundo é mais frágil
+(ou tem mais peças interagindo) do que qualquer teste isolado
+conseguiu reproduzir até agora.
+
+**Por que não vale a pena continuar tentando remendar isso**: o
+gerador de PDF de hoje (`baixarRelatorioPDF`) funciona tirando uma
+"foto" (`html2canvas`) de cada `.rel-page` já renderizada na tela e
+colando essas fotos, uma por uma, em folhas A4 dentro de um PDF
+(`jsPDF`) — ver o comentário grande logo antes da função pra entender
+por que foi feito assim (fugir do motor de impressão nativo do
+navegador, que paginava diferente em cada aparelho). Isso significa
+que cada página do PDF final é só uma imagem rasterizada, nunca texto
+de verdade — e, por ser um mecanismo de "print de tela" reagindo a
+medidas de altura em milímetros/pixels calculadas em cima de
+`aspect-ratio`/flexbox, está sujeito a um monte de jeitos diferentes
+de dar errado (arredondamento, timing de carregamento de imagem,
+diferença entre o que a tela mostra e o que o `html2canvas` mede) —
+já tentamos consertar essa classe de bug pelo menos duas vezes agora
+(a página extra em branco, e agora essa bagunça na Prévia) sem
+resolver de vez, o que é sinal de que o problema é estrutural, não um
+bug pontual pra caçar e remendar.
+
+**A correção de verdade, já combinada com o astrólogo em conversa
+anterior** (ver também a pesquisa sobre o Delphic Oracle, que usa um
+motor de relatório de verdade, não captura de tela): trocar
+`baixarRelatorioPDF` inteiro por um backend que roda Chrome headless,
+renderiza a MESMA página HTML que a Prévia já mostra, e usa a função
+nativa do Chrome de exportar aquilo pra PDF (`page.pdf()`) — isso dá
+texto de verdade (selecionável, nítido em qualquer zoom) e paginação
+sempre consistente, sem depender de fatiar imagem nenhuma. Isso exige
+infraestrutura nova (um servidor rodando navegador) que este site
+(hoje só front-end estático + Supabase) ainda não tem — projeto à
+parte, não uma correção de código local.
+
+**Enquanto isso não existir**: não vale a pena gastar mais rodadas
+testando variações de `html2canvas`/`jsPDF` pra esse bug específico —
+já foi tentado, testado isoladamente com sucesso, e mesmo assim não
+resolveu no site publicado. Próxima sessão que for mexer nisso: ou já
+vem pra implementar o Chrome headless de verdade, ou pergunta antes de
+tentar mais um remendo pontual no mecanismo de captura de tela atual.
