@@ -1122,6 +1122,16 @@ function inicializarQuillsPendentes() {
       modules: {
         toolbar: {
           container: [
+            // "Tipo de Texto" (Normal/Título) — rótulos em PT via CSS (ver
+            // .ql-picker.ql-header em injetarEstilosEditorRelatorio). "Título"
+            // usa o header nível 2 do Quill (<h2>), o único nível
+            // oferecido: cada <h2> dentro do bloco vira sua PRÓPRIA linha
+            // no Índice (ver marcarTitulosInternosComId), apontando pra
+            // ele mesmo — não pro bloco inteiro. É o que permite um único
+            // bloco de texto ("Word-like", vários "capítulos" internos)
+            // preencher o Índice sozinho, sem precisar de um bloco por
+            // capítulo. Parágrafo "Normal" nunca entra no Índice.
+            [{ header: [2, false] }],
             ['bold', 'italic', 'underline'],
             [{ color: [] }],
             [{ size: ['12px', false, '18px', '26px'] }],
@@ -1259,12 +1269,19 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
   overlay.className = 'rel-quebra-pagina-overlay';
   container.appendChild(overlay);
 
-  const temBlocoH1 = id !== '__encerramento__';
-  const tituloInput = temBlocoH1 ? document.querySelector(`[data-bloco-titulo="${id}"]`) : null;
+  // __encerramento__ nunca tem .rel-h1 (ver montarConteudoRelatorioHtml);
+  // os outros blocos de texto têm, mas só desenham a caixa de verdade
+  // quando o título não está em branco (ver renderBlocoRelatorio) — por
+  // isso "tem .rel-h1 agora" depende do CONTEÚDO atual do campo, não é
+  // fixo por tipo de bloco, e precisa ser reavaliado a cada recálculo.
+  const podeTerH1 = id !== '__encerramento__';
+  const tituloInput = podeTerH1 ? document.querySelector(`[data-bloco-titulo="${id}"]`) : null;
 
   function recalcular() {
     if (!document.body.contains(mount)) return; // bloco removido da tela nesse meio tempo
-    const indices = calcularQuebrasDePaginaTexto(quill.root.innerHTML, tituloInput ? tituloInput.value : '', temBlocoH1);
+    const tituloTexto = tituloInput ? tituloInput.value : '';
+    const temBlocoH1 = podeTerH1 && Boolean(tituloTexto.trim());
+    const indices = calcularQuebrasDePaginaTexto(quill.root.innerHTML, tituloTexto, temBlocoH1);
     const containerRect = container.getBoundingClientRect();
     overlay.innerHTML = indices.map((idx, n) => {
       const filho = quill.root.children[idx];
@@ -1585,6 +1602,17 @@ function injetarEstilosEditorRelatorio() {
          o texto ali dentro é exatamente o que vira PDF/imagem pro cliente
          (ver injetarEstilosRelatorio/montarConteudoRelatorioHtml, sempre
          brancos), então não fazem sentido escurecer só na tela de edição. */
+      /* Rótulos em português do seletor "Tipo de Texto" (ver o grupo
+         [{header:[2,false]}] na barra do Quill, inicializarQuillsPendentes)
+         — o Quill só sabe rotular em inglês ("Heading 2"/"Normal") sozinho;
+         a troca de texto é feita via ::before, técnica padrão dele (o
+         <span> real fica vazio, só o CSS desenha o texto). */
+      .rel-quill-mount .ql-picker.ql-header .ql-picker-label::before,
+      .rel-quill-mount .ql-picker.ql-header .ql-picker-item::before { content: 'Normal'; }
+      .rel-quill-mount .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
+      .rel-quill-mount .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: 'Título'; }
+      .rel-quill-mount .ql-picker.ql-header { width: 100px; }
+
       .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
@@ -3056,6 +3084,32 @@ async function baixarRelatorioPDF() {
 }
 window.baixarRelatorioPDF = baixarRelatorioPDF;
 
+/* Acha os <h2> dentro do HTML rico de um bloco de texto ("Título" no
+   seletor "Tipo de Texto" da barra do Quill — ver inicializarQuillsPendentes)
+   e dá um id próprio, único, pra cada um — registrando também uma linha
+   nova em itensIndice, apontando pra esse id (não pro bloco inteiro).
+   numerarPaginasIndice depois acha, pra cada id desses, EM QUAL PÁGINA
+   ele fisicamente caiu (o que só se sabe depois de
+   dividirPaginasLongasEmFolhas rodar, já que um bloco de texto comprido
+   vira várias páginas). Sem isso, um único bloco de texto grande — o
+   "Word-like" que o astrólogo pediu, pra não ficar com 10 blocos
+   separados só pra aparecer no Índice — nunca teria como preencher o
+   Índice com mais de UMA linha (a do próprio bloco). */
+function marcarTitulosInternosComId(corpoHtml, blocoId, itensIndice) {
+  if (!corpoHtml || corpoHtml.indexOf('<h2') === -1) return corpoHtml;
+  const temp = document.createElement('div');
+  temp.innerHTML = corpoHtml;
+  let contador = 0;
+  temp.querySelectorAll('h2').forEach(h2 => {
+    contador++;
+    const id = `rel-titulo-int-${blocoId}-${contador}`;
+    h2.id = id;
+    const texto = h2.textContent.trim();
+    if (texto) itensIndice.push({ titulo: texto, alvo: id });
+  });
+  return temp.innerHTML;
+}
+
 /* Renderiza um bloco do preset (texto ou ferramenta) como uma ou mais
    .rel-page, e — quando o bloco entra no índice — registra o item em
    opts.itensIndice pra virar uma linha na página de Índice. */
@@ -3073,12 +3127,25 @@ function renderBlocoRelatorio(bloco, opts) {
     if (bloco.id === 'sete-lotes') tabelaExtra = renderTabelaLotesRelatorio(opts.lotesNatal, opts.ascAbsNatal);
     if (bloco.id === 'dodecatemorias') tabelaExtra = renderTabelaDodecatemoriasRelatorio();
 
-    opts.itensIndice.push({ titulo: bloco.titulo, alvo: bloco.id });
+    // Título do BLOCO (o campo fixo lá em cima do Quill, no editor) só
+    // entra no Índice — e só desenha a caixa .rel-h1 — quando não está em
+    // branco. Um bloco de texto único e grande ("Word-like", vários
+    // "capítulos" internos via <h2>, ver logo abaixo) não precisa de um
+    // título de bloco nenhum: sem isso, sobrava uma caixa vazia (só
+    // borda/fundo, sem texto) no topo da primeira página dele.
+    const temTituloProprio = Boolean((bloco.titulo || '').trim());
+    if (temTituloProprio) opts.itensIndice.push({ titulo: bloco.titulo, alvo: bloco.id });
+
+    // Cada <h2> dentro do texto (o astrólogo escolhe "Título" no seletor
+    // "Tipo de Texto" da barra do Quill) ganha um id próprio e vira sua
+    // PRÓPRIA linha no Índice — apontando pra ele mesmo, não pro bloco
+    // inteiro. "Normal" (parágrafo comum) e imagem nunca entram aqui.
+    const corpoComIdsHtml = marcarTitulosInternosComId(corpoHtml, bloco.id, opts.itensIndice);
 
     return `
       <section class="rel-page" data-pg="${escapeHtml(bloco.id)}">
-        <div class="rel-h1">${escapeHtml(bloco.titulo)}</div>
-        <div class="rel-corpo">${corpoHtml}</div>
+        ${temTituloProprio ? `<div class="rel-h1">${escapeHtml(bloco.titulo)}</div>` : ''}
+        <div class="rel-corpo">${corpoComIdsHtml}</div>
         ${tabelaExtra}
       </section>
     `;
@@ -3240,6 +3307,15 @@ function numerarPaginasIndice(container) {
 
   paginas.forEach(pagina => {
     if (pagina.dataset.pg) numeroPorAlvo[pagina.dataset.pg] = numeroAtual;
+
+    // "Títulos" internos (ver marcarTitulosInternosComId) que caíram
+    // FISICAMENTE dentro desta página — só dá pra saber isso agora,
+    // depois que dividirPaginasLongasEmFolhas já moveu cada <h2> pra
+    // página de verdade em que ele ficou (um bloco de texto comprido
+    // pode ter títulos internos espalhados por várias páginas dele).
+    pagina.querySelectorAll('[id^="rel-titulo-int-"]').forEach(elTitulo => {
+      numeroPorAlvo[elTitulo.id] = numeroAtual;
+    });
 
     // Número no canto inferior direito da PRÓPRIA página (não só no
     // Índice) — pra aparecer tanto na prévia em tela quanto pra quem só
@@ -3410,6 +3486,15 @@ function injetarEstilosRelatorio() {
 
       .rel-corpo p { font-size: 12.5px; line-height: 1.85; color: #1e293b; text-align: justify; margin-bottom: 14px; }
       .rel-corpo img { max-width: 100%; height: auto; display: block; margin: 4px auto 14px; border-radius: 8px; }
+
+      /* "Título" interno (ver [{header:[2,false]}] na barra do Quill) —
+         mais discreto que .rel-h1 (que é a caixa grande, com borda e
+         fundo, do topo de CADA bloco): este é só um subtítulo dentro do
+         texto corrido, pra dividir um bloco só de texto em "capítulos"
+         sem precisar de blocos separados. Cada um vira uma linha própria
+         no Índice (ver marcarTitulosInternosComId/numerarPaginasIndice). */
+      .rel-corpo h2 { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: #103b70; text-transform: uppercase; letter-spacing: 0.03em; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1.5px solid #c59b27; break-after: avoid; page-break-after: avoid; }
+      .rel-corpo h2:first-child { margin-top: 0; }
 
       /* Listas do texto rico (Quill) dentro de um bloco de texto — o
          resto da formatação (negrito, itálico, sublinhado, cor, tamanho)
