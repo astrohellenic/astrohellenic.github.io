@@ -1162,6 +1162,7 @@ function inicializarQuillsPendentes() {
     }
     window.relatorioQuillInstancias[id] = quill;
     criarOverlayQuebraPaginaQuill(id, quill);
+    ativarBarraFlutuanteQuill(id, quill);
   });
 
   window.relatorioQuillPendentes = {};
@@ -1316,6 +1317,68 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
   window.addEventListener('resize', agendarRecalculo);
 
   recalcular();
+}
+
+/* Barra de formatação do Quill "flutua" (fixa, logo abaixo da barra
+   Editar/Prévia/Salvar) enquanto o astrólogo está digitando NESTE bloco
+   — sem isso, num bloco de texto comprido (o "Word-like" de um bloco só,
+   que pode passar de dezenas de páginas), rolar até o meio do texto
+   escondia a barra de formatação lá em cima, obrigando a rolar tudo de
+   volta só pra negritar uma palavra.
+
+   NUNCA usa position:sticky — ver a nota no CLAUDE.md deste repositório
+   sobre sticky não ser confiável nesse layout (já tentado 2x pra outros
+   elementos, sem sucesso real no aparelho do astrólogo, mesmo com
+   #mandala-container liberado). Usa o MESMO padrão que já funcionou de
+   verdade aqui (.rel-editor-tabs/.rel-toolbar, ver
+   ajustarEspacadoresBarraFixaRelatorio): position:fixed calculado em JS
+   + um espaçador que reserva o lugar dela no fluxo normal, senão o
+   texto pularia pra cima quando ela sai do fluxo.
+
+   Só a barra do bloco com FOCO flutua (Quill dispara 'selection-change'
+   com range=null ao perder o foco, e com um range de verdade ao
+   ganhar) — as dos outros blocos continuam no lugar de sempre; clicar
+   nos próprios botões da barra (negrito, cor etc.) não conta como
+   perder o foco, o Quill já trata isso sozinho. */
+function ativarBarraFlutuanteQuill(id, quill) {
+  const mount = document.getElementById('quill-mount-' + id);
+  const toolbar = mount ? mount.querySelector('.ql-toolbar') : null;
+  if (!toolbar) return;
+
+  const espacador = document.createElement('div');
+  espacador.className = 'rel-quill-toolbar-espacador';
+  toolbar.after(espacador);
+
+  function posicionar() {
+    const tabsFixa = document.getElementById('relEditorTabsFixa');
+    const topo = tabsFixa ? tabsFixa.getBoundingClientRect().bottom : 0;
+    const rectMount = mount.getBoundingClientRect();
+    toolbar.style.top = topo + 'px';
+    toolbar.style.left = rectMount.left + 'px';
+    toolbar.style.width = rectMount.width + 'px';
+  }
+
+  function flutuar() {
+    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) { posicionar(); return; }
+    espacador.style.height = toolbar.offsetHeight + 'px';
+    espacador.style.display = 'block';
+    toolbar.classList.add('rel-quill-toolbar-flutuante');
+    posicionar();
+  }
+
+  function pousar() {
+    toolbar.classList.remove('rel-quill-toolbar-flutuante');
+    toolbar.style.top = '';
+    toolbar.style.left = '';
+    toolbar.style.width = '';
+    espacador.style.display = 'none';
+  }
+
+  quill.on('selection-change', range => { if (range) flutuar(); else pousar(); });
+
+  window.addEventListener('resize', () => {
+    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) posicionar();
+  });
 }
 
 /* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
@@ -1650,6 +1713,15 @@ function injetarEstilosEditorRelatorio() {
       .rel-quebra-pagina-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 5; }
       .rel-quebra-pagina-linha { position: absolute; left: 8px; right: 8px; border-top: 2px dashed #c59b27; }
       .rel-quebra-pagina-linha span { position: absolute; top: -9px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 4px; padding: 1px 6px; font-size: 9.5px; font-weight: 700; color: #9a6d18; white-space: nowrap; }
+
+      /* Barra do Quill flutuante (ver ativarBarraFlutuanteQuill) — some
+         do fluxo normal (position:fixed) enquanto o bloco está com
+         foco; .rel-quill-toolbar-espacador reserva o espaço que ela
+         deixa vazio, senão o texto abaixo pularia pra cima. display:none
+         por padrão (só aparece — display:block — quando a barra
+         correspondente está flutuando). */
+      .rel-quill-toolbar-espacador { display: none; }
+      .rel-quill-mount .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 40; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
 
