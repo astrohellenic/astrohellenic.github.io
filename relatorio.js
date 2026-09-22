@@ -423,8 +423,14 @@ function obterEncerramento(blocos) {
    nas páginas do corpo, que nunca mudam de estilo. */
 function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa) {
   if (capaFonte === 'mandala_fortuna') return png2Capa || png2 || null;
-  if (capaFonte === 'mandala_personalizada') {
-    const capturas = capturasDaFerramenta('mandala_personalizada');
+  // Mandala Personalizada, Profecção e Sinastria: nenhuma delas é
+  // calculada na hora (como natal/fortuna são) — todas usam a ÚLTIMA
+  // captura já feita na própria ferramenta ("Adicionar ao Relatório"),
+  // o mesmo pool que os blocos "ferramenta" do corpo do relatório usam.
+  // A imagem já sai com cabeçalho/legenda prontos de lá — nada a
+  // desenhar de novo aqui.
+  if (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria') {
+    const capturas = capturasDaFerramenta(capaFonte);
     return capturas.length ? capturas[capturas.length - 1].dataUrl : null;
   }
   if (capaFonte === 'nenhuma') return null;
@@ -2249,6 +2255,8 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
     { valor: 'mandala_natal', label: 'Mandala Natal (casas do Ascendente)' },
     { valor: 'mandala_fortuna', label: 'Mandala com a Fortuna na Casa 1' },
     { valor: 'mandala_personalizada', label: 'Mandala Personalizada (a última capturada na tela da Mandala)' },
+    { valor: 'profeccao', label: 'Mandala da Profecção (a última capturada na ferramenta)' },
+    { valor: 'sinastria', label: 'Mandala da Sinastria (a última capturada na ferramenta)' },
     { valor: 'nenhuma', label: 'Nenhuma imagem — só o título' }
   ];
   const opcoesHtml = opcoes.map(o => `<option value="${o.valor}" ${o.valor === capaFonteAtual ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
@@ -2475,8 +2483,17 @@ function atualizarPreviewCapaEditor() {
   if (!select || !wrap) return;
   const valor = select.value;
 
-  if (valor === 'mandala_personalizada') {
-    const capturas = capturasDaFerramenta('mandala_personalizada');
+  // Mandala Personalizada, Profecção e Sinastria: as três vêm de uma
+  // captura já feita na própria ferramenta, não de um cálculo aqui —
+  // mesmo pool de window.relatorioCapturas usado pelos blocos
+  // "ferramenta" do corpo do relatório (ver imagemCapaRelatorio).
+  const dicaOndeCapturar = {
+    mandala_personalizada: 'Abra a Mandala, deixe a rotação de Casa 1 do jeito que quer mostrar e clique no botão de "Adicionar ao Relatório" ao lado da rotação',
+    profeccao: 'Abra Ferramentas > Profecção, deixe a tela do jeito que quer mostrar e clique em "Adicionar ao Relatório"',
+    sinastria: 'Abra Ferramentas > Sinastria, escolha o segundo mapa e clique em "Adicionar ao Relatório"'
+  };
+  if (dicaOndeCapturar[valor]) {
+    const capturas = capturasDaFerramenta(valor);
     if (capturas.length) {
       const ultima = capturas[capturas.length - 1];
       wrap.innerHTML = `
@@ -2484,7 +2501,7 @@ function atualizarPreviewCapaEditor() {
         <img src="${ultima.dataUrl}" style="max-width: 160px; max-height: 160px; border: 1px solid var(--border-color); border-radius: 8px; display: block;">
       `;
     } else {
-      wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--gold-dark);">Nenhuma imagem capturada ainda pra essa opção. Abra a Mandala, deixe a rotação de Casa 1 do jeito que quer mostrar e clique no botão de "Adicionar ao Relatório" ao lado da rotação — depois volte aqui.</div>`;
+      wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--gold-dark);">Nenhuma imagem capturada ainda pra essa opção. ${dicaOndeCapturar[valor]} — depois volte aqui.</div>`;
     }
     return;
   }
