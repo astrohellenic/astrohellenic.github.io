@@ -423,13 +423,13 @@ function obterEncerramento(blocos) {
    nas páginas do corpo, que nunca mudam de estilo. */
 function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa) {
   if (capaFonte === 'mandala_fortuna') return png2Capa || png2 || null;
-  // Mandala Personalizada, Profecção e Sinastria: nenhuma delas é
-  // calculada na hora (como natal/fortuna são) — todas usam a ÚLTIMA
-  // captura já feita na própria ferramenta ("Adicionar ao Relatório"),
-  // o mesmo pool que os blocos "ferramenta" do corpo do relatório usam.
-  // A imagem já sai com cabeçalho/legenda prontos de lá — nada a
-  // desenhar de novo aqui.
-  if (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria') {
+  // Mandala Personalizada, Profecção, Sinastria e cada Lote da
+  // Liberação Zodiacal: nenhuma delas é calculada na hora (como
+  // natal/fortuna são) — todas usam a ÚLTIMA captura já feita na
+  // própria ferramenta ("Adicionar ao Relatório"), o mesmo pool que os
+  // blocos "ferramenta" do corpo do relatório usam. A imagem já sai
+  // com cabeçalho/legenda prontos de lá — nada a desenhar de novo aqui.
+  if (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria' || (capaFonte || '').indexOf('liberacao_') === 0) {
     const capturas = capturasDaFerramenta(capaFonte);
     return capturas.length ? capturas[capturas.length - 1].dataUrl : null;
   }
@@ -2257,6 +2257,13 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
     { valor: 'mandala_personalizada', label: 'Mandala Personalizada (a última capturada na tela da Mandala)' },
     { valor: 'profeccao', label: 'Mandala da Profecção (a última capturada na ferramenta)' },
     { valor: 'sinastria', label: 'Mandala da Sinastria (a última capturada na ferramenta)' },
+    // Liberação Zodiacal não tem uma captura só — cada Lote (Fortuna,
+    // Espírito etc.) é capturado à parte na ferramenta, então vira uma
+    // opção própria aqui, uma por lote.
+    ...RELATORIO_LOTES_ORDEM.map(loteKey => ({
+      valor: 'liberacao_' + loteKey,
+      label: `Mandala da Liberação Zodiacal — ${RELATORIO_LOT_NOMES[loteKey]} (a última capturada na ferramenta)`
+    })),
     { valor: 'nenhuma', label: 'Nenhuma imagem — só o título' }
   ];
   const opcoesHtml = opcoes.map(o => `<option value="${o.valor}" ${o.valor === capaFonteAtual ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
@@ -2483,15 +2490,19 @@ function atualizarPreviewCapaEditor() {
   if (!select || !wrap) return;
   const valor = select.value;
 
-  // Mandala Personalizada, Profecção e Sinastria: as três vêm de uma
-  // captura já feita na própria ferramenta, não de um cálculo aqui —
-  // mesmo pool de window.relatorioCapturas usado pelos blocos
-  // "ferramenta" do corpo do relatório (ver imagemCapaRelatorio).
+  // Mandala Personalizada, Profecção, Sinastria e cada Lote da
+  // Liberação Zodiacal: todas vêm de uma captura já feita na própria
+  // ferramenta, não de um cálculo aqui — mesmo pool de
+  // window.relatorioCapturas usado pelos blocos "ferramenta" do corpo
+  // do relatório (ver imagemCapaRelatorio).
   const dicaOndeCapturar = {
     mandala_personalizada: 'Abra a Mandala, deixe a rotação de Casa 1 do jeito que quer mostrar e clique no botão de "Adicionar ao Relatório" ao lado da rotação',
     profeccao: 'Abra Ferramentas > Profecção, deixe a tela do jeito que quer mostrar e clique em "Adicionar ao Relatório"',
     sinastria: 'Abra Ferramentas > Sinastria, escolha o segundo mapa e clique em "Adicionar ao Relatório"'
   };
+  RELATORIO_LOTES_ORDEM.forEach(loteKey => {
+    dicaOndeCapturar['liberacao_' + loteKey] = `Abra Ferramentas > Liberação Zodiacal, escolha o Lote ${RELATORIO_LOT_NOMES[loteKey]} e clique em "Adicionar ao Relatório"`;
+  });
   if (dicaOndeCapturar[valor]) {
     const capturas = capturasDaFerramenta(valor);
     if (capturas.length) {
