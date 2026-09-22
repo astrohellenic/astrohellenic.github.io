@@ -1162,6 +1162,7 @@ function inicializarQuillsPendentes() {
     }
     window.relatorioQuillInstancias[id] = quill;
     criarOverlayQuebraPaginaQuill(id, quill);
+    ativarBarraFlutuanteQuill(id, quill);
   });
 
   window.relatorioQuillPendentes = {};
@@ -1324,6 +1325,90 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
   window.addEventListener('resize', agendarRecalculo);
 
   recalcular();
+}
+
+/* Barra de formatação do Quill "flutua" (fixa, logo abaixo da barra
+   Editar/Prévia/Salvar) enquanto o astrólogo está digitando NESTE bloco
+   — sem isso, num bloco de texto comprido, rolar até o meio do texto
+   escondia a barra de formatação lá em cima, obrigando a rolar tudo de
+   volta só pra negritar uma palavra.
+
+   TENTATIVA ANTERIOR (revertida): só position:fixed, sem tirar a barra
+   do lugar onde nasceu — parecia certa, mas o clique nela ia parar no
+   texto por trás. Causa: #mandala-container (onde a tela do relatório
+   inteira é montada) tem "position:relative; z-index:1" — isso cria um
+   CONTEXTO DE EMPILHAMENTO. position:fixed escapa do FLUXO/rolagem de
+   qualquer ancestral, mas NÃO escapa do empilhamento: um z-index alto
+   (mesmo 999999) só vale DENTRO do contexto do ancestral mais próximo
+   que criou um — se outro elemento da página, fora de
+   #mandala-container, tiver um z-index maior que o de
+   #mandala-container (bem comum: menu, sidebar, algum overlay), esse
+   elemento pinta por cima da barra inteira, e o clique vai pra ele (ou
+   pro que estiver visualmente por baixo dele), nunca pro botão da
+   barra — sem erro nenhum, sem aviso, só "não clica".
+
+   CORREÇÃO: enquanto flutua, a barra é MOVIDA DE VERDADE pra
+   document.body (document.body.appendChild) — sai fisicamente de
+   dentro de #mandala-container, então nenhum z-index/contexto de
+   empilhamento dele (ou de qualquer ancestral) consegue mais prender
+   ela atrás de nada. Ao perder o foco, volta pro lugar exato de onde
+   saiu (logo antes do espaçador). NUNCA usa position:sticky — ver a
+   nota no CLAUDE.md deste repositório sobre sticky não ser confiável
+   nesse layout.
+
+   Só a barra do bloco com FOCO flutua (Quill dispara 'selection-change'
+   com range=null ao perder o foco, e com um range de verdade ao
+   ganhar) — clicar nos próprios botões da barra não conta como perder
+   o foco, o Quill já trata isso sozinho. */
+function ativarBarraFlutuanteQuill(id, quill) {
+  const toolbarModule = quill.getModule('toolbar');
+  const toolbar = toolbarModule ? toolbarModule.container : null;
+  if (!toolbar) return;
+  const container = quill.container; // só pra medir a largura/posição horizontal certa
+
+  const espacador = document.createElement('div');
+  espacador.className = 'rel-quill-toolbar-espacador';
+  toolbar.after(espacador);
+
+  // Onde a barra nasceu de verdade — pra devolver EXATAMENTE ali (logo
+  // antes do espaçador) quando ela parar de flutuar. Sem guardar isso,
+  // depois de mover pra document.body não teria como saber voltar pro
+  // lugar certo no meio da lista de blocos.
+  const paiOriginal = toolbar.parentElement;
+
+  function posicionar() {
+    const tabsFixa = document.getElementById('relEditorTabsFixa');
+    const topo = tabsFixa ? tabsFixa.getBoundingClientRect().bottom : 0;
+    const rectContainer = container.getBoundingClientRect();
+    toolbar.style.top = topo + 'px';
+    toolbar.style.left = rectContainer.left + 'px';
+    toolbar.style.width = rectContainer.width + 'px';
+  }
+
+  function flutuar() {
+    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) { posicionar(); return; }
+    espacador.style.height = toolbar.offsetHeight + 'px';
+    espacador.style.display = 'block';
+    document.body.appendChild(toolbar); // escapa de vez do empilhamento de #mandala-container
+    toolbar.classList.add('rel-quill-toolbar-flutuante');
+    posicionar();
+  }
+
+  function pousar() {
+    if (!toolbar.classList.contains('rel-quill-toolbar-flutuante')) return;
+    toolbar.classList.remove('rel-quill-toolbar-flutuante');
+    toolbar.style.top = '';
+    toolbar.style.left = '';
+    toolbar.style.width = '';
+    espacador.style.display = 'none';
+    paiOriginal.insertBefore(toolbar, espacador);
+  }
+
+  quill.on('selection-change', range => { if (range) flutuar(); else pousar(); });
+
+  window.addEventListener('resize', () => {
+    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) posicionar();
+  });
 }
 
 /* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
@@ -1658,6 +1743,17 @@ function injetarEstilosEditorRelatorio() {
       .rel-quebra-pagina-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 5; }
       .rel-quebra-pagina-linha { position: absolute; left: 8px; right: 8px; border-top: 2px dashed #c59b27; }
       .rel-quebra-pagina-linha span { position: absolute; top: -9px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 4px; padding: 1px 6px; font-size: 9.5px; font-weight: 700; color: #9a6d18; white-space: nowrap; }
+
+      /* Barra do Quill flutuante (ver ativarBarraFlutuanteQuill) — enquanto
+         flutua, ela é MOVIDA pra document.body (não só position:fixed),
+         pra escapar do contexto de empilhamento de #mandala-container
+         (z-index próprio) — por isso o seletor aqui não precisa (e não
+         pode) depender de nenhum ancestral: quando a classe está
+         presente, o elemento já não mora mais dentro de nenhum deles.
+         .rel-quill-toolbar-espacador reserva, no lugar de origem, o
+         espaço que ela deixa vazio ao sair do fluxo. */
+      .rel-quill-toolbar-espacador { display: none; }
+      .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 999999; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
       .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
 
