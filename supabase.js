@@ -89,7 +89,7 @@ function renderMenuPrincipal() {
 
   sidebar.innerHTML = `
     <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
-      <img src="astrohellenic.svg" alt="AstroHellenic" style="max-height: 40px; width: auto;">
+      <img src="astrohellenic.svg" alt="AstroHellenic" style="max-height: 37px; width: auto;">
     </div>
     <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar);">
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
