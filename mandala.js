@@ -1026,7 +1026,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     aspectoQuadratura: '#ff6b4a',
     aspectoSextil: '#38bdf8',
     elementoFogo: '#ff6b4a',
-    elementoTerra: '#c9863f',
+    elementoTerra: '#d99a5c',
     elementoAr: '#38bdf8',
     elementoAgua: '#60a5fa',
     dodecatemoriaLinha: 'rgba(217,174,63,0.35)',

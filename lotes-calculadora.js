@@ -46,7 +46,7 @@ function getSignSVGLotes(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = modoEscuro
-    ? ["#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa"]
+    ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
     : SIGN_COLORS_LOTES;
   const interno = `<g style="color: ${cores[signIndex]};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
   return svgComoImagemLotes(interno, size, size, '0 0 64 64');

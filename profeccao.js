@@ -596,7 +596,7 @@
             fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
             inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
             aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
-            elementoFogo: '#ff6b4a', elementoTerra: '#c9863f', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
+            elementoFogo: '#ff6b4a', elementoTerra: '#d99a5c', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
             dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
         } : {
             fundoDisco: '#ffffff', dourado: '#c59b27', douradoCasas: '#aa820a', halo: '#ffffff',

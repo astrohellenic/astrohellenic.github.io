@@ -64,7 +64,7 @@ function getSignSVGZR(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = modoEscuro
-    ? ["#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa", "#ff6b4a", "#c9863f", "#38bdf8", "#60a5fa"]
+    ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
     : SIGN_COLORS_ZR;
   const interno = `<g style="color: ${cores[signIndex]};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
   return svgComoImagemZR(interno, size, size, '0 0 64 64');
@@ -282,7 +282,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
     inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
     aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
-    elementoFogo: '#ff6b4a', elementoTerra: '#c9863f', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
+    elementoFogo: '#ff6b4a', elementoTerra: '#d99a5c', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
     dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
     picoBg: '#4a3a12', picoBorder: '#d99a2b', picoText: '#f0b35c',
     saltoBg: '#3a1f1f', saltoBorder: '#6b3232', saltoText: '#f4a8a8', saltoLabel: '#f4a8a8',
