@@ -571,7 +571,15 @@ function renderCircumambulaçõesUI() {
       rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="var(--bg-card)" stroke="var(--gold-primary)" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
-      rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="var(--gold-primary)" text-anchor="middle">${term.termPlanetSym}</text>`;
+      // [DESATIVADO 28/09/2026 - glifo de texto cru substituido pelo icone
+      //  novo logo abaixo (mesmo padrao usado nas mandalas) - mantido
+      //  comentado ate ser testado de verdade no site]
+      // rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="var(--gold-primary)" text-anchor="middle">${term.termPlanetSym}</text>`;
+      const termIconTamanhoDir = Math.max(10, termHeight - 6);
+      if (typeof getIconeTermoSVG === 'function') {
+        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, 'var(--gold-primary)')
+          .replace('<svg ', `<svg x="${xCenter - termIconTamanhoDir / 2}" y="${yBaseline + 1 + (termHeight - termIconTamanhoDir) / 2}" `);
+      }
 
       if (term.startYearsOld !== null && term.startDate !== null) {
         rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="var(--primary-blue)" text-anchor="start">${term.startYearsOld} anos</text>`;
