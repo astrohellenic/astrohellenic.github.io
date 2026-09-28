@@ -124,13 +124,30 @@ function conjuntoDeIconesAtivo() {
   return estiloPlanetasEsferico() ? ICONES_3D : ICONES_SIMPLES_NOVO;
 }
 
+/* Os ícones novos vêm do SVGOMG com IDs de gradiente/clipPath curtos e
+   genéricos (id="a", id="b"...) — ótimo pra um ícone sozinho, mas quando
+   dois ou mais aparecem juntos na MESMA página (ex.: os 7 planetas na
+   roda da mandala), o navegador trata todo id="x" da página como um
+   espaço só: o segundo "a" rouba a definição do primeiro, e as cores
+   saem erradas ou o ícone some (mesmo bug que já existe resolvido em
+   sinastria.js/profeccao.js/liberacao.js pros ícones antigos, com o
+   sufixo `_${sufixo}` manual). Aqui a correção é automática: cada
+   chamada recebe um sufixo novo, sempre. */
+let _iconeSufixoContador = 0;
+function _namespacearIdsIcone(svgTexto) {
+  const sufixo = 'ic' + (_iconeSufixoContador++);
+  return svgTexto
+    .replace(/\bid="([^"]+)"/g, (m, id) => `id="${id}_${sufixo}"`)
+    .replace(/url\(#([^)]+)\)/g, (m, id) => `url(#${id}_${sufixo})`);
+}
+
 /* Ícone novo pronto pra usar (tag <svg> completa), no tamanho pedido.
    categoria: 'planeta' | 'lote' | 'outro'. chave: ex. "Sun", "fortune",
    "sizigia", "northNode", "southNode", "angulo". */
 function getIconeSVG(categoria, chave, tamanho = 34) {
   const bruto = (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
   if (!bruto) return '';
-  return bruto.replace('<svg ', `<svg width="${tamanho}" height="${tamanho}" `);
+  return _namespacearIdsIcone(bruto.replace('<svg ', `<svg width="${tamanho}" height="${tamanho}" `));
 }
 
 /* Mesmo ícone novo, como miolo pronto pra embutir dentro de um <svg> já
@@ -142,7 +159,7 @@ function getIconeFragmento(categoria, chave) {
   if (!bruto) return '';
   const abre = bruto.indexOf('>') + 1;
   const fecha = bruto.lastIndexOf('</svg>');
-  return `<g>${bruto.slice(abre, fecha)}</g>`;
+  return _namespacearIdsIcone(`<g>${bruto.slice(abre, fecha)}</g>`);
 }
 
 /* Ícone fixo de termo/circunambulação, no tamanho pedido. planetId:
@@ -150,5 +167,5 @@ function getIconeFragmento(categoria, chave) {
 function getIconeTermoSVG(planetId, tamanho = 18) {
   const bruto = ICONES_TERMOS[planetId] || '';
   if (!bruto) return '';
-  return bruto.replace('<svg ', `<svg width="${tamanho}" height="${tamanho}" `);
+  return _namespacearIdsIcone(bruto.replace('<svg ', `<svg width="${tamanho}" height="${tamanho}" `));
 }

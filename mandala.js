@@ -152,91 +152,102 @@ const PLANETS_DEF = [
   { id: "Saturn", name: "Saturno", symbol: "♄", key: "Saturno" }
 ];
 
-/* DEFINIÇÕES VETORIAIS 3D DOS 7 PLANETAS */
-const PLANET_3D_SVGS = {
-  Sun: `
-    <g>
-      <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25" filter="blur(2px)"/>
-      <circle cx="50" cy="50" r="42" fill="url(#gradSun)" filter="url(#planetDropShadow)"/>
-      <ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/>
-      <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">☉</text>
-    </g>
-  `,
-  Moon: `
-    <g>
-      <circle cx="50" cy="50" r="42" fill="url(#gradMoon)" filter="url(#planetDropShadow)"/>
-      <circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/>
-      <circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/>
-      <circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/>
-      <circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/>
-      <ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/>
-      <path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" 
-            fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" filter="url(#glyphShadow)"/>
-    </g>
-  `,
-  Mercury: `
-    <g>
-      <circle cx="50" cy="50" r="42" fill="url(#gradMercury)" filter="url(#planetDropShadow)"/>
-      <ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/>
-      <circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/>
-      <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">☿</text>
-    </g>
-  `,
-  Venus: `
-    <g>
-      <circle cx="50" cy="50" r="42" fill="url(#gradVenus)" filter="url(#planetDropShadow)"/>
-      <ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/>
-      <circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/>
-      <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♀</text>
-    </g>
-  `,
-  Mars: `
-    <g>
-      <circle cx="50" cy="50" r="42" fill="url(#gradMars)" filter="url(#planetDropShadow)"/>
-      <ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/>
-      <ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/>
-      <circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/>
-      <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♂</text>
-    </g>
-  `,
-  Jupiter: `
-    <g>
-      <circle cx="50" cy="50" r="42" fill="url(#gradJupiter)" filter="url(#planetDropShadow)"/>
-      <g clip-path="url(#jupiterClip)" opacity="0.45">
-        <rect x="0" y="24" width="100" height="6" fill="#8c531b" />
-        <rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" />
-        <rect x="0" y="49" width="100" height="11" fill="#783d19" />
-        <rect x="0" y="64" width="100" height="6" fill="#8c531b" />
-        <rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" />
-      </g>
-      <ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/>
-      <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♃</text>
-    </g>
-  `,
-  Saturn: `
-    <g>
-      <g transform="rotate(-22 50 50)">
-        <ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRings)" stroke-width="5.5" opacity="0.95" />
-        <ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/>
-      </g>
-      <circle cx="50" cy="50" r="36" fill="url(#gradSaturn)" filter="url(#planetDropShadow)"/>
-      <g transform="rotate(-22 50 50)">
-        <path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRings)" stroke-width="5.5" />
-        <path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/>
-      </g>
-      <ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/>
-      <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♄</text>
-    </g>
-  `
-};
+// [DESATIVADO 28/09/2026 - substituído pelo bloco novo logo abaixo,
+//  mantido aqui comentado até a Mandala ser testada de verdade no
+//  site com os icones novos - so remover depois de confirmado]
+// /* DEFINIÇÕES VETORIAIS 3D DOS 7 PLANETAS */
+// const PLANET_3D_SVGS = {
+//   Sun: `
+//     <g>
+//       <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25" filter="blur(2px)"/>
+//       <circle cx="50" cy="50" r="42" fill="url(#gradSun)" filter="url(#planetDropShadow)"/>
+//       <ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/>
+//       <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">☉</text>
+//     </g>
+//   `,
+//   Moon: `
+//     <g>
+//       <circle cx="50" cy="50" r="42" fill="url(#gradMoon)" filter="url(#planetDropShadow)"/>
+//       <circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/>
+//       <circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/>
+//       <circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/>
+//       <circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/>
+//       <ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/>
+//       <path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" 
+//             fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" filter="url(#glyphShadow)"/>
+//     </g>
+//   `,
+//   Mercury: `
+//     <g>
+//       <circle cx="50" cy="50" r="42" fill="url(#gradMercury)" filter="url(#planetDropShadow)"/>
+//       <ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/>
+//       <circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/>
+//       <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">☿</text>
+//     </g>
+//   `,
+//   Venus: `
+//     <g>
+//       <circle cx="50" cy="50" r="42" fill="url(#gradVenus)" filter="url(#planetDropShadow)"/>
+//       <ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/>
+//       <circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/>
+//       <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♀</text>
+//     </g>
+//   `,
+//   Mars: `
+//     <g>
+//       <circle cx="50" cy="50" r="42" fill="url(#gradMars)" filter="url(#planetDropShadow)"/>
+//       <ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/>
+//       <ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/>
+//       <circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/>
+//       <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♂</text>
+//     </g>
+//   `,
+//   Jupiter: `
+//     <g>
+//       <circle cx="50" cy="50" r="42" fill="url(#gradJupiter)" filter="url(#planetDropShadow)"/>
+//       <g clip-path="url(#jupiterClip)" opacity="0.45">
+//         <rect x="0" y="24" width="100" height="6" fill="#8c531b" />
+//         <rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" />
+//         <rect x="0" y="49" width="100" height="11" fill="#783d19" />
+//         <rect x="0" y="64" width="100" height="6" fill="#8c531b" />
+//         <rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" />
+//       </g>
+//       <ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/>
+//       <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♃</text>
+//     </g>
+//   `,
+//   Saturn: `
+//     <g>
+//       <g transform="rotate(-22 50 50)">
+//         <ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRings)" stroke-width="5.5" opacity="0.95" />
+//         <ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/>
+//       </g>
+//       <circle cx="50" cy="50" r="36" fill="url(#gradSaturn)" filter="url(#planetDropShadow)"/>
+//       <g transform="rotate(-22 50 50)">
+//         <path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRings)" stroke-width="5.5" />
+//         <path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/>
+//       </g>
+//       <ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/>
+//       <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♄</text>
+//     </g>
+//   `
+// };
+//
+// /* Escolhe entre o ícone esférico 3D e o ícone simples (glifo), conforme a
+//    configuração de Aparência salva pelo usuário. */
+// function planetIconFragment(planetId) {
+//   if (typeof estiloPlanetasEsferico === 'function' && estiloPlanetasEsferico()) {
+//     return PLANET_3D_SVGS[planetId] || '';
+//   }
+//   return (typeof getPlanetSimpleFragment === 'function') ? getPlanetSimpleFragment(planetId) : (PLANET_3D_SVGS[planetId] || '');
+// }
 
-/* Escolhe entre o ícone esférico 3D e o ícone simples (glifo), conforme a
-   configuração de Aparência salva pelo usuário. */
+/* Escolhe entre o icone esferico 3D e o icone simples (glifo), conforme a
+   configuracao de Aparencia salva pelo usuario - agora delegado pro bloco
+   central novo em planetIcons.js (getIconeFragmento), que ja faz essa
+   mesma checagem sozinho. */
 function planetIconFragment(planetId) {
-  if (typeof estiloPlanetasEsferico === 'function' && estiloPlanetasEsferico()) {
-    return PLANET_3D_SVGS[planetId] || '';
-  }
-  return (typeof getPlanetSimpleFragment === 'function') ? getPlanetSimpleFragment(planetId) : (PLANET_3D_SVGS[planetId] || '');
+  return (typeof getIconeFragmento === 'function') ? getIconeFragmento('planeta', planetId) : '';
 }
 
 const EGYPTIAN_TERMS = [
@@ -1395,11 +1406,11 @@ ${temaCeu ? `
 
   const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
   if (horasInfo) {
-    if (horasInfo.dayRulerId && PLANET_3D_SVGS[horasInfo.dayRulerId]) {
+    if (horasInfo.dayRulerId && PLANETS_DEF.some(p => p.id === horasInfo.dayRulerId)) {
       svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${corCabecalhoPng.titulo}" text-anchor="start">DIA</text>
       <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
     }
-    if (horasInfo.hourRulerId && PLANET_3D_SVGS[horasInfo.hourRulerId]) {
+    if (horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId)) {
       svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${corCabecalhoPng.titulo}" text-anchor="start">HORA</text>
       <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
     }
