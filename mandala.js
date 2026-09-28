@@ -1443,6 +1443,56 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
 
+  /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
+     estrutura da mandala (círculos, raios, dentinhos) sempre por trás
+     de tudo; depois as linhas pretas dos eixos ASC/DSC/MC/IC; depois
+     todos os ícones por cima. Antes disso a ordem seguia a ordem em
+     que cada trecho tinha sido escrito, sem critério — dava pra ver um
+     dentinho cortando por cima do triângulo do ASC, por exemplo. Por
+     isso os loops que desenhavam linha+ícone juntos (dodecatemória,
+     termos) foram separados em duas passadas: uma só de linha aqui,
+     outra só de ícone lá embaixo, depois das linhas dos eixos. */
+
+  for (let i = 0; i < 12; i++) {
+    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
+    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
+    svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
+  }
+
+  for (let i = 0; i < 12; i++) {
+    for (let d = 0; d < 12; d++) {
+      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
+    }
+  }
+
+  for (let s = 0; s < 12; s++) {
+    let prev = 0;
+    EGYPTIAN_TERMS[s].forEach(term => {
+      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
+      prev = term.deg;
+    });
+  }
+
+  for (let deg = 0; deg < 360; deg++) {
+    const aScreen = eclToScreenAngle(deg, house1RefAbs);
+    const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
+    const p1 = polarToCart(cx, cy, R.Termos, aScreen);
+    const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
+  }
+
+  for (let deg = 0; deg < 360; deg++) {
+    const aScreen = eclToScreenAngle(deg, house1RefAbs);
+    const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
+    const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
+    const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
+  }
+
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
   const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
@@ -1450,6 +1500,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
   const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
+
+  /* A PARTIR DAQUI SÓ ÍCONE — nada de linha/dentinho novo abaixo disso,
+     pra manter a estrutura da roda sempre por trás. */
 
      /* DESENHO DOS 4 EIXOS NA PARTE INTERNA (ENCUSTADOS NO ANEL) */
   const rEixoInterno = R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
@@ -1460,20 +1513,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     { label: "MC",  deg: mcAbs, color: tinta.inkForte },
     { label: "IC",  deg: (mcAbs + 180) % 360, color: tinta.inkForte }
   ];
-
-  // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo,
-  //  mantido aqui comentado ate a Mandala ser testada de verdade no
-  //  site com os icones novos - so remover depois de confirmado]
-  // eixosInternos.forEach(eixo => {
-  //   const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
-  //   const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
-  //
-  //   svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-  //     <circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${eixo.color}" stroke-width="1.8"/>
-  //     <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
-  //     <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
-  //   </g>`;
-  // });
 
   /* Icone novo: um triangulo so (getIconeFragmento('outro','angulo')),
      desenhado por padrao apontando pra esquerda (180deg) - por isso a
@@ -1494,12 +1533,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     </g>`;
   });
 
-  for (let i = 0; i < 12; i++) {
-    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
-    svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
-  }
-
   const refSignIdx = Math.floor(house1RefAbs / 30);
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
@@ -1512,28 +1545,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
   for (let i = 0; i < 12; i++) {
     for (let d = 0; d < 12; d++) {
-      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
       const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
       svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
     }
   }
-
-  // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo,
-  //  mantido aqui comentado ate a Mandala ser testada de verdade no
-  //  site com os icones novos - so remover depois de confirmado]
-  // for (let s = 0; s < 12; s++) {
-  //   let prev = 0;
-  //   EGYPTIAN_TERMS[s].forEach(term => {
-  //     const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-  //     const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-  //     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
-  //     const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-  //     svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="${goldColor}" text-anchor="middle">${term.p}</text>`;
-  //     prev = term.deg;
-  //   });
-  // }
 
   /* term.p e so o glifo Unicode ("♃" etc) - de-para pro id do planeta
      que o icone novo dos termos usa. So os 5 regentes de termo egipcio
@@ -1544,9 +1559,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   for (let s = 0; s < 12; s++) {
     let prev = 0;
     EGYPTIAN_TERMS[s].forEach(term => {
-      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
       const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
       const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
       const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, goldColor)
@@ -1554,22 +1566,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       svg += termoSvg;
       prev = term.deg;
     });
-  }
-
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-    const p1 = polarToCart(cx, cy, R.Termos, aScreen);
-    const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
-  }
-   
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-    const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-    const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
