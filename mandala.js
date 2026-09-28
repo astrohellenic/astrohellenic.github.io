@@ -806,6 +806,99 @@ async function executarCalculo() {
   }
 }
 
+// [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo (icones
+//  novos do sistema central + botao/menu mais largos, proporcionais ao
+//  time-stepper) - mantido aqui comentado ate o seletor ser testado de
+//  verdade no site - so remover depois de confirmado]
+// function injetarBotaoRotacaoNaBarraSuperior() {
+//   const parentContainer = document.getElementById('mandala-controls-overlay');
+//   if (!parentContainer) return;
+//
+//   let btnContainer = document.getElementById('lotRotationBtnContainer');
+//   if (!btnContainer) {
+//     btnContainer = document.createElement('div');
+//     btnContainer.id = 'lotRotationBtnContainer';
+//     btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-right: 6px;";
+//     parentContainer.insertBefore(btnContainer, parentContainer.firstChild);
+//   }
+//
+//   const syms = {
+//     mercury: '☿',
+//     venus: '♀',
+//     mars: '♂',
+//     jupiter: '♃',
+//     saturn: '♄'
+//   };
+//
+//   let iconContent = '';
+//   if (selectedHouse1Lot === 'ASC') {
+//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
+//   } else if (selectedHouse1Lot === 'fortune') {
+//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
+//   } else if (selectedHouse1Lot === 'spirit') {
+//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`;
+//   } else {
+//     const symbol = syms[selectedHouse1Lot] || '';
+//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${symbol}</text></svg>`;
+//   }
+//
+//     btnContainer.innerHTML = `
+//     <div style="position: relative; display: inline-block;">
+//       <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+//         ${iconContent}
+//       </button>
+//       <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
+//         <div onclick="alternarRotacaoCasa1('ASC')" style="padding: 6px 0; cursor: pointer; text-align: center; font-size: 11px; font-weight: 800; color: var(--primary-blue);">ASC</div>
+//         <div onclick="alternarRotacaoCasa1('fortune')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg></div>
+//         <div onclick="alternarRotacaoCasa1('spirit')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg></div>
+//         <div onclick="alternarRotacaoCasa1('mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">☿</text></svg></div>
+//         <div onclick="alternarRotacaoCasa1('venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♀</text></svg></div>
+//         <div onclick="alternarRotacaoCasa1('mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♂</text></svg></div>
+//         <div onclick="alternarRotacaoCasa1('jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♃</text></svg></div>
+//         <div onclick="alternarRotacaoCasa1('saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♄</text></svg></div>
+//       </div>
+//     </div>
+//   `;
+// }
+
+/* Mesmo de-para de mandala.js's renderMandala (LOTE_ICON_KEY local), mas
+   em escopo de módulo porque essa função não está dentro de renderMandala.
+   item.lotType vem de calculateSevenLots() como o planeta regente do lote
+   ("venus", "mercury"...) pra fortune/spirit, que já tem nome próprio; os
+   ícones novos (planetIcons.js) usam o nome do lote em si. */
+const LOTE_ICON_KEY_SELETOR = {
+  fortune: 'fortune', spirit: 'spirit', venus: 'eros',
+  mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
+};
+
+/* Ordem/rótulos do menu de rotação da Casa 1 — usada tanto pro ícone do
+   botão fechado quanto pra lista de opções, pra não duplicar a mesma
+   informação duas vezes. */
+const OPCOES_ROTACAO_CASA1 = [
+  { key: 'ASC', label: 'Ascendente' },
+  { key: 'fortune', label: 'Fortuna' },
+  { key: 'spirit', label: 'Espírito' },
+  { key: 'mercury', label: 'Necessidade' },
+  { key: 'venus', label: 'Eros' },
+  { key: 'mars', label: 'Audácia' },
+  { key: 'jupiter', label: 'Vitória' },
+  { key: 'saturn', label: 'Nemesis' }
+];
+
+/* Ícone novo pra cada opção do seletor — vem da mesma função central
+   usada em todo o resto do sistema (getIconeSVG/getAnguloCirculoSVG):
+   simples ou 3D conforme o toggle do astrólogo, igual em qualquer outro
+   lugar. ASC usa o mesmo triângulo com rótulo do ASC/DSC/MC/IC da roda
+   (getAnguloCirculoSVG, já usado no Painel Técnico) — antes era só um
+   texto "ASC" cru, sem ícone nenhum. */
+function getIconeOpcaoRotacaoCasa1(key, tamanho) {
+  if (key === 'ASC') {
+    return (typeof getAnguloCirculoSVG === 'function') ? getAnguloCirculoSVG('ASC', tamanho) : 'ASC';
+  }
+  if (typeof getIconeSVG !== 'function') return '';
+  return getIconeSVG('lote', LOTE_ICON_KEY_SELETOR[key] || 'fortune', tamanho);
+}
+
 /* INJEÇÃO DO BOTÃO DE ROTAÇÃO NA BARRA SUPERIOR */
 function injetarBotaoRotacaoNaBarraSuperior() {
   const parentContainer = document.getElementById('mandala-controls-overlay');
@@ -819,40 +912,24 @@ function injetarBotaoRotacaoNaBarraSuperior() {
     parentContainer.insertBefore(btnContainer, parentContainer.firstChild);
   }
 
-  const syms = {
-    mercury: '☿',
-    venus: '♀',
-    mars: '♂',
-    jupiter: '♃',
-    saturn: '♄'
-  };
+  /* Tamanho do botão/menu proporcional ao time-stepper (o controle de
+     avançar/voltar no tempo, mesma barra superior) — antes o botão era
+     bem mais estreito (32px) que o stepper, e os ícones novos não
+     cabiam direito nesse espaço apertado. */
+  const ladoBotao = 44;
+  const tamanhoIcone = 28;
 
-  let iconContent = '';
-  if (selectedHouse1Lot === 'ASC') {
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
-  } else if (selectedHouse1Lot === 'fortune') {
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
-  } else if (selectedHouse1Lot === 'spirit') {
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`;
-  } else {
-    const symbol = syms[selectedHouse1Lot] || '';
-    iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${symbol}</text></svg>`;
-  }
+  const iconContent = getIconeOpcaoRotacaoCasa1(selectedHouse1Lot, tamanhoIcone);
+
+  const itensMenuHTML = OPCOES_ROTACAO_CASA1.map(opcao => `
+        <div onclick="alternarRotacaoCasa1('${opcao.key}')" title="${opcao.label}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getIconeOpcaoRotacaoCasa1(opcao.key, tamanhoIcone)}</div>`).join('');
 
     btnContainer.innerHTML = `
     <div style="position: relative; display: inline-block;">
-      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: ${ladoBotao}px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
         ${iconContent}
       </button>
-      <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
-        <div onclick="alternarRotacaoCasa1('ASC')" style="padding: 6px 0; cursor: pointer; text-align: center; font-size: 11px; font-weight: 800; color: var(--primary-blue);">ASC</div>
-        <div onclick="alternarRotacaoCasa1('fortune')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg></div>
-        <div onclick="alternarRotacaoCasa1('spirit')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg></div>
-        <div onclick="alternarRotacaoCasa1('mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">☿</text></svg></div>
-        <div onclick="alternarRotacaoCasa1('venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♀</text></svg></div>
-        <div onclick="alternarRotacaoCasa1('mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♂</text></svg></div>
-        <div onclick="alternarRotacaoCasa1('jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♃</text></svg></div>
-        <div onclick="alternarRotacaoCasa1('saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♄</text></svg></div>
+      <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: ${ladoBotao}px; box-sizing: border-box;">${itensMenuHTML}
       </div>
     </div>
   `;
