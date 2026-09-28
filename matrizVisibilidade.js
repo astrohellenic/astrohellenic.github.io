@@ -32,19 +32,14 @@
 const MATRIZ_CELULA_TAM = 46;
 
 /* Ícone de cada coluna/linha da matriz. Igual ao getMatrixIcon() que
-   existia dentro do renderMatrizVisibilidadeHTML antigo, com uma
-   diferença: Nodo Norte/Sul, no getItemSVG original, viravam um <span>
-   de HTML solto (texto ☊/☋) — o que nunca apareceria dentro de um <svg>
-   puro (teria que ser um <foreignObject>, que era exatamente o tipo de
-   complicação que essa reescrita quis evitar). Aqui os dois viram um
-   <svg><text> de verdade, na mesma cor (var(--aspect-conjuncao)) e
-   tamanho visual equivalente ao <span> original. */
+   existia dentro do renderMatrizVisibilidadeHTML antigo. Nodo Norte/Sul:
+   getItemSVG já devolve um <svg> de verdade (getIconeSVG), não mais o
+   <span> de HTML solto de antes — cabe direto dentro do <svg> puro sem
+   precisar de caso especial (o caso especial antigo aqui, removido em
+   28/09/2026, tinha ficado desatualizado e continuava mostrando o
+   símbolo cru). */
 function getMatrizIconeSVG(col) {
   if (col.type === 'planet') return getPlanet3DSVG(col.id);
-  if (col.name === 'Nodo Norte' || col.name === 'Nodo Sul') {
-    const simbolo = col.name === 'Nodo Norte' ? '☊' : '☋';
-    return `<svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="6" font-size="17" font-weight="bold" fill="var(--aspect-conjuncao)" text-anchor="middle">${simbolo}</text></svg>`;
-  }
   return getItemSVG(col.name);
 }
 
