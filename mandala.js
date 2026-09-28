@@ -1520,6 +1520,27 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
   }
 
+  // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo,
+  //  mantido aqui comentado ate a Mandala ser testada de verdade no
+  //  site com os icones novos - so remover depois de confirmado]
+  // for (let s = 0; s < 12; s++) {
+  //   let prev = 0;
+  //   EGYPTIAN_TERMS[s].forEach(term => {
+  //     const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+  //     const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+  //     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
+  //     const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
+  //     svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="${goldColor}" text-anchor="middle">${term.p}</text>`;
+  //     prev = term.deg;
+  //   });
+  // }
+
+  /* term.p e so o glifo Unicode ("♃" etc) - de-para pro id do planeta
+     que o icone novo dos termos usa. So os 5 regentes de termo egipcio
+     (nunca Sol/Lua) entram aqui. */
+  const TERMO_PLANET_BY_SYMBOL = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
+  const termoIconTamanho = 18;
+
   for (let s = 0; s < 12; s++) {
     let prev = 0;
     EGYPTIAN_TERMS[s].forEach(term => {
@@ -1527,7 +1548,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
       svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
       const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-      svg += `<text x="${pTerm.x}" y="${pTerm.y + 4}" font-size="10" font-weight="bold" fill="${goldColor}" text-anchor="middle">${term.p}</text>`;
+      const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
+      const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, goldColor)
+        .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanho / 2}" y="${pTerm.y - termoIconTamanho / 2}" `);
+      svg += termoSvg;
       prev = term.deg;
     });
   }
