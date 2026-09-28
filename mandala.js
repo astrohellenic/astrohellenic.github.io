@@ -1461,13 +1461,34 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     { label: "IC",  deg: (mcAbs + 180) % 360, color: tinta.inkForte }
   ];
 
+  // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo,
+  //  mantido aqui comentado ate a Mandala ser testada de verdade no
+  //  site com os icones novos - so remover depois de confirmado]
+  // eixosInternos.forEach(eixo => {
+  //   const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
+  //   const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
+  //
+  //   svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+  //     <circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${eixo.color}" stroke-width="1.8"/>
+  //     <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
+  //     <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+  //   </g>`;
+  // });
+
+  /* Icone novo: um triangulo so (getIconeFragmento('outro','angulo')),
+     desenhado por padrao apontando pra esquerda (180deg) - por isso a
+     rotacao aplicada e sempre (aScreen - 180), pra ele apontar pro
+     angulo certo de CADA mapa (ASC/DSC nem sempre caem exatamente em
+     180/0deg quando a casa 1 usa um Lote como referencia em vez do
+     ASC, e MC/IC quase nunca caem exatamente em 270/90deg). */
   eixosInternos.forEach(eixo => {
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
+    const anguloFrag = getIconeFragmento('outro', 'angulo');
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${eixo.color}" stroke-width="1.8"/>
-      <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
+      <g transform="scale(0.22) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFrag}</g>
+      <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2.5" paint-order="stroke fill">${eixo.label}</text>
       <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
     </g>`;
   });
@@ -1535,7 +1556,55 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
   }
 
-  /* 2. CAMADA 2: PONTOS SEM CORPO FÍSICO (nodos, sizígia, lotes) */
+  // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo,
+  //  mantido aqui comentado ate a Mandala ser testada de verdade no
+  //  site com os icones novos - so remover depois de confirmado]
+  // outerRingItems.forEach(item => {
+  //   if (item.type === 'planet') return;
+  //
+  //   const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
+  //
+  //   const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
+  //   const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
+  //   svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
+  //
+  //   const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
+  //
+  //   if (item.type === "node") {
+  //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+  //       <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+  //       <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+  //     </g>`;
+  //   } else if (item.type === "syzygy") {
+  //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+  //       <circle cx="0" cy="0" r="12" fill="${fundoDiscoEfetivo}" stroke="none"/>
+  //       <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
+  //       <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
+  //       <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
+  //       <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+  //     </g>`;
+  //   } else if (item.type === "lot") {
+  //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
+  //     if (item.lotType === "fortune") {
+  //       svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
+  //     } else if (item.lotType === "spirit") {
+  //       svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
+  //     } else {
+  //       svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
+  //     }
+  //     svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+  //   }
+  // });
+
+  /* item.lotType vem de calculateSevenLots() como o planeta regente do
+     lote ("venus", "mercury"...) pra fortune/spirit, que ja tem nome
+     proprio. Os icones novos (planetIcons.js) usam o nome do lote em
+     si, entao precisa desse de-para. */
+  const LOTE_ICON_KEY = {
+    fortune: 'fortune', spirit: 'spirit', venus: 'eros',
+    mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
+  };
+
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
@@ -1548,28 +1617,22 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
     if (item.type === "node") {
+      const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="12" fill="${fundoDiscoEfetivo}" stroke="none"/>
-        <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
-        <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
-        <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
-      if (item.lotType === "fortune") {
-        svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
-      } else if (item.lotType === "spirit") {
-        svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
-      } else {
-        svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
-      }
-      svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
+      const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>
+        <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+      </g>`;
     }
   });
 
