@@ -882,7 +882,7 @@ const OPCOES_ROTACAO_CASA1 = [
   { key: 'venus', label: 'Eros' },
   { key: 'mars', label: 'Audácia' },
   { key: 'jupiter', label: 'Vitória' },
-  { key: 'saturn', label: 'Nemesis' }
+  { key: 'saturn', label: 'Nêmesis' }
 ];
 
 /* Ícone novo pra cada opção do seletor — vem da mesma função central

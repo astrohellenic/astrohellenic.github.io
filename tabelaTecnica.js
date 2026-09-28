@@ -267,7 +267,7 @@ function getAnguloCirculoSVG(label, tamanho = 24) {
 const NOMES_PONTOS_TABELA = {
   Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno',
   'Nodo Norte': 'Nodo Norte', 'Nodo Sul': 'Nodo Sul', 'Sizígia': 'Sizígia',
-  fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Audácia', jupiter: 'Vitória', saturn: 'Némesis',
+  fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Audácia', jupiter: 'Vitória', saturn: 'Nêmesis',
   ASC: 'Ascendente', DSC: 'Descendente', MC: 'Meio-Céu', IC: 'Fundo do Céu'
 };
 
@@ -402,16 +402,25 @@ function extrairTamanhoIconeSVG(fragmentoSVG) {
 
 /* Ícone da coluna "Ponto" — igual ao getMatrizIconeSVG (matrizVisibilidade.js,
    mesma ideia, campos do objeto diferentes porque a lista de elementos
-   do Painel Principal usa outro formato): Nodo Norte/Sul, no getItemSVG
-   original, viram um <span> de HTML solto, que não existe dentro de um
-   <svg> puro — aqui viram <svg><text> de verdade, mesma cor/símbolo. */
+   do Painel Principal usa outro formato). Nodo Norte/Sul: getItemSVG já
+   devolve um <svg> de verdade (getIconeSVG), não mais o <span> de HTML
+   solto de antes — cabe direto dentro do <svg> puro sem precisar de
+   caso especial (o caso especial antigo aqui, removido em 28/09/2026,
+   tinha ficado desatualizado e continuava mostrando o símbolo cru). */
 function getIconePontoTabelaSVG(el) {
   if (el.type === 'planet') return getPlanet3DSVG(el.pId);
-  if (el.key === 'Nodo Norte' || el.key === 'Nodo Sul') {
-    const simbolo = el.key === 'Nodo Norte' ? '☊' : '☋';
-    return `<svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="6" font-size="17" font-weight="bold" fill="var(--aspect-conjuncao)" text-anchor="middle">${simbolo}</text></svg>`;
-  }
   return getItemSVG(el.key);
+}
+
+/* calcEgyptianTermTabela devolve só o glifo Unicode do regente do termo
+   ("♃" etc) — de-para pro id do planeta que o ícone novo dos termos usa
+   (mesmo mapa de mandala.js/direcoes.js). Só os 5 regentes de termo
+   egípcio entram aqui (nunca Sol/Lua). */
+const TERMO_PLANET_BY_SYMBOL_TABELA = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
+function getTermoIconeTabelaSVG(simbolo, tamanho = 20) {
+  if (typeof getIconeTermoSVG !== 'function') return `<svg width="${tamanho}" height="${tamanho}"><text x="${tamanho / 2}" y="${tamanho / 2 + 5}" font-size="14" font-weight="700" fill="var(--gold-primary)" text-anchor="middle">${simbolo}</text></svg>`;
+  const planetId = TERMO_PLANET_BY_SYMBOL_TABELA[simbolo];
+  return getIconeTermoSVG(planetId, tamanho, 'var(--gold-primary)');
 }
 
 /* Reconstrói a tabela do Painel Principal (Ponto/Signo/Grau/Latitude/
@@ -435,7 +444,7 @@ function montarSVGPainelPrincipal(listaElementos) {
   const F_PONTO_LABEL = { size: 9, weight: 600 };
   const F_GRAU = { size: 12, weight: 600 };
   const F_LAT = { size: 12, weight: 600 };
-  const F_TERMO = { size: 14, weight: 700 };
+  const TERMO_ICONE_TAMANHO = 20;
   const F_DODEC_GRAU = { size: 12, weight: 600 };
   const MARGEM_SEGURANCA = 4; // colchão pra pequenas imprecisões de medida (ex.: fonte ainda carregando)
 
@@ -447,10 +456,11 @@ function montarSVGPainelPrincipal(listaElementos) {
     const grauBase = formatDegMinTabela(absDeg);
     const temRetro = Boolean(el.retro);
     const latFormatted = (el.type === 'planet') ? formatarLatitudeEcliptica(el.lat) : '-';
-    const termo = calcEgyptianTermTabela(absDeg);
+    const termoSimbolo = calcEgyptianTermTabela(absDeg);
+    const termoIconeSVG = getTermoIconeTabelaSVG(termoSimbolo, TERMO_ICONE_TAMANHO);
     const dodec = calcDodecatemoriaTabela(absDeg);
     const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
-    return { iconeSVG, pointName, signoSVG, grauBase, temRetro, latFormatted, termo, dodecSignoSVG, dodecGrauFormatted: dodec.degFormatted };
+    return { iconeSVG, pointName, signoSVG, grauBase, temRetro, latFormatted, termoIconeSVG, dodecSignoSVG, dodecGrauFormatted: dodec.degFormatted };
   });
 
   // Largura de cada coluna = o maior entre o rótulo do cabeçalho e o
@@ -471,7 +481,7 @@ function montarSVGPainelPrincipal(listaElementos) {
     wSigno = Math.max(wSigno, extrairTamanhoIconeSVG(l.signoSVG).w);
     wGrau = Math.max(wGrau, medirLarguraTextoTabela(l.grauBase + (l.temRetro ? ' ℞' : ''), F_GRAU.size, F_GRAU.weight));
     wLat = Math.max(wLat, medirLarguraTextoTabela(l.latFormatted, F_LAT.size, F_LAT.weight));
-    wTermo = Math.max(wTermo, medirLarguraTextoTabela(l.termo, F_TERMO.size, F_TERMO.weight));
+    wTermo = Math.max(wTermo, extrairTamanhoIconeSVG(l.termoIconeSVG).w);
     wDodecSigno = Math.max(wDodecSigno, extrairTamanhoIconeSVG(l.dodecSignoSVG).w);
     wDodecGrau = Math.max(wDodecGrau, medirLarguraTextoTabela(l.dodecGrauFormatted, F_DODEC_GRAU.size, F_DODEC_GRAU.weight));
 
@@ -557,7 +567,7 @@ function montarSVGPainelPrincipal(listaElementos) {
     svg += celula(colX.lat, wLat, `<text x="${colX.lat + wLat / 2}" y="${cy}" font-size="${F_LAT.size}" font-weight="${F_LAT.weight}" fill="var(--text-muted-2)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.latFormatted)}</text>`);
 
     // Termo
-    svg += celula(colX.termo, wTermo, `<text x="${colX.termo + wTermo / 2}" y="${cy}" font-size="${F_TERMO.size}" font-weight="${F_TERMO.weight}" fill="var(--gold-primary)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.termo)}</text>`);
+    svg += celula(colX.termo, wTermo, posicionarIconeMatrizSVG(l.termoIconeSVG, colX.termo + wTermo / 2, cy));
 
     // Dodecatemória — Signo
     svg += celula(colX.dodecSigno, wDodecSigno, posicionarIconeMatrizSVG(l.dodecSignoSVG, colX.dodecSigno + wDodecSigno / 2, cy));

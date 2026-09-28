@@ -1110,7 +1110,7 @@ function renderLiberacaoUI() {
 
   const loteLabelsZR = {
     fortune: "Lote da Fortuna", spirit: "Lote do Espírito", venus: "Lote de Eros",
-    mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória", saturn: "Lote de Némesis"
+    mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória", saturn: "Lote de Nêmesis"
   };
 
   /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa) */

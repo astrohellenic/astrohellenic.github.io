@@ -694,7 +694,7 @@ function renderCircumambulaçõesUI() {
     ASC: "Ascendente", Sun: "Sol", Moon: "Lua", Syz: "Sizígia Prenatal",
     fortune: "Lote da Fortuna", spirit: "Lote do Espírito", venus: "Lote de Eros",
     mercury: "Lote da Necessidade", mars: "Lote da Audácia", jupiter: "Lote da Vitória",
-    saturn: "Lote de Némesis"
+    saturn: "Lote de Nêmesis"
   };
   function iconeAfetaDir(af) {
     return af.type === "planet"
