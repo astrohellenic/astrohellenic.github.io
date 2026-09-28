@@ -1487,6 +1487,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const anguloFrag = getIconeFragmento('outro', 'angulo');
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+      <circle cx="0" cy="0" r="19" fill="#fffdf5"/>
       <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFrag}</g>
       <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
       <text x="0" y="24" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
@@ -1616,20 +1617,28 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
+    /* Fundo clarinho fixo (não muda com o tema) atrás dos ícones simples:
+       vários deles (Necessidade/Eros, os nodos, o ângulo) têm partes só
+       de contorno, sem preenchimento — sem esse fundo, um traço azul
+       escuro fica invisível em cima do disco escuro do tema escuro, ou
+       da faixa roxa do tema "Ver Céu" mesmo no tema claro. */
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+        <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>
         <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
