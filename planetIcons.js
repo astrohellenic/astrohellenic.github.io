@@ -159,7 +159,12 @@ function getIconeFragmento(categoria, chave) {
   if (!bruto) return '';
   const abre = bruto.indexOf('>') + 1;
   const fecha = bruto.lastIndexOf('</svg>');
-  return _namespacearIdsIcone(`<g>${bruto.slice(abre, fecha)}</g>`);
+  /* O <svg fill="none"> original dá um preenchimento padrão "nenhum" pra
+     tudo que está dentro e não declara fill próprio (ex.: o anel só de
+     contorno da Necessidade/Eros). Sem essa tag, esse "nenhum" some, e
+     o SVG cai no padrão dele mesmo (preto sólido) pra essas formas —
+     por isso o <g> aqui precisa repetir fill="none". */
+  return _namespacearIdsIcone(`<g fill="none">${bruto.slice(abre, fecha)}</g>`);
 }
 
 /* Ícone fixo de termo/circunambulação, no tamanho pedido. planetId:
