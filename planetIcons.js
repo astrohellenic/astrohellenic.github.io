@@ -167,6 +167,27 @@ function getIconeFragmento(categoria, chave) {
   return _namespacearIdsIcone(`<g fill="none">${bruto.slice(abre, fecha)}</g>`);
 }
 
+/* Uma "mancha" só de cor, com a mesma silhueta do ícone (pega o "d" de
+   cada <path> do ícone e preenche tudo com corFundo, ignorando a cor
+   original) — pra desenhar atrás de um ícone que não é redondo (ex.:
+   o triângulo do ângulo), em vez de usar um círculo genérico que sobra
+   pra fora e cobre coisa que não devia. */
+function getIconeFundoSilhueta(categoria, chave, corFundo) {
+  const bruto = (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
+  if (!bruto) return '';
+  const abre = bruto.indexOf('>') + 1;
+  const fecha = bruto.lastIndexOf('</svg>');
+  const miolo = bruto.slice(abre, fecha);
+  /* Tira o <defs>...</defs> antes de procurar <path> — lá dentro tem o
+     retângulo do clipPath (cobre o quadrado 100x100 inteiro) e paths de
+     gradiente, que não são a silhueta visível do ícone. */
+  const semDefs = miolo.replace(/<defs>[\s\S]*?<\/defs>/, '');
+  const ds = [...semDefs.matchAll(/<path[^>]*\sd="([^"]+)"/g)].map(m => m[1]);
+  if (ds.length === 0) return '';
+  const paths = ds.map(d => `<path d="${d}" fill="${corFundo}"/>`).join('');
+  return `<g>${paths}</g>`;
+}
+
 /* Ícone fixo de termo/circunambulação, no tamanho pedido. planetId:
    "Mercury" | "Venus" | "Mars" | "Jupiter" | "Saturn". Os traços desse
    ícone são desenhados com fill="currentColor" (sem cor própria de

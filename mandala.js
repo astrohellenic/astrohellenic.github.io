@@ -1485,10 +1485,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
     const anguloFrag = getIconeFragmento('outro', 'angulo');
+    const anguloFundo = getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <circle cx="0" cy="0" r="19" fill="#fffdf5"/>
-      <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFrag}</g>
+      <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
       <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
       <text x="0" y="24" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
     </g>`;
