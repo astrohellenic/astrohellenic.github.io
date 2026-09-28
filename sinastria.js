@@ -472,6 +472,54 @@
         svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
         svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
 
+        /* ORDEM DE CAMADAS DA RODA (mesmo padrao de mandala.js, 28/09/2026):
+           a estrutura da mandala (circulos, raios, dentinhos) sempre por
+           tras de tudo; depois as linhas pretas dos eixos ASC/DSC/MC/IC;
+           depois todos os icones por cima. Os loops que desenhavam
+           linha+icone juntos (dodecatemoria, termos) foram separados em
+           duas passadas: uma so de linha aqui, outra so de icone la
+           embaixo, depois das linhas dos eixos. */
+
+        for (let i = 0; i < 12; i++) {
+            const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
+            const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
+            svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
+        }
+
+        for (let i = 0; i < 12; i++) {
+            for (let d = 0; d < 12; d++) {
+                const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+                const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
+            }
+        }
+
+        for (let s = 0; s < 12; s++) {
+            let prev = 0;
+            EGYPTIAN_TERMS[s].forEach(term => {
+                const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+                const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+                svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
+                prev = term.deg;
+            });
+        }
+
+        for (let deg = 0; deg < 360; deg++) {
+            const aScreen = eclToScreenAngle(deg, house1RefAbs);
+            const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
+            const p1 = polarToCart(cx, cy, R.Termos, aScreen);
+            const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
+            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
+        }
+
+        for (let deg = 0; deg < 360; deg++) {
+            const aScreen = eclToScreenAngle(deg, house1RefAbs);
+            const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
+            const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
+            const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
+            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
+        }
+
         const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
         const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
         svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
@@ -479,6 +527,9 @@
         const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
         const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
         svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
+
+        /* A PARTIR DAQUI SO ICONE - nada de linha/dentinho novo abaixo
+           disso, pra manter a estrutura da roda sempre por tras. */
 
         const rEixoInterno = R.SignSector - 12;
         const eixosInternos = [
@@ -513,12 +564,6 @@
             </g>`;
         });
 
-        for (let i = 0; i < 12; i++) {
-            const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-            const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
-            svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
-        }
-
         const refSignIdx = Math.floor(house1RefAbs / 30);
         for (let i = 0; i < 12; i++) {
             const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
@@ -531,9 +576,6 @@
 
         for (let i = 0; i < 12; i++) {
             for (let d = 0; d < 12; d++) {
-                const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-                const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
                 const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
                 svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
             }
@@ -548,9 +590,6 @@
         for (let s = 0; s < 12; s++) {
             let prev = 0;
             EGYPTIAN_TERMS[s].forEach(term => {
-                const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-                const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-                svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
                 // [DESATIVADO 28/09/2026 - glifo de texto antigo, substituido
                 //  pelo icone novo logo abaixo - mantido comentado ate teste]
                 // const pTermOld = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
@@ -561,22 +600,6 @@
                     .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanho / 2}" y="${pTerm.y - termoIconTamanho / 2}" `);
                 prev = term.deg;
             });
-        }
-
-        for (let deg = 0; deg < 360; deg++) {
-            const aScreen = eclToScreenAngle(deg, house1RefAbs);
-            const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-            const p1 = polarToCart(cx, cy, R.Termos, aScreen);
-            const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
-            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
-        }
-
-        for (let deg = 0; deg < 360; deg++) {
-            const aScreen = eclToScreenAngle(deg, house1RefAbs);
-            const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-            const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-            const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
         }
 
         function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
