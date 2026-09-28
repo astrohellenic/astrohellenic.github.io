@@ -60,13 +60,31 @@ function getPlanet3DSVGLotes(planetId, size = 26) {
   return '';
 }
 
-/* Mesmo círculo preto sobre fundo branco usado para ASC/DSC/MC/IC na mandala e no Painel Técnico — cores resolvidas em hex pelo mesmo motivo do comentário acima (vira <img>). */
+/* Mesmo triângulo do ícone novo usado em ASC/DSC/MC/IC em toda outra
+   ferramenta (getAnguloCirculoSVG, tabelaTecnica.js) — envolvido em <img>
+   pelo mesmo motivo de svgComoImagemLotes (fundo creme fixo, não muda
+   com o tema, igual ao resto do sistema). */
 function getASCIconSVGLotes(size = 22) {
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const fundo = modoEscuro ? '#262220' : '#ffffff';
-  const tinta = modoEscuro ? '#e8e6df' : '#000000';
-  const interno = `<circle cx="0" cy="0" r="10" fill="${fundo}" stroke="${tinta}" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="${tinta}" text-anchor="middle">ASC</text>`;
-  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
+  if (typeof getIconeFragmento !== 'function') return '';
+  const frag = getIconeFragmento('outro', 'angulo');
+  const fundo = getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
+  const interno = `<g transform="translate(50,50) scale(0.9) translate(-50,-50)">${fundo}${frag}</g><text x="50" y="58" font-size="16" font-weight="900" fill="#000000" text-anchor="middle">ASC</text>`;
+  return svgComoImagemLotes(interno, size, size, '0 0 100 100');
+}
+
+/* item.key aqui vem em português ("eros", "necessidade", "coragem",
+   "vitoria", "nemesis") — de-para pro nome que o ícone novo dos lotes
+   usa (mesmo padrão de LOTE_ICON_KEY em mandala.js/liberacao.js). Só
+   esses 5 + fortuna/espírito têm ícone dedicado no sistema central; os
+   demais lotes desta calculadora (dezenas deles) não têm — continuam
+   com a abreviação genérica, que é o certo pra eles. */
+const LOTE_ICON_KEY_LOTES = {
+  eros: 'eros', necessidade: 'necessity', coragem: 'courage', vitoria: 'victory', nemesis: 'nemesis'
+};
+function getLoteHermeticoIconSVG(loteKey, size = 22) {
+  if (typeof getIconeFragmento !== 'function') return '';
+  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', LOTE_ICON_KEY_LOTES[loteKey])}`;
+  return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
 /* Ícone genérico de lote (mesmo padrão de círculo + símbolo usado em liberacao.js/direcoes.js), com uma abreviação curta no lugar de um único glifo planetário quando o lote combina mais de um termo.
@@ -83,21 +101,22 @@ function getLoteAbbrevIconSVG(abbrev, size = 22) {
 }
 
 function getLoteFortunaIconSVG(size = 22) {
-  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
-  const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${cor}" stroke-width="1.8"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${cor}" stroke-width="1.8"/>`;
-  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
+  if (typeof getIconeFragmento !== 'function') return '';
+  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', 'fortune')}`;
+  return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
 function getLoteEspiritoIconSVG(size = 22) {
-  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
-  const interno = `<text x="0" y="9" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="${cor}" text-anchor="middle">Φ</text>`;
-  return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
+  if (typeof getIconeFragmento !== 'function') return '';
+  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', 'spirit')}`;
+  return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
 /* Dispara o ícone correto para um item de lote já calculado (Parte 1). */
 function getLoteIconHTMLLotes(lotObj, size = 24) {
   if (lotObj.iconType === 'fortune') return getLoteFortunaIconSVG(size);
   if (lotObj.iconType === 'spirit') return getLoteEspiritoIconSVG(size);
+  if (LOTE_ICON_KEY_LOTES[lotObj.key]) return getLoteHermeticoIconSVG(lotObj.key, size);
   return getLoteAbbrevIconSVG(lotObj.abbrev || '', size);
 }
 
