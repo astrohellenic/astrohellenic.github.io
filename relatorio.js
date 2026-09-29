@@ -3880,8 +3880,20 @@ function injetarEstilosRelatorio() {
            página, e motor de impressão que só recebe um "min-height"
            (sem "height") às vezes não repassa uma altura definida pro
            flexbox calcular o "flex: 1" — foi isso que causava a capa
-           inteira transbordar pra uma segunda página quase em branco. */
-        .rel-capa { height: 250mm; min-height: 250mm; }
+           inteira transbordar pra uma segunda página quase em branco.
+
+           .rel-page-captura (a página de uma ferramenta capturada —
+           Painel Técnico etc., ver RELATORIO_FERRAMENTAS_DISPONIVEIS)
+           é EXATAMENTE o mesmo caso: também nunca é texto livre (é uma
+           imagem só, via .rel-captura-corpo com "flex: 1" pra
+           centralizar), mas tinha ficado de fora dessa correção na
+           época — só a capa tinha sido ajustada. Resultado (29/09/2026,
+           já testado gerando PDF de verdade pelo Chrome headless):
+           imagem que ocupava certinho a página inteira na prévia virava
+           2 páginas no PDF baixado (uma quase em branco logo depois),
+           mesmo sintoma da capa antes da correção — mesma causa, mesma
+           correção. */
+        .rel-capa, .rel-page-captura { height: 250mm; min-height: 250mm; }
       }
   `;
   document.head.appendChild(style);
