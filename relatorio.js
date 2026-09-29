@@ -3229,7 +3229,7 @@ function nomeArquivoRelatorioPDF(preset) {
    só carrega esse HTML autônomo e usa a função nativa do Chrome de
    exportar pra PDF (page.pdf()) — texto de verdade, sem cortar nem
    fatiar imagem nenhuma. */
-const RELATORIO_PDF_API_URL = 'https://SUBSTITUA-PELO-SEU-PROJETO.vercel.app/api/gerar-pdf';
+const RELATORIO_PDF_API_URL = 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
 
 async function baixarRelatorioPDF() {
   const viewer = document.querySelector('.rel-viewer');
