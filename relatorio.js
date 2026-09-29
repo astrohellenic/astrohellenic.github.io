@@ -3801,9 +3801,23 @@ function injetarEstilosRelatorio() {
       .rel-capa.rel-capa-ceu { background: #1A073F; }
       .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #d4af37; }
 
-      /* PÁGINAS DAS MANDALAS */
+      /* PÁGINAS DAS MANDALAS — .rel-img-mandala só tinha limite de LARGURA
+         (max-width: 175mm), nunca de altura. Pra maioria das mandalas
+         (formato ~quadrado) isso nunca dava problema, mas uma mandala
+         proporcionalmente mais alta que larga estica pra baixo sem limite
+         nenhum e não cabe na folha — empurra o .rel-num-pagina-canto pra
+         fora da página e cria uma página extra quase em branco, mesmo
+         sintoma de .rel-capa/.rel-page-captura (ver comentários no
+         @media print), só que essa página tinha ficado de fora porque
+         até 29/09/2026 nunca tinha reproduzido na prática. Corrigido com
+         o mesmo padrão: "flex: 1" + "min-height: 0" na própria <img>
+         (aqui não existe uma div .rel-captura-corpo por fora dela pra
+         carregar isso, então vai direto na tag) faz a imagem dividir o
+         espaço vertical da página com o título/legenda em vez de crescer
+         livre, e "object-fit: contain" encolhe ela proporcionalmente
+         pra caber no espaço que sobrar (nunca esmagada/distorcida). */
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
-      .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; }
+      .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; flex: 1; min-height: 0; object-fit: contain; }
       .rel-legenda-mandala { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 12px; }
 
       /* BLOCOS "CAPTURADOS" DE OUTRAS FERRAMENTAS (ex.: Profecção) — a
@@ -3905,8 +3919,15 @@ function injetarEstilosRelatorio() {
            imagem que ocupava certinho a página inteira na prévia virava
            2 páginas no PDF baixado (uma quase em branco logo depois),
            mesmo sintoma da capa antes da correção — mesma causa, mesma
-           correção. */
-        .rel-capa, .rel-page-captura { height: 297mm; min-height: 297mm; }
+           correção.
+
+           .rel-page-mapa (a página só com a Mandala 1/Mandala 2, sem
+           captura nenhuma) entra na mesma lista pelo mesmo motivo: a
+           partir de 29/09/2026 .rel-img-mandala também usa "flex: 1"
+           (ver comentário dela, logo acima) pra nunca crescer mais alta
+           que a página cabe — só que isso também depende da página em
+           volta ter uma altura de verdade, não só "min-height". */
+        .rel-capa, .rel-page-captura, .rel-page-mapa { height: 297mm; min-height: 297mm; }
       }
   `;
   document.head.appendChild(style);
