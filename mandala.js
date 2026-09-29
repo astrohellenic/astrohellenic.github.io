@@ -1008,13 +1008,15 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores) {
 
   const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
   if (horasInfo) {
+    /* Rótulo (DIA / HORA) em cima e o planeta embaixo dele, cada um numa
+       coluna — desenho único do software inteiro (ver comentário acima). */
     if (horasInfo.dayRulerId && PLANETS_DEF.some(p => p.id === horasInfo.dayRulerId)) {
-      svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${cores.titulo}" text-anchor="start">DIA</text>
-      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+      svg += `<text x="840" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">DIA</text>
+      <g transform="translate(840, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
     }
     if (horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId)) {
-      svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${cores.titulo}" text-anchor="start">HORA</text>
-      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+      svg += `<text x="910" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">HORA</text>
+      <g transform="translate(910, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
     }
   }
   return svg;
