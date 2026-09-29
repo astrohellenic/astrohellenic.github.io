@@ -775,7 +775,21 @@ async function abrirRascunhoRelatorio(rascunhoId) {
     // Pool de capturas do CLIENTE (mapa_id), não só as desse rascunho —
     // assim uma captura feita enquanto editava outro relatório dela (ex.:
     // Mapa Natal) já aparece disponível aqui também (ex.: Retificação).
-    window.relatorioCapturas = await carregarCapturasPooladasDoMapa(rascunho.mapa_id);
+    // Captura feita antes de abrir o rascunho (ex.: na Mandala, com o mapa
+    // recém-carregado, quando currentRascunhoId ainda era null e por isso
+    // nunca subiu pro Storage) só existe em memória como data URL — trocar
+    // o pool inteiro pelo do banco jogava essa captura fora (sumia do
+    // seletor de imagens). Junta as duas coisas em vez de substituir; as
+    // que ainda são data URL sobem no próximo salvamento normal.
+    const poolDoBanco = await carregarCapturasPooladasDoMapa(rascunho.mapa_id);
+    Object.keys(window.relatorioCapturas || {}).forEach(toolId => {
+      capturasDaFerramenta(toolId).forEach(captura => {
+        if (!captura || !captura.dataUrl || !String(captura.dataUrl).startsWith('data:')) return;
+        poolDoBanco[toolId] = poolDoBanco[toolId] || [];
+        poolDoBanco[toolId].push(captura);
+      });
+    });
+    window.relatorioCapturas = poolDoBanco;
     // Guardado pra abrirEditorRascunhoRelatorio reaproveitar sem refazer a
     // consulta ao banco quando o astrólogo clicar em "Editar" a seguir.
     window.relatorioRascunhoEmEdicao = rascunho;
