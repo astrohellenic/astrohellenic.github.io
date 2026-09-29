@@ -446,3 +446,31 @@ foi feita ainda, porque exigem acesso que só o astrólogo tem):
    texto longo pra ver a paginação, Painel Técnico capturado) — só
    depois disso dá pra confirmar que resolveu os sintomas descritos
    mais acima (página extra em branco, imagem "atrás" na prévia).
+
+## O "motor de astrologia" (posições planetárias) mora FORA deste repositório — é normal, não precisa trazer pra cá
+
+`mandala.js` (função que busca o céu do momento, por volta da linha 654)
+chama `https://motor-astrologia.vercel.app/api/index?data=...&hora=...
+&fuso=...&lat=...&lon=...` — uma API separada que calcula as posições
+planetárias de verdade (via Swiss Ephemeris) e devolve só os números
+prontos pra Mandala desenhar. O código-fonte dessa API está no
+repositório à parte
+[`pereiracassio/motor-astrologia`](https://github.com/pereiracassio/motor-astrologia)
+— **fora** do repositório do Astro Hellenic, porque foi criado antes
+dele existir (o astrólogo não incluiu esse motor quando criou o
+repositório do Astro Hellenic depois).
+
+**Isso não é um problema a corrigir** — é o mesmo padrão que
+`api/gerar-pdf.js` (ver seção acima) usa: um serviço à parte, hospedado
+também na Vercel, que o site chama por HTTP pra fazer um trabalho
+específico que o front-end estático sozinho não faz. Juntar os dois
+repositórios num só não traria benefício nenhum e só arriscaria quebrar
+link/configuração que já funciona — contraria a "regra de ouro" deste
+arquivo. Se uma sessão futura precisar mexer na lógica de cálculo
+astronômico em si (não só em como a Mandala consome o resultado), é
+nesse outro repositório que precisa ir — mas repare que sessões deste
+Claude Code não têm acesso a repositórios fora dos que foram
+autorizados no início da conversa (dá pra pedir acesso a mais um
+repositório no meio de uma conversa via `add_repo`, mas cada conversa
+nova começa sem esse acesso de novo — precisa ser concedido de novo a
+cada vez que for realmente necessário mexer lá).
