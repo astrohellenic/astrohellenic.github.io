@@ -436,9 +436,14 @@ function calcularResultadoLotesLivre(p, lotesPart1, isDayAuto) {
   const startLabel = getPontoLabelLotes(lotesCalcStartPoint, lotesPart1);
   const aLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetA];
   const bLabel = PLANET_NAMES_PT_LOTES[lotesCalcPlanetB];
-  const formulaTxt = effectiveIsDay ? `${startLabel} + ${aLabel} − ${bLabel}` : `${startLabel} + ${bLabel} − ${aLabel}`;
+  /* Na tela: "distância DE (planeta B) ATÉ (planeta A)" de dia; à noite a
+     ordem se inverte (é o que calcLotePonto faz com invert=true). */
+  const deLabel = effectiveIsDay ? bLabel : aLabel;
+  const ateLabel = effectiveIsDay ? aLabel : bLabel;
+  const formulaTxt = `${deLabel} → ${ateLabel}, a partir de ${startLabel}`;
+  const formulaMat = effectiveIsDay ? `${startLabel} + ${aLabel} − ${bLabel}` : `${startLabel} + ${bLabel} − ${aLabel}`;
   const sectLabelTxt = lotesCalcManualSect === null ? `automática (${isDayAuto ? 'dia' : 'noite'})` : (lotesCalcManualSect ? 'dia — manual' : 'noite — manual');
-  const resultLegenda = `Calculadora Livre — fórmula: ASC-equivalente ${formulaTxt} • seita ${sectLabelTxt}`;
+  const resultLegenda = `Calculadora Livre — distância de ${deLabel} até ${ateLabel}, contada a partir de ${startLabel} • seita ${sectLabelTxt} • fórmula: ${formulaMat}`;
 
   return { resultAbs, formulaTxt, resultLegenda };
 }
@@ -602,11 +607,9 @@ function renderLotesUI() {
 
       <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 16px;">
         <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 22px;">
-          ${renderSeletorLotes('lotesStartMenu', startIconHTML, startMenuRows, 'Ponto de Partida')}
-          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: var(--gold-primary); margin-top: 20px;">+</div>
-          ${renderSeletorLotes('lotesPlanetAMenu', planetAIconHTML, planetAMenuRows, 'Planeta A')}
-          <div style="align-self: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; color: var(--gold-primary); margin-top: 20px;">−</div>
-          ${renderSeletorLotes('lotesPlanetBMenu', planetBIconHTML, planetBMenuRows, 'Planeta B')}
+          ${renderSeletorLotes('lotesPlanetBMenu', planetBIconHTML, planetBMenuRows, 'Distância de')}
+          ${renderSeletorLotes('lotesPlanetAMenu', planetAIconHTML, planetAMenuRows, 'Até')}
+          ${renderSeletorLotes('lotesStartMenu', startIconHTML, startMenuRows, 'Contar do')}
           ${renderToggleSeitaLotes(isDayAuto)}
         </div>
 
