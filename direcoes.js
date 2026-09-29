@@ -422,8 +422,85 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
 
 function alternarAfetaCircumambulation(key) {
   selectedAphetesKey = key;
+  circumambulacaoLinhasSelecionadas = new Set(); // as linhas mudam de signo/ordem com o afeta
   renderCircumambulaçõesUI();
 }
+
+/* Linhas (signos) marcadas pra mandar pro Relatório — vazio = imagem inteira.
+   Estado só da tela atual, não é preferência. */
+let circumambulacaoLinhasSelecionadas = new Set();
+let circumambulacaoMontador = null;
+function alternarLinhaCircumambulacaoRelatorio(idx, marcado) {
+  if (marcado) circumambulacaoLinhasSelecionadas.add(idx);
+  else circumambulacaoLinhasSelecionadas.delete(idx);
+  renderCircumambulaçõesUI();
+}
+window.alternarLinhaCircumambulacaoRelatorio = alternarLinhaCircumambulacaoRelatorio;
+
+/* PNG da página inteira (título + cabeçalho + pautas) pro botão de galeria,
+   pronto de antemão — o iPhone/iPad só abre "Salvar Imagem" se for chamado
+   direto do toque (mesma razão das outras ferramentas). O salvar em si é
+   salvarPngNaGaleria (mandala.js). */
+let circumambulacaoPngPronto = null;
+let circumambulacaoPngTimer = null;
+function agendarPngCircumambulacao() {
+  circumambulacaoPngPronto = null;
+  clearTimeout(circumambulacaoPngTimer);
+  circumambulacaoPngTimer = setTimeout(async () => {
+    if (typeof html2canvas !== 'function') return;
+    const elemento = document.getElementById('circumambulacao-container');
+    if (!elemento) return;
+    try {
+      const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+      const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+      if (document.getElementById('circumambulacao-container') === elemento) {
+        circumambulacaoPngPronto = canvas.toDataURL('image/png');
+      }
+    } catch (err) {
+      console.error('Erro ao preparar o PNG da Circumambulação:', err);
+    }
+  }, 250);
+}
+
+function salvarCircumambulacaoNaGaleria() {
+  if (!circumambulacaoPngPronto) { alert('A imagem ainda está sendo preparada. Toque de novo em um instante.'); return; }
+  salvarPngNaGaleria(circumambulacaoPngPronto, `Astro_Hellenic_Circumambulacao_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+}
+window.salvarCircumambulacaoNaGaleria = salvarCircumambulacaoNaGaleria;
+
+/* Manda pro Relatório SEM título nem cabeçalho: a imagem inteira das
+   pautas, ou — se houver linhas marcadas — só essas linhas. */
+async function capturarCircumambulacaoParaRelatorio() {
+  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
+  let temp = null;
+  try {
+    let alvo;
+    if (indices.length && circumambulacaoMontador) {
+      const { montarSvgPautas, signPassages } = circumambulacaoMontador;
+      temp = document.createElement('div');
+      temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: 920px; background: var(--bg-main); font-family: "Montserrat", sans-serif;`;
+      temp.innerHTML = montarSvgPautas(indices.map(i => signPassages[i]), 0, indices);
+      document.body.appendChild(temp);
+      alvo = temp;
+    } else {
+      alvo = document.getElementById('circumambulacaoPautas');
+      if (!alvo) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+    }
+    const canvas = await html2canvas(alvo, { backgroundColor: fundo, scale: 2, useCORS: true });
+    const total = adicionarCapturaRelatorio('circumambulacao', canvas.toDataURL('image/png'));
+    const oQue = indices.length ? `${indices.length} linha(s)` : 'a imagem inteira';
+    alert(`Circumambulação pelos Termos (${oQue}) foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar a Circumambulação ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    if (temp && temp.parentNode) temp.parentNode.removeChild(temp);
+  }
+}
+window.capturarCircumambulacaoParaRelatorio = capturarCircumambulacaoParaRelatorio;
 
 function iniciarModuloDirecoes() {
   const container = document.getElementById("mandala-container");
@@ -642,29 +719,25 @@ function renderCircumambulaçõesUI() {
      empilhadas a partir do topo. offsetGlobalInicial é a posição (no
      conjunto completo de 12 pautas) da primeira pauta desse subconjunto
      — necessário para saber se a marcação da posição natal cai aqui. */
-  function montarSvgPautas(passagesSubset, offsetGlobalInicial) {
+  function montarSvgPautas(passagesSubset, offsetGlobalInicial, indicesGlobais) {
     const alturaSvg = 20 + (passagesSubset.length * rowHeight);
     let svgInner = '';
     passagesSubset.forEach((passage, idxLocal) => {
-      svgInner += gerarLinhaSigno(passage, idxLocal, (offsetGlobalInicial + idxLocal) === 0);
+      const globalIdx = indicesGlobais ? indicesGlobais[idxLocal] : (offsetGlobalInicial + idxLocal);
+      svgInner += gerarLinhaSigno(passage, idxLocal, globalIdx === 0);
     });
     return `<svg viewBox="0 0 920 ${alturaSvg}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${svgInner}</svg>`;
   }
 
   // Uma única coluna com todas as pautas, na tela e na impressão.
   const svgTela = montarSvgPautas(signPassages, 0);
-
-  /* CABEÇALHO COM OS MESMOS DADOS DO MAPA (mesma fonte que a mandala usa) */
-  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
-  const diasSemanaDirLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const diaSemanaFormatted = diasSemanaDirLabels[currentMoment.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const anoH = currentMoment.getFullYear();
-  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const diaH = String(currentMoment.getDate()).padStart(2, '0');
-  const horaH = String(currentMoment.getHours()).padStart(2, '0');
-  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+  // Usado por capturarCircumambulacaoParaRelatorio (só as linhas marcadas).
+  circumambulacaoMontador = { montarSvgPautas, signPassages };
+  const alturaSvgTela = 20 + (signPassages.length * rowHeight);
+  const caixasLinhasHTML = signPassages.map((passage, i) => {
+    const topPct = ((10 + (i * rowHeight) + (boxHeight / 2)) / alturaSvgTela) * 100;
+    return `<input type="checkbox" ${circumambulacaoLinhasSelecionadas.has(i) ? 'checked' : ''} onchange="alternarLinhaCircumambulacaoRelatorio(${i}, this.checked)" title="Mandar só esta linha para o Relatório" style="position: absolute; left: -24px; top: ${topPct.toFixed(3)}%; transform: translateY(-50%); width: 16px; height: 16px; margin: 0; cursor: pointer;">`;
+  }).join('');
 
   const afetaLabelsDir = {
     ASC: "Ascendente", Sun: "Sol", Moon: "Lua", Syz: "Sizígia Prenatal",
@@ -686,11 +759,28 @@ function renderCircumambulaçõesUI() {
     return `<div onclick="alternarAfetaCircumambulation('${af.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${iconeAfetaDir(af)}</div>`;
   }).join('');
 
+  const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+  const totalMarcadas = circumambulacaoLinhasSelecionadas.size;
+  const dicaRelatorio = totalMarcadas
+    ? `Adicionar ao Relatório só as ${totalMarcadas} linha(s) marcada(s) (sem título nem cabeçalho)`
+    : 'Adicionar ao Relatório a imagem inteira (sem título nem cabeçalho). Marque a caixinha de uma ou mais linhas pra mandar só elas';
+
   let html = `
     <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
-        <button onclick="capturarTelaParaRelatorio('circumambulacao', 'circumambulacao-container', 'Circumambulação pelos Termos')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
+        <div style="position: relative; flex-shrink: 0;">
+          <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="${btnCss}" title="Afeta Direcionado">
+            ${iconAtualHTML}
+          </button>
+          <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+            ${afetaMenuRowsHTML}
+          </div>
+        </div>
+        <button type="button" onclick="salvarCircumambulacaoNaGaleria()" title="Salvar a página inteira como imagem na galeria (com título e cabeçalho)" style="${btnCss}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        </button>
+        <button type="button" onclick="capturarCircumambulacaoParaRelatorio()" title="${escapeHtml(dicaRelatorio)}" style="${btnCss}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
     <div class="dir-outer" id="circumambulacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
@@ -699,25 +789,15 @@ function renderCircumambulaçõesUI() {
           Circumambulação pelos Termos
         </h3>
 
-        <!-- CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala, 2 linhas à esquerda + seletor do afeta à direita. Mesma caixa/menu com rolagem e ícones (não texto) já usada no seletor de Casa 1 da mandala. -->
-        <div class="dir-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px;">
-          <div>
-            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-            <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-          </div>
-          <div style="position: relative; flex-shrink: 0;">
-            <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; border-radius: 6px; background: var(--bg-main); color: var(--primary-blue); border: 1px solid var(--gold-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Afeta Direcionado">
-              ${iconAtualHTML}
-            </button>
-            <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 42px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
-              ${afetaMenuRowsHTML}
-            </div>
-          </div>
-        </div>
+        <!-- CABEÇALHO PADRÃO: o mesmo de todas as ferramentas (montarCabecalhoMandalaImagemHTML, mandala.js). O seletor de afeta fica na barra de botões acima, não aqui. -->
+        <div class="dir-cabecalho">${montarCabecalhoMandalaImagemHTML(data)}</div>
 
-        <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão -->
+        <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão. As caixinhas (só na tela, ignoradas nas imagens) ficam na margem esquerda. -->
         <div style="width: 100%; overflow-x: auto;">
-          ${svgTela}
+          <div id="circumambulacaoPautas" style="position: relative; margin: 0 24px;">
+            <span data-html2canvas-ignore="true">${caixasLinhasHTML}</span>
+            ${svgTela}
+          </div>
         </div>
 
     </div>
@@ -725,4 +805,5 @@ function renderCircumambulaçõesUI() {
   `;
 
   container.innerHTML = html;
+  agendarPngCircumambulacao();
 }
