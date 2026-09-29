@@ -3886,8 +3886,48 @@ function injetarEstilosRelatorio() {
          conta de porcentagem em cima de altura calculada, o próprio motor
          de flexbox distribui o espaço entre título e imagem direto, e
          "object-fit: contain" encolhe a imagem proporcionalmente pra
-         caber no espaço que sobrar (nunca esmagada/cortada). */
-      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+         caber no espaço que sobrar (nunca esmagada/cortada).
+
+         ATUALIZAÇÃO (29/09/2026, mais tarde) — essa promessa ("nunca
+         esmagada/cortada") era FALSA na prática: "align-items: center"
+         faz o item flex NÃO esticar no eixo cruzado (altura, já que
+         .rel-captura-corpo é "display:flex" sem flex-direction, ou
+         seja, row) — sem esticar, a <img> nunca ganha uma altura
+         PRÓPRIA independente da proporção dela; ela só cresce conforme
+         a largura (100%) dividida pela proporção natural da imagem.
+         "object-fit: contain" não tem efeito nenhum nessa conta, porque
+         só funciona quando a caixa JÁ tem um tamanho independente pra
+         conter o conteúdo — aqui não tinha.
+
+         Medido de verdade (Chromium headless, a mesma versão da Vercel):
+         o espaço útil dentro de .rel-captura-corpo é 190mm de largura
+         por 260mm de altura. Uma captura real de ferramenta (Painel
+         Técnico, 1920x2854px, extraída de um PDF quebrado de verdade)
+         calculava 282,4mm de altura nessa largura — 22,4mm A MAIS do
+         que cabe, sempre, silenciosamente (só descoberto medindo, não
+         aparecia como "esmagado" nem como erro nenhum).
+
+         Correção: "align-items: stretch" (em vez de "center") faz a
+         <img> (que já é "flex:1; min-height:0") esticar pra ocupar a
+         altura REAL calculada por flexbox de .rel-captura-corpo — um
+         valor de verdade, não uma % arriscada em cima de altura
+         calculada (aquele risco já documentado no comentário de
+         ".rel-capa { height: 250mm }" mais abaixo não se aplica aqui,
+         porque não é porcentagem: é o próprio motor de flexbox
+         decidindo o tamanho da caixa, e a imagem SÓ estica até esse
+         tamanho, nunca além). Com uma altura de verdade pra conter,
+         "object-fit: contain" finalmente funciona: encolhe a imagem
+         proporcionalmente pra caber nos dois eixos, sem cortar nada.
+
+         "max-height: 230mm" (em vez de deixar ir até os 260mm que de
+         fato cabem) é uma folga proposital de 30mm — não porque a conta
+         de 260mm esteja errada, mas porque já foi visto nesse mesmo
+         mecanismo de impressão (ver histórico de ".rel-page-captura"
+         mais abaixo) sobrar fração de milímetro por arredondamento/
+         timing em casos que pareciam corretos no papel. Com 30mm de
+         sobra, mesmo esse tipo de erro pequeno nunca chega perto do
+         limite físico da página de novo. */
+      .rel-captura-corpo { flex: 1; min-height: 0; max-height: 230mm; display: flex; align-items: stretch; justify-content: center; overflow: hidden; }
       .rel-img-captura { flex: 1; min-height: 0; width: 100%; object-fit: contain; display: block; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
