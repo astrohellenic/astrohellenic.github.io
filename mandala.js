@@ -1646,11 +1646,17 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
    normal, que lá funciona. */
 function salvarImagemMandala() {
   if (!lastRenderedPngUrl) { alert('Nenhuma mandala na tela pra salvar.'); return; }
-  const nome = `Astro_Hellenic_${(currentSubjectName || 'mandala').replace(/\s+/g, '_')}.png`;
+  salvarPngNaGaleria(lastRenderedPngUrl, `Astro_Hellenic_${(currentSubjectName || 'mandala').replace(/\s+/g, '_')}.png`);
+}
+window.salvarImagemMandala = salvarImagemMandala;
 
+/* Mesmo mecanismo de salvar (folha de compartilhar / download) pra
+   qualquer ferramenta — recebe um PNG já pronto (data URL) e o nome do
+   arquivo. Precisa ser chamada direto do toque, sem await antes. */
+function salvarPngNaGaleria(pngDataUrl, nome) {
   let arquivo = null;
   try {
-    const partes = lastRenderedPngUrl.split(',');
+    const partes = pngDataUrl.split(',');
     const bin = atob(partes[1]);
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -1670,10 +1676,10 @@ function salvarImagemMandala() {
 
   const link = document.createElement('a');
   link.download = nome;
-  link.href = lastRenderedPngUrl;
+  link.href = pngDataUrl;
   link.click();
 }
-window.salvarImagemMandala = salvarImagemMandala;
+window.salvarPngNaGaleria = salvarPngNaGaleria;
 
 window.onload = function() {
   restaurarUnidadeStepperMandala();
