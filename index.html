@@ -650,6 +650,25 @@ body {
             #mandala-actions-overlay {
                 top: 56px !important;
             }
+
+            /* #mandala-controls-overlay só tinha right:10px (sem left), então
+               numa tela estreita a fileira de botões (seletor de Casa 1 +
+               "Adicionar ao Relatório" + zoom + stepper de tempo) ficava mais
+               larga que a tela e o primeiro botão (o seletor de Casa 1)
+               vazava pra fora da borda esquerda — e como #mandala-screen (o
+               pai) tem overflow:hidden, esse pedaço simplesmente sumia
+               cortado, em vez de aparecer ou rolar. Com left:10px também
+               (largura travada entre as duas bordas, com 10px de respiro em
+               cada uma) e flex-wrap, os botões que não cabem numa linha só
+               descem pra uma segunda linha — nada fica cortado. !important
+               pelo mesmo motivo do bloco acima: right/display são inline. */
+            #mandala-controls-overlay {
+                left: 10px !important;
+                max-width: calc(100% - 20px);
+                flex-wrap: wrap !important;
+                justify-content: flex-end !important;
+                row-gap: 6px;
+            }
         }
 
         /* PALCO DA MANDALA: no tema "Céu", fundo roxo, continuação do
