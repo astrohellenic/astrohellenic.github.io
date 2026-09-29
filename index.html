@@ -641,16 +641,18 @@ body {
         /* No celular, #mandala-controls-overlay (canto direito: ASC, Adicionar
            ao Relatório, zoom e stepper de tempo) ficou largo demais e passou
            a cobrir #mandala-actions-overlay (canto esquerdo: salvar, atualizar
-           momento, Revolução Solar) — os dois têm o mesmo top:10px inline e,
-           por vir depois no HTML, o da direita é desenhado por cima. Empurra
-           o da esquerda pra linha de baixo só nessa largura de tela; precisa
-           de !important porque o top:10px é inline no elemento (mais
-           específico que uma regra normal de CSS). */
+           momento, Revolução Solar) — os dois têm o mesmo top:10px inline. O
+           empurrão de #mandala-actions-overlay pra baixo de
+           #mandala-controls-overlay NÃO é mais feito aqui em CSS (era um
+           top:56px fixo, chutado pra quando o outro container sempre coubesse
+           numa linha só) — agora que #mandala-controls-overlay pode quebrar
+           em 1 ou 2 linhas (ver flex-wrap logo abaixo), 56px fixo ficaria
+           errado num dos dois casos. Quem decide a posição certa agora é
+           ajustarPosicaoMandalaActionsOverlay() (mandala.js), medindo a
+           altura de verdade do outro container — mesmo padrão já usado no
+           espaçador da barra fixa do editor de Relatório (medir em JS, não
+           chutar em CSS, porque o tamanho muda com a largura da tela). */
         @media (max-width: 600px) {
-            #mandala-actions-overlay {
-                top: 56px !important;
-            }
-
             /* #mandala-controls-overlay só tinha right:10px (sem left), então
                numa tela estreita a fileira de botões (seletor de Casa 1 +
                "Adicionar ao Relatório" + zoom + stepper de tempo) ficava mais
@@ -1193,7 +1195,7 @@ body {
 <script src="planetIcons.js?v=20260928e"></script>
 <script src="matrizVisibilidade.js?v=20260928a"></script>
 <script src="tabelaTecnica.js?v=20260928b"></script>
-<script src="mandala.js?v=20260928j"></script>
+<script src="mandala.js?v=20260929a"></script>
 <script src="isopsefia.js?v=20260920"></script>
 <script src="profeccao.js?v=20260928c"></script>
 <script src="sinastria.js?v=20260928b"></script>

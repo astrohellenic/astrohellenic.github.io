@@ -1023,6 +1023,35 @@ function injetarControleZoomMandala() {
   }
 }
 
+/* #mandala-actions-overlay (canto esquerdo: salvar, atualizar momento,
+   Revolução Solar) precisa ficar abaixo de #mandala-controls-overlay
+   (canto direito: seletor de Casa 1, Adicionar ao Relatório, zoom,
+   stepper de tempo) só quando a tela é estreita demais pra caberem os
+   dois lado a lado na mesma linha (ver @media max-width:600px em
+   index.html, onde #mandala-controls-overlay ganha flex-wrap e pode
+   virar 1 ou 2 linhas dependendo da largura). Um valor fixo de "top"
+   pro empurrão (como um antigo top:56px chutado) só acerta pra UM dos
+   dois casos (1 linha OU 2 linhas) — por isso mede a altura de verdade
+   do outro container em JS, mesmo padrão já usado no espaçador da
+   barra fixa do editor de Relatório (ajustarEspacadorBarraFixaEditor,
+   relatorio.js). Chamada de novo em "resize" porque virar o celular
+   (ou redimensionar a janela) pode mudar se cabe numa linha só ou não. */
+function ajustarPosicaoMandalaActionsOverlay() {
+  const controls = document.getElementById('mandala-controls-overlay');
+  const actions = document.getElementById('mandala-actions-overlay');
+  if (!controls || !actions) return;
+
+  if (window.innerWidth > 600) {
+    actions.style.top = '';
+    return;
+  }
+
+  const gap = 10;
+  const alturaControls = controls.offsetHeight;
+  actions.style.top = (10 + alturaControls + gap) + 'px';
+}
+window.addEventListener('resize', ajustarPosicaoMandalaActionsOverlay);
+
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
@@ -1156,6 +1185,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   injetarBotaoRotacaoNaBarraSuperior();
   injetarBotaoRelatorioNaBarraSuperior();
   injetarControleZoomMandala();
+  ajustarPosicaoMandalaActionsOverlay();
 
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
