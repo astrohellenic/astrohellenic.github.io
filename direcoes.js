@@ -182,36 +182,7 @@ function formatarDataBRDir(data) {
 
 /* Ícones plotados na pauta (marcadores de lote/sizígia/ângulo) — vêm do
    mesmo bloco central novo (planetIcons.js) usado em toda ferramenta já
-   migrada, respeitando o interruptor simples/esférico igual os demais.
-   [DESATIVADO 28/09/2026 - antes cada marcador era desenhado à mão aqui
-   dentro (nunca tinha sido migrado); mantido comentado até ser testado
-   de verdade no site - só remover depois de confirmado]
-   function getItemSVGDirOLD(key) {
-     if (key === 'Syz' || key === 'Sizígia') {
-       return `<svg width="20" height="20" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" stroke="var(--aspect-conjuncao)" stroke-width="1.8" fill="none"/><path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="var(--aspect-conjuncao)"/><circle cx="0" cy="0" r="2.3" fill="var(--aspect-conjuncao)"/></svg>`;
-     }
-     const lotConfig = {
-       'venus':   { sym: '♀', y: 2, size: 15 },
-       'mercury': { sym: '☿', y: 4, size: 15 },
-       'mars':    { sym: '♂', y: 2, size: 15 },
-       'jupiter': { sym: '♃', y: 4, size: 15 },
-       'saturn':  { sym: '♄', y: 4, size: 15 }
-     };
-     if (key === 'fortune') {
-       return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="var(--primary-blue)" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="var(--primary-blue)" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="var(--primary-blue)" stroke-width="1.5"/></svg>`;
-     }
-     if (key === 'spirit') {
-       return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><text x="0" y="9" font-size="26" font-weight="400" fill="var(--primary-blue)" text-anchor="middle">Φ</text></svg>`;
-     }
-     const cfg = lotConfig[key];
-     if (cfg) {
-       return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="none" stroke="var(--primary-blue)" stroke-width="1.5"/><text x="0" y="${cfg.y}" font-size="${cfg.size}" font-weight="bold" fill="var(--primary-blue)" text-anchor="middle">${cfg.sym}</text></svg>`;
-     }
-     if (key === 'ASC' || key === 'DSC' || key === 'MC' || key === 'IC') {
-       return `<svg width="22" height="22" viewBox="-12 -12 24 24" style="display: block; margin: 0 auto;"><circle cx="0" cy="0" r="10" fill="var(--bg-card)" stroke="var(--aspect-conjuncao)" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="var(--aspect-conjuncao)" text-anchor="middle">${key}</text></svg>`;
-     }
-     return `<span style="font-size: 11px; font-weight: bold;">${key}</span>`;
-   } */
+   migrada, respeitando o interruptor simples/esférico igual os demais. */
 const LOTE_ICON_KEY_DIR = {
   fortune: 'fortune', spirit: 'spirit', venus: 'eros',
   mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
@@ -580,10 +551,6 @@ function renderCircumambulaçõesUI() {
       rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="var(--bg-card)" stroke="var(--gold-primary)" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
-      // [DESATIVADO 28/09/2026 - glifo de texto cru substituido pelo icone
-      //  novo logo abaixo (mesmo padrao usado nas mandalas) - mantido
-      //  comentado ate ser testado de verdade no site]
-      // rowHtml += `<text x="${xCenter}" y="${yBaseline + Math.round(termHeight / 2) + 4}" font-size="14" font-weight="bold" fill="var(--gold-primary)" text-anchor="middle">${term.termPlanetSym}</text>`;
       const termIconTamanhoDir = Math.max(10, termHeight - 6);
       if (typeof getIconeTermoSVG === 'function') {
         rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, 'var(--gold-primary)')

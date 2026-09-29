@@ -184,49 +184,6 @@
        mesmos IDs de SVG. */
     let wheelInstanceCounter = 0;
 
-    // [DESATIVADO 28/09/2026 - gradientes/filtros dos planetas antigos,
-    //  so o combustionGlow (halo do Sol, nao muda com o icone) continua
-    //  ativo - mantido aqui comentado ate a mandala da Sinastria ser
-    //  testada de verdade no site - so remover depois de confirmado]
-    // function construirDefsPlanetas(sufixo) {
-    // return `
-    // <filter id="glyphShadow_${sufixo}" x="-30%" y="-30%" width="160%" height="160%">
-    // <feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000000" flood-opacity="0.85" />
-    // </filter>
-    // <filter id="planetDropShadow_${sufixo}" x="-40%" y="-40%" width="180%" height="180%">
-    // <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.25" />
-    // </filter>
-    // <radialGradient id="gradSun_${sufixo}" cx="35%" cy="32%" r="68%">
-    // <stop offset="0%" stop-color="#fffbeb" /><stop offset="25%" stop-color="#fde047" /><stop offset="60%" stop-color="#f59e0b" /><stop offset="88%" stop-color="#d97706" /><stop offset="100%" stop-color="#92400e" />
-    // </radialGradient>
-    // <radialGradient id="gradMoon_${sufixo}" cx="32%" cy="28%" r="70%">
-    // <stop offset="0%" stop-color="#ffffff" /><stop offset="30%" stop-color="#e2e8f0" /><stop offset="65%" stop-color="#94a3b8" /><stop offset="90%" stop-color="#475569" /><stop offset="100%" stop-color="#1e293b" />
-    // </radialGradient>
-    // <radialGradient id="gradMercury_${sufixo}" cx="35%" cy="30%" r="68%">
-    // <stop offset="0%" stop-color="#fef08a" /><stop offset="28%" stop-color="#d97706" /><stop offset="65%" stop-color="#92400e" /><stop offset="92%" stop-color="#451a03" /><stop offset="100%" stop-color="#270e02" />
-    // </radialGradient>
-    // <radialGradient id="gradVenus_${sufixo}" cx="34%" cy="30%" r="68%">
-    // <stop offset="0%" stop-color="#ffffff" /><stop offset="30%" stop-color="#fef3c7" /><stop offset="65%" stop-color="#f59e0b" /><stop offset="90%" stop-color="#b45309" /><stop offset="100%" stop-color="#78350f" />
-    // </radialGradient>
-    // <radialGradient id="gradMars_${sufixo}" cx="35%" cy="30%" r="68%">
-    // <stop offset="0%" stop-color="#fca5a5" /><stop offset="25%" stop-color="#ef4444" /><stop offset="60%" stop-color="#b91c1c" /><stop offset="88%" stop-color="#7f1d1d" /><stop offset="100%" stop-color="#450a0a" />
-    // </radialGradient>
-    // <radialGradient id="gradJupiter_${sufixo}" cx="35%" cy="30%" r="70%">
-    // <stop offset="0%" stop-color="#fffbeb" /><stop offset="30%" stop-color="#fef3c7" /><stop offset="58%" stop-color="#d4a373" /><stop offset="82%" stop-color="#a97142" /><stop offset="100%" stop-color="#6f4518" />
-    // </radialGradient>
-    // <radialGradient id="gradSaturn_${sufixo}" cx="35%" cy="30%" r="68%">
-    // <stop offset="0%" stop-color="#fef9c3" /><stop offset="35%" stop-color="#fde047" /><stop offset="70%" stop-color="#ca8a04" /><stop offset="92%" stop-color="#854d0e" /><stop offset="100%" stop-color="#422006" />
-    // </radialGradient>
-    // <linearGradient id="gradRings_${sufixo}" x1="0%" y1="0%" x2="100%" y2="100%">
-    // <stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95" /><stop offset="25%" stop-color="#cbd5e1" stop-opacity="0.9" /><stop offset="60%" stop-color="#94a3b8" stop-opacity="0.85" /><stop offset="85%" stop-color="#64748b" stop-opacity="0.9" /><stop offset="100%" stop-color="#334155" stop-opacity="0.95" />
-    // </linearGradient>
-    // <clipPath id="jupiterClip_${sufixo}"><circle cx="50" cy="50" r="42" /></clipPath>
-    // <radialGradient id="combustionGlow_${sufixo}" cx="50%" cy="50%" r="50%">
-    // <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.9" /><stop offset="30%" stop-color="#fde68a" stop-opacity="0.75" /><stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" /><stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
-    // </radialGradient>
-    // `;
-    // }
-
     function construirDefsPlanetas(sufixo) {
         return `
             <radialGradient id="combustionGlow_${sufixo}" cx="50%" cy="50%" r="50%">
@@ -234,78 +191,6 @@
             </radialGradient>
         `;
     }
-
-    // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo
-    //  (mesmo padrao de mandala.js/liberacao.js/profeccao.js) - mantido
-    //  aqui comentado ate a mandala da Sinastria ser testada de verdade
-    //  no site com os icones novos - so remover depois de confirmado]
-    // function fragmentoPlaneta3D(planetId, sufixo) {
-    // if (typeof estiloPlanetasEsferico === 'function' && !estiloPlanetasEsferico() && typeof getPlanetSimpleFragment === 'function') {
-    // return getPlanetSimpleFragment(planetId);
-    // }
-    // const frags = {
-    // Sun: `<g>
-    // <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25" filter="blur(2px)"/>
-    // <circle cx="50" cy="50" r="42" fill="url(#gradSun_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/>
-    // <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow_${sufixo})">☉</text>
-    // </g>`,
-    // Moon: `<g>
-    // <circle cx="50" cy="50" r="42" fill="url(#gradMoon_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/>
-    // <circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/>
-    // <circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/>
-    // <circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/>
-    // <ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/>
-    // <path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" filter="url(#glyphShadow_${sufixo})"/>
-    // </g>`,
-    // Mercury: `<g>
-    // <circle cx="50" cy="50" r="42" fill="url(#gradMercury_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/>
-    // <circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/>
-    // <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow_${sufixo})">☿</text>
-    // </g>`,
-    // Venus: `<g>
-    // <circle cx="50" cy="50" r="42" fill="url(#gradVenus_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/>
-    // <circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/>
-    // <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow_${sufixo})">♀</text>
-    // </g>`,
-    // Mars: `<g>
-    // <circle cx="50" cy="50" r="42" fill="url(#gradMars_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/>
-    // <ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/>
-    // <circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/>
-    // <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow_${sufixo})">♂</text>
-    // </g>`,
-    // Jupiter: `<g>
-    // <circle cx="50" cy="50" r="42" fill="url(#gradJupiter_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <g clip-path="url(#jupiterClip_${sufixo})" opacity="0.45">
-    // <rect x="0" y="24" width="100" height="6" fill="#8c531b" />
-    // <rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" />
-    // <rect x="0" y="49" width="100" height="11" fill="#783d19" />
-    // <rect x="0" y="64" width="100" height="6" fill="#8c531b" />
-    // <rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" />
-    // </g>
-    // <ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/>
-    // <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow_${sufixo})">♃</text>
-    // </g>`,
-    // Saturn: `<g>
-    // <g transform="rotate(-22 50 50)">
-    // <ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRings_${sufixo})" stroke-width="5.5" opacity="0.95" />
-    // <ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/>
-    // </g>
-    // <circle cx="50" cy="50" r="36" fill="url(#gradSaturn_${sufixo})" filter="url(#planetDropShadow_${sufixo})"/>
-    // <g transform="rotate(-22 50 50)">
-    // <path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRings_${sufixo})" stroke-width="5.5" />
-    // <path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/>
-    // </g>
-    // <ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/>
-    // <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow_${sufixo})">♄</text>
-    // </g>`
-    // };
-    // return frags[planetId] || '';
-    // }
 
     function fragmentoPlaneta3D(planetId, sufixo) {
         return (typeof getIconeFragmento === 'function') ? getIconeFragmento('planeta', planetId) : '';
@@ -538,20 +423,6 @@
             { label: "MC", deg: mcAbs, color: tinta.inkForte },
             { label: "IC", deg: (mcAbs + 180) % 360, color: tinta.inkForte }
         ];
-        // [DESATIVADO 28/09/2026 - badge circular antigo substituido pelo
-        //  triangulo do icone novo (mesmo padrao de mandala.js) logo abaixo -
-        //  mantido aqui comentado ate a mandala da Sinastria ser testada de
-        //  verdade no site - so remover depois de confirmado]
-        // eixosInternos.forEach(eixo => {
-        //     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
-        //     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
-        //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        //         <circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${eixo.color}" stroke-width="1.8"/>
-        //         <text x="0" y="3.5" font-size="9" font-weight="900" fill="${eixo.color}" text-anchor="middle">${eixo.label}</text>
-        //         <text x="0" y="18" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
-        //     </g>`;
-        // });
-
         eixosInternos.forEach(eixo => {
             const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
             const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
@@ -590,10 +461,6 @@
         for (let s = 0; s < 12; s++) {
             let prev = 0;
             EGYPTIAN_TERMS[s].forEach(term => {
-                // [DESATIVADO 28/09/2026 - glifo de texto antigo, substituido
-                //  pelo icone novo logo abaixo - mantido comentado ate teste]
-                // const pTermOld = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-                // svg += `<text x="${pTermOld.x}" y="${pTermOld.y + 4}" font-size="10" font-weight="bold" fill="${goldColor}" text-anchor="middle">${term.p}</text>`;
                 const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
                 const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
                 svg += getIconeTermoSVG(termoPlanetId, termoIconTamanho, goldColor)
@@ -634,36 +501,6 @@
             svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
             const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-            // [DESATIVADO 28/09/2026 - desenho antigo de nodo/sizigia/lote
-            //  (texto cru ou forma desenhada a mao), substituido pelos
-            //  icones novos logo abaixo (mesmo padrao de mandala.js) -
-            //  mantido aqui comentado ate a mandala da Sinastria ser
-            //  testada de verdade no site - so remover depois de confirmado]
-            // if (item.type === "node") {
-            //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-            //         <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-            //         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-            //     </g>`;
-            // } else if (item.type === "syzygy") {
-            //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-            //         <circle cx="0" cy="0" r="12" fill="${tinta.fundoDisco}" stroke="none"/>
-            //         <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
-            //         <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
-            //         <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-            //         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-            //     </g>`;
-            // } else if (item.type === "lot") {
-            //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
-            //     if (item.lotType === "fortune") {
-            //         svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
-            //     } else if (item.lotType === "spirit") {
-            //         svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
-            //     } else {
-            //         svg += `<circle cx="0" cy="0" r="10" fill="${tinta.fundoDisco}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
-            //     }
-            //     svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
-            // }
-
             const LOTE_ICON_KEY = {
                 fortune: 'fortune', spirit: 'spirit', venus: 'eros',
                 mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'

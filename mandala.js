@@ -152,96 +152,6 @@ const PLANETS_DEF = [
   { id: "Saturn", name: "Saturno", symbol: "♄", key: "Saturno" }
 ];
 
-// [DESATIVADO 28/09/2026 - substituído pelo bloco novo logo abaixo,
-//  mantido aqui comentado até a Mandala ser testada de verdade no
-//  site com os icones novos - so remover depois de confirmado]
-// /* DEFINIÇÕES VETORIAIS 3D DOS 7 PLANETAS */
-// const PLANET_3D_SVGS = {
-//   Sun: `
-//     <g>
-//       <circle cx="50" cy="50" r="46" fill="#f59e0b" opacity="0.25" filter="blur(2px)"/>
-//       <circle cx="50" cy="50" r="42" fill="url(#gradSun)" filter="url(#planetDropShadow)"/>
-//       <ellipse cx="38" cy="24" rx="16" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 38 24)"/>
-//       <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">☉</text>
-//     </g>
-//   `,
-//   Moon: `
-//     <g>
-//       <circle cx="50" cy="50" r="42" fill="url(#gradMoon)" filter="url(#planetDropShadow)"/>
-//       <circle cx="34" cy="38" r="7" fill="#334155" opacity="0.22"/>
-//       <circle cx="62" cy="46" r="10" fill="#334155" opacity="0.18"/>
-//       <circle cx="42" cy="66" r="8" fill="#1e293b" opacity="0.25"/>
-//       <circle cx="58" cy="28" r="5" fill="#475569" opacity="0.15"/>
-//       <ellipse cx="36" cy="22" rx="14" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-25 36 22)"/>
-//       <path d="M 40,24 C 62,24 72,36 72,50 C 72,64 62,76 40,76 C 54,69 60,59 60,50 C 60,41 54,31 40,24 Z" 
-//             fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" filter="url(#glyphShadow)"/>
-//     </g>
-//   `,
-//   Mercury: `
-//     <g>
-//       <circle cx="50" cy="50" r="42" fill="url(#gradMercury)" filter="url(#planetDropShadow)"/>
-//       <ellipse cx="36" cy="24" rx="15" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-20 36 24)"/>
-//       <circle cx="68" cy="65" r="18" fill="#1c0a00" opacity="0.3"/>
-//       <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">☿</text>
-//     </g>
-//   `,
-//   Venus: `
-//     <g>
-//       <circle cx="50" cy="50" r="42" fill="url(#gradVenus)" filter="url(#planetDropShadow)"/>
-//       <ellipse cx="36" cy="22" rx="16" ry="8" fill="#ffffff" opacity="0.45" transform="rotate(-20 36 22)"/>
-//       <circle cx="65" cy="62" r="22" fill="#451a03" opacity="0.25"/>
-//       <text x="50" y="66" font-size="48" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♀</text>
-//     </g>
-//   `,
-//   Mars: `
-//     <g>
-//       <circle cx="50" cy="50" r="42" fill="url(#gradMars)" filter="url(#planetDropShadow)"/>
-//       <ellipse cx="44" cy="12" rx="10" ry="3" fill="#ffffff" opacity="0.45"/>
-//       <ellipse cx="34" cy="26" rx="14" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-25 34 26)"/>
-//       <circle cx="68" cy="66" r="22" fill="#2d0505" opacity="0.4"/>
-//       <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♂</text>
-//     </g>
-//   `,
-//   Jupiter: `
-//     <g>
-//       <circle cx="50" cy="50" r="42" fill="url(#gradJupiter)" filter="url(#planetDropShadow)"/>
-//       <g clip-path="url(#jupiterClip)" opacity="0.45">
-//         <rect x="0" y="24" width="100" height="6" fill="#8c531b" />
-//         <rect x="0" y="36" width="100" height="9" fill="#ffffff" opacity="0.3" />
-//         <rect x="0" y="49" width="100" height="11" fill="#783d19" />
-//         <rect x="0" y="64" width="100" height="6" fill="#8c531b" />
-//         <rect x="0" y="73" width="100" height="7" fill="#ffffff" opacity="0.2" />
-//       </g>
-//       <ellipse cx="36" cy="22" rx="15" ry="7" fill="#ffffff" opacity="0.3" transform="rotate(-20 36 22)"/>
-//       <text x="50" y="66" font-size="46" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♃</text>
-//     </g>
-//   `,
-//   Saturn: `
-//     <g>
-//       <g transform="rotate(-22 50 50)">
-//         <ellipse cx="50" cy="50" rx="64" ry="11" fill="none" stroke="url(#gradRings)" stroke-width="5.5" opacity="0.95" />
-//         <ellipse cx="50" cy="50" rx="66.5" ry="12.2" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.7"/>
-//       </g>
-//       <circle cx="50" cy="50" r="36" fill="url(#gradSaturn)" filter="url(#planetDropShadow)"/>
-//       <g transform="rotate(-22 50 50)">
-//         <path d="M -14,50 A 64 11 0 0 0 114,50" fill="none" stroke="url(#gradRings)" stroke-width="5.5" />
-//         <path d="M -16.5,50 A 66.5 12.2 0 0 0 116.5,50" fill="none" stroke="#64748b" stroke-width="0.7" opacity="0.8"/>
-//       </g>
-//       <ellipse cx="38" cy="26" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-20 38 26)"/>
-//       <text x="50" y="65" font-size="44" font-weight="900" fill="#ffffff" stroke="#ffffff" stroke-width="1.2" text-anchor="middle" filter="url(#glyphShadow)">♄</text>
-//     </g>
-//   `
-// };
-//
-// /* Escolhe entre o ícone esférico 3D e o ícone simples (glifo), conforme a
-//    configuração de Aparência salva pelo usuário. */
-// function planetIconFragment(planetId) {
-//   if (typeof estiloPlanetasEsferico === 'function' && estiloPlanetasEsferico()) {
-//     return PLANET_3D_SVGS[planetId] || '';
-//   }
-//   return (typeof getPlanetSimpleFragment === 'function') ? getPlanetSimpleFragment(planetId) : (PLANET_3D_SVGS[planetId] || '');
-// }
-
 /* Escolhe entre o icone esferico 3D e o icone simples (glifo), conforme a
    configuracao de Aparencia salva pelo usuario - agora delegado pro bloco
    central novo em planetIcons.js (getIconeFragmento), que ja faz essa
@@ -805,61 +715,6 @@ async function executarCalculo() {
     return false;
   }
 }
-
-// [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo (icones
-//  novos do sistema central + botao/menu mais largos, proporcionais ao
-//  time-stepper) - mantido aqui comentado ate o seletor ser testado de
-//  verdade no site - so remover depois de confirmado]
-// function injetarBotaoRotacaoNaBarraSuperior() {
-//   const parentContainer = document.getElementById('mandala-controls-overlay');
-//   if (!parentContainer) return;
-//
-//   let btnContainer = document.getElementById('lotRotationBtnContainer');
-//   if (!btnContainer) {
-//     btnContainer = document.createElement('div');
-//     btnContainer.id = 'lotRotationBtnContainer';
-//     btnContainer.style.cssText = "display: inline-flex; align-items: center; justify-content: center; position: relative; margin-right: 6px;";
-//     parentContainer.insertBefore(btnContainer, parentContainer.firstChild);
-//   }
-//
-//   const syms = {
-//     mercury: '☿',
-//     venus: '♀',
-//     mars: '♂',
-//     jupiter: '♃',
-//     saturn: '♄'
-//   };
-//
-//   let iconContent = '';
-//   if (selectedHouse1Lot === 'ASC') {
-//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8"/><text x="0" y="3.5" font-size="9" font-weight="900" fill="#000000" text-anchor="middle">ASC</text></svg>`;
-//   } else if (selectedHouse1Lot === 'fortune') {
-//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg>`;
-//   } else if (selectedHouse1Lot === 'spirit') {
-//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="18" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg>`;
-//   } else {
-//     const symbol = syms[selectedHouse1Lot] || '';
-//     iconContent = `<svg width="24" height="24" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">${symbol}</text></svg>`;
-//   }
-//
-//     btnContainer.innerHTML = `
-//     <div style="position: relative; display: inline-block;">
-//       <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
-//         ${iconContent}
-//       </button>
-//       <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 32px; box-sizing: border-box;">
-//         <div onclick="alternarRotacaoCasa1('ASC')" style="padding: 6px 0; cursor: pointer; text-align: center; font-size: 11px; font-weight: 800; color: var(--primary-blue);">ASC</div>
-//         <div onclick="alternarRotacaoCasa1('fortune')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="#103b70" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="#103b70" stroke-width="1.5"/></svg></div>
-//         <div onclick="alternarRotacaoCasa1('spirit')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><text x="0" y="5" font-size="26" font-weight="400" font-family="'Montserrat', sans-serif" fill="#103b70" text-anchor="middle" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">Φ</text></svg></div>
-//         <div onclick="alternarRotacaoCasa1('mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">☿</text></svg></div>
-//         <div onclick="alternarRotacaoCasa1('venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♀</text></svg></div>
-//         <div onclick="alternarRotacaoCasa1('mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♂</text></svg></div>
-//         <div onclick="alternarRotacaoCasa1('jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♃</text></svg></div>
-//         <div onclick="alternarRotacaoCasa1('saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;"><svg width="20" height="20" viewBox="-12 -12 24 24"><circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#103b70" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="#103b70" text-anchor="middle">♄</text></svg></div>
-//       </div>
-//     </div>
-//   `;
-// }
 
 /* Mesmo de-para de mandala.js's renderMandala (LOTE_ICON_KEY local), mas
    em escopo de módulo porque essa função não está dentro de renderMandala.
@@ -1622,46 +1477,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
   }
-
-  // [DESATIVADO 28/09/2026 - substituido pelo bloco novo logo abaixo,
-  //  mantido aqui comentado ate a Mandala ser testada de verdade no
-  //  site com os icones novos - so remover depois de confirmado]
-  // outerRingItems.forEach(item => {
-  //   if (item.type === 'planet') return;
-  //
-  //   const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
-  //
-  //   const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-  //   const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
-  //   svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
-  //
-  //   const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-  //
-  //   if (item.type === "node") {
-  //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-  //       <text x="0" y="5" font-size="24" font-weight="bold" fill="${item.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${item.label}</text>
-  //       <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-  //     </g>`;
-  //   } else if (item.type === "syzygy") {
-  //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-  //       <circle cx="0" cy="0" r="12" fill="${fundoDiscoEfetivo}" stroke="none"/>
-  //       <circle cx="0" cy="0" r="10" stroke="${item.color}" stroke-width="1.8" fill="none"/>
-  //       <path d="M 0 -10 A 10 10 0 0 1 0 10 Q 3.8 -3.8 -3.8 -10 Z" fill="${item.color}"/>
-  //       <circle cx="0" cy="0" r="2.3" fill="${item.color}"/>
-  //       <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-  //     </g>`;
-  //   } else if (item.type === "lot") {
-  //     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">`;
-  //     if (item.lotType === "fortune") {
-  //       svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="${tinta.navio}" stroke-width="1.5"/>`;
-  //     } else if (item.lotType === "spirit") {
-  //       svg += `<text x="0" y="5" font-size="34" font-weight="400" font-family="'Montserrat', sans-serif" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">Φ</text>`;
-  //     } else {
-  //       svg += `<circle cx="0" cy="0" r="10" fill="${fundoDiscoEfetivo}" stroke="${tinta.navio}" stroke-width="1.5"/><text x="0" y="4" font-size="11" font-weight="bold" fill="${tinta.navio}" text-anchor="middle">${item.sym}</text>`;
-  //     }
-  //     svg += `<text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text></g>`;
-  //   }
-  // });
 
   /* item.lotType vem de calculateSevenLots() como o planeta regente do
      lote ("venus", "mercury"...) pra fortune/spirit, que ja tem nome
