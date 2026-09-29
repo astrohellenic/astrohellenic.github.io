@@ -3832,12 +3832,29 @@ function injetarEstilosRelatorio() {
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
         margin-bottom: 14px; flex-shrink: 0;
       }
-      /* flex:1 + min-height:0 é o que permite essa área encolher dentro da
-         coluna (senão a imagem empurraria a página pra além do tamanho A4)
-         — dentro dela, centraliza a imagem nos dois eixos preservando a
-         proporção original, seja a captura larga ou alta. */
-      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-      .rel-img-captura { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
+      /* ATUALIZAÇÃO (29/09/2026): a versão anterior dava "max-height:100%"
+         pra .rel-img-captura, uma PORCENTAGEM calculada em cima da altura
+         de .rel-captura-corpo — que por sua vez só existe porque ELA
+         TAMBÉM é "flex: 1" (duas camadas de flexbox empilhadas). Isso é
+         exatamente o mesmo risco já documentado no comentário de
+         ".rel-capa { height: 250mm }" mais abaixo (motor de impressão que
+         não repassa direito uma altura "calculada" por flexbox pra uma
+         porcentagem de dentro dela resolver) — só que essa página tinha
+         ficado de fora daquela lição na hora de escrever o código.
+         Sintoma: imagem alta empurrando .rel-num-pagina-canto pra outra
+         página, criando uma página extra quase em branco — mesmo defeito
+         de sempre, com aparência de "cabe" porque o corte só falha às
+         vezes, não sempre.
+
+         Corrigido eliminando a porcentagem por completo: .rel-img-captura
+         agora é ELA MESMA "flex: 1" (o mesmo padrão de .rel-img-mandala,
+         ver comentário dela em "PÁGINAS DAS MANDALAS") — sem nenhuma
+         conta de porcentagem em cima de altura calculada, o próprio motor
+         de flexbox distribui o espaço entre título e imagem direto, e
+         "object-fit: contain" encolhe a imagem proporcionalmente pra
+         caber no espaço que sobrar (nunca esmagada/cortada). */
+      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+      .rel-img-captura { flex: 1; min-height: 0; width: 100%; object-fit: contain; display: block; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
