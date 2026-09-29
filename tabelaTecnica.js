@@ -463,14 +463,14 @@ function renderPainelTecnico(data, containerId) {
           <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
         </button>
       </div>
-      <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+      <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 10px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
       ${montarCabecalhoMandalaHTML(data, 'painelTecnicoHeader')}
     `;
 
     html += `
-      <div id="painelPrincipalContainer" style="text-align: center; margin: 24px 0;">
+      <div id="painelPrincipalContainer" style="text-align: center; margin: 12px 0;">
         ${montarSVGPainelPrincipal(listaElementos)}
       </div>
     `;
