@@ -12,7 +12,10 @@
    função não guarda, não loga e não repassa esse HTML pra lugar
    nenhum, só usa ele em memória pra montar o PDF e descarta. */
 
-const chromium = require('@sparticuz/chromium');
+// A partir da v137, o pacote virou ESM por dentro — em CommonJS o valor
+// de verdade vem em ".default" (sem isso, "chromium.executablePath" nem
+// existe: o require() cru só devolve {__esModule, default, ...}).
+const chromium = require('@sparticuz/chromium').default;
 const puppeteer = require('puppeteer-core');
 
 // Só esses sites podem chamar essa função. Sem isso, qualquer site na

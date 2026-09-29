@@ -387,20 +387,47 @@ nessa sessão. Peças novas:
 
 - **`api/gerar-pdf.js`** — função serverless (Vercel, Node, CommonJS)
   que recebe `{ html }` no corpo (POST), abre esse HTML num Chromium
-  headless (`puppeteer-core` + `@sparticuz/chromium`, versões travadas
-  em `22.13.1`/`126.0.0` — ver comentário no `package.json`; NÃO
-  atualizar pra "latest" sem checar a tabela de compatibilidade do
-  `@sparticuz/chromium` no GitHub, versões descasadas podem simplesmente
-  não subir o Chromium na Vercel) e devolve o PDF (`page.pdf()`, com
-  `printBackground: true` — sem isso as cores de fundo da capa somem).
-  CORS restrito a `astrohellenic.com`/`www.astrohellenic.com`/
-  `astrohellenic.github.io` (lista `ORIGENS_PERMITIDAS`), pra ninguém
-  de fora usar esse endpoint às custas da conta Vercel do astrólogo.
-  Testado localmente (fora da Vercel, via `node` direto neste
-  ambiente) que o Chromium sobe e gera um PDF válido com fundo colorido
-  — não foi possível testar contra a Vercel de verdade nem contra o
-  HTML real do relatório (com mandala, fontes etc.), só a mecânica
-  básica.
+  headless (`puppeteer-core` + `@sparticuz/chromium`) e devolve o PDF
+  (`page.pdf()`, com `printBackground: true` — sem isso as cores de
+  fundo da capa somem). CORS restrito a `astrohellenic.com`/
+  `www.astrohellenic.com`/`astrohellenic.github.io` (lista
+  `ORIGENS_PERMITIDAS`), pra ninguém de fora usar esse endpoint às
+  custas da conta Vercel do astrólogo.
+
+  **Erro real (29/09/2026), já corrigido — não repetir:** a primeira
+  versão publicada travava a versão do `@sparticuz/chromium` em
+  `126.0.0` "pra ser conservador" — só que isso quebrou de verdade na
+  Vercel (testado só localmente antes de publicar, e o problema NUNCA
+  aparece localmente, só lá). Erro visto nos Logs da Vercel: `/tmp/
+  chromium: error while loading shared libraries: libnss3.so: cannot
+  open shared object file`. Causa raiz: a Vercel roda as funções num
+  ambiente chamado "Fluid Compute", parecido com AWS Lambda mas SEM as
+  variáveis de ambiente que o Lambda tem — versões do
+  `@sparticuz/chromium` **anteriores à 137.0.0** não sabiam detectar
+  esse ambiente por outro caminho (variável `VERCEL`) e escolhiam um
+  binário do Chromium com bibliotecas incompatíveis. Corrigido
+  atualizando pra `@sparticuz/chromium@153.0.0` +
+  `puppeteer-core@25.12.0` (par mais recente, testado localmente de
+  novo depois da troca). **Pegadinha extra dessa atualização:** a
+  partir da v137 o pacote virou ESM por dentro — em CommonJS
+  `require('@sparticuz/chromium')` sozinho não expõe mais
+  `.executablePath`/`.args` diretamente, precisa pegar `.default`
+  (`require('@sparticuz/chromium').default`) — sem isso dá
+  `TypeError: chromium.executablePath is not a function`, também só
+  detectável testando de verdade (o `require` não avisa nada, só
+  quebra na hora de usar).
+
+  **Lição pra próxima vez que mexer nisso:** testar local (`node`
+  direto) só prova que o pacote instala e roda em Linux genérico — NÃO
+  prova que funciona no ambiente real da Vercel (esse bug específico só
+  existe lá, nunca localmente). "Travar numa versão conservadora sem
+  checar se ela suporta Vercel" foi pior do que usar a mais recente.
+  Sempre que mexer nessas duas dependências de novo: usar a versão mais
+  recente de ambas (é o par que o mantenedor testa), e pedir pro
+  astrólogo testar de verdade no site publicado antes de considerar
+  resolvido — os Logs da função na Vercel (painel do projeto → "Logs")
+  são o único jeito de ver o erro de verdade quando isso acontece de
+  novo.
 - **`package.json`/`package-lock.json`/`vercel.json`** — novos, só
   pra essa função (`vercel.json` define memória/tempo máximo da
   função). O site continua 100% estático publicado pelo GitHub Pages
