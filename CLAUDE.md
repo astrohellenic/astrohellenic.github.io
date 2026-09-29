@@ -514,6 +514,28 @@ foi feita ainda, porque exigem acesso que só o astrólogo tem):
    depois disso dá pra confirmar que resolveu os sintomas descritos
    mais acima (página extra em branco, imagem "atrás" na prévia).
 
+**Atualização (29/09/2026, depois de testar de verdade): os três erros
+de deploy acima foram corrigidos e o PDF passou a gerar de verdade —
+mas o sintoma histórico da "página extra em branco" (documentado desde
+22/09) ainda acontecia, só que agora com causa raiz bem mais simples de
+achar (sem captura de tela/canvas no meio, o bug ficou fácil de
+localizar direto no CSS): `.rel-page-captura` (a página de uma
+ferramenta capturada, ex. Painel Técnico) tinha ficado de fora da
+correção que só a `.rel-capa` recebeu (ver comentário
+"`.rel-capa { height: 250mm }`" no `@media print` de
+`injetarEstilosRelatorio`) — mesmo bug de flexbox descrito naquele
+comentário (`min-height` sem `height` fixo não repassa direito pro
+`flex: 1` calcular), só que nunca replicado pra essa outra página que
+usa o mesmo padrão. Corrigido igualando `.rel-page-captura` à `.rel-capa`
+(`height: 250mm` também). Testado localmente gerando PDF de verdade dos
+dois jeitos (sem/com a correção) pra confirmar a causa antes de
+publicar: sem a correção, uma imagem que ocupa a página inteira sempre
+virava 2 páginas no PDF; com a correção, vira 1. Esse era o mesmo
+sintoma que sessões anteriores (22/09) tentaram resolver sem sucesso no
+mecanismo antigo de captura de tela — a troca pro Chrome headless não
+só resolveu a fragilidade geral como tornou ESSE bug específico trivial
+de achar (era só CSS, sempre foi).
+
 ## O "motor de astrologia" (posições planetárias) mora FORA deste repositório — é normal, não precisa trazer pra cá
 
 `mandala.js` (função que busca o céu do momento, por volta da linha 654)
