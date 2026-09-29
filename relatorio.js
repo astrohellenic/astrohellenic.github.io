@@ -3211,158 +3211,71 @@ function nomeArquivoRelatorioPDF(preset) {
   return bruto.replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
 }
 
-/* Escreve o número da página no canto inferior direito, direto no PDF
-   (não é uma captura de tela — é texto de verdade, desenhado pelo
-   próprio jsPDF em cima da imagem já colada) — assim funciona certinho
-   mesmo nas páginas que vieram de um bloco fatiado (um texto bem
-   comprido que ocupou mais de uma folha), onde cada fatia physicamente
-   é uma página своя e precisa do seu próprio número. Sem isso, o Índice
-   apontava pra números que não apareciam em lugar nenhum do PDF. */
-function numerarPaginaPdf(pdf, numero, larguraMm, alturaMm) {
-  pdf.setFontSize(9);
-  pdf.setTextColor(154, 109, 24); // mesmo tom dourado do número no Índice em tela
-  pdf.text(String(numero), larguraMm - 12, alturaMm - 10, { align: 'right' });
-}
+/* GERA O PDF NUM CHROME HEADLESS DE VERDADE, rodando num serviço à
+   parte (função serverless na Vercel, ver /api/gerar-pdf.js) — não é
+   mais captura de tela (html2canvas+jsPDF). O motor de impressão
+   nativo do navegador já tinha sido tentado antes desse mecanismo de
+   captura e foi abandonado (ver CLAUDE.md) porque cada aparelho quem
+   imprimia era o PRÓPRIO navegador do astrólogo/cliente — Safari/iPad
+   em especial calculava a página errado. Aqui é diferente: é sempre o
+   MESMO Chromium, rodando no servidor, nunca no aparelho de quem
+   baixa — elimina exatamente essa inconsistência entre aparelhos.
 
-/* GERA O PDF DIRETO EM CÓDIGO — sem passar pelo "Imprimir" do navegador.
-   Foi trocado por isso porque cada navegador/aparelho (Chrome, Safari,
-   iPad) tem seu próprio motor de impressão, com seus próprios
-   cabeçalhos/rodapés forçados, margens e jeito de calcular página —
-   nenhum CSS consegue controlar isso por completo, e por isso o
-   relatório vinha saindo diferente (e quebrado) dependendo de onde era
-   gerado. Aqui a gente tira uma "foto" (html2canvas) de cada .rel-page
-   já pronta na tela — a prévia sempre esteve certa, só a impressão que
-   não — e cola essas fotos, uma por uma, em folhas A4 de verdade dentro
-   de um arquivo PDF (jsPDF). Sem depender de navegador nenhum pra
-   paginar, o resultado é idêntico em qualquer aparelho. */
+   O que é enviado pro servidor é a MESMA prévia que já está certa na
+   tela: o .rel-viewer inteiro (já paginado em folhas por
+   dividirPaginasLongasEmFolhas, com os números de página já escritos
+   em cada .rel-num-pagina-canto) mais o CSS de impressão que já existe
+   (injetarEstilosRelatorio, incluindo o bloco @media print). O servidor
+   só carrega esse HTML autônomo e usa a função nativa do Chrome de
+   exportar pra PDF (page.pdf()) — texto de verdade, sem cortar nem
+   fatiar imagem nenhuma. */
+const RELATORIO_PDF_API_URL = 'https://SUBSTITUA-PELO-SEU-PROJETO.vercel.app/api/gerar-pdf';
+
 async function baixarRelatorioPDF() {
   const viewer = document.querySelector('.rel-viewer');
   if (!viewer) return;
-  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou. Recarregue a página e tente de novo.'); return; }
-  if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') { alert('Biblioteca de geração de PDF não carregou. Recarregue a página e tente de novo.'); return; }
-
-  const paginas = Array.from(viewer.querySelectorAll(':scope > .rel-page'));
-  if (!paginas.length) return;
+  if (viewer.dataset.gerandoPdf === '1') return;
 
   const botao = document.getElementById('relBtnBaixarPdf');
   const rotuloOriginal = botao ? botao.innerHTML : '';
-  if (botao) botao.disabled = true;
-
-  const MM_A4_LARGURA = 210;
-  const MM_A4_ALTURA = 297;
+  if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando PDF...'; }
+  viewer.dataset.gerandoPdf = '1';
 
   try {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-    let paginasPdfGeradas = 0;
+    const estilos = document.getElementById('relatorio-estilos');
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Montserrat', sans-serif; }</style>
+<style>${estilos ? estilos.textContent : ''}</style>
+</head>
+<body>${viewer.outerHTML}</body>
+</html>`;
 
-    for (let i = 0; i < paginas.length; i++) {
-      const pagina = paginas[i];
-      if (botao) botao.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando página ${i + 1} de ${paginas.length}...`;
+    const resposta = await fetch(RELATORIO_PDF_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html })
+    });
+    if (!resposta.ok) throw new Error('Servidor de PDF respondeu ' + resposta.status);
 
-      // Tira a sombra e a margem que só existem pra separar as páginas
-      // na prévia em tela — numa folha de PDF de verdade não fazem
-      // sentido — e o selo de número em tela (o número de verdade quem
-      // escreve é o jsPDF, depois, direto na página; se a captura
-      // incluísse o selo também, o número saía em dobro). Devolve tudo
-      // como estava depois de capturar.
-      const boxShadowOriginal = pagina.style.boxShadow;
-      const margemOriginal = pagina.style.margin;
-      const seloNumero = pagina.querySelector(':scope > .rel-num-pagina-canto');
-      pagina.style.boxShadow = 'none';
-      pagina.style.margin = '0';
-      if (seloNumero) seloNumero.style.display = 'none';
-
-      // Um texto personalizado bem comprido faz essa página crescer bem
-      // mais alta que uma folha A4 (de propósito — ver comentário
-      // abaixo, que depois fatia isso em várias folhas). Só que
-      // html2canvas cria UM canvas do tamanho da página inteira ANTES de
-      // fatiar, e em "scale: 2" isso pode passar do limite de área de
-      // canvas que Safari/iPad aceita (por volta de 4096px num dos
-      // lados, dependendo do aparelho) — quando passa, o navegador não
-      // avisa nada, só devolve um canvas em branco/cortado a partir daí,
-      // e é isso que fazia o texto que não cabia numa folha só
-      // "simplesmente não aparecer" em vez de virar a página seguinte.
-      // Reduz a escala só quando a página é alta o suficiente pra
-      // esbarrar nesse limite — páginas normais (a grande maioria)
-      // continuam em scale:2, nítidas como sempre.
-      const LIMITE_DIMENSAO_CANVAS_PX = 4000;
-      const larguraNaturalPx = pagina.scrollWidth;
-      const alturaNaturalPx = pagina.scrollHeight;
-      let escalaCaptura = 2;
-      if (larguraNaturalPx * escalaCaptura > LIMITE_DIMENSAO_CANVAS_PX || alturaNaturalPx * escalaCaptura > LIMITE_DIMENSAO_CANVAS_PX) {
-        escalaCaptura = Math.max(1, Math.min(
-          LIMITE_DIMENSAO_CANVAS_PX / larguraNaturalPx,
-          LIMITE_DIMENSAO_CANVAS_PX / alturaNaturalPx
-        ));
-      }
-
-      const canvas = await html2canvas(pagina, { scale: escalaCaptura, useCORS: true, backgroundColor: '#ffffff' });
-      pagina.style.boxShadow = boxShadowOriginal;
-      pagina.style.margin = margemOriginal;
-      if (seloNumero) seloNumero.style.display = '';
-
-      // Praticamente todo bloco cabe exatamente numa folha (a prévia em
-      // tela já é do tamanho A4). Mas um texto personalizado bem comprido
-      // pode passar de uma página — em vez de espremer tudo numa folha só
-      // (o que distorceria o conteúdo), fatia a imagem em pedaços de uma
-      // folha cada, sem espremer nada.
-      const pxPorMm = canvas.width / MM_A4_LARGURA;
-      const alturaEquivalenteMm = canvas.height / pxPorMm;
-
-      // .rel-page-captura (a página de uma ferramenta capturada — ex.:
-      // Painel Técnico) é, por design, SEMPRE uma folha só: o CSS dela
-      // (.rel-captura-corpo com flex:1 + max-height:100%) já existe
-      // exatamente pra nunca deixar a imagem passar da folha. Mesmo
-      // assim, uma sobra mínima (poucos milímetros, arredondamento de
-      // pixel na captura) já bastava pra cair no "else" abaixo e criar
-      // uma folha nova SÓ com esse restinho quase em branco — cada
-      // imagem dessas virava 2 páginas em vez de 1, descasando a
-      // numeração do Índice pra sempre depois dela. Como essas páginas
-      // nunca são pensadas pra continuar num "página 2", força sempre o
-      // caminho de folha única aqui — qualquer sobra mínima real fica
-      // só um pouco cortada na borda de baixo da imagem (imperceptível),
-      // nunca vira outra folha.
-      const nuncaFatiar = pagina.classList.contains('rel-page-captura');
-
-      if (nuncaFatiar || alturaEquivalenteMm <= MM_A4_ALTURA + 2) { // +2mm de tolerância de arredondamento — cabe numa folha só
-        if (paginasPdfGeradas > 0) pdf.addPage();
-        // width/height aqui preservam a proporção natural da captura
-        // (é assim que alturaEquivalenteMm foi calculada). Se nuncaFatiar
-        // empurrou uma sobra real além da folha, o próprio limite físico
-        // da página do PDF corta o excesso (nunca aparece, nem vaza pra
-        // outra página) — bem diferente de espremer a imagem numa altura
-        // menor, que distorceria ela (esmagada), em vez de só cortar a
-        // pontinha de baixo.
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaEquivalenteMm, undefined, 'FAST');
-        paginasPdfGeradas++;
-        numerarPaginaPdf(pdf, paginasPdfGeradas, MM_A4_LARGURA, MM_A4_ALTURA);
-      } else {
-        const alturaFatiaPx = Math.round(MM_A4_ALTURA * pxPorMm);
-        let offsetPx = 0;
-        while (offsetPx < canvas.height) {
-          const alturaDestaFatiaPx = Math.min(alturaFatiaPx, canvas.height - offsetPx);
-
-          const fatia = document.createElement('canvas');
-          fatia.width = canvas.width;
-          fatia.height = alturaDestaFatiaPx;
-          fatia.getContext('2d').drawImage(canvas, 0, offsetPx, canvas.width, alturaDestaFatiaPx, 0, 0, canvas.width, alturaDestaFatiaPx);
-
-          if (paginasPdfGeradas > 0) pdf.addPage();
-          const alturaFatiaMm = alturaDestaFatiaPx / pxPorMm;
-          pdf.addImage(fatia.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MM_A4_LARGURA, alturaFatiaMm, undefined, 'FAST');
-          paginasPdfGeradas++;
-          numerarPaginaPdf(pdf, paginasPdfGeradas, MM_A4_LARGURA, MM_A4_ALTURA);
-          offsetPx += alturaDestaFatiaPx;
-        }
-      }
-    }
-
-    pdf.save(nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {}));
+    const blobPdf = await resposta.blob();
+    const url = URL.createObjectURL(blobPdf);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {});
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   } catch (err) {
     console.error('Erro ao gerar o PDF do relatório:', err);
     alert('Não foi possível gerar o PDF. Tente novamente.');
   } finally {
+    delete viewer.dataset.gerandoPdf;
     if (botao) { botao.disabled = false; botao.innerHTML = rotuloOriginal; }
   }
 }
@@ -3606,10 +3519,9 @@ function numerarPaginasIndice(container) {
 
     // Número no canto inferior direito da PRÓPRIA página (não só no
     // Índice) — pra aparecer tanto na prévia em tela quanto pra quem só
-    // olhar aqui sem baixar o PDF. O número de verdade em cada folha do
-    // PDF baixado é escrito à parte, direto pelo jsPDF (ver
-    // numerarPaginaPdf) — escondido durante a captura de cada página
-    // (baixarRelatorioPDF), senão ficaria duplicado no PDF.
+    // olhar aqui sem baixar o PDF. É esse MESMO elemento que aparece no
+    // PDF baixado (baixarRelatorioPDF manda o .rel-viewer como está, sem
+    // esconder nada) — não tem número desenhado à parte.
     let selo = pagina.querySelector(':scope > .rel-num-pagina-canto');
     if (!selo) {
       selo = document.createElement('div');
