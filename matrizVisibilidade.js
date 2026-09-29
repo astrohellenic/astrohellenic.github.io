@@ -319,7 +319,8 @@ async function prepararPngMatrizVisibilidade() {
   if (!elemento) return;
   try {
     const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+    await rasterizarCabecalhosMandala(elemento);
+    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true, onclone: aplicarCabecalhosRasterizadosNoClone });
     if (document.getElementById('matrizVisibilidadeMandalaContainer') === elemento) {
       matrizPngPronto = canvas.toDataURL('image/png');
     }

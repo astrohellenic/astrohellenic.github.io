@@ -1027,9 +1027,43 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional) {
   const cores = coresCabecalhoMandala(modoEscuro, null);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="79" viewBox="0 0 960 79">${montarCabecalhoMandalaGrupoSVG(data, 2, cores)}</svg>`;
   const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="margin: 0 auto 16px auto; box-sizing: border-box;"><img src="${src}" alt="" draggable="false" style="display: block; width: 100%; height: auto;"></div>`;
+  /* A altura do quadro sai só da largura (aspect-ratio 960:79) e a <img> preenche esse quadro por posição absoluta — assim o
+     tamanho NÃO depende de a imagem já ter carregado. Com "height: auto" o
+     html2canvas (salvar/enviar imagem) às vezes media o quadro antes da
+     imagem carregar e cortava o cabeçalho pela metade. */
+  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="position: relative; width: 100%; aspect-ratio: 960 / 79; margin: 0 auto 16px auto; box-sizing: border-box;"><img data-cabecalho-svg="1" src="${src}" alt="" draggable="false" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;"></div>`;
 }
 window.montarCabecalhoMandalaImagemHTML = montarCabecalhoMandalaImagemHTML;
+
+/* Ao SALVAR/ENVIAR imagem (html2canvas), o Safari do iPad desenhava o
+   cabeçalho (SVG dentro de <img>) no tamanho original e cortava no quadro.
+   A Mandala não tem esse problema porque converte o SVG em PNG por canvas,
+   com tamanho de destino explícito — aqui se faz o mesmo só na hora de
+   capturar: rasterizarCabecalhosMandala prepara o PNG de cada cabeçalho
+   dentro de "raiz", e aplicarCabecalhosRasterizadosNoClone (passada em
+   "onclone" do html2canvas) troca o SVG pelo PNG só na cópia que vira
+   imagem — a tela continua com o SVG (vetorial). */
+async function rasterizarCabecalhosMandala(raiz) {
+  const imgs = (raiz || document).querySelectorAll('img[data-cabecalho-svg]');
+  for (const im of imgs) {
+    try {
+      const svgImg = new Image();
+      await new Promise((resolve, reject) => { svgImg.onload = resolve; svgImg.onerror = reject; svgImg.src = im.src; });
+      const canvas = document.createElement('canvas');
+      canvas.width = 960 * 2;
+      canvas.height = 79 * 2;
+      canvas.getContext('2d').drawImage(svgImg, 0, 0, canvas.width, canvas.height);
+      im.dataset.png = canvas.toDataURL('image/png');
+    } catch (e) {
+      console.error('Erro ao rasterizar o cabeçalho:', e);
+    }
+  }
+}
+function aplicarCabecalhosRasterizadosNoClone(doc) {
+  doc.querySelectorAll('img[data-cabecalho-svg]').forEach(i => { if (i.dataset.png) i.src = i.dataset.png; });
+}
+window.rasterizarCabecalhosMandala = rasterizarCabecalhosMandala;
+window.aplicarCabecalhosRasterizadosNoClone = aplicarCabecalhosRasterizadosNoClone;
 
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
