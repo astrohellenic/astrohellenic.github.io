@@ -176,7 +176,7 @@ function montarCabecalhoMandalaHTML(data, idOpcional) {
       <div>
         <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
         <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        <div style="font-size: 10.5px; color: var(--text-muted-2); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}  <span style="color: var(--primary-blue); font-weight: 700;">• ${sectText}</span></div>
+        <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}  <span style="color: var(--gold-dark); font-weight: 700;">• ${sectText}</span></div>
       </div>
       ${horasInfo ? `
       <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
@@ -458,9 +458,12 @@ function renderPainelTecnico(data, containerId) {
 
     let html = `
       <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 20px;">
-        <button onclick="capturarPainelTecnicoParaRelatorio()" title="Adiciona esta tela como um bloco no Relatório (a captura sai em tamanho natural, sem o zoom que você deu na tela, pra sair nítida no PDF)" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <div style="display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
+        <button type="button" onclick="salvarPainelTecnicoNaGaleria()" title="Salvar o Painel Técnico como imagem na galeria (com título e cabeçalho)" style="${PAINEL_BTN_ICONE_CSS}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        </button>
+        <button type="button" onclick="capturarPainelTecnicoParaRelatorio()" title="Adicionar ao Relatório (só a tabela, sem título nem cabeçalho)" style="${PAINEL_BTN_ICONE_CSS}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
       <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 10px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
@@ -477,6 +480,7 @@ function renderPainelTecnico(data, containerId) {
 
     html += `</div></div>`;
     container.innerHTML = html;
+    setTimeout(prepararPngPainelTecnico, 200); // depois do ajuste de largura do cabeçalho, logo abaixo
 
     const headerEl = document.getElementById('painelTecnicoHeader');
     const painelEl = document.querySelector('#painelPrincipalContainer svg');
@@ -522,7 +526,9 @@ function renderPainelTecnico(data, containerId) {
    caixinha nem transform nenhum (ver montarSVGPainelPrincipal), isso
    deixou de ser necessário: é só capturar direto. */
 async function capturarPainelTecnicoParaRelatorio() {
-  const elemento = document.getElementById('painel-tecnico-container');
+  // Só a tabela (sem título nem cabeçalho do cliente): o relatório já
+  // mostra o título da página e a capa já tem os dados do cliente.
+  const elemento = document.getElementById('painelPrincipalContainer');
   if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
 
@@ -540,6 +546,36 @@ async function capturarPainelTecnicoParaRelatorio() {
   }
 }
 window.capturarPainelTecnicoParaRelatorio = capturarPainelTecnicoParaRelatorio;
+
+const PAINEL_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0;";
+
+/* PNG (com título e cabeçalho do cliente) que o botão de galeria salva.
+   Gerado logo que o Painel aparece, e não no toque, porque o iPhone/iPad
+   só abre a folha de "Salvar Imagem" se for chamada direto do toque
+   (mesma razão de Mandala e Matriz terem o PNG pronto de antemão). O
+   salvar em si é salvarPngNaGaleria (mandala.js), igual nas outras telas. */
+let painelPngPronto = null;
+async function prepararPngPainelTecnico() {
+  painelPngPronto = null;
+  if (typeof html2canvas !== 'function') return;
+  const elemento = document.getElementById('painel-tecnico-container');
+  if (!elemento) return;
+  try {
+    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+    if (document.getElementById('painel-tecnico-container') === elemento) {
+      painelPngPronto = canvas.toDataURL('image/png');
+    }
+  } catch (err) {
+    console.error('Erro ao preparar o PNG do Painel Técnico:', err);
+  }
+}
+
+function salvarPainelTecnicoNaGaleria() {
+  if (!painelPngPronto) { alert('A imagem ainda está sendo preparada. Toque de novo em um instante.'); return; }
+  salvarPngNaGaleria(painelPngPronto, `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+}
+window.salvarPainelTecnicoNaGaleria = salvarPainelTecnicoNaGaleria;
 
 /* FUNÇÃO DE INICIALIZAÇÃO CHAMADA PELO BOTÃO DA BARRA */
 function iniciarModuloTabelaTecnica() {
