@@ -468,9 +468,14 @@ repositórios num só não traria benefício nenhum e só arriscaria quebrar
 link/configuração que já funciona — contraria a "regra de ouro" deste
 arquivo. Se uma sessão futura precisar mexer na lógica de cálculo
 astronômico em si (não só em como a Mandala consome o resultado), é
-nesse outro repositório que precisa ir — mas repare que sessões deste
-Claude Code não têm acesso a repositórios fora dos que foram
-autorizados no início da conversa (dá pra pedir acesso a mais um
-repositório no meio de uma conversa via `add_repo`, mas cada conversa
-nova começa sem esse acesso de novo — precisa ser concedido de novo a
-cada vez que for realmente necessário mexer lá).
+nesse outro repositório que precisa ir.
+
+**Acesso a esse outro repositório (checado na prática em 29/09/2026):**
+`pereiracassio/motor-astrologia` é **público**, então qualquer sessão
+deste Claude Code já consegue LER/clonar ele a qualquer momento, só de
+pedir — não existe um botão "adicionar repositório" na conversa nem
+precisa de autorização prévia do astrólogo pra isso (não é o mesmo caso
+do repositório do Astro Hellenic, que é privado e precisa ser
+selecionado/conectado na tela do GitHub da conta Claude). Só **editar/
+commitar** nesse outro repositório exigiria essa autorização de
+verdade — ler não.
