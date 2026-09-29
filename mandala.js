@@ -811,9 +811,22 @@ function injetarBotaoRelatorioNaBarraSuperior() {
   btn.type = 'button';
   btn.title = 'Adiciona a mandala ao Relatório, exatamente do jeito que está agora (com a rotação de Casa 1 escolhida)';
   btn.style.cssText = "width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);";
-  btn.innerHTML = '<i class="fa-solid fa-file-circle-plus" style="color: var(--primary-blue); font-size: 14px;"></i>';
+  /* Só o ícone monoline do Relatório (o mesmo da barra superior do
+     site), sem texto — pedido do astrólogo. */
+  btn.innerHTML = '<svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
   btn.onclick = capturarMandalaAtualParaRelatorio;
   rotationContainer.after(btn);
+
+  /* Botão "Salvar na galeria" (ícone de imagem), logo depois do do
+     Relatório — ver salvarImagemMandala. */
+  const btnGaleria = document.createElement('button');
+  btnGaleria.id = 'mandalaSalvarImagemBtnContainer';
+  btnGaleria.type = 'button';
+  btnGaleria.title = 'Salvar a mandala como imagem na galeria';
+  btnGaleria.style.cssText = btn.style.cssText;
+  btnGaleria.innerHTML = '<svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  btnGaleria.onclick = salvarImagemMandala;
+  btn.after(btnGaleria);
 }
 
 async function capturarMandalaAtualParaRelatorio() {
@@ -885,7 +898,7 @@ function injetarControleZoomMandala() {
   // Entre o botão de Relatório e o stepper de tempo — nunca no início da
   // barra (antes do ícone de rotação de Casa 1) nem no fim (depois do
   // stepper), pra não embaralhar a ordem dos controles já existentes.
-  const relatorioBtn = document.getElementById('mandalaRelatorioBtnContainer');
+  const relatorioBtn = document.getElementById('mandalaSalvarImagemBtnContainer') || document.getElementById('mandalaRelatorioBtnContainer');
   if (relatorioBtn) {
     relatorioBtn.after(zoomContainer);
   } else {
@@ -1556,6 +1569,18 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   const blobURL = URL.createObjectURL(svgBlob);
 
+  /* O que aparece NA TELA é o próprio SVG (vetorial — ampliar nunca
+     pixeliza), não o PNG. O PNG (lastRenderedPngUrl) continua sendo
+     gerado logo abaixo só porque o Relatório (onReady) e o botão "Salvar
+     na galeria" (salvarImagemMandala) precisam dele. width/height dobrados
+     mantêm o mesmo tamanho natural que o PNG (exportScale 2) tinha antes,
+     já que o SVG cru só traz viewBox (sem tamanho próprio, um <img>
+     dele não tem dimensão definida). */
+  const svgTela = svg.replace('<svg viewBox', `<svg width="${width * 2}" height="${height * 2}" viewBox`);
+  const svgTelaUrl = URL.createObjectURL(new Blob([svgTela], { type: 'image/svg+xml;charset=utf-8' }));
+  if (window.mandalaSvgTelaUrlAtual) URL.revokeObjectURL(window.mandalaSvgTelaUrlAtual);
+  window.mandalaSvgTelaUrlAtual = svgTelaUrl;
+
   const imgLoader = new Image();
   imgLoader.onload = function() {
     const exportScale = 2;
@@ -1570,7 +1595,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
-    <img id="mandalaImg" src="${lastRenderedPngUrl}" alt="Mandala Astrológica" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: top center; transition: transform 120ms ease-out;">
+    <img id="mandalaImg" src="${svgTelaUrl}" alt="Mandala Astrológica" draggable="false" style="-webkit-touch-callout: none; max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: top center; transition: transform 120ms ease-out;">
   </div>
 `;
      
@@ -1608,13 +1633,47 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   imgLoader.src = blobURL;
 }
 
+/* Botão "Salvar na galeria" da mandala (ícone de imagem, ao lado do
+   "Adicionar ao Relatório"). No iPhone/iPad o <a download> NÃO funciona
+   mais (aparece "Baixar/Ver" e nada acontece) — o caminho que funciona é
+   a folha de compartilhamento nativa (navigator.share com arquivo), que
+   tem a opção "Salvar Imagem" (vai pra galeria), o mesmo destino do
+   antigo toque longo na imagem. O navigator.share exige ser chamado
+   dentro do toque do usuário, por isso o PNG (já pronto em
+   lastRenderedPngUrl) vira Blob de forma SÍNCRONA aqui — nada de fetch/
+   await antes de share(), senão o iOS considera que o gesto "expirou".
+   Sem suporte a compartilhar arquivo (computador), cai no download
+   normal, que lá funciona. */
 function salvarImagemMandala() {
-  if (!lastRenderedPngUrl) return;
+  if (!lastRenderedPngUrl) { alert('Nenhuma mandala na tela pra salvar.'); return; }
+  const nome = `Astro_Hellenic_${(currentSubjectName || 'mandala').replace(/\s+/g, '_')}.png`;
+
+  let arquivo = null;
+  try {
+    const partes = lastRenderedPngUrl.split(',');
+    const bin = atob(partes[1]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    arquivo = new File([bytes], nome, { type: 'image/png' });
+  } catch (e) {
+    console.error('Erro ao preparar a imagem da mandala:', e);
+  }
+
+  if (arquivo && navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+    navigator.share({ files: [arquivo] }).catch(err => {
+      if (err && err.name === 'AbortError') return; // fechou a folha de propósito
+      console.error('Erro ao compartilhar a mandala:', err);
+      alert('Não foi possível abrir a folha de salvar a imagem.');
+    });
+    return;
+  }
+
   const link = document.createElement('a');
-  link.download = `Astro_Hellenic_${currentSubjectName.replace(/\s+/g, '_')}.png`;
+  link.download = nome;
   link.href = lastRenderedPngUrl;
   link.click();
 }
+window.salvarImagemMandala = salvarImagemMandala;
 
 window.onload = function() {
   restaurarUnidadeStepperMandala();
