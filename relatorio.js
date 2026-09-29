@@ -3943,8 +3943,32 @@ function injetarEstilosRelatorio() {
            partir de 29/09/2026 .rel-img-mandala também usa "flex: 1"
            (ver comentário dela, logo acima) pra nunca crescer mais alta
            que a página cabe — só que isso também depende da página em
-           volta ter uma altura de verdade, não só "min-height". */
-        .rel-capa, .rel-page-captura, .rel-page-mapa { height: 297mm; min-height: 297mm; }
+           volta ter uma altura de verdade, não só "min-height".
+
+           "overflow: hidden" (ATUALIZAÇÃO 29/09/2026, mais tarde no
+           mesmo dia) — faltava isso aqui. ".rel-page" (regra base, logo
+           acima) usa "overflow: visible" DE PROPÓSITO, pra texto longo
+           conseguir crescer e fluir pra folhas seguintes. Só que essas
+           três páginas aqui NUNCA deviam crescer — o conteúdo delas é
+           sempre "encolhido pra caber" (flex:1 + object-fit/min-height),
+           nunca "cresce a página pro conteúdo caber". O problema de
+           herdar "overflow: visible" mesmo assim: se sobrar QUALQUER
+           diferença mínima entre o que o CSS calcula e o que o motor de
+           impressão desenha de verdade (arredondamento de sub-pixel,
+           métrica de fonte um pouco diferente, um título que quebra em
+           mais uma linha do que o esperado) — mesmo um resto de menos de
+           1mm — "overflow: visible" deixa esse resto vazar pra fora da
+           página em vez de cortar, e isso sozinho já basta pra empurrar
+           .rel-num-pagina-canto pra fora e criar a folha extra quase em
+           branco, INDEPENDENTE de o "flex:1"/"object-fit" da imagem
+           estarem funcionando direito (podem estar funcionando 99,9%
+           perfeitos e ainda sobrar aquele 0,1% que cria a folha extra).
+           "overflow: hidden" aqui garante que, mesmo que sobre uma
+           fração de milímetro por qualquer motivo não previsto, ela é
+           cortada (dificilmente perceptível) em vez de virar folha
+           extra — rede de segurança de verdade, não só "encolher
+           direito e torcer". */
+        .rel-capa, .rel-page-captura, .rel-page-mapa { height: 297mm; min-height: 297mm; overflow: hidden; }
       }
   `;
   document.head.appendChild(style);
