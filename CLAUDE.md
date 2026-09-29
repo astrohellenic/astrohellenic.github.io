@@ -417,17 +417,41 @@ nessa sessão. Peças novas:
   detectável testando de verdade (o `require` não avisa nada, só
   quebra na hora de usar).
 
-  **Lição pra próxima vez que mexer nisso:** testar local (`node`
-  direto) só prova que o pacote instala e roda em Linux genérico — NÃO
-  prova que funciona no ambiente real da Vercel (esse bug específico só
-  existe lá, nunca localmente). "Travar numa versão conservadora sem
-  checar se ela suporta Vercel" foi pior do que usar a mais recente.
-  Sempre que mexer nessas duas dependências de novo: usar a versão mais
-  recente de ambas (é o par que o mantenedor testa), e pedir pro
-  astrólogo testar de verdade no site publicado antes de considerar
-  resolvido — os Logs da função na Vercel (painel do projeto → "Logs")
-  são o único jeito de ver o erro de verdade quando isso acontece de
-  novo.
+  **Segundo erro real, logo em seguida (mesma sessão) — também já
+  corrigido:** depois de trocar a versão, o teste local (`node` direto)
+  passou limpo, mas a Vercel quebrou de novo com um erro DIFERENTE:
+  `Error [ERR_REQUIRE_ESM]: require() of ES Module .../@sparticuz/
+  chromium/build/index.js ... not supported. Instead change the
+  require of index.js ... to a dynamic import()`. Causa: a partir da
+  v137 o pacote é um ES Module puro — `require('@sparticuz/chromium')`
+  cru só não quebra em Node bem recente (que tolera `require` de ESM
+  por baixo dos panos); o Node que a Vercel roda não tolera, e dá esse
+  erro na hora. **Por que o teste local não pegou isso:** a versão do
+  Node deste ambiente de desenvolvimento é mais nova que a da Vercel —
+  o MESMO código passa aqui e quebra lá, então "rodei local e funcionou"
+  não prova nada sobre compatibilidade de ESM/CommonJS, só sobre se o
+  pacote existe e roda nessa máquina específica. Corrigido carregando o
+  pacote com `import()` dinâmico dentro da função (não `require()` no
+  topo do arquivo) — isso funciona em qualquer versão de Node de dentro
+  de um arquivo CommonJS, então resolve o problema de vez (não é mais
+  uma escolha de versão que pode quebrar nas próximas atualizações do
+  pacote).
+
+  **Lição pra próxima vez que mexer nisso (as duas rodadas acima
+  juntas):** testar local (`node` direto) só prova que o pacote
+  instala e a função roda em Linux genérico — NÃO prova compatibilidade
+  com o ambiente/versão de Node da Vercel especificamente (os dois bugs
+  desta sessão só existiam lá, nunca localmente, por dois motivos
+  diferentes: detecção de ambiente Lambda vs. Fluid Compute, e depois
+  versão de Node tolerando ou não require de ESM). Sempre que mexer
+  nessas duas dependências de novo: usar a versão mais recente de
+  ambas, carregar pacotes ESM com `import()` dinâmico (nunca
+  `require()` direto) por padrão, e pedir pro astrólogo testar de
+  verdade no site publicado antes de considerar resolvido — os Logs da
+  função na Vercel (painel do projeto → "Logs", clicar na linha
+  vermelha do erro) são o único jeito de ver o erro de verdade quando
+  isso acontece de novo, e cada erro visto até agora já veio com a
+  causa bem explícita na própria mensagem.
 - **`package.json`/`package-lock.json`/`vercel.json`** — novos, só
   pra essa função (`vercel.json` define memória/tempo máximo da
   função). O site continua 100% estático publicado pelo GitHub Pages
