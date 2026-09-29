@@ -101,14 +101,36 @@ module.exports = async function handler(req, res) {
     await pagina.setContent(html, { waitUntil: 'load', timeout: 45000 });
     await pagina.evaluate(async () => {
       const imagens = Array.from(document.images);
-      await Promise.all(imagens.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
+      await Promise.all(imagens.map(async img => {
+        // "img.complete" pode ser true com a imagem ainda sem ter sido
+        // DECODIFICADA de verdade (o evento "load" dispara antes disso
+        // terminar, principalmente em imagens grandes — uma captura de
+        // ferramenta em alta resolução, por exemplo). Se o layout de
+        // paginação for calculado com a imagem só "carregada" mas ainda
+        // decodificando, o tamanho que entra nessa conta pode não ser o
+        // tamanho final — foi visto na prática (29/09/2026) uma página
+        // de captura empurrando o número dela pra uma folha extra mesmo
+        // com a altura da página travada em 297mm, sem imagem visível
+        // cortada ou distorcida (sintoma de timing, não de CSS errado).
+        // "decode()" só resolve quando a imagem está de verdade pronta
+        // pra ser desenhada, garantindo que o tamanho já é o definitivo
+        // antes do Chrome calcular onde cada página termina.
+        if (typeof img.decode === 'function') {
+          try { await img.decode(); return; } catch (_) { /* cai no fallback abaixo */ }
+        }
+        if (img.complete) return;
+        await new Promise(resolve => {
           img.addEventListener('load', resolve, { once: true });
           img.addEventListener('error', resolve, { once: true });
         });
       }));
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      // Força o navegador a terminar de calcular o layout com os tamanhos
+      // finais (imagens decodificadas, fontes prontas) antes de seguir —
+      // ler uma medida força o "reflow"; dois quadros de animação
+      // garantem que isso já foi pintado de verdade, não só agendado.
+      document.body.getBoundingClientRect();
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     });
 
     await pagina.emulateMediaType('print');

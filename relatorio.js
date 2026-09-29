@@ -4001,8 +4001,30 @@ function injetarEstilosRelatorio() {
            fração de milímetro por qualquer motivo não previsto, ela é
            cortada (dificilmente perceptível) em vez de virar folha
            extra — rede de segurança de verdade, não só "encolher
-           direito e torcer". */
-        .rel-capa, .rel-page-captura, .rel-page-mapa { height: 297mm; min-height: 297mm; overflow: hidden; }
+           direito e torcer".
+
+           ATUALIZAÇÃO (29/09/2026, mais tarde ainda) — "overflow: hidden"
+           sozinho NÃO bastou (confirmado abrindo o PDF de verdade): o
+           astrólogo continuava vendo o número de página sozinho numa
+           folha extra, mesmo com a imagem parecendo caber perfeita. A
+           explicação: "overflow" e a PAGINAÇÃO de impressão são dois
+           mecanismos DIFERENTES do navegador — "overflow: hidden" só
+           decide o que é DESENHADO (esconde o que passa da caixa), mas
+           não decide se a caixa é "fatiada" em mais de uma folha física
+           quando o conteúdo dela não cabe. Quem decide isso é
+           "break-inside"/"page-break-inside" (o MESMO usado em ".rel-h1"
+           e nas linhas da tabela técnica, mais acima neste arquivo, pra
+           impedir um título ou uma linha de quebrar ao meio entre duas
+           páginas) — sem "avoid" aqui, o motor de paginação continuava
+           livre pra abrir uma segunda folha física pro que sobrasse,
+           por menor que fosse, mesmo com esse sobra depois escondida
+           visualmente pelo "overflow: hidden". Com "break-inside: avoid"
+           também, a caixa passa a ser tratada como uma unidade que não
+           pode ser fatiada em duas folhas de jeito nenhum — junto com a
+           altura fixa (297mm) e o "overflow: hidden", fecha os três
+           mecanismos que juntos garantem: nunca mais que uma folha,
+           nunca conteúdo cortado ao meio, nunca vazamento visível. */
+        .rel-capa, .rel-page-captura, .rel-page-mapa { height: 297mm; min-height: 297mm; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
       }
   `;
   document.head.appendChild(style);
