@@ -1001,7 +1001,22 @@ window.ajustarZoomMandala = ajustarZoomMandala;
 
 function injetarControleZoomMandala() {
   const overlay = document.getElementById('mandala-controls-overlay');
-  if (!overlay || document.getElementById('mandalaZoomContainer')) return;
+  if (!overlay) return;
+
+  const existente = document.getElementById('mandalaZoomContainer');
+
+  /* Esse zoom por botão foi pensado pra quem está num computador sem
+     gesto de pinça disponível (ver comentário acima) — no celular já dá
+     pra ampliar a mandala com o dedo, então esse controle não faz
+     sentido lá: só ocupa espaço e contribuía pro
+     #mandala-controls-overlay quebrar em duas linhas à toa (pedido do
+     astrólogo, 29/09/2026). Remove se já tinha sido injetado antes de a
+     tela ficar estreita (ex.: redimensionar a janela). */
+  if (window.innerWidth <= 600) {
+    if (existente) existente.remove();
+    return;
+  }
+  if (existente) return;
 
   const zoomContainer = document.createElement('div');
   zoomContainer.id = 'mandalaZoomContainer';
@@ -1050,7 +1065,18 @@ function ajustarPosicaoMandalaActionsOverlay() {
   const alturaControls = controls.offsetHeight;
   actions.style.top = (10 + alturaControls + gap) + 'px';
 }
-window.addEventListener('resize', ajustarPosicaoMandalaActionsOverlay);
+
+/* Reavalia os dois ajustes de #mandala-controls-overlay que dependem da
+   largura da tela (esconder o zoom por botão no celular, empurrar
+   #mandala-actions-overlay pra baixo) sempre que a largura pode ter
+   mudado — virar o celular ou redimensionar a janela. A ordem importa:
+   o zoom precisa entrar/sair ANTES de medir a altura pro empurrão,
+   senão a medida fica desatualizada. */
+function ajustarControlesMandalaNaLargura() {
+  injetarControleZoomMandala();
+  ajustarPosicaoMandalaActionsOverlay();
+}
+window.addEventListener('resize', ajustarControlesMandalaNaLargura);
 
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
