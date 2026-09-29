@@ -148,49 +148,8 @@ function calcDodecatemoriaTabela(absDeg) {
    aqui no Painel Técnico (usado logo abaixo pra sincronizar a largura
    com a tabela) — na Matriz não precisa de id nenhum. */
 function montarCabecalhoMandalaHTML(data, idOpcional) {
-  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
-
-  const diasSemanaLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const diaSemanaFormatted = diasSemanaLabels[currentMoment.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-
-  // Mesmo cálculo de isDay/sectText de renderMandala (mandala.js).
-  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
-  const sunAbs = data.Sol ? data.Sol.grau_absoluto : 0;
-  const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
-  const sectText = isDay ? "Natividade Diurna" : "Natividade Noturna";
-
-  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
-  const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
-
-  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-
-  return `
-    <div${idOpcional ? ` id="${idOpcional}"` : ''} style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px auto; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; box-sizing: border-box;">
-      <div>
-        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-        <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)}  <span style="color: var(--gold-dark); font-weight: 700;">• ${sectText}</span></div>
-      </div>
-      ${horasInfo ? `
-      <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
-        <div style="text-align: center;">
-          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Dia</div>
-          ${getPlanet3DSVG(horasInfo.dayRulerId)}
-        </div>
-        <div style="text-align: center;">
-          <div style="font-size: 10px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Hora</div>
-          ${getPlanet3DSVG(horasInfo.hourRulerId)}
-        </div>
-      </div>` : ''}
-    </div>
-  `;
+  // Cabeçalho único de todas as ferramentas: o da Mandala (mandala.js).
+  return montarCabecalhoMandalaImagemHTML(data, idOpcional);
 }
 
 /* Mede a largura de um texto renderizado numa fonte específica — usado

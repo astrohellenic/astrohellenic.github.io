@@ -946,6 +946,89 @@ function ajustarControlesMandalaNaLargura() {
 }
 window.addEventListener('resize', ajustarControlesMandalaNaLargura);
 
+/* CABEÇALHO PADRÃO — ÚNICA FONTE: é o cabeçalho da Mandala, e todas as
+   ferramentas que mostram cabeçalho devem usar ESTE (nunca uma cópia).
+   Três peças:
+   - coresCabecalhoMandala: as cores (claro/escuro, ou uma cor de fundo
+     forçada, usada só na capa do Relatório).
+   - montarCabecalhoMandalaGrupoSVG: o desenho em si (um <g> de SVG), que a
+     própria Mandala embute dentro do SVG dela.
+   - montarCabecalhoMandalaImagemHTML: o mesmo desenho como <img> (SVG
+     isolado, igual à Mandala renderiza), pras outras ferramentas. */
+function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
+  const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+  function luminanciaRelativaHex(hex) {
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  }
+  const cabecalhoValido = HEX_RE.test(corCabecalhoForcada) ? corCabecalhoForcada : null;
+  const cabecalhoEscuro = cabecalhoValido ? (luminanciaRelativaHex(cabecalhoValido) < 0.5) : modoEscuro;
+  return {
+    fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
+    borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27',
+    titulo: cabecalhoEscuro ? '#8ab4e8' : '#103b70',
+    dataCidade: cabecalhoEscuro ? '#c3cad4' : '#475569',
+    zodiaco: cabecalhoEscuro ? '#a3aab3' : '#64748b',
+    sect: cabecalhoEscuro ? '#f0c869' : '#9a6d18',
+  };
+}
+
+function montarCabecalhoMandalaGrupoSVG(data, headerY, cores) {
+  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
+  const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
+
+  const sunDef = PLANETS_DEF.find(p => p.id === 'Sun');
+  const sunItem = data[sunDef ? sunDef.key : 'Sol'];
+  const sunAbs = sunItem ? sunItem.grau_absoluto : 0;
+  const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
+  const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
+  const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+
+  const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diaSemanaFormatted = diasSemana[currentMoment.getDay()];
+  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
+  const ano = currentMoment.getFullYear();
+  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
+  const dia = String(currentMoment.getDate()).padStart(2, '0');
+  const hora = String(currentMoment.getHours()).padStart(2, '0');
+  const min = String(currentMoment.getMinutes()).padStart(2, '0');
+
+  /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
+  let svg = `<g id="png-discreet-header">
+    <!-- Fundo (creme/escuro conforme o modo) e Borda Dourada Estendidos quase até o fim -->
+    <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />
+
+    <!-- Textos das 3 Linhas alinhados à esquerda -->
+    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${escapeHtml(headerTitle)}</text>
+    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
+        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}</tspan></text>
+  </g>`;
+
+  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
+  if (horasInfo) {
+    if (horasInfo.dayRulerId && PLANETS_DEF.some(p => p.id === horasInfo.dayRulerId)) {
+      svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${cores.titulo}" text-anchor="start">DIA</text>
+      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+    }
+    if (horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId)) {
+      svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${cores.titulo}" text-anchor="start">HORA</text>
+      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+    }
+  }
+  return svg;
+}
+
+function montarCabecalhoMandalaImagemHTML(data, idOpcional) {
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const cores = coresCabecalhoMandala(modoEscuro, null);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="79" viewBox="0 0 960 79">${montarCabecalhoMandalaGrupoSVG(data, 2, cores)}</svg>`;
+  const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="margin: 0 auto 16px auto; box-sizing: border-box;"><img src="${src}" alt="" draggable="false" style="display: block; width: 100%; height: auto;"></div>`;
+}
+window.montarCabecalhoMandalaImagemHTML = montarCabecalhoMandalaImagemHTML;
+
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
@@ -998,21 +1081,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      DESSA cor específica, não pelo modoEscuro geral. */
   const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
-  function luminanciaRelativaHexMandala(hex) {
-    if (!HEX_RE_MANDALA.test(hex)) return 1;
-    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  }
-  const cabecalhoValido = HEX_RE_MANDALA.test(corCabecalhoForcada) ? corCabecalhoForcada : null;
-  const cabecalhoEscuro = cabecalhoValido ? (luminanciaRelativaHexMandala(cabecalhoValido) < 0.5) : modoEscuro;
-  const corCabecalhoPng = {
-    fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
-    borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27',
-    titulo: cabecalhoEscuro ? '#8ab4e8' : '#103b70',
-    dataCidade: cabecalhoEscuro ? '#c3cad4' : '#475569',
-    zodiaco: cabecalhoEscuro ? '#a3aab3' : '#64748b',
-    sect: cabecalhoEscuro ? '#f0c869' : '#9a6d18',
-  };
+  const corCabecalhoPng = coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
 
   /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
      Tema Claro é exatamente a paleta de sempre (nada muda). No Tema
@@ -1307,28 +1376,9 @@ ${temaCeu ? `
   const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
 
-  /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
-  svg += `<g id="png-discreet-header">
-    <!-- Fundo (creme/escuro conforme o modo) e Borda Dourada Estendidos quase até o fim -->
-    <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="${corCabecalhoPng.fundo}" stroke="${corCabecalhoPng.borda}" stroke-width="2" />
-
-    <!-- Textos das 3 Linhas alinhados à esquerda -->
-    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${corCabecalhoPng.titulo}">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${corCabecalhoPng.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${corCabecalhoPng.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${corCabecalhoPng.sect}" font-weight="700">  ${sectText}</tspan></text>
-  </g>`;
-
-  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-  if (horasInfo) {
-    if (horasInfo.dayRulerId && PLANETS_DEF.some(p => p.id === horasInfo.dayRulerId)) {
-      svg += `<text x="760" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${corCabecalhoPng.titulo}" text-anchor="start">DIA</text>
-      <g transform="translate(800, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
-    }
-    if (horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId)) {
-      svg += `<text x="845" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="700" fill="${corCabecalhoPng.titulo}" text-anchor="start">HORA</text>
-      <g transform="translate(915, ${headerY + 35})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
-    }
-  }
+  /* CABEÇALHO (nome, data, local, zodíaco, natividade, Dia/Hora) — o mesmo
+     desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
+  svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng);
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
 
