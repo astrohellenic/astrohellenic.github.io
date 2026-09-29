@@ -3244,37 +3244,45 @@ async function baixarRelatorioPDF() {
   try {
     const estilos = document.getElementById('relatorio-estilos');
 
-    /* O Chrome headless que gera o PDF (api/gerar-pdf.js) recalcula o
-       layout do zero, do jeito dele — e "flex: 1" + "object-fit" dentro
-       de uma página com altura fixa (297mm) não dá o MESMO resultado lá
-       que dá aqui na prévia, mesmo sendo o mesmo Chromium por baixo (a
-       prévia já está certa, é comprovado; foi só medir o PDF de verdade
-       — 29/09/2026 — que uma imagem de ferramenta capturada acabou
-       crescendo mais que a página mesmo com "overflow: hidden", e o
-       número da página foi parar sozinho numa folha extra). Em vez de
-       confiar que os dois motores de layout vão concordar, mede-se o
-       tamanho de VERDADE que cada imagem já está ocupando AQUI, na tela
-       (onde já está garantidamente certo), converte pra milímetros, e
-       fixa esse valor exato como "width"/"height" inline na cópia que
-       vai pro PDF — "flex: none" trava esse tamanho contra qualquer
-       "flex: 1"/"object-fit" tentando recalcular de novo lá do outro
-       lado. O Chrome do PDF não decide mais nada sobre o tamanho da
-       imagem, só desenha o número que a prévia já mediu. */
+    /* SEGUNDA TENTATIVA (29/09/2026, mesma sessão) — medir a imagem e
+       travar o tamanho dela (tentativa anterior, ver histórico do
+       commit) reduziu a sobra mas não eliminou: o TÍTULO
+       (.rel-titulo-captura) continuava sendo desenhado de novo pelo
+       Chrome do PDF, e mesmo uma diferença mínima na altura dele
+       (métrica de fonte, timing de carregamento) já é o suficiente pra
+       sobrar. Ou seja, travar só a imagem não bastava — qualquer parte
+       da página que o Chrome do PDF ainda desenha do zero é uma parte
+       que pode sair diferente da prévia.
+
+       Solução de verdade: a página inteira (título + imagem, tudo
+       junto) é tirada como UMA FOTO ÚNICA daqui da prévia (html2canvas
+       — a MESMA técnica que já é usada pra capturar a tela da
+       ferramenta em primeiro lugar, só que agora capturando a página do
+       relatório já montada) e essa foto ocupa a página inteira no PDF.
+       O Chrome do PDF não desenha mais NADA dessa página sozinho — só
+       coloca uma imagem pronta dentro de uma caixa de tamanho fixo
+       (297mm, papel da correção anterior). Sem título recalculado, sem
+       flexbox, sem "object-fit", sem nada pra sair diferente. */
     const viewerParaPdf = viewer.cloneNode(true);
-    const paginaReferencia = viewer.querySelector('.rel-page');
-    const pxPorMm = paginaReferencia ? paginaReferencia.getBoundingClientRect().width / 210 : 0;
-    if (pxPorMm > 0) {
-      const imagensOriginais = viewer.querySelectorAll('.rel-img-captura, .rel-img-mandala');
-      const imagensCopia = viewerParaPdf.querySelectorAll('.rel-img-captura, .rel-img-mandala');
-      imagensOriginais.forEach((imgOriginal, i) => {
-        const rect = imgOriginal.getBoundingClientRect();
-        if (!rect.width || !rect.height) return; // imagem ainda não carregou/mediu — deixa o CSS de sempre resolver
-        const imgCopia = imagensCopia[i];
-        if (!imgCopia) return;
-        const larguraMm = (rect.width / pxPorMm).toFixed(2);
-        const alturaMm = (rect.height / pxPorMm).toFixed(2);
-        imgCopia.style.cssText += `flex: none; width: ${larguraMm}mm; height: ${alturaMm}mm; max-width: ${larguraMm}mm; max-height: ${alturaMm}mm;`;
-      });
+
+    if (typeof html2canvas === 'function') {
+      const secoesOriginais = viewer.querySelectorAll('.rel-page-captura, .rel-page-mapa');
+      const secoesCopia = viewerParaPdf.querySelectorAll('.rel-page-captura, .rel-page-mapa');
+      for (let i = 0; i < secoesOriginais.length; i++) {
+        const secaoOriginal = secoesOriginais[i];
+        const secaoCopia = secoesCopia[i];
+        if (!secaoCopia) continue;
+        try {
+          const canvas = await html2canvas(secaoOriginal, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          secaoCopia.innerHTML = `<img src="${canvas.toDataURL('image/png')}" style="display:block; width:100%; height:100%;" alt="">`;
+          secaoCopia.style.padding = '0';
+        } catch (_) {
+          // Falhou a captura dessa página específica (imagem não carregou a
+          // tempo, CORS etc.) — deixa ela do jeito que estava (título +
+          // imagem separados, o mecanismo antigo) em vez de travar o PDF
+          // inteiro por causa de uma página só.
+        }
+      }
     }
 
     const html = `<!doctype html>
