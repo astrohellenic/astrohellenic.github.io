@@ -56,8 +56,13 @@
     </script>
 
    <!-- FAVICON -->
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="apple-touch-icon" href="favicon.png">
+   <!-- O "?v=" força o navegador a buscar o arquivo de novo quando o favicon
+        muda; sem isso, alguns navegadores continuam usando a versão antiga
+        em cache mesmo depois de recarregar a página (o cache de favicon é
+        separado do cache normal da página). Trocar esse número toda vez
+        que o favicon.svg ou o favicon.png forem atualizados de novo. -->
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+<link rel="apple-touch-icon" href="favicon.png?v=2">
 
     <!-- FONTES E ÍCONES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1203,7 +1208,7 @@ body {
 <script src="decenios.js?v=20260928a"></script>
 <script src="direcoes.js?v=20260928c"></script>
 <script src="liberacao.js?v=20260928c"></script>
-<script src="lotes-calculadora.js?v=20260928a"></script>
+<script src="lotes-calculadora.js?v=20260929a"></script>
 <script src="horas.js?v=20260928a"></script>
 <script src="perguntas.js?v=20260916"></script>
 <script src="relatorio.js?v=20260922l"></script>
@@ -1244,7 +1249,7 @@ body {
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    background: #1A073F;
+    background: #1E5FA4;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1256,8 +1261,26 @@ body {
     display: flex;
   }
 
+  /* Planetas 3D decorativos espalhados atrás do cartão de login — só
+     enfeite, sem relação nenhuma com conta/config de usuário nenhum
+     (ninguém ainda logou nessa tela). Posição sorteada em JS a cada
+     carregamento (renderizarPlanetasDecorativosLogin, mais abaixo). */
+  #loginPlanetsDecor {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .login-planet-decor {
+    position: absolute;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+  }
+
   .login-card {
-    background: #ffffff;
+    position: relative;
+    z-index: 1;
+    background: #FFFDF5;
     width: 90%;
     max-width: 380px;
     padding: 32px 28px;
@@ -1273,6 +1296,8 @@ body {
     letter-spacing: 1px;
     margin-bottom: 24px;
     text-transform: uppercase;
+    background: #ffffff;
+    border-radius: 8px;
   }
 
   .login-field-container {
@@ -1289,6 +1314,7 @@ body {
     font-size: 14px;
     box-sizing: border-box;
     outline: none;
+    background: #ffffff;
   }
 
   .login-field:focus {
@@ -1388,8 +1414,9 @@ body:not(.modo-mandala) #main-stage {
 </style>
 
 <div id="loginOverlay">
+  <div id="loginPlanetsDecor" aria-hidden="true"></div>
   <div class="login-card">
-    <div class="login-brand"><img src="astrohellenic.svg?v=20260924" alt="Astro Hellenic" style="max-width: 220px; width: 100%; height: auto;"></div>
+    <div class="login-brand"><img src="astrohellenic.svg?v=20260924" alt="Astro Hellenic" style="width: 100%; height: auto;"></div>
     
     <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
 
@@ -1528,12 +1555,112 @@ body:not(.modo-mandala) #main-stage {
     }
   }
 
+  /* Planetas 3D decorativos na tela de login — SÓ enfeite. Usa direto
+     ICONES_3D (sempre a versão esférica/3D, igual à referência do
+     astrólogo), nunca getIconeSVG/conjuntoDeIconesAtivo: aquelas
+     decidem o estilo (esférico x simples) pela preferência salva da
+     CONTA do usuário, e aqui ninguém ainda fez login — não tem conta
+     nenhuma pra consultar. Sorteia planeta, posição, tamanho e rotação
+     toda vez que a tela de login aparece, dentro do espaço que sobra
+     ao redor do cartão (nunca por cima dele, pra não atrapalhar o
+     login) — em telas estreitas, onde o cartão ocupa quase toda a
+     largura, os planetas ficam concentrados nas faixas de cima/baixo.
+  */
+  function renderizarPlanetasDecorativosLogin() {
+    const container = document.getElementById('loginPlanetsDecor');
+    const card = document.querySelector('#loginOverlay .login-card');
+    if (!container || !card || typeof ICONES_3D === 'undefined') return;
+
+    const planetas = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+    for (let i = planetas.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [planetas[i], planetas[j]] = [planetas[j], planetas[i]];
+    }
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cardRect = card.getBoundingClientRect();
+    const margem = 14;
+
+    /* Zonas livres ao redor do cartão (topo/base sempre que sobra
+       espaço; laterais só entram se a tela for larga o bastante — em
+       celular estreito o cartão quase encosta nas bordas). Topo/base
+       pesam mais porque são as faixas que sempre existem. */
+    const zonas = [];
+    if (cardRect.top > 90) zonas.push({ x0: 0, x1: vw, y0: 0, y1: cardRect.top - margem, peso: 2 });
+    if (vh - cardRect.bottom > 90) zonas.push({ x0: 0, x1: vw, y0: cardRect.bottom + margem, y1: vh, peso: 2 });
+    if (cardRect.left > 76) zonas.push({ x0: 0, x1: cardRect.left - margem, y0: 0, y1: vh, peso: 1 });
+    if (vw - cardRect.right > 76) zonas.push({ x0: cardRect.right + margem, x1: vw, y0: 0, y1: vh, peso: 1 });
+
+    container.innerHTML = '';
+    if (zonas.length === 0) return;
+
+    const pesoTotal = zonas.reduce((soma, z) => soma + z.peso, 0);
+    function sortearZona() {
+      let r = Math.random() * pesoTotal;
+      for (const z of zonas) {
+        if (r < z.peso) return z;
+        r -= z.peso;
+      }
+      return zonas[zonas.length - 1];
+    }
+
+    /* Tenta algumas posições por planeta e fica com a que fica mais
+       longe dos planetas já colocados — evita dois planetas caindo
+       quase um em cima do outro por coincidência do sorteio, sem
+       precisar de um algoritmo de layout de verdade (é só enfeite). */
+    const colocados = [];
+    function sortearPosicao(tamanho) {
+      const raio = tamanho / 2;
+      let melhor = null;
+      let melhorDistancia = -Infinity;
+      for (let tentativa = 0; tentativa < 6; tentativa++) {
+        const zona = sortearZona();
+        const larguraDisponivel = Math.max(zona.x1 - zona.x0 - tamanho, 0);
+        const alturaDisponivel = Math.max(zona.y1 - zona.y0 - tamanho, 0);
+        const x = zona.x0 + raio + Math.random() * larguraDisponivel;
+        const y = zona.y0 + raio + Math.random() * alturaDisponivel;
+        const distanciaMinima = colocados.reduce((menor, p) => {
+          const d = Math.hypot(x - p.x, y - p.y) - raio - p.raio;
+          return Math.min(menor, d);
+        }, Infinity);
+        if (distanciaMinima > melhorDistancia) {
+          melhorDistancia = distanciaMinima;
+          melhor = { x, y };
+        }
+        if (melhorDistancia > 10) break;
+      }
+      colocados.push({ x: melhor.x, y: melhor.y, raio });
+      return melhor;
+    }
+
+    let html = '';
+    planetas.forEach(planeta => {
+      const tamanho = 40 + Math.random() * 38;
+      const { x, y } = sortearPosicao(tamanho);
+      const rotacao = (Math.random() * 30 - 15).toFixed(1);
+      const svgBase = (ICONES_3D.planeta[planeta] || '').replace('<svg ', `<svg width="${tamanho.toFixed(0)}" height="${tamanho.toFixed(0)}" `);
+      const svg = typeof _namespacearIdsIcone === 'function' ? _namespacearIdsIcone(svgBase) : svgBase;
+      html += `<div class="login-planet-decor" style="left:${x.toFixed(0)}px; top:${y.toFixed(0)}px; transform: translate(-50%, -50%) rotate(${rotacao}deg);">${svg}</div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  let _resizeDecorPlanetasTimeout = null;
+  window.addEventListener('resize', () => {
+    const overlay = document.getElementById('loginOverlay');
+    if (!overlay || !overlay.classList.contains('visible')) return;
+    clearTimeout(_resizeDecorPlanetasTimeout);
+    _resizeDecorPlanetasTimeout = setTimeout(renderizarPlanetasDecorativosLogin, 200);
+  });
+
   function fecharTelaLogin() {
     document.getElementById('loginOverlay').classList.remove('visible');
   }
 
   function mostrarTelaLogin() {
     document.getElementById('loginOverlay').classList.add('visible');
+    renderizarPlanetasDecorativosLogin();
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
