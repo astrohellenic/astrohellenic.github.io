@@ -76,6 +76,16 @@ Regras específicas que vieram de sessões onde isso foi ignorado (dia
   resultado", que é lento e gasta a cota dele. Antes de propor uma
   correção nessa área, ler primeiro se já existe alguma nota aqui sobre
   o mesmo elemento/padrão.
+- **Todo commit que edita um arquivo `.js`/`.svg`/`.png` referenciado
+  com `?v=` em `index.html` tem que bumpar esse `?v=` NO MESMO commit,
+  sem exceção** — esquecer isso faz o astrólogo testar uma versão
+  antiga sem ninguém perceber (ele vê "não mudou nada" e acha que a
+  correção não pegou, quando na verdade nem chegou no navegador dele).
+  Aconteceu duas vezes na sessão de 29/09/2026 só com `relatorio.js`
+  (parou de bumpar depois das correções de página em branco/297mm do
+  PDF) — antes de dizer "pronto, publiquei" pro astrólogo testar,
+  conferir se o arquivo mexido tem uma linha `?v=` em `index.html` e,
+  se tiver, se ela foi atualizada joint com essa mudança.
 
 ## `#mandala-container` e `position: sticky` fora do modo Mandala
 
