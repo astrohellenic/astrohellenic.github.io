@@ -12,17 +12,27 @@
    função não guarda, não loga e não repassa esse HTML pra lugar
    nenhum, só usa ele em memória pra montar o PDF e descarta. */
 
-// A partir da v137, o pacote virou um ES Module puro — "require()" direto
-// funciona só por acaso em Node novo (que tolera require de ESM); no Node
-// da Vercel dá "ERR_REQUIRE_ESM" na hora. import() dinâmico funciona em
-// qualquer versão, mesmo dentro de um arquivo CommonJS como este — por
-// isso carregado dentro da função (não no topo do arquivo) e cacheado na
-// primeira chamada.
-const puppeteer = require('puppeteer-core');
-let chromiumPromise;
-function carregarChromium() {
-  if (!chromiumPromise) chromiumPromise = import('@sparticuz/chromium').then(m => m.default);
-  return chromiumPromise;
+// Tanto @sparticuz/chromium quanto puppeteer-core (nas versões atuais)
+// viram ES Module puro por dentro — "require()" direto funciona só por
+// acaso em Node novo (que tolera require de ESM); no Node da Vercel dá
+// "ERR_REQUIRE_ESM" na hora, um pacote de cada vez (foi exatamente assim
+// que apareceu: corrigiu o chromium, publicou, e só aí apareceu o mesmo
+// erro no puppeteer-core). import() dinâmico funciona em qualquer versão
+// de Node de dentro de um arquivo CommonJS como este — por isso os dois
+// são carregados dentro da função (nunca com require() no topo do
+// arquivo), cacheados na primeira chamada de cada instância da função.
+let dependenciasPromise;
+function carregarDependencias() {
+  if (!dependenciasPromise) {
+    dependenciasPromise = Promise.all([
+      import('puppeteer-core'),
+      import('@sparticuz/chromium')
+    ]).then(([puppeteerMod, chromiumMod]) => ({
+      launch: puppeteerMod.launch,
+      chromium: chromiumMod.default
+    }));
+  }
+  return dependenciasPromise;
 }
 
 // Só esses sites podem chamar essa função. Sem isso, qualquer site na
@@ -73,8 +83,8 @@ module.exports = async function handler(req, res) {
 
   let navegador;
   try {
-    const chromium = await carregarChromium();
-    navegador = await puppeteer.launch({
+    const { launch, chromium } = await carregarDependencias();
+    navegador = await launch({
       args: chromium.args,
       defaultViewport: { width: 1240, height: 1754 }, // proporção A4 em px, só pro layout inicial antes do @media print entrar
       executablePath: await chromium.executablePath(),
