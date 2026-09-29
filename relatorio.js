@@ -3865,8 +3865,8 @@ function injetarEstilosRelatorio() {
            margem dele por cima sem avisar, "roubando" espaço da página
            sem o CSS saber, e essa folga era a defesa contra isso.
            Motivo de ter deixado de fazer sentido: agora quem gera o PDF
-           é o Puppeteer (`api/gerar-pdf.js`), que manda
-           `margin: {top:'0mm', ...}` direto pro Chrome, sem caixa de
+           é o Puppeteer (api/gerar-pdf.js), que manda
+           margin: {top:'0mm', ...} direto pro Chrome, sem caixa de
            diálogo nenhuma no meio — não existe mais "a pessoa esqueceu
            de mudar o padrão" pra se defender. Resultado de manter em
            250mm com esse motivo já resolvido: a folga virava uma faixa
