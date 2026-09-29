@@ -1063,7 +1063,7 @@ function aplicarCabecalhosRasterizadosNoClone(doc) {
   doc.querySelectorAll('img[data-cabecalho-svg]').forEach(i => { if (i.dataset.png) i.src = i.dataset.png; });
 }
 /* Recorta uma captura (canvas do html2canvas) rente ao conteúdo, deixando só
-   uma margem mínima (~3 mm) em volta — pra imagem que vai pro Relatório não
+   uma margem de ~3 mm desenhada nos 4 lados — pra imagem que vai pro Relatório não
    levar um monte de fundo creme ao redor de uma tabela estreita. "fundo" é a
    cor de fundo usada na captura (hex). Nunca falha: se algo der errado ou não
    achar conteúdo, devolve o canvas original. */
@@ -1087,15 +1087,17 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
       }
     }
     if (maxX < 0) return canvas;
-    const x0 = Math.max(0, minX - margem), y0 = Math.max(0, minY - margem);
-    const x1 = Math.min(w, maxX + 1 + margem), y1 = Math.min(h, maxY + 1 + margem);
+    // Recorta exatamente o conteúdo e DESENHA a margem em volta (em vez de
+    // só "sobrar" da captura original) — assim a margem é a mesma nos 4
+    // lados mesmo quando a captura já vinha rente ao conteúdo em cima/embaixo.
+    const cw = maxX + 1 - minX, ch = maxY + 1 - minY;
     const saida = document.createElement('canvas');
-    saida.width = x1 - x0;
-    saida.height = y1 - y0;
+    saida.width = cw + (margem * 2);
+    saida.height = ch + (margem * 2);
     const ctx = saida.getContext('2d');
     ctx.fillStyle = fundo;
     ctx.fillRect(0, 0, saida.width, saida.height);
-    ctx.drawImage(canvas, x0, y0, saida.width, saida.height, 0, 0, saida.width, saida.height);
+    ctx.drawImage(canvas, minX, minY, cw, ch, margem, margem, cw, ch);
     return saida;
   } catch (e) {
     console.error('Erro ao recortar a captura:', e);
