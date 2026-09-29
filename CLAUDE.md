@@ -452,6 +452,22 @@ nessa sessão. Peças novas:
   vermelha do erro) são o único jeito de ver o erro de verdade quando
   isso acontece de novo, e cada erro visto até agora já veio com a
   causa bem explícita na própria mensagem.
+
+  **Terceiro erro real, mesmo dia, mesma causa — confirma que não era
+  só o chromium:** corrigido o `@sparticuz/chromium` com `import()`
+  dinâmico, publicado, e a Vercel deu o MESMO `ERR_REQUIRE_ESM` de
+  novo — dessa vez apontando pro `puppeteer-core` (`require() of ES
+  Module .../puppeteer-core.js ... not supported`), que continuava
+  sendo carregado com `require()` normal no topo do arquivo. Corrigido
+  juntando os dois num só `carregarDependencias()` que faz `import()`
+  dinâmico dos dois (`puppeteer-core` expõe `launch` como export
+  nomeado — `const { launch } = await import('puppeteer-core')` — não
+  `.default`, diferente do `@sparticuz/chromium`). **Confirma a régua
+  geral:** qualquer pacote usado aqui dentro de `api/gerar-pdf.js`
+  entra por padrão com `import()` dinâmico dentro da função, nunca
+  `require()` no topo do arquivo — não vale a pena nem checar se o
+  pacote "ainda é CommonJS" antes, porque isso muda de versão pra
+  versão sem aviso.
 - **`package.json`/`package-lock.json`/`vercel.json`** — novos, só
   pra essa função (`vercel.json` define memória/tempo máximo da
   função). O site continua 100% estático publicado pelo GitHub Pages
