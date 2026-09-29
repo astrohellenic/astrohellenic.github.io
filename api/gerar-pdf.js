@@ -12,11 +12,18 @@
    função não guarda, não loga e não repassa esse HTML pra lugar
    nenhum, só usa ele em memória pra montar o PDF e descarta. */
 
-// A partir da v137, o pacote virou ESM por dentro — em CommonJS o valor
-// de verdade vem em ".default" (sem isso, "chromium.executablePath" nem
-// existe: o require() cru só devolve {__esModule, default, ...}).
-const chromium = require('@sparticuz/chromium').default;
+// A partir da v137, o pacote virou um ES Module puro — "require()" direto
+// funciona só por acaso em Node novo (que tolera require de ESM); no Node
+// da Vercel dá "ERR_REQUIRE_ESM" na hora. import() dinâmico funciona em
+// qualquer versão, mesmo dentro de um arquivo CommonJS como este — por
+// isso carregado dentro da função (não no topo do arquivo) e cacheado na
+// primeira chamada.
 const puppeteer = require('puppeteer-core');
+let chromiumPromise;
+function carregarChromium() {
+  if (!chromiumPromise) chromiumPromise = import('@sparticuz/chromium').then(m => m.default);
+  return chromiumPromise;
+}
 
 // Só esses sites podem chamar essa função. Sem isso, qualquer site na
 // internet poderia usar esse endpoint pra converter HTML em PDF às
@@ -66,6 +73,7 @@ module.exports = async function handler(req, res) {
 
   let navegador;
   try {
+    const chromium = await carregarChromium();
     navegador = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width: 1240, height: 1754 }, // proporção A4 em px, só pro layout inicial antes do @media print entrar
