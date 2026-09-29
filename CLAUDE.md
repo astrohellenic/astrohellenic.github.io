@@ -536,6 +536,29 @@ mecanismo antigo de captura de tela — a troca pro Chrome headless não
 só resolveu a fragilidade geral como tornou ESSE bug específico trivial
 de achar (era só CSS, sempre foi).
 
+**Atualização seguinte, mesmo dia — o `250mm` ficou OBSOLETO, não é pra
+voltar pra ele:** logo depois da correção acima, o astrólogo reportou
+uma faixa branca real sobrando embaixo de CADA página do PDF (bem
+visível na capa, de fundo azul — via print). Causa: `.rel-page`/
+`.rel-capa`/`.rel-page-captura` usavam `250mm` de altura na impressão
+(não os `297mm` cheios da folha) de propósito — 47mm de "folga",
+comentada na época como defesa contra a pessoa deixar a caixa de
+diálogo de impressão em "Margens: Padrão" em vez de "Nenhuma" (cenário
+real quando o PDF saía do "Imprimir" nativo do navegador, ver o
+histórico de `baixarRelatorioPDF` mais acima). **Essa defesa não faz
+mais sentido**: quem gera o PDF hoje é o Puppeteer (`api/gerar-pdf.js`),
+mandando `margin: {top:'0mm', ...}` direto pro Chrome — não existe
+caixa de diálogo nenhuma, então não existe "a pessoa esqueceu de mudar
+o padrão" pra se defender. Manter os 47mm só virou espaço em branco
+puro, sobrando à toa. Corrigido pra `297mm` (a mesma altura que a
+prévia em tela já usa) nos três seletores. Testado localmente gerando
+PDF de verdade antes de publicar: `297mm` não estoura nem cria página
+extra (o `@page {margin:0}` + o `margin:0` do Puppeteer são
+determinísticos, não tem "sobra" de navegador real pra temer). **Se
+uma sessão futura ver esse `250mm` documentado em algum lugar e pensar
+em restaurar "pra segurança"**: não — o motivo de existir já não existe
+mais, e restaurar reabre exatamente essa faixa branca.
+
 ## O "motor de astrologia" (posições planetárias) mora FORA deste repositório — é normal, não precisa trazer pra cá
 
 `mandala.js` (função que busca o céu do momento, por volta da linha 654)
