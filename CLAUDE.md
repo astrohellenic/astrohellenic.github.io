@@ -378,3 +378,71 @@ já foi tentado, testado isoladamente com sucesso, e mesmo assim não
 resolveu no site publicado. Próxima sessão que for mexer nisso: ou já
 vem pra implementar o Chrome headless de verdade, ou pergunta antes de
 tentar mais um remendo pontual no mecanismo de captura de tela atual.
+
+## Atualização (29/09/2026): Chrome headless de verdade IMPLEMENTADO — falta só o astrólogo importar o projeto na Vercel
+
+A correção de verdade descrita acima (trocar `html2canvas`+`jsPDF` por
+um backend rodando Chrome headless com `page.pdf()`) foi implementada
+nessa sessão. Peças novas:
+
+- **`api/gerar-pdf.js`** — função serverless (Vercel, Node, CommonJS)
+  que recebe `{ html }` no corpo (POST), abre esse HTML num Chromium
+  headless (`puppeteer-core` + `@sparticuz/chromium`, versões travadas
+  em `22.13.1`/`126.0.0` — ver comentário no `package.json`; NÃO
+  atualizar pra "latest" sem checar a tabela de compatibilidade do
+  `@sparticuz/chromium` no GitHub, versões descasadas podem simplesmente
+  não subir o Chromium na Vercel) e devolve o PDF (`page.pdf()`, com
+  `printBackground: true` — sem isso as cores de fundo da capa somem).
+  CORS restrito a `astrohellenic.com`/`www.astrohellenic.com`/
+  `astrohellenic.github.io` (lista `ORIGENS_PERMITIDAS`), pra ninguém
+  de fora usar esse endpoint às custas da conta Vercel do astrólogo.
+  Testado localmente (fora da Vercel, via `node` direto neste
+  ambiente) que o Chromium sobe e gera um PDF válido com fundo colorido
+  — não foi possível testar contra a Vercel de verdade nem contra o
+  HTML real do relatório (com mandala, fontes etc.), só a mecânica
+  básica.
+- **`package.json`/`package-lock.json`/`vercel.json`** — novos, só
+  pra essa função (`vercel.json` define memória/tempo máximo da
+  função). O site continua 100% estático publicado pelo GitHub Pages
+  (`CNAME`) — a Vercel só hospeda esse endpoint, não substitui o GitHub
+  Pages.
+- **`relatorio.js`, `baixarRelatorioPDF()`** — reescrita: em vez de
+  fatiar `.rel-page` em canvas, agora pega o `.rel-viewer` inteiro já
+  renderizado na tela (já paginado por `dividirPaginasLongasEmFolhas`,
+  já com os números de página certos em `.rel-num-pagina-canto`) +
+  o CSS de `#relatorio-estilos` (que já tinha um bloco `@media print`
+  pronto, inclusive com os ajustes de `height`/`min-height` da capa já
+  feitos numa sessão anterior — ver seção "position: sticky" acima pro
+  motivo de esses valores serem tão específicos) e manda isso pro
+  `/api/gerar-pdf`. Removida a função `numerarPaginaPdf` (não precisa
+  mais desenhar número à parte — o `.rel-num-pagina-canto` já é o
+  número de verdade agora). Removido o `<script>` do `jsPDF` do
+  `index.html` (não é mais usado em lugar nenhum). **`html2canvas`
+  continua no `index.html`** — é usado por VÁRIOS outros módulos
+  (Painel Técnico, Matriz, Liberação, Profecção, Sinastria, Lotes) pra
+  capturar imagem, nada disso mudou.
+- **Constante `RELATORIO_PDF_API_URL`** (topo da função, em
+  `relatorio.js`) — hoje aponta pra uma URL de exemplo
+  (`SUBSTITUA-PELO-SEU-PROJETO.vercel.app`). **Isso precisa ser trocado
+  pela URL real** assim que o astrólogo importar o repositório na
+  Vercel (a Vercel mostra essa URL depois do primeiro deploy).
+
+**Por que não precisou de login/token/mudança no Supabase**: o
+astrólogo já está logado e com o relatório JÁ renderizado na tela
+quando clica em "Baixar PDF" — a função serverless nunca precisa
+acessar o Supabase, só recebe o HTML pronto (que o navegador do
+astrólogo já tinha) e devolve o PDF. Chegou-se a cogitar (numa
+conversa anterior a essa correção) um esquema de link temporário de
+impressão ou de credencial de serviço do Supabase — **não foi usado,
+e não é necessário**, porque simplifica bastante não ter esse tipo de
+autenticação/token novo no meio.
+
+**O que falta pra isso funcionar de verdade** (nenhuma dessas coisas
+foi feita ainda, porque exigem acesso que só o astrólogo tem):
+1. Importar este repositório na Vercel (conta que o astrólogo já tem).
+2. Pegar a URL que a Vercel gerar pro projeto e colocar em
+   `RELATORIO_PDF_API_URL` (`relatorio.js`), substituindo o placeholder.
+3. Testar de verdade gerando o PDF de um relatório real (com mandala,
+   texto longo pra ver a paginação, Painel Técnico capturado) — só
+   depois disso dá pra confirmar que resolveu os sintomas descritos
+   mais acima (página extra em branco, imagem "atrás" na prévia).
