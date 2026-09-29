@@ -3243,6 +3243,40 @@ async function baixarRelatorioPDF() {
 
   try {
     const estilos = document.getElementById('relatorio-estilos');
+
+    /* O Chrome headless que gera o PDF (api/gerar-pdf.js) recalcula o
+       layout do zero, do jeito dele — e "flex: 1" + "object-fit" dentro
+       de uma página com altura fixa (297mm) não dá o MESMO resultado lá
+       que dá aqui na prévia, mesmo sendo o mesmo Chromium por baixo (a
+       prévia já está certa, é comprovado; foi só medir o PDF de verdade
+       — 29/09/2026 — que uma imagem de ferramenta capturada acabou
+       crescendo mais que a página mesmo com "overflow: hidden", e o
+       número da página foi parar sozinho numa folha extra). Em vez de
+       confiar que os dois motores de layout vão concordar, mede-se o
+       tamanho de VERDADE que cada imagem já está ocupando AQUI, na tela
+       (onde já está garantidamente certo), converte pra milímetros, e
+       fixa esse valor exato como "width"/"height" inline na cópia que
+       vai pro PDF — "flex: none" trava esse tamanho contra qualquer
+       "flex: 1"/"object-fit" tentando recalcular de novo lá do outro
+       lado. O Chrome do PDF não decide mais nada sobre o tamanho da
+       imagem, só desenha o número que a prévia já mediu. */
+    const viewerParaPdf = viewer.cloneNode(true);
+    const paginaReferencia = viewer.querySelector('.rel-page');
+    const pxPorMm = paginaReferencia ? paginaReferencia.getBoundingClientRect().width / 210 : 0;
+    if (pxPorMm > 0) {
+      const imagensOriginais = viewer.querySelectorAll('.rel-img-captura, .rel-img-mandala');
+      const imagensCopia = viewerParaPdf.querySelectorAll('.rel-img-captura, .rel-img-mandala');
+      imagensOriginais.forEach((imgOriginal, i) => {
+        const rect = imgOriginal.getBoundingClientRect();
+        if (!rect.width || !rect.height) return; // imagem ainda não carregou/mediu — deixa o CSS de sempre resolver
+        const imgCopia = imagensCopia[i];
+        if (!imgCopia) return;
+        const larguraMm = (rect.width / pxPorMm).toFixed(2);
+        const alturaMm = (rect.height / pxPorMm).toFixed(2);
+        imgCopia.style.cssText += `flex: none; width: ${larguraMm}mm; height: ${alturaMm}mm; max-width: ${larguraMm}mm; max-height: ${alturaMm}mm;`;
+      });
+    }
+
     const html = `<!doctype html>
 <html>
 <head>
@@ -3252,7 +3286,7 @@ async function baixarRelatorioPDF() {
 <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Montserrat', sans-serif; }</style>
 <style>${estilos ? estilos.textContent : ''}</style>
 </head>
-<body>${viewer.outerHTML}</body>
+<body>${viewerParaPdf.outerHTML}</body>
 </html>`;
 
     const corpo = JSON.stringify({ html });
@@ -3853,7 +3887,7 @@ function injetarEstilosRelatorio() {
          de flexbox distribui o espaço entre título e imagem direto, e
          "object-fit: contain" encolhe a imagem proporcionalmente pra
          caber no espaço que sobrar (nunca esmagada/cortada). */
-      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+      .rel-captura-corpo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
       .rel-img-captura { flex: 1; min-height: 0; width: 100%; object-fit: contain; display: block; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
