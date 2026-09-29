@@ -3255,12 +3255,23 @@ async function baixarRelatorioPDF() {
 <body>${viewer.outerHTML}</body>
 </html>`;
 
+    const corpo = JSON.stringify({ html });
+    console.log('[PDF] Tamanho do corpo enviado:', (corpo.length / 1024 / 1024).toFixed(2), 'MB');
+
     const resposta = await fetch(RELATORIO_PDF_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ html })
+      body: corpo
     });
-    if (!resposta.ok) throw new Error('Servidor de PDF respondeu ' + resposta.status);
+    if (!resposta.ok) {
+      // Tenta ler o motivo que o servidor mandou (nosso próprio erro em
+      // JSON, ou a página de erro genérica da Vercel) — sem isso, toda
+      // falha vira o mesmo alerta genérico e ninguém descobre o motivo
+      // sem ir direto nos logs da Vercel.
+      let detalhe = '';
+      try { detalhe = (await resposta.text()).slice(0, 300); } catch (_) {}
+      throw new Error(`Servidor de PDF respondeu ${resposta.status}${detalhe ? ': ' + detalhe : ''}`);
+    }
 
     const blobPdf = await resposta.blob();
     const url = URL.createObjectURL(blobPdf);
@@ -3273,7 +3284,7 @@ async function baixarRelatorioPDF() {
     URL.revokeObjectURL(url);
   } catch (err) {
     console.error('Erro ao gerar o PDF do relatório:', err);
-    alert('Não foi possível gerar o PDF. Tente novamente.');
+    alert('Não foi possível gerar o PDF: ' + err.message);
   } finally {
     delete viewer.dataset.gerandoPdf;
     if (botao) { botao.disabled = false; botao.innerHTML = rotuloOriginal; }
