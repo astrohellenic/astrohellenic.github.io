@@ -354,7 +354,8 @@ async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
 
   try {
     const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+    const fundoCaptura = modoEscuroCaptura ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await html2canvas(elemento, { backgroundColor: fundoCaptura, scale: 2, useCORS: true }), fundoCaptura);
     const total = adicionarCapturaRelatorio('matriz_visibilidade_mandala', canvas.toDataURL('image/png'));
     alert(`"Matriz de Visibilidade" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {

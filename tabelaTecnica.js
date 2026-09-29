@@ -496,7 +496,8 @@ async function capturarPainelTecnicoParaRelatorio() {
     // verdade do container já é var(--bg-main) (inline), então acompanha o
     // modo atual em vez de cravar sempre o creme do Tema Claro.
     const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+    const fundoCaptura = modoEscuroCaptura ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await html2canvas(elemento, { backgroundColor: fundoCaptura, scale: 2, useCORS: true }), fundoCaptura);
     const total = adicionarCapturaRelatorio('tabela_tecnica', canvas.toDataURL('image/png'));
     alert(`"Painel Técnico de Natividades" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {

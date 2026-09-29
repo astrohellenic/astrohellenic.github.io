@@ -1062,6 +1062,47 @@ async function rasterizarCabecalhosMandala(raiz) {
 function aplicarCabecalhosRasterizadosNoClone(doc) {
   doc.querySelectorAll('img[data-cabecalho-svg]').forEach(i => { if (i.dataset.png) i.src = i.dataset.png; });
 }
+/* Recorta uma captura (canvas do html2canvas) rente ao conteúdo, deixando só
+   uma margem mínima (~3 mm) em volta — pra imagem que vai pro Relatório não
+   levar um monte de fundo creme ao redor de uma tabela estreita. "fundo" é a
+   cor de fundo usada na captura (hex). Nunca falha: se algo der errado ou não
+   achar conteúdo, devolve o canvas original. */
+function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
+  try {
+    const margem = Math.round((margemCssPx === undefined ? 11 : margemCssPx) * 2); // escala 2 da captura
+    const w = canvas.width, h = canvas.height;
+    const dados = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+    const bgR = parseInt(fundo.slice(1, 3), 16), bgG = parseInt(fundo.slice(3, 5), 16), bgB = parseInt(fundo.slice(5, 7), 16);
+    const difere = (i) => dados[i + 3] > 8 && (Math.abs(dados[i] - bgR) > 10 || Math.abs(dados[i + 1] - bgG) > 10 || Math.abs(dados[i + 2] - bgB) > 10);
+    let minX = w, minY = h, maxX = -1, maxY = -1;
+    for (let y = 0; y < h; y++) {
+      const linha = y * w * 4;
+      for (let x = 0; x < w; x++) {
+        if (difere(linha + x * 4)) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) return canvas;
+    const x0 = Math.max(0, minX - margem), y0 = Math.max(0, minY - margem);
+    const x1 = Math.min(w, maxX + 1 + margem), y1 = Math.min(h, maxY + 1 + margem);
+    const saida = document.createElement('canvas');
+    saida.width = x1 - x0;
+    saida.height = y1 - y0;
+    const ctx = saida.getContext('2d');
+    ctx.fillStyle = fundo;
+    ctx.fillRect(0, 0, saida.width, saida.height);
+    ctx.drawImage(canvas, x0, y0, saida.width, saida.height, 0, 0, saida.width, saida.height);
+    return saida;
+  } catch (e) {
+    console.error('Erro ao recortar a captura:', e);
+    return canvas;
+  }
+}
+window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 window.rasterizarCabecalhosMandala = rasterizarCabecalhosMandala;
 window.aplicarCabecalhosRasterizadosNoClone = aplicarCabecalhosRasterizadosNoClone;
 

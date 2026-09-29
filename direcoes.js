@@ -490,7 +490,7 @@ async function capturarCircumambulacaoParaRelatorio() {
       alvo = document.getElementById('circumambulacaoPautas');
       if (!alvo) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
     }
-    const canvas = await html2canvas(alvo, { backgroundColor: fundo, scale: 2, useCORS: true });
+    const canvas = recortarCanvasAoConteudo(await html2canvas(alvo, { backgroundColor: fundo, scale: 2, useCORS: true }), fundo);
     const total = adicionarCapturaRelatorio('circumambulacao', canvas.toDataURL('image/png'));
     const oQue = indices.length ? `${indices.length} linha(s)` : 'a imagem inteira';
     alert(`Circumambulação pelos Termos (${oQue}) foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
