@@ -3852,22 +3852,35 @@ function injetarEstilosRelatorio() {
         @page { size: A4; margin: 0; }
 
         /* min-height (NUNCA height fixo) do tamanho real de uma folha
-           impressa, com folga bem maior que antes (250mm dos 297mm
-           disponíveis — 47mm de sobra, não só os ~30mm de antes).
-           Motivo do aumento da folga: o navegador só respeita o
-           "@page { margin: 0 }" logo acima quando a própria caixa de
-           diálogo de impressão está com "Margens: Nenhuma" e "Escala:
-           100%" — se a pessoa deixar em "Padrão" (o mais comum), o
-           navegador aplica a margem dele por cima, sem avisar, e
-           "rouba" espaço da página sem o CSS saber. Essa folga extra é
-           a defesa contra isso. Esse valor precisa ser o MESMO em toda
-           .rel-page, capa incluída: testando, misturar valores
-           diferentes entre páginas (ou mudar esse número sem também
-           levar em conta o @page acima) foi o que causou perda de
-           conteúdo em relatórios longos numa rodada anterior — qualquer
-           ajuste futuro aqui precisa ser testado gerando um PDF de
-           verdade com várias páginas, não só olhando o CSS. */
-        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 250mm; overflow: visible; page-break-after: always; }
+           impressa: 297mm cheios, a mesma altura que a prévia em tela já
+           usa (".rel-page { aspect-ratio: 210/297 }", @media screen,
+           logo acima).
+
+           ATUALIZAÇÃO (29/09/2026) — esse valor já foi 250mm (47mm de
+           "folga" proposital), de uma época em que o PDF saía do
+           "Imprimir" de verdade do navegador: ali fazia sentido, porque
+           o navegador só respeita "@page { margin: 0 }" se a PESSOA
+           deixar a caixa de diálogo em "Margens: Nenhuma" — no padrão
+           ("Margens: Padrão", o mais comum), o navegador aplica a
+           margem dele por cima sem avisar, "roubando" espaço da página
+           sem o CSS saber, e essa folga era a defesa contra isso.
+           Motivo de ter deixado de fazer sentido: agora quem gera o PDF
+           é o Puppeteer (`api/gerar-pdf.js`), que manda
+           `margin: {top:'0mm', ...}` direto pro Chrome, sem caixa de
+           diálogo nenhuma no meio — não existe mais "a pessoa esqueceu
+           de mudar o padrão" pra se defender. Resultado de manter em
+           250mm com esse motivo já resolvido: a folga virava uma faixa
+           branca real, visível, sobrando embaixo de toda página (mais
+           óbvio na capa, com fundo colorido) — exatamente o problema
+           que essa folga foi criada pra evitar, só que auto-infligido.
+           Esse valor precisa ser o MESMO em toda .rel-page, capa
+           incluída: testando, misturar valores diferentes entre páginas
+           (ou mudar esse número sem também levar em conta o @page
+           acima) foi o que causou perda de conteúdo em relatórios
+           longos numa rodada anterior — qualquer ajuste futuro aqui
+           precisa ser testado gerando um PDF de verdade com várias
+           páginas, não só olhando o CSS. */
+        .rel-page { box-shadow: none; margin: 0; width: auto; min-height: 297mm; overflow: visible; page-break-after: always; }
         .rel-page:last-child { page-break-after: auto; }
 
         /* A capa é o único .rel-page com "height" fixo (não só
@@ -3893,7 +3906,7 @@ function injetarEstilosRelatorio() {
            2 páginas no PDF baixado (uma quase em branco logo depois),
            mesmo sintoma da capa antes da correção — mesma causa, mesma
            correção. */
-        .rel-capa, .rel-page-captura { height: 250mm; min-height: 250mm; }
+        .rel-capa, .rel-page-captura { height: 297mm; min-height: 297mm; }
       }
   `;
   document.head.appendChild(style);
