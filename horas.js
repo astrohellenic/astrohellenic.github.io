@@ -165,7 +165,6 @@ function iniciarModuloHoras(containerIdAlvo) {
   }
 
   const horaAtual = hoursSchedule.find(h => h.isCurrent);
-  const localNome = (typeof currentGeo !== 'undefined' && currentGeo.city) ? currentGeo.city : "Local Atual";
   window.horasPlanetariasAtual = {
     dayRulerId: firstPlanetId,
     hourRulerId: horaAtual ? horaAtual.planet.id : null
@@ -301,7 +300,6 @@ function iniciarModuloHoras(containerIdAlvo) {
     <div class="horas-card" id="horasCardArea">
   <div class="horas-card-inner">
       <p class="horas-info">
-        Localidade: <strong>${localNome}</strong><br>
         Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
   `;
