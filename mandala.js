@@ -978,7 +978,16 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   };
 }
 
-function montarCabecalhoMandalaGrupoSVG(data, headerY, cores) {
+/* "loteCasa1" (chave: fortune/spirit/venus/mercury/mars/jupiter/saturn, ou
+   null) — quando a Casa 1 do desenho NÃO é o Ascendente, o cabeçalho avisa
+   "Lote tal na Casa 1" (depois de Natividade Diurna/Noturna), pra ninguém
+   confundir com um mapa normal. Quem não gira o mapa (Painel Técnico,
+   Matriz) nunca passa nada aqui e a linha nunca aparece. */
+const ROTULOS_LOTE_CASA1 = {
+  fortune: 'Lote da Fortuna', spirit: 'Lote do Espírito', venus: 'Lote de Eros',
+  mercury: 'Lote da Necessidade', mars: 'Lote da Audácia', jupiter: 'Lote da Vitória', saturn: 'Lote de Nêmesis'
+};
+function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1) {
   const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
   const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
@@ -1008,7 +1017,7 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores) {
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${escapeHtml(headerTitle)}</text>
     <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}</tspan></text>
+        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${(loteCasa1 && ROTULOS_LOTE_CASA1[loteCasa1]) ? `  • ${ROTULOS_LOTE_CASA1[loteCasa1]} na Casa 1` : ''}</tspan></text>
   </g>`;
 
   const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
@@ -1027,7 +1036,7 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores) {
   return svg;
 }
 
-function montarCabecalhoMandalaImagemHTML(data, idOpcional) {
+function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = coresCabecalhoMandala(modoEscuro, null);
   /* SVG DIRETO na página (não <img>): o Safari do iPad não desenhava certo
@@ -1036,7 +1045,7 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional) {
      certo. As fontes ficam nas famílias genéricas (serif/sans-serif) pra
      ficar IDÊNTICO ao cabeçalho da Mandala, que é desenhado como imagem
      isolada e por isso também não usa Cinzel/Montserrat. */
-  const grupo = montarCabecalhoMandalaGrupoSVG(data, 2, cores)
+  const grupo = montarCabecalhoMandalaGrupoSVG(data, 2, cores, opcoes && opcoes.loteCasa1)
     .replace(/'Cinzel', serif/g, 'serif')
     .replace(/'Montserrat', sans-serif/g, 'sans-serif');
   return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="margin: 0 auto 16px auto; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" width="960" height="79" viewBox="0 0 960 79" style="display: block; width: 100%; height: auto;">${grupo}</svg></div>`;
@@ -1441,7 +1450,7 @@ ${temaCeu ? `
 
   /* CABEÇALHO (nome, data, local, zodíaco, natividade, Dia/Hora) — o mesmo
      desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
-  svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng);
+  svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
 

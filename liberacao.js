@@ -7,20 +7,6 @@ let expandedL1Index = null; // Detectado automaticamente com base no momento atu
 let expandedL2Key = null; // Guarda a chave do L2 expandido (ex: "0_2")
 let expandedL3Key = null; // Guarda a chave do L3 expandido (ex: "0_2_1")
 
-/* Quais partes da tela vão junto quando "Adicionar ao Relatório" é
-   clicado — igual à ideia da Calculadora de Lotes (o astrólogo escolhe
-   o que entra), só que aqui são só duas partes (mandala e árvore) em
-   vez de um quadrinho por item. Cabeçalho (título + nome/data) sempre
-   vai junto, não é opcional. */
-let liberacaoIncluirMandalaRelatorio = true;
-let liberacaoIncluirTabelaRelatorio = true;
-
-function alternarLiberacaoIncluirNoRelatorio(parte, marcado) {
-  if (parte === 'mandala') liberacaoIncluirMandalaRelatorio = marcado;
-  else if (parte === 'tabela') liberacaoIncluirTabelaRelatorio = marcado;
-}
-window.alternarLiberacaoIncluirNoRelatorio = alternarLiberacaoIncluirNoRelatorio;
-
 // Anos Helenísticos (Valens): Áries(15), Touro(8), Gêmeos(20), Câncer(25), Leão(19), Virgem(20), Libra(8), Escorpião(15), Sagitário(12), Capricórnio(27), Aquário(30), Peixes(12)
 const ZR_SIGN_YEARS = [15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12];
 
@@ -963,23 +949,25 @@ function renderLiberacaoUI() {
 
   let html = `
     <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-bottom: 8px; padding: 0 20px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--primary-blue); font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a mandala quando adicionar ao Relatório">
-            <input type="checkbox" ${liberacaoIncluirMandalaRelatorio ? 'checked' : ''} onchange="alternarLiberacaoIncluirNoRelatorio('mandala', this.checked)" style="width: 14px; height: 14px; cursor: pointer;"> Mandala
-          </label>
-          <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--primary-blue); font-weight: 600; cursor: pointer; user-select: none;" title="Incluir a árvore (L1-L4) quando adicionar ao Relatório">
-            <input type="checkbox" ${liberacaoIncluirTabelaRelatorio ? 'checked' : ''} onchange="alternarLiberacaoIncluirNoRelatorio('tabela', this.checked)" style="width: 14px; height: 14px; cursor: pointer;"> Tabela
-          </label>
-        </div>
-        <button onclick="capturarLiberacaoParaRelatorio()" title="Adiciona a mandala e/ou a árvore ao Relatório, conforme as caixinhas marcadas ao lado" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
+        <button type="button" onclick="salvarLiberacaoNaGaleria()" title="Salvar a ferramenta inteira como imagem na galeria (com título e cabeçalho)" style="${LIB_BTN_ICONE_CSS}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
+        <div style="position: relative; flex-shrink: 0;">
+          <button type="button" onclick="const m=document.getElementById('liberacaoMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" style="${LIB_BTN_ICONE_CSS}">
+            <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+          <div id="liberacaoMenuRelatorio" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; min-width: 210px; overflow: hidden;">
+            <div onclick="capturarLiberacaoParaRelatorio('inteira')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Ferramenta inteira (com cabeçalho)</div>
+            <div onclick="capturarLiberacaoParaRelatorio('mandala')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Só a mandala (com cabeçalho)</div>
+            <div onclick="capturarLiberacaoParaRelatorio('tabela')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue);">Só a tabela</div>
+          </div>
+        </div>
       </div>
     <div class="lib-outer" id="liberacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <div id="liberacaoHeaderCapture">
-        <!-- Título + seletor de lote ativo lado a lado. O cabeçalho antigo (contorno dourado + nome/data/local do cliente) foi removido daqui porque ficou redundante: essas mesmas informações agora aparecem dentro do card da mandala logo abaixo (ver liberacaoMandalaImgHost), que é o que vira <img> pro toque-longo salvar em PNG. -->
+        <!-- Título + seletor de lote ativo lado a lado. -->
         <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
           <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin: 0; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
             Liberação Zodiacal
@@ -994,28 +982,13 @@ function renderLiberacaoUI() {
           </div>
         </div>
 
-        <!-- Nome/data/local do cliente: escondido na tela (já aparece dentro do card da mandala, ver liberacaoMandalaImgHost), mas mantido aqui pra continuar entrando na imagem exportada pro Relatório quando só "Tabela" é marcada (sem "Mandala") — senão essa combinação perderia o contexto de nome/data/local. capturarLiberacaoParaRelatorio torna este bloco visível só na cópia clonada usada pra exportar. -->
-        <div id="liberacaoHeaderClientInfo" style="display: none; text-align: center; margin-bottom: 12px;">
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-        </div>
+        <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas), com "Lote tal na Casa 1": a Liberação sempre gira em torno de um lote. -->
+        ${montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'liberacaoCabecalhoPadrao', { loteCasa1: selectedZRPhase })}
       </div>
 
       <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
-        <!-- id próprio (liberacaoMandalaImgHost): depois do render, essa
-             div é convertida numa <img> com o mesmo mecanismo do "salvar
-             imagem" da mandala principal (mandala.js) — sem botão nenhum
-             pra isso, é só a mandala virar uma imagem de verdade, e o
-             toque longo do navegador/SO já oferece "salvar imagem"
-             sozinho, nativamente. O nome/data/hora repetido aqui (fora
-             do cabeçalho interativo lá em cima) é pra essa imagem salva
-             já vir com esse contexto, sem precisar do resto da tela. -->
+        <!-- A mandala fica como SVG (vetorial); as imagens pra galeria/relatório saem dela direto (ver montarImagemLiberacao). -->
         <div id="liberacaoMandalaImgHost">
-          <div style="text-align: center; margin-bottom: 8px;">
-            <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-            <div style="font-size: 10.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 1px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</div>
-            <div style="font-family: 'Cinzel', serif; font-size: 11px; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; margin-top: 4px;">Mapa Natal — Casa 1: ${escapeHtml(loteLabelsZR[selectedZRPhase] || selectedZRPhase)}</div>
-          </div>
           <div style="max-width: 480px; margin: 0 auto;">
             ${gerarMandalaNatalZR(currentCalculatedData, {
               loteCasa1: selectedZRPhase,
@@ -1224,92 +1197,106 @@ function renderLiberacaoUI() {
 
   container.innerHTML = html;
   encolherTabelasLZRVisiveis(container);
-  converterMandalaLiberacaoEmImagem();
 }
 
-/* Monta, fora da tela, um bloco só com o cabeçalho (sempre) + mandala
-   e/ou árvore (conforme as caixinhas marcadas) e manda pro relatório —
-   mesma ideia da Calculadora de Lotes (capturarLotesSelecionadosParaRelatorio):
-   o astrólogo escolhe um subconjunto da tela, não a tela inteira toda
-   vez. Clona os elementos (não move os originais) pra não bagunçar a
-   tela real enquanto captura. */
-async function capturarLiberacaoParaRelatorio() {
-  if (!liberacaoIncluirMandalaRelatorio && !liberacaoIncluirTabelaRelatorio) {
-    alert('Marque a caixinha de "Mandala" e/ou "Tabela" antes de adicionar ao relatório.');
-    return;
+const LIB_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+
+/* IMAGENS DA LIBERAÇÃO (galeria e relatório). Título + cabeçalho padrão +
+   cartão da mandala saem direto do SVG (rápido); a tabela (árvore L1-L4) é
+   HTML, então é a única parte que passa pelo html2canvas. "opc": {titulo,
+   cabecalho, mandala, tabela} (booleanos). Devolve o canvas (escala 2). */
+async function montarImagemLiberacao(opc) {
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const arvoreEl = document.getElementById('liberacaoArvoreCapture');
+  const cardEl = document.getElementById('liberacaoMandalaCapture');
+  const roda = cardEl && cardEl.querySelector('svg');
+  const W = (opc.tabela && arvoreEl) ? Math.max(320, Math.round(arvoreEl.getBoundingClientRect().width)) : 960;
+
+  let y = 0, partes = '';
+  const cores = coresCabecalhoMandala(modoEscuro, null);
+  if (opc.titulo) {
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">LIBERAÇÃO ZODIACAL</text>`;
+    y += 44;
   }
-  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
-
-  const header = document.getElementById('liberacaoHeaderCapture');
-  const mandala = document.getElementById('liberacaoMandalaCapture');
-  const arvore = document.getElementById('liberacaoArvoreCapture');
-  if (!header) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
-
-  const modoEscuroCapturaLib = document.documentElement.classList.contains('tema-escuro');
-  const temp = document.createElement('div');
-  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: 900px; padding: 20px; background: ${modoEscuroCapturaLib ? '#1c1917' : '#fffdf5'}; font-family: "Montserrat", sans-serif;`;
-  const headerClone = header.cloneNode(true);
-  // Nome/data/local ficam escondidos na tela (redundantes com o card da mandala). Só precisam aparecer aqui na imagem exportada quando a mandala (que já traz essa mesma informação) não entrar — senão duplicaria na própria imagem.
-  if (!liberacaoIncluirMandalaRelatorio) {
-    const clientInfoClone = headerClone.querySelector('#liberacaoHeaderClientInfo');
-    if (clientInfoClone) clientInfoClone.style.display = 'block';
+  if (opc.cabecalho) {
+    const k = Math.min(1, W / 960);
+    const grupo = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, 2, cores, selectedZRPhase)
+      .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+    partes += `<g transform="translate(${(W - 960 * k) / 2}, ${y}) scale(${k})">${grupo}</g>`;
+    y += (79 * k) + 16;
   }
-  temp.appendChild(headerClone);
-  if (liberacaoIncluirMandalaRelatorio && mandala) temp.appendChild(mandala.cloneNode(true));
-  if (liberacaoIncluirTabelaRelatorio && arvore) temp.appendChild(arvore.cloneNode(true));
-  document.body.appendChild(temp);
+  if (opc.mandala && roda) {
+    const cs = getComputedStyle(cardEl);
+    const borda = parseFloat(cs.borderTopWidth) || 0, raio = parseFloat(cs.borderTopLeftRadius) || 0;
+    const roda_s = Math.min(480, W - 24);
+    const alturaCartao = roda_s + 24;
+    const svgRoda = new XMLSerializer().serializeToString(roda)
+      .replace(/ style="[^"]*"/, '')
+      .replace('<svg ', `<svg x="${(W - roda_s) / 2}" y="${y + 12}" width="${roda_s}" height="${roda_s}" `);
+    partes += `<rect x="${borda / 2}" y="${y + borda / 2}" width="${W - borda}" height="${alturaCartao - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>${svgRoda}`;
+    y += alturaCartao + 16;
+  }
+  const alturaTopo = y > 0 ? y - 16 : 0;
 
+  let topoCanvas = null;
+  if (alturaTopo > 0) {
+    topoCanvas = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${alturaTopo}" viewBox="0 0 ${W} ${alturaTopo}">${partes}</svg>`, W, alturaTopo, fundo, 2);
+  }
+  let arvoreCanvas = null;
+  if (opc.tabela && arvoreEl) {
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+    arvoreCanvas = await html2canvas(arvoreEl, { backgroundColor: fundo, scale: 2, useCORS: true });
+  }
+  if (!topoCanvas) return arvoreCanvas;
+  if (!arvoreCanvas) return topoCanvas;
+
+  const saida = document.createElement('canvas');
+  saida.width = Math.max(topoCanvas.width, arvoreCanvas.width);
+  saida.height = topoCanvas.height + 32 + arvoreCanvas.height;
+  const ctx = saida.getContext('2d');
+  ctx.fillStyle = fundo;
+  ctx.fillRect(0, 0, saida.width, saida.height);
+  ctx.drawImage(topoCanvas, Math.round((saida.width - topoCanvas.width) / 2), 0);
+  ctx.drawImage(arvoreCanvas, Math.round((saida.width - arvoreCanvas.width) / 2), topoCanvas.height + 32);
+  return saida;
+}
+
+/* Botão de galeria: título + cabeçalho + mandala + tabela, SÓ AO TOCAR (ver
+   capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
+function salvarLiberacaoNaGaleria() {
+  capturarESalvarNaGaleria(
+    () => montarImagemLiberacao({ titulo: true, cabecalho: true, mandala: true, tabela: true }),
+    `Astro_Hellenic_Liberacao_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+window.salvarLiberacaoNaGaleria = salvarLiberacaoNaGaleria;
+
+/* Manda pro Relatório. modo: 'inteira' (cabeçalho + mandala + tabela), 'mandala'
+   (cabeçalho + mandala) ou 'tabela' (só a tabela, sem cabeçalho). A mandala
+   sempre leva o cabeçalho — é ele que avisa "Lote tal na Casa 1". */
+async function capturarLiberacaoParaRelatorio(modo) {
+  const menu = document.getElementById('liberacaoMenuRelatorio');
+  if (menu) menu.style.display = 'none';
+  const opc = modo === 'tabela' ? { tabela: true }
+    : modo === 'mandala' ? { cabecalho: true, mandala: true }
+    : { cabecalho: true, mandala: true, tabela: true };
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
   try {
-    const canvas = await html2canvas(temp, { backgroundColor: modoEscuroCapturaLib ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
-    const partes = [];
-    if (liberacaoIncluirMandalaRelatorio) partes.push('Mandala');
-    if (liberacaoIncluirTabelaRelatorio) partes.push('Tabela');
+    const bruto = await montarImagemLiberacao(opc);
+    if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+    const canvas = recortarCanvasAoConteudo(bruto, fundo);
     const rotuloLote = (typeof RELATORIO_LOT_NOMES !== 'undefined' && RELATORIO_LOT_NOMES[selectedZRPhase]) || selectedZRPhase;
+    const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandala' ? 'Mandala' : 'Mandala + Tabela';
     const total = adicionarCapturaRelatorio('liberacao_' + selectedZRPhase, canvas.toDataURL('image/png'));
-    alert(`Liberação Zodiacal — ${rotuloLote} (${partes.join(' + ')}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+    alert(`Liberação Zodiacal — ${rotuloLote} (${oQue}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar a Liberação Zodiacal ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
-  } finally {
-    document.body.removeChild(temp);
   }
 }
 window.capturarLiberacaoParaRelatorio = capturarLiberacaoParaRelatorio;
-
-/* Converte o card da mandala (nome/data + "Casa 1: ..." + a roda) numa
-   <img> de verdade logo depois do render — mesma ideia do "salvar
-   imagem" da mandala principal (mandala.js): lá a tela inteira da
-   mandala já É uma <img src="data:image/png...">, então o toque longo
-   no iPad/celular já oferece "Salvar Imagem" sozinho, nativamente, sem
-   precisar de nenhum botão. Aqui a mandala é só uma peça dentro de uma
-   tela maior (cabeçalho interativo + árvore), então em vez de trocar a
-   tela inteira, só a div #liberacaoMandalaImgHost (que já nasce com o
-   SVG dentro, pra aparecer na hora, sem tela em branco) é convertida
-   pra imagem depois — via html2canvas, porque ali dentro tem texto
-   HTML normal (nome/data) junto do SVG, não só o SVG puro (o
-   drawImage direto de mandala.js só funciona pra SVG isolado).
-   Silenciosa: se falhar (html2canvas não carregou, por exemplo), o SVG
-   cru continua visível — o astrólogo só perde o toque-longo-pra-salvar
-   nesse caso, a mandala em si nunca desaparece. */
-async function converterMandalaLiberacaoEmImagem() {
-  if (typeof html2canvas !== 'function') return;
-  const host = document.getElementById('liberacaoMandalaImgHost');
-  if (!host) return;
-
-  try {
-    const modoEscuroConversao = document.documentElement.classList.contains('tema-escuro');
-    // backgroundColor precisa ser o fundo do CARTÃO (#liberacaoMandalaCapture,
-    // --bg-card), não o da página (--bg-main) — host é só um filho sem fundo
-    // próprio dentro do cartão; usar --bg-main aqui reproduzia a mesma
-    // "costura de cor" que 2b8c8d8 já tinha corrigido no fundoDisco do SVG,
-    // só que nessa outra camada (o preenchimento de base do html2canvas).
-    const canvas = await html2canvas(host, { backgroundColor: modoEscuroConversao ? '#262220' : '#ffffff', scale: 2, useCORS: true });
-    if (!document.getElementById('liberacaoMandalaImgHost')) return; // a tela já mudou (outro lote/módulo) enquanto convertia
-    host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Mandala Natal — Liberação Zodiacal" style="width: 100%; height: auto; display: block;">`;
-  } catch (err) {
-    console.error('Erro ao converter a mandala da Liberação em imagem:', err);
-  }
-}
 
 /* ENCOLHE TABELAS LARGAS DEMAIS (L2/L3/L4) PARA CABEREM NA TELA (SEM CORTE),
    EM VEZ DE FICAREM TRAVADAS/CORTADAS EM TELAS ESTREITAS — mesma técnica
