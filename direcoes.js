@@ -433,7 +433,15 @@ let circumambulacaoMontador = null;
 function alternarLinhaCircumambulacaoRelatorio(idx, marcado) {
   if (marcado) circumambulacaoLinhasSelecionadas.add(idx);
   else circumambulacaoLinhasSelecionadas.delete(idx);
-  renderCircumambulaçõesUI();
+  // Só atualiza a dica do botão — NUNCA redesenha a tela (era o que travava).
+  const btn = document.getElementById('circumambulacaoBtnRelatorio');
+  if (btn) btn.title = dicaBotaoRelatorioCircumambulacao();
+}
+function dicaBotaoRelatorioCircumambulacao() {
+  const n = circumambulacaoLinhasSelecionadas.size;
+  return n
+    ? `Adicionar ao Relatório só as ${n} linha(s) marcada(s) (sem título nem cabeçalho)`
+    : 'Adicionar ao Relatório a imagem inteira (sem título nem cabeçalho). Marque a caixinha de uma ou mais linhas pra mandar só elas';
 }
 window.alternarLinhaCircumambulacaoRelatorio = alternarLinhaCircumambulacaoRelatorio;
 
@@ -738,10 +746,7 @@ function renderCircumambulaçõesUI() {
   }).join('');
 
   const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
-  const totalMarcadas = circumambulacaoLinhasSelecionadas.size;
-  const dicaRelatorio = totalMarcadas
-    ? `Adicionar ao Relatório só as ${totalMarcadas} linha(s) marcada(s) (sem título nem cabeçalho)`
-    : 'Adicionar ao Relatório a imagem inteira (sem título nem cabeçalho). Marque a caixinha de uma ou mais linhas pra mandar só elas';
+  const dicaRelatorio = dicaBotaoRelatorioCircumambulacao();
 
   let html = `
     <div style="width: 100%;">
@@ -757,7 +762,7 @@ function renderCircumambulaçõesUI() {
         <button type="button" onclick="salvarCircumambulacaoNaGaleria()" title="Salvar a página inteira como imagem na galeria (com título e cabeçalho)" style="${btnCss}">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
-        <button type="button" onclick="capturarCircumambulacaoParaRelatorio()" title="${escapeHtml(dicaRelatorio)}" style="${btnCss}">
+        <button type="button" id="circumambulacaoBtnRelatorio" onclick="capturarCircumambulacaoParaRelatorio()" title="${escapeHtml(dicaRelatorio)}" style="${btnCss}">
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
