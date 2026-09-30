@@ -171,11 +171,23 @@ function iniciarModuloHoras(containerIdAlvo) {
     hourRulerId: horaAtual ? horaAtual.planet.id : null
   };
 
+  /* Chamada do mandala.js num container escondido: só precisava calcular
+     window.horasPlanetariasAtual (acima). Não monta a tela — assim não existem
+     dois #horas-container na página (o escondido e o de verdade). */
+  if (containerIdAlvo) return;
+
+  const btnCssHoras = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+  const cabecalhoHorasHTML = (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof montarCabecalhoMandalaImagemHTML === 'function')
+    ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'horasCabecalho', { largura: 480 }) : '';
+
   let html = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: flex-end; padding: 12px 20px 0;">
-        <button onclick="capturarTelaParaRelatorio('horas', 'horas-container', 'Horas Planetárias')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
+        <button type="button" onclick="salvarHorasNaGaleria()" title="Salvar as Horas Planetárias como imagem na galeria (com título e cabeçalho)" style="${btnCssHoras}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        </button>
+        <button type="button" onclick="capturarHorasParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" style="${btnCssHoras}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
     <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif; text-align: center; box-sizing: border-box;">
@@ -208,8 +220,12 @@ function iniciarModuloHoras(containerIdAlvo) {
         text-align: center;
         margin-bottom: 20px;
       }
+      /* display:flex + width:fit-content + margin:auto (em vez de inline-flex): mesmo visual,
+         mas o html2canvas deixava de desenhar o conteúdo de um inline-flex com imagens dentro. */
       #horas-container .horas-atual-box {
-        display: inline-flex;
+        display: flex;
+        width: fit-content;
+        margin: 0 auto;
         max-width: 100%;
         flex-direction: column;
         align-items: center;
@@ -277,9 +293,13 @@ function iniciarModuloHoras(containerIdAlvo) {
          com sufixo único por chamada, não esses fixos). Removido junto
          com a limpeza do PLANET_3D_SVGS. -->
 
-    <div class="horas-card">
+    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Horas Planetárias</h3>
+
+    <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
+    <div style="max-width: 480px; margin: 0 auto;">${cabecalhoHorasHTML}</div>
+
+    <div class="horas-card" id="horasCardArea">
   <div class="horas-card-inner">
-      <h3 style="font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 8px; text-align: center;">Horas Planetárias</h3>
       <p class="horas-info">
         Localidade: <strong>${localNome}</strong><br>
         Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
@@ -350,3 +370,66 @@ function iniciarModuloHoras(containerIdAlvo) {
 
   container.innerHTML = html;
 }
+
+
+/* IMAGENS DAS HORAS PLANETÁRIAS. Galeria: título + cabeçalho padrão (no layout
+   estreito, o mesmo que está na tela) + o cartão. Relatório: só o cartão.
+   Só ao tocar nos botões. */
+function fundoCapturaHoras() {
+  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+}
+
+async function montarImagemHoras(comCabecalho) {
+  const area = document.getElementById('horasCardArea');
+  if (!area) return null;
+  const fundo = fundoCapturaHoras();
+  const corpo = await html2canvasRapido(area, fundo);
+  if (!comCabecalho) return corpo;
+
+  const escuro = document.documentElement.classList.contains('tema-escuro');
+  const cores = coresCabecalhoMandala(escuro, null);
+  const W = 480;
+  const pecas = [];
+  pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">HORAS PLANETÁRIAS</text></svg>`, W, 34, fundo, 2));
+  const svgEl = document.querySelector('#horasCabecalho svg');
+  if (svgEl) {
+    const xml = new XMLSerializer().serializeToString(svgEl);
+    const abertura = xml.match(/^<svg[^>]*>/)[0];
+    const svgLimpo = abertura.replace(/ style="[^"]*"/, '') + xml.slice(abertura.length);
+    const h = parseFloat(svgEl.getAttribute('height'));
+    pecas.push(await rasterizarSvgParaCanvas(svgLimpo, W, h, fundo, 2));
+  }
+  pecas.push(corpo);
+  const gap = 24;
+  const saida = document.createElement('canvas');
+  saida.width = Math.max(...pecas.map(c => c.width));
+  saida.height = pecas.reduce((t, c) => t + c.height, 0) + gap * (pecas.length - 1);
+  const ctx = saida.getContext('2d');
+  ctx.fillStyle = fundo;
+  ctx.fillRect(0, 0, saida.width, saida.height);
+  let y = 0;
+  pecas.forEach(c => { ctx.drawImage(c, Math.round((saida.width - c.width) / 2), y); y += c.height + gap; });
+  return saida;
+}
+
+function salvarHorasNaGaleria() {
+  capturarESalvarNaGaleria(
+    () => montarImagemHoras(true),
+    `Astro_Hellenic_Horas_${((typeof currentSubjectName !== 'undefined' && currentSubjectName) || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+window.salvarHorasNaGaleria = salvarHorasNaGaleria;
+
+async function capturarHorasParaRelatorio() {
+  try {
+    const bruto = await montarImagemHoras(false);
+    if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+    const canvas = recortarCanvasAoConteudo(bruto, fundoCapturaHoras());
+    const total = adicionarCapturaRelatorio('horas', canvas.toDataURL('image/png'));
+    alert(`"Horas Planetárias" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar as Horas Planetárias ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarHorasParaRelatorio = capturarHorasParaRelatorio;
