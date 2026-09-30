@@ -867,6 +867,14 @@
         let cardEsquerdaHtml;
         let cardDireitaHtml;
 
+        // Cabeçalho PADRÃO do mapa em tela também enquanto o segundo mapa ainda
+        // não foi escolhido (o da esquerda ganha um espaço invisível do mesmo
+        // tamanho, pra os dois cartões ficarem alinhados).
+        const horasSolo = (typeof window.calcularHorasPlanetariasProf === 'function')
+            ? window.calcularHorasPlanetariasProf(momentA, geoA.lat, geoA.lon, geoA.fuso !== undefined ? geoA.fuso : -3) : null;
+        const cabSolo = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { largura: 480, titulo: nomeA, momento: momentA, geo: geoA, horasInfo: horasSolo });
+        const espacoCabSolo = `<div aria-hidden="true" style="visibility: hidden;">${cabSolo}</div>`;
+
         if (sinastriaSegundoMapa) {
             // As duas mandalas são geradas juntas pra ficarem na MESMA escala
             // visual (ver gerarMandalasComEscalaIgual) — senão quem tem mais
@@ -907,7 +915,9 @@
             // Dentro de uma pasta: cabeçalho com "voltar" + nome da pasta,
             // busca (filtra só dentro dela) e a lista de clientes.
             cardEsquerdaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
+                <div style="flex: 1 1 0; min-width: 280px;">
+                ${espacoCabSolo}
+                <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                         <button onclick="sinastriaVoltarPastas()" title="Voltar às pastas" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; flex-shrink: 0;">
                             <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i>
@@ -921,14 +931,15 @@
                         <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando mapas...</div>
                     </div>
                 </div>
+                </div>
             `;
 
             cardDireitaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    <div style="text-align: center; margin-bottom: 8px;">
-                        ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
+                <div style="flex: 1 1 0; min-width: 280px;">
+                    ${cabSolo}
+                    <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                        ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                     </div>
-                    ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                 </div>
             `;
         } else {
@@ -936,20 +947,23 @@
             // (mesma fonte que a barra lateral usa), pra facilitar achar o
             // mapa certo em vez de uma lista única com todo mundo junto.
             cardEsquerdaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
+                <div style="flex: 1 1 0; min-width: 280px;">
+                ${espacoCabSolo}
+                <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
                     <div style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Selecione a Pasta</div>
                     <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main);">
                         <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando pastas...</div>
                     </div>
                 </div>
+                </div>
             `;
 
             cardDireitaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    <div style="text-align: center; margin-bottom: 8px;">
-                        ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
+                <div style="flex: 1 1 0; min-width: 280px;">
+                    ${cabSolo}
+                    <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                        ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                     </div>
-                    ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                 </div>
             `;
         }
