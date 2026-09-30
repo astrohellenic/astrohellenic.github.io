@@ -3942,7 +3942,15 @@ function injetarEstilosRelatorio() {
          sobra, mesmo esse tipo de erro pequeno nunca chega perto do
          limite físico da página de novo. */
       .rel-captura-corpo { flex: 1; min-height: 0; max-height: 230mm; display: flex; align-items: stretch; justify-content: center; overflow: hidden; }
-      .rel-img-captura { flex: 1; min-height: 0; width: 100%; object-fit: contain; display: block; }
+      /* ATUALIZAÇÃO (30/09/2026): a imagem tem altura EXPLÍCITA (230mm), em vez
+         de depender do flexbox esticar ela ("flex: 1" + stretch). No Safari do
+         iPad o stretch de <img> dentro de flex não funciona: a imagem tomava a
+         altura natural (proporção da captura) — uma tabela recortada, estreita
+         e alta, ficava bem mais alta que a folha e era cortada pelo
+         "overflow: hidden" (aparecia fora da página na Prévia). Com altura fixa
+         + object-fit: contain, qualquer proporção é encolhida pra caber, igual
+         em qualquer navegador (o Chromium já se comportava assim). */
+      .rel-img-captura { flex: none; width: 100%; height: 230mm; object-fit: contain; display: block; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
