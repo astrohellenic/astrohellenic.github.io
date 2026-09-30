@@ -987,10 +987,56 @@ const ROTULOS_LOTE_CASA1 = {
   fortune: 'Lote da Fortuna', spirit: 'Lote do Espírito', venus: 'Lote de Eros',
   mercury: 'Lote da Necessidade', mars: 'Lote da Audácia', jupiter: 'Lote da Vitória', saturn: 'Lote de Nêmesis'
 };
-function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1) {
-  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
-  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
+/* opcoes (todas opcionais): { largura (padrão 960; abaixo de 900 usa o
+   layout ESTREITO, que quebra as linhas longas em vez de cortar), titulo
+   (nome; padrão = cliente atual), momento (Date; padrão = momento atual),
+   tipoMapa ('Natal', 'Revolução Solar'...; padrão = tipo atual), horasInfo
+   (objeto ou null; padrão = Hora Planetária atual), alturaMinima (pra dois
+   cabeçalhos lado a lado ficarem com a mesma altura) }.
+   Devolve { svg, altura } — o layout LARGO (960) é exatamente o de sempre. */
+function medirTextoCabecalho(texto, px, peso) {
+  try {
+    const ctx = medirTextoCabecalho._ctx || (medirTextoCabecalho._ctx = document.createElement('canvas').getContext('2d'));
+    ctx.font = `${peso} ${px}px sans-serif`;
+    return ctx.measureText(texto).width;
+  } catch (e) {
+    return texto.length * px * 0.58;
+  }
+}
+
+/* Quebra uma sequência de trechos coloridos ({t, cor, peso}) em linhas que caibam
+   em maxW, sem cortar palavra. Cada linha é uma lista de trechos. */
+function quebrarTrechosCabecalho(trechos, maxW, px) {
+  const linhas = [[]];
+  let usado = 0;
+  const espaco = medirTextoCabecalho(' ', px, 600);
+  trechos.forEach(tr => {
+    const palavras = tr.t.split(' ').filter(Boolean);
+    palavras.forEach(pal => {
+      const w = medirTextoCabecalho(pal, px, tr.peso || 600);
+      const atual = linhas[linhas.length - 1];
+      const precisa = atual.length ? usado + espaco + w : w;
+      if (atual.length && precisa > maxW) {
+        linhas.push([{ t: pal, cor: tr.cor, peso: tr.peso }]);
+        usado = w;
+      } else {
+        const ultimo = atual[atual.length - 1];
+        if (ultimo && ultimo.cor === tr.cor && ultimo.peso === tr.peso) ultimo.t += ' ' + pal;
+        else atual.push({ t: (atual.length ? ' ' : '') + pal, cor: tr.cor, peso: tr.peso });
+        usado = precisa;
+      }
+    });
+  });
+  return linhas;
+}
+
+function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
+  opcoes = opcoes || {};
+  const largura = opcoes.largura || 960;
+  const headerTitle = opcoes.titulo !== undefined ? opcoes.titulo : (currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName);
+  const tipoAtual = opcoes.tipoMapa || ((typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal');
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
+  const momento = opcoes.momento || currentMoment;
 
   const sunDef = PLANETS_DEF.find(p => p.id === 'Sun');
   const sunItem = data[sunDef ? sunDef.key : 'Sol'];
@@ -998,42 +1044,89 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1) {
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
   const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+  const loteTexto = (loteCasa1 && ROTULOS_LOTE_CASA1[loteCasa1]) ? `• ${ROTULOS_LOTE_CASA1[loteCasa1]} na Casa 1` : '';
 
   const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const diaSemanaFormatted = diasSemana[currentMoment.getDay()];
+  const diaSemanaFormatted = diasSemana[momento.getDay()];
   const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
   const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
+  const ano = momento.getFullYear();
+  const mes = String(momento.getMonth() + 1).padStart(2, '0');
+  const dia = String(momento.getDate()).padStart(2, '0');
+  const hora = String(momento.getHours()).padStart(2, '0');
+  const min = String(momento.getMinutes()).padStart(2, '0');
+  const horasInfo = opcoes.horasInfo !== undefined ? opcoes.horasInfo : ((typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null);
+  const temDia = !!(horasInfo && horasInfo.dayRulerId && PLANETS_DEF.some(p => p.id === horasInfo.dayRulerId));
+  const temHora = !!(horasInfo && horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId));
 
-  /* CARD DO CABEÇALHO LARGO COM ESPAÇO VAZIO À DIREITA PARA OS BOTÕES */
-  let svg = `<g id="png-discreet-header">
+  let svg, altura;
+  if (largura >= 900) {
+    /* LAYOUT LARGO (960) — o de sempre, byte a byte. */
+    altura = 75;
+    svg = `<g id="png-discreet-header">
     <!-- Fundo (creme/escuro conforme o modo) e Borda Dourada Estendidos quase até o fim -->
     <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${escapeHtml(headerTitle)}</text>
     <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
-        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${(loteCasa1 && ROTULOS_LOTE_CASA1[loteCasa1]) ? `  • ${ROTULOS_LOTE_CASA1[loteCasa1]} na Casa 1` : ''}</tspan></text>
+        <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${loteTexto ? `  ${loteTexto}` : ''}</tspan></text>
   </g>`;
-
-  const horasInfo = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-  if (horasInfo) {
-    /* Rótulo (DIA / HORA) em cima e o planeta embaixo dele, cada um numa
-       coluna — desenho único do software inteiro (ver comentário acima). */
-    if (horasInfo.dayRulerId && PLANETS_DEF.some(p => p.id === horasInfo.dayRulerId)) {
-      svg += `<text x="840" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">DIA</text>
+    if (horasInfo) {
+      /* Rótulo (DIA / HORA) em cima e o planeta embaixo dele, cada um numa
+         coluna — desenho único do software inteiro. */
+      if (temDia) {
+        svg += `<text x="840" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">DIA</text>
       <g transform="translate(840, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
-    }
-    if (horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId)) {
-      svg += `<text x="910" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">HORA</text>
+      }
+      if (temHora) {
+        svg += `<text x="910" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">HORA</text>
       <g transform="translate(910, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+      }
     }
+    return { svg, altura };
   }
-  return svg;
+
+  /* LAYOUT ESTREITO (ex.: um cabeçalho por mandala, lado a lado): mesmas fontes,
+     mesmas cores e mesmos textos — só quebra em mais linhas o que não cabe. */
+  const reservaHoras = (temDia || temHora) ? 105 : 0;
+  const maxW = largura - 60 - reservaHoras;
+  const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20);
+  const linhasData = quebrarTrechosCabecalho([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${currentGeo.city}`, cor: cores.dataCidade, peso: 500 }], maxW, 12);
+  const trechosZod = [{ t: `Zodíaco Tropical • Signos Inteiros • ${tipoFormatado}`, cor: cores.zodiaco, peso: 600 }, { t: sectText, cor: cores.sect, peso: 700 }];
+  if (loteTexto) trechosZod.push({ t: loteTexto, cor: cores.sect, peso: 700 });
+  const linhasZod = quebrarTrechosCabecalho(trechosZod, maxW, 11);
+
+  let y = headerY + 23, textos = '';
+  linhasTitulo.forEach((ln, i) => {
+    if (i > 0) y += 22;
+    textos += `<text x="30" y="${y}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
+  });
+  y += 18;
+  linhasData.forEach((ln, i) => {
+    if (i > 0) y += 16;
+    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
+  });
+  y += 17;
+  linhasZod.forEach((ln, i) => {
+    if (i > 0) y += 15;
+    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
+  });
+  altura = Math.max(75, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
+  svg = `<g id="png-discreet-header"><rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />${textos}`;
+  if (temDia) {
+    svg += `<text x="${largura - 100}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${largura - 100}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+  }
+  if (temHora) {
+    svg += `<text x="${largura - 45}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${largura - 45}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+  }
+  svg += '</g>';
+  return { svg, altura };
+}
+window.montarCabecalhoMandalaLayout = montarCabecalhoMandalaLayout;
+
+function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1, opcoes) {
+  return montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes).svg;
 }
 
 function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
@@ -1045,10 +1138,13 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
      certo. As fontes ficam nas famílias genéricas (serif/sans-serif) pra
      ficar IDÊNTICO ao cabeçalho da Mandala, que é desenhado como imagem
      isolada e por isso também não usa Cinzel/Montserrat. */
-  const grupo = montarCabecalhoMandalaGrupoSVG(data, 2, cores, opcoes && opcoes.loteCasa1)
+  const largura = (opcoes && opcoes.largura) || 960;
+  const layout = montarCabecalhoMandalaLayout(data, 2, cores, opcoes && opcoes.loteCasa1, opcoes);
+  const grupo = layout.svg
     .replace(/'Cinzel', serif/g, 'serif')
     .replace(/'Montserrat', sans-serif/g, 'sans-serif');
-  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="margin: 0 auto 16px auto; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" width="960" height="79" viewBox="0 0 960 79" style="display: block; width: 100%; height: auto;">${grupo}</svg></div>`;
+  const altura = layout.altura + 4;
+  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="margin: 0 auto 16px auto; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}" style="display: block; width: 100%; height: auto;">${grupo}</svg></div>`;
 }
 window.montarCabecalhoMandalaImagemHTML = montarCabecalhoMandalaImagemHTML;
 
@@ -1930,6 +2026,27 @@ async function prepararSvgsRapidosParaCaptura(elemento) {
   return { aplicar, limpar };
 }
 
+/* html2canvas de um elemento HTML, com os <svg> trocados por imagem durante a
+   captura (ver prepararSvgsRapidosParaCaptura). "fundo" (hex) pinta o fundo. */
+async function html2canvasRapido(elemento, fundo) {
+  if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+  const rapido = await prepararSvgsRapidosParaCaptura(elemento);
+  try {
+    rapido.aplicar();
+    return await html2canvas(elemento, {
+      backgroundColor: fundo, scale: 2, useCORS: true,
+      // O html2canvas copia a PÁGINA INTEIRA antes de recortar o elemento — com
+      // mandalas gigantes (milhares de nós) noutro ponto da tela isso levava
+      // vários segundos. Desenhos (<svg>) que ficam FORA do trecho capturado
+      // são ignorados na cópia: não aparecem na imagem de qualquer jeito.
+      ignoreElements: (no) => no.tagName && no.tagName.toLowerCase() === 'svg' && !elemento.contains(no)
+    });
+  } finally {
+    rapido.limpar();
+  }
+}
+window.html2canvasRapido = html2canvasRapido;
+
 /* IMAGEM DE UMA FERRAMENTA QUE É HTML (tabelas etc.): título + cabeçalho padrão
    saem direto do SVG (rápido) e só o conteúdo HTML passa pelo html2canvas.
    opcoes: { titulo (texto ou vazio), comCabecalho (bool), loteCasa1 (opcional) }.
@@ -1938,14 +2055,7 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
-  const rapido = await prepararSvgsRapidosParaCaptura(elemento);
-  let corpo;
-  try {
-    rapido.aplicar();
-    corpo = await html2canvas(elemento, { backgroundColor: fundo, scale: 2, useCORS: true });
-  } finally {
-    rapido.limpar();
-  }
+  const corpo = await html2canvasRapido(elemento, fundo);
   if (!opcoes.titulo && !opcoes.comCabecalho) return corpo;
 
   const W = Math.max(320, Math.round(elemento.getBoundingClientRect().width));

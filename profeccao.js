@@ -929,45 +929,43 @@
                 </div>`;
         }
 
-        const horasInfoNatal = (typeof window.horasPlanetariasAtual !== 'undefined') ? window.horasPlanetariasAtual : null;
-        const diaHoraNatalHTML = blocoDiaHora('Natal', horasInfoNatal);
-
-        let linhaRSHTML = '';
-        if (dadosRS && rsTimestamp) {
-            const rsMoment = new Date(rsTimestamp);
-            const fusoRSVal = fusoNatalVal;
-            const fusoRSFormatted = `UTC${fusoRSVal >= 0 ? '+' + fusoRSVal : fusoRSVal}`;
-            const diaSemanaRS = diasSemanaProf[rsMoment.getDay()];
-            const anoRSFmt = rsMoment.getFullYear();
-            const mesRSFmt = String(rsMoment.getMonth() + 1).padStart(2, '0');
-            const diaRSFmt = String(rsMoment.getDate()).padStart(2, '0');
-            const horaRSFmt = String(rsMoment.getHours()).padStart(2, '0');
-            const minRSFmt = String(rsMoment.getMinutes()).padStart(2, '0');
-            const isDayRS = ((dadosRS.Sol.grau_absoluto - dadosRS.Ascendente.grau_absoluto + 360) % 360) >= 180;
-            const sectRSText = isDayRS ? 'Natividade Diurna' : 'Natividade Noturna';
-
-            const horasInfoRS = calcularHorasPlanetariasProf(rsMoment, latAtual, lonAtual, fusoRSVal);
-            const diaHoraRSHTML = blocoDiaHora('RS', horasInfoRS);
-
-            linhaRSHTML = `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
-                <div style="flex: 1 1 260px;">
-                    <div style="font-size: 12px; color: var(--text-muted-2); font-weight: 500;">${diaSemanaRS} • ${diaRSFmt}/${mesRSFmt}/${anoRSFmt} às ${horaRSFmt}:${minRSFmt} (${fusoRSFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa de Revolução Solar <span style="color: var(--gold-dark); font-weight: 700;">• ${sectRSText}</span></div>
-                </div>
-                ${diaHoraRSHTML}
-            </div>`;
-        }
+        /* CABEÇALHO PADRÃO (a função global, mandala.js), um por mandala: o da
+           Revolução Solar acima da RS e o do Mapa Natal acima do Natal, cada
+           um na largura de uma mandala (layout estreito) e com a mesma altura. */
+        const LARGURA_CABECALHO_PROF = 480;
+        const modoEscuroCabProf = document.documentElement.classList.contains('tema-escuro');
+        const coresCabProf = coresCabecalhoMandala(modoEscuroCabProf, null);
+        const rsMomento = (dadosRS && rsTimestamp) ? new Date(rsTimestamp) : null;
+        const opcoesCabRS = rsMomento ? {
+            largura: LARGURA_CABECALHO_PROF, tipoMapa: 'Revolução Solar', momento: rsMomento,
+            horasInfo: calcularHorasPlanetariasProf(rsMomento, latAtual, lonAtual, fusoNatalVal)
+        } : null;
+        const layoutCabNatal = montarCabecalhoMandalaLayout(dadosNatal, 2, coresCabProf, null, { largura: LARGURA_CABECALHO_PROF });
+        const layoutCabRS = opcoesCabRS ? montarCabecalhoMandalaLayout(dadosRS, 2, coresCabProf, null, opcoesCabRS) : null;
+        const alturaCabProf = Math.max(layoutCabNatal.altura, layoutCabRS ? layoutCabRS.altura : 0);
+        const cabecalhoNatalHTML = montarCabecalhoMandalaImagemHTML(dadosNatal, null, { largura: LARGURA_CABECALHO_PROF, alturaMinima: alturaCabProf });
+        const cabecalhoRSHTML = opcoesCabRS ? montarCabecalhoMandalaImagemHTML(dadosRS, null, Object.assign({ alturaMinima: alturaCabProf }, opcoesCabRS)) : '';
+        const btnCssProf = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+        const cardMandalaCssProf = "background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
 
         let html = `
     <div style="width: 100%;">
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-            <button onclick="capturarTelaParaRelatorio('profeccao', 'profeccao-container', 'Profecção Anual')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-                <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+        <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
+            <button type="button" onclick="salvarProfeccaoNaGaleria()" title="Salvar a Profecção como imagem na galeria (com título e cabeçalhos)" style="${btnCssProf}">
+                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
             </button>
+            <div style="position: relative; flex-shrink: 0;">
+                <button type="button" onclick="const m=document.getElementById('profeccaoMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" style="${btnCssProf}">
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+                </button>
+                <div id="profeccaoMenuRelatorio" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; min-width: 230px; overflow: hidden;">
+                    <div onclick="capturarProfeccaoParaRelatorio('inteira')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Ferramenta inteira (com cabeçalhos)</div>
+                    <div onclick="capturarProfeccaoParaRelatorio('mandalas')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Só as mandalas (com cabeçalhos)</div>
+                    <div onclick="capturarProfeccaoParaRelatorio('tabela')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue);">Só a tabela</div>
+                </div>
+            </div>
         </div>
     <div id="profeccao-container"
-         oncontextmenu="event.preventDefault(); salvarModuloEmPNG('profeccao-container', 'profeccao-anual'); return false;"
          style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
         <div style="text-align: center; margin-bottom: 16px;">
@@ -979,54 +977,28 @@
                 <button onclick="mudarAnoProfeccao(1)" style="background: var(--bg-main); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
             </div>
 
-            <div style="font-size: 13px; color: var(--primary-blue);">
+            <div id="profeccaoAnoProfectado" style="font-size: 13px; color: var(--primary-blue);">
                 <strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}
             </div>
         </div>
 
-        <!-- CABEÇALHO PADRÃO (estilo mandala): uma linha para o natal (nome,
-             data/hora/local, zodíaco/signos/tipo de mapa + seita, com o
-             regente de dia/hora do NATAL colado nela) e, separada por uma
-             linha dourada, outra linha para a Revolução Solar calculada
-             (com o regente de dia/hora da RS colado nela). Cada bloco
-             dia/hora fica sempre junto do texto ao qual pertence, inclusive
-             quando a tela é estreita e tudo empilha. -->
-        <!-- id próprio (profeccaoMandalasImgHost): depois do render, esse bloco
-             (cabeçalho + as duas mandalas) é convertido numa <img> de verdade
-             via converterProfeccaoMandalasEmImagem() — mesma técnica da
-             Liberação Zodiacal (liberacao.js, converterMandalaLiberacaoEmImagem),
-             que por sua vez segue a ideia da mandala principal (mandala.js): uma
-             vez virando <img>, o toque longo do navegador/SO já oferece "Salvar
-             Imagem" sozinho, sem precisar de nenhum botão. Aqui precisa de
-             html2canvas (não dá pra usar o drawImage direto de mandala.js)
-             porque o bloco mistura texto HTML normal (o cabeçalho) com as duas
-             mandalas em SVG. -->
-        <div id="profeccaoMandalasImgHost">
-        <div style="background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
-            <div style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin-bottom: 2px;">${escapeHtmlProf(headerTitle)}</div>
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
-                <div style="flex: 1 1 260px;">
-                    <div style="font-size: 12px; color: var(--text-muted-2); font-weight: 500;">${diaSemanaNatal} • ${diaNatalFmt}/${mesNatalFmt}/${anoNatalFmt} às ${horaNatalFmt}:${minNatalFmt} (${fusoNatalFormatted}) • ${escapeHtmlProf(cidadeAtual)}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">Zodíaco Tropical • Signos Inteiros • Mapa Natal <span style="color: var(--gold-dark); font-weight: 700;">• ${sectNatalText}</span></div>
+        <!-- Dois cabeçalhos PADRÃO (função global), cada um acima da sua mandala, lado a lado. -->
+        <div id="profeccaoDuasColunas" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
+            <div style="flex: 1 1 0; min-width: 280px;">
+                ${cabecalhoRSHTML}
+                <div style="${cardMandalaCssProf}">
+                    ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
                 </div>
-                ${diaHoraNatalHTML}
             </div>
-            ${linhaRSHTML}
+            <div style="flex: 1 1 0; min-width: 280px;">
+                ${cabecalhoNatalHTML}
+                <div style="${cardMandalaCssProf}">
+                    ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
+                </div>
+            </div>
         </div>
 
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
-            <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: var(--primary-blue); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Revolução Solar ${anoAlvoRS}</div>
-                ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
-            </div>
-            <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <div style="text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: var(--primary-blue); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Mapa Natal</div>
-                ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
-            </div>
-        </div>
-        </div>
-
-        <div style="background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
+        <div id="profeccaoTabelaCard" style="background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
             <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
                 <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: var(--primary-blue); font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
             </div>
@@ -1063,7 +1035,6 @@
 
         html += `</tbody></table></div></div></div></div></div></div>`;
         container.innerHTML = html;
-        converterProfeccaoMandalasEmImagem();
 
         // Em telas estreitas, em vez de deixar a tabela cortada com rolagem
         // interna, encolhe ela (mantendo a proporção) até caber inteira na
@@ -1132,30 +1103,113 @@
         }
     }
 
-    /* Converte o cabeçalho + as duas mandalas (RS e Natal) numa <img> de
-       verdade logo depois do render — mesma técnica de
-       converterMandalaLiberacaoEmImagem em liberacao.js: via html2canvas,
-       porque o bloco mistura texto HTML normal (o cabeçalho) com SVG (as
-       mandalas), então não dá pra usar o drawImage direto que mandala.js usa
-       pra SVG isolado. Uma vez virando <img>, o toque longo do navegador/SO
-       já oferece "Salvar Imagem" sozinho, sem precisar de nenhum botão.
-       Silenciosa: se falhar (html2canvas não carregou, por exemplo), o
-       cabeçalho e as mandalas em HTML/SVG cru continuam visíveis normalmente
-       — só se perde o toque-longo-pra-salvar nesse caso. */
-    async function converterProfeccaoMandalasEmImagem() {
-        if (typeof html2canvas !== 'function') return;
-        const host = document.getElementById('profeccaoMandalasImgHost');
-        if (!host) return;
+    /* IMAGENS DA PROFECÇÃO (galeria e relatório). Título, cabeçalhos e mandalas
+       saem direto do SVG (rápido); a tabela mensal e a linha "Ano Profectado" são
+       HTML e passam pelo html2canvasRapido. As setas do ano ficam de fora. */
+    function fundoCapturaProf() {
+        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+    }
 
+    /* Cabeçalhos + cartões das mandalas, na mesma posição em que estão na tela
+       (lado a lado ou empilhados), num SVG só. */
+    async function montarTopoProfeccao() {
+        const caixa = document.getElementById('profeccaoDuasColunas');
+        if (!caixa) return null;
+        const R = caixa.getBoundingClientRect();
+        let partes = '';
+        const serializar = (svgEl, rect) => {
+            const xml = new XMLSerializer().serializeToString(svgEl);
+            const abertura = xml.match(/^<svg[^>]*>/)[0];
+            // tira atributos de posição/tamanho/estilo da tag de abertura e põe os desta posição
+            const novaAbertura = abertura.replace(/ (style|width|height|x|y)="[^"]*"/g, '')
+                .replace('<svg ', `<svg x="${rect.left - R.left}" y="${rect.top - R.top}" width="${rect.width}" height="${rect.height}" `);
+            return novaAbertura + xml.slice(abertura.length);
+        };
+        Array.from(caixa.children).forEach(coluna => {
+            const cab = coluna.querySelector(':scope > div > svg');
+            if (cab) partes += serializar(cab, cab.getBoundingClientRect());
+            const cartao = coluna.querySelector(':scope > div:last-child');
+            const roda = cartao && cartao.querySelector('svg');
+            if (cartao) {
+                const rc = cartao.getBoundingClientRect(), cs = getComputedStyle(cartao);
+                const borda = parseFloat(cs.borderTopWidth) || 0, raio = parseFloat(cs.borderTopLeftRadius) || 0;
+                partes += `<rect x="${rc.left - R.left + borda / 2}" y="${rc.top - R.top + borda / 2}" width="${rc.width - borda}" height="${rc.height - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`;
+            }
+            if (roda) partes += serializar(roda, roda.getBoundingClientRect());
+        });
+        const W = Math.round(R.width), H = Math.round(R.height);
+        return rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${partes}</svg>`, W, H, fundoCapturaProf(), 2);
+    }
+
+    /* opc: { titulo, ano, topo, tabela } (booleanos) */
+    async function montarImagemProfeccao(opc) {
+        const fundo = fundoCapturaProf();
+        const pecas = [];
+        if (opc.titulo) {
+            const h2 = document.querySelector('#profeccao-container h2');
+            const cores = coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+            const W = Math.max(320, Math.round((document.getElementById('profeccaoDuasColunas') || document.getElementById('profeccao-container')).getBoundingClientRect().width));
+            pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtmlProf(((h2 && h2.textContent) || 'Profecção Anual').trim().toUpperCase())}</text></svg>`, W, 34, fundo, 2));
+        }
+        if (opc.ano) {
+            const el = document.getElementById('profeccaoAnoProfectado');
+            if (el) pecas.push(await html2canvasRapido(el, fundo));
+        }
+        if (opc.topo) {
+            const topo = await montarTopoProfeccao();
+            if (topo) pecas.push(topo);
+        }
+        if (opc.tabela) {
+            const el = document.getElementById('profeccaoTabelaCard');
+            if (el) pecas.push(await html2canvasRapido(el, fundo));
+        }
+        if (!pecas.length) return null;
+        if (pecas.length === 1) return pecas[0];
+        const gap = 32; // 16px em escala 2
+        const saida = document.createElement('canvas');
+        saida.width = Math.max(...pecas.map(c => c.width));
+        saida.height = pecas.reduce((h, c) => h + c.height, 0) + gap * (pecas.length - 1);
+        const ctx = saida.getContext('2d');
+        ctx.fillStyle = fundo;
+        ctx.fillRect(0, 0, saida.width, saida.height);
+        let y = 0;
+        pecas.forEach(c => { ctx.drawImage(c, Math.round((saida.width - c.width) / 2), y); y += c.height + gap; });
+        return saida;
+    }
+
+    /* Botão de galeria: título + "Ano Profectado" + cabeçalhos + mandalas + tabela,
+       SÓ AO TOCAR (ver capturarESalvarNaGaleria, mandala.js). */
+    function salvarProfeccaoNaGaleria() {
+        capturarESalvarNaGaleria(
+            () => montarImagemProfeccao({ titulo: true, ano: true, topo: true, tabela: true }),
+            `Astro_Hellenic_Profeccao_${((typeof currentSubjectName !== 'undefined' && currentSubjectName) || 'mapa').replace(/\s+/g, '_')}.png`
+        );
+    }
+    window.salvarProfeccaoNaGaleria = salvarProfeccaoNaGaleria;
+
+    /* Manda pro Relatório. modo: 'inteira' (Ano Profectado + cabeçalhos/mandalas +
+       tabela), 'mandalas' (cabeçalhos + mandalas) ou 'tabela' (só a tabela, sem
+       cabeçalho). As mandalas sempre levam os cabeçalhos. */
+    async function capturarProfeccaoParaRelatorio(modo) {
+        const menu = document.getElementById('profeccaoMenuRelatorio');
+        if (menu) menu.style.display = 'none';
+        const opc = modo === 'tabela' ? { tabela: true }
+            : modo === 'mandalas' ? { topo: true }
+            : { ano: true, topo: true, tabela: true };
+        const fundo = fundoCapturaProf();
         try {
-            const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-            const canvas = await html2canvas(host, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
-            if (!document.getElementById('profeccaoMandalasImgHost')) return; // a tela já mudou (outro ano/módulo) enquanto convertia
-            host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Profecção Anual — Revolução Solar e Mapa Natal" style="width: 100%; height: auto; display: block;">`;
+            const bruto = await montarImagemProfeccao(opc);
+            if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+            const canvas = recortarCanvasAoConteudo(bruto, fundo);
+            const total = adicionarCapturaRelatorio('profeccao', canvas.toDataURL('image/png'));
+            const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandalas' ? 'Mandalas' : 'Ferramenta inteira';
+            alert(`"Profecção Anual" (${oQue}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
         } catch (err) {
-            console.error('Erro ao converter o cabeçalho e as mandalas da Profecção em imagem:', err);
+            console.error('Erro ao adicionar a Profecção ao relatório:', err);
+            alert('Não foi possível adicionar esta tela ao relatório.');
         }
     }
+    window.capturarProfeccaoParaRelatorio = capturarProfeccaoParaRelatorio;
 
     window.iniciarModuloProfeccao = iniciarModuloProfeccao;
 })();
