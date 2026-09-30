@@ -1873,6 +1873,12 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const raio = parseFloat(cs.borderTopLeftRadius) || 0;
   const corBorda = cs.borderTopColor;
   const W = w + (borda * 2), H = h + (borda * 2);
+  // Mesmo tamanho que a ferramenta tem NA TELA (o SVG encolhe pra caber) — é
+  // o tamanho que sempre coube na página do relatório; nunca "inflar" pro
+  // tamanho natural do desenho.
+  const larguraTela = svgEl.getBoundingClientRect().width;
+  const k = larguraTela > 0 ? larguraTela / W : 1;
+  const Wk = W * k, Hk = H * k;
   const interno = new XMLSerializer().serializeToString(svgEl)
     .replace(/ style="[^"]*"/, ' font-family="sans-serif"')
     .replace('<svg ', `<svg x="${borda}" y="${borda}" `);
@@ -1881,20 +1887,20 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
     ${borda ? `<rect x="${borda / 2}" y="${borda / 2}" width="${W - borda}" height="${H - borda}" rx="${raio}" ry="${raio}" fill="none" stroke="${corBorda}" stroke-width="${borda}"/>` : ''}`;
 
   if (!opcoes.comCabecalho) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${conteudo}</svg>`;
-    return rasterizarSvgParaCanvas(svg, W, H, fundo, 2);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${Wk}" height="${Hk}" viewBox="0 0 ${W} ${H}">${conteudo}</svg>`;
+    return rasterizarSvgParaCanvas(svg, Wk, Hk, fundo, 2);
   }
 
   const cores = coresCabecalhoMandala(modoEscuro, null);
-  const largura = Math.max(960, W + 40);
+  const largura = Math.max(960, Wk + 40);
   const yTitulo = 34, yCabecalho = 52, yConteudo = 142;
-  const altura = yConteudo + H + 20;
+  const altura = yConteudo + Hk + 20;
   const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
     .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
     <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>
     <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
-    <g transform="translate(${(largura - W) / 2}, ${yConteudo})">${conteudo}</g>
+    <g transform="translate(${(largura - Wk) / 2}, ${yConteudo}) scale(${k})">${conteudo}</g>
   </svg>`;
   return rasterizarSvgParaCanvas(svg, largura, altura, fundo, 2);
 }

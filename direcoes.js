@@ -447,10 +447,18 @@ window.alternarLinhaCircumambulacaoRelatorio = alternarLinhaCircumambulacaoRelat
 
 /* Tira o "estilo de tela" do <svg> das pautas e dá tamanho próprio, pra ele
    poder virar imagem (ver rasterizarSvgParaCanvas). */
-function svgPautasComTamanho(svgStr, largura, altura) {
+function svgPautasComTamanho(svgStr, largura, altura, k) {
   return svgStr
     .replace(/ style="[^"]*"/, '')
-    .replace('<svg viewBox', `<svg width="${largura}" height="${altura}" font-family="sans-serif" viewBox`);
+    .replace('<svg viewBox', `<svg width="${largura * k}" height="${altura * k}" font-family="sans-serif" viewBox`);
+}
+
+/* Fator de escala em que as pautas aparecem NA TELA (o SVG encolhe pra
+   caber) — as imagens saem nesse mesmo tamanho, nunca maiores. */
+function fatorTelaPautasCircumambulacao() {
+  const svgEl = document.querySelector('#circumambulacaoPautas svg');
+  const w = svgEl ? svgEl.getBoundingClientRect().width : 0;
+  return w > 0 ? w / 920 : 1;
 }
 
 /* Botão de galeria: título + cabeçalho padrão + pautas, tudo num SVG só,
@@ -463,15 +471,16 @@ function salvarCircumambulacaoNaGaleria() {
     const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
     const cores = coresCabecalhoMandala(modoEscuro, null);
     const corTitulo = cores.titulo;
+    const k = fatorTelaPautasCircumambulacao();
     const alturaPautas = 20 + (signPassages.length * rowHeight);
     const yTitulo = 34, yCabecalho = 52, yPautas = 142;
-    const largura = 960, altura = yPautas + alturaPautas + 20;
+    const largura = Math.max(960, (920 * k) + 40), altura = yPautas + (alturaPautas * k) + 20;
     const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
       .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
-    const pautas = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas).replace('<svg ', '<svg x="20" y="' + yPautas + '" ');
+    const pautas = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas, k).replace('<svg ', '<svg x="' + ((largura - (920 * k)) / 2) + '" y="' + yPautas + '" ');
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
       <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">CIRCUMAMBULAÇÃO PELOS TERMOS</text>
-      ${cabecalho}
+      <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
       ${pautas}
     </svg>`;
     return rasterizarSvgParaCanvas(svg, largura, altura, fundo, 2);
@@ -490,9 +499,10 @@ async function capturarCircumambulacaoParaRelatorio() {
   const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
   try {
     const passagens = indices.length ? indices.map(i => signPassages[i]) : signPassages;
+    const k = fatorTelaPautasCircumambulacao();
     const altura = 20 + (passagens.length * rowHeight);
-    const svg = svgPautasComTamanho(montarSvgPautas(passagens, 0, indices.length ? indices : undefined), 920, altura);
-    const bruto = await rasterizarSvgParaCanvas(svg, 920, altura, fundo, 2);
+    const svg = svgPautasComTamanho(montarSvgPautas(passagens, 0, indices.length ? indices : undefined), 920, altura, k);
+    const bruto = await rasterizarSvgParaCanvas(svg, 920 * k, altura * k, fundo, 2);
     const canvas = recortarCanvasAoConteudo(bruto, fundo);
     const total = adicionarCapturaRelatorio('circumambulacao', canvas.toDataURL('image/png'));
     const oQue = indices.length ? `${indices.length} linha(s)` : 'a imagem inteira';
