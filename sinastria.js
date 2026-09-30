@@ -213,8 +213,8 @@
 
         /* Mesma "tinta" clara/escura de mandala.js/profeccao.js/liberacao.js
            (esta função segue a mesma arquitetura de renderMandala) — cores
-           resolvidas em hexadecimal porque este SVG acaba virando <img>
-           (ver converterSinastriaMandalasEmImagem logo depois do render),
+           resolvidas em hexadecimal porque este SVG acaba virando imagem
+           nas capturas (galeria/relatório),
            então var(--x) não seria enxergado por quem lê o canvas depois.
            ELEMENT_SIGN_COLORS fica sombreado só aqui dentro (a versão do
            módulo continua intocada).
@@ -874,21 +874,33 @@
             // outra, mesmo os dois cartões tendo a mesma largura.
             const { svgEsquerda, svgDireita } = gerarMandalasComEscalaIgual(sinastriaSegundoMapa.dados, currentCalculatedData);
 
+            // Cabeçalho PADRÃO (função global, mandala.js) acima de cada mandala,
+            // cada um na largura de uma mandala e com a mesma altura.
+            const LARGURA_CAB = 480;
+            const coresCab = coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+            const horasDe = (momento, geo) => (typeof window.calcularHorasPlanetariasProf === 'function')
+                ? window.calcularHorasPlanetariasProf(momento, geo.lat, geo.lon, geo.fuso !== undefined ? geo.fuso : -3) : null;
+            const m2 = sinastriaSegundoMapa;
+            const opcEsq = { largura: LARGURA_CAB, titulo: m2.codigo ? `${m2.codigo} ${m2.nome}` : m2.nome, momento: m2.moment, geo: m2.geo, tipoMapa: 'Natal', horasInfo: horasDe(m2.moment, m2.geo) };
+            const opcDir = { largura: LARGURA_CAB, titulo: codigoA ? `${codigoA} ${nomeA}` : nomeA, momento: momentA, geo: geoA, horasInfo: horasDe(momentA, geoA) };
+            const altCab = Math.max(
+                montarCabecalhoMandalaLayout(m2.dados, 2, coresCab, null, opcEsq).altura,
+                montarCabecalhoMandalaLayout(currentCalculatedData, 2, coresCab, null, opcDir).altura);
+            const cabEsq = montarCabecalhoMandalaImagemHTML(m2.dados, null, Object.assign({ alturaMinima: altCab }, opcEsq));
+            const cabDir = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, Object.assign({ alturaMinima: altCab }, opcDir));
+            const cardCss = "background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+
             cardEsquerdaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    <div style="text-align: center; margin-bottom: 8px;">
-                        ${sinastriaLinhaInfo(sinastriaSegundoMapa.nome, sinastriaSegundoMapa.codigo, sinastriaSegundoMapa.moment, sinastriaSegundoMapa.geo)}
-                    </div>
-                    ${svgEsquerda}
+                <div style="flex: 1 1 0; min-width: 280px;">
+                    ${cabEsq}
+                    <div style="${cardCss}">${svgEsquerda}</div>
                 </div>
             `;
 
             cardDireitaHtml = `
-                <div style="flex: 1 1 0; min-width: 280px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                    <div style="text-align: center; margin-bottom: 8px;">
-                        ${sinastriaLinhaInfo(nomeA, codigoA, momentA, geoA)}
-                    </div>
-                    ${svgDireita}
+                <div style="flex: 1 1 0; min-width: 280px;">
+                    ${cabDir}
+                    <div style="${cardCss}">${svgDireita}</div>
                 </div>
             `;
         } else if (sinastriaPastaSelecionada) {
@@ -943,44 +955,30 @@
         }
 
         const mandalasHtml = `
-            <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px;">
+            <div id="${sinastriaSegundoMapa ? 'sinastriaDuasColunas' : 'sinastriaSelecao'}" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px;">
                 ${cardEsquerdaHtml}
                 ${cardDireitaHtml}
             </div>
         `;
 
-        /* Os botões "Adicionar ao Relatório" e "Trocar Mapa" ficam FORA do
-           bloco que vira imagem (ver sinastriaMandalasImgHost logo abaixo)
-           — igual ao botão "Adicionar ao Relatório" da Profecção, que fica
-           num container à parte pra nunca aparecer na própria imagem
-           gerada. O de Relatório chama sinastriaAdicionarAoRelatorio()
-           (definida logo depois de converterSinastriaMandalasEmImagem),
-           que reaproveita a <img> já gerada pra o toque-longo em vez de
-           tirar um segundo html2canvas do mesmo conteúdo. */
+        /* Barra de ícones (sem texto), igual às outras ferramentas: galeria,
+           relatório e trocar mapa (setinhas). Só com os dois mapas escolhidos. */
+        const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
         const trocarBtnHtml = sinastriaSegundoMapa ? `
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
-                <button onclick="sinastriaAdicionarAoRelatorio()" title="Adiciona as duas mandalas, lado a lado, exatamente como estão agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-                    <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+            <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
+                <button type="button" onclick="sinastriaSalvarNaGaleria()" title="Salvar a Sinastria como imagem na galeria (com título e cabeçalhos)" style="${btnCss}">
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
                 </button>
-                <button onclick="sinastriaTrocarMapa()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Trocar Mapa
+                <button type="button" onclick="sinastriaAdicionarAoRelatorio()" title="Adicionar ao Relatório (as duas mandalas com cabeçalhos)" style="${btnCss}">
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+                </button>
+                <button type="button" onclick="sinastriaTrocarMapa()" title="Trocar o segundo mapa" style="${btnCss}">
+                    <i class="fa-solid fa-arrow-right-arrow-left" style="font-size: 15px;"></i>
                 </button>
             </div>
         ` : '';
 
-        /* Com os dois mapas escolhidos, as duas mandalas + cabeçalhos ficam
-           dentro de um host com id próprio (sinastriaMandalasImgHost) que,
-           logo depois do render, converterSinastriaMandalasEmImagem() troca
-           por uma <img> de verdade — mesma técnica da Profecção
-           (converterProfeccaoMandalasEmImagem) e da Liberação Zodiacal: uma
-           vez virando <img>, o toque longo do navegador/SO já oferece
-           "Salvar Imagem" sozinho, sem precisar de nenhum botão. O
-           oncontextmenu cobre o caso de desktop (clique direito). Enquanto
-           só um dos dois mapas está escolhido (a busca ainda em tela), não
-           faz sentido nenhum virar imagem — ainda não tem o que salvar. */
-        const blocoMandalasHtml = sinastriaSegundoMapa
-            ? `<div id="sinastriaMandalasImgHost" oncontextmenu="event.preventDefault(); salvarModuloEmPNG('sinastriaMandalasImgHost', 'sinastria'); return false;">${mandalasHtml}</div>`
-            : mandalasHtml;
+        const blocoMandalasHtml = mandalasHtml;
 
         container.innerHTML = `
             <div style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
@@ -993,7 +991,7 @@
         `;
 
         if (sinastriaSegundoMapa) {
-            converterSinastriaMandalasEmImagem();
+            // nada a fazer: as imagens só são geradas ao tocar nos botões
         } else if (sinastriaPastaSelecionada) {
             sinastriaGarantirListaCarregada();
         } else {
@@ -1001,55 +999,52 @@
         }
     }
 
-    /* Converte o bloco das duas mandalas (+ cabeçalhos) numa <img> de
-       verdade logo depois do render — mesma técnica de
-       converterProfeccaoMandalasEmImagem em profeccao.js: via html2canvas,
-       porque o bloco mistura texto HTML normal (os cabeçalhos) com SVG (as
-       mandalas), então não dá pra usar o drawImage direto que mandala.js
-       usa pra SVG isolado. Silenciosa: se falhar (html2canvas não
-       carregou, por exemplo), o cabeçalho e as mandalas em HTML/SVG cru
-       continuam visíveis normalmente — só se perde o toque-longo-pra-salvar
-       nesse caso. */
-    async function converterSinastriaMandalasEmImagem() {
-        if (typeof html2canvas !== 'function') return;
-        const host = document.getElementById('sinastriaMandalasImgHost');
-        if (!host) return;
-
-        try {
-            const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-            const canvas = await html2canvas(host, { backgroundColor: modoEscuroCaptura ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
-            if (!document.getElementById('sinastriaMandalasImgHost')) return; // a tela já mudou (trocou de mapa/módulo) enquanto convertia
-            host.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Sinastria — duas mandalas lado a lado" style="width: 100%; height: auto; display: block;">`;
-        } catch (err) {
-            console.error('Erro ao converter as mandalas da Sinastria em imagem:', err);
-        }
+    /* IMAGENS DA SINASTRIA (galeria e relatório): título + cabeçalhos + cartões +
+       mandalas saem direto do SVG (rápido), só ao tocar nos botões. */
+    function sinastriaFundoCaptura() {
+        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
     }
 
-    /* Botão "Adicionar ao Relatório" da Sinastria — diferente da Profecção
-       (onde a imagem do relatório inclui a Profecção Mensal além das
-       mandalas) e da Liberação (onde o astrólogo escolhe por checkbox se
-       entra mandala, tabela, ou os dois), aqui o que vai pro relatório é
-       exatamente o mesmo conteúdo do sinastriaMandalasImgHost — nada mais,
-       nada menos. Então, em vez de chamar capturarTelaParaRelatorio (que
-       tiraria um SEGUNDO html2canvas do mesmo container, já convertido em
-       <img> por converterSinastriaMandalasEmImagem alguns instantes atrás),
-       reaproveita direto o src dessa <img> já pronta: mesma imagem,
-       processamento a menos, e garante que o que vai pro relatório é
-       pixel-idêntico ao que o astrólogo já vê na tela (e pode salvar na
-       galeria com toque longo).
-       Se a conversão ainda não tiver terminado por algum motivo (clique
-       muito rápido logo após trocar de mapa, ou html2canvas não carregou),
-       cai de volta no mecanismo genérico de sempre, que tira a captura na
-       hora — nunca fica sem enviar nada ao relatório. */
-    function sinastriaAdicionarAoRelatorio() {
-        const host = document.getElementById('sinastriaMandalasImgHost');
-        const img = host ? host.querySelector('img') : null;
-        if (img && img.src) {
-            const total = adicionarCapturaRelatorio('sinastria', img.src);
+    async function sinastriaMontarImagem(comTitulo) {
+        const fundo = sinastriaFundoCaptura();
+        const topo = await window.montarTopoDuasMandalas('sinastriaDuasColunas');
+        if (!topo) return null;
+        if (!comTitulo) return topo;
+        const W = topo.width / 2;
+        const cores = coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+        const titulo = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">SINASTRIA</text></svg>`, W, 34, fundo, 2);
+        const gap = 32;
+        const saida = document.createElement('canvas');
+        saida.width = topo.width;
+        saida.height = titulo.height + gap + topo.height;
+        const ctx = saida.getContext('2d');
+        ctx.fillStyle = fundo;
+        ctx.fillRect(0, 0, saida.width, saida.height);
+        ctx.drawImage(titulo, 0, 0);
+        ctx.drawImage(topo, 0, titulo.height + gap);
+        return saida;
+    }
+
+    function sinastriaSalvarNaGaleria() {
+        capturarESalvarNaGaleria(
+            () => sinastriaMontarImagem(true),
+            `Astro_Hellenic_Sinastria_${((typeof currentSubjectName !== 'undefined' && currentSubjectName) || 'mapa').replace(/\s+/g, '_')}.png`
+        );
+    }
+    window.sinastriaSalvarNaGaleria = sinastriaSalvarNaGaleria;
+
+    /* Manda as duas mandalas (com os cabeçalhos) pro Relatório. */
+    async function sinastriaAdicionarAoRelatorio() {
+        try {
+            const bruto = await sinastriaMontarImagem(false);
+            if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+            const canvas = recortarCanvasAoConteudo(bruto, sinastriaFundoCaptura());
+            const total = adicionarCapturaRelatorio('sinastria', canvas.toDataURL('image/png'));
             alert(`"Sinastria" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
-            return;
+        } catch (err) {
+            console.error('Erro ao adicionar a Sinastria ao relatório:', err);
+            alert('Não foi possível adicionar esta tela ao relatório.');
         }
-        capturarTelaParaRelatorio('sinastria', 'sinastriaMandalasImgHost', 'Sinastria');
     }
     window.sinastriaAdicionarAoRelatorio = sinastriaAdicionarAoRelatorio;
 

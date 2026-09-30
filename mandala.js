@@ -992,7 +992,8 @@ const ROTULOS_LOTE_CASA1 = {
    (nome; padrão = cliente atual), momento (Date; padrão = momento atual),
    tipoMapa ('Natal', 'Revolução Solar'...; padrão = tipo atual), horasInfo
    (objeto ou null; padrão = Hora Planetária atual), alturaMinima (pra dois
-   cabeçalhos lado a lado ficarem com a mesma altura) }.
+   cabeçalhos lado a lado ficarem com a mesma altura), geo ({city, fuso, lon};
+   padrão = local atual) }.
    Devolve { svg, altura } — o layout LARGO (960) é exatamente o de sempre. */
 function medirTextoCabecalho(texto, px, peso) {
   try {
@@ -1037,6 +1038,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   const tipoAtual = opcoes.tipoMapa || ((typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal');
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
   const momento = opcoes.momento || currentMoment;
+  const geoCab = opcoes.geo || currentGeo;
 
   const sunDef = PLANETS_DEF.find(p => p.id === 'Sun');
   const sunItem = data[sunDef ? sunDef.key : 'Sol'];
@@ -1048,7 +1050,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
 
   const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const diaSemanaFormatted = diasSemana[momento.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
+  const fusoVal = (geoCab && geoCab.fuso !== undefined) ? geoCab.fuso : calcularFusoPorLongitude(geoCab.lon);
   const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
   const ano = momento.getFullYear();
   const mes = String(momento.getMonth() + 1).padStart(2, '0');
@@ -1069,7 +1071,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)}</text>
+    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(geoCab.city)}</text>
         <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${loteTexto ? `  ${loteTexto}` : ''}</tspan></text>
   </g>`;
     if (horasInfo) {
@@ -1092,7 +1094,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   const reservaHoras = (temDia || temHora) ? 105 : 0;
   const maxW = largura - 60 - reservaHoras;
   const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20);
-  const linhasData = quebrarTrechosCabecalho([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${currentGeo.city}`, cor: cores.dataCidade, peso: 500 }], maxW, 12);
+  const linhasData = quebrarTrechosCabecalho([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${geoCab.city}`, cor: cores.dataCidade, peso: 500 }], maxW, 12);
   const trechosZod = [{ t: `Zodíaco Tropical • Signos Inteiros • ${tipoFormatado}`, cor: cores.zodiaco, peso: 600 }, { t: sectText, cor: cores.sect, peso: 700 }];
   if (loteTexto) trechosZod.push({ t: loteTexto, cor: cores.sect, peso: 700 });
   const linhasZod = quebrarTrechosCabecalho(trechosZod, maxW, 11);

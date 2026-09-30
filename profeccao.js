@@ -1173,8 +1173,8 @@
 
     /* Cabeçalhos + cartões das mandalas, na mesma posição em que estão na tela
        (lado a lado ou empilhados), num SVG só. */
-    async function montarTopoProfeccao() {
-        const caixa = document.getElementById('profeccaoDuasColunas');
+    async function montarTopoProfeccao(idCaixa) {
+        const caixa = document.getElementById(idCaixa || 'profeccaoDuasColunas');
         if (!caixa) return null;
         const R = caixa.getBoundingClientRect();
         let partes = '';
@@ -1271,6 +1271,10 @@
         }
     }
     window.capturarProfeccaoParaRelatorio = capturarProfeccaoParaRelatorio;
+
+    // Reaproveitados pela Sinastria (mesmo layout de cabeçalho + mandala, lado a lado)
+    window.montarTopoDuasMandalas = montarTopoProfeccao;
+    window.calcularHorasPlanetariasProf = calcularHorasPlanetariasProf;
 
     window.iniciarModuloProfeccao = iniciarModuloProfeccao;
 })();
