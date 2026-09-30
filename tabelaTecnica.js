@@ -484,19 +484,13 @@ function renderPainelTecnico(data, containerId) {
    caixinha nem transform nenhum (ver montarSVGPainelPrincipal), isso
    deixou de ser necessário: é só capturar direto. */
 async function capturarPainelTecnicoParaRelatorio() {
-  // Só a tabela (sem título nem cabeçalho do cliente): o relatório já
-  // mostra o título da página e a capa já tem os dados do cliente.
-  const elemento = document.getElementById('painelPrincipalContainer');
-  if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
-  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
-
+  const svgEl = document.querySelector('#painelPrincipalContainer svg');
+  if (!svgEl) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
-    // Fallback só pra eventuais áreas transparentes na captura — o fundo de
-    // verdade do container já é var(--bg-main) (inline), então acompanha o
-    // modo atual em vez de cravar sempre o creme do Tema Claro.
-    const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-    const fundoCaptura = modoEscuroCaptura ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await html2canvas(elemento, { backgroundColor: fundoCaptura, scale: 2, useCORS: true }), fundoCaptura);
+    // Só a tabela (sem título nem cabeçalho do cliente), direto do SVG (rápido).
+    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false }), fundo);
     const total = adicionarCapturaRelatorio('tabela_tecnica', canvas.toDataURL('image/png'));
     alert(`"Painel Técnico de Natividades" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
@@ -511,9 +505,9 @@ const PAINEL_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-ma
 /* Botão de galeria: captura título + cabeçalho + tabela SÓ AO TOCAR (ver
    capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
 function salvarPainelTecnicoNaGaleria() {
-  const elemento = document.getElementById('painel-tecnico-container');
-  if (!elemento) return;
-  capturarESalvarNaGaleria(() => html2canvasComCabecalhoPadrao(elemento), `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  const svgEl = document.querySelector('#painelPrincipalContainer svg');
+  if (!svgEl) return;
+  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, titulo: 'PAINEL TÉCNICO DE NATIVIDADES' }), `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarPainelTecnicoNaGaleria = salvarPainelTecnicoNaGaleria;
 

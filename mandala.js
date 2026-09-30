@@ -1858,14 +1858,47 @@ async function rasterizarSvgParaCanvas(svgStr, largura, altura, fundo, escala) {
 window.rasterizarSvgParaCanvas = rasterizarSvgParaCanvas;
 window.resolverVariaveisCssNoSvg = resolverVariaveisCssNoSvg;
 
-/* html2canvas de um elemento da tela (título + cabeçalho padrão + conteúdo),
-   com o fundo do tema atual. */
-async function html2canvasComCabecalhoPadrao(elemento) {
-  if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+/* IMAGEM DE UMA FERRAMENTA (Painel Técnico, Matriz...) direto do SVG, sem
+   html2canvas (rápido: ~0,2s em vez de vários segundos, e sem travar a tela).
+   "svgEl" é o <svg> da ferramenta que está na tela. Com "comCabecalho" sai
+   título + cabeçalho padrão + o SVG (imagem pra salvar na galeria); sem, só o
+   SVG com a moldura arredondada dele (imagem pro Relatório). Devolve o canvas
+   (escala 2), ainda sem recorte. */
+async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  return html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
+  const cs = getComputedStyle(svgEl);
+  const borda = parseFloat(cs.borderTopWidth) || 0;
+  const raio = parseFloat(cs.borderTopLeftRadius) || 0;
+  const corBorda = cs.borderTopColor;
+  const W = w + (borda * 2), H = h + (borda * 2);
+  const interno = new XMLSerializer().serializeToString(svgEl)
+    .replace(/ style="[^"]*"/, ' font-family="sans-serif"')
+    .replace('<svg ', `<svg x="${borda}" y="${borda}" `);
+  const conteudo = `<defs><clipPath id="molduraFerramenta"><rect x="${borda}" y="${borda}" width="${w}" height="${h}" rx="${raio}" ry="${raio}"/></clipPath></defs>
+    <g clip-path="url(#molduraFerramenta)">${interno}</g>
+    ${borda ? `<rect x="${borda / 2}" y="${borda / 2}" width="${W - borda}" height="${H - borda}" rx="${raio}" ry="${raio}" fill="none" stroke="${corBorda}" stroke-width="${borda}"/>` : ''}`;
+
+  if (!opcoes.comCabecalho) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${conteudo}</svg>`;
+    return rasterizarSvgParaCanvas(svg, W, H, fundo, 2);
+  }
+
+  const cores = coresCabecalhoMandala(modoEscuro, null);
+  const largura = Math.max(960, W + 40);
+  const yTitulo = 34, yCabecalho = 52, yConteudo = 142;
+  const altura = yConteudo + H + 20;
+  const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
+    .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
+    <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>
+    <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
+    <g transform="translate(${(largura - W) / 2}, ${yConteudo})">${conteudo}</g>
+  </svg>`;
+  return rasterizarSvgParaCanvas(svg, largura, altura, fundo, 2);
 }
-window.html2canvasComCabecalhoPadrao = html2canvasComCabecalhoPadrao;
+window.gerarImagemFerramentaDoSvg = gerarImagemFerramentaDoSvg;
 
 window.onload = function() {
   restaurarUnidadeStepperMandala();

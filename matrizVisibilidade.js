@@ -309,9 +309,9 @@ const MATRIZ_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-ma
 /* Botão de galeria: captura título + grade + cabeçalho SÓ AO TOCAR (ver
    capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
 function salvarMatrizVisibilidadeNaGaleria() {
-  const elemento = document.getElementById('matrizVisibilidadeMandalaContainer');
-  if (!elemento) return;
-  capturarESalvarNaGaleria(() => html2canvasComCabecalhoPadrao(elemento), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  const svgEl = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
+  if (!svgEl) return;
+  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, titulo: 'MATRIZ DE VISIBILIDADE (THEORIA)' }), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarMatrizVisibilidadeNaGaleria = salvarMatrizVisibilidadeNaGaleria;
 window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
@@ -327,15 +327,15 @@ window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
    captura direto. */
 async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
   // Só a grade (sem título nem cabeçalho do cliente): o relatório já
-  // mostra o título da página e a capa já tem os dados do cliente.
-  const elemento = document.getElementById('matrizVisibilidadeResponsivaRoot');
-  if (!elemento) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
-  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+  // mostra o título da página e a capa já tem os dados do cliente. Direto do
+  // SVG (rápido), sem html2canvas.
+  const svgEl = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
+  if (!svgEl) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
 
   try {
-    const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-    const fundoCaptura = modoEscuroCaptura ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await html2canvas(elemento, { backgroundColor: fundoCaptura, scale: 2, useCORS: true }), fundoCaptura);
+    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false }), fundo);
     const total = adicionarCapturaRelatorio('matriz_visibilidade_mandala', canvas.toDataURL('image/png'));
     alert(`"Matriz de Visibilidade" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
