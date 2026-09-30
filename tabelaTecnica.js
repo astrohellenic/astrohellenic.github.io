@@ -132,26 +132,9 @@ function calcDodecatemoriaTabela(absDeg) {
   };
 }
 
-/* CABEÇALHO — cópia do conteúdo exato do cabeçalho desenhado dentro da
-   PRÓPRIA MANDALA (mandala.js, dentro de renderMandala, bloco
-   `<g id="png-discreet-header">`): nome, dia/data/hora/fuso, cidade, e a
-   terceira linha com "Zodíaco Tropical • Signos Inteiros • <tipo do
-   mapa> • Natividade Diurna/Noturna". Função de nível global (moveu de
-   matrizVisibilidade.js pra cá) porque agora é usada tanto pelo Painel
-   Técnico (aqui embaixo, em renderPainelTecnico) quanto pela Matriz de
-   Visibilidade quando ela aparece no lugar da Mandala
-   (matrizVisibilidade.js) — o pedido do astrólogo foi que esse cabeçalho
-   fosse padrão, idêntico, em todo canto que mostra essa informação, não
-   uma versão parecida por fora criada à parte em cada lugar (foi
-   exatamente isso que deu errado numa tentativa anterior).
-   "idOpcional" só existe pra manter o id "painelTecnicoHeader" de sempre
-   aqui no Painel Técnico (usado logo abaixo pra sincronizar a largura
-   com a tabela) — na Matriz não precisa de id nenhum. */
-function montarCabecalhoMandalaHTML(data, idOpcional) {
-  // Cabeçalho único de todas as ferramentas: o da Mandala (mandala.js).
-  return montarCabecalhoMandalaImagemHTML(data, idOpcional);
-}
-
+/* CABEÇALHO: o do Painel Técnico e o da Matriz são o cabeçalho GLOBAL
+   (montarCabecalhoMandalaImagemHTML, mandala.js), chamado direto. O id
+   "painelTecnicoHeader" é usado logo abaixo pra sincronizar a largura com a tabela. */
 /* Mede a largura de um texto renderizado numa fonte específica — usado
    só pra calcular a largura de cada coluna do Painel Principal em SVG
    (montarSVGPainelPrincipal, mais abaixo), que — ao contrário de uma
@@ -428,7 +411,7 @@ function renderPainelTecnico(data, containerId) {
       <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 10px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
-      ${montarCabecalhoMandalaHTML(data, 'painelTecnicoHeader')}
+      ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader')}
     `;
 
     html += `

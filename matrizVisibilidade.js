@@ -22,12 +22,8 @@
    (getItemSVG) continuam definidos em tabelaTecnica.js e são só
    reaproveitados aqui como funções globais — não foram duplicados, pra
    não correr o risco de alguém atualizar o desenho de um ícone só numa
-   das duas cópias no futuro. O mesmo vale pro cabeçalho (nome/dia/data/
-   hora/fuso/cidade + regentes do Dia/Hora): `montarCabecalhoMandalaHTML`
-   também mora em tabelaTecnica.js, cópia idêntica do que a própria
-   Mandala mostra — o astrólogo foi claro que esse cabeçalho tem que ser
-   padrão em todo canto que o mostra, nunca uma versão parecida criada à
-   parte, e ter uma função só evita exatamente esse risco. */
+   das duas cópias no futuro. O cabeçalho é o GLOBAL (`montarCabecalhoMandalaImagemHTML`, mandala.js), chamado
+   direto — o mesmo de todas as ferramentas. */
 
 const MATRIZ_CELULA_TAM = 46;
 
@@ -237,10 +233,8 @@ function calcularDadosMatrizVisibilidade(data) {
    da vista, sai rolando a PÁGINA de verdade, não ficando preso atrás de
    uma caixa.
 
-   `montarCabecalhoMandalaHTML` (o cabeçalho colado embaixo da grade)
-   mora em tabelaTecnica.js, não aqui — é a MESMA função que o Painel
-   Técnico também usa, cópia idêntica do cabeçalho de verdade da
-   Mandala; ver o comentário dela lá pra entender por quê. */
+   O cabeçalho colado embaixo da grade é o GLOBAL (`montarCabecalhoMandalaImagemHTML`,
+   mandala.js), chamado direto. */
 function renderMatrizVisibilidadeResponsivaHTML(data) {
   const { colunas, posicoes } = calcularDadosMatrizVisibilidade(data);
   const svgMatriz = montarSVGMatrizVisibilidade(
@@ -254,7 +248,7 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
     </div>
-    ${montarCabecalhoMandalaHTML(data)}
+    ${montarCabecalhoMandalaImagemHTML(data)}
   `;
 }
 

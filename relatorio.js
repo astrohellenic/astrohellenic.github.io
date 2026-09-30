@@ -849,12 +849,6 @@ async function iniciarModuloRelatorio() {
 }
 
 function renderRelatorioSetup(container, presets, rascunhos) {
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-  const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
   // Pré-seleciona o último modelo que o astrólogo escolheu (guardado no
   // navegador) em vez de sempre voltar pro primeiro da lista — sem isso,
@@ -896,12 +890,12 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   container.innerHTML = `
     <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Relatório</h2>
-        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
-          ${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}
-        </div>
-      </div>
+      <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+        Relatório
+      </h3>
+
+      <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
+      ${montarCabecalhoMandalaImagemHTML(currentCalculatedData)}
 
       ${listaRascunhosHTML}
 
