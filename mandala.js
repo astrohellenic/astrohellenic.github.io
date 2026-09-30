@@ -830,6 +830,11 @@ function injetarBotaoRelatorioNaBarraSuperior() {
 }
 
 async function capturarMandalaAtualParaRelatorio() {
+  // Com a Matriz de Visibilidade na tela (no lugar da mandala), o botão da
+  // barra de cima manda a MATRIZ — não redesenha a mandala por cima dela.
+  if (document.getElementById('matrizVisibilidadeResponsivaRoot') && typeof capturarMatrizVisibilidadeMandalaParaRelatorio === 'function') {
+    return capturarMatrizVisibilidadeMandalaParaRelatorio();
+  }
   if (!currentCalculatedData) { alert('Nenhum mapa carregado pra adicionar ao relatório.'); return; }
   // 'claro' + fundoTransparente: essa captura pode acabar tanto numa página
   // do corpo do relatório (papel branco de sempre) quanto na CAPA (qualquer
@@ -1753,6 +1758,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
    Sem suporte a compartilhar arquivo (computador), cai no download
    normal, que lá funciona. */
 function salvarImagemMandala() {
+  // Com a Matriz de Visibilidade na tela, o botão de galeria da barra de cima
+  // salva a MATRIZ (com título e cabeçalho), não a imagem da mandala escondida.
+  if (document.getElementById('matrizVisibilidadeResponsivaRoot') && typeof salvarMatrizVisibilidadeNaGaleria === 'function') {
+    return salvarMatrizVisibilidadeNaGaleria();
+  }
   if (!lastRenderedPngUrl) { alert('Nenhuma mandala na tela pra salvar.'); return; }
   salvarPngNaGaleria(lastRenderedPngUrl, `Astro_Hellenic_${(currentSubjectName || 'mandala').replace(/\s+/g, '_')}.png`);
 }
