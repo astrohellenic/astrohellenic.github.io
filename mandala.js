@@ -1038,8 +1038,7 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional) {
 }
 window.montarCabecalhoMandalaImagemHTML = montarCabecalhoMandalaImagemHTML;
 
-/* Recorta uma captura (canvas do html2canvas) rente ao conteúdo, deixando só
-   uma margem de ~3 mm desenhada nos 4 lados — pra imagem que vai pro Relatório não
+/* Recorta uma captura rente ao conteúdo, com uma margem de ~3 mm desenhada nos 4 lados — pra imagem que vai pro Relatório não
    levar um monte de fundo creme ao redor de uma tabela estreita. "fundo" é a
    cor de fundo usada na captura (hex). Nunca falha: se algo der errado ou não
    achar conteúdo, devolve o canvas original. */
@@ -1067,13 +1066,19 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
     // só "sobrar" da captura original) — assim a margem é a mesma nos 4
     // lados mesmo quando a captura já vinha rente ao conteúdo em cima/embaixo.
     const cw = maxX + 1 - minX, ch = maxY + 1 - minY;
+    const innerW = cw + (margem * 2), innerH = ch + (margem * 2);
+    // A IMAGEM JÁ NASCE NO TAMANHO QUE CABE NA FOLHA: a área útil da página de
+    // captura do Relatório é 190 x 230 mm. Se a imagem for mais alta que essa
+    // proporção, ganha laterais TRANSPARENTES até ficar exatamente nela, com o
+    // conteúdo centralizado (= encolhido pra caber). Assim ela cabe por
+    // construção, em qualquer navegador, sem depender de CSS.
+    const PROPORCAO_MAX_ALTURA = 230 / 190;
+    const saidaW = (innerH / innerW) > PROPORCAO_MAX_ALTURA ? Math.ceil(innerH / PROPORCAO_MAX_ALTURA) : innerW;
     const saida = document.createElement('canvas');
-    saida.width = cw + (margem * 2);
-    saida.height = ch + (margem * 2);
-    const ctx = saida.getContext('2d');
-    ctx.fillStyle = fundo;
-    ctx.fillRect(0, 0, saida.width, saida.height);
-    ctx.drawImage(canvas, minX, minY, cw, ch, margem, margem, cw, ch);
+    saida.width = saidaW;
+    saida.height = innerH;
+    const ctx = saida.getContext('2d'); // fundo transparente: nada de retângulo creme na folha branca
+    ctx.drawImage(canvas, minX, minY, cw, ch, Math.round((saidaW - cw) / 2), margem, cw, ch);
     return saida;
   } catch (e) {
     console.error('Erro ao recortar a captura:', e);
