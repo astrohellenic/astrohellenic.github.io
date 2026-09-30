@@ -509,7 +509,7 @@ function renderLotesUI() {
   const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
 
   /* CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), usado por Decênios, Liberação Zodiacal e Circumambulações. */
-  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const headerTitle = currentSubjectName;
   const diasSemanaLotesLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const diaSemanaFormatted = diasSemanaLotesLabels[currentMoment.getDay()];
   const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);

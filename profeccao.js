@@ -936,9 +936,7 @@
         /* CABEÇALHO PADRÃO (mesmas 3 linhas + DIA/HORA do cabeçalho da mandala),
            uma vez para o natal (com nome) e uma vez para a Revolução Solar
            calculada (sem repetir o nome). */
-        const headerTitle = (typeof currentCustomCode !== 'undefined' && currentCustomCode)
-            ? `${currentCustomCode} ${typeof currentSubjectName !== 'undefined' ? currentSubjectName : ''}`
-            : (typeof currentSubjectName !== 'undefined' ? currentSubjectName : '');
+        const headerTitle = (typeof currentSubjectName !== 'undefined' ? currentSubjectName : '');
 
         const diasSemanaProf = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
         const cidadeAtual = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.city) ? currentGeo.city : 'Local n/i';

@@ -881,8 +881,8 @@
             const horasDe = (momento, geo) => (typeof window.calcularHorasPlanetariasProf === 'function')
                 ? window.calcularHorasPlanetariasProf(momento, geo.lat, geo.lon, geo.fuso !== undefined ? geo.fuso : -3) : null;
             const m2 = sinastriaSegundoMapa;
-            const opcEsq = { largura: LARGURA_CAB, titulo: m2.codigo ? `${m2.codigo} ${m2.nome}` : m2.nome, momento: m2.moment, geo: m2.geo, tipoMapa: 'Natal', horasInfo: horasDe(m2.moment, m2.geo) };
-            const opcDir = { largura: LARGURA_CAB, titulo: codigoA ? `${codigoA} ${nomeA}` : nomeA, momento: momentA, geo: geoA, horasInfo: horasDe(momentA, geoA) };
+            const opcEsq = { largura: LARGURA_CAB, titulo: m2.nome, momento: m2.moment, geo: m2.geo, tipoMapa: 'Natal', horasInfo: horasDe(m2.moment, m2.geo) };
+            const opcDir = { largura: LARGURA_CAB, titulo: nomeA, momento: momentA, geo: geoA, horasInfo: horasDe(momentA, geoA) };
             const altCab = Math.max(
                 montarCabecalhoMandalaLayout(m2.dados, 2, coresCab, null, opcEsq).altura,
                 montarCabecalhoMandalaLayout(currentCalculatedData, 2, coresCab, null, opcDir).altura);

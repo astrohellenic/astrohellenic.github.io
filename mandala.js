@@ -1034,7 +1034,7 @@ function quebrarTrechosCabecalho(trechos, maxW, px) {
 function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   opcoes = opcoes || {};
   const largura = opcoes.largura || 960;
-  const headerTitle = opcoes.titulo !== undefined ? opcoes.titulo : (currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName);
+  const headerTitle = opcoes.titulo !== undefined ? opcoes.titulo : currentSubjectName;
   const tipoAtual = opcoes.tipoMapa || ((typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal');
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
   const momento = opcoes.momento || currentMoment;
@@ -1541,7 +1541,7 @@ ${temaCeu ? `
       <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_Ceu} ${cy} A ${R_Ceu} ${R_Ceu} 0 0 0 ${cx - R_Ceu} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>
     </g>` : ''}`;
 
-  const headerTitle = currentCustomCode ? `${currentCustomCode} ${currentSubjectName}` : currentSubjectName;
+  const headerTitle = currentSubjectName;
 
   const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
   const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
