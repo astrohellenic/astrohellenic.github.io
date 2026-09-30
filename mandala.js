@@ -1025,54 +1025,62 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores) {
 function montarCabecalhoMandalaImagemHTML(data, idOpcional) {
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = coresCabecalhoMandala(modoEscuro, null);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="79" viewBox="0 0 960 79">${montarCabecalhoMandalaGrupoSVG(data, 2, cores)}</svg>`;
-  const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  /* A altura do quadro sai só da largura (aspect-ratio 960:79) e a <img> preenche esse quadro por posição absoluta — assim o
-     tamanho NÃO depende de a imagem já ter carregado. Com "height: auto" o
-     html2canvas (salvar/enviar imagem) às vezes media o quadro antes da
-     imagem carregar e cortava o cabeçalho pela metade. */
-  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="position: relative; width: 100%; aspect-ratio: 960 / 79; margin: 0 auto 16px auto; box-sizing: border-box;"><img data-cabecalho-svg="1" src="${src}" alt="" draggable="false" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;"></div>`;
+  /* SVG DIRETO na página (não <img>): o Safari do iPad não desenhava certo
+     SVG-dentro-de-<img> na captura (saía vazio/cortado). Direto na página
+     é o mesmo tipo de desenho da tabela do Painel Técnico, que captura
+     certo. As fontes ficam nas famílias genéricas (serif/sans-serif) pra
+     ficar IDÊNTICO ao cabeçalho da Mandala, que é desenhado como imagem
+     isolada e por isso também não usa Cinzel/Montserrat. */
+  const grupo = montarCabecalhoMandalaGrupoSVG(data, 2, cores)
+    .replace(/'Cinzel', serif/g, 'serif')
+    .replace(/'Montserrat', sans-serif/g, 'sans-serif');
+  return `<div${idOpcional ? ` id="${idOpcional}"` : ''} style="margin: 0 auto 16px auto; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" width="960" height="79" viewBox="0 0 960 79" style="display: block; width: 100%; height: auto;">${grupo}</svg></div>`;
 }
 window.montarCabecalhoMandalaImagemHTML = montarCabecalhoMandalaImagemHTML;
 
-/* Ao SALVAR/ENVIAR imagem (html2canvas), o Safari do iPad desenhava o
-   cabeçalho (SVG dentro de <img>) no tamanho original e cortava no quadro.
-   A Mandala não tem esse problema porque converte o SVG em PNG por canvas,
-   com tamanho de destino explícito — aqui se faz o mesmo só na hora de
-   capturar: rasterizarCabecalhosMandala prepara o PNG de cada cabeçalho
-   dentro de "raiz", e aplicarCabecalhosRasterizadosNoClone (passada em
-   "onclone" do html2canvas) troca o SVG pelo PNG só na cópia que vira
-   imagem — a tela continua com o SVG (vetorial). */
-async function rasterizarCabecalhosMandala(raiz) {
-  const imgs = (raiz || document).querySelectorAll('img[data-cabecalho-svg]');
-  for (const im of imgs) {
-    try {
-      const svgImg = new Image();
-      await new Promise((resolve, reject) => { svgImg.onload = resolve; svgImg.onerror = reject; svgImg.src = im.src; });
-      const canvas = document.createElement('canvas');
-      canvas.width = 960 * 2;
-      canvas.height = 79 * 2;
-      canvas.getContext('2d').drawImage(svgImg, 0, 0, canvas.width, canvas.height);
-      im.dataset.png = canvas.toDataURL('image/png');
-    } catch (e) {
-      console.error('Erro ao rasterizar o cabeçalho:', e);
+/* Recorta uma captura (canvas do html2canvas) rente ao conteúdo, deixando só
+   uma margem de ~3 mm desenhada nos 4 lados — pra imagem que vai pro Relatório não
+   levar um monte de fundo creme ao redor de uma tabela estreita. "fundo" é a
+   cor de fundo usada na captura (hex). Nunca falha: se algo der errado ou não
+   achar conteúdo, devolve o canvas original. */
+function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
+  try {
+    const margem = Math.round((margemCssPx === undefined ? 11 : margemCssPx) * 2); // escala 2 da captura
+    const w = canvas.width, h = canvas.height;
+    const dados = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+    const bgR = parseInt(fundo.slice(1, 3), 16), bgG = parseInt(fundo.slice(3, 5), 16), bgB = parseInt(fundo.slice(5, 7), 16);
+    const difere = (i) => dados[i + 3] > 8 && (Math.abs(dados[i] - bgR) > 10 || Math.abs(dados[i + 1] - bgG) > 10 || Math.abs(dados[i + 2] - bgB) > 10);
+    let minX = w, minY = h, maxX = -1, maxY = -1;
+    for (let y = 0; y < h; y++) {
+      const linha = y * w * 4;
+      for (let x = 0; x < w; x++) {
+        if (difere(linha + x * 4)) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
     }
+    if (maxX < 0) return canvas;
+    // Recorta exatamente o conteúdo e DESENHA a margem em volta (em vez de
+    // só "sobrar" da captura original) — assim a margem é a mesma nos 4
+    // lados mesmo quando a captura já vinha rente ao conteúdo em cima/embaixo.
+    const cw = maxX + 1 - minX, ch = maxY + 1 - minY;
+    const saida = document.createElement('canvas');
+    saida.width = cw + (margem * 2);
+    saida.height = ch + (margem * 2);
+    const ctx = saida.getContext('2d');
+    ctx.fillStyle = fundo;
+    ctx.fillRect(0, 0, saida.width, saida.height);
+    ctx.drawImage(canvas, minX, minY, cw, ch, margem, margem, cw, ch);
+    return saida;
+  } catch (e) {
+    console.error('Erro ao recortar a captura:', e);
+    return canvas;
   }
 }
-function aplicarCabecalhosRasterizadosNoClone(doc) {
-  doc.querySelectorAll('img[data-cabecalho-svg]').forEach(i => {
-    if (!i.dataset.png) return;
-    // <img> PNG em fluxo normal (width 100% / height auto): o mesmo padrão das
-    // outras imagens capturadas (ex.: mandala da Profecção), que funciona no
-    // iPad — nada de posição absoluta/aspect-ratio dentro da captura.
-    i.src = i.dataset.png;
-    i.style.cssText = 'display: block; width: 100%; height: auto;';
-    const quadro = i.parentElement;
-    if (quadro) { quadro.style.aspectRatio = 'auto'; quadro.style.position = 'static'; }
-  });
-}
-window.rasterizarCabecalhosMandala = rasterizarCabecalhosMandala;
-window.aplicarCabecalhosRasterizadosNoClone = aplicarCabecalhosRasterizadosNoClone;
+window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
@@ -1821,13 +1829,41 @@ async function capturarESalvarNaGaleria(gerarCanvas, nome) {
 }
 window.capturarESalvarNaGaleria = capturarESalvarNaGaleria;
 
-/* html2canvas de um elemento que tem o cabeçalho padrão dentro (ver
-   rasterizarCabecalhosMandala). */
+/* SVG (texto) -> canvas, direto pelo navegador (o mesmo caminho que a
+   Mandala já usa), sem passar pelo html2canvas — que levava ~7s numa tela
+   pesada como a Circumambulação (este leva ~0,2s). "var(--x)" não funciona
+   dentro de um SVG usado como imagem, então as variáveis de cor da página
+   são trocadas pelo valor real antes. "fundo" (hex) pinta o fundo. */
+function resolverVariaveisCssNoSvg(svgStr) {
+  const cs = getComputedStyle(document.documentElement);
+  return svgStr.replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m);
+}
+async function rasterizarSvgParaCanvas(svgStr, largura, altura, fundo, escala) {
+  const url = URL.createObjectURL(new Blob([resolverVariaveisCssNoSvg(svgStr)], { type: 'image/svg+xml;charset=utf-8' }));
+  try {
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('SVG não carregou')); img.src = url; });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(largura * escala);
+    canvas.height = Math.round(altura * escala);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = fundo;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+window.rasterizarSvgParaCanvas = rasterizarSvgParaCanvas;
+window.resolverVariaveisCssNoSvg = resolverVariaveisCssNoSvg;
+
+/* html2canvas de um elemento da tela (título + cabeçalho padrão + conteúdo),
+   com o fundo do tema atual. */
 async function html2canvasComCabecalhoPadrao(elemento) {
   if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
-  await rasterizarCabecalhosMandala(elemento);
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  return html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true, onclone: aplicarCabecalhosRasterizadosNoClone });
+  return html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
 }
 window.html2canvasComCabecalhoPadrao = html2canvasComCabecalhoPadrao;
 

@@ -445,45 +445,61 @@ function dicaBotaoRelatorioCircumambulacao() {
 }
 window.alternarLinhaCircumambulacaoRelatorio = alternarLinhaCircumambulacaoRelatorio;
 
-/* Botão de galeria: captura título + cabeçalho + pautas SÓ AO TOCAR (ver
-   capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
+/* Tira o "estilo de tela" do <svg> das pautas e dá tamanho próprio, pra ele
+   poder virar imagem (ver rasterizarSvgParaCanvas). */
+function svgPautasComTamanho(svgStr, largura, altura) {
+  return svgStr
+    .replace(/ style="[^"]*"/, '')
+    .replace('<svg viewBox', `<svg width="${largura}" height="${altura}" font-family="sans-serif" viewBox`);
+}
+
+/* Botão de galeria: título + cabeçalho padrão + pautas, tudo num SVG só,
+   gerado SÓ AO TOCAR (ver capturarESalvarNaGaleria, mandala.js). */
 function salvarCircumambulacaoNaGaleria() {
-  const elemento = document.getElementById('circumambulacao-container');
-  if (!elemento) return;
-  capturarESalvarNaGaleria(() => html2canvasComCabecalhoPadrao(elemento), `Astro_Hellenic_Circumambulacao_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  if (!circumambulacaoMontador) return;
+  capturarESalvarNaGaleria(async () => {
+    const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
+    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+    const cores = coresCabecalhoMandala(modoEscuro, null);
+    const corTitulo = cores.titulo;
+    const alturaPautas = 20 + (signPassages.length * rowHeight);
+    const yTitulo = 34, yCabecalho = 52, yPautas = 142;
+    const largura = 960, altura = yPautas + alturaPautas + 20;
+    const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
+      .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+    const pautas = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas).replace('<svg ', '<svg x="20" y="' + yPautas + '" ');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
+      <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">CIRCUMAMBULAÇÃO PELOS TERMOS</text>
+      ${cabecalho}
+      ${pautas}
+    </svg>`;
+    return rasterizarSvgParaCanvas(svg, largura, altura, fundo, 2);
+  }, `Astro_Hellenic_Circumambulacao_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarCircumambulacaoNaGaleria = salvarCircumambulacaoNaGaleria;
 
 /* Manda pro Relatório SEM título nem cabeçalho: a imagem inteira das
-   pautas, ou — se houver linhas marcadas — só essas linhas. */
+   pautas, ou — se houver linhas marcadas — só essas linhas. Direto do SVG
+   (rápido), sem html2canvas. */
 async function capturarCircumambulacaoParaRelatorio() {
-  if (typeof html2canvas !== 'function') { alert('Biblioteca de captura de imagem não carregou.'); return; }
+  if (!circumambulacaoMontador) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
   const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
-  let temp = null;
   try {
-    let alvo;
-    if (indices.length && circumambulacaoMontador) {
-      const { montarSvgPautas, signPassages } = circumambulacaoMontador;
-      temp = document.createElement('div');
-      temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: 920px; background: var(--bg-main); font-family: "Montserrat", sans-serif;`;
-      temp.innerHTML = montarSvgPautas(indices.map(i => signPassages[i]), 0, indices);
-      document.body.appendChild(temp);
-      alvo = temp;
-    } else {
-      alvo = document.getElementById('circumambulacaoPautas');
-      if (!alvo) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
-    }
-    const canvas = recortarCanvasAoConteudo(await html2canvas(alvo, { backgroundColor: fundo, scale: 2, useCORS: true }), fundo);
+    const passagens = indices.length ? indices.map(i => signPassages[i]) : signPassages;
+    const altura = 20 + (passagens.length * rowHeight);
+    const svg = svgPautasComTamanho(montarSvgPautas(passagens, 0, indices.length ? indices : undefined), 920, altura);
+    const bruto = await rasterizarSvgParaCanvas(svg, 920, altura, fundo, 2);
+    const canvas = recortarCanvasAoConteudo(bruto, fundo);
     const total = adicionarCapturaRelatorio('circumambulacao', canvas.toDataURL('image/png'));
     const oQue = indices.length ? `${indices.length} linha(s)` : 'a imagem inteira';
     alert(`Circumambulação pelos Termos (${oQue}) foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar a Circumambulação ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
-  } finally {
-    if (temp && temp.parentNode) temp.parentNode.removeChild(temp);
   }
 }
 window.capturarCircumambulacaoParaRelatorio = capturarCircumambulacaoParaRelatorio;
@@ -718,7 +734,7 @@ function renderCircumambulaçõesUI() {
   // Uma única coluna com todas as pautas, na tela e na impressão.
   const svgTela = montarSvgPautas(signPassages, 0);
   // Usado por capturarCircumambulacaoParaRelatorio (só as linhas marcadas).
-  circumambulacaoMontador = { montarSvgPautas, signPassages };
+  circumambulacaoMontador = { montarSvgPautas, signPassages, rowHeight };
   const alturaSvgTela = 20 + (signPassages.length * rowHeight);
   const caixasLinhasHTML = signPassages.map((passage, i) => {
     const topPct = ((10 + (i * rowHeight) + (boxHeight / 2)) / alturaSvgTela) * 100;
