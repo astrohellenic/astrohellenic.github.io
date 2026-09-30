@@ -382,10 +382,10 @@ function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
   const signo = Math.floor(norm360Lotes(deg) / 30);
   const casa = casaDoGrauLotes(deg, ascAbs);
   const checkboxHTML = opts.key ? `
-    <input type="checkbox" data-lote-relatorio-key="${opts.key}" ${lotesSelecionadosRelatorio.has(opts.key) ? 'checked' : ''} onchange="alternarSelecaoLoteRelatorio('${opts.key}', this.checked)" title="Selecionar para o Relatório" style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;">
+    <input type="checkbox" data-html2canvas-ignore="true" data-lote-relatorio-key="${opts.key}" ${lotesSelecionadosRelatorio.has(opts.key) ? 'checked' : ''} onchange="alternarSelecaoLoteRelatorio('${opts.key}', this.checked)" title="Selecionar para o Relatório" style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;">
   ` : '';
   const removerHTML = opts.onRemover ? `
-    <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 11px; margin-left: auto; flex-shrink: 0;" title="Remover este lote salvo" onclick="${opts.onRemover}"></i>
+    <i class="fa-solid fa-trash" data-html2canvas-ignore="true" style="color: var(--danger); cursor: pointer; font-size: 11px; margin-left: auto; flex-shrink: 0;" title="Remover este lote salvo" onclick="${opts.onRemover}"></i>
   ` : '';
   return `
     <div style="border: 1px solid var(--gold-primary); border-radius: 10px; background: var(--bg-card); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
@@ -508,17 +508,7 @@ function renderLotesUI() {
 
   const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
 
-  /* CABEÇALHO PADRÃO: mesmo contorno/fundo do cabeçalho da mandala (creme #fffdf5, borda dourada #c59b27), usado por Decênios, Liberação Zodiacal e Circumambulações. */
-  const headerTitle = currentSubjectName;
-  const diasSemanaLotesLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const diaSemanaFormatted = diasSemanaLotesLabels[currentMoment.getDay()];
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-  const anoH = currentMoment.getFullYear();
-  const mesH = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const diaH = String(currentMoment.getDate()).padStart(2, '0');
-  const horaH = String(currentMoment.getHours()).padStart(2, '0');
-  const minH = String(currentMoment.getMinutes()).padStart(2, '0');
+  const btnCssLotes = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
 
   let html = `
     <div class="lotes-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
@@ -527,15 +517,26 @@ function renderLotesUI() {
         Calculadora de Lotes
       </h3>
 
-      <div class="lotes-cabecalho" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; background: var(--bg-main); border: 2px solid var(--gold-primary); border-radius: 10px; padding: 10px 16px; flex-wrap: wrap;">
-        <div>
-          <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 15px; color: var(--primary-blue);">${escapeHtml(headerTitle)}</div>
-          <div style="font-size: 11.5px; color: var(--text-muted-2); font-weight: 500; margin-top: 2px;">${diaSemanaFormatted} • ${diaH}/${mesH}/${anoH} às ${horaH}:${minH} (${fusoFormatted}) • ${escapeHtml(currentGeo.city)} • <strong style="color: var(--badge-text);">${isDayAuto ? 'Natividade Diurna' : 'Natividade Noturna'}</strong></div>
-        </div>
-        <button type="button" onclick="capturarLotesSelecionadosParaRelatorio()" title="Adiciona os lotes marcados (caixinha em cada quadrinho) como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif; flex-shrink: 0;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <!-- Barra de ícones (sem texto), igual às outras ferramentas -->
+      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
+        <button type="button" onclick="salvarLotesNaGaleria()" title="Salvar a Calculadora de Lotes como imagem na galeria (com título e cabeçalho)" style="${btnCssLotes}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
+        <div style="position: relative; flex-shrink: 0;">
+          <button type="button" onclick="const m=document.getElementById('lotesMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" style="${btnCssLotes}">
+            <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+          <div id="lotesMenuRelatorio" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; min-width: 230px; overflow: hidden;">
+            <div onclick="capturarLotesInteiraParaRelatorio()" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Ferramenta inteira (sem cabeçalho)</div>
+            <div onclick="capturarLotesSelecionadosParaRelatorio()" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue);">Só os lotes marcados</div>
+          </div>
+        </div>
       </div>
+
+      <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
+      ${montarCabecalhoMandalaImagemHTML(data)}
+
+      <div id="lotesConteudoArea">
 
       <!-- PARTE 1: LOTES PRÉ-CALCULADOS -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
@@ -615,12 +616,13 @@ function renderLotesUI() {
 
         <div style="max-width: 260px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 8px;">
           ${renderLoteCardHTML(getLoteAbbrevIconSVG('=', 24), formulaTxt, resultAbs, p.asc, resultLegenda)}
-          <button type="button" onclick="salvarLoteCalculadoraLivre()" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif;">
+          <button type="button" data-html2canvas-ignore="true" onclick="salvarLoteCalculadoraLivre()" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif;">
             <i class="fa-solid fa-floppy-disk"></i> Salvar este Lote
           </button>
         </div>
       </div>
 
+      </div>
     </div>
   `;
 
@@ -634,6 +636,8 @@ function renderLotesUI() {
    dos 20 pré-calculados + qualquer lote que tenha salvo na Calculadora
    Livre — cada envio pega só o que estiver marcado no momento. */
 async function capturarLotesSelecionadosParaRelatorio() {
+  const menuRel = document.getElementById('lotesMenuRelatorio');
+  if (menuRel) menuRel.style.display = 'none';
   if (lotesSelecionadosRelatorio.size === 0) {
     alert('Marque a caixinha de pelo menos um lote antes de adicionar ao relatório.');
     return;
@@ -683,7 +687,8 @@ async function capturarLotesSelecionadosParaRelatorio() {
     // atual em vez de cravar sempre o creme do Tema Claro (mesmo padrão
     // de capturarTelaParaRelatorio em relatorio.js).
     const modoEscuroCapturaLotes = document.documentElement.classList.contains('tema-escuro');
-    const canvas = await html2canvas(temp, { backgroundColor: modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true });
+    const fundoCapt = modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await html2canvas(temp, { backgroundColor: fundoCapt, scale: 2, useCORS: true }), fundoCapt);
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`${selecionados.length} lote(s) adicionado(s) ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
@@ -694,3 +699,33 @@ async function capturarLotesSelecionadosParaRelatorio() {
   }
 }
 window.capturarLotesSelecionadosParaRelatorio = capturarLotesSelecionadosParaRelatorio;
+
+/* Botão de galeria: título + cabeçalho padrão + a ferramenta inteira, SÓ AO
+   TOCAR (ver capturarESalvarNaGaleria e gerarImagemHtmlComCabecalho, mandala.js). */
+function salvarLotesNaGaleria() {
+  const area = document.getElementById('lotesConteudoArea');
+  if (!area) return;
+  capturarESalvarNaGaleria(
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'CALCULADORA DE LOTES', comCabecalho: true }),
+    `Astro_Hellenic_Lotes_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+window.salvarLotesNaGaleria = salvarLotesNaGaleria;
+
+/* Manda pro Relatório a ferramenta inteira, SEM título nem cabeçalho. */
+async function capturarLotesInteiraParaRelatorio() {
+  const menu = document.getElementById('lotesMenuRelatorio');
+  if (menu) menu.style.display = 'none';
+  const area = document.getElementById('lotesConteudoArea');
+  if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  try {
+    const fundo = document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false }), fundo);
+    const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
+    alert(`"Calculadora de Lotes" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar a Calculadora de Lotes ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarLotesInteiraParaRelatorio = capturarLotesInteiraParaRelatorio;
