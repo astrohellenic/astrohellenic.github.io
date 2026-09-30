@@ -10,6 +10,49 @@
         }
     };
 
+    /* Janelinha de escolha do ano (mesmo visual da Revolução Solar). Escolher um
+       ano define o deslocamento em relação ao ano de hoje e recarrega a ferramenta;
+       as setas < > continuam andando a partir dele. */
+    window.toggleJanelaAnoProfeccao = function(event) {
+        if (event) event.stopPropagation();
+        const janela = document.getElementById('profeccaoJanelaAno');
+        if (!janela) return;
+        const abrir = janela.style.display !== 'block';
+        janela.style.display = abrir ? 'block' : 'none';
+        if (!abrir) return;
+        const nasc = window.profeccaoAnoNasc || 1990;
+        const anoSel = nasc + (window.profeccaoIdadeBase || 0) + window.profeccaoOffsetAnos;
+        const nome = (typeof currentSubjectName !== 'undefined' && currentSubjectName) ? currentSubjectName : 'Mapa Atual';
+        const nomeEl = document.getElementById('profeccaoJanelaNome');
+        if (nomeEl) nomeEl.innerText = nome;
+        const lbl = document.getElementById('profeccaoJanelaAnoLabel');
+        if (lbl) lbl.innerText = `${anoSel}, ${anoSel - nasc} anos`;
+        const lista = document.getElementById('profeccaoListaAnos');
+        if (!lista) return;
+        let h = '';
+        for (let a = nasc; a <= nasc + 120; a++) {
+            const sel = a === anoSel;
+            h += `<div class="${sel ? 'ano-item-selecionado' : ''}" onclick="selecionarAnoProfeccao(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${sel ? 'var(--bg-hover)' : 'var(--bg-card)'}; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted-2);"><span><strong>${a}</strong>, ${a - nasc} anos</span>${sel ? '<i class="fa-solid fa-check" style="color: var(--primary-blue);"></i>' : ''}</div>`;
+        }
+        lista.innerHTML = h;
+        setTimeout(() => {
+            const it = lista.querySelector('.ano-item-selecionado');
+            if (it) it.scrollIntoView({ block: 'center' });
+        }, 30);
+    };
+
+    window.selecionarAnoProfeccao = function(ano) {
+        const nasc = window.profeccaoAnoNasc || 1990;
+        window.profeccaoOffsetAnos = (ano - nasc) - (window.profeccaoIdadeBase || 0);
+        window.expandedProfeccaoMes = null;
+        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao();
+    };
+
+    document.addEventListener('click', function(e) {
+        const janela = document.getElementById('profeccaoJanelaAno');
+        if (janela && janela.style.display === 'block' && !janela.contains(e.target)) janela.style.display = 'none';
+    });
+
     window.alternarMesProfeccao = function(index) {
     window.expandedProfeccaoMes = (window.expandedProfeccaoMes === index) ? -1 : index;
     if (typeof window.iniciarModuloProfeccao === 'function') {
@@ -829,6 +872,8 @@
         if (m < 0 || (m === 0 && hoje.getDate() < dataNasc.getDate())) idade--;
         if (idade < 0) idade = 0;
 
+        window.profeccaoIdadeBase = idade;
+        window.profeccaoAnoNasc = dataNasc.getFullYear();
         idade += window.profeccaoOffsetAnos;
 
         const houseNumber = (idade % 12) + 1;
@@ -951,6 +996,22 @@
         let html = `
     <div style="width: 100%;">
         <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
+            <div style="position: relative; flex-shrink: 0;">
+                <button type="button" onclick="toggleJanelaAnoProfeccao(event)" title="Escolher o ano profectado" style="${btnCssProf}">
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="12" width="48" height="44" rx="5"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/><circle cx="22" cy="38" r="1.5"/><circle cx="32" cy="38" r="1.5"/><circle cx="42" cy="38" r="1.5"/><circle cx="22" cy="47" r="1.5"/><circle cx="32" cy="47" r="1.5"/></svg>
+                </button>
+                <div id="profeccaoJanelaAno" style="display: none; position: absolute; top: 42px; right: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
+                    <div style="padding: 10px 14px; border-bottom: 1px solid var(--gold-primary); border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                        <span style="font-size: 10px; text-transform: uppercase; color: var(--gold-primary); font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
+                        <div id="profeccaoJanelaNome" style="font-weight: 700; font-size: 13px; color: var(--primary-blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+                    </div>
+                    <div style="padding: 12px 14px;">
+                        <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Ano Profectado</span>
+                        <span id="profeccaoJanelaAnoLabel" style="font-weight: 700; font-size: 14px; color: var(--primary-blue);"></span>
+                    </div>
+                    <div id="profeccaoListaAnos" style="max-height: 250px; overflow-y: auto; border-top: 1px solid var(--gold-primary); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
+                </div>
+            </div>
             <button type="button" onclick="salvarProfeccaoNaGaleria()" title="Salvar a Profecção como imagem na galeria (com título e cabeçalhos)" style="${btnCssProf}">
                 <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
             </button>
@@ -970,14 +1031,14 @@
 
         <div style="text-align: center; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 6px;">
-                <button onclick="mudarAnoProfeccao(-1)" style="background: var(--bg-main); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&lt;</button>
+                <button onclick="mudarAnoProfeccao(-1)" style="background: var(--bg-main); border: 1px solid #d4af37; color: var(--primary-blue); border-radius: 6px; width: 36px; height: 36px; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; padding: 0;">&lt;</button>
 
                 <h2 style="font-family: 'Cinzel', serif; color: var(--primary-blue); margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
 
-                <button onclick="mudarAnoProfeccao(1)" style="background: var(--bg-main); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">&gt;</button>
+                <button onclick="mudarAnoProfeccao(1)" style="background: var(--bg-main); border: 1px solid #d4af37; color: var(--primary-blue); border-radius: 6px; width: 36px; height: 36px; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; padding: 0;">&gt;</button>
             </div>
 
-            <div id="profeccaoAnoProfectado" style="font-size: 13px; color: var(--primary-blue);">
+            <div id="profeccaoAnoProfectado" style="font-size: 13px; color: var(--primary-blue); display: flex; align-items: center; justify-content: center; gap: 5px;">
                 <strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}
             </div>
         </div>
