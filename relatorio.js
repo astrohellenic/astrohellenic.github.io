@@ -1028,7 +1028,7 @@ window.excluirRascunhoRelatorio = excluirRascunhoRelatorio;
    dá pra intercalar textos, mandalas e capturas de ferramenta à vontade.
    Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
    espaço pra digitar os textos. */
-function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, formato, ferramentaId, capturaIndex, rotuloIndice }) {
+function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, formato, ferramentaId, capturaIndex, rotuloIndice, bibliotecaId }) {
   const setaCss = 'width: 26px; height: 20px; border: 1px solid var(--gold-primary); background: var(--bg-card); color: var(--primary-blue); border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
   const setas = `
     <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
@@ -1106,11 +1106,12 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
   window.relatorioQuillPendentes[id] = { corpo: corpo || '', formato: formato || 'texto' };
 
   return `
-    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}" style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 8px; overflow: hidden;">
+    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}"${bibliotecaId ? ` data-biblioteca-id="${bibliotecaId}"` : ''} style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 8px; overflow: hidden;">
       <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
         <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? 'var(--gold-dark)' : 'var(--primary-blue)'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
+        <i class="fa-solid fa-bookmark" style="color: var(--primary-blue); cursor: pointer; font-size: 13px;" title="Salvar na biblioteca (fica na lista &quot;Meus blocos&quot; pra usar em outros relatórios)" onclick="salvarBlocoNaBiblioteca('${id}')"></i>
         <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerBlocoEditor(this, '${id}')"></i>
       </div>
       <div class="rel-editor-campos" style="padding: 0 14px 14px;">
@@ -1811,6 +1812,181 @@ function adicionarBlocoCustomizadoEditor() {
 }
 window.adicionarBlocoCustomizadoEditor = adicionarBlocoCustomizadoEditor;
 
+/* ==========================================
+   BIBLIOTECA DE BLOCOS ("Meus blocos")
+   Blocos de texto que o astrólogo guarda pra reusar em qualquer relatório
+   ou modelo — tabela relatorio_blocos_salvos no Supabase (id, user_id,
+   titulo, corpo, formato), então vale em qualquer aparelho. Usar um bloco
+   num relatório põe uma CÓPIA independente (o bloco continua na biblioteca;
+   editar/apagar aqui nunca mexe em relatório já feito).
+   ========================================== */
+window.relatorioBiblioteca = window.relatorioBiblioteca || [];
+
+async function relatorioBibliotecaUserId(client) {
+  const { data: { user } } = await client.auth.getUser();
+  return user ? user.id : null;
+}
+
+async function carregarBibliotecaRelatorio() {
+  const client = relatorioSupabaseClient();
+  if (!client) return window.relatorioBiblioteca;
+  try {
+    const userId = await relatorioBibliotecaUserId(client);
+    if (!userId) return window.relatorioBiblioteca;
+    const { data, error } = await client.from('relatorio_blocos_salvos').select('*').eq('user_id', userId).order('created_at', { ascending: true });
+    if (!error && data) window.relatorioBiblioteca = data;
+    else if (error) console.error('Erro ao carregar a biblioteca de blocos:', error);
+  } catch (e) {
+    console.error('Erro ao carregar a biblioteca de blocos:', e);
+  }
+  return window.relatorioBiblioteca;
+}
+
+function renderizarBibliotecaNoEditor() {
+  const lista = document.getElementById('relBibliotecaLista');
+  if (!lista) return;
+  const itens = window.relatorioBiblioteca || [];
+  if (!itens.length) {
+    lista.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">Nenhum bloco guardado ainda. Escreva um bloco de texto e toque no marcador <i class="fa-solid fa-bookmark"></i> dele pra guardar aqui.</div>';
+    return;
+  }
+  lista.innerHTML = itens.map(item => `
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px dashed var(--gold-primary); border-radius: 8px; background: var(--bg-main); margin-bottom: 8px;">
+      <span onclick="adicionarItemBibliotecaAoEditor('${item.id}')" style="flex: 1; font-size: 13px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">+ ${escapeHtml(item.titulo || 'Sem título')}</span>
+      <i class="fa-solid fa-pen" style="color: var(--primary-blue); cursor: pointer; font-size: 13px;" title="Editar este bloco guardado" onclick="editarItemDaBiblioteca('${item.id}')"></i>
+      <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px;" title="Apagar da biblioteca (não mexe em relatórios já feitos)" onclick="apagarItemDaBiblioteca('${item.id}')"></i>
+    </div>
+  `).join('');
+}
+
+function relatorioAvisoCurto(texto) {
+  const aviso = document.createElement('div');
+  aviso.style.cssText = 'position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 8px; padding: 10px 18px; font: 700 13px Montserrat, sans-serif; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);';
+  aviso.textContent = texto;
+  document.body.appendChild(aviso);
+  setTimeout(() => aviso.remove(), 2200);
+}
+
+/* Coloca uma CÓPIA do bloco guardado no fim do relatório. */
+function adicionarItemBibliotecaAoEditor(idItem) {
+  const container = document.getElementById('relEditorOrdenavel');
+  const item = (window.relatorioBiblioteca || []).find(b => b.id === idItem);
+  if (!container || !item) return;
+  const novoId = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  container.insertAdjacentHTML('beforeend', relatorioLinhaEditorHtml({
+    id: novoId, tipo: 'texto', custom: true, titulo: item.titulo, corpo: item.corpo, formato: item.formato || 'rich', bibliotecaId: item.id
+  }));
+  inicializarQuillsPendentes();
+  agendarAutoSalvarRelatorio();
+  relatorioAvisoCurto('Bloco colocado no fim do relatório');
+}
+window.adicionarItemBibliotecaAoEditor = adicionarItemBibliotecaAoEditor;
+
+/* Guarda na biblioteca o título + texto que estão agora num bloco do
+   relatório. Se o bloco veio da biblioteca, pergunta se atualiza aquele
+   item ou guarda como um novo. */
+async function salvarBlocoNaBiblioteca(idLinha) {
+  const linha = document.querySelector(`#relEditorOrdenavel .rel-editor-linha[data-bloco-id="${idLinha}"]`);
+  const client = relatorioSupabaseClient();
+  if (!linha || !client) return;
+  const tituloInput = linha.querySelector(`[data-bloco-titulo="${idLinha}"]`);
+  const titulo = (tituloInput && tituloInput.value.trim()) || '';
+  const quill = (window.relatorioQuillInstancias || {})[idLinha];
+  const corpo = quill ? quill.root.innerHTML : '';
+  if (!titulo && (!quill || !quill.getText().trim())) { alert('Escreva um título ou um texto no bloco antes de guardar.'); return; }
+
+  try {
+    const userId = await relatorioBibliotecaUserId(client);
+    if (!userId) { alert('Sessão expirada. Entre de novo.'); return; }
+    const origemId = linha.dataset.bibliotecaId;
+    const origem = origemId && (window.relatorioBiblioteca || []).find(b => b.id === origemId);
+    if (origem && confirm(`Este bloco veio de "${origem.titulo || 'Sem título'}". OK = atualizar o bloco guardado. Cancelar = guardar como um novo.`)) {
+      const { error } = await client.from('relatorio_blocos_salvos').update({ titulo, corpo, formato: 'rich' }).eq('id', origem.id).eq('user_id', userId);
+      if (error) throw error;
+      origem.titulo = titulo; origem.corpo = corpo; origem.formato = 'rich';
+    } else {
+      const { data, error } = await client.from('relatorio_blocos_salvos').insert({ user_id: userId, titulo, corpo, formato: 'rich' }).select().maybeSingle();
+      if (error) throw error;
+      if (data) { window.relatorioBiblioteca.push(data); linha.dataset.bibliotecaId = data.id; }
+    }
+    renderizarBibliotecaNoEditor();
+    relatorioAvisoCurto('Guardado em "Meus blocos"');
+  } catch (e) {
+    console.error('Erro ao guardar o bloco na biblioteca:', e);
+    alert('Não foi possível guardar o bloco na biblioteca.');
+  }
+}
+window.salvarBlocoNaBiblioteca = salvarBlocoNaBiblioteca;
+
+async function apagarItemDaBiblioteca(idItem) {
+  const item = (window.relatorioBiblioteca || []).find(b => b.id === idItem);
+  const client = relatorioSupabaseClient();
+  if (!item || !client) return;
+  if (!confirm(`Apagar "${item.titulo || 'Sem título'}" da biblioteca? Relatórios que já usam esse texto não mudam.`)) return;
+  try {
+    const userId = await relatorioBibliotecaUserId(client);
+    const { error } = await client.from('relatorio_blocos_salvos').delete().eq('id', idItem).eq('user_id', userId);
+    if (error) throw error;
+    window.relatorioBiblioteca = window.relatorioBiblioteca.filter(b => b.id !== idItem);
+    renderizarBibliotecaNoEditor();
+  } catch (e) {
+    console.error('Erro ao apagar o bloco da biblioteca:', e);
+    alert('Não foi possível apagar o bloco da biblioteca.');
+  }
+}
+window.apagarItemDaBiblioteca = apagarItemDaBiblioteca;
+
+/* Edita um bloco guardado (título + texto, no mesmo editor dos blocos). */
+function editarItemDaBiblioteca(idItem) {
+  const item = (window.relatorioBiblioteca || []).find(b => b.id === idItem);
+  if (!item) return;
+  document.getElementById('relBibliotecaEditorOverlay')?.remove();
+  const idQuill = 'biblioteca-edicao';
+  window.relatorioQuillPendentes = window.relatorioQuillPendentes || {};
+  window.relatorioQuillPendentes[idQuill] = { corpo: item.corpo || '', formato: item.formato || 'rich' };
+
+  const overlay = document.createElement('div');
+  overlay.id = 'relBibliotecaEditorOverlay';
+  overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: flex-start; justify-content: center; z-index: 1900; padding: 20px; overflow-y: auto;';
+  overlay.innerHTML = `
+    <div style="background: var(--bg-card); width: 100%; max-width: 720px; border-radius: 8px; padding: 20px; margin-top: 60px;">
+      <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; margin-bottom: 12px;">Editar bloco guardado</div>
+      <input type="text" id="relBibliotecaEdicaoTitulo" class="modal-input" value="${escapeHtml(item.titulo || '')}" placeholder="Título do bloco" style="margin-bottom: 8px; font-size: 13px;">
+      <div id="quill-mount-${idQuill}" class="rel-quill-mount"></div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+        <button type="button" id="relBibliotecaEdicaoCancelar" class="btn-secondary">Cancelar</button>
+        <button type="button" id="relBibliotecaEdicaoSalvar" class="btn-primary">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  inicializarQuillsPendentes();
+
+  const fechar = () => {
+    overlay.remove();
+    if (window.relatorioQuillInstancias) delete window.relatorioQuillInstancias[idQuill];
+    if (window.relatorioQuillPendentes) delete window.relatorioQuillPendentes[idQuill];
+  };
+  document.getElementById('relBibliotecaEdicaoCancelar').onclick = fechar;
+  document.getElementById('relBibliotecaEdicaoSalvar').onclick = async () => {
+    const client = relatorioSupabaseClient();
+    const titulo = document.getElementById('relBibliotecaEdicaoTitulo').value.trim();
+    const quill = (window.relatorioQuillInstancias || {})[idQuill];
+    const corpo = quill ? quill.root.innerHTML : item.corpo;
+    try {
+      const userId = await relatorioBibliotecaUserId(client);
+      const { error } = await client.from('relatorio_blocos_salvos').update({ titulo, corpo, formato: 'rich' }).eq('id', item.id).eq('user_id', userId);
+      if (error) throw error;
+      item.titulo = titulo; item.corpo = corpo; item.formato = 'rich';
+      renderizarBibliotecaNoEditor();
+      fechar();
+    } catch (e) {
+      console.error('Erro ao salvar o bloco da biblioteca:', e);
+      alert('Não foi possível salvar as mudanças do bloco.');
+    }
+  };
+}
+window.editarItemDaBiblioteca = editarItemDaBiblioteca;
+
 /* CSS só da TELA de edição do modelo (abas Editar/Prévia, moldura do
    Quill, aviso da prévia) — injetado uma única vez, separado do CSS do
    relatório em si (injetarEstilosRelatorio), que é usado tanto aqui
@@ -2176,6 +2352,14 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
             <div id="relAdicionarLista">${linhasParaAdicionar}</div>
           </div>
 
+          <div id="relBibliotecaSecao">
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">Meus blocos</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+              Blocos de texto que você guardou (pelo marcador em cada bloco de texto). Clique pra colocar uma cópia no relatório; eles continuam aqui pra usar em outros.
+            </div>
+            <div id="relBibliotecaLista"><div style="font-size: 12px; color: var(--text-muted);">Carregando...</div></div>
+          </div>
+
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
             <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
             <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: var(--primary-blue); padding: 8px 12px; border: 1px solid var(--gold-primary); border-radius: 6px; background: var(--bg-card); cursor: pointer;">+ Adicionar</button>
@@ -2195,6 +2379,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   inicializarQuillsPendentes();
   atualizarPreviewCapaEditor();
   ajustarEspacadoresBarraFixaRelatorio();
+  carregarBibliotecaRelatorio().then(renderizarBibliotecaNoEditor);
 
   // Reconstrução pós-prévia: a prévia já veio pronta (foi gerada ANTES da
   // mandala apagar a tela) — só exibe, direto na aba Prévia, sem gerar de
