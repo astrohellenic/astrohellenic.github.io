@@ -437,35 +437,12 @@ function alternarLinhaCircumambulacaoRelatorio(idx, marcado) {
 }
 window.alternarLinhaCircumambulacaoRelatorio = alternarLinhaCircumambulacaoRelatorio;
 
-/* PNG da página inteira (título + cabeçalho + pautas) pro botão de galeria,
-   pronto de antemão — o iPhone/iPad só abre "Salvar Imagem" se for chamado
-   direto do toque (mesma razão das outras ferramentas). O salvar em si é
-   salvarPngNaGaleria (mandala.js). */
-let circumambulacaoPngPronto = null;
-let circumambulacaoPngTimer = null;
-function agendarPngCircumambulacao() {
-  circumambulacaoPngPronto = null;
-  clearTimeout(circumambulacaoPngTimer);
-  circumambulacaoPngTimer = setTimeout(async () => {
-    if (typeof html2canvas !== 'function') return;
-    const elemento = document.getElementById('circumambulacao-container');
-    if (!elemento) return;
-    try {
-      const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-      await rasterizarCabecalhosMandala(elemento);
-      const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true, onclone: aplicarCabecalhosRasterizadosNoClone });
-      if (document.getElementById('circumambulacao-container') === elemento) {
-        circumambulacaoPngPronto = canvas.toDataURL('image/png');
-      }
-    } catch (err) {
-      console.error('Erro ao preparar o PNG da Circumambulação:', err);
-    }
-  }, 250);
-}
-
+/* Botão de galeria: captura título + cabeçalho + pautas SÓ AO TOCAR (ver
+   capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
 function salvarCircumambulacaoNaGaleria() {
-  if (!circumambulacaoPngPronto) { alert('A imagem ainda está sendo preparada. Toque de novo em um instante.'); return; }
-  salvarPngNaGaleria(circumambulacaoPngPronto, `Astro_Hellenic_Circumambulacao_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  const elemento = document.getElementById('circumambulacao-container');
+  if (!elemento) return;
+  capturarESalvarNaGaleria(() => html2canvasComCabecalhoPadrao(elemento), `Astro_Hellenic_Circumambulacao_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarCircumambulacaoNaGaleria = salvarCircumambulacaoNaGaleria;
 
@@ -806,5 +783,4 @@ function renderCircumambulaçõesUI() {
   `;
 
   container.innerHTML = html;
-  agendarPngCircumambulacao();
 }

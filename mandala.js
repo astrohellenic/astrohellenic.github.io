@@ -1060,51 +1060,17 @@ async function rasterizarCabecalhosMandala(raiz) {
   }
 }
 function aplicarCabecalhosRasterizadosNoClone(doc) {
-  doc.querySelectorAll('img[data-cabecalho-svg]').forEach(i => { if (i.dataset.png) i.src = i.dataset.png; });
+  doc.querySelectorAll('img[data-cabecalho-svg]').forEach(i => {
+    if (!i.dataset.png) return;
+    // <img> PNG em fluxo normal (width 100% / height auto): o mesmo padrão das
+    // outras imagens capturadas (ex.: mandala da Profecção), que funciona no
+    // iPad — nada de posição absoluta/aspect-ratio dentro da captura.
+    i.src = i.dataset.png;
+    i.style.cssText = 'display: block; width: 100%; height: auto;';
+    const quadro = i.parentElement;
+    if (quadro) { quadro.style.aspectRatio = 'auto'; quadro.style.position = 'static'; }
+  });
 }
-/* Recorta uma captura (canvas do html2canvas) rente ao conteúdo, deixando só
-   uma margem de ~3 mm desenhada nos 4 lados — pra imagem que vai pro Relatório não
-   levar um monte de fundo creme ao redor de uma tabela estreita. "fundo" é a
-   cor de fundo usada na captura (hex). Nunca falha: se algo der errado ou não
-   achar conteúdo, devolve o canvas original. */
-function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
-  try {
-    const margem = Math.round((margemCssPx === undefined ? 11 : margemCssPx) * 2); // escala 2 da captura
-    const w = canvas.width, h = canvas.height;
-    const dados = canvas.getContext('2d').getImageData(0, 0, w, h).data;
-    const bgR = parseInt(fundo.slice(1, 3), 16), bgG = parseInt(fundo.slice(3, 5), 16), bgB = parseInt(fundo.slice(5, 7), 16);
-    const difere = (i) => dados[i + 3] > 8 && (Math.abs(dados[i] - bgR) > 10 || Math.abs(dados[i + 1] - bgG) > 10 || Math.abs(dados[i + 2] - bgB) > 10);
-    let minX = w, minY = h, maxX = -1, maxY = -1;
-    for (let y = 0; y < h; y++) {
-      const linha = y * w * 4;
-      for (let x = 0; x < w; x++) {
-        if (difere(linha + x * 4)) {
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
-        }
-      }
-    }
-    if (maxX < 0) return canvas;
-    // Recorta exatamente o conteúdo e DESENHA a margem em volta (em vez de
-    // só "sobrar" da captura original) — assim a margem é a mesma nos 4
-    // lados mesmo quando a captura já vinha rente ao conteúdo em cima/embaixo.
-    const cw = maxX + 1 - minX, ch = maxY + 1 - minY;
-    const saida = document.createElement('canvas');
-    saida.width = cw + (margem * 2);
-    saida.height = ch + (margem * 2);
-    const ctx = saida.getContext('2d');
-    ctx.fillStyle = fundo;
-    ctx.fillRect(0, 0, saida.width, saida.height);
-    ctx.drawImage(canvas, minX, minY, cw, ch, margem, margem, cw, ch);
-    return saida;
-  } catch (e) {
-    console.error('Erro ao recortar a captura:', e);
-    return canvas;
-  }
-}
-window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 window.rasterizarCabecalhosMandala = rasterizarCabecalhosMandala;
 window.aplicarCabecalhosRasterizadosNoClone = aplicarCabecalhosRasterizadosNoClone;
 
@@ -1797,7 +1763,10 @@ function salvarPngNaGaleria(pngDataUrl, nome) {
   if (arquivo && navigator.canShare && navigator.canShare({ files: [arquivo] })) {
     navigator.share({ files: [arquivo] }).catch(err => {
       if (err && err.name === 'AbortError') return; // fechou a folha de propósito
-      console.error('Erro ao compartilhar a mandala:', err);
+      // O iPhone/iPad recusa a folha quando passou tempo demais desde o toque
+      // (imagem demorou pra gerar): pede um toque novo, agora garantido.
+      if (err && err.name === 'NotAllowedError') { mostrarBotaoSalvarImagem(pngDataUrl, nome); return; }
+      console.error('Erro ao compartilhar a imagem:', err);
       alert('Não foi possível abrir a folha de salvar a imagem.');
     });
     return;
@@ -1809,6 +1778,58 @@ function salvarPngNaGaleria(pngDataUrl, nome) {
   link.click();
 }
 window.salvarPngNaGaleria = salvarPngNaGaleria;
+
+function mostrarBotaoSalvarImagem(pngDataUrl, nome) {
+  document.getElementById('salvarImagemOverlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'salvarImagemOverlay';
+  overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 100000; padding: 20px;';
+  overlay.innerHTML = `
+    <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; padding: 20px; text-align: center; font-family: 'Montserrat', sans-serif; color: var(--primary-blue); max-width: 280px;">
+      <div style="font-weight: 700; margin-bottom: 14px;">Imagem pronta</div>
+      <button type="button" id="salvarImagemOk" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 10px 18px; font-weight: 700; cursor: pointer; width: 100%;">Salvar na galeria</button>
+      <div id="salvarImagemFechar" style="margin-top: 12px; font-size: 12px; cursor: pointer; opacity: 0.7;">Fechar</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('salvarImagemOk').onclick = () => { overlay.remove(); salvarPngNaGaleria(pngDataUrl, nome); };
+  document.getElementById('salvarImagemFechar').onclick = () => overlay.remove();
+}
+
+/* Captura SÓ QUANDO O BOTÃO É TOCADO (nunca em segundo plano — travava a
+   tela): mostra "Gerando imagem…", espera o canvas e abre a folha de salvar.
+   "gerarCanvas" é uma função async que devolve o canvas. */
+let salvandoImagemEmAndamento = false;
+async function capturarESalvarNaGaleria(gerarCanvas, nome) {
+  if (salvandoImagemEmAndamento) return;
+  salvandoImagemEmAndamento = true;
+  const aviso = document.createElement('div');
+  aviso.style.cssText = 'position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 8px; padding: 10px 18px; font: 700 13px Montserrat, sans-serif; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);';
+  aviso.textContent = 'Gerando imagem…';
+  document.body.appendChild(aviso);
+  let dataUrl = null;
+  try {
+    const canvas = await gerarCanvas();
+    dataUrl = canvas.toDataURL('image/png');
+  } catch (err) {
+    console.error('Erro ao gerar a imagem:', err);
+    alert('Não foi possível gerar a imagem.');
+  } finally {
+    aviso.remove();
+    salvandoImagemEmAndamento = false;
+  }
+  if (dataUrl) salvarPngNaGaleria(dataUrl, nome);
+}
+window.capturarESalvarNaGaleria = capturarESalvarNaGaleria;
+
+/* html2canvas de um elemento que tem o cabeçalho padrão dentro (ver
+   rasterizarCabecalhosMandala). */
+async function html2canvasComCabecalhoPadrao(elemento) {
+  if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+  await rasterizarCabecalhosMandala(elemento);
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  return html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true, onclone: aplicarCabecalhosRasterizadosNoClone });
+}
+window.html2canvasComCabecalhoPadrao = html2canvasComCabecalhoPadrao;
 
 window.onload = function() {
   restaurarUnidadeStepperMandala();

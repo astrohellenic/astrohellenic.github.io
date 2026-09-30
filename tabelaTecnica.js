@@ -439,7 +439,6 @@ function renderPainelTecnico(data, containerId) {
 
     html += `</div></div>`;
     container.innerHTML = html;
-    setTimeout(prepararPngPainelTecnico, 200); // depois do ajuste de largura do cabeçalho, logo abaixo
 
     const headerEl = document.getElementById('painelTecnicoHeader');
     const painelEl = document.querySelector('#painelPrincipalContainer svg');
@@ -509,32 +508,12 @@ window.capturarPainelTecnicoParaRelatorio = capturarPainelTecnicoParaRelatorio;
 
 const PAINEL_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0;";
 
-/* PNG (com título e cabeçalho do cliente) que o botão de galeria salva.
-   Gerado logo que o Painel aparece, e não no toque, porque o iPhone/iPad
-   só abre a folha de "Salvar Imagem" se for chamada direto do toque
-   (mesma razão de Mandala e Matriz terem o PNG pronto de antemão). O
-   salvar em si é salvarPngNaGaleria (mandala.js), igual nas outras telas. */
-let painelPngPronto = null;
-async function prepararPngPainelTecnico() {
-  painelPngPronto = null;
-  if (typeof html2canvas !== 'function') return;
+/* Botão de galeria: captura título + cabeçalho + tabela SÓ AO TOCAR (ver
+   capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
+function salvarPainelTecnicoNaGaleria() {
   const elemento = document.getElementById('painel-tecnico-container');
   if (!elemento) return;
-  try {
-    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    await rasterizarCabecalhosMandala(elemento);
-    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true, onclone: aplicarCabecalhosRasterizadosNoClone });
-    if (document.getElementById('painel-tecnico-container') === elemento) {
-      painelPngPronto = canvas.toDataURL('image/png');
-    }
-  } catch (err) {
-    console.error('Erro ao preparar o PNG do Painel Técnico:', err);
-  }
-}
-
-function salvarPainelTecnicoNaGaleria() {
-  if (!painelPngPronto) { alert('A imagem ainda está sendo preparada. Toque de novo em um instante.'); return; }
-  salvarPngNaGaleria(painelPngPronto, `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  capturarESalvarNaGaleria(() => html2canvasComCabecalhoPadrao(elemento), `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarPainelTecnicoNaGaleria = salvarPainelTecnicoNaGaleria;
 

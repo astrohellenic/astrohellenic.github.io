@@ -301,37 +301,17 @@ function toggleMatrizVisibilidadeNaMandala() {
         </div>
       </div>
     `;
-    prepararPngMatrizVisibilidade();
   }
 }
 
 const MATRIZ_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0;";
 
-/* PNG (com título e cabeçalho do cliente) que o botão de galeria salva.
-   Gerado logo que a matriz aparece, e não no toque: o html2canvas demora,
-   e o iPhone/iPad só abre a folha de "Salvar Imagem" se for chamada direto
-   do toque (mesma razão de a mandala ter o PNG pronto de antemão). */
-let matrizPngPronto = null;
-async function prepararPngMatrizVisibilidade() {
-  matrizPngPronto = null;
-  if (typeof html2canvas !== 'function') return;
+/* Botão de galeria: captura título + grade + cabeçalho SÓ AO TOCAR (ver
+   capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
+function salvarMatrizVisibilidadeNaGaleria() {
   const elemento = document.getElementById('matrizVisibilidadeMandalaContainer');
   if (!elemento) return;
-  try {
-    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    await rasterizarCabecalhosMandala(elemento);
-    const canvas = await html2canvas(elemento, { backgroundColor: modoEscuro ? '#1c1917' : '#fffdf5', scale: 2, useCORS: true, onclone: aplicarCabecalhosRasterizadosNoClone });
-    if (document.getElementById('matrizVisibilidadeMandalaContainer') === elemento) {
-      matrizPngPronto = canvas.toDataURL('image/png');
-    }
-  } catch (err) {
-    console.error('Erro ao preparar o PNG da Matriz de Visibilidade:', err);
-  }
-}
-
-function salvarMatrizVisibilidadeNaGaleria() {
-  if (!matrizPngPronto) { alert('A imagem ainda está sendo preparada. Toque de novo em um instante.'); return; }
-  salvarPngNaGaleria(matrizPngPronto, `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  capturarESalvarNaGaleria(() => html2canvasComCabecalhoPadrao(elemento), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarMatrizVisibilidadeNaGaleria = salvarMatrizVisibilidadeNaGaleria;
 window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
