@@ -1871,8 +1871,10 @@ async function rasterizarSvgParaCanvas(svgStr, largura, altura, fundo, escala) {
     canvas.width = Math.round(largura * escala);
     canvas.height = Math.round(altura * escala);
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = fundo;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (fundo) {
+      ctx.fillStyle = fundo;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     return canvas;
   } finally {
@@ -1881,6 +1883,98 @@ async function rasterizarSvgParaCanvas(svgStr, largura, altura, fundo, escala) {
 }
 window.rasterizarSvgParaCanvas = rasterizarSvgParaCanvas;
 window.resolverVariaveisCssNoSvg = resolverVariaveisCssNoSvg;
+
+/* CAPTURA RÁPIDA DE TELAS COM MUITOS ÍCONES SVG. O html2canvas gasta muito
+   tempo clonando cada <svg> da página — numa tela com centenas de ícones
+   (Decênios: 641) isso leva 30s+, e não dá pra evitar depois que a cópia
+   começa. Então, por um instante (só o tempo da captura), os <svg> da tela
+   são trocados por <img> do mesmo tamanho: cada MODELO de ícone (igual,
+   ignorando os ids de gradiente, que mudam a cada ícone) vira um PNG
+   transparente uma vez só (rasterizarSvgParaCanvas), e os ícones escondidos
+   (acordeão fechado) saem de cena. Depois, tudo volta ao que era.
+   Devolve { aplicar, limpar }: chamar aplicar() antes do html2canvas e limpar()
+   num finally. */
+async function prepararSvgsRapidosParaCaptura(elemento) {
+  const svgs = Array.from(elemento.querySelectorAll('svg'));
+  const normalizar = (html) => html.replace(/(id="|url\(#|href="#)[^")]*/g, '$1X');
+  const cache = new Map();   // chave -> dataURL
+  const trocas = [];         // { svg, substituto }
+  for (const svg of svgs) {
+    const rect = svg.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      trocas.push({ svg, substituto: document.createComment('svg oculto') }); // escondido: não aparece mesmo
+      continue;
+    }
+    const chave = normalizar(svg.outerHTML) + '|' + Math.round(rect.width) + 'x' + Math.round(rect.height);
+    if (!cache.has(chave)) {
+      try {
+        const copia = svg.cloneNode(true);
+        copia.setAttribute('width', rect.width);
+        copia.setAttribute('height', rect.height);
+        if (!copia.getAttribute('xmlns')) copia.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        const canvas = await rasterizarSvgParaCanvas(new XMLSerializer().serializeToString(copia), rect.width, rect.height, null, 2);
+        cache.set(chave, canvas.toDataURL('image/png'));
+      } catch (e) {
+        cache.set(chave, null); // esse modelo fica como <svg> normal (mais lento, mas certo)
+      }
+    }
+    const dataUrl = cache.get(chave);
+    if (!dataUrl) continue;
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.style.cssText = `${svg.getAttribute('style') || ''}; width: ${rect.width}px; height: ${rect.height}px;`;
+    trocas.push({ svg, substituto: img });
+  }
+  const aplicar = () => trocas.forEach(t => t.svg.replaceWith(t.substituto));
+  const limpar = () => trocas.forEach(t => { if (t.substituto.parentNode) t.substituto.replaceWith(t.svg); });
+  return { aplicar, limpar };
+}
+
+/* IMAGEM DE UMA FERRAMENTA QUE É HTML (tabelas etc.): título + cabeçalho padrão
+   saem direto do SVG (rápido) e só o conteúdo HTML passa pelo html2canvas.
+   opcoes: { titulo (texto ou vazio), comCabecalho (bool), loteCasa1 (opcional) }.
+   Devolve o canvas (escala 2), ainda sem recorte. */
+async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
+  if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const rapido = await prepararSvgsRapidosParaCaptura(elemento);
+  let corpo;
+  try {
+    rapido.aplicar();
+    corpo = await html2canvas(elemento, { backgroundColor: fundo, scale: 2, useCORS: true });
+  } finally {
+    rapido.limpar();
+  }
+  if (!opcoes.titulo && !opcoes.comCabecalho) return corpo;
+
+  const W = Math.max(320, Math.round(elemento.getBoundingClientRect().width));
+  const cores = coresCabecalhoMandala(modoEscuro, null);
+  let y = 0, partes = '';
+  if (opcoes.titulo) {
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtml(opcoes.titulo)}</text>`;
+    y += 44;
+  }
+  if (opcoes.comCabecalho) {
+    const k = Math.min(1, W / 960);
+    const grupo = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, 2, cores, opcoes.loteCasa1)
+      .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+    partes += `<g transform="translate(${(W - 960 * k) / 2}, ${y}) scale(${k})">${grupo}</g>`;
+    y += (79 * k) + 16;
+  }
+  const alturaTopo = y;
+  const topo = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${alturaTopo}" viewBox="0 0 ${W} ${alturaTopo}">${partes}</svg>`, W, alturaTopo, fundo, 2);
+  const saida = document.createElement('canvas');
+  saida.width = Math.max(topo.width, corpo.width);
+  saida.height = topo.height + corpo.height;
+  const ctx = saida.getContext('2d');
+  ctx.fillStyle = fundo;
+  ctx.fillRect(0, 0, saida.width, saida.height);
+  ctx.drawImage(topo, Math.round((saida.width - topo.width) / 2), 0);
+  ctx.drawImage(corpo, Math.round((saida.width - corpo.width) / 2), topo.height);
+  return saida;
+}
+window.gerarImagemHtmlComCabecalho = gerarImagemHtmlComCabecalho;
 
 /* IMAGEM DE UMA FERRAMENTA (Painel Técnico, Matriz...) direto do SVG, sem
    html2canvas (rápido: ~0,2s em vez de vários segundos, e sem travar a tela).

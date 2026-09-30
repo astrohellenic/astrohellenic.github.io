@@ -93,51 +93,45 @@ function renderDeceniosUI(container) {
 
   const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
 
+  const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+
   container.innerHTML = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: flex-end; padding: 12px 20px 0;">
-        <button onclick="capturarTelaParaRelatorio('decenios', 'decenios-container', 'Decênios Helenísticos')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
+        ${luzEmCasaNaoOperante ? `
+          <div title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) — considere selecionar outro planeta manualmente" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; cursor: help;">
+            <svg width="22" height="22" viewBox="0 0 24 24" style="display: block;">
+              <path d="M12 2 L23 21 H1 Z" fill="var(--badge-bg)" stroke="var(--badge-text)" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="11" y="9" width="2" height="6" rx="1" fill="var(--badge-text)"/>
+              <rect x="11" y="16.5" width="2" height="2" rx="1" fill="var(--badge-text)"/>
+            </svg>
+          </div>
+        ` : ''}
+        <div style="position: relative; display: inline-block;">
+          <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="${btnCss}" title="Planeta Inicial">
+            ${getPlanet3DSVG(startPlanetKey, 26)}
+          </button>
+          <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
+            <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
+            <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
+            <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
+            <div onclick="alternarSeitaManual('Venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Venus', 24)}</div>
+            <div onclick="alternarSeitaManual('Mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mars', 24)}</div>
+            <div onclick="alternarSeitaManual('Jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Jupiter', 24)}</div>
+            <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
+          </div>
+        </div>
+        <button type="button" onclick="salvarDeceniosNaGaleria()" title="Salvar os Decênios como imagem na galeria (com título e cabeçalho)" style="${btnCss}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        </button>
+        <button type="button" onclick="capturarDeceniosParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" style="${btnCss}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
     <div id="decenios-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <!-- CABEÇALHO PADRONIZADO (ESTILO PROFECÇÃO) -->
-      <div style="background: var(--bg-card); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <div>
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
-          <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
-            ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")} •
-            <strong style="color: var(--badge-text);">${isDay ? 'Natividade Diurna' : 'Natividade Noturna'}</strong>
-          </div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 8px;">
-          ${luzEmCasaNaoOperante ? `
-            <div title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) — considere selecionar outro planeta manualmente" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; cursor: help;">
-              <svg width="22" height="22" viewBox="0 0 24 24" style="display: block;">
-                <path d="M12 2 L23 21 H1 Z" fill="var(--badge-bg)" stroke="var(--badge-text)" stroke-width="1.5" stroke-linejoin="round"/>
-                <rect x="11" y="9" width="2" height="6" rx="1" fill="var(--badge-text)"/>
-                <rect x="11" y="16.5" width="2" height="2" rx="1" fill="var(--badge-text)"/>
-              </svg>
-            </div>
-          ` : ''}
-          <div style="position: relative; display: inline-block;">
-            <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 38px; height: 38px; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Planeta Inicial">
-              ${getPlanet3DSVG(startPlanetKey, 26)}
-            </button>
-            <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 42px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
-              <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
-              <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
-              <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
-              <div onclick="alternarSeitaManual('Venus')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Venus', 24)}</div>
-              <div onclick="alternarSeitaManual('Mars')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mars', 24)}</div>
-              <div onclick="alternarSeitaManual('Jupiter')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Jupiter', 24)}</div>
-              <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
+      ${montarCabecalhoMandalaImagemHTML(data)}
 
       <!-- EXIBIÇÃO DOS RESULTADOS DOS DECÊNIOS -->
       <div id="decennialsResultsArea">
@@ -150,6 +144,35 @@ function renderDeceniosUI(container) {
 
   encolherTabelasDecVisiveis(container);
 }
+
+/* Botão de galeria: título + cabeçalho padrão + resultados, SÓ AO TOCAR (ver
+   capturarESalvarNaGaleria e gerarImagemHtmlComCabecalho, mandala.js). */
+function salvarDeceniosNaGaleria() {
+  const area = document.getElementById('decennialsResultsArea');
+  if (!area) return;
+  capturarESalvarNaGaleria(
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'DECÊNIOS HELENÍSTICOS', comCabecalho: true }),
+    `Astro_Hellenic_Decenios_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+window.salvarDeceniosNaGaleria = salvarDeceniosNaGaleria;
+
+/* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho). */
+async function capturarDeceniosParaRelatorio() {
+  const area = document.getElementById('decennialsResultsArea');
+  if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  try {
+    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false }), fundo);
+    const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'));
+    alert(`"Decênios Helenísticos" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar os Decênios ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarDeceniosParaRelatorio = capturarDeceniosParaRelatorio;
 
 /* ENCOLHE TABELAS LARGAS DEMAIS PARA CABEREM NA TELA (SEM CORTE), EM VEZ DE
    FICAREM TRAVADAS/CORTADAS EM TELAS ESTREITAS — mesma técnica usada no
