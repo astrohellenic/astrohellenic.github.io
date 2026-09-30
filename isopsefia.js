@@ -153,32 +153,26 @@ function iniciarModuloIsopsefia() {
 }
 
 function renderIsopsefiaUI(container) {
-  const ascIdx = obterAscendenteIdxMandala();
-  const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : (typeof currentSubjectName !== 'undefined' ? currentSubjectName : 'Mapa Ativo');
+  const btnCssIso = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
 
   container.innerHTML = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: flex-end; padding: 12px 20px 0;">
-        <button onclick="capturarTelaParaRelatorio('isopsefia', 'isopsefia-container', 'Isopsefia')" title="Adiciona esta tela, exatamente do jeito que está agora, como um bloco no Relatório" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;">
-          <i class="fa-solid fa-file-circle-plus"></i> Adicionar ao Relatório
+      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
+        <button type="button" onclick="salvarIsopsefiaNaGaleria()" title="Salvar a Isopsefia como imagem na galeria (com título e cabeçalho)" style="${btnCssIso}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        </button>
+        <button type="button" onclick="capturarIsopsefiaParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" style="${btnCssIso}">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
     <div id="isopsefia-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-      <!-- CABEÇALHO PADRONIZADO -->
-      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <div>
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(headerTitle)}</h2>
-          <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
-            Isopsefia Helenística • Vettius Valens
-          </div>
-        </div>
+      <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+        Isopsefia Helenística
+      </h3>
 
-        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-card); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--gold-primary);">
-          <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); font-family: 'Cinzel', serif;">ASCENDENTE:</span>
-          ${getSignSvgHtmlIso(ascIdx, 22)}
-        </div>
-      </div>
+      <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
+      ${montarCabecalhoMandalaImagemHTML(currentCalculatedData)}
 
       <!-- ABAS INTERNAS -->
       <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--table-border-soft); margin-bottom: 20px;">
@@ -261,7 +255,7 @@ function renderConteudoAbaAtual() {
 
   if (isoState.activeTab === 'planilha') {
     return `
-      <div style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); margin-bottom: 16px; display: flex; gap: 8px;">
+      <div data-html2canvas-ignore="true" style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); margin-bottom: 16px; display: flex; gap: 8px;">
         <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--table-border-soft); border-radius: 6px; font-size: 13px; outline: none; background: var(--bg-card); color: var(--text-dark);" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
         <button onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Adicionar</button>
       </div>
@@ -276,7 +270,7 @@ function renderConteudoAbaAtual() {
               <th style="padding: 12px; text-align: center;">Fórmula do Resto</th>
               <th style="padding: 12px; text-align: center;">Topos (Resto)</th>
               <th style="padding: 12px; text-align: center;">Signo Ativado</th>
-              <th style="padding: 12px; text-align: center;">Ações</th>
+              <th data-html2canvas-ignore="true" style="padding: 12px; text-align: center;">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -293,7 +287,7 @@ function renderConteudoAbaAtual() {
                   <td style="padding: 10px 12px; text-align: center; color: var(--text-muted); font-family: monospace;">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
                   <td style="padding: 10px 12px; text-align: center;"><span style="background: var(--badge-bg); color: var(--badge-text); padding: 2px 8px; border-radius: 12px; font-weight: 700;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</span></td>
                   <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtmlIso(ativ.signIdx, 22)}</td>
-                  <td style="padding: 10px 12px; text-align: center;"><button onclick="removerTermoPlanilha(${idx})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">Excluir</button></td>
+                  <td data-html2canvas-ignore="true" style="padding: 10px 12px; text-align: center;"><button onclick="removerTermoPlanilha(${idx})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">Excluir</button></td>
                 </tr>
               `;
             }).join('')}
@@ -396,3 +390,32 @@ function atualizarSingleInput(val) {
     encolherTabelasIsoVisiveis(content);
   }
 }
+
+
+/* IMAGENS DA ISOPSEFIA (aba aberta). Galeria: título + cabeçalho padrão + conteúdo.
+   Relatório: só o conteúdo. Só ao tocar nos botões. Campos de digitar, "Adicionar"
+   e "Excluir" ficam de fora (data-html2canvas-ignore). */
+function salvarIsopsefiaNaGaleria() {
+  const area = document.getElementById('isoTabContent');
+  if (!area) return;
+  capturarESalvarNaGaleria(
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'ISOPSEFIA HELENÍSTICA', comCabecalho: true }),
+    `Astro_Hellenic_Isopsefia_${((typeof currentSubjectName !== 'undefined' && currentSubjectName) || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+window.salvarIsopsefiaNaGaleria = salvarIsopsefiaNaGaleria;
+
+async function capturarIsopsefiaParaRelatorio() {
+  const area = document.getElementById('isoTabContent');
+  if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  try {
+    const fundo = document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false }), fundo);
+    const total = adicionarCapturaRelatorio('isopsefia', canvas.toDataURL('image/png'));
+    alert(`"Isopsefia" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar a Isopsefia ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+window.capturarIsopsefiaParaRelatorio = capturarIsopsefiaParaRelatorio;
