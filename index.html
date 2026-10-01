@@ -770,6 +770,35 @@ body {
         body.tema-ceu #mandalaRelatorioBtnContainer svg,
         body.tema-ceu #mandalaSalvarImagemBtnContainer svg { stroke: #1d3a66; }
 
+        /* TEMA CÉU: quadro da Revolução Solar como um papiro aberto (pedaço de papiro com borda
+           rasgada, tinta preta, nome do cliente em terracota, setas/marcas em azul-tinta).
+           SÓ PINTURA — largura, altura, posição e rolagem da lista seguem como estão (os
+           estilos do quadro são inline, por isso !important). */
+        body.tema-ceu #dropdown-rs-container {
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.25) 100%),
+                radial-gradient(ellipse at 12% 8%, rgba(240,222,180,0.5) 0%, transparent 45%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            clip-path: polygon(
+                0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px,
+                calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px),
+                93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px),
+                4px 85%, 0 62%, 3px 40%, 0 18%);
+        }
+        body.tema-ceu #dropdown-rs-container > div { background: transparent !important; border-color: rgba(95, 65, 30, 0.35) !important; }
+        body.tema-ceu #dropdown-rs-container span { color: #1a1410 !important; }
+        body.tema-ceu #dropdown-rs-container > div:first-child span { color: #1d3a66 !important; }
+        body.tema-ceu #dropdown-rs-container #rs-nome-cliente { color: #a03e25 !important; }
+        body.tema-ceu #dropdown-rs-container #rs-ano-atual-label { color: #1a1410 !important; }
+        body.tema-ceu #dropdown-rs-container #rs-chevron-icon { color: #1d3a66 !important; }
+        body.tema-ceu #dropdown-rs-container #rs-lista-anos > div { background: transparent !important; border-bottom-color: rgba(95, 65, 30, 0.3) !important; color: #1a1410 !important; }
+        body.tema-ceu #dropdown-rs-container #rs-lista-anos > div.ano-item-selecionado { background: rgba(120, 80, 30, 0.22) !important; }
+        body.tema-ceu #dropdown-rs-container #rs-lista-anos i { color: #a03e25 !important; }
+
 
         #mandala-container {
             flex: 1;
