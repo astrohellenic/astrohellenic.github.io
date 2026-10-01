@@ -1275,6 +1275,71 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
 }
 window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 
+/* PLANETAS DO TEMA CÉU — como no Stellarium: ponto de luz (branco, brilho
+   diferente por planeta) com o glifo AO LADO. Sol = brilho macio com núcleo
+   estourado; Lua = disco com a fase. Os glifos são as silhuetas dos ícones
+   "simples" do próprio software (planetIcons.js), pintadas de preto de dia
+   e de branco à noite. Só pintura/desenho do ponto — a linha conectora e o
+   grau continuam os de sempre. */
+function misturarHexCeu(c1, c2, t) {
+  const a = [1, 3, 5].map(i => parseInt(c1.slice(i, i + 2), 16)), b = [1, 3, 5].map(i => parseInt(c2.slice(i, i + 2), 16));
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+
+function glifoSilhuetaCeu(id, x, y, tam, cor, halo, larguraHalo) {
+  const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO.planeta && ICONES_SIMPLES_NOVO.planeta[id]) || '';
+  if (!bruto) return '';
+  const miolo = bruto.slice(bruto.indexOf('>') + 1, bruto.lastIndexOf('</svg>')).replace(/<defs>[\s\S]*?<\/defs>/g, '').replace(/fill="url\(#\w+\)"/g, `fill="${cor}"`);
+  const k = tam / 100;
+  const pos = `translate(${(x - tam / 2).toFixed(1)} ${(y - tam / 2).toFixed(1)}) scale(${k.toFixed(3)})`;
+  // Duas camadas: contorno (halo, atrás) e o glifo por cima, com um traço fino da própria cor
+  // pra engrossar as linhas — os glifos simples são bem finos e sumiam no zoom normal.
+  return `<g transform="${pos}" stroke="${halo}" stroke-width="${(larguraHalo * 2.2 / k).toFixed(2)}" stroke-linejoin="round">${miolo}</g>`
+    + `<g transform="${pos}" stroke="${cor}" stroke-width="${(1.1 / k).toFixed(2)}" stroke-linejoin="round">${miolo}</g>`;
+}
+
+/* o = { id, x, y, dia (0..1), noCeu (true = acima do horizonte), elevacao,
+   lado (+1 glifo à direita / -1 à esquerda), luaFrac (0..1), luaCrescente,
+   luaInvertida (hemisfério Sul) } */
+function desenharPlanetaCeuSVG(o) {
+  const { id, x, y, dia, noCeu, elevacao, lado } = o;
+  const claro = noCeu ? dia : 0;                       // abaixo do horizonte (espaço) = sempre "noite"
+  const corGlifo = misturarHexCeu('#ffffff', '#0b0b10', claro);
+  const corContorno = (noCeu && claro > 0.5) ? 'rgba(255,255,255,.75)' : 'rgba(11,18,48,.6)';
+  const gid = 'plc' + id;
+  let corpo = '';
+  if (id === 'Sun') {
+    const calor = 1 - Math.max(0, Math.min(1, (elevacao - 0.0) / 0.4));
+    const c2 = misturarHexCeu('#e4efff', '#ffc896', calor), c3 = misturarHexCeu('#ffffff', '#ffe2c4', calor);
+    corpo = `<defs><radialGradient id="${gid}"><stop offset="0%" stop-color="#fff"/><stop offset="9%" stop-color="#fff"/><stop offset="13%" stop-color="${c3}" stop-opacity=".92"/><stop offset="22%" stop-color="${c3}" stop-opacity=".6"/><stop offset="40%" stop-color="${c2}" stop-opacity=".28"/><stop offset="70%" stop-color="${c2}" stop-opacity=".08"/><stop offset="100%" stop-color="${c2}" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="${x}" cy="${y}" r="112" fill="url(#${gid})"/>`
+      + glifoSilhuetaCeu('Sun', x + 3, y - 46, 30, corGlifo, corContorno, 2);
+  } else if (id === 'Moon') {
+    const r = 13, frac = o.luaFrac, cresc = o.luaCrescente !== o.luaInvertida;
+    const luz = cresc ? 1 : -1, rx = r * Math.abs(1 - 2 * frac);
+    const sweepOuter = luz > 0 ? 1 : 0, sweepTerm = (frac < 0.5) ? (luz > 0 ? 0 : 1) : (luz > 0 ? 1 : 0);
+    let d = '';
+    if (frac >= 0.98) d = `M ${x - r} ${y} A ${r} ${r} 0 1 1 ${x + r} ${y} A ${r} ${r} 0 1 1 ${x - r} ${y}`;
+    else if (frac > 0.02) d = `M ${x} ${y - r} A ${r} ${r} 0 0 ${sweepOuter} ${x} ${y + r} A ${rx.toFixed(2)} ${r} 0 0 ${sweepTerm} ${x} ${y - r} Z`;
+    const esc = misturarHexCeu('#2a3558', '#7a8bb5', claro * 0.9);
+    corpo = `<defs><radialGradient id="${gid}"><stop offset="0%" stop-color="#eaf0ff" stop-opacity="${(0.5 - 0.3 * claro).toFixed(2)}"/><stop offset="100%" stop-color="#eaf0ff" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="${x}" cy="${y}" r="${r * 2.6}" fill="url(#${gid})"/>
+      <circle cx="${x}" cy="${y}" r="${r}" fill="${esc}" fill-opacity="${(0.9 - 0.35 * claro).toFixed(2)}" stroke="rgba(220,230,255,${(0.35 - 0.1 * claro).toFixed(2)})" stroke-width="1"/>
+      ${d ? `<path d="${d}" fill="#fffef2"/>` : ''}`
+      + glifoSilhuetaCeu('Moon', x + lado * 26, y - 24, 28, corGlifo, corContorno, 2);
+  } else {
+    const BR = { Mercury: 0.55, Venus: 1, Mars: 0.6, Jupiter: 0.85, Saturn: 0.65 }[id] || 0.6;
+    const DV = { Mercury: 0.06, Venus: 0.5, Mars: 0.08, Jupiter: 0.22, Saturn: 0.08 }[id] || 0.1;
+    const vis = noCeu ? (1 - claro) + claro * DV : 1;     // de dia, no céu, o brilho quase se apaga
+    const core = 3.4 + 3.6 * BR, halo = core * (4.6 - 1.4 * claro);
+    corpo = `<defs><radialGradient id="${gid}"><stop offset="0%" stop-color="#fff" stop-opacity="${(0.95 * vis).toFixed(3)}"/><stop offset="30%" stop-color="#fff" stop-opacity="${((0.4 * BR + 0.1) * vis).toFixed(3)}"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="${x}" cy="${y}" r="${halo.toFixed(1)}" fill="url(#${gid})"/>
+      <circle cx="${x}" cy="${y}" r="${(core * 0.7).toFixed(1)}" fill="#fff" fill-opacity="${Math.min(1, vis * 1.6).toFixed(3)}"/>`
+      + glifoSilhuetaCeu(id, x + lado * 27, y - 24, 30, corGlifo, corContorno, 2);
+  }
+  return corpo;
+}
+
 /* FUNDO DE TELA DO TEMA CÉU — o céu continua pra fora da imagem da
    mandala (em vez do roxo liso do fundo). É o MESMO desenho da imagem
    (mesmas cores, mesmas estrelas), só num SVG bem maior, usado como
@@ -1701,6 +1766,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
     corDisco: tinta.fundoDisco
   } : null;
+  if (ceuParams) { const t = Math.max(0, Math.min(1, (ceuParams.elevacao + 0.10) / 0.60)); ceuParams.dia = t * t * (3 - 2 * t); }
   const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
@@ -1974,10 +2040,26 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      const planetSvgContent = planetIconFragment(item.id);
       let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      let iconeSvg;
+      if (temaCeu) {
+        // Tema Céu: ponto de luz + glifo ao lado (ver desenharPlanetaCeuSVG). Acima do
+        // horizonte (metade de cima do referencial girado) vale o dia/noite do Sol.
+        const rad = -skyRotation * Math.PI / 180, dx = pPos.x - cx, dy = pPos.y - cy;
+        const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
+        const sunAbs = pObj.Sun.abs, moonAbs = pObj.Moon.abs;
+        const elong = ((moonAbs - sunAbs) % 360 + 360) % 360;
+        iconeSvg = `<g transform="translate(${-pPos.x}, ${-pPos.y})">${desenharPlanetaCeuSVG({
+          id: item.id, x: pPos.x, y: pPos.y, dia: ceuParams.dia, noCeu: yRot < 0, elevacao: ceuParams.elevacao,
+          lado: pPos.x >= cx ? 1 : -1,
+          luaFrac: (1 - Math.cos(elong * Math.PI / 180)) / 2, luaCrescente: elong < 180,
+          luaInvertida: (currentGeo && currentGeo.lat < 0)
+        })}</g>`;
+      } else {
+        iconeSvg = `<g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(item.id)}</g>`;
+      }
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
+        ${iconeSvg}
         <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
