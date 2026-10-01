@@ -1006,6 +1006,15 @@ function coresCabecalhoPapiro() {
   };
 }
 
+/* CABEÇALHO "TINTA SOBRE A FOLHA" (Tema Céu): mesmas cores de tinta do cabeçalho em papiro, mas SEM
+   papel nem recorte — pra ferramentas cuja tela já é uma folha de papiro (o papiro do cabeçalho
+   ficaria "papel em cima de papel"). O papiro recortado continua pro cabeçalho que flutua direto
+   no céu (capa do Relatório, imagem da Mandala). Quem quer a tinta pede com
+   opcoes.tintaSobreFolha em montarCabecalhoMandalaImagemHTML. */
+function coresCabecalhoTinta() {
+  return Object.assign(coresCabecalhoPapiro(), { fundo: 'none', borda: 'none', papiro: false });
+}
+
 /* Borda "rasgada" do papiro: um polígono que ocupa o MESMO retângulo do
    cabeçalho (x=15, largura w, altura h), só que com as bordas irregulares
    — recuo de 0 a ~4px, sempre pra DENTRO, então nada sai da área original
@@ -1217,7 +1226,8 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1, opcoes)
 
 function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const cores = coresCabecalhoMandala(modoEscuro, null);
+  const tintaSobreFolha = !!(opcoes && opcoes.tintaSobreFolha) && window.temaMandala === 'ceu';
+  const cores = tintaSobreFolha ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   /* SVG DIRETO na página (não <img>): o Safari do iPad não desenhava certo
      SVG-dentro-de-<img> na captura (saía vazio/cortado). Direto na página
      é o mesmo tipo de desenho da tabela do Painel Técnico, que captura
@@ -1226,7 +1236,10 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
      isolada e por isso também não usa Cinzel/Montserrat. */
   const largura = (opcoes && opcoes.largura) || 960;
   const layout = montarCabecalhoMandalaLayout(data, 2, cores, opcoes && opcoes.loteCasa1, opcoes);
-  const grupo = (cores.papiro ? aplicarPapiroNoCabecalhoSVG(layout.svg) : layout.svg)
+  /* Tinta sobre a folha: duas linhas finas de tinta (em cima e embaixo) separam o cabeçalho do resto da folha. */
+  const regua = y => `<line x1="15" y1="${y}" x2="${largura - 15}" y2="${y}" stroke="#1a1410" stroke-opacity="0.55" stroke-width="1"/>`;
+  const svgCab = tintaSobreFolha ? regua(1) + layout.svg + regua(layout.altura + 3) : layout.svg;
+  const grupo = (cores.papiro ? aplicarPapiroNoCabecalhoSVG(svgCab) : svgCab)
     .replace(/'Cinzel', serif/g, 'serif')
     .replace(/'Montserrat', sans-serif/g, 'sans-serif');
   const altura = layout.altura + 4;

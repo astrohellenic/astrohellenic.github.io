@@ -233,7 +233,7 @@ function calcularDadosMatrizVisibilidade(data) {
    da vista, sai rolando a PÁGINA de verdade, não ficando preso atrás de
    uma caixa.
 
-   O cabeçalho colado embaixo da grade é o GLOBAL (`montarCabecalhoMandalaImagemHTML`,
+   O cabeçalho (entre o título e a grade; no Tema Céu, em "tinta sobre a folha") é o GLOBAL (`montarCabecalhoMandalaImagemHTML`,
    mandala.js), chamado direto. */
 function renderMatrizVisibilidadeResponsivaHTML(data) {
   const { colunas, posicoes } = calcularDadosMatrizVisibilidade(data);
@@ -245,10 +245,10 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
 
   return `
     <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+    ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
     </div>
-    ${montarCabecalhoMandalaImagemHTML(data)}
   `;
 }
 
