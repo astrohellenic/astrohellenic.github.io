@@ -1273,6 +1273,91 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
 }
 window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 
+/* CÉU DO TEMA CÉU (cores do site falandodeastrologia) — só pintura.
+   Acima do horizonte ASC-DSC é TUDO céu, até as bordas da imagem; abaixo é
+   o espaço (noite). A cor do céu acompanha a altura do Sol (elevacao, de
+   -1 = Sol no IC a +1 = Sol no MC, contínua): noite -> amanhecer/pôr do sol
+   (mancha laranja, do lado do Sol: ladoSol +1 = lado do ASC, -1 = lado do
+   DSC) -> dia claro ao meio-dia. Estrelas só onde é noite: no espaço (abaixo
+   do horizonte) sempre; no céu só quando o Sol está abaixo do horizonte.
+   Sem <mask> (não funciona no caminho Blob->img em alguns celulares): só
+   gradientes, círculos e transformação de rotação. "soHalo" (capa do
+   Relatório): só o halo do céu em volta do disco, sem espaço nem estrelas,
+   porque o fundo da capa já é o céu do site (CSS). */
+function montarCeuMandalaSVG(o) {
+  const { cx, cy, width, height, termos, raioCeu, skyRotation, elevacao, ladoSol, corDisco, soHalo } = o;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const suave = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const misturar = (c1, c2, t) => { const a = hex2rgb(c1), b = hex2rgb(c2); return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+
+  const dia = suave(-0.10, 0.50, elevacao);                 // 0 = noite, 1 = dia pleno
+  const crepusculo = Math.exp(-Math.pow((elevacao - 0.02) / 0.2, 2)); // pico com o Sol no horizonte
+  const noiteEstrelas = 1 - suave(-0.14, 0.06, elevacao);   // estrelas no céu só de noite
+
+  const NOITE = ['#41377a', '#2a3774', '#18285c', '#0f1a45', '#070d25'];
+  const DIA = ['#eaf6fc', '#bfe0f5', '#7db8e6', '#3f74bb', '#2b5aa6'];
+  const CREP = ['#f0b98d', '#c27f94', '#6a4f93', '#2f3274', '#101a48']; // pêssego -> rosa -> violeta -> índigo (amanhecer/pôr do sol)
+  const aCrep = suave(-0.16, 0.0, elevacao); // noite -> crepúsculo
+  const aDia = suave(0.0, 0.5, elevacao);    // crepúsculo -> dia
+  const pontos = [0, 0.3, 0.55, 0.78, 1];
+  const raioTotal = Math.hypot(Math.max(cx, width - cx), Math.max(cy, height - cy));
+  const rIni = termos / raioTotal * 100;
+  const alcance = soHalo ? raioCeu : raioTotal;
+  const stops = pontos.map((p, i) => {
+    const cor = misturar(misturar(NOITE[i], CREP[i], aCrep), DIA[i], aDia);
+    const op = soHalo && i === pontos.length - 1 ? 0 : 1;
+    return `<stop offset="${(soHalo ? (termos / raioCeu * 100 + p * (100 - termos / raioCeu * 100)) : (rIni + p * (100 - rIni))).toFixed(2)}%" stop-color="${cor}" stop-opacity="${op}"/>`;
+  }).join('');
+  const corGlow = misturar('#e8702c', '#ffe2a8', dia);
+  const forcaGlow = (0.95 * crepusculo * (1 - 0.45 * dia)).toFixed(3);
+  const rGlow = raioCeu * 0.95;
+  const glowX = cx - ladoSol * (raioCeu * 0.55);
+
+  let defs = `<radialGradient id="ceuEspaco" cx="${cx}" cy="${cy}" r="${raioTotal.toFixed(0)}" gradientUnits="userSpaceOnUse">
+        <stop offset="${rIni.toFixed(2)}%" stop-color="#1c2552"/><stop offset="45%" stop-color="#101842"/><stop offset="100%" stop-color="#070d25"/>
+      </radialGradient>
+      <radialGradient id="ceuAzul" cx="${cx}" cy="${cy}" r="${alcance.toFixed(0)}" gradientUnits="userSpaceOnUse">${stops}</radialGradient>
+      <radialGradient id="ceuGlow" cx="${glowX.toFixed(1)}" cy="${cy}" r="${rGlow.toFixed(0)}" gradientUnits="userSpaceOnUse" gradientTransform="translate(${glowX.toFixed(1)} ${cy}) scale(1 0.7) translate(${(-glowX).toFixed(1)} ${-cy})">
+        <stop offset="0%" stop-color="${corGlow}" stop-opacity="${forcaGlow}"/><stop offset="40%" stop-color="${corGlow}" stop-opacity="${(forcaGlow * 0.45).toFixed(3)}"/><stop offset="100%" stop-color="${corGlow}" stop-opacity="0"/>
+      </radialGradient>
+      <clipPath id="ceuMeia"><rect x="${cx - 4000}" y="${cy - 4000}" width="8000" height="4000"/></clipPath>`;
+
+  // Estrelas: posições fixas (gerador determinístico, nunca aleatório de verdade).
+  let semente = 20260930;
+  const rnd = () => { semente = (semente + 0x6D2B79F5) | 0; let t = Math.imul(semente ^ (semente >>> 15), 1 | semente); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const cores = ['#dfe8ff', '#f6e7b4', '#ffffff'];
+  let estrelasCeu = '', estrelasEspaco = '';
+  const meio = Math.ceil(raioTotal);
+  for (let i = 0; i < 520; i++) {
+    const x = cx - meio + rnd() * meio * 2, y = cy - meio + rnd() * meio * 2;
+    const grande = rnd() < 0.16, cor = cores[Math.floor(rnd() * 3)], opac = (0.55 + rnd() * 0.45).toFixed(2), raio = ((grande ? 2.1 : 1.2) * (0.8 + rnd() * 0.5)).toFixed(2);
+    if (Math.hypot(x - cx, y - cy) < termos + 14) continue;
+    const c = `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${raio}" fill="${cor}" fill-opacity="${opac}"/>`;
+    if (y < cy) estrelasCeu += c; else estrelasEspaco += c;
+  }
+
+  let corpo;
+  if (soHalo) {
+    corpo = `<!-- Céu só como halo (capa do Relatório): o fundo é o céu do site, via CSS. -->
+    <circle cx="${cx}" cy="${cy}" r="${termos}" fill="${corDisco}"/>
+    <g transform="rotate(${skyRotation} ${cx} ${cy})"><g clip-path="url(#ceuMeia)"><circle cx="${cx}" cy="${cy}" r="${raioCeu}" fill="url(#ceuAzul)"/></g></g>`;
+  } else {
+    corpo = `<!-- ESPAÇO (abaixo do horizonte) e CÉU (acima, até as bordas), girando junto com a casa 1. -->
+    <rect width="${width}" height="${height}" fill="url(#ceuEspaco)"/>
+    <g transform="rotate(${skyRotation} ${cx} ${cy})">
+      ${estrelasEspaco}
+      <g clip-path="url(#ceuMeia)">
+        <rect x="${cx - 4000}" y="${cy - 4000}" width="8000" height="4000" fill="url(#ceuAzul)"/>
+        <rect x="${cx - 4000}" y="${cy - 4000}" width="8000" height="4000" fill="url(#ceuGlow)"/>
+        <g opacity="${noiteEstrelas.toFixed(3)}">${estrelasCeu}</g>
+      </g>
+    </g>
+    <circle cx="${cx}" cy="${cy}" r="${termos}" fill="${corDisco}"/>`;
+  }
+  return { defs, corpo };
+}
+
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
@@ -1542,6 +1627,15 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
 
+  /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
+     aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
+  const solAngulo = ((pObj.Sun.abs - ascAbs + 360) % 360) * Math.PI / 180;
+  const ceuMandala = temaCeu ? montarCeuMandalaSVG({
+    cx, cy, width, height, termos: R.Termos, raioCeu: R_Ceu, skyRotation,
+    elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
+    corDisco: tinta.fundoDisco, soHalo: !!espacoTransparente
+  }) : { defs: '', corpo: '' };
+
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- BRILHO DE COMBUSTÃO / SOB OS RAIOS (halo ao redor do Sol) -->
@@ -1552,32 +1646,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
         <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
       </radialGradient>
 
-      <!-- CÉU (metade do lado do MC/acima do horizonte ASC-DSC) e ESPAÇO
-           SIDERAL (metade do lado do IC), na faixa de fora dos termos até
-           R_Ceu — raio grande o bastante para sempre cobrir o planeta mais
-           distante desse mapa. O primeiro stop fica exatamente na borda
-           interna dessa faixa (R.Termos), então tudo que se vê vai do tom
-           mais claro, perto do horizonte, ao tom-base, mais saturado, perto
-           da borda — uma perspectiva atmosférica simples. Nos últimos 20%
-           o céu perde opacidade até ficar transparente, revelando o espaço
-           sideral por baixo aos poucos — só na borda externa; a linha do
-           horizonte (onde o céu encontra o espaço lateralmente) continua
-           nítida, pois ali é o corte reto do próprio path. -->
-      ${temaCeu ? `
-      <radialGradient id="skyGradDay" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#eafdff" stop-opacity="1" />
-        <stop offset="80%" stop-color="#C5F4FF" stop-opacity="1" />
-        <stop offset="100%" stop-color="#C5F4FF" stop-opacity="0" />
-      </radialGradient>
-      <radialGradient id="skyGradNight" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3c4d7c" stop-opacity="1" />
-        <stop offset="80%" stop-color="#273568" stop-opacity="1" />
-        <stop offset="100%" stop-color="#273568" stop-opacity="0" />
-      </radialGradient>
-      <radialGradient id="spaceGrad" cx="${cx}" cy="${cy}" r="${R_Ceu}" gradientUnits="userSpaceOnUse">
-        <stop offset="${(R.Termos / R_Ceu * 100).toFixed(2)}%" stop-color="#3a1b66" />
-        <stop offset="100%" stop-color="#1A073F" />
-      </radialGradient>` : ''}
+      ${temaCeu ? ceuMandala.defs : ''}
     </defs>
 
     <rect width="${width}" height="${height}" fill="${espacoTransparente ? 'transparent' : fundoDiscoEfetivo}"/>
@@ -1601,23 +1670,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
          bastante pra cobrir até o planeta/glow mais distante do mapa
          (é pra isso que ele foi calculado, mais acima). -->
     <circle cx="${cx}" cy="${cy}" r="${R_Ceu}" fill="${corCirculoForcada}"/>` : ''}
-${temaCeu ? `
-    <!-- Espaço sideral: cobre tudo fora do anel dos termos, em qualquer
-         direção, até a borda da tela (o "furo" no meio, via fill-rule
-         evenodd, é o disco interno — signos, dodecatemoria, termos — que
-         continua branco, intocado). Não gira: já cobre as duas metades por
-         igual, então a orientação do horizonte não importa para ele. -->
-    ${espacoTransparente ? `<!-- "espacoTransparente" (só a capa do Relatório): sem o retângulo roxo do espaço sideral — o céu de fundo é o da própria capa (CSS, ver .rel-capa-ceu). Só o disco interno continua sólido (branco), como sempre foi. -->
-    <circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="${tinta.fundoDisco}"/>` : `<path fill-rule="evenodd" d="M 0 0 H ${width} V ${height} H 0 Z
-      M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx - R.Termos} ${cy} Z" fill="url(#spaceGrad)"/>`}
-
-    <!-- Céu: a faixa entre o anel dos termos e R_Ceu, do lado do MC (acima
-         do horizonte ASC-DSC) — desenhado por cima do espaço sideral. Gira
-         junto com o botão de "casa 1" (skyRotation), para acompanhar o
-         horizonte real quando ele deixa de ser exatamente horizontal. -->
-    <g transform="rotate(${skyRotation} ${cx} ${cy})">
-      <path d="M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} L ${cx + R_Ceu} ${cy} A ${R_Ceu} ${R_Ceu} 0 0 0 ${cx - R_Ceu} ${cy} Z" fill="url(#${isDay ? 'skyGradDay' : 'skyGradNight'})"/>
-    </g>` : ''}`;
+${temaCeu ? ceuMandala.corpo : ''}`;
 
   const headerTitle = currentSubjectName;
 
