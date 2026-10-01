@@ -76,8 +76,12 @@ function getItemSVG(key, tamanho = 20) {
 function getAnguloCirculoSVG(label, tamanho = 24) {
   if (typeof getIconeFragmento !== 'function') return `<span style="font-size: 11px; font-weight: bold;">${label}</span>`;
   const frag = getIconeFragmento('outro', 'angulo');
-  const fundo = getIconeFundoSilhueta('outro', 'angulo', 'var(--bg-card)');
-  return `<svg width="${tamanho}" height="${tamanho}" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><g>${fundo}${frag}</g><text x="50" y="58" font-size="16" font-weight="900" fill="var(--aspect-conjuncao)" text-anchor="middle">${label}</text></svg>`;
+  /* Tema Céu: triângulo todo preenchido de azul-tinta e letras em terracota (sem o fundo claro).
+     É ESTA função que desenha ASC/DSC/MC/IC em todas as ferramentas e no botão da Mandala — a cor
+     é decidida só aqui, pra nunca ficar diferente de um lugar pro outro. */
+  const ceu = typeof temaCeuAtivoNosIcones === 'function' && temaCeuAtivoNosIcones();
+  const fundo = getIconeFundoSilhueta('outro', 'angulo', ceu ? '#1d3a66' : 'var(--bg-card)');
+  return `<svg width="${tamanho}" height="${tamanho}" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><g>${fundo}${frag}</g><text x="50" y="58" font-size="16" font-weight="900" fill="${ceu ? '#a03e25' : 'var(--aspect-conjuncao)'}" text-anchor="middle">${label}</text></svg>`;
 }
 
 /* NOMES POR EXTENSO DE CADA PONTO, PARA A COLUNA "PONTO" DO PAINEL TÉCNICO */
