@@ -1419,7 +1419,6 @@ function montarBandaZodiacoCeuSVG(o) {
   const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos } = o;
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
-  const noCeuEm = (x, y) => { const rad = -skyRotation * Math.PI / 180; return ((x - cx) * Math.sin(rad) + (y - cy) * Math.cos(rad)) < 0; };
   const refSignIdx = Math.floor(ref / 30);
   let svg = '';
   for (let i = 0; i < 12; i++) {
@@ -1443,8 +1442,6 @@ function montarBandaZodiacoCeuSVG(o) {
   }
   const grupoTinta = (cor, clip) => `<g clip-path="url(#${clip})" stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
   svg += grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo');
-  const pL = P(rIn + 44, eclToScreenAngle(ref + 75, ref));
-  svg += `<text x="${pL.x.toFixed(1)}" y="${pL.y.toFixed(1)}" font-family="sans-serif" font-size="10" letter-spacing="3" fill="${noCeuEm(pL.x, pL.y) ? tintaCima : tintaBaixo}" fill-opacity=".8" text-anchor="middle">ECLÍPTICA</text>`;
   return svg;
 }
 
@@ -1917,9 +1914,12 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
   }
 
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
+  // Tema Céu: as divisas dos termos e da dodecatemória são tracejadas (foram postas ali, não são do céu); os dentinhos ficam sólidos.
+  const tracejadoCeu = temaCeu ? ' stroke-dasharray="6 4"' : '';
+  const tracejadoFinoCeu = temaCeu ? ' stroke-dasharray="3 3"' : '';
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"${tracejadoCeu}/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
 
   /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
      estrutura da mandala (círculos, raios, dentinhos) sempre por trás
@@ -1943,7 +1943,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     for (let d = 0; d < 12; d++) {
       const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
+      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"${tracejadoFinoCeu}/>`;
     }
   }
 
@@ -1952,7 +1952,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     EGYPTIAN_TERMS[s].forEach(term => {
       const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
+      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
       prev = term.deg;
     });
   }
