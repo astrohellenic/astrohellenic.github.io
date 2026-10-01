@@ -687,8 +687,13 @@ body {
            (não em #main-stage nem em body), então nunca aparece nas
            outras ferramentas — e a barra superior fixa, que tem fundo
            creme próprio, continua por cima sem ser afetada. */
+        /* Tema Céu: o céu é o fundo do #main-stage inteiro (pintado por JS, ver
+           configurarFundoCeuDaTela em mandala.js) — por isso a área da mandala fica sem fundo
+           próprio e nada em volta (moldura, lados da barra) fica branco. */
+        body.tema-ceu { background-color: #070d25; }
+        body.tema-ceu #main-stage { background-color: #070d25; }
         body.tema-ceu #mandala-screen {
-            background-color: #070d25;
+            background-color: transparent;
         }
 
         /* TEMA CÉU: barra superior em papiro (em todas as ferramentas — o Tema Céu é do
@@ -1227,7 +1232,7 @@ body {
 <script src="planetIcons.js?v=20260930a"></script>
 <script src="matrizVisibilidade.js?v=20260930a"></script>
 <script src="tabelaTecnica.js?v=20260930a"></script>
-<script src="mandala.js?v=20261001p"></script>
+<script src="mandala.js?v=20261001q"></script>
 <script src="isopsefia.js?v=20260930a"></script>
 <script src="profeccao.js?v=20260930d"></script>
 <script src="sinastria.js?v=20260930c"></script>

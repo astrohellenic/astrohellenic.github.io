@@ -1390,38 +1390,45 @@ function configurarFundoCeuDaTela(container, params) {
   if (window.fundoCeuTelaUrl) { URL.revokeObjectURL(window.fundoCeuTelaUrl); window.fundoCeuTelaUrl = null; }
   window.fundoCeuTelaParams = null;
   if (!container) return;
+  /* O céu é o fundo do PALCO inteiro (#main-stage), não só do container da mandala: assim também
+     cobre a moldura de 10px em volta e os lados da barra fixa, em qualquer ferramenta — nada de
+     borda branca. O container fica sem fundo próprio. */
+  const alvo = document.getElementById('main-stage') || container;
+  container.style.backgroundImage = '';
+  container.style.backgroundColor = '';
   if (!params) {
-    container.style.backgroundImage = '';
-    container.style.backgroundColor = '';
+    alvo.style.backgroundImage = '';
+    alvo.style.backgroundColor = '';
     return;
   }
   const EXT = 1800;
   window.fundoCeuTelaUrl = URL.createObjectURL(new Blob([montarFundoCeuSVG(params, EXT)], { type: 'image/svg+xml;charset=utf-8' }));
   window.fundoCeuTelaParams = { cx: params.cx, cy: params.cy, width: params.width, ext: EXT };
-  container.style.backgroundImage = `url("${window.fundoCeuTelaUrl}")`;
-  container.style.backgroundRepeat = 'no-repeat';
-  container.style.backgroundAttachment = 'local';
-  container.style.backgroundColor = '#070d25';
+  alvo.style.backgroundImage = `url("${window.fundoCeuTelaUrl}")`;
+  alvo.style.backgroundRepeat = 'no-repeat';
+  alvo.style.backgroundAttachment = 'scroll';
+  alvo.style.backgroundColor = '#070d25';
   alinharFundoCeuTela();
   const img = document.getElementById('mandalaImg');
   if (img && !img.complete) img.addEventListener('load', alinharFundoCeuTela, { once: true });
+  if (!container.dataset.ceuScroll) { container.dataset.ceuScroll = '1'; container.addEventListener('scroll', () => alinharFundoCeuTela(), { passive: true }); }
   requestAnimationFrame(alinharFundoCeuTela);
 }
 
 /* Posiciona/escala o fundo pra o centro dele coincidir com o centro da roda
-   na tela (considera tamanho exibido, zoom e rolagem). */
+   na tela (considera tamanho exibido, zoom e rolagem do container). */
 function alinharFundoCeuTela() {
   const p = window.fundoCeuTelaParams;
-  const container = document.getElementById('mandala-container');
+  const alvo = document.getElementById('main-stage');
   const img = document.getElementById('mandalaImg');
-  if (!p || !container || !img) return;
-  const r = img.getBoundingClientRect(), cr = container.getBoundingClientRect();
+  if (!p || !alvo || !img) return;
+  const r = img.getBoundingClientRect(), ar = alvo.getBoundingClientRect();
   if (!r.width) return;
   const escala = r.width / p.width;
-  const x = r.left - cr.left - container.clientLeft + container.scrollLeft;
-  const y = r.top - cr.top - container.clientTop + container.scrollTop;
-  container.style.backgroundSize = `${(2 * p.ext * escala).toFixed(1)}px ${(2 * p.ext * escala).toFixed(1)}px`;
-  container.style.backgroundPosition = `${(x + (p.cx - p.ext) * escala).toFixed(1)}px ${(y + (window.fundoCeuTelaParams.cy - p.ext) * escala).toFixed(1)}px`;
+  const x = r.left - ar.left - alvo.clientLeft + alvo.scrollLeft;
+  const y = r.top - ar.top - alvo.clientTop + alvo.scrollTop;
+  alvo.style.backgroundSize = `${(2 * p.ext * escala).toFixed(1)}px ${(2 * p.ext * escala).toFixed(1)}px`;
+  alvo.style.backgroundPosition = `${(x + (p.cx - p.ext) * escala).toFixed(1)}px ${(y + (p.cy - p.ext) * escala).toFixed(1)}px`;
 }
 window.alinharFundoCeuTela = alinharFundoCeuTela;
 window.addEventListener('resize', () => alinharFundoCeuTela());
