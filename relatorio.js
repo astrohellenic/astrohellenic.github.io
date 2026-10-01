@@ -4197,16 +4197,38 @@ function injetarEstilosRelatorio() {
          já existe, só recolorida) mais um fio preto por FORA via outline
          (não ocupa espaço) — o "filete duplo" dos papiros egípcios. */
       .rel-tema-papiro .rel-corpo p, .rel-tema-papiro .rel-corpo ul, .rel-tema-papiro .rel-corpo ol { color: #1a1410; }
-      .rel-tema-papiro .rel-h1, .rel-tema-papiro .rel-corpo h2 { color: #1a1410; border-color: #a03e25; background: rgba(235,215,170,0.30); outline: 1px solid #1a1410; outline-offset: 2px; }
-      .rel-tema-papiro .rel-corpo h3, .rel-tema-papiro .rel-num-pagina, .rel-tema-papiro .rel-num-pagina-canto { color: #8a3220; }
+      /* Só os recursos de ESCRITA do papiro: tinta preta, terracota (rubrica) e azul-tinta, traços e filetes —
+         nada de caixas/células com um tom de fundo próprio por cima do papel (por isso transparent). */
+      .rel-tema-papiro .rel-h1, .rel-tema-papiro .rel-corpo h2 { color: #1a1410; border-color: #a03e25; background: transparent; outline: 1px solid #1a1410; outline-offset: 2px; }
+      .rel-tema-papiro .rel-corpo h3, .rel-tema-papiro .rel-num-pagina, .rel-tema-papiro .rel-num-pagina-canto { color: #a03e25; }
       .rel-tema-papiro .rel-titulo-captura, .rel-tema-papiro .rel-rodape-nome { color: #1a1410; }
       .rel-tema-papiro .rel-legenda-mandala { color: #2a2118; }
       .rel-tema-papiro .rel-indice li { color: #1a1410; border-bottom-color: rgba(26,20,16,0.4); }
       .rel-tema-papiro .rel-rodape-astrologo { border-top-color: #a03e25; color: #1a1410; }
       .rel-tema-papiro .rel-tabela-caixa { border-color: #1d3a66; }
-      .rel-tema-papiro .tabela-enxuta { background: rgba(235,215,170,0.25); color: #1a1410; }
+      .rel-tema-papiro .tabela-enxuta { background: transparent; color: #1a1410; }
       .rel-tema-papiro .tabela-enxuta th, .rel-tema-papiro .tabela-enxuta td { border-color: #1d3a66; }
-      .rel-tema-papiro .tabela-enxuta th { background-color: rgba(235,215,170,0.4); color: #1d3a66; }
+      .rel-tema-papiro .tabela-enxuta th { background-color: transparent; color: #1d3a66; }
+      .rel-tema-papiro .rel-captura-faltando { color: #a03e25; }
+
+      /* TEMA CÉU — a "mesa" atrás das folhas é o próprio céu do site (não o cinza da prévia comum), e a
+         barra de cima (Voltar / Baixar PDF) é um pedaço de papiro com borda rasgada, botões só de
+         contorno e letra de tinta (azul no Voltar, terracota no Baixar PDF). SÓ PINTURA. */
+      body.tema-ceu .rel-viewer { background: transparent; }
+      body.tema-ceu .rel-toolbar {
+        background:
+          radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.22) 100%),
+          radial-gradient(ellipse at 10% 25%, rgba(240,222,180,0.45) 0%, transparent 45%),
+          repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+          repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+          linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%);
+        border-bottom-color: transparent;
+        clip-path: polygon(0 0, 100% 0, calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px), 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px), 4px 70%, 0 45%, 3px 22%);
+      }
+      body.tema-ceu .rel-toolbar .btn-secondary,
+      body.tema-ceu .rel-toolbar .btn-primary { background: transparent; border: 1.5px solid #1d3a66; color: #1d3a66; }
+      body.tema-ceu .rel-toolbar .btn-primary { border-color: #a03e25; color: #a03e25; }
+      body.tema-ceu .rel-toolbar .btn-secondary:hover, body.tema-ceu .rel-toolbar .btn-primary:hover { background: rgba(120, 80, 30, 0.14); }
 
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }
