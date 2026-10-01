@@ -854,7 +854,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   const dia = String(currentMoment.getDate()).padStart(2, '0');
   const hora = String(currentMoment.getHours()).padStart(2, '0');
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
-  const headerTitle = currentCustomCode ? `${currentCustomCode} - ${currentSubjectName}` : currentSubjectName;
+  const headerTitle = currentSubjectName; // só o nome: o código do cliente não aparece mais no cabeçalho
 
   // Pré-seleciona o último modelo que o astrólogo escolheu (guardado no
   // navegador) em vez de sempre voltar pro primeiro da lista — sem isso,
@@ -901,9 +901,9 @@ function renderRelatorioSetup(container, presets, rascunhos) {
       </h3>
 
       <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas — assim também vira papiro no Tema Céu).
-           O título leva o código do cliente ("código - nome"), que esta tela sempre mostrou. -->
+           Sem código do cliente: só o nome, igual às outras ferramentas. -->
       ${(typeof montarCabecalhoMandalaImagemHTML === 'function' && currentCalculatedData)
-        ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { titulo: headerTitle })
+        ? montarCabecalhoMandalaImagemHTML(currentCalculatedData)
         : `<div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px;"><div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}</div></div>`}
       </div>
 
