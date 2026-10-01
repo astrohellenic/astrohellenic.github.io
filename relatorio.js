@@ -3237,7 +3237,7 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
   const coresCapaParaMandala = resolverCoresCapaRelatorio(blocoCapa);
   const corCabecalhoCapa = coresCapaParaMandala.corCabecalho;
   const temaCeuAtivo = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
-  const precisaCapaSeparada = !temaCeuAtivo && (capaFonte === 'mandala_natal' || capaFonte === 'mandala_fortuna');
+  const precisaCapaSeparada = (capaFonte === 'mandala_natal' || capaFonte === 'mandala_fortuna');
   // O "círculo atrás da mandala" (medalhão) é desenhado DENTRO do SVG,
   // no mesmo centro matemático (cx/cy) que a roda inteira já usa (ver
   // corCirculoForcada em renderMandala/mandala.js) — nunca por CSS em
@@ -3251,14 +3251,18 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
     selectedHouse1Lot = 'ASC';
     png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
-      png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
+      png1Capa = await new Promise(resolve => temaCeuAtivo
+        ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o fundo é o céu do site, via CSS) e cabeçalho em papiro
+        : renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
     }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
     png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
-      png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
+      png2Capa = await new Promise(resolve => temaCeuAtivo
+        ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o fundo é o céu do site, via CSS) e cabeçalho em papiro
+        : renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
     }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
@@ -4039,7 +4043,16 @@ function injetarEstilosRelatorio() {
       /* CAPA com o tema "Céu": fundo roxo (a mesma cor de fundo que a
          mandala usa nesse tema) e o título em dourado em vez de azul.
          Só a capa muda — as páginas da Mandala 1/2 continuam iguais. */
-      .rel-capa.rel-capa-ceu { background: #1A073F; }
+      /* Céu do site (falandodeastrologia, home.css): degradê azul-noite -> roxo,
+         mancha laranja só no pé e estrelas — só fundo (pintura). As estrelas
+         são um SVG de uma camada só, repetido na horizontal (repeat-x), que só
+         ocupa o alto da folha e some pra baixo, como no site. */
+      .rel-capa.rel-capa-ceu {
+        background:
+          url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='760' height='900'><circle cx='124' cy='199' r='0.88' fill='%23dfe8ff' fill-opacity='0.79'/><circle cx='83' cy='463' r='0.85' fill='%23ffffff' fill-opacity='0.65'/><circle cx='77' cy='141' r='0.80' fill='%23dfe8ff' fill-opacity='0.82'/><circle cx='322' cy='75' r='0.94' fill='%23dfe8ff' fill-opacity='0.86'/><circle cx='471' cy='530' r='0.85' fill='%23dfe8ff' fill-opacity='0.61'/><circle cx='302' cy='333' r='0.99' fill='%23dfe8ff' fill-opacity='0.72'/><circle cx='111' cy='323' r='0.80' fill='%23ffffff' fill-opacity='0.72'/><circle cx='238' cy='90' r='0.94' fill='%23dfe8ff' fill-opacity='0.85'/><circle cx='428' cy='82' r='0.72' fill='%23dfe8ff' fill-opacity='0.86'/><circle cx='61' cy='318' r='0.67' fill='%23dfe8ff' fill-opacity='0.73'/><circle cx='399' cy='291' r='0.92' fill='%23f6e7b4' fill-opacity='0.74'/><circle cx='342' cy='338' r='0.75' fill='%23dfe8ff' fill-opacity='0.71'/><circle cx='191' cy='398' r='0.85' fill='%23ffffff' fill-opacity='0.68'/><circle cx='263' cy='290' r='0.81' fill='%23ffffff' fill-opacity='0.74'/><circle cx='100' cy='547' r='0.80' fill='%23f6e7b4' fill-opacity='0.60'/><circle cx='368' cy='108' r='0.66' fill='%23ffffff' fill-opacity='0.84'/><circle cx='418' cy='68' r='0.93' fill='%23f6e7b4' fill-opacity='0.86'/><circle cx='268' cy='208' r='0.82' fill='%23f6e7b4' fill-opacity='0.79'/><circle cx='83' cy='64' r='0.74' fill='%23ffffff' fill-opacity='0.87'/><circle cx='59' cy='380' r='0.90' fill='%23ffffff' fill-opacity='0.69'/><circle cx='507' cy='334' r='0.81' fill='%23ffffff' fill-opacity='0.72'/><circle cx='498' cy='232' r='0.66' fill='%23f6e7b4' fill-opacity='0.77'/><circle cx='456' cy='216' r='0.82' fill='%23dfe8ff' fill-opacity='0.78'/><circle cx='109' cy='435' r='0.74' fill='%23f6e7b4' fill-opacity='0.66'/><circle cx='374' cy='514' r='0.71' fill='%23f6e7b4' fill-opacity='0.62'/><circle cx='653' cy='319' r='0.94' fill='%23ffffff' fill-opacity='0.72'/><circle cx='315' cy='175' r='0.78' fill='%23f6e7b4' fill-opacity='0.80'/><circle cx='124' cy='536' r='0.71' fill='%23dfe8ff' fill-opacity='0.61'/><circle cx='24' cy='377' r='0.94' fill='%23dfe8ff' fill-opacity='0.69'/><circle cx='18' cy='167' r='0.80' fill='%23f6e7b4' fill-opacity='0.81'/><circle cx='245' cy='351' r='0.69' fill='%23ffffff' fill-opacity='0.71'/><circle cx='488' cy='532' r='0.91' fill='%23f6e7b4' fill-opacity='0.61'/><circle cx='578' cy='505' r='0.96' fill='%23ffffff' fill-opacity='0.62'/><circle cx='303' cy='235' r='0.69' fill='%23ffffff' fill-opacity='0.77'/><circle cx='153' cy='240' r='0.99' fill='%23f6e7b4' fill-opacity='0.77'/><circle cx='261' cy='113' r='0.67' fill='%23dfe8ff' fill-opacity='0.84'/><circle cx='403' cy='328' r='0.98' fill='%23ffffff' fill-opacity='0.72'/><circle cx='646' cy='41' r='0.86' fill='%23dfe8ff' fill-opacity='0.88'/><circle cx='705' cy='364' r='0.86' fill='%23f6e7b4' fill-opacity='0.70'/><circle cx='628' cy='92' r='1.00' fill='%23f6e7b4' fill-opacity='0.85'/><circle cx='240' cy='282' r='0.70' fill='%23ffffff' fill-opacity='0.74'/><circle cx='206' cy='209' r='0.94' fill='%23dfe8ff' fill-opacity='0.79'/><circle cx='163' cy='301' r='0.98' fill='%23f6e7b4' fill-opacity='0.73'/><circle cx='407' cy='105' r='0.66' fill='%23ffffff' fill-opacity='0.84'/><circle cx='479' cy='185' r='0.68' fill='%23f6e7b4' fill-opacity='0.80'/><circle cx='671' cy='302' r='0.77' fill='%23dfe8ff' fill-opacity='0.73'/><circle cx='578' cy='310' r='0.77' fill='%23dfe8ff' fill-opacity='0.73'/><circle cx='584' cy='353' r='0.92' fill='%23dfe8ff' fill-opacity='0.71'/><circle cx='606' cy='404' r='1.53' fill='%23fff6d0' fill-opacity='0.80'/><circle cx='371' cy='121' r='1.53' fill='%23fff6d0' fill-opacity='0.94'/><circle cx='356' cy='397' r='1.29' fill='%23ffffff' fill-opacity='0.80'/><circle cx='692' cy='236' r='1.64' fill='%23ffffff' fill-opacity='0.88'/><circle cx='89' cy='65' r='1.41' fill='%23ffffff' fill-opacity='0.97'/><circle cx='466' cy='123' r='1.61' fill='%23fff6d0' fill-opacity='0.94'/><circle cx='487' cy='251' r='1.56' fill='%23fff6d0' fill-opacity='0.87'/><circle cx='102' cy='418' r='1.37' fill='%23fff6d0' fill-opacity='0.79'/><circle cx='144' cy='251' r='1.56' fill='%23ffffff' fill-opacity='0.87'/><circle cx='698' cy='68' r='1.52' fill='%23ffffff' fill-opacity='0.97'/><circle cx='699' cy='215' r='1.53' fill='%23fff6d0' fill-opacity='0.89'/><circle cx='35' cy='492' r='1.47' fill='%23ffffff' fill-opacity='0.75'/></svg>") 0 0 / 760px 900px repeat-x,
+          radial-gradient(ellipse 90% 380px at 50% 100%, rgba(232,112,44,0.55) 0%, rgba(196,84,52,0.28) 40%, transparent 100%),
+          linear-gradient(to top, #3a2f5e 0%, #23305f 14%, #15214a 40%, #0d1738 70%, #070d25 100%);
+      }
       .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #d4af37; }
 
       /* PÁGINAS DAS MANDALAS — .rel-img-mandala só tinha limite de LARGURA

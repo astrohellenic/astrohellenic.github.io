@@ -1273,7 +1273,7 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
 }
 window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 
-function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho) {
+function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -1580,7 +1580,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
       </radialGradient>` : ''}
     </defs>
 
-    <rect width="${width}" height="${height}" fill="${fundoDiscoEfetivo}"/>
+    <rect width="${width}" height="${height}" fill="${espacoTransparente ? 'transparent' : fundoDiscoEfetivo}"/>
     ${HEX_RE_MANDALA.test(corCirculoForcada) ? `
     <!-- "MEDALHÃO" ATRÁS DA MANDALA (ver corCirculoForcada, só usado pela
          capa do Relatório) — desenhado exatamente em (cx, cy), o MESMO
@@ -1607,8 +1607,9 @@ ${temaCeu ? `
          evenodd, é o disco interno — signos, dodecatemoria, termos — que
          continua branco, intocado). Não gira: já cobre as duas metades por
          igual, então a orientação do horizonte não importa para ele. -->
-    <path fill-rule="evenodd" d="M 0 0 H ${width} V ${height} H 0 Z
-      M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx - R.Termos} ${cy} Z" fill="url(#spaceGrad)"/>
+    ${espacoTransparente ? `<!-- "espacoTransparente" (só a capa do Relatório): sem o retângulo roxo do espaço sideral — o céu de fundo é o da própria capa (CSS, ver .rel-capa-ceu). Só o disco interno continua sólido (branco), como sempre foi. -->
+    <circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="${tinta.fundoDisco}"/>` : `<path fill-rule="evenodd" d="M 0 0 H ${width} V ${height} H 0 Z
+      M ${cx - R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx + R.Termos} ${cy} A ${R.Termos} ${R.Termos} 0 0 1 ${cx - R.Termos} ${cy} Z" fill="url(#spaceGrad)"/>`}
 
     <!-- Céu: a faixa entre o anel dos termos e R_Ceu, do lado do MC (acima
          do horizonte ASC-DSC) — desenhado por cima do espaço sideral. Gira
