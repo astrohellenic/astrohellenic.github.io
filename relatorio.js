@@ -878,9 +878,9 @@ function renderRelatorioSetup(container, presets, rascunhos) {
       <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 10px;">Relatórios em Andamento</label>
       ${gruposRascunhos.map(g => `
         <div style="margin-bottom: 10px;">
-          <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">${escapeHtml(g.nome)}</div>
+          <div class="rel-setup-cliente" style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">${escapeHtml(g.nome)}</div>
           ${g.itens.map(r => `
-            <div onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? 'var(--bg-main)' : 'var(--bg-card)'};">
+            <div class="rel-setup-rascunho${r.id === currentRascunhoId ? ' rel-setup-rascunho-atual' : ''}" onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? 'var(--bg-main)' : 'var(--bg-card)'};">
               <span style="font-size: 12px; color: var(--text-muted-2);">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
               <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
                 <i class="fa-solid fa-trash" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" style="color: var(--danger); cursor: pointer; font-size: 12px;" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)"></i>
@@ -894,7 +894,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   ` : '';
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="rel-setup-tela" style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
         Relatório
@@ -903,7 +903,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
       <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas — assim também vira papiro no Tema Céu).
            Sem código do cliente: só o nome, igual às outras ferramentas. -->
       ${(typeof montarCabecalhoMandalaImagemHTML === 'function' && currentCalculatedData)
-        ? montarCabecalhoMandalaImagemHTML(currentCalculatedData)
+        ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true })
         : `<div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px;"><div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}</div></div>`}
 
       ${listaRascunhosHTML}
