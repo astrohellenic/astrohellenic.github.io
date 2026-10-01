@@ -2071,11 +2071,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
   const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
+  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${temaCeu ? '#ffffff' : tinta.inkForte}" stroke-width="2.5"${temaCeu ? ' stroke-dasharray="9 6"' : ''}/>`; // Tema Céu: branca tracejada (não faz parte do céu, foi "posta" por cima)
 
   const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
   const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
+  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${temaCeu ? '#ffffff' : tinta.inkForte}" stroke-width="2.5"${temaCeu ? ' stroke-dasharray="9 6"' : ''}/>`;
 
   /* A PARTIR DAQUI SÓ ÍCONE — nada de linha/dentinho novo abaixo disso,
      pra manter a estrutura da roda sempre por trás. */
