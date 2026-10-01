@@ -1408,6 +1408,55 @@ function alinharFundoCeuTela() {
 window.alinharFundoCeuTela = alinharFundoCeuTela;
 window.addEventListener('resize', () => alinharFundoCeuTela());
 
+/* FAIXA DO ZODÍACO NA ECLÍPTICA (só Tema Céu) — os signos viram uma faixa em volta
+   do raio dos planetas (a eclíptica), de ±9° de largura (a latitude dos planetas já
+   desloca o ponto de luz nessa mesma escala, 12 unidades por grau). Cada signo é só
+   um contorno TRACEJADO na cor do elemento (sem preenchimento), com um pequeno recuo,
+   então entre dois signos ficam dois tracejados paralelos. Glifo do signo = o mesmo de
+   sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
+   Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
+function montarBandaZodiacoCeuSVG(o) {
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos } = o;
+  const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
+  const P = (r, a) => polarToCart(cx, cy, r, a);
+  const noCeuEm = (x, y) => { const rad = -skyRotation * Math.PI / 180; return ((x - cx) * Math.sin(rad) + (y - cy) * Math.cos(rad)) < 0; };
+  const refSignIdx = Math.floor(ref / 30);
+  let svg = '';
+  for (let i = 0; i < 12; i++) {
+    const A = eclToScreenAngle(i * 30, ref), a1 = A - INS, a2 = A - 30 + INS, cor = elemCores[signElem[i]];
+    const r1 = rIn + RIN, r2 = rOut - RIN;
+    const q1 = P(r2, a1), q2 = P(r2, a2), q3 = P(r1, a2), q4 = P(r1, a1);
+    svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)} A${r1} ${r1} 0 0 1 ${q4.x.toFixed(1)} ${q4.y.toFixed(1)}Z" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4" stroke-linejoin="round"/>`;
+    const Am = A - 15, pG = P(rOut - 26, Am), pN = P(rIn + 20, Am);
+    svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${cor};">${glifos[i]}</svg>`;
+    svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+  }
+  // linha da eclíptica + marcas de grau (1°, 5°, 10°), em duas tintas: azul-marinho de dia acima
+  // do horizonte, claro à noite e no espaço
+  const tintaCima = misturarHexCeu('#e6eeff', '#1d3a66', dia), tintaBaixo = '#e6eeff';
+  const marcas = { fina: '', media: '', forte: '' };
+  for (let deg = 0; deg < 360; deg++) {
+    const a = eclToScreenAngle(deg, ref), len = deg % 10 === 0 ? 12 : (deg % 5 === 0 ? 8 : 4);
+    const p1 = P(pR - len / 2, a), p2 = P(pR + len / 2, a);
+    const seg = `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)}L${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    if (deg % 10 === 0) marcas.forte += seg; else if (deg % 5 === 0) marcas.media += seg; else marcas.fina += seg;
+  }
+  const grupoTinta = (cor, clip) => `<g clip-path="url(#${clip})" stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
+  svg += grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo');
+  const pL = P(rIn + 44, eclToScreenAngle(ref + 75, ref));
+  svg += `<text x="${pL.x.toFixed(1)}" y="${pL.y.toFixed(1)}" font-family="sans-serif" font-size="10" letter-spacing="3" fill="${noCeuEm(pL.x, pL.y) ? tintaCima : tintaBaixo}" fill-opacity=".8" text-anchor="middle">ECLÍPTICA</text>`;
+  return svg;
+}
+
+/* A TERRA no miolo (só Tema Céu): esfera clara com halo de atmosfera — é onde ficam os
+   aspectos. (Mais pra frente é aqui que entra o papiro.) */
+function montarTerraCeuSVG(cx, cy, raio, corBorda) {
+  return `<defs><radialGradient id="ceuTerra" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffffff"/><stop offset="70%" stop-color="#f4f1e6"/><stop offset="100%" stop-color="#d8d2bd"/></radialGradient>
+    <radialGradient id="ceuAtmosfera"><stop offset="86%" stop-color="#8ec5ff" stop-opacity="0"/><stop offset="93%" stop-color="#8ec5ff" stop-opacity=".55"/><stop offset="100%" stop-color="#8ec5ff" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="${cx}" cy="${cy}" r="${(raio * 1.22).toFixed(1)}" fill="url(#ceuAtmosfera)"/>
+    <circle cx="${cx}" cy="${cy}" r="${raio}" fill="url(#ceuTerra)" stroke="${corBorda}" stroke-width="2"/>`;
+}
+
 /* CÉU DO TEMA CÉU (cores do site falandodeastrologia) — só pintura.
    Acima do horizonte ASC-DSC é TUDO céu, até as bordas da imagem; abaixo é
    o espaço (noite). A cor do céu acompanha a altura do Sol (elevacao, de
@@ -1456,7 +1505,9 @@ function montarCeuMandalaSVG(o) {
       <radialGradient id="ceuGlow" cx="${glowX.toFixed(1)}" cy="${cy}" r="${rGlow.toFixed(0)}" gradientUnits="userSpaceOnUse" gradientTransform="translate(${glowX.toFixed(1)} ${cy}) scale(1 0.7) translate(${(-glowX).toFixed(1)} ${-cy})">
         <stop offset="0%" stop-color="${corGlow}" stop-opacity="${forcaGlow}"/><stop offset="40%" stop-color="${corGlow}" stop-opacity="${(forcaGlow * 0.45).toFixed(3)}"/><stop offset="100%" stop-color="${corGlow}" stop-opacity="0"/>
       </radialGradient>
-      <clipPath id="ceuMeia"><rect x="${cx - 4000}" y="${cy - 4000}" width="8000" height="4000"/></clipPath>`;
+      <clipPath id="ceuMeia"><rect x="${cx - 4000}" y="${cy - 4000}" width="8000" height="4000"/></clipPath>
+      <clipPath id="ceuMeiaTela"><rect x="${cx - 4000}" y="${cy - 4000}" width="8000" height="4000" transform="rotate(${skyRotation} ${cx} ${cy})"/></clipPath>
+      <clipPath id="ceuMeiaTelaBaixo"><rect x="${cx - 4000}" y="${cy}" width="8000" height="4000" transform="rotate(${skyRotation} ${cx} ${cy})"/></clipPath>`;
 
   // Estrelas: posições fixas (gerador determinístico, nunca aleatório de verdade).
   let semente = 20260930;
@@ -1780,7 +1831,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
   const solAngulo = ((pObj.Sun.abs - ascAbs + 360) % 360) * Math.PI / 180;
   const ceuParams = temaCeu ? {
-    cx, cy, width, height, termos: R.Termos, raioCeu: R_Ceu, skyRotation,
+    cx, cy, width, height, termos: R.Aspects, raioCeu: R_Ceu, skyRotation,
     elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
     corDisco: tinta.fundoDisco
   } : null;
@@ -1832,7 +1883,16 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
      desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
   svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
 
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
+  if (temaCeu) {
+    // Tema Céu: faixa do zodíaco na eclíptica (por trás de tudo) + a Terra no miolo
+    svg += montarBandaZodiacoCeuSVG({
+      cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams.dia, tinta,
+      elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS
+    });
+    svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor);
+  } else {
+    svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
+  }
 
   const occupiedSigns = new Set();
   PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
@@ -1855,9 +1915,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
   }
 
+  if (!temaCeu) {
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
+  }
 
   /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
      estrutura da mandala (círculos, raios, dentinhos) sempre por trás
@@ -1869,6 +1931,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      termos) foram separados em duas passadas: uma só de linha aqui,
      outra só de ícone lá embaixo, depois das linhas dos eixos. */
 
+  if (!temaCeu) { // no Tema Céu essa estrutura do disco não existe (a faixa do zodíaco a substitui)
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
     const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
@@ -1907,6 +1970,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
     const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
+  }
+
   }
 
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
@@ -1949,6 +2014,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     </g>`;
   });
 
+  if (!temaCeu) { // no Tema Céu: números e glifos dos signos vão pra faixa; dodecatemória e termos não aparecem
   const refSignIdx = Math.floor(house1RefAbs / 30);
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
@@ -1983,6 +2049,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       prev = term.deg;
     });
   }
+  }
 
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
@@ -2013,9 +2080,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
-    const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
+    const raioEfetivo = (item.type === 'lot' ? (temaCeu ? 244 : 276) : pR) + (item.rOffset || 0);
 
-    const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
+    const p1 = polarToCart(cx, cy, temaCeu ? R.Aspects : R.Termos, item.aScreen);
     const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
@@ -2070,7 +2137,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
         // latitude), sem nenhum desvio. O glifo vai sempre ACIMA do ponto e o grau
         // sempre ABAIXO.
         const pGlifo = { x: pPonto.x, y: pPonto.y - 34 };
-        const p1c = polarToCart(cx, cy, R.Termos, item.aScreen);
+        const p1c = polarToCart(cx, cy, R.Aspects, item.aScreen);
         const p2c = polarToCart(cx, cy, rPonto - 10, item.aScreen);
         svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
         // Acima do horizonte (metade de cima do referencial girado) vale o dia/noite do Sol.
