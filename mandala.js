@@ -992,13 +992,16 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
    aplicar o papel. Só o Relatório pede isso (ver o 7º parâmetro de
    renderMandala); o cabeçalho das outras ferramentas nunca passa por aqui. */
 function coresCabecalhoPapiro() {
+  // Convenção dos papiros: título em tinta vermelha (rubrica) e o resto em tinta preta.
   return {
     fundo: 'url(#papiroCabBase)',
     borda: '#1d3a66', // sem uso hoje (o papel não tem contorno), mantido por compatibilidade com o formato das outras paletas
-    titulo: '#1d3a66', // destaque: nome do cliente e rótulos DIA/HORA, no azul-tinta dos desenhos do papiro
+    titulo: '#1d3a66', // usado por quem desenha títulos de ferramenta por fora do cabeçalho (inalterado)
+    nome: '#a03e25',   // NOME DO CLIENTE: terracota (rubrica)
+    rotulo: '#1a1410', // rótulos DIA/HORA: preto
     dataCidade: '#1a1410',
-    zodiaco: '#2a2118',
-    sect: '#1d3a66',
+    zodiaco: '#1a1410',
+    sect: '#1a1410',   // "Natividade Diurna/Noturna": preto
     papiro: true,
   };
 }
@@ -1150,7 +1153,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
-    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${escapeHtml(headerTitle)}</text>
+    <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${escapeHtml(headerTitle)}</text>
     <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(geoCab.city)}</text>
         <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${loteTexto ? `  ${loteTexto}` : ''}</tspan></text>
   </g>`;
@@ -1158,11 +1161,11 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
       /* Rótulo (DIA / HORA) em cima e o planeta embaixo dele, cada um numa
          coluna — desenho único do software inteiro. */
       if (temDia) {
-        svg += `<text x="840" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">DIA</text>
+        svg += `<text x="840" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text>
       <g transform="translate(840, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
       }
       if (temHora) {
-        svg += `<text x="910" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">HORA</text>
+        svg += `<text x="910" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text>
       <g transform="translate(910, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
       }
     }
@@ -1182,7 +1185,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   let y = headerY + 23, textos = '';
   linhasTitulo.forEach((ln, i) => {
     if (i > 0) y += 22;
-    textos += `<text x="30" y="${y}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.titulo}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
   });
   y += 18;
   linhasData.forEach((ln, i) => {
@@ -1197,10 +1200,10 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   altura = Math.max(75, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
   svg = `<g id="png-discreet-header"><rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />${textos}`;
   if (temDia) {
-    svg += `<text x="${largura - 100}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${largura - 100}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+    svg += `<text x="${largura - 100}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${largura - 100}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
   }
   if (temHora) {
-    svg += `<text x="${largura - 45}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${largura - 45}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+    svg += `<text x="${largura - 45}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${largura - 45}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
   }
   svg += '</g>';
   return { svg, altura };
