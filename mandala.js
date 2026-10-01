@@ -1341,6 +1341,23 @@ function desenharPlanetaCeuSVG(o) {
   return corpo;
 }
 
+/* PONTOS CALCULADOS NO TEMA CÉU (lotes, nodos, sizígia) — traço fino e claro
+   dentro de um retículo tracejado, sem brilho: não são corpos do céu, são
+   marcações calculadas sobre ele. Lotes em traço fino (contorno do ícone);
+   nodos e sizígia com o preenchimento cheio do ícone. Cor: branco-azulado à
+   noite, azul-marinho de dia (acima do horizonte, de dia). */
+function iconeCalculadoCeuSVG(categoria, chave, cor, solido) {
+  const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO[categoria] && ICONES_SIMPLES_NOVO[categoria][chave]) || '';
+  const reticulo = `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
+  if (!bruto) return reticulo;
+  const vb = (bruto.match(/viewBox="0 0 (\d+(?:\.\d+)?) /) || [0, 100])[1];
+  const k = 22 / parseFloat(vb);
+  let miolo = bruto.slice(bruto.indexOf('>') + 1, bruto.lastIndexOf('</svg>')).replace(/<defs>[\s\S]*?<\/defs>/g, '');
+  miolo = miolo.replace(/fill="#fff"/g, 'fill="__n__"').replace(/fill="url\(#\w+\)"/g, solido ? `fill="${cor}"` : 'fill="__n__"')
+    .replace(/fill="#000"/g, solido ? `fill="${cor}"` : 'fill="__n__"').replace(/stroke="(?:url\(#\w+\)|#000)"/g, `stroke="${cor}"`).replace(/fill="__n__"/g, 'fill="none"');
+  return reticulo + `<g transform="translate(-11 -11) scale(${k.toFixed(4)})" fill="none" stroke="${cor}" stroke-width="${(solido ? 0.4 : 1.2) / k}" stroke-linejoin="round">${miolo}</g>`;
+}
+
 /* FUNDO DE TELA DO TEMA CÉU — o céu continua pra fora da imagem da
    mandala (em vez do roxo liso do fundo). É o MESMO desenho da imagem
    (mesmas cores, mesmas estrelas), só num SVG bem maior, usado como
@@ -1985,6 +2002,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
   };
 
+  // Tema Céu: cor do ponto calculado conforme dia/noite NO LUGAR onde ele está (acima do
+  // horizonte, de dia -> azul-marinho; à noite ou no espaço -> branco-azulado).
+  const corCalculadoCeu = (px, py) => {
+    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
+    const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
+    return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
+  };
+
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
@@ -2004,21 +2029,21 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>`}
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>`}
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>
+        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>`}
         <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     }
@@ -2031,25 +2056,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      exatamente como no céu real, onde o mais distante fica encoberto. */
   const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
 
-  /* Tema Céu: o PONTO de luz fica sempre na posição real (ângulo da longitude,
-     raio da latitude — nada de empilhamento radial, que falsearia a altura).
-     Só o GLIFO desvia, e só lateralmente (ao longo do círculo, nunca pra
-     cima/baixo na roda): começa um pouco ao lado do ponto e, se dois glifos
-     colidem, eles se afastam em ângulo. */
-  if (temaCeu) {
-    const ps = outerRingItems.filter(i => i.type === 'planet').sort((a, b) => a.aScreen - b.aScreen);
-    const BASE = 4.2, MIN_LADO = 3.6, MIN = 8.6; // graus de arco no raio dos planetas
-    ps.forEach(it => { it.gAng = it.aScreen + BASE; });
-    for (let pass = 0; pass < 60; pass++) {
-      for (let i = 0; i < ps.length - 1; i++) {
-        const diff = ps[i + 1].gAng - ps[i].gAng;
-        if (diff < MIN) { const ov = (MIN - diff) / 2; ps[i].gAng -= ov; ps[i + 1].gAng += ov; }
-      }
-      // o glifo nunca fica em cima do próprio ponto de luz: sempre a pelo menos MIN_LADO do ângulo real
-      ps.forEach(it => { if (it.gAng < it.aScreen + MIN_LADO) it.gAng = it.aScreen + MIN_LADO; });
-    }
-  }
-
   outerRingItems
     .filter(item => item.type === 'planet')
     .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
@@ -2060,7 +2066,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       if (temaCeu) {
         const rPonto = pR + (item.eclLat * latPxPerGrau);
         const pPonto = polarToCart(cx, cy, rPonto, item.aScreen);
-        const pGlifo = polarToCart(cx, cy, rPonto, item.gAng);
+        // O PONTO de luz fica sempre na posição real (ângulo da longitude, raio da
+        // latitude), sem nenhum desvio. O glifo vai sempre ACIMA do ponto e o grau
+        // sempre ABAIXO.
+        const pGlifo = { x: pPonto.x, y: pPonto.y - 34 };
         const p1c = polarToCart(cx, cy, R.Termos, item.aScreen);
         const p2c = polarToCart(cx, cy, rPonto - 10, item.aScreen);
         svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
@@ -2074,7 +2083,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
           luaFrac: (1 - Math.cos(elong * Math.PI / 180)) / 2, luaCrescente: elong < 180,
           luaInvertida: (currentGeo && currentGeo.lat < 0)
         });
-        svg += `<text x="${pGlifo.x.toFixed(1)}" y="${(pGlifo.y + 27).toFixed(1)}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>`;
+        svg += `<text x="${pPonto.x.toFixed(1)}" y="${(pPonto.y + 27).toFixed(1)}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>`;
         return;
       }
 
