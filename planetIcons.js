@@ -141,11 +141,76 @@ function _namespacearIdsIcone(svgTexto) {
     .replace(/url\(#([^)]+)\)/g, (m, id) => `url(#${id}_${sufixo})`);
 }
 
+/* ÍCONES DE PAPIRO (só no Tema Céu, fora da roda da Mandala) — os mesmos desenhos dos ícones
+   "simples", mas em TINTA chapada em vez do dourado com gradiente: azul-tinta (#1d3a66) e, nos
+   planetas que estão na SEITA do mapa, terracota (#a03e25). A seita (hairesis) é helenística:
+   mapa diurno -> Sol, Júpiter e Saturno; mapa noturno -> Lua, Vênus e Marte; Mercúrio é diurno
+   quando oriental (nasce antes do Sol) e noturno quando ocidental. A roda da Mandala tem estilo
+   próprio no Tema Céu (pontos de luz) e não passa por aqui. Fora do Tema Céu nada muda. */
+const COR_TINTA_AZUL = '#1d3a66';
+const COR_TINTA_TERRACOTA = '#a03e25';
+
+function temaCeuAtivoNosIcones() {
+  return typeof window !== 'undefined' && window.temaMandala === 'ceu';
+}
+
+/* Seita do mapa aberto, a partir de currentCalculatedData (posições em graus absolutos).
+   Devolve { diurno, mercurioOriental } ou null se não houver mapa carregado. */
+function seitaDoMapaAtual() {
+  const d = (typeof currentCalculatedData !== 'undefined') ? currentCalculatedData : null;
+  if (!d || !d.Ascendente || !d['Sol']) return null;
+  const sol = d['Sol'].grau_absoluto, asc = d.Ascendente.grau_absoluto;
+  if (typeof sol !== 'number' || typeof asc !== 'number') return null;
+  const diurno = ((sol - asc + 360) % 360) >= 180;
+  const merc = d['Mercúrio'] && d['Mercúrio'].grau_absoluto;
+  const mercurioOriental = (typeof merc === 'number') ? (((sol - merc + 360) % 360) < 180) : true;
+  return { diurno, mercurioOriental };
+}
+
+function planetaEstaNaSeita(planetId) {
+  const s = seitaDoMapaAtual();
+  if (!s) return false;
+  if (planetId === 'Mercury') return s.diurno ? s.mercurioOriental : !s.mercurioOriental;
+  return s.diurno ? ['Sun', 'Jupiter', 'Saturn'].includes(planetId) : ['Moon', 'Venus', 'Mars'].includes(planetId);
+}
+
+function corIconePapiro(categoria, chave) {
+  return (categoria === 'planeta' && planetaEstaNaSeita(chave)) ? COR_TINTA_TERRACOTA : COR_TINTA_AZUL;
+}
+
+/* Recolore o SVG de um ícone simples pra tinta chapada: tira o <defs> (gradientes), pinta cada
+   forma com a cor, e um traço fininho da mesma cor arredonda as pontas. */
+function recolorirIconePapiro(bruto, cor) {
+  const abre = bruto.indexOf('>') + 1;
+  const fecha = bruto.lastIndexOf('</svg>');
+  let miolo = bruto.slice(abre, fecha).replace(/<defs>[\s\S]*?<\/defs>/g, '');
+  miolo = miolo.replace(/<g([^>]*)>/g, (x, a) => `<g${a.replace(/\s(fill|clip-path)="[^"]*"/g, '')}>`);
+  miolo = miolo.replace(/<(path|circle)\b([^>]*?)(\/?)>/g, (x, tag, a, fim) => {
+    const comContorno = /stroke="/.test(a);
+    a = a.replace(/\s(fill|stroke)="[^"]*"/g, '');
+    const sw = (a.match(/stroke-width="([^"]+)"/) || [0, 3])[1];
+    a = a.replace(/\sstroke-width="[^"]*"/g, '');
+    return comContorno
+      ? `<${tag}${a} fill="none" stroke="${cor}" stroke-width="${sw}" stroke-linejoin="round"${fim}>`
+      : `<${tag}${a} fill="${cor}" stroke="${cor}" stroke-width=".9" stroke-linejoin="round"${fim}>`;
+  });
+  return bruto.slice(0, abre) + miolo + '</svg>';
+}
+
+/* SVG bruto do ícone: o de sempre, ou o de papiro no Tema Céu. */
+function brutoDoIcone(categoria, chave) {
+  if (temaCeuAtivoNosIcones()) {
+    const base = (ICONES_SIMPLES_NOVO[categoria] || {})[chave] || '';
+    return base ? recolorirIconePapiro(base, corIconePapiro(categoria, chave)) : '';
+  }
+  return (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
+}
+
 /* Ícone novo pronto pra usar (tag <svg> completa), no tamanho pedido.
    categoria: 'planeta' | 'lote' | 'outro'. chave: ex. "Sun", "fortune",
    "sizigia", "northNode", "southNode", "angulo". */
 function getIconeSVG(categoria, chave, tamanho = 34) {
-  const bruto = (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
+  const bruto = brutoDoIcone(categoria, chave);
   if (!bruto) return '';
   return _namespacearIdsIcone(bruto.replace('<svg ', `<svg width="${tamanho}" height="${tamanho}" `));
 }
@@ -155,7 +220,7 @@ function getIconeSVG(categoria, chave, tamanho = 34) {
    conteúdo (formas + defs) dentro de um <g>, pra quem usa escalar/girar
    como quiser por fora. */
 function getIconeFragmento(categoria, chave) {
-  const bruto = (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
+  const bruto = brutoDoIcone(categoria, chave);
   if (!bruto) return '';
   const abre = bruto.indexOf('>') + 1;
   const fecha = bruto.lastIndexOf('</svg>');
