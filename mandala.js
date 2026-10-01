@@ -1824,7 +1824,9 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      nunca menor que 960 (largura original), só cresce quando precisa. */
   const cx = Math.max(480, R_Ceu + margemVertical);
   const width = cx * 2, height = headerY + headerH + headerGapBottom;
-  const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
+  // Tema Céu: os anéis de termos (fora) e dodecatemória (dentro) ficam logo ABAIXO da faixa dos
+  // signos (que começa no raio 282); os lotes ficam abaixo deles e a Terra no centro.
+  const R = temaCeu ? { Aspects: 110, SignSector: 233, Dodec: 256, Termos: 280 } : { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
 
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
@@ -1915,11 +1917,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
   }
 
-  if (!temaCeu) {
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-  }
 
   /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
      estrutura da mandala (círculos, raios, dentinhos) sempre por trás
@@ -1931,11 +1931,12 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      termos) foram separados em duas passadas: uma só de linha aqui,
      outra só de ícone lá embaixo, depois das linhas dos eixos. */
 
-  if (!temaCeu) { // no Tema Céu essa estrutura do disco não existe (a faixa do zodíaco a substitui)
+  if (!temaCeu) { // no Tema Céu as divisas dos signos são os tracejados da faixa
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
     const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
+  }
   }
 
   for (let i = 0; i < 12; i++) {
@@ -1972,7 +1973,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
   }
 
-  }
 
   const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
   const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
@@ -2014,8 +2014,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     </g>`;
   });
 
-  if (!temaCeu) { // no Tema Céu: números e glifos dos signos vão pra faixa; dodecatemória e termos não aparecem
   const refSignIdx = Math.floor(house1RefAbs / 30);
+  if (!temaCeu) { // no Tema Céu os números e glifos dos signos ficam na faixa
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, 122, aMid);
@@ -2023,6 +2023,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
     const pSym = polarToCart(cx, cy, 166, aMid);
     svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
+  }
   }
 
   for (let i = 0; i < 12; i++) {
@@ -2048,7 +2049,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       svg += termoSvg;
       prev = term.deg;
     });
-  }
   }
 
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
@@ -2080,7 +2080,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
-    const raioEfetivo = (item.type === 'lot' ? (temaCeu ? 244 : 276) : pR) + (item.rOffset || 0);
+    const raioEfetivo = (item.type === 'lot' ? (temaCeu ? 190 : 276) : pR) + (item.rOffset || 0);
 
     const p1 = polarToCart(cx, cy, temaCeu ? R.Aspects : R.Termos, item.aScreen);
     const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
