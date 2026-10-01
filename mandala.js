@@ -1438,7 +1438,9 @@ function montarBandaZodiacoCeuSVG(o) {
     const A = eclToScreenAngle(i * 30, ref), a1 = A - INS, a2 = A - 30 + INS, cor = elemCores[signElem[i]];
     const r1 = rIn + RIN, r2 = rOut - RIN;
     const q1 = P(r2, a1), q2 = P(r2, a2), q3 = P(r1, a2), q4 = P(r1, a1);
-    svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)} A${r1} ${r1} 0 0 1 ${q4.x.toFixed(1)} ${q4.y.toFixed(1)}Z" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4" stroke-linejoin="round"/>`;
+    // sem o fecho de baixo (arco na borda de dentro da faixa): o signo fica aberto pra baixo e as
+    // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
+    svg += `<path d="M${q4.x.toFixed(1)} ${q4.y.toFixed(1)} L${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4" stroke-linejoin="round"/>`;
     // as divisas do signo seguem pra dentro: pausam nos anéis de termos/dodecatemória (de rAneis
     // pra fora) e continuam até encostar na Terra
     [a1, a2].forEach(ang => {
