@@ -905,7 +905,6 @@ function renderRelatorioSetup(container, presets, rascunhos) {
       ${(typeof montarCabecalhoMandalaImagemHTML === 'function' && currentCalculatedData)
         ? montarCabecalhoMandalaImagemHTML(currentCalculatedData)
         : `<div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px;"><div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}</div></div>`}
-      </div>
 
       ${listaRascunhosHTML}
 
