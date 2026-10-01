@@ -3058,7 +3058,7 @@ async function atualizarPreviaEditorModelo() {
     <div class="rel-previa-aviso no-print">
       <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
     </div>
-    <div class="rel-viewer">${conteudoHtml}</div>
+    <div class="rel-viewer${classeTemaPapiroRelatorio()}">${conteudoHtml}</div>
   `;
 
   reabrirEditorRelatorioAtual({
@@ -3249,14 +3249,14 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
-    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
+    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
       png1Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
     }
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
-    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro'));
+    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
       png2Capa = await new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
     }
@@ -3280,6 +3280,14 @@ function voltarConfigRelatorio() {
   // estava em memória — garante que a lista de rascunhos apareça
   // atualizada com o que acabou de ser gerado.
   iniciarModuloRelatorio();
+}
+
+/* TEMA "CÉU + PAPIRO" do relatório: vale quando o Tema Céu da Mandala
+   está ativo (window.temaMandala, que já vem do Supabase). Devolve a
+   classe que vai no .rel-viewer — o CSS correspondente (ver
+   ".rel-tema-papiro" em injetarEstilosRelatorio) é SÓ pintura. */
+function classeTemaPapiroRelatorio() {
+  return (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-tema-papiro' : '';
 }
 
 /* Monta o conteúdo de dentro de ".rel-viewer" (capa + índice + páginas +
@@ -3386,7 +3394,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
     </div>
     <div id="relToolbarEspacador" class="no-print"></div>
 
-    <div class="rel-viewer">
+    <div class="rel-viewer${classeTemaPapiroRelatorio()}">
       ${conteudoHtml}
     </div>
   `;
@@ -4142,6 +4150,47 @@ function injetarEstilosRelatorio() {
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
       .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; break-inside: avoid; page-break-inside: avoid; }
       .rel-rodape-nome { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; }
+
+      /* TEMA "CÉU + PAPIRO" (.rel-tema-papiro no .rel-viewer, ver
+         classeTemaPapiroRelatorio) — SÓ PINTURA nas folhas do corpo
+         (tudo menos a capa, que continua sendo a do Céu). Regra de ouro
+         desta seção: nenhuma propriedade de layout aqui (nada de
+         width/height/margin/padding/border/flex/fonte) — o histórico
+         deste relatório (páginas extras em branco, capturas maiores que
+         a folha) mostra que qualquer mudança de tamanho reabre bugs de
+         paginação. Cor, fundo e contorno (outline, que não ocupa espaço)
+         são seguros: não mudam o tamanho de nada.
+         Fundo de papiro em camadas (luz no canto, sombra no canto
+         oposto, fibras finas). Moldura dupla via outline com offset
+         negativo (desenha por dentro da folha, sem ocupar espaço). */
+      .rel-tema-papiro .rel-page:not(.rel-capa) {
+        background:
+          radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.26) 100%),
+          radial-gradient(ellipse at 18% 10%, rgba(240,222,180,0.40) 0%, transparent 42%),
+          radial-gradient(ellipse at 85% 88%, rgba(90,55,25,0.22) 0%, transparent 48%),
+          repeating-linear-gradient(0deg, rgba(95,65,30,0.09) 0px, rgba(95,65,30,0.09) 1px, transparent 1px, transparent 5px),
+          repeating-linear-gradient(90deg, rgba(110,78,40,0.06) 0px, rgba(110,78,40,0.06) 2px, transparent 2px, transparent 25px),
+          linear-gradient(180deg, #cfb287 0%, #c4a375 55%, #b78f60 100%);
+        outline: 1.2mm double #1a1410;
+        outline-offset: -5mm;
+      }
+      /* Paleta tirada de papiros reais (referências do astrólogo): tinta
+         PRETA no texto, vermelho-tijolo só em filetes/molduras e detalhes
+         pequenos, azul-tinta (dos desenhos do canvas do papiro) em tabelas.
+         Títulos: texto preto; caixa com filete vermelho-tijolo (a borda que
+         já existe, só recolorida) mais um fio preto por FORA via outline
+         (não ocupa espaço) — o "filete duplo" dos papiros egípcios. */
+      .rel-tema-papiro .rel-corpo p, .rel-tema-papiro .rel-corpo ul, .rel-tema-papiro .rel-corpo ol { color: #1a1410; }
+      .rel-tema-papiro .rel-h1, .rel-tema-papiro .rel-corpo h2 { color: #1a1410; border-color: #a03e25; background: rgba(235,215,170,0.30); outline: 1px solid #1a1410; outline-offset: 2px; }
+      .rel-tema-papiro .rel-corpo h3, .rel-tema-papiro .rel-num-pagina, .rel-tema-papiro .rel-num-pagina-canto { color: #8a3220; }
+      .rel-tema-papiro .rel-titulo-captura, .rel-tema-papiro .rel-rodape-nome { color: #1a1410; }
+      .rel-tema-papiro .rel-legenda-mandala { color: #2a2118; }
+      .rel-tema-papiro .rel-indice li { color: #1a1410; border-bottom-color: rgba(26,20,16,0.4); }
+      .rel-tema-papiro .rel-rodape-astrologo { border-top-color: #a03e25; color: #1a1410; }
+      .rel-tema-papiro .rel-tabela-caixa { border-color: #1d3a66; }
+      .rel-tema-papiro .tabela-enxuta { background: rgba(235,215,170,0.25); color: #1a1410; }
+      .rel-tema-papiro .tabela-enxuta th, .rel-tema-papiro .tabela-enxuta td { border-color: #1d3a66; }
+      .rel-tema-papiro .tabela-enxuta th { background-color: rgba(235,215,170,0.4); color: #1d3a66; }
 
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }

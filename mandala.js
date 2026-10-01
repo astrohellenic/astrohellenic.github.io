@@ -978,6 +978,79 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   };
 }
 
+/* CABEÇALHO EM PAPIRO (tema Céu do Relatório) — só PINTURA: mesmas
+   posições, tamanhos e textos do cabeçalho de sempre, só troca o fundo
+   sólido da caixinha por um papel de papiro (degradês + fibras finas,
+   definidos num <defs> dentro do próprio SVG, já que este desenho vira
+   imagem isolada e não enxerga CSS da página) e as tintas pro marrom/
+   ocre. "papiro: true" é o sinal pra montarCabecalhoMandalaGrupoSVG
+   aplicar o papel. Só o Relatório pede isso (ver o 7º parâmetro de
+   renderMandala); o cabeçalho das outras ferramentas nunca passa por aqui. */
+function coresCabecalhoPapiro() {
+  return {
+    fundo: 'url(#papiroCabBase)',
+    borda: '#1d3a66', // sem uso hoje (o papel não tem contorno), mantido por compatibilidade com o formato das outras paletas
+    titulo: '#1d3a66', // destaque: nome do cliente e rótulos DIA/HORA, no azul-tinta dos desenhos do papiro
+    dataCidade: '#1a1410',
+    zodiaco: '#2a2118',
+    sect: '#1d3a66',
+    papiro: true,
+  };
+}
+
+/* Borda "rasgada" do papiro: um polígono que ocupa o MESMO retângulo do
+   cabeçalho (x=15, largura w, altura h), só que com as bordas irregulares
+   — recuo de 0 a ~4px, sempre pra DENTRO, então nada sai da área original
+   (o texto começa a 15px da borda; nunca é cortado). Determinístico (mesma
+   entrada, mesmo recorte; nunca aleatório de verdade), pra o PNG não mudar
+   entre uma geração e outra do mesmo relatório. */
+function caminhoBordaPapiro(x, y, w, h) {
+  let seed = (Math.round(w) * 73856093) ^ (Math.round(h) * 19349663);
+  const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const rec = () => (rnd() * 4).toFixed(1) * 1; // recuo 0..4px
+  const pts = [];
+  const lado = (x0, y0, x1, y1, passo, normalX, normalY) => {
+    const comp = Math.hypot(x1 - x0, y1 - y0);
+    const n = Math.max(2, Math.round(comp / passo));
+    for (let i = 0; i < n; i++) {
+      const t = i / n, r = rec();
+      pts.push([x0 + (x1 - x0) * t + normalX * r, y0 + (y1 - y0) * t + normalY * r]);
+    }
+  };
+  lado(x + 6, y, x + w - 6, y, 18, 0, 1);              // topo (recua pra baixo)
+  lado(x + w, y + 6, x + w, y + h - 6, 14, -1, 0);     // direita (recua pra esquerda)
+  lado(x + w - 6, y + h, x + 6, y + h, 18, 0, -1);     // base (recua pra cima)
+  lado(x, y + h - 6, x, y + 6, 14, 1, 0);              // esquerda (recua pra direita)
+  return 'M' + pts.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L') + ' Z';
+}
+
+function aplicarPapiroNoCabecalhoSVG(svg) {
+  const defs = `<defs>
+    <linearGradient id="papiroCabBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d6bd92"/><stop offset="55%" stop-color="#c8a878"/><stop offset="100%" stop-color="#b98f5f"/>
+    </linearGradient>
+    <radialGradient id="papiroCabLuz" cx="0.18" cy="0.2" r="0.6">
+      <stop offset="0%" stop-color="#f0deb4" stop-opacity="0.45"/><stop offset="100%" stop-color="#fff0c8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="papiroCabSombra" cx="0.9" cy="0.9" r="0.6">
+      <stop offset="0%" stop-color="#6e461e" stop-opacity="0.3"/><stop offset="100%" stop-color="#6e461e" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="papiroCabFibras" width="24" height="5" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0.5" x2="24" y2="0.5" stroke="#785528" stroke-opacity="0.13" stroke-width="1"/>
+      <line x1="12" y1="0" x2="12" y2="5" stroke="#966e3c" stroke-opacity="0.09" stroke-width="1.5"/>
+    </pattern>
+  </defs>`;
+  const m = svg.match(/<rect x="15" y="[\d.\-]+" width="[\d.]+" height="[\d.]+" rx="10" ry="10"[^>]*\/>/);
+  if (!m) return svg;
+  const attrs = m[0].match(/x="15" y="([\d.\-]+)" width="([\d.]+)" height="([\d.]+)"/);
+  // Sem contorno: o papel é só o polígono de borda irregular (o retângulo
+  // com stroke original é substituído por ele).
+  const d = caminhoBordaPapiro(15, parseFloat(attrs[1]), parseFloat(attrs[2]), parseFloat(attrs[3]));
+  const camada = fill => `<path d="${d}" fill="${fill}"/>`;
+  const papel = camada('url(#papiroCabBase)') + camada('url(#papiroCabLuz)') + camada('url(#papiroCabSombra)') + camada('url(#papiroCabFibras)');
+  return defs + svg.replace(m[0], papel);
+}
+
 /* "loteCasa1" (chave: fortune/spirit/venus/mercury/mars/jupiter/saturn, ou
    null) — quando a Casa 1 do desenho NÃO é o Ascendente, o cabeçalho avisa
    "Lote tal na Casa 1" (depois de Natividade Diurna/Noturna), pra ninguém
@@ -1128,7 +1201,8 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
 window.montarCabecalhoMandalaLayout = montarCabecalhoMandalaLayout;
 
 function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1, opcoes) {
-  return montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes).svg;
+  const svg = montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes).svg;
+  return (cores && cores.papiro) ? aplicarPapiroNoCabecalhoSVG(svg) : svg;
 }
 
 function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
@@ -1199,7 +1273,7 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
 }
 window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 
-function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada) {
+function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -1251,7 +1325,10 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      DESSA cor específica, não pelo modoEscuro geral. */
   const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
-  const corCabecalhoPng = coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
+  /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
+     caixinha de nome/data/cidade como papiro (ver coresCabecalhoPapiro) —
+     só cor/textura, o layout do cabeçalho não muda. */
+  const corCabecalhoPng = papiroCabecalho ? coresCabecalhoPapiro() : coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
 
   /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
      Tema Claro é exatamente a paleta de sempre (nada muda). No Tema
