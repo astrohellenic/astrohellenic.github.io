@@ -1346,19 +1346,16 @@ function desenharPlanetaCeuSVG(o) {
    marcações calculadas sobre ele. Lotes em traço fino (contorno do ícone);
    nodos e sizígia com o preenchimento cheio do ícone. Cor: branco-azulado à
    noite, azul-marinho de dia (acima do horizonte, de dia). */
-function iconeCalculadoCeuSVG(categoria, chave, cor, solido, comReticulo) {
+function iconeCalculadoCeuSVG(categoria, chave, cor, solido) {
   const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO[categoria] && ICONES_SIMPLES_NOVO[categoria][chave]) || '';
-  // Retículo tracejado só na sizígia e nos nodos. Os lotes NÃO levam: o círculo do próprio
-  // ícone já é a marca histórica do lote (glifo dentro de um círculo).
-  const reticulo = comReticulo ? `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>` : '';
+  const reticulo = `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
   if (!bruto) return reticulo;
   const vb = (bruto.match(/viewBox="0 0 (\d+(?:\.\d+)?) /) || [0, 100])[1];
-  const tam = comReticulo ? 22 : 26;
-  const k = tam / parseFloat(vb);
+  const k = 22 / parseFloat(vb);
   let miolo = bruto.slice(bruto.indexOf('>') + 1, bruto.lastIndexOf('</svg>')).replace(/<defs>[\s\S]*?<\/defs>/g, '');
   miolo = miolo.replace(/fill="#fff"/g, 'fill="__n__"').replace(/fill="url\(#\w+\)"/g, solido ? `fill="${cor}"` : 'fill="__n__"')
     .replace(/fill="#000"/g, solido ? `fill="${cor}"` : 'fill="__n__"').replace(/stroke="(?:url\(#\w+\)|#000)"/g, `stroke="${cor}"`).replace(/fill="__n__"/g, 'fill="none"');
-  return reticulo + `<g transform="translate(${-tam / 2} ${-tam / 2}) scale(${k.toFixed(4)})" fill="none" stroke="${cor}" stroke-width="${(solido ? 0.4 : 1.2) / k}" stroke-linejoin="round">${miolo}</g>`;
+  return reticulo + `<g transform="translate(-11 -11) scale(${k.toFixed(4)})" fill="none" stroke="${cor}" stroke-width="${(solido ? 0.4 : 1.2) / k}" stroke-linejoin="round">${miolo}</g>`;
 }
 
 /* FUNDO DE TELA DO TEMA CÉU — o céu continua pra fora da imagem da
@@ -2032,20 +2029,20 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>`}
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>`}
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, false) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>`}
         <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
