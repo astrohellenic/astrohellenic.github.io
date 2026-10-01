@@ -869,6 +869,8 @@ function ajustarZoomMandala(delta) {
   if (img) img.style.transform = `scale(${(mandalaZoomPercent / 100).toFixed(2)})`;
   const label = document.getElementById('mandalaZoomLabel');
   if (label) label.textContent = `${mandalaZoomPercent}%`;
+  // O fundo do Tema Céu acompanha o zoom (a imagem anima por ~120ms).
+  if (typeof alinharFundoCeuTela === 'function') { alinharFundoCeuTela(); setTimeout(alinharFundoCeuTela, 160); }
 }
 window.ajustarZoomMandala = ajustarZoomMandala;
 
@@ -1273,6 +1275,56 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
 }
 window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
 
+/* FUNDO DE TELA DO TEMA CÉU — o céu continua pra fora da imagem da
+   mandala (em vez do roxo liso do fundo). É o MESMO desenho da imagem
+   (mesmas cores, mesmas estrelas), só num SVG bem maior, usado como
+   background do #mandala-container e alinhado ao centro da roda. */
+function montarFundoCeuSVG(params, extensao) {
+  const c = montarCeuMandalaSVG(Object.assign({}, params, { soHalo: false, extensao }));
+  const lado = extensao * 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${lado}" height="${lado}" viewBox="${params.cx - extensao} ${params.cy - extensao} ${lado} ${lado}"><defs>${c.defs}</defs>${c.corpo}</svg>`;
+}
+
+function configurarFundoCeuDaTela(container, params) {
+  if (window.fundoCeuTelaUrl) { URL.revokeObjectURL(window.fundoCeuTelaUrl); window.fundoCeuTelaUrl = null; }
+  window.fundoCeuTelaParams = null;
+  if (!container) return;
+  if (!params) {
+    container.style.backgroundImage = '';
+    container.style.backgroundColor = '';
+    return;
+  }
+  const EXT = 1800;
+  window.fundoCeuTelaUrl = URL.createObjectURL(new Blob([montarFundoCeuSVG(params, EXT)], { type: 'image/svg+xml;charset=utf-8' }));
+  window.fundoCeuTelaParams = { cx: params.cx, cy: params.cy, width: params.width, ext: EXT };
+  container.style.backgroundImage = `url("${window.fundoCeuTelaUrl}")`;
+  container.style.backgroundRepeat = 'no-repeat';
+  container.style.backgroundAttachment = 'local';
+  container.style.backgroundColor = '#070d25';
+  alinharFundoCeuTela();
+  const img = document.getElementById('mandalaImg');
+  if (img && !img.complete) img.addEventListener('load', alinharFundoCeuTela, { once: true });
+  requestAnimationFrame(alinharFundoCeuTela);
+}
+
+/* Posiciona/escala o fundo pra o centro dele coincidir com o centro da roda
+   na tela (considera tamanho exibido, zoom e rolagem). */
+function alinharFundoCeuTela() {
+  const p = window.fundoCeuTelaParams;
+  const container = document.getElementById('mandala-container');
+  const img = document.getElementById('mandalaImg');
+  if (!p || !container || !img) return;
+  const r = img.getBoundingClientRect(), cr = container.getBoundingClientRect();
+  if (!r.width) return;
+  const escala = r.width / p.width;
+  const x = r.left - cr.left - container.clientLeft + container.scrollLeft;
+  const y = r.top - cr.top - container.clientTop + container.scrollTop;
+  container.style.backgroundSize = `${(2 * p.ext * escala).toFixed(1)}px ${(2 * p.ext * escala).toFixed(1)}px`;
+  container.style.backgroundPosition = `${(x + (p.cx - p.ext) * escala).toFixed(1)}px ${(y + (window.fundoCeuTelaParams.cy - p.ext) * escala).toFixed(1)}px`;
+}
+window.alinharFundoCeuTela = alinharFundoCeuTela;
+window.addEventListener('resize', () => alinharFundoCeuTela());
+
 /* CÉU DO TEMA CÉU (cores do site falandodeastrologia) — só pintura.
    Acima do horizonte ASC-DSC é TUDO céu, até as bordas da imagem; abaixo é
    o espaço (noite). A cor do céu acompanha a altura do Sol (elevacao, de
@@ -1285,7 +1337,7 @@ window.recortarCanvasAoConteudo = recortarCanvasAoConteudo;
    Relatório): só o halo do céu em volta do disco, sem espaço nem estrelas,
    porque o fundo da capa já é o céu do site (CSS). */
 function montarCeuMandalaSVG(o) {
-  const { cx, cy, width, height, termos, raioCeu, skyRotation, elevacao, ladoSol, corDisco, soHalo } = o;
+  const { cx, cy, width, height, termos, raioCeu, skyRotation, elevacao, ladoSol, corDisco, soHalo, extensao } = o;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const suave = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -1336,6 +1388,20 @@ function montarCeuMandalaSVG(o) {
     const c = `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${raio}" fill="${cor}" fill-opacity="${opac}"/>`;
     if (y < cy) estrelasCeu += c; else estrelasEspaco += c;
   }
+  // "extensao" (fundo da tela, ver montarFundoCeuSVG): continua o MESMO céu
+  // pra fora da imagem. As 520 estrelas de cima são idênticas às da imagem
+  // (mesmo gerador); as extras só caem FORA desse quadrado, pra não haver
+  // emenda visível na borda da imagem.
+  if (extensao && !soHalo) {
+    const total = Math.min(4200, Math.round(520 * Math.pow(extensao / meio, 2)));
+    for (let i = 0; i < total; i++) {
+      const x = cx - extensao + rnd() * extensao * 2, y = cy - extensao + rnd() * extensao * 2;
+      const grande = rnd() < 0.16, cor = cores[Math.floor(rnd() * 3)], opac = (0.55 + rnd() * 0.45).toFixed(2), raio = ((grande ? 2.1 : 1.2) * (0.8 + rnd() * 0.5)).toFixed(2);
+      if (Math.abs(x - cx) <= meio && Math.abs(y - cy) <= meio) continue;
+      const c = `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${raio}" fill="${cor}" fill-opacity="${opac}"/>`;
+      if (y < cy) estrelasCeu += c; else estrelasEspaco += c;
+    }
+  }
 
   let corpo;
   if (soHalo) {
@@ -1344,7 +1410,7 @@ function montarCeuMandalaSVG(o) {
     <g transform="rotate(${skyRotation} ${cx} ${cy})"><g clip-path="url(#ceuMeia)"><circle cx="${cx}" cy="${cy}" r="${raioCeu}" fill="url(#ceuAzul)"/></g></g>`;
   } else {
     corpo = `<!-- ESPAÇO (abaixo do horizonte) e CÉU (acima, até as bordas), girando junto com a casa 1. -->
-    <rect width="${width}" height="${height}" fill="url(#ceuEspaco)"/>
+    <rect x="${extensao ? cx - extensao : 0}" y="${extensao ? cy - extensao : 0}" width="${extensao ? extensao * 2 : width}" height="${extensao ? extensao * 2 : height}" fill="url(#ceuEspaco)"/>
     <g transform="rotate(${skyRotation} ${cx} ${cy})">
       ${estrelasEspaco}
       <g clip-path="url(#ceuMeia)">
@@ -1630,11 +1696,12 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
      aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
   const solAngulo = ((pObj.Sun.abs - ascAbs + 360) % 360) * Math.PI / 180;
-  const ceuMandala = temaCeu ? montarCeuMandalaSVG({
+  const ceuParams = temaCeu ? {
     cx, cy, width, height, termos: R.Termos, raioCeu: R_Ceu, skyRotation,
     elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
-    corDisco: tinta.fundoDisco, soHalo: !!espacoTransparente
-  }) : { defs: '', corpo: '' };
+    corDisco: tinta.fundoDisco
+  } : null;
+  const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -1950,6 +2017,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   </div>
 `;
      
+    // Só a mandala ao vivo (não as cópias do Relatório, que passam estiloForcado):
+    // com o Tema Céu, o céu continua pra fora da imagem; senão limpa o fundo.
+    if (!estiloForcado) configurarFundoCeuDaTela(container, ceuParams);
+
     URL.revokeObjectURL(blobURL);     
 
            try {
