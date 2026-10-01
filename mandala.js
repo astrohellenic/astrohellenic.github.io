@@ -1298,11 +1298,12 @@ function glifoSilhuetaCeu(id, x, y, tam, cor, halo, larguraHalo) {
     + `<g transform="${pos}" stroke="${cor}" stroke-width="${(1.1 / k).toFixed(2)}" stroke-linejoin="round">${miolo}</g>`;
 }
 
-/* o = { id, x, y, dia (0..1), noCeu (true = acima do horizonte), elevacao,
-   lado (+1 glifo à direita / -1 à esquerda), luaFrac (0..1), luaCrescente,
-   luaInvertida (hemisfério Sul) } */
+/* o = { id, x, y (posição REAL do ponto de luz, nunca desviada), gx, gy (onde
+   o glifo fica — só ele desvia, e só lateralmente), dia (0..1), noCeu (true =
+   acima do horizonte), elevacao, luaFrac (0..1), luaCrescente, luaInvertida
+   (hemisfério Sul) } */
 function desenharPlanetaCeuSVG(o) {
-  const { id, x, y, dia, noCeu, elevacao, lado } = o;
+  const { id, x, y, gx, gy, dia, noCeu, elevacao } = o;
   const claro = noCeu ? dia : 0;                       // abaixo do horizonte (espaço) = sempre "noite"
   const corGlifo = misturarHexCeu('#ffffff', '#0b0b10', claro);
   const corContorno = (noCeu && claro > 0.5) ? 'rgba(255,255,255,.75)' : 'rgba(11,18,48,.6)';
@@ -1313,7 +1314,7 @@ function desenharPlanetaCeuSVG(o) {
     const c2 = misturarHexCeu('#e4efff', '#ffc896', calor), c3 = misturarHexCeu('#ffffff', '#ffe2c4', calor);
     corpo = `<defs><radialGradient id="${gid}"><stop offset="0%" stop-color="#fff"/><stop offset="9%" stop-color="#fff"/><stop offset="13%" stop-color="${c3}" stop-opacity=".92"/><stop offset="22%" stop-color="${c3}" stop-opacity=".6"/><stop offset="40%" stop-color="${c2}" stop-opacity=".28"/><stop offset="70%" stop-color="${c2}" stop-opacity=".08"/><stop offset="100%" stop-color="${c2}" stop-opacity="0"/></radialGradient></defs>
       <circle cx="${x}" cy="${y}" r="112" fill="url(#${gid})"/>`
-      + glifoSilhuetaCeu('Sun', x + 3, y - 46, 30, corGlifo, corContorno, 2);
+      + glifoSilhuetaCeu('Sun', gx, gy, 30, corGlifo, corContorno, 2);
   } else if (id === 'Moon') {
     const r = 13, frac = o.luaFrac, cresc = o.luaCrescente !== o.luaInvertida;
     const luz = cresc ? 1 : -1, rx = r * Math.abs(1 - 2 * frac);
@@ -1326,7 +1327,7 @@ function desenharPlanetaCeuSVG(o) {
       <circle cx="${x}" cy="${y}" r="${r * 2.6}" fill="url(#${gid})"/>
       <circle cx="${x}" cy="${y}" r="${r}" fill="${esc}" fill-opacity="${(0.9 - 0.35 * claro).toFixed(2)}" stroke="rgba(220,230,255,${(0.35 - 0.1 * claro).toFixed(2)})" stroke-width="1"/>
       ${d ? `<path d="${d}" fill="#fffef2"/>` : ''}`
-      + glifoSilhuetaCeu('Moon', x + lado * 26, y - 24, 28, corGlifo, corContorno, 2);
+      + glifoSilhuetaCeu('Moon', gx, gy, 28, corGlifo, corContorno, 2);
   } else {
     const BR = { Mercury: 0.55, Venus: 1, Mars: 0.6, Jupiter: 0.85, Saturn: 0.65 }[id] || 0.6;
     const DV = { Mercury: 0.06, Venus: 0.5, Mars: 0.08, Jupiter: 0.22, Saturn: 0.08 }[id] || 0.1;
@@ -1335,7 +1336,7 @@ function desenharPlanetaCeuSVG(o) {
     corpo = `<defs><radialGradient id="${gid}"><stop offset="0%" stop-color="#fff" stop-opacity="${(0.95 * vis).toFixed(3)}"/><stop offset="30%" stop-color="#fff" stop-opacity="${((0.4 * BR + 0.1) * vis).toFixed(3)}"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
       <circle cx="${x}" cy="${y}" r="${halo.toFixed(1)}" fill="url(#${gid})"/>
       <circle cx="${x}" cy="${y}" r="${(core * 0.7).toFixed(1)}" fill="#fff" fill-opacity="${Math.min(1, vis * 1.6).toFixed(3)}"/>`
-      + glifoSilhuetaCeu(id, x + lado * 27, y - 24, 30, corGlifo, corContorno, 2);
+      + glifoSilhuetaCeu(id, gx, gy, 30, corGlifo, corContorno, 2);
   }
   return corpo;
 }
@@ -2029,38 +2030,62 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      planeta), quem fica na frente é sempre o corpo mais próximo da Terra —
      exatamente como no céu real, onde o mais distante fica encoberto. */
   const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
+
+  /* Tema Céu: o PONTO de luz fica sempre na posição real (ângulo da longitude,
+     raio da latitude — nada de empilhamento radial, que falsearia a altura).
+     Só o GLIFO desvia, e só lateralmente (ao longo do círculo, nunca pra
+     cima/baixo na roda): começa um pouco ao lado do ponto e, se dois glifos
+     colidem, eles se afastam em ângulo. */
+  if (temaCeu) {
+    const ps = outerRingItems.filter(i => i.type === 'planet').sort((a, b) => a.aScreen - b.aScreen);
+    const BASE = 4.2, MIN_LADO = 3.6, MIN = 8.6; // graus de arco no raio dos planetas
+    ps.forEach(it => { it.gAng = it.aScreen + BASE; });
+    for (let pass = 0; pass < 60; pass++) {
+      for (let i = 0; i < ps.length - 1; i++) {
+        const diff = ps[i + 1].gAng - ps[i].gAng;
+        if (diff < MIN) { const ov = (MIN - diff) / 2; ps[i].gAng -= ov; ps[i + 1].gAng += ov; }
+      }
+      // o glifo nunca fica em cima do próprio ponto de luz: sempre a pelo menos MIN_LADO do ângulo real
+      ps.forEach(it => { if (it.gAng < it.aScreen + MIN_LADO) it.gAng = it.aScreen + MIN_LADO; });
+    }
+  }
+
   outerRingItems
     .filter(item => item.type === 'planet')
     .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
     .forEach(item => {
-      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
+      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      const estiloGrau = `font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill"`;
 
+      if (temaCeu) {
+        const rPonto = pR + (item.eclLat * latPxPerGrau);
+        const pPonto = polarToCart(cx, cy, rPonto, item.aScreen);
+        const pGlifo = polarToCart(cx, cy, rPonto, item.gAng);
+        const p1c = polarToCart(cx, cy, R.Termos, item.aScreen);
+        const p2c = polarToCart(cx, cy, rPonto - 10, item.aScreen);
+        svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
+        // Acima do horizonte (metade de cima do referencial girado) vale o dia/noite do Sol.
+        const rad = -skyRotation * Math.PI / 180, dx = pPonto.x - cx, dy = pPonto.y - cy;
+        const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
+        const elong = (((pObj.Moon.abs - pObj.Sun.abs) % 360) + 360) % 360;
+        svg += desenharPlanetaCeuSVG({
+          id: item.id, x: pPonto.x, y: pPonto.y, gx: pGlifo.x, gy: pGlifo.y,
+          dia: ceuParams.dia, noCeu: yRot < 0, elevacao: ceuParams.elevacao,
+          luaFrac: (1 - Math.cos(elong * Math.PI / 180)) / 2, luaCrescente: elong < 180,
+          luaInvertida: (currentGeo && currentGeo.lat < 0)
+        });
+        svg += `<text x="${pGlifo.x.toFixed(1)}" y="${(pGlifo.y + 27).toFixed(1)}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>`;
+        return;
+      }
+
+      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
       const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
       const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
-
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
-      let iconeSvg;
-      if (temaCeu) {
-        // Tema Céu: ponto de luz + glifo ao lado (ver desenharPlanetaCeuSVG). Acima do
-        // horizonte (metade de cima do referencial girado) vale o dia/noite do Sol.
-        const rad = -skyRotation * Math.PI / 180, dx = pPos.x - cx, dy = pPos.y - cy;
-        const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
-        const sunAbs = pObj.Sun.abs, moonAbs = pObj.Moon.abs;
-        const elong = ((moonAbs - sunAbs) % 360 + 360) % 360;
-        iconeSvg = `<g transform="translate(${-pPos.x}, ${-pPos.y})">${desenharPlanetaCeuSVG({
-          id: item.id, x: pPos.x, y: pPos.y, dia: ceuParams.dia, noCeu: yRot < 0, elevacao: ceuParams.elevacao,
-          lado: pPos.x >= cx ? 1 : -1,
-          luaFrac: (1 - Math.cos(elong * Math.PI / 180)) / 2, luaCrescente: elong < 180,
-          luaInvertida: (currentGeo && currentGeo.lat < 0)
-        })}</g>`;
-      } else {
-        iconeSvg = `<g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(item.id)}</g>`;
-      }
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${iconeSvg}
-        <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
+        <g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(item.id)}</g>
+        <text x="0" y="27" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
 
