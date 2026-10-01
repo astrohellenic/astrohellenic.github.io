@@ -1341,6 +1341,19 @@ function desenharPlanetaCeuSVG(o) {
   return corpo;
 }
 
+/* ÍCONE DOS ÂNGULOS (ASC/DSC/MC/IC) NO TEMA CÉU — mesmo estilo dos nodos e dos lotes: traço
+   claro (azul-marinho de dia) dentro de um retículo tracejado, sem brilho. O triângulo vem
+   do ícone do software e aponta pro ângulo certo (rotação aScreen - 180). */
+function iconeAnguloCeuSVG(aScreen, cor, rotulo) {
+  const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO.outro && ICONES_SIMPLES_NOVO.outro.angulo) || '';
+  const reticulo = `<circle cx="0" cy="0" r="19" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
+  if (!bruto) return reticulo;
+  const miolo = bruto.slice(bruto.indexOf('>') + 1, bruto.lastIndexOf('</svg>')).replace(/<defs>[\s\S]*?<\/defs>/g, '').replace(/<clipPath[\s\S]*?<\/clipPath>/g, '')
+    .replace(/clip-path="[^"]*"/g, '').replace(/stroke-width="[\d.]+"/g, 'stroke-width="6"').replace(/fill="#fff"/g, `fill="${cor}" fill-opacity=".18"`).replace(/stroke="#000"/g, `stroke="${cor}"`);
+  return reticulo + `<g transform="scale(0.26) translate(-50, -50) rotate(${(aScreen - 180).toFixed(2)} 50 50)" stroke-linejoin="round">${miolo}</g>`
+    + `<text x="0" y="2.6" font-size="6.5" font-weight="900" fill="${cor}" text-anchor="middle">${rotulo}</text>`;
+}
+
 /* PONTOS CALCULADOS NO TEMA CÉU (lotes, nodos, sizígia) — traço fino e claro
    dentro de um retículo tracejado, sem brilho: não são corpos do céu, são
    marcações calculadas sobre ele. Lotes em traço fino (contorno do ícone);
@@ -1416,7 +1429,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos } = o;
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos, rTerra, rAneis } = o;
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const noCeuEm = (x, y) => { const rad = -skyRotation * Math.PI / 180; return ((x - cx) * Math.sin(rad) + (y - cy) * Math.cos(rad)) < 0; };
@@ -1427,6 +1440,12 @@ function montarBandaZodiacoCeuSVG(o) {
     const r1 = rIn + RIN, r2 = rOut - RIN;
     const q1 = P(r2, a1), q2 = P(r2, a2), q3 = P(r1, a2), q4 = P(r1, a1);
     svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)} A${r1} ${r1} 0 0 1 ${q4.x.toFixed(1)} ${q4.y.toFixed(1)}Z" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4" stroke-linejoin="round"/>`;
+    // as divisas do signo seguem pra dentro: pausam nos anéis de termos/dodecatemória (de rAneis
+    // pra fora) e continuam até encostar na Terra
+    [a1, a2].forEach(ang => {
+      const i0 = P(rTerra, ang), i1 = P(rAneis, ang);
+      svg += `<line x1="${i0.x.toFixed(1)}" y1="${i0.y.toFixed(1)}" x2="${i1.x.toFixed(1)}" y2="${i1.y.toFixed(1)}" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+    });
     const Am = A - 15, pG = P(rOut - 26, Am), pN = P(rIn + 20, Am);
     svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${cor};">${glifos[i]}</svg>`;
     svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
@@ -1448,12 +1467,10 @@ function montarBandaZodiacoCeuSVG(o) {
   return svg;
 }
 
-/* A TERRA no miolo (só Tema Céu): esfera clara com halo de atmosfera — é onde ficam os
+/* A TERRA no miolo (só Tema Céu): esfera clara — é onde ficam os
    aspectos. (Mais pra frente é aqui que entra o papiro.) */
 function montarTerraCeuSVG(cx, cy, raio, corBorda) {
-  return `<defs><radialGradient id="ceuTerra" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffffff"/><stop offset="70%" stop-color="#f4f1e6"/><stop offset="100%" stop-color="#d8d2bd"/></radialGradient>
-    <radialGradient id="ceuAtmosfera"><stop offset="86%" stop-color="#8ec5ff" stop-opacity="0"/><stop offset="93%" stop-color="#8ec5ff" stop-opacity=".55"/><stop offset="100%" stop-color="#8ec5ff" stop-opacity="0"/></radialGradient></defs>
-    <circle cx="${cx}" cy="${cy}" r="${(raio * 1.22).toFixed(1)}" fill="url(#ceuAtmosfera)"/>
+  return `<defs><radialGradient id="ceuTerra" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffffff"/><stop offset="70%" stop-color="#f4f1e6"/><stop offset="100%" stop-color="#d8d2bd"/></radialGradient></defs>
     <circle cx="${cx}" cy="${cy}" r="${raio}" fill="url(#ceuTerra)" stroke="${corBorda}" stroke-width="2"/>`;
 }
 
@@ -1889,7 +1906,8 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     // Tema Céu: faixa do zodíaco na eclíptica (por trás de tudo) + a Terra no miolo
     svg += montarBandaZodiacoCeuSVG({
       cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams.dia, tinta,
-      elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS
+      elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
+      rTerra: R.Aspects, rAneis: R.SignSector
     });
     svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor);
   } else {
@@ -2001,9 +2019,25 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      angulo certo de CADA mapa (ASC/DSC nem sempre caem exatamente em
      180/0deg quando a casa 1 usa um Lote como referencia em vez do
      ASC, e MC/IC quase nunca caem exatamente em 270/90deg). */
+  // Tema Céu: cor dos pontos calculados conforme dia/noite NO LUGAR onde ele está (acima do
+  // horizonte, de dia -> azul-marinho; à noite ou no espaço -> branco-azulado).
+  const corCalculadoCeu = (px, py) => {
+    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
+    const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
+    return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
+  };
+
   eixosInternos.forEach(eixo => {
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
+    if (temaCeu) {
+      // mesmo estilo dos nodos/lotes: triângulo em traço claro dentro de um retículo tracejado
+      const cor = corCalculadoCeu(pPos.x, pPos.y);
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">${iconeAnguloCeuSVG(aScreen, cor, eixo.label)}
+        <text x="0" y="29" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+      </g>`;
+      return;
+    }
     const anguloFrag = getIconeFragmento('outro', 'angulo');
     const anguloFundo = getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
 
@@ -2067,14 +2101,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   const LOTE_ICON_KEY = {
     fortune: 'fortune', spirit: 'spirit', venus: 'eros',
     mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
-  };
-
-  // Tema Céu: cor do ponto calculado conforme dia/noite NO LUGAR onde ele está (acima do
-  // horizonte, de dia -> azul-marinho; à noite ou no espaço -> branco-azulado).
-  const corCalculadoCeu = (px, py) => {
-    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
-    const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
-    return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
   };
 
   outerRingItems.forEach(item => {
