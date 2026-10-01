@@ -1466,11 +1466,38 @@ function montarBandaZodiacoCeuSVG(o) {
   return svg;
 }
 
-/* A TERRA no miolo (só Tema Céu): esfera clara — é onde ficam os
+/* O CHÃO no miolo (só Tema Céu): janela com céu em cima e terra embaixo das colinas — é onde ficam os
    aspectos. (Mais pra frente é aqui que entra o papiro.) */
-function montarTerraCeuSVG(cx, cy, raio, corBorda) {
-  return `<defs><radialGradient id="ceuTerra" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffffff"/><stop offset="70%" stop-color="#f4f1e6"/><stop offset="100%" stop-color="#d8d2bd"/></radialGradient></defs>
-    <circle cx="${cx}" cy="${cy}" r="${raio}" fill="url(#ceuTerra)" stroke="${corBorda}" stroke-width="2"/>`;
+function montarTerraCeuSVG(cx, cy, raio, corBorda, dia, skyRotation) {
+  // O miolo é uma "janela": acima das colinas do horizonte aparece o próprio céu (nada é
+  // desenhado ali), abaixo delas é CHÃO preenchido. O horizonte gira junto com a casa 1
+  // (skyRotation), então tudo fica num grupo girado.
+  const mix = misturarHexCeu;
+  const c1 = mix('#2a221a', '#6e5d47', dia), c2 = mix('#16120d', '#4a3d2d', dia), sil = mix('#0c0a07', '#2b2216', dia);
+  const bruma = mix('#5a4f9a', '#cfe6f7', dia);
+  const r = raio;
+  let colinas = `M${cx - r} ${cy}`;
+  const N = 22;
+  for (let i = 0; i <= N; i++) {
+    const x = cx - r + i * (2 * r / N);
+    const h = 4 + 5 * Math.abs(Math.sin(i * 1.7 + 0.6)) + 3 * Math.abs(Math.sin(i * 0.8));
+    colinas += ` L${x.toFixed(1)} ${(cy - h).toFixed(1)}`;
+  }
+  colinas += ` L${cx + r} ${cy} A${r} ${r} 0 0 1 ${cx - r} ${cy} Z`;   // fecha pela metade de baixo do círculo
+  return `<defs>
+      <radialGradient id="ceuChao" cx="50%" cy="38%" r="75%"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></radialGradient>
+      <linearGradient id="ceuBruma" x1="0" y1="${cy - 28}" x2="0" y2="${cy}" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="${bruma}" stop-opacity="0"/><stop offset="100%" stop-color="${bruma}" stop-opacity="${(0.25 + 0.3 * dia).toFixed(2)}"/></linearGradient>
+      <clipPath id="ceuTerraClip"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+    </defs>
+    <g transform="rotate(${skyRotation} ${cx} ${cy})">
+      <g clip-path="url(#ceuTerraClip)">
+        <rect x="${cx - r}" y="${cy - 28}" width="${2 * r}" height="28" fill="url(#ceuBruma)"/>
+        <path d="${colinas}" fill="url(#ceuChao)"/>
+        <path d="${colinas}" fill="${sil}" fill-opacity=".35"/>
+        <path d="M${cx - r} ${cy} L${cx + r} ${cy}" stroke="${bruma}" stroke-opacity=".45" stroke-width="1"/>
+      </g>
+    </g>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${corBorda}" stroke-width="2"/>`;
 }
 
 /* CÉU DO TEMA CÉU (cores do site falandodeastrologia) — só pintura.
@@ -1851,7 +1878,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   const ceuParams = temaCeu ? {
     cx, cy, width, height, termos: R.Aspects, raioCeu: R_Ceu, skyRotation,
     elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
-    corDisco: tinta.fundoDisco
+    corDisco: 'none' // sem disco branco: o miolo é uma janela pro céu (ver montarTerraCeuSVG)
   } : null;
   if (ceuParams) { const t = Math.max(0, Math.min(1, (ceuParams.elevacao + 0.10) / 0.60)); ceuParams.dia = t * t * (3 - 2 * t); }
   const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
@@ -1908,7 +1935,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
       elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
       rTerra: R.Aspects, rAneis: R.SignSector
     });
-    svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor);
+    svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor, ceuParams.dia, skyRotation);
   } else {
     svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
   }
@@ -1929,7 +1956,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       if (col) {
         const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
         const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
+        if (temaCeu) {
+          // sobre o chão escuro e o céu claro: cor mais clara + contorno escuro fininho por baixo
+          const corCeu = { [tinta.aspectoOposicao]: '#fb7185', [tinta.aspectoTrigono]: '#60a5fa', [tinta.aspectoQuadratura]: '#ff6b4a', [tinta.aspectoSextil]: '#38bdf8' }[col] || col;
+          svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="rgba(8,14,40,.55)" stroke-width="3.8" stroke-linecap="round"/>`;
+          svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${corCeu}" stroke-width="1.9" stroke-linecap="round"/>`;
+        } else {
         svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${col}" stroke-width="1.8" opacity="0.9"/>`;
+        }
       }
     }
   }
