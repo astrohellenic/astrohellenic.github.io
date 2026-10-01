@@ -963,6 +963,9 @@ window.addEventListener('resize', ajustarControlesMandalaNaLargura);
    - montarCabecalhoMandalaImagemHTML: o mesmo desenho como <img> (SVG
      isolado, igual à Mandala renderiza), pras outras ferramentas. */
 function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
+  // Tema Céu: o cabeçalho GLOBAL (o mesmo de todas as ferramentas) é o de papiro. Fora do
+  // Tema Céu, tudo segue como sempre foi.
+  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return coresCabecalhoPapiro();
   const HEX_RE = /^#[0-9a-fA-F]{6}$/;
   function luminanciaRelativaHex(hex) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
@@ -1026,18 +1029,20 @@ function caminhoBordaPapiro(x, y, w, h) {
   return 'M' + pts.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L') + ' Z';
 }
 
+let _papiroCabContador = 0;
 function aplicarPapiroNoCabecalhoSVG(svg) {
+  const sf = '_' + (_papiroCabContador++);
   const defs = `<defs>
-    <linearGradient id="papiroCabBase" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="papiroCabBase${sf}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#d6bd92"/><stop offset="55%" stop-color="#c8a878"/><stop offset="100%" stop-color="#b98f5f"/>
     </linearGradient>
-    <radialGradient id="papiroCabLuz" cx="0.18" cy="0.2" r="0.6">
+    <radialGradient id="papiroCabLuz${sf}" cx="0.18" cy="0.2" r="0.6">
       <stop offset="0%" stop-color="#f0deb4" stop-opacity="0.45"/><stop offset="100%" stop-color="#fff0c8" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="papiroCabSombra" cx="0.9" cy="0.9" r="0.6">
+    <radialGradient id="papiroCabSombra${sf}" cx="0.9" cy="0.9" r="0.6">
       <stop offset="0%" stop-color="#6e461e" stop-opacity="0.3"/><stop offset="100%" stop-color="#6e461e" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="papiroCabFibras" width="24" height="5" patternUnits="userSpaceOnUse">
+    <pattern id="papiroCabFibras${sf}" width="24" height="5" patternUnits="userSpaceOnUse">
       <line x1="0" y1="0.5" x2="24" y2="0.5" stroke="#785528" stroke-opacity="0.13" stroke-width="1"/>
       <line x1="12" y1="0" x2="12" y2="5" stroke="#966e3c" stroke-opacity="0.09" stroke-width="1.5"/>
     </pattern>
@@ -1049,7 +1054,7 @@ function aplicarPapiroNoCabecalhoSVG(svg) {
   // com stroke original é substituído por ele).
   const d = caminhoBordaPapiro(15, parseFloat(attrs[1]), parseFloat(attrs[2]), parseFloat(attrs[3]));
   const camada = fill => `<path d="${d}" fill="${fill}"/>`;
-  const papel = camada('url(#papiroCabBase)') + camada('url(#papiroCabLuz)') + camada('url(#papiroCabSombra)') + camada('url(#papiroCabFibras)');
+  const papel = camada(`url(#papiroCabBase${sf})`) + camada(`url(#papiroCabLuz${sf})`) + camada(`url(#papiroCabSombra${sf})`) + camada(`url(#papiroCabFibras${sf})`);
   return defs + svg.replace(m[0], papel);
 }
 
@@ -1218,7 +1223,7 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
      isolada e por isso também não usa Cinzel/Montserrat. */
   const largura = (opcoes && opcoes.largura) || 960;
   const layout = montarCabecalhoMandalaLayout(data, 2, cores, opcoes && opcoes.loteCasa1, opcoes);
-  const grupo = layout.svg
+  const grupo = (cores.papiro ? aplicarPapiroNoCabecalhoSVG(layout.svg) : layout.svg)
     .replace(/'Cinzel', serif/g, 'serif')
     .replace(/'Montserrat', sans-serif/g, 'sans-serif');
   const altura = layout.altura + 4;

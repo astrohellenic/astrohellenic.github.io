@@ -691,6 +691,34 @@ body {
             background-color: #070d25;
         }
 
+        /* TEMA CÉU: barra superior em papiro (em todas as ferramentas — o Tema Céu é do
+           software inteiro). SÓ PINTURA: não mexe em altura (52px), posição (fixa ou no
+           fluxo), padding nem espaçador medido em JS. O contorno azul vira transparente
+           (mantém a mesma espessura, só some a cor) e a borda rasgada vem de clip-path. */
+        body.tema-ceu #top-bar {
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.22) 100%),
+                radial-gradient(ellipse at 10% 25%, rgba(240,222,180,0.45) 0%, transparent 45%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%);
+            border-color: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            clip-path: polygon(
+                0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px,
+                calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px),
+                98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px),
+                4px 70%, 0 45%, 3px 22%);
+        }
+        body.tema-ceu #top-bar .icon-btn { color: #1d3a66; }
+        body.tema-ceu #top-bar .icon-btn:hover { background: rgba(29, 58, 102, 0.14); color: #0f2a52; }
+        body.tema-ceu #top-bar .icon-btn.matriz-visibilidade-ativa { background: #103b70; color: #fcf6ba; }
+        body.tema-ceu #top-bar .icon-btn.matriz-visibilidade-ativa:hover { background: #0c2c54; color: #fcf6ba; }
+        body.tema-ceu #top-bar .menu-toggle-btn { background: rgba(255, 240, 200, 0.35); border-color: #1d3a66; color: #1d3a66; }
+        body.tema-ceu #top-bar .menu-toggle-btn:hover { background: rgba(255, 240, 200, 0.6); border-color: #0f2a52; color: #0f2a52; }
+
+
         #mandala-container {
             flex: 1;
             display: flex;
@@ -1199,7 +1227,7 @@ body {
 <script src="planetIcons.js?v=20260930a"></script>
 <script src="matrizVisibilidade.js?v=20260930a"></script>
 <script src="tabelaTecnica.js?v=20260930a"></script>
-<script src="mandala.js?v=20261001o"></script>
+<script src="mandala.js?v=20261001p"></script>
 <script src="isopsefia.js?v=20260930a"></script>
 <script src="profeccao.js?v=20260930d"></script>
 <script src="sinastria.js?v=20260930c"></script>
