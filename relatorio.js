@@ -3226,6 +3226,10 @@ function calcularLotesRelatorio() {
    continua sendo a mesma cópia 'claro' de sempre, com o disco claro
    "flutuando" dentro do céu estrelado — o visual de sempre desse tema,
    que já funciona e não deve mudar aqui. */
+/* Céu da capa (Tema Céu): o MESMO céu da mandala, guardado na hora de desenhar a roda da capa. Chaves:
+   'mandala_natal' / 'mandala_fortuna'. Só existe quando a capa usa uma dessas duas mandalas. */
+let relatorioCeuFundoCapa = {};
+
 async function renderizarMandalasDoPreset(blocos, capaFonte) {
   // Calcula cada mandala se ela tiver página própria marcada no preset OU
   // se for a fonte escolhida pra capa (as duas coisas são independentes:
@@ -3234,6 +3238,7 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
   const precisaFortuna = blocos.some(b => b.type === 'ferramenta' && b.id === 'mandala_fortuna') || capaFonte === 'mandala_fortuna';
   const lotSalvo = selectedHouse1Lot;
   let png1 = null, png2 = null, png1Capa = null, png2Capa = null;
+  relatorioCeuFundoCapa = {};
 
   const blocoCapa = (blocos || []).find(b => b.type === 'capa');
   const estiloCapa = estiloMandalaParaCapa(blocoCapa);
@@ -3255,8 +3260,9 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
     png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
       png1Capa = await new Promise(resolve => temaCeuAtivo
-        ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o fundo é o céu do site, via CSS) e cabeçalho em papiro
+        ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o céu da capa vem de relatorioCeuFundoCapa) e cabeçalho em papiro
         : renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
+      if (temaCeuAtivo) relatorioCeuFundoCapa.mandala_natal = window.ceuFundoCapaUltimo;
     }
   }
   if (precisaFortuna) {
@@ -3264,8 +3270,9 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
     png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
       png2Capa = await new Promise(resolve => temaCeuAtivo
-        ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o fundo é o céu do site, via CSS) e cabeçalho em papiro
+        ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o céu da capa vem de relatorioCeuFundoCapa) e cabeçalho em papiro
         : renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
+      if (temaCeuAtivo) relatorioCeuFundoCapa.mandala_fortuna = window.ceuFundoCapaUltimo;
     }
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
@@ -3335,6 +3342,14 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   // do corpo do relatório, então nunca entram no map abaixo.
   const blocos = (preset.blocos || []).filter(b => b.type !== 'capa' && b.type !== 'encerramento');
   const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa);
+  /* Tema Céu + capa com a roda da própria mandala: o céu de fundo é o da mandala (ver relatorioCeuFundoCapa).
+     A imagem da roda vai dentro de um invólucro do tamanho exato dela; o céu enorme é posicionado em
+     porcentagens desse invólucro (alinhado ao centro da roda) e recortado pela folha da capa. */
+  const ceuFundoCapa = (capaClasseCeu && imgCapa && ((capaFonte === 'mandala_fortuna' && imgCapa === png2Capa) || (capaFonte !== 'mandala_fortuna' && imgCapa === png1Capa)))
+    ? relatorioCeuFundoCapa[capaFonte === 'mandala_fortuna' ? 'mandala_fortuna' : 'mandala_natal'] : null;
+  const imgCeuFundoHtml = ceuFundoCapa
+    ? `<img class="rel-ceu-fundo" alt="" src="${ceuFundoCapa.url}" style="left: ${((ceuFundoCapa.cx - ceuFundoCapa.ext) / ceuFundoCapa.width * 100).toFixed(3)}%; top: ${((ceuFundoCapa.cy - ceuFundoCapa.ext) / ceuFundoCapa.height * 100).toFixed(3)}%; width: ${(ceuFundoCapa.ext * 2 / ceuFundoCapa.width * 100).toFixed(3)}%; height: ${(ceuFundoCapa.ext * 2 / ceuFundoCapa.height * 100).toFixed(3)}%;">`
+    : '';
   const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
   const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -3348,12 +3363,12 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   return `
     <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
          cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
-    <section class="rel-page rel-capa${capaClasseCeu}${capaClasseBorda}" data-pg="capa"${estiloCapaCores}>
+    <section class="rel-page rel-capa${capaClasseCeu}${ceuFundoCapa ? ' rel-capa-ceu-fundo' : ''}${capaClasseBorda}" data-pg="capa"${estiloCapaCores}>
       ${capaComBorda ? '<div class="rel-capa-moldura">' : ''}
       <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
       ${imgCapa ? `
         <div class="rel-capa-centro">
-          <img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">
+          ${ceuFundoCapa ? `<div class="rel-capa-roda">${imgCeuFundoHtml}<img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}"></div>` : `<img class="rel-img-capa" src="${imgCapa}" alt="${escapeHtml(preset.nome)}">`}
         </div>
       ` : '<div class="rel-capa-centro"></div>'}
       <div class="rel-marca-rodape">
@@ -4057,6 +4072,12 @@ function injetarEstilosRelatorio() {
           linear-gradient(to top, #3a2f5e 0%, #23305f 14%, #15214a 40%, #0d1738 70%, #070d25 100%);
       }
       .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #d4af37; }
+      /* Capa com o céu DA MANDALA (mesmo Sol/horizonte/brilho da roda): o fundo antigo (degradê com mancha laranja
+         fixa no pé) sai; o céu é um SVG enorme atrás da roda, recortado pela folha. z-index negativo dentro da
+         própria capa (isolation) = fica atrás do título, da roda e do rodapé. */
+      .rel-capa.rel-capa-ceu.rel-capa-ceu-fundo { background: #070d25; isolation: isolate; overflow: hidden; }
+      .rel-capa-roda { position: relative; display: inline-block; line-height: 0; }
+      .rel-ceu-fundo { position: absolute; max-width: none; max-height: none; z-index: -1; pointer-events: none; }
 
       /* PÁGINAS DAS MANDALAS — .rel-img-mandala só tinha limite de LARGURA
          (max-width: 175mm), nunca de altura. Pra maioria das mandalas

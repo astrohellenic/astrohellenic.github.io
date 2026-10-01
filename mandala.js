@@ -1541,6 +1541,9 @@ function montarTerraCeuSVG(cx, cy, raio, corBorda, dia, skyRotation) {
    porque o fundo da capa já é o céu do site (CSS). */
 function montarCeuMandalaSVG(o) {
   const { cx, cy, width, height, termos, raioCeu, skyRotation, elevacao, ladoSol, corDisco, soHalo, extensao } = o;
+  // Só o fundo da CAPA do Relatório usa estes dois (a roda ali é minúscula perto da folha, então as estrelas
+  // precisam de raio maior e de menos unidades de densidade pra ficarem do mesmo tamanho/quantidade visuais).
+  const fatorEstrela = o.fatorEstrela || 1, densidadeEstrela = o.densidadeEstrela || 1;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const suave = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -1586,9 +1589,9 @@ function montarCeuMandalaSVG(o) {
   const cores = ['#dfe8ff', '#f6e7b4', '#ffffff'];
   let estrelasCeu = '', estrelasEspaco = '';
   const meio = Math.ceil(raioTotal);
-  for (let i = 0; i < 520; i++) {
+  for (let i = 0; i < Math.round(520 * densidadeEstrela); i++) {
     const x = cx - meio + rnd() * meio * 2, y = cy - meio + rnd() * meio * 2;
-    const grande = rnd() < 0.16, cor = cores[Math.floor(rnd() * 3)], opac = (0.55 + rnd() * 0.45).toFixed(2), raio = ((grande ? 2.1 : 1.2) * (0.8 + rnd() * 0.5)).toFixed(2);
+    const grande = rnd() < 0.16, cor = cores[Math.floor(rnd() * 3)], opac = (0.55 + rnd() * 0.45).toFixed(2), raio = ((grande ? 2.1 : 1.2) * (0.8 + rnd() * 0.5) * fatorEstrela).toFixed(2);
     if (Math.hypot(x - cx, y - cy) < termos + 14) continue;
     const c = `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${raio}" fill="${cor}" fill-opacity="${opac}"/>`;
     if (y < cy) estrelasCeu += c; else estrelasEspaco += c;
@@ -1598,10 +1601,10 @@ function montarCeuMandalaSVG(o) {
   // (mesmo gerador); as extras só caem FORA desse quadrado, pra não haver
   // emenda visível na borda da imagem.
   if (extensao && !soHalo) {
-    const total = Math.min(4200, Math.round(520 * Math.pow(extensao / meio, 2)));
+    const total = Math.min(4200, Math.round(520 * Math.pow(extensao / meio, 2) * densidadeEstrela));
     for (let i = 0; i < total; i++) {
       const x = cx - extensao + rnd() * extensao * 2, y = cy - extensao + rnd() * extensao * 2;
-      const grande = rnd() < 0.16, cor = cores[Math.floor(rnd() * 3)], opac = (0.55 + rnd() * 0.45).toFixed(2), raio = ((grande ? 2.1 : 1.2) * (0.8 + rnd() * 0.5)).toFixed(2);
+      const grande = rnd() < 0.16, cor = cores[Math.floor(rnd() * 3)], opac = (0.55 + rnd() * 0.45).toFixed(2), raio = ((grande ? 2.1 : 1.2) * (0.8 + rnd() * 0.5) * fatorEstrela).toFixed(2);
       if (Math.abs(x - cx) <= meio && Math.abs(y - cy) <= meio) continue;
       const c = `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${raio}" fill="${cor}" fill-opacity="${opac}"/>`;
       if (y < cy) estrelasCeu += c; else estrelasEspaco += c;
@@ -1910,6 +1913,16 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   } : null;
   if (ceuParams) { const t = Math.max(0, Math.min(1, (ceuParams.elevacao + 0.10) / 0.60)); ceuParams.dia = t * t * (3 - 2 * t); }
   const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
+  /* CAPA do Relatório (espacoTransparente + Tema Céu): além da roda "só com halo", guarda o MESMO céu da tela
+     (mesmo Sol, mesma rotação do horizonte, mesmo brilho no lado do Sol), enorme, pra a capa usar de fundo,
+     alinhado ao centro da roda (ver relatorio.js, .rel-ceu-fundo). Data URL (não blob): o HTML da capa vai
+     inteiro pro gerador de PDF no servidor, que não enxerga blobs do navegador. */
+  window.ceuFundoCapaUltimo = null;
+  if (temaCeu && espacoTransparente) {
+    const EXT_CAPA = 3600;
+    const svgFundo = montarFundoCeuSVG(Object.assign({}, ceuParams, { fatorEstrela: 3, densidadeEstrela: 0.11 }), EXT_CAPA);
+    window.ceuFundoCapaUltimo = { url: 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgFundo))), cx, cy, width, height, ext: EXT_CAPA };
+  }
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
