@@ -723,6 +723,53 @@ body {
         body.tema-ceu #top-bar .menu-toggle-btn { background: rgba(255, 240, 200, 0.35); border-color: #1d3a66; color: #1d3a66; }
         body.tema-ceu #top-bar .menu-toggle-btn:hover { background: rgba(255, 240, 200, 0.6); border-color: #0f2a52; color: #0f2a52; }
 
+        /* TEMA CÉU: ícone do menu lateral em terracota (a cor de destaque do tema) — os demais
+           ícones da barra seguem azul-tinta. SÓ COR do desenho. */
+        body.tema-ceu #top-bar .menu-toggle-btn { color: #a03e25; }
+        body.tema-ceu #top-bar .menu-toggle-btn:hover { color: #7f2e1a; }
+
+        /* TEMA CÉU: botões que flutuam sobre a mandala (canto esquerdo: salvar/atualizar/matriz/
+           RS; canto direito: Casa 1, Relatório, galeria, zoom, stepper de tempo) viram pedaços
+           de papiro com borda rasgada, ícones em azul-tinta. SÓ PINTURA: tamanho, posição e
+           espaçamento ficam como estão (vários desses estilos são inline, por isso !important). */
+        body.tema-ceu {
+            --papiro-botao:
+                radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.22) 100%),
+                radial-gradient(ellipse at 15% 20%, rgba(240,222,180,0.45) 0%, transparent 50%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%);
+            --papiro-botao-rasgo: polygon(
+                0 2px, 14% 0, 32% 2px, 50% 0, 70% 2px, 88% 0, 100% 2px,
+                calc(100% - 1px) 40%, 100% 70%, calc(100% - 2px) 100%,
+                84% calc(100% - 2px), 62% 100%, 40% calc(100% - 2px), 18% 100%, 0 calc(100% - 2px),
+                2px 65%, 0 35%);
+        }
+        body.tema-ceu #mandala-actions-overlay > .icon-btn,
+        body.tema-ceu #lotRotationBtnContainer > div > button,
+        body.tema-ceu #mandalaRelatorioBtnContainer,
+        body.tema-ceu #mandalaSalvarImagemBtnContainer,
+        body.tema-ceu #mandalaZoomContainer,
+        body.tema-ceu #mandala-controls-overlay .time-stepper,
+        body.tema-ceu #lotMenuList {
+            background: var(--papiro-botao) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            clip-path: var(--papiro-botao-rasgo);
+        }
+        body.tema-ceu #mandala-actions-overlay > .icon-btn { color: #1d3a66; }
+        body.tema-ceu #mandala-actions-overlay > .icon-btn:hover,
+        body.tema-ceu #lotRotationBtnContainer > div > button:hover,
+        body.tema-ceu #mandalaRelatorioBtnContainer:hover,
+        body.tema-ceu #mandalaSalvarImagemBtnContainer:hover { filter: brightness(1.1); color: #0f2a52; }
+        body.tema-ceu #mandala-actions-overlay > .icon-btn.matriz-visibilidade-ativa { background: #103b70 !important; color: #e8d9b0; }
+        body.tema-ceu #mandala-controls-overlay .icon-btn { color: #1d3a66; background: transparent; }
+        body.tema-ceu #mandala-controls-overlay .icon-btn:hover { background: rgba(29, 58, 102, 0.14); color: #0f2a52; }
+        body.tema-ceu #mandala-controls-overlay .time-select { color: #1d3a66; }
+        body.tema-ceu #mandalaZoomContainer button { background: transparent !important; border-color: transparent !important; color: #1d3a66 !important; }
+        body.tema-ceu #mandalaZoomContainer span { color: #1a1410 !important; }
+        body.tema-ceu #mandalaRelatorioBtnContainer svg,
+        body.tema-ceu #mandalaSalvarImagemBtnContainer svg { stroke: #1d3a66; }
+
 
         #mandala-container {
             flex: 1;
