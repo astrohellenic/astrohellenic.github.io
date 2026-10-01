@@ -67,9 +67,9 @@ function getPlanet3DSVGLotes(planetId, size = 26) {
 function getASCIconSVGLotes(size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
   const frag = getIconeFragmento('outro', 'angulo');
-  // Tema Céu: mesmo triângulo azul com letras em terracota de getAnguloCirculoSVG.
+  // Tema Céu: mesmo triângulo só de contorno azul (sem preenchimento) com letras em terracota de getAnguloCirculoSVG.
   const ceu = typeof temaCeuAtivoNosIcones === 'function' && temaCeuAtivoNosIcones();
-  const fundo = getIconeFundoSilhueta('outro', 'angulo', ceu ? '#1d3a66' : '#fffdf5');
+  const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
   const interno = `<g transform="translate(50,50) scale(0.9) translate(-50,-50)">${fundo}${frag}</g><text x="50" y="58" font-size="16" font-weight="900" fill="${ceu ? '#a03e25' : '#000000'}" text-anchor="middle">ASC</text>`;
   return svgComoImagemLotes(interno, size, size, '0 0 100 100');
 }
