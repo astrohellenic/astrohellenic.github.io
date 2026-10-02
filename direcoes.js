@@ -461,24 +461,43 @@ function fatorTelaPautasCircumambulacao() {
   return w > 0 ? w / 920 : 1;
 }
 
+/* Tema Céu: a imagem salva sai como a tela — papiro + tinta. As cores das pautas vêm de variáveis redefinidas só
+   dentro da folha (#circumambulacao-container), então são resolvidas aqui a partir dela (o rasterizador só
+   enxerga as variáveis globais). Fundo chapado '#c8a878' pro recorte automático achar a borda. */
+function circumambulacaoPapiroAtivo() { return window.temaMandala === 'ceu'; }
+function resolverVarsDaFolhaCircumambulacao(svgStr) {
+  const el = document.getElementById('circumambulacao-container');
+  if (!el) return svgStr;
+  const cs = getComputedStyle(el);
+  // 1ª passada: os var(--x) simples (inclusive os de dentro de um "var(--a, var(--b))"); 2ª: os que têm reserva já resolvida
+  return svgStr
+    .replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m)
+    .replace(/var\((--[a-z0-9-]+)\s*,\s*([^()]+)\)/gi, (m, nome, reserva) => cs.getPropertyValue(nome).trim() || reserva.trim());
+}
+
 /* Botão de galeria: título + cabeçalho padrão + pautas, tudo num SVG só,
    gerado SÓ AO TOCAR (ver capturarESalvarNaGaleria, mandala.js). */
 function salvarCircumambulacaoNaGaleria() {
   if (!circumambulacaoMontador) return;
   capturarESalvarNaGaleria(async () => {
     const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
-    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
-    const cores = coresCabecalhoMandala(modoEscuro, null);
-    const corTitulo = cores.titulo;
+    const papiro = circumambulacaoPapiroAtivo();
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
+    const corTitulo = papiro ? '#a03e25' : cores.titulo;
     const k = fatorTelaPautasCircumambulacao();
     const alturaPautas = 20 + (signPassages.length * rowHeight);
     const yTitulo = 34, yCabecalho = 52, yPautas = 142;
     const largura = Math.max(960, (920 * k) + 40), altura = yPautas + (alturaPautas * k) + 20;
     const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
       .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
-    const pautas = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas, k).replace('<svg ', '<svg x="' + ((largura - (920 * k)) / 2) + '" y="' + yPautas + '" ');
+    let pautasSvg = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas, k);
+    if (papiro) pautasSvg = resolverVarsDaFolhaCircumambulacao(pautasSvg);
+    const pautas = pautasSvg.replace('<svg ', '<svg x="' + ((largura - (920 * k)) / 2) + '" y="' + yPautas + '" ');
+    const papelFundo = papiro ? `<defs><linearGradient id="papiroCaptura" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6bd92"/><stop offset=".55" stop-color="#c8a878"/><stop offset="1" stop-color="#b98f5f"/></linearGradient></defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
+      ${papelFundo}
       <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">CIRCUMAMBULAÇÃO PELOS TERMOS</text>
       <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
       ${pautas}
@@ -493,15 +512,17 @@ window.salvarCircumambulacaoNaGaleria = salvarCircumambulacaoNaGaleria;
    (rápido), sem html2canvas. */
 async function capturarCircumambulacaoParaRelatorio() {
   if (!circumambulacaoMontador) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const papiro = circumambulacaoPapiroAtivo();
+  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
   const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
   const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
   try {
     const passagens = indices.length ? indices.map(i => signPassages[i]) : signPassages;
     const k = fatorTelaPautasCircumambulacao();
     const altura = 20 + (passagens.length * rowHeight);
-    const svg = svgPautasComTamanho(montarSvgPautas(passagens, 0, indices.length ? indices : undefined), 920, altura, k);
+    let svg = svgPautasComTamanho(montarSvgPautas(passagens, 0, indices.length ? indices : undefined), 920, altura, k);
+    if (papiro) svg = resolverVarsDaFolhaCircumambulacao(svg);
     const bruto = await rasterizarSvgParaCanvas(svg, 920 * k, altura * k, fundo, 2);
     const canvas = recortarCanvasAoConteudo(bruto, fundo);
     const total = adicionarCapturaRelatorio('circumambulacao', canvas.toDataURL('image/png'));
@@ -702,9 +723,9 @@ function renderCircumambulaçõesUI() {
       const natalTop = yOffset + Math.round(10 * k);
       const natalBottom = yOffset + boxHeight - Math.round(6 * k);
 
-      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="var(--element-fogo)" stroke-width="2"/>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--element-fogo)" text-anchor="start">0.0 anos</text>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--element-fogo)" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="var(--natal-marca, var(--element-fogo))" stroke-width="2"/>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--natal-marca, var(--element-fogo))" text-anchor="start">0.0 anos</text>`;
+      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--natal-marca, var(--element-fogo))" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
@@ -799,7 +820,7 @@ function renderCircumambulaçõesUI() {
         </h3>
 
         <!-- CABEÇALHO PADRÃO: o mesmo de todas as ferramentas (montarCabecalhoMandalaImagemHTML, mandala.js). O seletor de afeta fica na barra de botões acima, não aqui. -->
-        <div class="dir-cabecalho">${montarCabecalhoMandalaImagemHTML(data)}</div>
+        <div class="dir-cabecalho">${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}</div>
 
         <!-- PAUTAS DOS SIGNOS: uma coluna só, na tela e na impressão. As caixinhas (só na tela, ignoradas nas imagens) ficam na margem esquerda. -->
         <div style="width: 100%; overflow-x: auto;">
