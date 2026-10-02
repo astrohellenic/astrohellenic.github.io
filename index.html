@@ -930,7 +930,12 @@ body {
         body.tema-ceu #salvarImagemOverlay > div .btn-primary,
         body.tema-ceu #relBibliotecaEditorOverlay > div .btn-primary,
         body.tema-ceu .rel-seletor-imagem-box .btn-primary,
-        body.tema-ceu #modalSaveCurrentMap > div .btn-primary { background: #1d3a66 !important; color: #f3e6c4 !important; border: 1px solid #1a1410 !important; border-radius: 6px !important; }
+        body.tema-ceu #modalSaveCurrentMap > div .btn-primary {
+            /* botão principal (Salvar / Salvar Alterações / Criar...): pedaço de papiro com borda rasgada, letra em terracota — como os botões da Mandala */
+            background: var(--papiro-botao) !important; color: #a03e25 !important; font-weight: 800 !important;
+            border: 1px solid transparent !important; border-radius: 0 !important; box-shadow: none !important;
+            clip-path: var(--papiro-botao-rasgo);
+        }
         body.tema-ceu .modal-box .btn-secondary,
         body.tema-ceu #salvarImagemOverlay > div .btn-secondary,
         body.tema-ceu #relBibliotecaEditorOverlay > div .btn-secondary,
