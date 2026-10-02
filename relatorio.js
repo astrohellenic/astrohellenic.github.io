@@ -2303,7 +2303,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   injetarEstilosEditorRelatorio();
 
   container.innerHTML = `
-    <div style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="rel-editor-tela" style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(config.tituloTela)}</h2>
