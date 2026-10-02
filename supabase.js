@@ -600,6 +600,7 @@ function reRenderizarModuloAtivo() {
   // mandala.js): moduloTecnicoAtivo ainda é undefined, e cair no 'mandala' aqui sobrescrevia a ferramenta
   // guardada (astro_ultimo_modulo) e cancelava a restauração. A ferramenta pendente já abre com o estilo certo.
   if (window.moduloPendenteRestaurar) return;
+  descartarModulosGuardados(); // o estilo mudou: as telas guardadas das outras ferramentas ficariam com o antigo
   const modulo = window.moduloTecnicoAtivo || 'mandala';
   if (typeof abrirModuloTecnica === 'function') abrirModuloTecnica(modulo);
 }
@@ -1350,9 +1351,22 @@ async function fazerLogout() {
   }
 }
 
+/* Ferramentas que ficam "guardadas" ao trocar pra outra (a tela, com tudo o que foi digitado/escolhido/rolado,
+   é só tirada do #mandala-container e recolocada na volta, em vez de ser reconstruída do zero). Ficam de fora a
+   Mandala/Radix (estado global, redesenhada de qualquer jeito), as Horas (dependem do relógio) e a Agenda
+   (dados podem mudar por fora, ex.: novos agendamentos). */
+const MODULOS_GUARDAVEIS = ['relatorio', 'tabelaTecnica', 'profeccao', 'decenios', 'isopsefia', 'liberacao', 'direcoes', 'lotes', 'sinastria'];
+window.modulosGuardados = window.modulosGuardados || {};
+
+/* Esquece as telas guardadas — chamada sempre que o que elas mostram deixa de valer (outro mapa/momento
+   calculado em executarCalculo, ou mudança de estilo em reRenderizarModuloAtivo). */
+function descartarModulosGuardados() { window.modulosGuardados = {}; }
+window.descartarModulosGuardados = descartarModulosGuardados;
+
 /* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo) {
   window.moduloPendenteRestaurar = null; // qualquer navegação explícita cancela a ferramenta que aguardava o mapa carregar
+  const moduloAnterior = window.moduloTecnicoAtivo;
   window.moduloTecnicoAtivo = modulo;
   try { localStorage.setItem('astro_ultimo_modulo', modulo); } catch (e) {}
   const cRadix = document.getElementById('mandala-container');
@@ -1387,9 +1401,28 @@ function abrirModuloTecnica(modulo) {
   // garante que, quando o container reaparecer, nunca mostre restos de
   // outro módulo — o próprio init do módulo novo substitui isso em
   // seguida pelo conteúdo de verdade (ou por um loading próprio dele).
+  // Guarda a tela da ferramenta que está saindo (só se ela já terminou de montar — se ainda mostra o spinner
+  // de carregamento, não há nada de útil pra guardar) e pega a da que está entrando, se houver.
+  let telaRestaurada = null;
   if (cRadix) {
+    if (moduloAnterior && moduloAnterior !== modulo && MODULOS_GUARDAVEIS.includes(moduloAnterior)
+        && cRadix.childNodes.length && !cRadix.querySelector('[data-spinner-troca]')) {
+      const frag = document.createDocumentFragment();
+      while (cRadix.firstChild) frag.appendChild(cRadix.firstChild);
+      window.modulosGuardados[moduloAnterior] = { frag, scrollY: window.scrollY, scrollTop: cRadix.scrollTop };
+    }
+    if (MODULOS_GUARDAVEIS.includes(modulo) && moduloAnterior !== modulo && window.modulosGuardados[modulo]) {
+      telaRestaurada = window.modulosGuardados[modulo];
+      delete window.modulosGuardados[modulo];
+    }
+  }
+
+  if (cRadix && telaRestaurada) {
+    cRadix.innerHTML = '';
+    cRadix.appendChild(telaRestaurada.frag);
+  } else if (cRadix) {
     cRadix.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;">
+      <div data-spinner-troca style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;">
         <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37;"></i>
       </div>
     `;
@@ -1421,7 +1454,13 @@ function abrirModuloTecnica(modulo) {
   if (typeof ajustarEspacadorTopBar === 'function') ajustarEspacadorTopBar();
 
 // 1. MANDALA / MAPA NATAL (Globinho)
-if (modulo === 'mandala' || modulo === 'radix') {
+if (telaRestaurada) {
+  if (cRadix) cRadix.style.display = 'block';
+  requestAnimationFrame(() => {
+    if (cRadix) cRadix.scrollTop = telaRestaurada.scrollTop;
+    window.scrollTo(0, telaRestaurada.scrollY);
+  });
+  } else if (modulo === 'mandala' || modulo === 'radix') {
   if (cRadix) cRadix.style.display = 'block';
   if (cOverlay) cOverlay.style.display = 'flex';
   if (cActionsOverlay) cActionsOverlay.style.display = 'flex';

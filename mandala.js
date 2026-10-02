@@ -705,6 +705,8 @@ async function executarCalculoInterno(opcoes) {
       };
 
     if (opcoes && opcoes.soCalcular) return true;
+    // novo mapa/momento: as telas guardadas das outras ferramentas (ver abrirModuloTecnica) ficaram velhas
+    if (typeof descartarModulosGuardados === 'function') descartarModulosGuardados();
 
     /* Só precisamos que essa chamada calcule window.horasPlanetariasAtual
        (regente do dia/da hora, usado em mais telas) — não que ela apareça
