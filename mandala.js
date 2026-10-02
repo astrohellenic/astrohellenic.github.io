@@ -445,15 +445,15 @@ function selecionarCidadeModal(nomeFormatado, lat, lon, containerId, isEdit) {
 function confirmarNovoMapaModal() {
   const codDigitado = document.getElementById('modalCodigo').value.trim();
   const nome = document.getElementById('modalNome').value.trim();
-  const dataStr = document.getElementById('modalData').value.trim();
-  const horaStr = document.getElementById('modalHora').value.trim();
+  const dataStr = normalizarDataNascimento(document.getElementById('modalData').value);
+  const horaStr = normalizarHoraNascimento(document.getElementById('modalHora').value);
 
   if (!nome) { alert("Informe o nome."); return; }
-  if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
+  if (!dataStr) { alert("Data inválida. Use o formato DD/MM/AAAA (ex.: 11/06/1999)."); return; }
+  if (horaStr === null) { alert("Horário inválido. Use o formato HH:MM (ex.: 18:28), de 00:00 a 23:59."); return; }
   if (!horaStr) { alert("Informe o horário."); return; }
 
   const partesData = dataStr.split('/');
-  if (partesData.length !== 3) { alert("Data inválida."); return; }
   const dia = partesData[0], mes = partesData[1], ano = partesData[2];
 
   const partesHora = horaStr.split(':');

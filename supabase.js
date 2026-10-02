@@ -1917,14 +1917,15 @@ async function salvarEdicaoMapaModal() {
   const tipo = document.getElementById('editModalTipoMapa').value;
   const codDigitado = document.getElementById('editModalCodigo').value.trim();
   const nome = document.getElementById('editModalNome').value.trim();
-  const dataStr = document.getElementById('editModalData').value.trim();
-  const horaStr = document.getElementById('editModalHora').value.trim();
+  const dataStr = normalizarDataNascimento(document.getElementById('editModalData').value);
+  const horaStr = normalizarHoraNascimento(document.getElementById('editModalHora').value);
 
   const whatsappVal = document.getElementById('editModalWhatsapp') ? document.getElementById('editModalWhatsapp').value.trim() : null;
   const emailVal = document.getElementById('editModalEmail') ? document.getElementById('editModalEmail').value.trim() : null;
 
   if (!nome) { alert("Informe o nome."); return; }
-  if (!dataStr || !dataStr.includes('/')) { alert("Informe a data no formato DD/MM/AAAA."); return; }
+  if (!dataStr) { alert("Data inválida. Use o formato DD/MM/AAAA (ex.: 11/06/1999)."); return; }
+  if (horaStr === null) { alert("Horário inválido. Use o formato HH:MM (ex.: 18:28), de 00:00 a 23:59."); return; }
 
   let lat = editSelectedCityGeo ? editSelectedCityGeo.lat : -23.5505;
   let lon = editSelectedCityGeo ? editSelectedCityGeo.lon : -46.6333;

@@ -90,3 +90,22 @@
   // O alert nativo bloqueava e não devolvia nada; este mostra a janela do site e segue.
   window.alert = function (msg) { window.astroAlert(msg); };
 })();
+
+/* DATA E HORA DE NASCIMENTO — usadas ao criar/editar mapa (campos de texto livre). Padronizam pra DD/MM/AAAA e HH:MM,
+   aceitando "6/3/1978", "06-03-1978", "10h45", "9h"; devolvem null se a data/hora não existe. Hora vazia -> ''. */
+window.normalizarDataNascimento = function (txt) {
+  var m = String(txt || '').trim().match(/^(\d{1,2})\s*[\/.\-]\s*(\d{1,2})\s*[\/.\-]\s*(\d{4})$/);
+  if (!m) return null;
+  var d = parseInt(m[1], 10), mes = parseInt(m[2], 10), a = parseInt(m[3], 10), dt = new Date(a, mes - 1, d);
+  if (a < 1000 || dt.getFullYear() !== a || dt.getMonth() !== mes - 1 || dt.getDate() !== d) return null;
+  return String(d).padStart(2, '0') + '/' + String(mes).padStart(2, '0') + '/' + a;
+};
+window.normalizarHoraNascimento = function (txt) {
+  var t = String(txt || '').trim().toLowerCase();
+  if (!t) return '';
+  var m = t.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:min)?$/);
+  if (!m) return null;
+  var h = parseInt(m[1], 10), mi = m[2] ? parseInt(m[2], 10) : 0;
+  if (h > 23 || mi > 59) return null;
+  return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0');
+};
