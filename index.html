@@ -946,10 +946,13 @@ body {
            papiro (as cores da grade vêm de variáveis, redefinidas só aqui dentro). As imagens
            salvas/enviadas pro Relatório saem direto do SVG e não mudam. */
         body.tema-ceu #matrizVisibilidadeMandalaContainer {
-            --bg-card: rgba(255, 244, 215, 0.30);
-            --bg-main: rgba(255, 244, 215, 0.55);
-            --bg-hover: rgba(120, 80, 30, 0.18);
+            /* sem preenchimento nenhum nas células (nem cabeçalho, nem as vazias): o que separa é só o traço de tinta */
+            --bg-card: transparent;
+            --bg-main: transparent;
+            --bg-hover: transparent;
             --table-border: rgba(29, 58, 102, 0.75);
+            /* aspectos só nas três tintas: azul (sextil/trígono), terracota (quadratura/oposição), preto (conjunção) */
+            --aspect-conjuncao: #1a1410; --aspect-sextil: #1d3a66; --aspect-trigono: #1d3a66; --aspect-quadratura: #a03e25; --aspect-oposicao: #a03e25;
             --text-disabled: rgba(42, 33, 24, 0.55);
             --primary-blue: #1d3a66;
             width: fit-content;
