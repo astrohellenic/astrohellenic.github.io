@@ -344,6 +344,7 @@
   const SUPABASE_URL = "https://ndgjenvddkmztmdixjhc.supabase.co";
   const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let redirectUrlForm = null;
 
   /* CARREGA O LOGO PERSONALIZADO AO ABRIR A PÁGINA */
   document.addEventListener('DOMContentLoaded', async () => {
@@ -351,12 +352,10 @@
       const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('u');
 
-      let query = supabaseClient.from('configuracoes').select('logo_url, redirect_url');
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
-
-      const { data } = await query.maybeSingle();
+      /* Só logo e redirecionamento — o webhook e o resto das configurações nunca saem do servidor. */
+      const { data: cfgPublica } = await supabaseClient.rpc('config_publica_formulario', { p_user: userId });
+      const data = Array.isArray(cfgPublica) ? cfgPublica[0] : cfgPublica;
+      redirectUrlForm = data && data.redirect_url ? data.redirect_url : null;
 
       if (data && data.logo_url) {
         const logoImg = document.getElementById('formLogoImg');
@@ -495,34 +494,14 @@
     };
 
     try {
-      const { error } = await supabaseClient.from('mapas').insert([payload]);
+      /* O servidor grava o mapa E dispara o webhook (o endereço do webhook não passa mais pelo navegador). */
+      const { error } = await supabaseClient.rpc('registrar_cliente_formulario', {
+        p_user: payload.user_id, p_nome: payload.nome, p_data: payload.data_nascimento, p_hora: payload.hora_nascimento,
+        p_cidade: payload.cidade, p_lat: payload.latitude, p_lon: payload.longitude,
+        p_whatsapp: payload.whatsapp, p_email: payload.email
+      });
       if (!error) {
-        let cfgData = null;
-        try {
-          let queryCfg = supabaseClient.from('configuracoes').select('*');
-          if (ownerId) {
-            queryCfg = queryCfg.eq('user_id', ownerId);
-          }
-          const { data } = await queryCfg.maybeSingle();
-          cfgData = data;
-        } catch (e) {
-          console.error("Erro ao ler configuracoes:", e);
-        }
-
-        if (cfgData && cfgData.webhook_url) {
-          try {
-            await fetch(cfgData.webhook_url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...payload,
-                data_envio: new Date().toISOString()
-              })
-            });
-          } catch (webErr) {
-            console.error("Erro no Webhook:", webErr);
-          }
-        }
+        const cfgData = { redirect_url: redirectUrlForm };
 
         document.getElementById('clientForm').reset();
         selectedGeo = { lat: null, lon: null, name: '' };
