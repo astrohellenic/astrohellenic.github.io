@@ -682,28 +682,40 @@ function renderCircumambulaçõesUI() {
 
     raiosDoSigno.sort((a, b) => a.degInSign - b.degInSign);
 
-    let prevX = -999;
-    let currentLevel = 0;
-    const rayLevelShift = Math.round(18 * k);
+    /* POSIÇÃO DOS RÓTULOS DOS RAIOS (anos + data + símbolo do aspecto + planeta). Cada rótulo ocupa ~LARG_ROTULO
+       de largura e todos ficam na MESMA altura (empilhar um acima do outro não resolve: o rótulo é mais alto
+       que o desnível e ainda sai da moldura da pauta). Quando dois ficariam colados, o de trás ganha um DESVIO
+       LATERAL — anda pro lado até caber, com um fiozinho ligando ao grau verdadeiro. O raio em si (a linha
+       vertical) fica sempre no grau exato. */
+    const LARG_ROTULO = 42;
+    const xMinRotulo = 56, xMaxRotulo = 888;
+    const posRotulos = raiosDoSigno.map(r => ({ xRay: x0 + (r.degInSign * scale), cx: x0 + (r.degInSign * scale) }));
+    // ida (esquerda -> direita): cada rótulo no mínimo LARG_ROTULO depois do anterior
+    posRotulos.forEach((p, i) => {
+      p.cx = Math.max(p.cx, xMinRotulo);
+      if (i > 0) p.cx = Math.max(p.cx, posRotulos[i - 1].cx + LARG_ROTULO);
+    });
+    // volta (direita -> esquerda): se o último passou da moldura, puxa de volta mantendo o espaçamento
+    for (let i = posRotulos.length - 1; i >= 0; i--) {
+      const teto = (i === posRotulos.length - 1) ? xMaxRotulo : posRotulos[i + 1].cx - LARG_ROTULO;
+      posRotulos[i].cx = Math.min(posRotulos[i].cx, teto);
+    }
 
-    raiosDoSigno.forEach(r => {
-      const xRay = x0 + (r.degInSign * scale);
-
-      if (xRay - prevX < 38) {
-        currentLevel = (currentLevel === 0) ? 1 : 0;
-      } else {
-        currentLevel = 0;
-      }
-      prevX = xRay;
-
-      const yShift = currentLevel * rayLevelShift;
-      const yTop = yAspectLine - yShift;
+    raiosDoSigno.forEach((r, idxRaio) => {
+      const { xRay, cx } = posRotulos[idxRaio];
+      const yTop = yAspectLine;
 
       rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="var(--gold-primary)" stroke-width="0.8" opacity="0.7"/>`;
 
+      // fiozinho do raio até o rótulo desviado pro lado (só quando houve desvio)
+      if (Math.abs(cx - xRay) > 0.5) {
+        const xFim = cx > xRay ? cx - 14 : cx + 19;
+        rowHtml += `<line x1="${xRay}" y1="${yTop}" x2="${xFim}" y2="${yTop}" stroke="var(--gold-primary)" stroke-width="0.8" opacity="0.7"/>`;
+      }
+
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--primary-blue)" text-anchor="middle">${r.yearsOld} anos</text>`;
-      rowHtml += `<text x="${xRay}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${r.exactDate}</text>`;
+      rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--primary-blue)" text-anchor="middle">${r.yearsOld} anos</text>`;
+      rowHtml += `<text x="${cx}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
 
@@ -713,8 +725,8 @@ function renderCircumambulaçõesUI() {
         : getItemSVGDir(r.planetId === 'Syz' ? 'Sizígia' : r.planetId);
       const escalaIcone = isPlanetaReal ? ((r.planetId === 'Saturn') ? 0.95 : 0.75) : 1;
 
-      rowHtml += `<g transform="translate(${xRay - 13}, ${yTop - 7})">${aspectSVG}</g>`;
-      rowHtml += `<g transform="translate(${xRay + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
+      rowHtml += `<g transform="translate(${cx - 13}, ${yTop - 7})">${aspectSVG}</g>`;
+      rowHtml += `<g transform="translate(${cx + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL
@@ -724,8 +736,16 @@ function renderCircumambulaçõesUI() {
       const natalBottom = yOffset + boxHeight - Math.round(6 * k);
 
       rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="var(--natal-marca, var(--element-fogo))" stroke-width="2"/>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--natal-marca, var(--element-fogo))" text-anchor="start">0.0 anos</text>`;
-      rowHtml += `<text x="${xNatal + 3}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--natal-marca, var(--element-fogo))" text-anchor="start">${formatarDataBRDir(birthDate)}</text>`;
+      // Os textos da marca ficam à direita do traço; se caírem em cima do ícone do termo, vão pro lado esquerdo.
+      const termoDaMarca = passage.terms.find(t => natalDegInSign >= t.termStartDeg && natalDegInSign < t.termEndDeg);
+      let ancoraNatal = 'start', xTextoNatal = xNatal + 3;
+      if (termoDaMarca) {
+        const xIcone = x0 + ((termoDaMarca.termStartDeg + termoDaMarca.termEndDeg) / 2) * scale;
+        const meiaIcone = Math.max(10, termHeight - 6) / 2 + 2;
+        if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 40 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
+      }
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--natal-marca, var(--element-fogo))" text-anchor="${ancoraNatal}">0.0 anos</text>`;
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--natal-marca, var(--element-fogo))" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
