@@ -764,7 +764,8 @@ async function abrirRascunhoRelatorio(rascunhoId) {
         horaNascimento: mapaRow.hora_nascimento,
         cidade: mapaRow.cidade,
         latitude: mapaRow.latitude,
-        longitude: mapaRow.longitude
+        longitude: mapaRow.longitude,
+        manterModulo: true // continua no Relatório (senão a Mandala e os botões dela voltam por cima)
       });
       if (calculoOk === false) { alert('Não foi possível calcular o mapa deste rascunho (erro de conexão). Tente de novo.'); iniciarModuloRelatorio(); return; }
     }

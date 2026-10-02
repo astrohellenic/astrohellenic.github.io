@@ -325,7 +325,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
   const menuHere = document.getElementById('menu-here-now');
   if (menuHere) menuHere.classList.remove('active');
 
-  try { localStorage.setItem('astro_ultimo_perfil', JSON.stringify(c)); } catch (e) {}
+  try { localStorage.setItem('astro_ultimo_perfil', JSON.stringify(Object.assign({}, c, { manterModulo: undefined }))); } catch (e) {}
 
   let ano = 2000, mes = 1, dia = 1;
   if (c.dataNascimento && c.dataNascimento.includes('/')) {
@@ -379,7 +379,8 @@ function aplicarDadosDoPerfilNoMapa(c) {
   // reabrindo um rascunho, que só pode montar a prévia depois que os
   // dados do mapa novo estiverem prontos, senão corre o risco de gerar
   // com dados do cliente anterior ainda na tela.
-  return executarCalculo();
+  // c.manterModulo: quem chama (ex.: o Relatório reabrindo um rascunho) quer ficar na ferramenta onde está.
+  return executarCalculo(c.manterModulo ? { manterModulo: true } : undefined);
 }
 
 function abrirModalNovoMapa() {
@@ -732,7 +733,7 @@ async function executarCalculoInterno(opcoes) {
     const moduloAtivo = window.moduloTecnicoAtivo || 'mandala';
     if (moduloPendente && typeof abrirModuloTecnica === 'function') {
       abrirModuloTecnica(moduloPendente);
-    } else if (moduloAtivo !== 'mandala' && moduloAtivo !== 'radix' && typeof abrirModuloTecnica === 'function') {
+    } else if (!(opcoes && opcoes.manterModulo) && moduloAtivo !== 'mandala' && moduloAtivo !== 'radix' && typeof abrirModuloTecnica === 'function') {
       abrirModuloTecnica('mandala');
     } else {
       renderMandala();
