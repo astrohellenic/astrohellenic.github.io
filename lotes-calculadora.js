@@ -455,7 +455,7 @@ function calcularResultadoLotesLivre(p, lotesPart1, isDayAuto) {
 /* Salva o resultado atual da Calculadora Livre como um novo quadrinho
    permanente (igual aos 20 pré-calculados da Parte 1), pra poder ser
    selecionado e enviado ao relatório junto com os outros. */
-function salvarLoteCalculadoraLivre() {
+async function salvarLoteCalculadoraLivre() {
   if (!currentCalculatedData) return;
   const data = currentCalculatedData;
   const p = obterAbsPlanetasLotes(data);
@@ -463,7 +463,7 @@ function salvarLoteCalculadoraLivre() {
   const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
   const { resultAbs, formulaTxt, resultLegenda } = calcularResultadoLotesLivre(p, lotesPart1, isDayAuto);
 
-  const nome = prompt('Nome para este lote calculado:', formulaTxt);
+  const nome = await astroPrompt('Nome para este lote calculado:', formulaTxt);
   if (nome === null) return; // cancelado
 
   const id = 'custom-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

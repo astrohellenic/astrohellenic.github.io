@@ -89,7 +89,7 @@ function renderMenuPrincipal() {
 
   sidebar.innerHTML = `
     <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
-      <img src="astrohellenic.svg?v=20261001" alt="AstroHellenic" style="max-height: 38px; width: auto;">
+      <img src="astrohellenic.svg?v=20261003" alt="AstroHellenic" style="max-height: 38px; width: auto;">
     </div>
     <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar);">
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
@@ -965,7 +965,7 @@ function renderServicosList() {
    (mesma semente usada ao criar um modelo novo em Relatório > Modelos),
    pra já nascer utilizável como modelo caso o astrólogo abra o Relatório. */
 async function criarServico() {
-  const nome = prompt("Nome do novo serviço (ex: Mapa Natal Clássico):");
+  const nome = await astroPrompt("Nome do novo serviço (ex: Mapa Natal Clássico):");
   if (!nome || !nome.trim()) return;
 
   try {
@@ -990,7 +990,7 @@ async function criarServico() {
 /* RENOMEIA UM SERVIÇO JÁ EXISTENTE (só o nome — o conteúdo do modelo
    continua sendo editado em Relatório > Modelos) */
 async function editarNomeServico(id, nomeAtual) {
-  const novoNome = prompt("Novo nome do serviço:", nomeAtual);
+  const novoNome = await astroPrompt("Novo nome do serviço:", nomeAtual);
   if (!novoNome || !novoNome.trim() || novoNome.trim() === nomeAtual) return;
 
   try {
@@ -1012,7 +1012,7 @@ async function editarNomeServico(id, nomeAtual) {
 /* APAGA UM SERVIÇO (COM CONFIRMAÇÃO) — remove a linha de relatorio_presets,
    então some também da lista de modelos em Relatório */
 async function apagarServico(id, nome) {
-  if (!confirm(`Tem certeza que deseja apagar o serviço "${nome}"?\n\nIsso também vai apagar o modelo de relatório vinculado a ele (o mesmo usado em Relatório → Modelos). Essa ação não pode ser desfeita.`)) return;
+  if (!await astroConfirm(`Tem certeza que deseja apagar o serviço "${nome}"?\n\nIsso também vai apagar o modelo de relatório vinculado a ele (o mesmo usado em Relatório → Modelos). Essa ação não pode ser desfeita.`)) return;
 
   try {
     const { error } = await supabaseClient.from('relatorio_presets').delete().eq('id', id);
@@ -1774,7 +1774,7 @@ async function confirmarExclusaoSelecionados() {
     return;
   }
 
-  if (confirm(`Deseja realmente apagar os ${selectedMapIds.size} mapas selecionados?`)) {
+  if (await astroConfirm(`Deseja realmente apagar os ${selectedMapIds.size} mapas selecionados?`)) {
     try {
       const idsArray = Array.from(selectedMapIds);
       const { error } = await supabaseClient.from('mapas').delete().in('id', idsArray);
@@ -1807,7 +1807,7 @@ function executarBuscaLocal(termo) {
 }
 
 async function criarNovaPasta() {
-  const nome = prompt("Nome da nova pasta:");
+  const nome = await astroPrompt("Nome da nova pasta:");
   if (!nome || !nome.trim()) return;
   const limpo = nome.trim();
 
@@ -1832,7 +1832,7 @@ async function criarNovaPasta() {
 
 async function editarNomePasta(event, pastaAntiga) {
   event.stopPropagation();
-  const novoNome = prompt(`Novo nome para a pasta "${pastaAntiga}":`, pastaAntiga);
+  const novoNome = await astroPrompt(`Novo nome para a pasta "${pastaAntiga}":`, pastaAntiga);
   if (!novoNome || !novoNome.trim() || novoNome.trim() === pastaAntiga) return;
   
   const nomeLimpo = novoNome.trim();
@@ -1860,7 +1860,7 @@ async function apagarPasta(event, pastaParaDeletar) {
     return;
   }
 
-  if (confirm(`Deseja remover a pasta "${pastaParaDeletar}" e todos os mapas gravados nela?`)) {
+  if (await astroConfirm(`Deseja remover a pasta "${pastaParaDeletar}" e todos os mapas gravados nela?`)) {
     try {
       await supabaseClient.from('mapas').delete().eq('pasta', pastaParaDeletar);
       await supabaseClient.from('pastas').delete().eq('nome', pastaParaDeletar);
@@ -2030,7 +2030,7 @@ async function processarImportacaoTextoEmMassa() {
 
 async function deletarRegistroUnico(event, idMapa) {
   event.stopPropagation();
-  if (!confirm("Deseja realmente apagar este mapa?")) return;
+  if (!await astroConfirm("Deseja realmente apagar este mapa?")) return;
 
   try {
     const { error } = await supabaseClient.from('mapas').delete().eq('id', idMapa);
@@ -2135,7 +2135,7 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
 }
 
 async function criarPastaDiretoNoModalSalvamento() {
-  const nome = prompt("Nome da nova pasta:");
+  const nome = await astroPrompt("Nome da nova pasta:");
   if (!nome || !nome.trim()) return;
   const limpo = nome.trim();
 

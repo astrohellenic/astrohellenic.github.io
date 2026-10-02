@@ -810,8 +810,8 @@ body {
         body.tema-ceu #sidebar-overlay { background: rgba(5, 10, 32, 0.62); backdrop-filter: none; }
         body.tema-ceu #sidebar {
             --bg-sidebar: transparent;
-            --bg-main: rgba(255, 244, 215, 0.30);
-            --bg-card: rgba(255, 244, 215, 0.30);
+            --bg-main: transparent;
+            --bg-card: transparent;
             --bg-hover: rgba(120, 80, 30, 0.14);
             --bg-selected: rgba(120, 80, 30, 0.22);
             --border-color: rgba(95, 65, 30, 0.40);
@@ -835,6 +835,10 @@ body {
             clip-path: polygon(0 0, calc(100% - 3px) 0, calc(100% - 2px) 2.2%, calc(100% - 1px) 4.3%, calc(100% - 3px) 6.5%, calc(100% - 5px) 8.7%, calc(100% - 0px) 10.9%, calc(100% - 0px) 13.0%, calc(100% - 4px) 15.2%, calc(100% - 0px) 17.4%, calc(100% - 2px) 19.6%, calc(100% - 4px) 21.7%, calc(100% - 0px) 23.9%, calc(100% - 4px) 26.1%, calc(100% - 1px) 28.3%, calc(100% - 0px) 30.4%, calc(100% - 0px) 32.6%, calc(100% - 3px) 34.8%, calc(100% - 3px) 37.0%, calc(100% - 0px) 39.1%, calc(100% - 1px) 41.3%, calc(100% - 0px) 43.5%, calc(100% - 4px) 45.7%, calc(100% - 3px) 47.8%, calc(100% - 0px) 50.0%, calc(100% - 4px) 52.2%, calc(100% - 0px) 54.3%, calc(100% - 1px) 56.5%, calc(100% - 5px) 58.7%, calc(100% - 5px) 60.9%, calc(100% - 4px) 63.0%, calc(100% - 0px) 65.2%, calc(100% - 4px) 67.4%, calc(100% - 4px) 69.6%, calc(100% - 3px) 71.7%, calc(100% - 0px) 73.9%, calc(100% - 1px) 76.1%, calc(100% - 0px) 78.3%, calc(100% - 4px) 80.4%, calc(100% - 1px) 82.6%, calc(100% - 2px) 84.8%, calc(100% - 3px) 87.0%, calc(100% - 1px) 89.1%, calc(100% - 4px) 91.3%, calc(100% - 0px) 93.5%, calc(100% - 4px) 95.7%, calc(100% - 2px) 97.8%, calc(100% - 2px) 100%, 0 100%);
         }
         body.tema-ceu #sidebar .sidebar-header { border-bottom: 1px solid rgba(29, 58, 102, 0.55) !important; }
+        /* botão "+ Pasta": só o contorninho de tinta, sem fundo nem sombra */
+        body.tema-ceu #sidebar .add-folder-btn { background: transparent !important; border: 1px solid #1d3a66 !important; box-shadow: none !important; }
+        /* logo sem fundo: fica só o desenho, em tinta — encaixa em qualquer papiro; nos temas escuros clareia pra não sumir */
+        html.tema-escuro body:not(.tema-ceu) img[src^="astrohellenic.svg"] { filter: invert(0.88) hue-rotate(180deg); }
         body.tema-ceu #sidebar .sidebar-title { color: #a03e25; }
         /* Clientes: linhas de tinta no lugar dos cartões; nome em terracota, o resto em preto. */
         body.tema-ceu #sidebar .client-card-item {
@@ -857,6 +861,7 @@ body {
            tinta. SÓ PINTURA — tamanho, posição e comportamento ficam como estão. As regras valem
            só DENTRO dessas janelas (as classes .modal-input/.btn-primary também são usadas em telas
            normais, que não mudam aqui). */
+        body.tema-ceu #astroDialogoOverlay { background: rgba(5, 10, 32, 0.62) !important; }
         body.tema-ceu #modalOverlay, body.tema-ceu #modalEditOverlay, body.tema-ceu #modalImportOverlay,
         body.tema-ceu #salvarImagemOverlay, body.tema-ceu #relBibliotecaEditorOverlay,
         body.tema-ceu #relSeletorImagemOverlay, body.tema-ceu #modalSaveCurrentMap { background: rgba(5, 10, 32, 0.62) !important; }
@@ -2027,7 +2032,8 @@ body {
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tz-lookup.js?v=20260919"></script>
-<script src="supabase.js?v=20261003a"></script>
+<script src="dialogos.js?v=20261003a"></script>
+<script src="supabase.js?v=20261003b"></script>
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261002b"></script>
@@ -2039,12 +2045,12 @@ body {
 <script src="decenios.js?v=20261002c"></script>
 <script src="direcoes.js?v=20261002e"></script>
 <script src="liberacao.js?v=20261002c"></script>
-<script src="lotes-calculadora.js?v=20261003a"></script>
+<script src="lotes-calculadora.js?v=20261003b"></script>
 <script src="horas.js?v=20261003a"></script>
 <script src="perguntas.js?v=20260916"></script>
 <script src="papiro-folha.js?v=20261002a"></script>
-<script src="relatorio.js?v=20261002z"></script>
-<script src="agendamento.js?v=20261003a"></script>
+<script src="relatorio.js?v=20261003a"></script>
+<script src="agendamento.js?v=20261003b"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
      de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão
@@ -2248,7 +2254,7 @@ body:not(.modo-mandala) #main-stage {
 <div id="loginOverlay">
   <div id="loginPlanetsDecor" aria-hidden="true"></div>
   <div class="login-card">
-    <div class="login-brand"><img src="astrohellenic.svg?v=20261001" alt="Astro Hellenic" style="width: 100%; height: auto;"></div>
+    <div class="login-brand"><img src="astrohellenic.svg?v=20261003" alt="Astro Hellenic" style="width: 100%; height: auto;"></div>
     
     <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
 

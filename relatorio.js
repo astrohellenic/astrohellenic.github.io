@@ -952,7 +952,7 @@ function renderizarListaModelosRelatorioHTML(presets) {
 /* CRIA UM NOVO MODELO DE RELATÓRIO A PARTIR DO CONJUNTO DE BLOCOS PADRÃO
    (o astrólogo edita os textos e escolhe o que entra depois, no editor) */
 async function criarNovoPresetRelatorio() {
-  const nome = prompt("Nome do novo modelo de relatório (ex: Revolução Solar):");
+  const nome = await astroPrompt("Nome do novo modelo de relatório (ex: Revolução Solar):");
   if (!nome || !nome.trim()) return;
 
   const client = relatorioSupabaseClient();
@@ -977,7 +977,7 @@ window.criarNovoPresetRelatorio = criarNovoPresetRelatorio;
 async function excluirPresetRelatorio(idx) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset || !preset.id) return;
-  if (!confirm(`Excluir o modelo "${preset.nome}"?\n\nIsso também vai apagar o serviço vinculado a ele (o mesmo cadastrado em Configurações → Captação de Clientes → Serviços). Essa ação não pode ser desfeita.`)) return;
+  if (!await astroConfirm(`Excluir o modelo "${preset.nome}"?\n\nIsso também vai apagar o serviço vinculado a ele (o mesmo cadastrado em Configurações → Captação de Clientes → Serviços). Essa ação não pode ser desfeita.`)) return;
 
   const client = relatorioSupabaseClient();
   if (!client) return;
@@ -997,7 +997,7 @@ window.excluirPresetRelatorio = excluirPresetRelatorio;
    nessa linha específica de relatorio_rascunhos. */
 async function excluirRascunhoRelatorio(rascunhoId, rotulo) {
   if (!rascunhoId) return;
-  if (!confirm(`Excluir o relatório "${rotulo}"? Essa ação não pode ser desfeita.`)) return;
+  if (!await astroConfirm(`Excluir o relatório "${rotulo}"? Essa ação não pode ser desfeita.`)) return;
 
   const client = relatorioSupabaseClient();
   if (!client) return;
@@ -1714,12 +1714,12 @@ window.moverBlocoEditor = moverBlocoEditor;
    "capturada" (ex.: se o astrólogo clicou "Adicionar ao Relatório" por
    engano, ou quer recomeçar do zero pra esse cliente) — atualiza o
    badge da própria linha sem precisar recarregar o editor inteiro. */
-function limparCapturasEditor(toolId, iconEl) {
+async function limparCapturasEditor(toolId, iconEl) {
   const total = capturasDaFerramenta(toolId).length;
   const msg = total > 1
     ? `Apagar as ${total} imagens já adicionadas desta ferramenta?`
     : 'Apagar a imagem já adicionada desta ferramenta?';
-  if (!confirm(msg)) return;
+  if (!await astroConfirm(msg)) return;
   limparCapturasRelatorio(toolId);
   const linha = iconEl.closest('.rel-editor-linha');
   const badge = linha && linha.querySelector('[data-badge-capturas]');
@@ -1903,7 +1903,7 @@ async function salvarBlocoNaBiblioteca(idLinha) {
     if (!userId) { alert('Sessão expirada. Entre de novo.'); return; }
     const origemId = linha.dataset.bibliotecaId;
     const origem = origemId && (window.relatorioBiblioteca || []).find(b => b.id === origemId);
-    if (origem && confirm(`Este bloco veio de "${origem.titulo || 'Sem título'}". OK = atualizar o bloco guardado. Cancelar = guardar como um novo.`)) {
+    if (origem && await astroConfirm(`Este bloco veio de "${origem.titulo || 'Sem título'}". OK = atualizar o bloco guardado. Cancelar = guardar como um novo.`)) {
       const { error } = await client.from('relatorio_blocos_salvos').update({ titulo, corpo, formato: 'rich' }).eq('id', origem.id).eq('user_id', userId);
       if (error) throw error;
       origem.titulo = titulo; origem.corpo = corpo; origem.formato = 'rich';
@@ -1925,7 +1925,7 @@ async function apagarItemDaBiblioteca(idItem) {
   const item = (window.relatorioBiblioteca || []).find(b => b.id === idItem);
   const client = relatorioSupabaseClient();
   if (!item || !client) return;
-  if (!confirm(`Apagar "${item.titulo || 'Sem título'}" da biblioteca? Relatórios que já usam esse texto não mudam.`)) return;
+  if (!await astroConfirm(`Apagar "${item.titulo || 'Sem título'}" da biblioteca? Relatórios que já usam esse texto não mudam.`)) return;
   try {
     const userId = await relatorioBibliotecaUserId(client);
     const { error } = await client.from('relatorio_blocos_salvos').delete().eq('id', idItem).eq('user_id', userId);

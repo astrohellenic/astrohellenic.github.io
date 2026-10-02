@@ -288,7 +288,7 @@ async function confirmarNovoAgendamento() {
 
 /* CANCELA (APAGA, COM CONFIRMAÇÃO) UM AGENDAMENTO JÁ MARCADO */
 async function apagarAgendamento(id, rotulo) {
-  if (!confirm(`Cancelar o agendamento "${rotulo}"? Essa ação não pode ser desfeita.`)) return;
+  if (!await astroConfirm(`Cancelar o agendamento "${rotulo}"? Essa ação não pode ser desfeita.`)) return;
 
   try {
     const { error } = await supabaseClient.from('agendamentos').delete().eq('id', id);
