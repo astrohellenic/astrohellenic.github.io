@@ -281,9 +281,9 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFatiaDestaque(l4SignIdx, papiro ? "rgba(29, 58, 102, 0.08)" : "rgba(148, 163, 184, 0.45)");
-  svg += desenharFatiaDestaque(l3SignIdx, papiro ? "rgba(160, 62, 37, 0.10)" : "rgba(224, 231, 255, 0.6)");
-  svg += desenharFatiaDestaque(l2SignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(254, 240, 138, 0.5)");
+  svg += desenharFatiaDestaque(l4SignIdx, papiro ? "rgba(23, 112, 127, 0.16)" : "rgba(148, 163, 184, 0.45)");
+  svg += desenharFatiaDestaque(l3SignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)");
+  svg += desenharFatiaDestaque(l2SignIdx, papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)");
   svg += desenharFatiaDestaque(l1SignIdx, papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)");
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
@@ -437,9 +437,9 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFaixaDestaque(l4SignIdx, papiro ? "rgba(29, 58, 102, 0.45)" : "#475569", R_OuterLine + 4, R_OuterLine + 12);
-  svg += desenharFaixaDestaque(l3SignIdx, papiro ? "rgba(160, 62, 37, 0.55)" : "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
-  svg += desenharFaixaDestaque(l2SignIdx, papiro ? AZ_TINTA : "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+  svg += desenharFaixaDestaque(l4SignIdx, papiro ? "#17707f" : "#475569", R_OuterLine + 4, R_OuterLine + 12);
+  svg += desenharFaixaDestaque(l3SignIdx, papiro ? AZ_TINTA : "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
+  svg += desenharFaixaDestaque(l2SignIdx, papiro ? "#6b4a2b" : "#eab308", R_OuterLine + 24, R_OuterLine + 32);
   svg += desenharFaixaDestaque(l1SignIdx, papiro ? TERRACOTA : "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
 
   /* RÓTULOS DE PICO E SALTO — ficam na mesma faixa de raio das
