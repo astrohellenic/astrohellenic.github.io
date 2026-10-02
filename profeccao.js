@@ -790,8 +790,8 @@
             svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
         }
 
-        // Pontos calculados (nodos, sizígia, lotes): círculo cremoso por trás do ícone; no papiro, só um retículo tracejado de tinta.
-        const circuloFundoPonto = papiro ? `<circle cx="0" cy="0" r="11" fill="none" stroke="${AZ_TINTA}" stroke-width=".9" stroke-opacity=".7" stroke-dasharray="2.5 2.5"/>` : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>';
+        // Pontos calculados (nodos, sizígia, lotes): círculo cremoso por trás do ícone; no papiro não há nada atrás (aqui não existe céu, então não precisa do retículo que diz "isto foi posto por cima do céu").
+        const circuloFundoPonto = papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>';
         outerRingItems.forEach(item => {
             if (item.type === 'planet') return;
             const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
