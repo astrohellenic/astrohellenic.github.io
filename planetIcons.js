@@ -156,8 +156,9 @@ function temaCeuAtivoNosIcones() {
 
 /* Seita do mapa aberto, a partir de currentCalculatedData (posições em graus absolutos).
    Devolve { diurno, mercurioOriental } ou null se não houver mapa carregado. */
-function seitaDoMapaAtual() {
-  const d = (typeof currentCalculatedData !== 'undefined') ? currentCalculatedData : null;
+function seitaDoMapaAtual(dados) {
+  // 'dados' (opcional): a seita de OUTRO mapa (ex.: a Revolução Solar desenhada numa roda secundária); sem ele, o mapa aberto.
+  const d = dados || ((typeof currentCalculatedData !== 'undefined') ? currentCalculatedData : null);
   if (!d || !d.Ascendente || !d['Sol']) return null;
   const sol = d['Sol'].grau_absoluto, asc = d.Ascendente.grau_absoluto;
   if (typeof sol !== 'number' || typeof asc !== 'number') return null;
@@ -167,15 +168,15 @@ function seitaDoMapaAtual() {
   return { diurno, mercurioOriental };
 }
 
-function planetaEstaNaSeita(planetId) {
-  const s = seitaDoMapaAtual();
+function planetaEstaNaSeita(planetId, dados) {
+  const s = seitaDoMapaAtual(dados);
   if (!s) return false;
   if (planetId === 'Mercury') return s.diurno ? s.mercurioOriental : !s.mercurioOriental;
   return s.diurno ? ['Sun', 'Jupiter', 'Saturn'].includes(planetId) : ['Moon', 'Venus', 'Mars'].includes(planetId);
 }
 
-function corIconePapiro(categoria, chave) {
-  return (categoria === 'planeta' && planetaEstaNaSeita(chave)) ? COR_TINTA_TERRACOTA : COR_TINTA_AZUL;
+function corIconePapiro(categoria, chave, dados) {
+  return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? COR_TINTA_TERRACOTA : COR_TINTA_AZUL;
 }
 
 /* Recolore o SVG de um ícone simples pra tinta chapada: tira o <defs> (gradientes), pinta cada
@@ -198,10 +199,10 @@ function recolorirIconePapiro(bruto, cor) {
 }
 
 /* SVG bruto do ícone: o de sempre, ou o de papiro no Tema Céu. */
-function brutoDoIcone(categoria, chave) {
+function brutoDoIcone(categoria, chave, dados) {
   if (temaCeuAtivoNosIcones()) {
     const base = (ICONES_SIMPLES_NOVO[categoria] || {})[chave] || '';
-    return base ? recolorirIconePapiro(base, corIconePapiro(categoria, chave)) : '';
+    return base ? recolorirIconePapiro(base, corIconePapiro(categoria, chave, dados)) : '';
   }
   return (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
 }
@@ -209,8 +210,8 @@ function brutoDoIcone(categoria, chave) {
 /* Ícone novo pronto pra usar (tag <svg> completa), no tamanho pedido.
    categoria: 'planeta' | 'lote' | 'outro'. chave: ex. "Sun", "fortune",
    "sizigia", "northNode", "southNode", "angulo". */
-function getIconeSVG(categoria, chave, tamanho = 34) {
-  const bruto = brutoDoIcone(categoria, chave);
+function getIconeSVG(categoria, chave, tamanho = 34, dados) {
+  const bruto = brutoDoIcone(categoria, chave, dados);
   if (!bruto) return '';
   return _namespacearIdsIcone(bruto.replace('<svg ', `<svg width="${tamanho}" height="${tamanho}" `));
 }
@@ -219,8 +220,8 @@ function getIconeSVG(categoria, chave, tamanho = 34) {
    existente (ex.: a roda da mandala) — sem a tag <svg> externa, só o
    conteúdo (formas + defs) dentro de um <g>, pra quem usa escalar/girar
    como quiser por fora. */
-function getIconeFragmento(categoria, chave) {
-  const bruto = brutoDoIcone(categoria, chave);
+function getIconeFragmento(categoria, chave, dados) {
+  const bruto = brutoDoIcone(categoria, chave, dados);
   if (!bruto) return '';
   const abre = bruto.indexOf('>') + 1;
   const fecha = bruto.lastIndexOf('</svg>');

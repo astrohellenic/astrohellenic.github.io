@@ -97,7 +97,8 @@
     const MONTH_MS = (30 + (10.5 / 24)) * MS_PER_DAY;
 
     function getSignSvgHtml(signIdx, size = 18) {
-        const color = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[signIdx]];
+        // Tema Céu (papiro): glifo de signo em azul-tinta (sem cor por elemento), como os desenhos em tinta.
+        const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? '#1d3a66' : ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[signIdx]];
         return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; display: inline-block; vertical-align: middle;">${MONOLINE_ZODIAC_SVGS[signIdx]}</svg>`;
     }
 
@@ -507,7 +508,18 @@
            margem clara aparecer entre a borda dourada do cartão e o disco
            escuro. */
         const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-        const tinta = modoEscuro ? {
+        /* TEMA CÉU — roda SECUNDÁRIA (desta ferramenta): "tinta sobre o papiro". Sem fundo nem céu; só azul-tinta
+           (estrutura, glifos) e terracota (destaques: casas, aspectos duros, planetas da seita, ângulos,
+           Profecção). Quem observa o céu é a mandala principal; aqui o astrólogo já está escrevendo no papiro. */
+        const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+        const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
+        const tinta = papiro ? {
+            fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
+            inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: AZ_TINTA, linhaConectora: 'rgba(29,58,102,0.55)',
+            aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
+            elementoFogo: AZ_TINTA, elementoTerra: AZ_TINTA, elementoAr: AZ_TINTA, elementoAgua: AZ_TINTA,
+            dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
+        } : modoEscuro ? {
             fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
             inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
             aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
@@ -600,9 +612,9 @@
             return `<path d="${d}" fill="${cor}"/>`;
         }
 
-        svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, "rgba(224, 231, 255, 0.6)");
-        svg += desenharFatiaDestaque(profectedSignIdx, "rgba(163, 230, 53, 0.4)");
-        svg += desenharFatiaDestaque(highlightAscSignIdx, "rgba(254, 240, 138, 0.5)");
+        svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)");
+        svg += desenharFatiaDestaque(profectedSignIdx, papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)");
+        svg += desenharFatiaDestaque(highlightAscSignIdx, papiro ? "rgba(160, 62, 37, 0.10)" : "rgba(254, 240, 138, 0.5)");
 
         svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -691,16 +703,16 @@
 
         const rEixoInterno = R.SignSector - 12;
         const eixosInternos = [
-            { label: "ASC", deg: ascAbs, color: tinta.inkForte },
-            { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
-            { label: "MC", deg: mcAbs, color: tinta.inkForte },
-            { label: "IC", deg: (mcAbs + 180) % 360, color: tinta.inkForte }
+            { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
+            { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
+            { label: "MC", deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
+            { label: "IC", deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
         ];
         eixosInternos.forEach(eixo => {
             const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
             const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
             const anguloFrag = getIconeFragmento('outro', 'angulo');
-            const anguloFundo = getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
+            const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
             svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
                 <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
                 <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
@@ -763,12 +775,12 @@
             return `<path d="${d}" fill="${cor}"/>`;
         }
 
-        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
-        svg += desenharFaixaDestaque(highlightAscSignIdx, "#eab308", R_OuterLine + 14, R_OuterLine + 22);
-        svg += desenharFaixaDestaque(profectedSignIdx, "#65a30d", R_OuterLine + 24, R_OuterLine + 32);
+        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, papiro ? AZ_TINTA : "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
+        svg += desenharFaixaDestaque(highlightAscSignIdx, papiro ? "rgba(160, 62, 37, 0.55)" : "#eab308", R_OuterLine + 14, R_OuterLine + 22);
+        svg += desenharFaixaDestaque(profectedSignIdx, papiro ? TERRACOTA : "#65a30d", R_OuterLine + 24, R_OuterLine + 32);
 
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-        if (sunItem) {
+        if (sunItem && !papiro) { // no papiro não há mancha de combustão (é um brilho de céu)
             const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
             /* Disco branco opaco por baixo do gradiente: a mancha de combustão é
                parcialmente transparente, então sem isso a fatia verde/amarela do
@@ -778,6 +790,8 @@
             svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
         }
 
+        // Pontos calculados (nodos, sizígia, lotes): círculo cremoso por trás do ícone; no papiro, só um retículo tracejado de tinta.
+        const circuloFundoPonto = papiro ? `<circle cx="0" cy="0" r="11" fill="none" stroke="${AZ_TINTA}" stroke-width=".9" stroke-opacity=".7" stroke-dasharray="2.5 2.5"/>` : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>';
         outerRingItems.forEach(item => {
             if (item.type === 'planet') return;
             const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
@@ -793,20 +807,20 @@
             if (item.type === "node") {
                 const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+                    ${circuloFundoPonto}
                     <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>
                     <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
             } else if (item.type === "syzygy") {
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+                    ${circuloFundoPonto}
                     <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
                     <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
             } else if (item.type === "lot") {
                 const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+                    ${circuloFundoPonto}
                     <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>
                     <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
                 </g>`;
@@ -824,8 +838,8 @@
                 svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
                 const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-                const planetSvgContent = fragmentoPlaneta3D(item.id, sufixo);
-                let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+                const planetSvgContent = papiro ? getIconeFragmento('planeta', item.id, dados) : fragmentoPlaneta3D(item.id, sufixo);
+                let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
                 svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
                     <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
                     <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
@@ -840,10 +854,10 @@
                 const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
                 const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
                 svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
-                    <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
-                    <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
-                    <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
+                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${papiro ? 'none' : '#f5c518'}" stroke="${papiro ? TERRACOTA : '#a8790a'}" stroke-width="${papiro ? 1.4 : 0.9}" stroke-linejoin="round"/>
+                    <circle cx="0" cy="-7" r="1.6" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
+                    <circle cx="-9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
+                    <circle cx="9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
                 </g>`;
             }
         }
@@ -986,8 +1000,8 @@
         const layoutCabNatal = montarCabecalhoMandalaLayout(dadosNatal, 2, coresCabProf, null, { largura: LARGURA_CABECALHO_PROF });
         const layoutCabRS = opcoesCabRS ? montarCabecalhoMandalaLayout(dadosRS, 2, coresCabProf, null, opcoesCabRS) : null;
         const alturaCabProf = Math.max(layoutCabNatal.altura, layoutCabRS ? layoutCabRS.altura : 0);
-        const cabecalhoNatalHTML = montarCabecalhoMandalaImagemHTML(dadosNatal, null, { largura: LARGURA_CABECALHO_PROF, alturaMinima: alturaCabProf });
-        const cabecalhoRSHTML = opcoesCabRS ? montarCabecalhoMandalaImagemHTML(dadosRS, null, Object.assign({ alturaMinima: alturaCabProf }, opcoesCabRS)) : '';
+        const cabecalhoNatalHTML = montarCabecalhoMandalaImagemHTML(dadosNatal, null, { largura: LARGURA_CABECALHO_PROF, alturaMinima: alturaCabProf, tintaSobreFolha: true });
+        const cabecalhoRSHTML = opcoesCabRS ? montarCabecalhoMandalaImagemHTML(dadosRS, null, Object.assign({ alturaMinima: alturaCabProf, tintaSobreFolha: true }, opcoesCabRS)) : '';
         const btnCssProf = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
         const cardMandalaCssProf = "background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
 
