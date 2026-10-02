@@ -1656,7 +1656,7 @@ function rasterizarFundoCeuCapa(info) {
   });
 }
 
-function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente) {
+function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
@@ -1707,11 +1707,17 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      legibilidade do texto/borda dentro dela é decidida pela luminância
      DESSA cor específica, não pelo modoEscuro geral. */
   const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
+  /* "tintaPapiro" (opcional, só as PÁGINAS DO CORPO do Relatório com o Tema Céu): a roda sai "tinta sobre o
+     papiro" — sem céu, sem fundo, azul-tinta + terracota + preto (a mesma pintura das rodas secundárias:
+     Profecção/Liberação/Sinastria). O céu fica só na capa. Mesmo desenho e mesmos tamanhos da roda clássica. */
+  const papiro = !!tintaPapiro && typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
+  if (papiro) fundoTransparente = true;
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
   /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
      caixinha de nome/data/cidade como papiro (ver coresCabecalhoPapiro) —
      só cor/textura, o layout do cabeçalho não muda. */
-  const corCabecalhoPng = papiroCabecalho ? coresCabecalhoPapiro() : coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
+  const corCabecalhoPng = papiro ? coresCabecalhoTinta() : papiroCabecalho ? coresCabecalhoPapiro() : coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
 
   /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
      Tema Claro é exatamente a paleta de sempre (nada muda). No Tema
@@ -1722,7 +1728,13 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      branco atrás de tinta escura (Tema Claro) vira contorno escuro atrás
      de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
      mancha branca em volta de cada número no meio do disco escuro. */
-  const tinta = modoEscuro ? {
+  const tinta = papiro ? {
+    fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
+    inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: AZ_TINTA, linhaConectora: 'rgba(29,58,102,0.55)',
+    aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
+    elementoFogo: AZ_TINTA, elementoTerra: AZ_TINTA, elementoAr: AZ_TINTA, elementoAgua: AZ_TINTA,
+    dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
+  } : modoEscuro ? {
     fundoDisco: '#1c1917',
     dourado: '#d9ae3f',
     douradoCasas: '#e8c667',
@@ -1899,7 +1911,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
      nunca escolheu) — controla só a decoração de céu/espaço sideral. O
      tamanho e o layout do desenho continuam iguais nos dois temas. */
-  const temaCeu = (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
+  const temaCeu = !papiro && (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -2111,10 +2123,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   const rEixoInterno = R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
 
   const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: tinta.inkForte },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
-    { label: "MC",  deg: mcAbs, color: tinta.inkForte },
-    { label: "IC",  deg: (mcAbs + 180) % 360, color: tinta.inkForte }
+    { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
+    { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
+    { label: "MC",  deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
+    { label: "IC",  deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
   ];
 
   /* Icone novo: um triangulo so (getIconeFragmento('outro','angulo')),
@@ -2143,7 +2155,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       return;
     }
     const anguloFrag = getIconeFragmento('outro', 'angulo');
-    const anguloFundo = getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
+    const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
       <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
@@ -2191,7 +2203,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-  if (sunItem) {
+  if (sunItem && !papiro) {
     const degToPx = (2 * Math.PI * pR) / 360;
     const rSobRaios = degToPx * 15;
     const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
@@ -2226,20 +2238,20 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>`}
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>`}
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false) : `<circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>`}
         <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
@@ -2257,7 +2269,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     .filter(item => item.type === 'planet')
     .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
     .forEach(item => {
-      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
       const estiloGrau = `font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill"`;
 
       if (temaCeu) {
@@ -2290,7 +2302,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(item.id)}</g>
+        <g transform="scale(0.36) translate(-50, -50)">${papiro ? getIconeFragmento('planeta', item.id, data) : planetIconFragment(item.id)}</g>
         <text x="0" y="27" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });

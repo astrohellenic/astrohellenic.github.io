@@ -3257,7 +3257,7 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
-    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
+    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo, false, temaCeuAtivo)); // Céu: roda de tinta sobre o papiro (o céu fica só na capa)
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') {
       png1Capa = await new Promise(resolve => temaCeuAtivo
         ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o céu da capa vem de relatorioCeuFundoCapa) e cabeçalho em papiro
@@ -3267,7 +3267,7 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
-    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo));
+    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo, false, temaCeuAtivo));
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') {
       png2Capa = await new Promise(resolve => temaCeuAtivo
         ? renderMandala(null, resolve, 'claro', false, null, null, true, true) // Céu: sem o retângulo roxo (o céu da capa vem de relatorioCeuFundoCapa) e cabeçalho em papiro
