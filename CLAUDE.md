@@ -601,3 +601,42 @@ do repositório do Astro Hellenic, que é privado e precisa ser
 selecionado/conectado na tela do GitHub da conta Claude). Só **editar/
 commitar** nesse outro repositório exigiria essa autorização de
 verdade — ler não.
+
+## Estado do Tema Céu (02/10/2026)
+
+Resumo de onde parou o trabalho de redesenho visual ("Tema Céu"), pra
+retomar numa conversa nova sem depender do histórico da anterior.
+
+**Já na `main`:**
+- O cabeçalho global com dois modos (papiro recortado no céu, "tinta
+  sobre a folha" nas ferramentas), os botões, as janelas, o menu lateral
+  e a logo nova com o favicon.
+- O ASC/DSC/MC/IC (triângulo só de contorno azul, letras terracota), a
+  Matriz de Visibilidade e a tela e a prévia do Relatório.
+- A capa com o céu da própria mandala (JPEG), as barras brancas
+  tracejadas na Mandala principal, e a Profecção e a Liberação em folha
+  de papiro com roda de tinta.
+
+**Regra de design:** a Mandala principal fica no céu. As rodas
+secundárias das ferramentas são tinta sobre papiro, só com azul-tinta
+`#1d3a66`, terracota `#a03e25` e preto `#1a1410`, sem outras cores e sem
+tracejado em volta dos ícones.
+
+**Pendente, nesta ordem:**
+1. **Sinastria.** Ela copia a roda da Profecção, então é só levar o
+   mesmo `papiro` de `gerarMandalaSVG` e o CSS da tela.
+2. **Relatório.** As páginas de mandala do corpo do PDF devem usar a
+   roda de tinta e não o céu. O céu fica só na capa. Isso também some
+   com os PNGs pesados de 2 a 7 MB.
+3. **Revisão ferramenta por ferramenta.** Direções, Decênios, Horas,
+   Isopsefia, Calculadora de Lotes, Agenda, e as telas de configuração
+   e edição do Relatório.
+
+**Conferir no deploy:** a capa tem estrelas na prévia do iPad. O PDF
+abre mais rápido. Não surge mais folha extra. Se aparecer, o aviso
+mostra a página (o site avisa quando o servidor precisa ajustar alguma
+página).
+
+**Regras do projeto (reforço):** só publicar na `main` quando o
+astrólogo pedir; bumpar o `?v=` de todo arquivo mexido; só pintura, sem
+mudar layout; preferência vai pro Supabase e não pro `localStorage`.
