@@ -1472,6 +1472,13 @@ body {
         body.tema-ceu #liberacaoMandalaCapture { background: transparent !important; border: none !important; box-shadow: none !important; }
         body.tema-ceu #liberacaoArvoreCapture strong { color: #a03e25 !important; }
         body.tema-ceu #liberacaoArvoreCapture thead tr { background: transparent !important; color: #1d3a66 !important; }
+        /* TEMA CÉU — barra lateral, telas de configuração: botões só contornados (nunca preenchidos), caixa de marcar e setas em papiro */
+        body.tema-ceu #sidebar button[onclick="copiarLinkFormulario()"] { background: transparent !important; color: #1d3a66 !important; border: 1.5px solid #1d3a66 !important; box-shadow: none !important; }
+        body.tema-ceu #sidebar button[onclick="salvarConfiguracoesCaptacao()"] { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; box-shadow: none !important; }
+        body.tema-ceu #sidebar input[type="checkbox"] { -webkit-appearance: none; appearance: none; background: transparent !important; border: 1.5px solid #1d3a66; border-radius: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
+        body.tema-ceu #sidebar input[type="checkbox"]:checked { background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5 L6.5 12 L13 4' fill='none' stroke='%231d3a66' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/80% no-repeat !important; }
+        body.tema-ceu #sidebar button[onclick^="moverBotaoTopo"] { background: transparent !important; color: #1d3a66 !important; border-color: #1d3a66 !important; }
+        body.tema-ceu #sidebar button[onclick^="moverBotaoTopo"]:disabled { background: transparent !important; color: #a03e25 !important; border-color: #a03e25 !important; opacity: 1 !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="163, 230, 53"] { background: rgba(160, 62, 37, 0.20) !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="254, 240, 138"] { background: rgba(107, 74, 43, 0.18) !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="224, 231, 255"] { background: rgba(29, 58, 102, 0.14) !important; }
