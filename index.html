@@ -691,6 +691,8 @@ body {
            configurarFundoCeuDaTela em mandala.js) — por isso a área da mandala fica sem fundo
            próprio e nada em volta (moldura, lados da barra) fica branco. */
         body.tema-ceu { background-color: #070d25; }
+        /* o fundo do <html> também (senão, onde a página acaba ou no "puxão" do celular, aparece uma faixa creme do tema anterior embaixo do céu) */
+        html:has(body.tema-ceu) { background-color: #070d25; }
         body.tema-ceu #main-stage { background-color: #070d25; }
         body.tema-ceu #mandala-screen {
             background-color: transparent;
@@ -987,9 +989,10 @@ body {
            papiro (as cores da grade vêm de variáveis, redefinidas só aqui dentro). As imagens
            salvas/enviadas pro Relatório saem como a tela (papiro + tinta, ver gerarImagemFerramentaDoSvg). */
         body.tema-ceu .painel-tecnico-folha {
-            --bg-card: rgba(255, 244, 215, 0.30);
-            --bg-main: rgba(255, 244, 215, 0.55);
-            --bg-hover: rgba(120, 80, 30, 0.18);
+            /* sem preenchimento nenhum nas células: o que separa é só o traço de tinta */
+            --bg-card: transparent;
+            --bg-main: transparent;
+            --bg-hover: transparent;
             --table-border: rgba(29, 58, 102, 0.75);
             --text-disabled: rgba(42, 33, 24, 0.55);
             --primary-blue: #1d3a66;
