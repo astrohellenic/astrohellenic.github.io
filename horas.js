@@ -374,6 +374,8 @@ function iniciarModuloHoras(containerIdAlvo) {
    estreito, o mesmo que está na tela) + o cartão. Relatório: só o cartão.
    Só ao tocar nos botões. */
 function fundoCapturaHoras() {
+  // Tema Céu + imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum.
+  if (window.temaMandala === 'ceu' && window.__capturaSemFundo) return null;
   return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
 }
 
@@ -403,8 +405,7 @@ async function montarImagemHoras(comCabecalho) {
   saida.width = Math.max(...pecas.map(c => c.width));
   saida.height = pecas.reduce((t, c) => t + c.height, 0) + gap * (pecas.length - 1);
   const ctx = saida.getContext('2d');
-  ctx.fillStyle = fundo;
-  ctx.fillRect(0, 0, saida.width, saida.height);
+  if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
   let y = 0;
   pecas.forEach(c => { ctx.drawImage(c, Math.round((saida.width - c.width) / 2), y); y += c.height + gap; });
   return saida;
@@ -419,6 +420,7 @@ function salvarHorasNaGaleria() {
 window.salvarHorasNaGaleria = salvarHorasNaGaleria;
 
 async function capturarHorasParaRelatorio() {
+  window.__capturaSemFundo = true;
   try {
     const bruto = await montarImagemHoras(false);
     if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
@@ -428,6 +430,8 @@ async function capturarHorasParaRelatorio() {
   } catch (err) {
     console.error('Erro ao adicionar as Horas Planetárias ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    window.__capturaSemFundo = false;
   }
 }
 window.capturarHorasParaRelatorio = capturarHorasParaRelatorio;

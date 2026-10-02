@@ -689,7 +689,7 @@ async function capturarLotesSelecionadosParaRelatorio() {
     // atual em vez de cravar sempre o creme do Tema Claro (mesmo padrão
     // de capturarTelaParaRelatorio em relatorio.js).
     const modoEscuroCapturaLotes = document.documentElement.classList.contains('tema-escuro');
-    const fundoCapt = modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5';
+    const fundoCapt = window.temaMandala === 'ceu' ? null : (modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5'); // Tema Céu: sem fundo
     const canvas = recortarCanvasAoConteudo(await html2canvas(temp, { backgroundColor: fundoCapt, scale: 2, useCORS: true }), fundoCapt);
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`${selecionados.length} lote(s) adicionado(s) ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
@@ -721,8 +721,8 @@ async function capturarLotesInteiraParaRelatorio() {
   const area = document.getElementById('lotesConteudoArea');
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
-    const fundo = document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false }), fundo);
+    const fundo = window.temaMandala === 'ceu' ? null : (document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`"Calculadora de Lotes" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {

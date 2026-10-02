@@ -409,8 +409,8 @@ async function capturarIsopsefiaParaRelatorio() {
   const area = document.getElementById('isoTabContent');
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
-    const fundo = document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false }), fundo);
+    const fundo = window.temaMandala === 'ceu' ? null : (document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('isopsefia', canvas.toDataURL('image/png'));
     alert(`"Isopsefia" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
