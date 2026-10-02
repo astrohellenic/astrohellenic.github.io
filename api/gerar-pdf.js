@@ -58,6 +58,26 @@ function aplicarCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+// Roda DENTRO do Chrome: mede cada folha (altura da caixa, altura com o que vaza e se o conteúdo visível cabe em uma A4).
+const MEDIR_FOLHAS_PARA_PAGINAR = function() {
+  const mm = 96 / 25.4, folha = 297 * mm;
+  return Array.from(document.querySelectorAll('.rel-page')).map(pagina => {
+    const caixa = pagina.getBoundingClientRect();
+    const corta = ['hidden', 'clip'].includes(getComputedStyle(pagina).overflowY);
+    let maisBaixo = 0;
+    pagina.querySelectorAll('*').forEach(el => {
+      if (el.classList && el.classList.contains('rel-num-pagina-canto')) return;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) maisBaixo = Math.max(maisBaixo, r.bottom - caixa.top);
+    });
+    return {
+      caixa: +(caixa.height / mm).toFixed(2),
+      altura: +((corta ? caixa.height : Math.max(caixa.height, pagina.scrollHeight)) / mm).toFixed(2),
+      cabe: maisBaixo <= folha + 1
+    };
+  });
+};
+
 // Roda DENTRO do Chrome (pagina.evaluate): não pode usar nada daqui de fora.
 const AJUSTAR_EXCESSO_DAS_FOLHAS = function() {
   /* Rede de segurança contra "folha extra com só o número da página" (ver .rel-page em relatorio.js):
@@ -199,21 +219,58 @@ module.exports = async function handler(req, res) {
       });
     } catch (e) { /* só diagnóstico */ }
 
-    const pdf = await pagina.pdf({
+    const opcoesPdf = {
       format: 'A4',
       printBackground: true,
       margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' }
-    });
+    };
+    let pdf = await pagina.pdf(opcoesPdf);
+    const contarPaginas = buf => (Buffer.from(buf).toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+    let paginasPdf = contarPaginas(pdf);
+    let corte = null;
+
+    /* GARANTIA SEM CSS: o relatório tem N folhas (.rel-page) e cada uma deve virar UMA página do PDF. Se o PDF
+       saiu com mais páginas que folhas, o Chrome partiu alguma folha em duas (a "folha extra com só o número").
+       Em vez de torcer pra algum CSS segurar, calcula em que página do PDF cada folha COMEÇA (pela altura
+       medida de cada uma) e manda o Chrome imprimir só essas páginas (pageRanges). Só corta a continuação de
+       uma folha cujo conteúdo visível cabe na primeira página; só aplica se a conta fecha EXATAMENTE com o
+       número de páginas que o PDF realmente tem (senão devolve o PDF como saiu, sem arriscar cortar errado). */
+    if (folhas && paginasPdf > folhas.total) {
+      try {
+        const medidas = await pagina.evaluate(MEDIR_FOLHAS_PARA_PAGINAR);
+        const A4 = 297;
+        for (const chave of ['caixa', 'altura']) {
+          let inicio = 1;
+          const mapa = medidas.map(m => {
+            const n = Math.max(1, Math.ceil(m[chave] / A4 - 0.02));
+            const item = { inicio, n, cabe: m.cabe };
+            inicio += n;
+            return item;
+          });
+          if (inicio - 1 !== paginasPdf) continue; // a conta não fecha com o PDF real: tenta a outra medida
+          const manter = [];
+          mapa.forEach(m => {
+            if (m.n > 1 && m.cabe) manter.push(String(m.inicio)); // só a primeira página da folha
+            else for (let k = 0; k < m.n; k++) manter.push(String(m.inicio + k));
+          });
+          const pdf2 = await pagina.pdf(Object.assign({}, opcoesPdf, { pageRanges: manter.join(',') }));
+          const paginas2 = contarPaginas(pdf2);
+          if (paginas2 === folhas.total || paginas2 < paginasPdf) { pdf = pdf2; corte = { de: paginasPdf, para: paginas2, medida: chave }; paginasPdf = paginas2; }
+          break;
+        }
+      } catch (e) {
+        console.error('Corte das páginas extras falhou (devolve o PDF como saiu):', e);
+      }
+    }
 
     await navegador.close();
     navegador = null;
 
     res.setHeader('Content-Type', 'application/pdf');
     // Quantas páginas o PDF realmente tem (conta os objetos /Type /Page) x quantas folhas o relatório tem.
-    const paginasPdf = (Buffer.from(pdf).toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
     res.setHeader('Access-Control-Expose-Headers', 'X-PDF-Ajustes, X-PDF-Diag');
     res.setHeader('X-PDF-Ajustes', encodeURIComponent(JSON.stringify(ajustes)).slice(0, 1500));
-    res.setHeader('X-PDF-Diag', encodeURIComponent(JSON.stringify({ paginasPdf, folhas })).slice(0, 1500));
+    res.setHeader('X-PDF-Diag', encodeURIComponent(JSON.stringify({ paginasPdf, folhas, corte })).slice(0, 1500));
     res.status(200).send(Buffer.from(pdf));
   } catch (err) {
     console.error('Erro ao gerar PDF do relatório:', err);
