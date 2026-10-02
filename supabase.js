@@ -1365,11 +1365,24 @@ window.descartarModulosGuardados = descartarModulosGuardados;
 
 /* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo, forcar) {
-  // Clicar no ícone da ferramenta que JÁ está aberta (e é guardável) não faz nada: antes reconstruía a tela do
-  // zero e perdia o que estava ali. "forcar" é só pra quem quer mesmo redesenhar (reRenderizarModuloAtivo).
-  if (!forcar && modulo === window.moduloTecnicoAtivo && MODULOS_GUARDAVEIS.includes(modulo)) {
-    const c = document.getElementById('mandala-container');
-    if (c && c.childNodes.length && !c.querySelector('[data-spinner-troca]')) return;
+  // Clicar UMA vez no ícone da ferramenta que JÁ está aberta (e é guardável) não faz nada: antes reconstruía a
+  // tela do zero e perdia o que estava ali. DUPLO clique (dois cliques em até 450 ms, com a ferramenta já aberta
+  // desde o primeiro) reinicia de propósito. Contado aqui e não no evento "dblclick" pra funcionar também no
+  // toque. "forcar" é pra quem quer redesenhar sem perguntar (reRenderizarModuloAtivo).
+  if (!forcar) {
+    const agora = Date.now();
+    const ultimo = window.ultimoCliqueIcone;
+    let jaAberta = false;
+    if (modulo === window.moduloTecnicoAtivo && MODULOS_GUARDAVEIS.includes(modulo)) {
+      const c = document.getElementById('mandala-container');
+      if (c && c.childNodes.length && !c.querySelector('[data-spinner-troca]')) {
+        jaAberta = true;
+        const duplo = ultimo && ultimo.modulo === modulo && ultimo.jaAberta && (agora - ultimo.t) < 450;
+        window.ultimoCliqueIcone = duplo ? null : { modulo, t: agora, jaAberta: true };
+        if (!duplo) return;
+      }
+    }
+    if (!jaAberta) window.ultimoCliqueIcone = { modulo, t: agora, jaAberta: false };
   }
   window.moduloPendenteRestaurar = null; // qualquer navegação explícita cancela a ferramenta que aguardava o mapa carregar
   const moduloAnterior = window.moduloTecnicoAtivo;
