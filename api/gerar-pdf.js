@@ -68,7 +68,9 @@ const AJUSTAR_EXCESSO_DAS_FOLHAS = function() {
        proporcionalmente exatamente pelo excesso.
      Devolve a lista do que ajustou (pra diagnóstico). */
   const mm = 96 / 25.4, folha = 297 * mm, ajustes = [];
-  document.querySelectorAll('.rel-page:not(.rel-capa)').forEach((pagina, i) => {
+  const todas = Array.from(document.querySelectorAll('.rel-page'));
+  document.querySelectorAll('.rel-page:not(.rel-capa)').forEach(pagina => {
+    const i = todas.indexOf(pagina); // posição real no PDF (a capa é a página 1)
     const excesso = pagina.scrollHeight - folha;
     if (excesso <= 1.5) return;
     const topo = pagina.getBoundingClientRect().top;

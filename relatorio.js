@@ -3536,6 +3536,14 @@ async function baixarRelatorioPDF() {
       throw new Error(`Servidor de PDF respondeu ${resposta.status}${detalhe ? ': ' + detalhe : ''}`);
     }
 
+    // Diagnóstico do servidor: se ele precisou ajustar alguma folha pra não criar página extra, avisa (e registra no console).
+    try {
+      const ajustes = JSON.parse(decodeURIComponent(resposta.headers.get('X-PDF-Ajustes') || '[]'));
+      if (ajustes.length) {
+        console.log('[PDF] Folhas ajustadas pelo servidor:', ajustes);
+        relatorioAvisoCurto('PDF: ajustei ' + ajustes.length + ' página(s) pra não criar folha extra (págs. ' + ajustes.map(a => a.pagina).join(', ') + ')');
+      }
+    } catch (_) { /* cabeçalho ausente ou ilegível: segue sem aviso */ }
     const blobPdf = await resposta.blob();
     const url = URL.createObjectURL(blobPdf);
     const link = document.createElement('a');
