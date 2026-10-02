@@ -305,7 +305,7 @@ const MATRIZ_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-ma
 function salvarMatrizVisibilidadeNaGaleria() {
   const svgEl = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
   if (!svgEl) return;
-  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, titulo: 'MATRIZ DE VISIBILIDADE (THEORIA)' }), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, papiro: true, titulo: 'MATRIZ DE VISIBILIDADE (THEORIA)' }), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarMatrizVisibilidadeNaGaleria = salvarMatrizVisibilidadeNaGaleria;
 window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
@@ -327,9 +327,10 @@ async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
   if (!svgEl) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
 
   try {
-    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false }), fundo);
+    const papiro = window.temaMandala === 'ceu';
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('matriz_visibilidade_mandala', canvas.toDataURL('image/png'));
     alert(`"Matriz de Visibilidade" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {

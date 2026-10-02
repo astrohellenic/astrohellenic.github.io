@@ -2612,8 +2612,12 @@ window.gerarImagemHtmlComCabecalho = gerarImagemHtmlComCabecalho;
    SVG com a moldura arredondada dele (imagem pro Relatório). Devolve o canvas
    (escala 2), ainda sem recorte. */
 async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  /* opcoes.papiro (só a Matriz de Visibilidade por enquanto): Tema Céu — a imagem sai como a tela, sobre papiro,
+     com as cores de tinta e as variáveis de cor do ESCOPO da ferramenta (a grade usa var(--bg-card) etc.,
+     redefinidas só dentro da folha), claro ou escuro. */
+  const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
+  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
   const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
   const cs = getComputedStyle(svgEl);
   const borda = parseFloat(cs.borderTopWidth) || 0;
@@ -2626,7 +2630,9 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const larguraTela = svgEl.getBoundingClientRect().width;
   const k = larguraTela > 0 ? larguraTela / W : 1;
   const Wk = W * k, Hk = H * k;
-  const interno = new XMLSerializer().serializeToString(svgEl)
+  let internoXml = new XMLSerializer().serializeToString(svgEl);
+  if (papiro) internoXml = internoXml.replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m);
+  const interno = internoXml
     .replace(/ style="[^"]*"/, ' font-family="sans-serif"')
     .replace('<svg ', `<svg x="${borda}" y="${borda}" `);
   const conteudo = `<defs><clipPath id="molduraFerramenta"><rect x="${borda}" y="${borda}" width="${w}" height="${h}" rx="${raio}" ry="${raio}"/></clipPath></defs>
@@ -2638,14 +2644,16 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
     return rasterizarSvgParaCanvas(svg, Wk, Hk, fundo, 2);
   }
 
-  const cores = coresCabecalhoMandala(modoEscuro, null);
+  const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   const largura = Math.max(960, Wk + 40);
   const yTitulo = 34, yCabecalho = 52, yConteudo = 142;
   const altura = yConteudo + Hk + 20;
   const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
     .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+  const papelFundo = papiro ? `<defs><linearGradient id="papiroCaptura" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6bd92"/><stop offset=".55" stop-color="#c8a878"/><stop offset="1" stop-color="#b98f5f"/></linearGradient></defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
-    <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>
+    ${papelFundo}
+    <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>
     <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
     <g transform="translate(${(largura - Wk) / 2}, ${yConteudo}) scale(${k})">${conteudo}</g>
   </svg>`;
