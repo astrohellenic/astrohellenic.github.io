@@ -172,7 +172,7 @@ function renderAgendaSetup(container, ctx) {
     : `<div style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Nenhum agendamento futuro ainda.</div>`;
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div id="agenda-container" style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
         <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Agenda</h2>
@@ -198,7 +198,7 @@ function renderAgendaSetup(container, ctx) {
         <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Horário</label>
         <select id="agNovoHorario" class="modal-select" style="margin-bottom: 14px;"><option value="">Escolha uma data</option></select>
 
-        <button onclick="confirmarNovoAgendamento()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        <button class="agenda-btn-agendar" onclick="confirmarNovoAgendamento()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
           Agendar
         </button>
       </div>
