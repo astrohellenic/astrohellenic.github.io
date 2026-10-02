@@ -185,6 +185,19 @@ module.exports = async function handler(req, res) {
     } catch (e) {
       console.error('Ajuste de excesso das folhas falhou (segue sem ele):', e);
     }
+    // Diagnóstico: quantas folhas (.rel-page) existem e quais passam de uma A4 (altura em mm, já em impressão).
+    let folhas = null;
+    try {
+      folhas = await pagina.evaluate(() => {
+        const mm = 96 / 25.4;
+        const todas = Array.from(document.querySelectorAll('.rel-page'));
+        return {
+          total: todas.length,
+          altas: todas.map((el, i) => ({ pagina: i + 1, classe: (el.className || '').replace('rel-page', '').trim(), altura: +(el.scrollHeight / mm).toFixed(1), caixa: +(el.getBoundingClientRect().height / mm).toFixed(1) }))
+            .filter(f => f.altura > 297.5 || f.caixa > 297.5)
+        };
+      });
+    } catch (e) { /* só diagnóstico */ }
 
     const pdf = await pagina.pdf({
       format: 'A4',
@@ -196,8 +209,11 @@ module.exports = async function handler(req, res) {
     navegador = null;
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Access-Control-Expose-Headers', 'X-PDF-Ajustes');
+    // Quantas páginas o PDF realmente tem (conta os objetos /Type /Page) x quantas folhas o relatório tem.
+    const paginasPdf = (Buffer.from(pdf).toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+    res.setHeader('Access-Control-Expose-Headers', 'X-PDF-Ajustes, X-PDF-Diag');
     res.setHeader('X-PDF-Ajustes', encodeURIComponent(JSON.stringify(ajustes)).slice(0, 1500));
+    res.setHeader('X-PDF-Diag', encodeURIComponent(JSON.stringify({ paginasPdf, folhas })).slice(0, 1500));
     res.status(200).send(Buffer.from(pdf));
   } catch (err) {
     console.error('Erro ao gerar PDF do relatório:', err);

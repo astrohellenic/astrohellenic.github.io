@@ -1862,12 +1862,12 @@ function renderizarBibliotecaNoEditor() {
   `).join('');
 }
 
-function relatorioAvisoCurto(texto) {
+function relatorioAvisoCurto(texto, duracaoMs) {
   const aviso = document.createElement('div');
   aviso.style.cssText = 'position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 8px; padding: 10px 18px; font: 700 13px Montserrat, sans-serif; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);';
   aviso.textContent = texto;
   document.body.appendChild(aviso);
-  setTimeout(() => aviso.remove(), 2200);
+  setTimeout(() => aviso.remove(), duracaoMs || 2200);
 }
 
 /* Coloca uma CÓPIA do bloco guardado no fim do relatório. */
@@ -3541,9 +3541,18 @@ async function baixarRelatorioPDF() {
       const ajustes = JSON.parse(decodeURIComponent(resposta.headers.get('X-PDF-Ajustes') || '[]'));
       if (ajustes.length) {
         console.log('[PDF] Folhas ajustadas pelo servidor:', ajustes);
-        relatorioAvisoCurto('PDF: ajustei ' + ajustes.length + ' página(s) pra não criar folha extra (págs. ' + ajustes.map(a => a.pagina).join(', ') + ')');
+        relatorioAvisoCurto('PDF: ajustei ' + ajustes.length + ' página(s) pra não criar folha extra (págs. ' + ajustes.map(a => a.pagina).join(', ') + ')', 8000);
       }
     } catch (_) { /* cabeçalho ausente ou ilegível: segue sem aviso */ }
+    // Diagnóstico: se o PDF saiu com MAIS páginas que folhas no relatório, mostra quantas e quais folhas passaram de uma A4.
+    try {
+      const diag = JSON.parse(decodeURIComponent(resposta.headers.get('X-PDF-Diag') || 'null'));
+      if (diag && diag.folhas && diag.paginasPdf > diag.folhas.total) {
+        console.log('[PDF] Diagnóstico:', diag);
+        const altas = (diag.folhas.altas || []).map(f => 'folha ' + f.pagina + ' (' + (f.classe || 'texto') + ', ' + f.altura + 'mm)').join('; ');
+        relatorioAvisoCurto('PDF com ' + diag.paginasPdf + ' páginas para ' + diag.folhas.total + ' folhas' + (altas ? ' — altas: ' + altas : ''), 15000);
+      }
+    } catch (_) { /* sem diagnóstico: segue */ }
     const blobPdf = await resposta.blob();
     const url = URL.createObjectURL(blobPdf);
     const link = document.createElement('a');
