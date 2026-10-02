@@ -1235,6 +1235,55 @@ body {
         body.tema-ceu #mandala-container button[onclick^="salvarHorasNaGaleria"] svg,
         body.tema-ceu #mandala-container button[onclick^="capturarHorasParaRelatorio"] svg { stroke: #1d3a66; }
 
+        /* TEMA CÉU — Isopsefia Helenística (isopsefia.js): a tela é uma folha de papiro e tudo é só tinta: azul nas
+           linhas, caixas e letras; terracota no título, na aba ativa e nos destaques; preto no texto. Sem
+           preenchimento nem faixa azul-marinho. As cores vêm de variáveis redefinidas só aqui dentro. SÓ PINTURA. */
+        body.tema-ceu #isopsefia-container {
+            --bg-main: transparent;
+            --bg-card: transparent;
+            --bg-hover: transparent;
+            --bg-disabled: transparent;
+            --border-color: rgba(95, 65, 30, 0.45);
+            --table-border: rgba(29, 58, 102, 0.75);
+            --table-border-soft: rgba(95, 65, 30, 0.45);
+            --primary-blue: #1d3a66;
+            --gold-primary: #1d3a66;
+            --text-dark: #1a1410; --text-muted: #1a1410; --text-muted-2: #1a1410; --text-muted-3: #1a1410; --text-faint: #1a1410;
+            --badge-bg: transparent; --badge-border: #1d3a66; --badge-text: #1d3a66;
+            --danger: #a03e25;
+            --element-fogo: #1d3a66; --element-terra: #1d3a66; --element-ar: #1d3a66; --element-agua: #1d3a66;
+            color: #1a1410;
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.22) 100%),
+                radial-gradient(ellipse at 12% 6%, rgba(240,222,180,0.5) 0%, transparent 40%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%) !important;
+            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
+        }
+        body.tema-ceu #isopsefia-container h3 { color: #a03e25 !important; }
+        body.tema-ceu #isopsefia-container [style*="box-shadow"] { box-shadow: none !important; }
+        body.tema-ceu #isopsefia-container thead tr { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid #1d3a66; }
+        /* abas: só texto em tinta; a ativa em terracota com uma linha embaixo */
+        body.tema-ceu #isopsefia-container .iso-aba { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid transparent !important; }
+        body.tema-ceu #isopsefia-container .iso-aba-ativa { color: #a03e25 !important; border-bottom: 2px solid #a03e25 !important; }
+        body.tema-ceu #isopsefia-container .iso-btn-adicionar { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; }
+        /* caixa do resultado (palavra em grego + soma/resto): contorno em tinta, grego em terracota */
+        body.tema-ceu #isopsefia-container .iso-resultado { background: transparent !important; color: #1a1410 !important; border: 1.5px solid #1d3a66 !important; }
+        body.tema-ceu #isopsefia-container .iso-resultado [style*="border-top"] { border-top-color: rgba(95, 65, 30, 0.45) !important; }
+        body.tema-ceu #isopsefia-container .iso-grego { color: #a03e25 !important; }
+        body.tema-ceu #isopsefia-container input[type="text"] { background: transparent !important; color: #1a1410 !important; border: 1.5px solid #1d3a66 !important; }
+        /* botões de galeria e relatório (fora da folha): papiro, como os da Profecção */
+        body.tema-ceu #mandala-container button[onclick^="salvarIsopsefiaNaGaleria"],
+        body.tema-ceu #mandala-container button[onclick^="capturarIsopsefiaParaRelatorio"] {
+            background: var(--papiro-botao) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            clip-path: var(--papiro-botao-rasgo);
+        }
+        body.tema-ceu #mandala-container button[onclick^="salvarIsopsefiaNaGaleria"] svg,
+        body.tema-ceu #mandala-container button[onclick^="capturarIsopsefiaParaRelatorio"] svg { stroke: #1d3a66; }
+
         /* TEMA CÉU — tela de configuração do Relatório (lista de relatórios em andamento + modelos): a
            tela inteira é uma folha de papiro; só tinta — nome do cliente e título em terracota, texto
            em preto, azul-tinta nos desenhos (setas, lápis); rascunhos viram linhas de tinta e as
@@ -1951,7 +2000,7 @@ body {
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261002b"></script>
 <script src="mandala.js?v=20261002f"></script>
-<script src="isopsefia.js?v=20261002z"></script>
+<script src="isopsefia.js?v=20261003a"></script>
 <script src="profeccao.js?v=20261002d"></script>
 <script src="sinastria.js?v=20261002c"></script>
 <script src="revolucao.js?v=20260920"></script>

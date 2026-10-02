@@ -27,7 +27,8 @@ const MONOLINE_ZODIAC_SVGS_ISO = [
 
 function getSignSvgHtmlIso(signIdx, size = 20) {
   if (signIdx < 0 || signIdx > 11) return '-';
-  const color = ELEMENT_SIGN_COLORS_ISO[SIGN_ELEMENTS_ISO[signIdx]];
+  // Tema Céu (papiro): glifo de signo em azul-tinta (sem cor por elemento) — direto, pra também sair certo nas imagens salvas.
+  const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? '#1d3a66' : ELEMENT_SIGN_COLORS_ISO[SIGN_ELEMENTS_ISO[signIdx]];
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; display: inline-block; vertical-align: middle;">${MONOLINE_ZODIAC_SVGS_ISO[signIdx]}</svg>`;
 }
 
@@ -172,13 +173,13 @@ function renderIsopsefiaUI(container) {
       </h3>
 
       <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
-      ${montarCabecalhoMandalaImagemHTML(currentCalculatedData)}
+      ${montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true })}
 
       <!-- ABAS INTERNAS -->
       <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--table-border-soft); margin-bottom: 20px;">
-        <button onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Planilha Dinâmica</button>
-        <button onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Análise Passo a Passo</button>
-        <button onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Tabela Jônica Clássica</button>
+        <button class="iso-aba${isoState.activeTab === 'planilha' ? ' iso-aba-ativa' : ''}" onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Planilha Dinâmica</button>
+        <button class="iso-aba${isoState.activeTab === 'calculadora' ? ' iso-aba-ativa' : ''}" onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Análise Passo a Passo</button>
+        <button class="iso-aba${isoState.activeTab === 'referencia' ? ' iso-aba-ativa' : ''}" onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Tabela Jônica Clássica</button>
       </div>
 
       <!-- CONTEÚDO DAS ABAS -->
@@ -257,7 +258,7 @@ function renderConteudoAbaAtual() {
     return `
       <div data-html2canvas-ignore="true" style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); margin-bottom: 16px; display: flex; gap: 8px;">
         <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--table-border-soft); border-radius: 6px; font-size: 13px; outline: none; background: var(--bg-card); color: var(--text-dark);" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
-        <button onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Adicionar</button>
+        <button class="iso-btn-adicionar" onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Adicionar</button>
       </div>
 
       <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; overflow: hidden;">
@@ -318,12 +319,12 @@ function renderConteudoAbaAtual() {
         </div>
 
         <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 16px;">
-          <div style="background: #103b70; color: #ffffff; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid var(--gold-primary);">
+          <div class="iso-resultado" style="background: #103b70; color: #ffffff; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid var(--gold-primary);">
             <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-family: 'Cinzel', serif;">Palavra em Grego</span>
-            <div style="font-size: 28px; font-family: serif; font-weight: bold; margin: 8px 0; color: #fcf6ba;">${calc.grego || '-'}</div>
+            <div class="iso-grego" style="font-size: 28px; font-family: serif; font-weight: bold; margin: 8px 0; color: #fcf6ba;">${calc.grego || '-'}</div>
             <div style="display: flex; justify-content: space-around; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
               <div><small style="display:block; opacity:0.8; font-size:10px;">SOMA</small><strong style="font-size:18px;">${calc.bruto}</strong></div>
-              <div><small style="display:block; opacity:0.8; font-size:10px;">RESTO</small><strong style="font-size:18px; color: #fcf6ba;">${calc.resto}</strong></div>
+              <div><small style="display:block; opacity:0.8; font-size:10px;">RESTO</small><strong class="iso-grego" style="font-size:18px; color: #fcf6ba;">${calc.resto}</strong></div>
             </div>
           </div>
 
@@ -399,7 +400,7 @@ function salvarIsopsefiaNaGaleria() {
   const area = document.getElementById('isoTabContent');
   if (!area) return;
   capturarESalvarNaGaleria(
-    () => gerarImagemHtmlComCabecalho(area, { titulo: 'ISOPSEFIA HELENÍSTICA', comCabecalho: true }),
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'ISOPSEFIA HELENÍSTICA', comCabecalho: true, papiro: true }),
     `Astro_Hellenic_Isopsefia_${((typeof currentSubjectName !== 'undefined' && currentSubjectName) || 'mapa').replace(/\s+/g, '_')}.png`
   );
 }
