@@ -543,13 +543,14 @@
 
     try {
       /* O servidor grava o mapa E dispara o webhook (o endereço do webhook não passa mais pelo navegador). */
-      const { error } = await supabaseClient.rpc('registrar_cliente_formulario', {
+      const { data: novoClienteId, error } = await supabaseClient.rpc('registrar_cliente_formulario', {
         p_user: payload.user_id, p_nome: payload.nome, p_data: payload.data_nascimento, p_hora: payload.hora_nascimento,
         p_cidade: payload.cidade, p_lat: payload.latitude, p_lon: payload.longitude,
         p_whatsapp: payload.whatsapp, p_email: payload.email
       });
       if (!error) {
-        const cfgData = { redirect_url: redirectUrlForm };
+        /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
+        const cfgData = { redirect_url: redirectUrlForm ? redirectUrlForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
         document.getElementById('clientForm').reset();
         selectedGeo = { lat: null, lon: null, name: '' };
