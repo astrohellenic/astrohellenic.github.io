@@ -1225,16 +1225,24 @@ const LIB_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main)
    cartão da mandala saem direto do SVG (rápido); a tabela (árvore L1-L4) é
    HTML, então é a única parte que passa pelo html2canvas. "opc": {titulo,
    cabecalho, mandala, tabela} (booleanos). Devolve o canvas (escala 2). */
+/* Tema Céu: a imagem sai sobre o papiro (cor chapada, pra o recorte automático achar a borda), tanto no modo
+   claro quanto no escuro — a tela já é papiro nos dois. */
+function fundoCapturaLiberacao() {
+  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return '#c8a878';
+  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+}
+
 async function montarImagemLiberacao(opc) {
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const fundo = fundoCapturaLiberacao();
   const arvoreEl = document.getElementById('liberacaoArvoreCapture');
   const cardEl = document.getElementById('liberacaoMandalaCapture');
   const roda = cardEl && cardEl.querySelector('svg');
   const W = (opc.tabela && arvoreEl) ? Math.max(320, Math.round(arvoreEl.getBoundingClientRect().width)) : 960;
 
   let y = 0, partes = '';
-  const cores = coresCabecalhoMandala(modoEscuro, null);
+  const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   if (opc.titulo) {
     partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">LIBERAÇÃO ZODIACAL</text>`;
     y += 44;
@@ -1301,8 +1309,7 @@ async function capturarLiberacaoParaRelatorio(modo) {
   const opc = modo === 'tabela' ? { tabela: true }
     : modo === 'mandala' ? { cabecalho: true, mandala: true }
     : { cabecalho: true, mandala: true, tabela: true };
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  const fundo = fundoCapturaLiberacao();
   try {
     const bruto = await montarImagemLiberacao(opc);
     if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
