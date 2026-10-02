@@ -602,7 +602,7 @@ function reRenderizarModuloAtivo() {
   if (window.moduloPendenteRestaurar) return;
   descartarModulosGuardados(); // o estilo mudou: as telas guardadas das outras ferramentas ficariam com o antigo
   const modulo = window.moduloTecnicoAtivo || 'mandala';
-  if (typeof abrirModuloTecnica === 'function') abrirModuloTecnica(modulo);
+  if (typeof abrirModuloTecnica === 'function') abrirModuloTecnica(modulo, true);
 }
 
 /* ORDEM DOS BOTÕES DA BARRA SUPERIOR (Configurações > Aparência)
@@ -1364,7 +1364,13 @@ function descartarModulosGuardados() { window.modulosGuardados = {}; }
 window.descartarModulosGuardados = descartarModulosGuardados;
 
 /* Abrir módulo técnicas */
-function abrirModuloTecnica(modulo) {
+function abrirModuloTecnica(modulo, forcar) {
+  // Clicar no ícone da ferramenta que JÁ está aberta (e é guardável) não faz nada: antes reconstruía a tela do
+  // zero e perdia o que estava ali. "forcar" é só pra quem quer mesmo redesenhar (reRenderizarModuloAtivo).
+  if (!forcar && modulo === window.moduloTecnicoAtivo && MODULOS_GUARDAVEIS.includes(modulo)) {
+    const c = document.getElementById('mandala-container');
+    if (c && c.childNodes.length && !c.querySelector('[data-spinner-troca]')) return;
+  }
   window.moduloPendenteRestaurar = null; // qualquer navegação explícita cancela a ferramenta que aguardava o mapa carregar
   const moduloAnterior = window.moduloTecnicoAtivo;
   window.moduloTecnicoAtivo = modulo;
