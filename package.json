@@ -3,7 +3,8 @@
   "private": true,
   "description": "Função serverless (Vercel) que gera o PDF de verdade do Relatório, rodando Chrome headless. O site em si (index.html e os .js na raiz) continua estático, publicado pelo GitHub Pages — isso aqui só serve o endpoint /api/gerar-pdf.",
   "dependencies": {
-    "puppeteer-core": "25.12.0",
-    "@sparticuz/chromium": "153.0.0"
+    "@sparticuz/chromium": "153.0.0",
+    "pdf-lib": "1.17.1",
+    "puppeteer-core": "25.12.0"
   }
 }

@@ -58,23 +58,19 @@ function aplicarCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-// Roda DENTRO do Chrome: mede cada folha (altura da caixa, altura com o que vaza e se o conteúdo visível cabe em uma A4).
-const MEDIR_FOLHAS_PARA_PAGINAR = function() {
-  const mm = 96 / 25.4, folha = 297 * mm;
+// Roda DENTRO do Chrome: para cada folha, diz se o conteúdo visível cabe em uma A4 (então só a 1ª página importa).
+const MEDIR_SE_FOLHAS_CABEM = function() {
+  const folha = 297 * 96 / 25.4;
   return Array.from(document.querySelectorAll('.rel-page')).map(pagina => {
-    const caixa = pagina.getBoundingClientRect();
-    const corta = ['hidden', 'clip'].includes(getComputedStyle(pagina).overflowY);
+    if (pagina.classList.contains('rel-capa')) return true; // capa: tamanho fixo, o que vaza é cortado
+    const topo = pagina.getBoundingClientRect().top;
     let maisBaixo = 0;
     pagina.querySelectorAll('*').forEach(el => {
       if (el.classList && el.classList.contains('rel-num-pagina-canto')) return;
       const r = el.getBoundingClientRect();
-      if (r.width && r.height) maisBaixo = Math.max(maisBaixo, r.bottom - caixa.top);
+      if (r.width && r.height) maisBaixo = Math.max(maisBaixo, r.bottom - topo);
     });
-    return {
-      caixa: +(caixa.height / mm).toFixed(2),
-      altura: +((corta ? caixa.height : Math.max(caixa.height, pagina.scrollHeight)) / mm).toFixed(2),
-      cabe: maisBaixo <= folha + 1
-    };
+    return maisBaixo <= folha + 1;
   });
 };
 
@@ -230,36 +226,36 @@ module.exports = async function handler(req, res) {
     let corte = null;
 
     /* GARANTIA SEM CSS: o relatório tem N folhas (.rel-page) e cada uma deve virar UMA página do PDF. Se o PDF
-       saiu com mais páginas que folhas, o Chrome partiu alguma folha em duas (a "folha extra com só o número").
-       Em vez de torcer pra algum CSS segurar, calcula em que página do PDF cada folha COMEÇA (pela altura
-       medida de cada uma) e manda o Chrome imprimir só essas páginas (pageRanges). Só corta a continuação de
-       uma folha cujo conteúdo visível cabe na primeira página; só aplica se a conta fecha EXATAMENTE com o
-       número de páginas que o PDF realmente tem (senão devolve o PDF como saiu, sem arriscar cortar errado). */
+       saiu com mais páginas que folhas (a "folha extra com só o número"), o Chrome partiu alguma folha em duas
+       na hora de paginar — e isso só acontece na paginação de verdade, não dá pra prever medindo antes (foi
+       medido: nenhuma folha "alta" e mesmo assim sobravam páginas). Então, quando isso acontece, refaz o PDF
+       FOLHA POR FOLHA: mostra uma folha de cada vez, imprime só a 1ª página dela e junta tudo num PDF só
+       (pdf-lib). Assim cada folha vira exatamente uma página, independente de como o Chrome pagina. Só deixa
+       passar mais de uma página numa folha cujo conteúdo visível realmente passa de uma A4. Se algo falhar,
+       devolve o PDF como saiu. */
     if (folhas && paginasPdf > folhas.total) {
       try {
-        const medidas = await pagina.evaluate(MEDIR_FOLHAS_PARA_PAGINAR);
-        const A4 = 297;
-        for (const chave of ['caixa', 'altura']) {
-          let inicio = 1;
-          const mapa = medidas.map(m => {
-            const n = Math.max(1, Math.ceil(m[chave] / A4 - 0.02));
-            const item = { inicio, n, cabe: m.cabe };
-            inicio += n;
-            return item;
-          });
-          if (inicio - 1 !== paginasPdf) continue; // a conta não fecha com o PDF real: tenta a outra medida
-          const manter = [];
-          mapa.forEach(m => {
-            if (m.n > 1 && m.cabe) manter.push(String(m.inicio)); // só a primeira página da folha
-            else for (let k = 0; k < m.n; k++) manter.push(String(m.inicio + k));
-          });
-          const pdf2 = await pagina.pdf(Object.assign({}, opcoesPdf, { pageRanges: manter.join(',') }));
-          const paginas2 = contarPaginas(pdf2);
-          if (paginas2 === folhas.total || paginas2 < paginasPdf) { pdf = pdf2; corte = { de: paginasPdf, para: paginas2, medida: chave }; paginasPdf = paginas2; }
-          break;
+        const cabe = await pagina.evaluate(MEDIR_SE_FOLHAS_CABEM);
+        const { PDFDocument } = await import('pdf-lib');
+        const final = await PDFDocument.create();
+        for (let i = 0; i < folhas.total; i++) {
+          await pagina.evaluate(indice => {
+            Array.from(document.querySelectorAll('.rel-page')).forEach((el, k) => { el.style.display = (k === indice) ? '' : 'none'; });
+          }, i);
+          const parte = await pagina.pdf(cabe[i] ? Object.assign({}, opcoesPdf, { pageRanges: '1' }) : opcoesPdf);
+          const docParte = await PDFDocument.load(parte);
+          const copiadas = await final.copyPages(docParte, docParte.getPageIndices());
+          copiadas.forEach(p => final.addPage(p));
+        }
+        const bytes = await final.save();
+        const paginasFinal = final.getPageCount();
+        if (paginasFinal >= folhas.total && paginasFinal < paginasPdf) {
+          corte = { de: paginasPdf, para: paginasFinal, metodo: 'folha por folha' };
+          pdf = Buffer.from(bytes);
+          paginasPdf = paginasFinal;
         }
       } catch (e) {
-        console.error('Corte das páginas extras falhou (devolve o PDF como saiu):', e);
+        console.error('Refazer folha por folha falhou (devolve o PDF como saiu):', e);
       }
     }
 

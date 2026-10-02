@@ -3550,7 +3550,7 @@ async function baixarRelatorioPDF() {
       if (diag && diag.folhas && diag.paginasPdf > diag.folhas.total) {
         console.log('[PDF] Diagnóstico:', diag);
         const altas = (diag.folhas.altas || []).map(f => 'folha ' + f.pagina + ' (' + (f.classe || 'texto') + ', ' + f.altura + 'mm)').join('; ');
-        relatorioAvisoCurto('PDF com ' + diag.paginasPdf + ' páginas para ' + diag.folhas.total + ' folhas' + (altas ? ' — altas: ' + altas : ''), 15000);
+        relatorioAvisoCurto('PDF com ' + diag.paginasPdf + ' páginas para ' + diag.folhas.total + ' folhas' + (altas ? ' — altas: ' + altas : '') + (diag.corte ? ' — corrigido folha por folha' : ''), 25000);
       }
     } catch (_) { /* sem diagnóstico: segue */ }
     const blobPdf = await resposta.blob();
