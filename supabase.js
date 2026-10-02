@@ -596,6 +596,10 @@ async function salvarEstiloPlanetas(estilo) {
 /* REDESENHA A FERRAMENTA ATUALMENTE ABERTA (usado ao trocar o estilo dos ícones dos planetas) */
 function reRenderizarModuloAtivo() {
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
+  // Recarregou a página com outra ferramenta aberta e o mapa ainda está chegando (ver window.onload em
+  // mandala.js): moduloTecnicoAtivo ainda é undefined, e cair no 'mandala' aqui sobrescrevia a ferramenta
+  // guardada (astro_ultimo_modulo) e cancelava a restauração. A ferramenta pendente já abre com o estilo certo.
+  if (window.moduloPendenteRestaurar) return;
   const modulo = window.moduloTecnicoAtivo || 'mandala';
   if (typeof abrirModuloTecnica === 'function') abrirModuloTecnica(modulo);
 }
