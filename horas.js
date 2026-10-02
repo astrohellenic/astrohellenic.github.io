@@ -177,7 +177,7 @@ function iniciarModuloHoras(containerIdAlvo) {
 
   const btnCssHoras = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
   const cabecalhoHorasHTML = (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof montarCabecalhoMandalaImagemHTML === 'function')
-    ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'horasCabecalho', { largura: 480 }) : '';
+    ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'horasCabecalho', { largura: 480, tintaSobreFolha: true }) : '';
 
   let html = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
@@ -319,7 +319,7 @@ function iniciarModuloHoras(containerIdAlvo) {
             </div>
           </div>
           <div class="horas-atual-periodo">
-            ${horaAtual.period === 'diurna' ? '☀️' : '🌙'} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
+            ${iconeSolLuaHoras(horaAtual.period, 14)} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
           </div>
         </div>
       </div>
@@ -342,11 +342,11 @@ function iniciarModuloHoras(containerIdAlvo) {
   `;
 
   hoursSchedule.forEach(item => {
-    const bgRow = item.isCurrent ? "background-color: var(--bg-main); font-weight: 700;" : "";
+    const bgRow = item.isCurrent ? "background-color: var(--horas-atual-bg, var(--bg-main)); font-weight: 700;" : "";
     html += `
       <tr style="border-bottom: 1px solid var(--primary-blue); ${bgRow}">
         <td>${item.index}ª</td>
-        <td>${item.period === 'diurna' ? '☀️' : '🌙'}</td>
+        <td>${iconeSolLuaHoras(item.period, 16)}</td>
         <td data-col="regente">
           ${getPlanet3DSVG(item.planet.id)}
         </td>
@@ -373,9 +373,20 @@ function iniciarModuloHoras(containerIdAlvo) {
 /* IMAGENS DAS HORAS PLANETÁRIAS. Galeria: título + cabeçalho padrão (no layout
    estreito, o mesmo que está na tela) + o cartão. Relatório: só o cartão.
    Só ao tocar nos botões. */
+/* Sol/Lua do período (dia/noite). Fora do Tema Céu continuam os emojis de sempre; no papiro viram um desenho em tinta
+   (sol em terracota, lua em azul-tinta) — emoji colorido não combina com nanquim. */
+function iconeSolLuaHoras(periodo, tam) {
+  if (window.temaMandala !== 'ceu') return periodo === 'diurna' ? '☀️' : '🌙';
+  const t = tam || 16;
+  const sol = `<svg width="${t}" height="${t}" viewBox="0 0 24 24" style="vertical-align: middle; display: inline-block;"><circle cx="12" cy="12" r="5" fill="none" stroke="#a03e25" stroke-width="2"/><g stroke="#a03e25" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="6.7" y2="6.7"/><line x1="17.3" y1="17.3" x2="19.4" y2="19.4"/><line x1="4.6" y1="19.4" x2="6.7" y2="17.3"/><line x1="17.3" y1="6.7" x2="19.4" y2="4.6"/></g></svg>`;
+  const lua = `<svg width="${t}" height="${t}" viewBox="0 0 24 24" style="vertical-align: middle; display: inline-block;"><path d="M16.5 3.2 A9 9 0 1 0 20.8 15.5 A7.2 7.2 0 0 1 16.5 3.2 Z" fill="none" stroke="#1d3a66" stroke-width="2" stroke-linejoin="round"/></svg>`;
+  return periodo === 'diurna' ? sol : lua;
+}
+
+/* Tema Céu: as peças da imagem saem SEM fundo (transparentes): no relatório encaixam direto no papiro da folha; na
+   galeria o papiro (degradê) é pintado por baixo no fim (ver montarImagemHoras). */
 function fundoCapturaHoras() {
-  // Tema Céu + imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum.
-  if (window.temaMandala === 'ceu' && window.__capturaSemFundo) return null;
+  if (window.temaMandala === 'ceu') return null;
   return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
 }
 
@@ -386,11 +397,13 @@ async function montarImagemHoras(comCabecalho) {
   const corpo = await html2canvasRapido(area, fundo);
   if (!comCabecalho) return corpo;
 
-  const escuro = document.documentElement.classList.contains('tema-escuro');
-  const cores = coresCabecalhoMandala(escuro, null);
+  const papiro = window.temaMandala === 'ceu';
+  const escuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(escuro, null);
+  const corTituloImg = papiro ? '#a03e25' : cores.titulo;
   const W = 480;
   const pecas = [];
-  pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">HORAS PLANETÁRIAS</text></svg>`, W, 34, fundo, 2));
+  pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTituloImg}">HORAS PLANETÁRIAS</text></svg>`, W, 34, fundo, 2));
   const svgEl = document.querySelector('#horasCabecalho svg');
   if (svgEl) {
     const xml = new XMLSerializer().serializeToString(svgEl);
@@ -405,7 +418,11 @@ async function montarImagemHoras(comCabecalho) {
   saida.width = Math.max(...pecas.map(c => c.width));
   saida.height = pecas.reduce((t, c) => t + c.height, 0) + gap * (pecas.length - 1);
   const ctx = saida.getContext('2d');
-  if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
+  if (papiro) {
+    const g = ctx.createLinearGradient(0, 0, 0, saida.height);
+    g.addColorStop(0, '#d6bd92'); g.addColorStop(0.55, '#c8a878'); g.addColorStop(1, '#b98f5f');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, saida.width, saida.height);
+  } else if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
   let y = 0;
   pecas.forEach(c => { ctx.drawImage(c, Math.round((saida.width - c.width) / 2), y); y += c.height + gap; });
   return saida;
