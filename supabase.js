@@ -525,7 +525,8 @@ async function carregarTemaMandala(userId) {
   // Se a mandala já tinha sido desenhada com o tema padrão antes desse
   // carregamento terminar, refaz o desenho já com o tema certo.
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
-    renderMandala();
+    if (mandalaEstaNaTela()) renderMandala();
+    else reRenderizarModuloAtivo(); // outra ferramenta aberta: refaz ELA com o tema novo (se ainda esperando o mapa, não faz nada)
   }
 }
 
@@ -543,7 +544,7 @@ async function salvarTemaMandala(tema) {
       window.temaMandala = tema;
       document.body.classList.toggle('tema-ceu', tema === 'ceu');
       if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
-        renderMandala();
+        if (mandalaEstaNaTela()) renderMandala();
       }
       abrirConfiguracoesAparencia();
     } else {
@@ -1362,6 +1363,18 @@ window.modulosGuardados = window.modulosGuardados || {};
    calculado em executarCalculo, ou mudança de estilo em reRenderizarModuloAtivo). */
 function descartarModulosGuardados() { window.modulosGuardados = {}; }
 window.descartarModulosGuardados = descartarModulosGuardados;
+
+/* A Mandala é mesmo o que está (ou vai estar) na tela? Falso quando outra ferramenta está aberta ou esperando o
+   mapa chegar (recarregou a página com ela aberta). Quem redesenha a mandala "por baixo dos panos" (carregar o
+   tema, voltar do login...) TEM que perguntar isso antes: renderMandala() escreve direto no #mandala-container,
+   então chamá-la com outra ferramenta aberta joga a mandala por cima dela — gigante, sem a classe modo-mandala e
+   sem os botões da Mandala, até apertar o ícone da Mandala de novo. */
+function mandalaEstaNaTela() {
+  if (window.moduloPendenteRestaurar) return false;
+  const m = window.moduloTecnicoAtivo;
+  return !m || m === 'mandala' || m === 'radix';
+}
+window.mandalaEstaNaTela = mandalaEstaNaTela;
 
 /* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo, forcar) {

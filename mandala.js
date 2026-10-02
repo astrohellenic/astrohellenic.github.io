@@ -2764,7 +2764,7 @@ async function gerarMandalaDoMomentoParaLogin() {
   } finally {
     currentCalculatedData = salvo.dados; currentMoment = salvo.momento; currentGeo = salvo.geo; currentSubjectName = salvo.nome;
     window.currentLotes = salvo.lotes; window.temaMandala = salvo.tema; selectedHouse1Lot = salvo.casa1; window.ceuFundoCapaUltimo = salvo.capa;
-    if (salvo.dados) { try { renderMandala(); } catch (e) { /* tela de trás: sem problema */ } }
+    if (salvo.dados && (typeof mandalaEstaNaTela !== 'function' || mandalaEstaNaTela())) { try { renderMandala(); } catch (e) { /* tela de trás: sem problema */ } }
   }
 }
 window.gerarMandalaDoMomentoParaLogin = gerarMandalaDoMomentoParaLogin;
