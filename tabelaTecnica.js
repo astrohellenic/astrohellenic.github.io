@@ -413,10 +413,10 @@ function renderPainelTecnico(data, containerId) {
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
-      <div id="painel-tecnico-container" style="width: 100%; min-height: 100%; padding: 10px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+      <div id="painel-tecnico-container" class="painel-tecnico-folha" style="width: 100%; min-height: 100%; padding: 10px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
       <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
 
-      ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader')}
+      ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader', { tintaSobreFolha: true })}
     `;
 
     html += `
@@ -476,9 +476,10 @@ async function capturarPainelTecnicoParaRelatorio() {
   if (!svgEl) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
     // Só a tabela (sem título nem cabeçalho do cliente), direto do SVG (rápido).
-    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false }), fundo);
+    const papiro = window.temaMandala === 'ceu';
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('tabela_tecnica', canvas.toDataURL('image/png'));
     alert(`"Painel Técnico de Natividades" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
@@ -495,7 +496,7 @@ const PAINEL_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-ma
 function salvarPainelTecnicoNaGaleria() {
   const svgEl = document.querySelector('#painelPrincipalContainer svg');
   if (!svgEl) return;
-  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, titulo: 'PAINEL TÉCNICO DE NATIVIDADES' }), `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, papiro: true, titulo: 'PAINEL TÉCNICO DE NATIVIDADES' }), `Astro_Hellenic_Painel_Tecnico_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarPainelTecnicoNaGaleria = salvarPainelTecnicoNaGaleria;
 

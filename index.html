@@ -978,6 +978,49 @@ body {
         body.tema-ceu #mandala-container button[onclick^="salvarMatrizVisibilidadeNaGaleria"] svg,
         body.tema-ceu #mandala-container button[onclick^="capturarMatrizVisibilidadeMandalaParaRelatorio"] svg { stroke: #1d3a66; }
 
+        /* TEMA CÉU — Painel Técnico de Natividades: a folha de papiro começa no título e vai até o
+           cabeçalho do cliente, MAIOR que a grade (a grade é desenhada dentro dela, com
+           folga em volta). Título em terracota; linhas e células da grade em tinta sobre o
+           papiro (as cores da grade vêm de variáveis, redefinidas só aqui dentro). As imagens
+           salvas/enviadas pro Relatório saem como a tela (papiro + tinta, ver gerarImagemFerramentaDoSvg). */
+        body.tema-ceu .painel-tecnico-folha {
+            --bg-card: rgba(255, 244, 215, 0.30);
+            --bg-main: rgba(255, 244, 215, 0.55);
+            --bg-hover: rgba(120, 80, 30, 0.18);
+            --table-border: rgba(29, 58, 102, 0.75);
+            --text-disabled: rgba(42, 33, 24, 0.55);
+            --primary-blue: #1d3a66;
+            --text-dark: #1a1410;
+            --text-muted-2: #1a1410;
+            --danger: #a03e25;
+            --gold-primary: #1d3a66;
+            --element-fogo: #1d3a66; --element-terra: #1d3a66; --element-ar: #1d3a66; --element-agua: #1d3a66;
+            width: fit-content;
+            max-width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+            padding: 26px 26px 12px;
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.25) 100%),
+                radial-gradient(ellipse at 12% 8%, rgba(240,222,180,0.5) 0%, transparent 45%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%);
+            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 85%, 0 62%, 3px 40%, 0 18%);
+        }
+        body.tema-ceu .painel-tecnico-folha h3 { color: #a03e25 !important; }
+        body.tema-ceu .painel-tecnico-folha #painelPrincipalContainer svg { border-radius: 4px !important; }
+        /* Botões de salvar/enviar da Matriz (acima da folha): pedaços de papiro como os da Mandala. */
+        body.tema-ceu #mandala-container button[onclick^="salvarPainelTecnicoNaGaleria"],
+        body.tema-ceu #mandala-container button[onclick^="capturarPainelTecnicoParaRelatorio"] {
+            background: var(--papiro-botao) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            clip-path: var(--papiro-botao-rasgo);
+        }
+        body.tema-ceu #mandala-container button[onclick^="salvarPainelTecnicoNaGaleria"] svg,
+        body.tema-ceu #mandala-container button[onclick^="capturarPainelTecnicoParaRelatorio"] svg { stroke: #1d3a66; }
+
         /* TEMA CÉU — tela de configuração do Relatório (lista de relatórios em andamento + modelos): a
            tela inteira é uma folha de papiro; só tinta — nome do cliente e título em terracota, texto
            em preto, azul-tinta nos desenhos (setas, lápis); rascunhos viram linhas de tinta e as
@@ -1692,7 +1735,7 @@ body {
 <script src="supabase.js?v=20261001a"></script>
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002a"></script>
-<script src="tabelaTecnica.js?v=20261001b"></script>
+<script src="tabelaTecnica.js?v=20261002a"></script>
 <script src="mandala.js?v=20261002c"></script>
 <script src="isopsefia.js?v=20260930a"></script>
 <script src="profeccao.js?v=20261002c"></script>
