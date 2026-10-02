@@ -52,7 +52,9 @@ function getSignSVGZR(signIndex, size = 22) {
   const cores = modoEscuro
     ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
     : SIGN_COLORS_ZR;
-  const interno = `<g style="color: ${cores[signIndex]};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
+  // Tema Céu (papiro): glifo de signo em azul-tinta, sem cor por elemento.
+  const corSigno = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? '#1d3a66' : cores[signIndex];
+  const interno = `<g style="color: ${corSigno};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
   return svgComoImagemZR(interno, size, size, '0 0 64 64');
 }
 
@@ -159,7 +161,20 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
      escuro — usar --bg-main aqui deixava uma "moldura" mais clara entre
      a borda dourada do cartão e o quadrado escuro do disco. */
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const tinta = modoEscuro ? {
+  /* TEMA CÉU — roda SECUNDÁRIA ("tinta sobre o papiro"): mesma lógica da Profecção (ver gerarMandalaSVG em
+     profeccao.js): sem fundo/céu, azul-tinta na estrutura e terracota nos destaques. Quem observa o céu é a
+     mandala principal; aqui o astrólogo já está escrevendo no papiro. */
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
+  const tinta = papiro ? {
+    fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
+    inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: TERRACOTA, linhaConectora: 'rgba(29,58,102,0.55)',
+    aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
+    elementoFogo: AZ_TINTA, elementoTerra: AZ_TINTA, elementoAr: AZ_TINTA, elementoAgua: AZ_TINTA,
+    dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
+    picoBg: 'none', picoBorder: AZ_TINTA, picoText: AZ_TINTA,
+    saltoBg: 'none', saltoBorder: TERRACOTA, saltoText: TERRACOTA, saltoLabel: TERRACOTA,
+  } : modoEscuro ? {
     fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
     inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
     aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
@@ -264,10 +279,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFatiaDestaque(l4SignIdx, "rgba(148, 163, 184, 0.45)");
-  svg += desenharFatiaDestaque(l3SignIdx, "rgba(224, 231, 255, 0.6)");
-  svg += desenharFatiaDestaque(l2SignIdx, "rgba(254, 240, 138, 0.5)");
-  svg += desenharFatiaDestaque(l1SignIdx, "rgba(163, 230, 53, 0.4)");
+  svg += desenharFatiaDestaque(l4SignIdx, papiro ? "rgba(29, 58, 102, 0.08)" : "rgba(148, 163, 184, 0.45)");
+  svg += desenharFatiaDestaque(l3SignIdx, papiro ? "rgba(160, 62, 37, 0.10)" : "rgba(224, 231, 255, 0.6)");
+  svg += desenharFatiaDestaque(l2SignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(254, 240, 138, 0.5)");
+  svg += desenharFatiaDestaque(l1SignIdx, papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)");
 
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -356,16 +371,16 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
 
   const rEixoInterno = R.SignSector - 12;
   const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: tinta.inkForte },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: tinta.inkForte },
-    { label: "MC", deg: mcAbs, color: tinta.inkForte },
-    { label: "IC", deg: (mcAbs + 180) % 360, color: tinta.inkForte }
+    { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
+    { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
+    { label: "MC", deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
+    { label: "IC", deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
   ];
   eixosInternos.forEach(eixo => {
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
     const anguloFrag = getIconeFragmento('outro', 'angulo');
-    const anguloFundo = getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
+    const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
         <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
@@ -420,10 +435,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     return `<path d="${d}" fill="${cor}"/>`;
   }
 
-  svg += desenharFaixaDestaque(l4SignIdx, "#475569", R_OuterLine + 4, R_OuterLine + 12);
-  svg += desenharFaixaDestaque(l3SignIdx, "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
-  svg += desenharFaixaDestaque(l2SignIdx, "#eab308", R_OuterLine + 24, R_OuterLine + 32);
-  svg += desenharFaixaDestaque(l1SignIdx, "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
+  svg += desenharFaixaDestaque(l4SignIdx, papiro ? "rgba(29, 58, 102, 0.45)" : "#475569", R_OuterLine + 4, R_OuterLine + 12);
+  svg += desenharFaixaDestaque(l3SignIdx, papiro ? "rgba(160, 62, 37, 0.55)" : "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
+  svg += desenharFaixaDestaque(l2SignIdx, papiro ? AZ_TINTA : "#eab308", R_OuterLine + 24, R_OuterLine + 32);
+  svg += desenharFaixaDestaque(l1SignIdx, papiro ? TERRACOTA : "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
 
   /* RÓTULOS DE PICO E SALTO — ficam na mesma faixa de raio das
      barrinhas coloridas dos níveis, desenhados por cima delas, igual
@@ -487,8 +502,11 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     </g>`;
   });
 
+  // Pontos calculados (nodos, sizígia, lotes): círculo cremoso por trás do ícone; no papiro não há nada atrás.
+  const circuloFundoPonto = papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>';
+
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-  if (sunItem) {
+  if (sunItem && !papiro) { // no papiro não há mancha de combustão (é um brilho de céu)
     const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="${tinta.fundoDisco}"/>`;
     svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
@@ -505,20 +523,20 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     if (item.type === "node") {
       const nodeKeyZR = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+          ${circuloFundoPonto}
           <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKeyZR)}</g>
           <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+          ${circuloFundoPonto}
           <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
           <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKeyZR = LOTE_ICON_KEY_LIB[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          <circle cx="0" cy="0" r="11" fill="#fffdf5"/>
+          ${circuloFundoPonto}
           <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKeyZR)}</g>
           <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
@@ -536,8 +554,8 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
       const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      const planetSvgContent = fragmentoPlaneta3DZR(item.id, sufixo);
-      let retroSymbol = item.retro ? `<tspan fill="#dc2626" font-weight="900"> ℞</tspan>` : '';
+      const planetSvgContent = papiro ? getIconeFragmento('planeta', item.id, dados) : fragmentoPlaneta3DZR(item.id, sufixo);
+      let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
           <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
           <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
@@ -564,10 +582,10 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     const rotuloNiveis = niveisPorRegenteZR[rulerId].join('-');
     svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
         <text x="0" y="-11" font-size="9" font-weight="900" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2.5" paint-order="stroke fill">${rotuloNiveis}</text>
-        <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="#f5c518" stroke="#a8790a" stroke-width="0.9" stroke-linejoin="round"/>
-        <circle cx="0" cy="-7" r="1.6" fill="#dc2626"/>
-        <circle cx="-9" cy="-2" r="1.3" fill="#dc2626"/>
-        <circle cx="9" cy="-2" r="1.3" fill="#dc2626"/>
+        <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${papiro ? 'none' : '#f5c518'}" stroke="${papiro ? TERRACOTA : '#a8790a'}" stroke-width="${papiro ? 1.4 : 0.9}" stroke-linejoin="round"/>
+        <circle cx="0" cy="-7" r="1.6" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
+        <circle cx="-9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
+        <circle cx="9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
     </g>`;
   });
 
@@ -983,7 +1001,7 @@ function renderLiberacaoUI() {
         </div>
 
         <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas), com "Lote tal na Casa 1": a Liberação sempre gira em torno de um lote. -->
-        ${montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'liberacaoCabecalhoPadrao', { loteCasa1: selectedZRPhase })}
+        ${montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'liberacaoCabecalhoPadrao', { loteCasa1: selectedZRPhase, tintaSobreFolha: true })}
       </div>
 
       <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
