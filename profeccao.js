@@ -614,7 +614,7 @@
 
         svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)");
         svg += desenharFatiaDestaque(profectedSignIdx, papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)");
-        svg += desenharFatiaDestaque(highlightAscSignIdx, papiro ? "rgba(160, 62, 37, 0.10)" : "rgba(254, 240, 138, 0.5)");
+        svg += desenharFatiaDestaque(highlightAscSignIdx, papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)");
 
         svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
 
@@ -776,7 +776,7 @@
         }
 
         svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, papiro ? AZ_TINTA : "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
-        svg += desenharFaixaDestaque(highlightAscSignIdx, papiro ? "rgba(160, 62, 37, 0.55)" : "#eab308", R_OuterLine + 14, R_OuterLine + 22);
+        svg += desenharFaixaDestaque(highlightAscSignIdx, papiro ? "#6b4a2b" : "#eab308", R_OuterLine + 14, R_OuterLine + 22);
         svg += desenharFaixaDestaque(profectedSignIdx, papiro ? TERRACOTA : "#65a30d", R_OuterLine + 24, R_OuterLine + 32);
 
         const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
