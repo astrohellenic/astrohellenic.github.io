@@ -300,7 +300,7 @@
 
     <div class="form-group">
       <label for="whatsapp">WhatsApp</label>
-      <input type="tel" id="whatsapp" required placeholder="(11) 99999-9999">
+      <input type="tel" inputmode="tel" id="whatsapp" required placeholder="(11) 99999-9999">
     </div>
 
     <div class="form-group">
@@ -442,6 +442,11 @@
 
   function abrirConfirmacao() {
     const nome = document.getElementById('nome').value.trim();
+    const campoWhats = document.getElementById('whatsapp');
+    const digitosWhats = campoWhats.value.replace(/\D/g, '');
+    if (/[^0-9\s()+.\-]/.test(campoWhats.value) || digitosWhats.length < 10 || digitosWhats.length > 15) {
+      alert('WhatsApp inválido. Digite só números, com DDD (ex.: (11) 99999-9999).'); campoWhats.focus(); return;
+    }
     const campoData = document.getElementById('data'), campoHora = document.getElementById('hora');
     const dataNorm = normalizarData(campoData.value);
     if (!dataNorm) { alert('Data de nascimento inválida. Use o formato DD/MM/AAAA (ex.: 06/03/1978).'); campoData.focus(); return; }
