@@ -1059,6 +1059,42 @@ body {
         body.tema-ceu #profeccaoJanelaAno span, body.tema-ceu #profeccaoMenuRelatorio div { color: #1a1410 !important; }
         body.tema-ceu #profeccaoJanelaNome { color: #a03e25 !important; }
 
+        /* TEMA CÉU — Sinastria: a tela é uma folha de papiro e as duas rodas são desenhadas em tinta direto nela
+           (ver gerarMandalaSVG em sinastria.js, cópia da Profecção). Mesma pintura da Profecção; SÓ PINTURA —
+           tamanhos, posições e comportamento ficam como estão. */
+        body.tema-ceu #sinastria-container {
+            --bg-main: transparent;
+            --bg-card: transparent;
+            --bg-hover: rgba(120, 80, 30, 0.14);
+            --border-color: rgba(95, 65, 30, 0.45);
+            --primary-blue: #1d3a66;
+            --gold-primary: #1d3a66;
+            --text-muted: #1a1410;
+            color: #1a1410;
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.22) 100%),
+                radial-gradient(ellipse at 12% 6%, rgba(240,222,180,0.5) 0%, transparent 40%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%) !important;
+            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
+        }
+        body.tema-ceu #sinastria-container h2, body.tema-ceu #sinastria-container h3 { color: #a03e25 !important; }
+        /* cartão da mandala sem moldura (a roda é desenhada direto na folha); o cartão do buscador de mapas continua com a borda de tinta */
+        body.tema-ceu #sinastriaDuasColunas > div > div:last-child,
+        body.tema-ceu #sinastriaSelecao > div:last-child > div:last-child { background: transparent !important; border: none !important; box-shadow: none !important; }
+        /* botões de galeria / relatório / trocar mapa: papiro, como os da Mandala e da Profecção */
+        body.tema-ceu #mandala-container button[onclick^="sinastriaSalvarNaGaleria"],
+        body.tema-ceu #mandala-container button[onclick^="sinastriaAdicionarAoRelatorio"],
+        body.tema-ceu #mandala-container button[onclick^="sinastriaTrocarMapa"] {
+            background: var(--papiro-botao) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            clip-path: var(--papiro-botao-rasgo);
+        }
+        body.tema-ceu #mandala-container button[onclick^="sinastriaSalvarNaGaleria"] svg,
+        body.tema-ceu #mandala-container button[onclick^="sinastriaAdicionarAoRelatorio"] svg { stroke: #1d3a66; }
+
         /* TEMA CÉU — Liberação Zodiacal: a tela é uma folha de papiro e a roda é desenhada em tinta direto nela
            (ver gerarMandalaNatalZR em liberacao.js). Os níveis abertos na tabela usam os MESMOS tons de tinta
            das fatias da roda (L1 terracota, L2 azul, L3 terracota leve). Só tinta; SÓ PINTURA. */
@@ -1630,7 +1666,7 @@ body {
 <script src="mandala.js?v=20261002a"></script>
 <script src="isopsefia.js?v=20260930a"></script>
 <script src="profeccao.js?v=20261002b"></script>
-<script src="sinastria.js?v=20260930c"></script>
+<script src="sinastria.js?v=20261002a"></script>
 <script src="revolucao.js?v=20260920"></script>
 <script src="decenios.js?v=20260930c"></script>
 <script src="direcoes.js?v=20260929h"></script>
