@@ -845,7 +845,15 @@ async function capturarMandalaAtualParaRelatorio() {
   // "quadrado" da Mandala Natal/Fortuna, ver renderizarMandalasDoPreset em
   // relatorio.js — só que aqui é capturado uma vez só, então usa sempre a
   // tinta 'claro', a mais segura pro uso mais comum, que é o corpo). */
-  const dataUrl = await new Promise(resolve => renderMandala(null, resolve, 'claro', true));
+  /* Tema Céu: a imagem que vai pro relatório (pra colocar dentro de um bloco de texto) sai SEM o céu — roda em
+     tinta sobre o papiro, mantendo a rotação de Casa 1 que está na tela. O céu fica só na capa (que é sempre a
+     Mandala Natal/Fortuna do modelo, ver renderizarMandalasDoPreset). Depois de capturar, redesenha a mandala
+     normal na tela (o desenho em tinta troca a imagem da tela por uns instantes). */
+  const temaCeuCaptura = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  const dataUrl = await new Promise(resolve => temaCeuCaptura
+    ? renderMandala(null, resolve, 'claro', true, null, null, false, false, true)
+    : renderMandala(null, resolve, 'claro', true));
+  if (temaCeuCaptura) renderMandala();
   const total = adicionarCapturaRelatorio('mandala_personalizada', dataUrl);
   alert(`Mandala adicionada ao relatório, do jeito que está na tela agora (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
 }
