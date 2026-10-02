@@ -754,6 +754,14 @@ async function abrirConfiguracoesCaptacao() {
         <input type="url" id="cfgRedirectUrl" placeholder="https://wa.me/55..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--gold-primary); border-radius: 8px; font-size: 12px; background: var(--bg-card); color: var(--primary-blue); box-sizing: border-box;">
       </div>
 
+      <!-- TEMA DO FORMULÁRIO -->
+      <div style="margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--primary-blue); cursor: pointer;">
+          <input type="checkbox" id="cfgFormTemaCeu" style="width: 16px; height: 16px; cursor: pointer;"> Aplicar o Tema Céu no formulário
+        </label>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">Ao aplicar o Tema Céu, o formulário que o cliente vê fica com papiro e céu estrelado ao fundo. Desmarcado, ele continua claro, como hoje.</div>
+      </div>
+
       <!-- BOTÃO SALVAR -->
       <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
         Salvar Configurações
@@ -814,6 +822,7 @@ if (document.getElementById('cfgPublicFormUrl')) {
       }
       if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
       if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
+      if (document.getElementById('cfgFormTemaCeu')) document.getElementById('cfgFormTemaCeu').checked = data.formulario_tema === 'ceu';
     }
   } catch (e) {
     console.error("Erro ao carregar configurações de captação:", e);
@@ -882,6 +891,7 @@ async function salvarConfiguracoesCaptacao() {
   const logoUrl = document.getElementById('cfgLogoUrl').value.trim();
   const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
   const redirectUrl = document.getElementById('cfgRedirectUrl').value.trim();
+  const formularioTema = document.getElementById('cfgFormTemaCeu') && document.getElementById('cfgFormTemaCeu').checked ? 'ceu' : 'claro';
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -893,7 +903,8 @@ async function salvarConfiguracoesCaptacao() {
         user_id: user.id,
         logo_url: logoUrl,
         webhook_url: webhookUrl,
-        redirect_url: redirectUrl
+        redirect_url: redirectUrl,
+        formulario_tema: formularioTema
       }, { onConflict: 'user_id' });
 
     if (!error) {

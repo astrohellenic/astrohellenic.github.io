@@ -266,6 +266,48 @@
     .btn-primary:hover {
       background: #0d2f5a;
     }
+
+    /* TEMA CÉU (opcional, escolhido nas configurações de captação): céu à noite atrás, papiro e tinta na frente. */
+    body.tema-ceu {
+      background-color: #070d25;
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(40, 80, 160, 0.45) 0%, transparent 60%),
+        radial-gradient(1.2px 1.2px at 12% 18%, #dfe8ff 50%, transparent 51%),
+        radial-gradient(1.6px 1.6px at 78% 12%, #f6e7b4 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 34% 62%, #ffffff 50%, transparent 51%),
+        radial-gradient(1.4px 1.4px at 88% 70%, #dfe8ff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 6% 84%, #f6e7b4 50%, transparent 51%),
+        radial-gradient(1.6px 1.6px at 56% 90%, #ffffff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 66% 40%, #dfe8ff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 22% 38%, #ffffff 50%, transparent 51%);
+      background-attachment: fixed;
+    }
+    body.tema-ceu .form-powered-by { color: #9fb0d8; }
+    body.tema-ceu .form-card, body.tema-ceu .modal-card {
+      border: none; box-shadow: none; color: #1a1410;
+      background:
+        radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.25) 100%),
+        radial-gradient(ellipse at 12% 8%, rgba(240,222,180,0.5) 0%, transparent 45%),
+        repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+        repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+        linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%);
+      clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 85%, 0 62%, 3px 40%, 0 18%);
+    }
+    body.tema-ceu h2, body.tema-ceu .modal-card h3, body.tema-ceu label, body.tema-ceu .summary-item strong { color: #1d3a66; }
+    body.tema-ceu input { background: transparent; border: 1.5px solid #1d3a66; color: #1a1410; border-radius: 6px; }
+    body.tema-ceu input::placeholder { color: rgba(26, 20, 16, 0.5); }
+    body.tema-ceu input:focus { border-color: #a03e25; box-shadow: none; }
+    body.tema-ceu .btn-submit, body.tema-ceu .btn-primary {
+      background: transparent; color: #a03e25; border: 1.5px solid #a03e25; box-shadow: none;
+    }
+    body.tema-ceu .btn-submit:hover, body.tema-ceu .btn-primary:hover { background: rgba(160, 62, 37, 0.12); border-color: #a03e25; }
+    body.tema-ceu .btn-secondary { background: transparent; color: #1d3a66; border: 1.5px solid #1d3a66; }
+    body.tema-ceu .btn-secondary:hover { background: rgba(29, 58, 102, 0.1); border-color: #1d3a66; }
+    body.tema-ceu .summary-list, body.tema-ceu .summary-item { color: #1a1410; border-color: rgba(95, 65, 30, 0.4); }
+    body.tema-ceu .modal-overlay { background: rgba(7, 13, 37, 0.7); }
+    body.tema-ceu .city-results { background: #e3cfa6; border: 1.5px solid #1d3a66; }
+    body.tema-ceu .city-item { color: #1a1410; border-color: rgba(95, 65, 30, 0.3); }
+    body.tema-ceu .city-item:hover { background: rgba(29, 58, 102, 0.12); color: #1d3a66; }
   </style>
 </head>
 <body>
@@ -356,6 +398,7 @@
       const { data: cfgPublica } = await supabaseClient.rpc('config_publica_formulario', { p_user: userId });
       const data = Array.isArray(cfgPublica) ? cfgPublica[0] : cfgPublica;
       redirectUrlForm = data && data.redirect_url ? data.redirect_url : null;
+      if (data && data.formulario_tema === 'ceu') document.body.classList.add('tema-ceu');
 
       if (data && data.logo_url) {
         const logoImg = document.getElementById('formLogoImg');
