@@ -421,10 +421,36 @@
     }
   });
 
+  /* Data e hora chegam como texto livre; aqui viram o formato que o Astro Hellenic espera (DD/MM/AAAA e HH:MM).
+     Aceita "6/3/1978", "06-03-1978", "10h45", "10:45" etc. Devolve null se for data/hora que não existe. */
+  function normalizarData(txt) {
+    const m = String(txt).trim().match(/^(\d{1,2})\s*[\/.\-]\s*(\d{1,2})\s*[\/.\-]\s*(\d{4})$/);
+    if (!m) return null;
+    const d = parseInt(m[1], 10), mes = parseInt(m[2], 10), a = parseInt(m[3], 10);
+    const dt = new Date(a, mes - 1, d);
+    if (a < 1850 || dt > new Date() || dt.getFullYear() !== a || dt.getMonth() !== mes - 1 || dt.getDate() !== d) return null;
+    return String(d).padStart(2, '0') + '/' + String(mes).padStart(2, '0') + '/' + a;
+  }
+  function normalizarHora(txt) {
+    const t = String(txt).trim().toLowerCase();
+    if (!t) return '';
+    const m = t.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:min)?$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 10), mi = m[2] ? parseInt(m[2], 10) : 0;
+    if (h > 23 || mi > 59) return null;
+    return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0');
+  }
+
   function abrirConfirmacao() {
     const nome = document.getElementById('nome').value.trim();
-    const data = document.getElementById('data').value.trim();
-    const hora = document.getElementById('hora').value.trim() || 'Não informada';
+    const campoData = document.getElementById('data'), campoHora = document.getElementById('hora');
+    const dataNorm = normalizarData(campoData.value);
+    if (!dataNorm) { alert('Data de nascimento inválida. Use o formato DD/MM/AAAA (ex.: 06/03/1978).'); campoData.focus(); return; }
+    const horaNorm = normalizarHora(campoHora.value);
+    if (horaNorm === null) { alert('Horário inválido. Use o formato HH:MM (ex.: 14:30), de 00:00 a 23:59.'); campoHora.focus(); return; }
+    campoData.value = dataNorm; campoHora.value = horaNorm;
+    const data = dataNorm;
+    const hora = horaNorm || 'Não informada';
     const cidadeInput = document.getElementById('cidade').value.trim();
     const whatsapp = document.getElementById('whatsapp').value.trim();
     const email = document.getElementById('email').value.trim();
