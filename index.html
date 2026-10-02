@@ -1294,6 +1294,10 @@ body {
         body.tema-ceu #mandala-container button[onclick^="salvarIsopsefiaNaGaleria"] svg,
         body.tema-ceu #mandala-container button[onclick^="capturarIsopsefiaParaRelatorio"] svg { stroke: #1d3a66; }
 
+        /* AGENDA, qualquer tema: os campos (principalmente o de data, que no Safari tem largura própria) não podem passar da caixa */
+        #agenda-container input, #agenda-container select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; display: block; }
+        #agenda-container input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 36px; }
+
         /* TEMA CÉU — Agenda (agendamento.js): a tela é uma folha de papiro e tudo é só tinta: azul nas linhas e
            caixas, terracota no título e no botão de agendar; preto no texto. Sem preenchimento, sem sombra e sem
            faixa azul-marinho. As cores vêm de variáveis redefinidas só aqui dentro. SÓ PINTURA. */
