@@ -1054,7 +1054,17 @@ body {
             clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
         }
         body.tema-ceu #circumambulacao-container h3 { color: #a03e25 !important; }
-        body.tema-ceu #circumambulacao-container input[type="checkbox"] { accent-color: #1d3a66; }
+        /* caixinhas de marcar linha pro Relatório: só o desenho em azul-tinta, sem fundo branco */
+        body.tema-ceu #circumambulacao-container input[type="checkbox"] {
+            -webkit-appearance: none; appearance: none;
+            background: transparent !important; border: 1.5px solid #1d3a66; border-radius: 3px;
+            width: 16px; height: 16px; cursor: pointer;
+        }
+        body.tema-ceu #circumambulacao-container input[type="checkbox"]:checked {
+            background: transparent !important;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5 L6.5 12 L13 4' fill='none' stroke='%231d3a66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+            background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
+        }
         /* botões (afeta, galeria, relatório) e a janelinha do afeta: papiro, como os da Profecção */
         body.tema-ceu #mandala-container button[onclick*="direcoesAfetaMenu"],
         body.tema-ceu #mandala-container button[onclick^="salvarCircumambulacaoNaGaleria"],
