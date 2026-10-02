@@ -53,7 +53,7 @@ function getSignSVGZR(signIndex, size = 22) {
     ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
     : SIGN_COLORS_ZR;
   // Tema Céu (papiro): glifo de signo em azul-tinta, sem cor por elemento.
-  const corSigno = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? '#1d3a66' : cores[signIndex];
+  const corSigno = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? ['#a62b1f', '#6b4a2b', '#17707f', '#1f3a66'][signIndex % 4] : cores[signIndex];
   const interno = `<g style="color: ${corSigno};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
   return svgComoImagemZR(interno, size, size, '0 0 64 64');
 }
@@ -172,7 +172,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
     inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: TERRACOTA, linhaConectora: 'rgba(29,58,102,0.55)',
     aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
-    elementoFogo: AZ_TINTA, elementoTerra: AZ_TINTA, elementoAr: AZ_TINTA, elementoAgua: AZ_TINTA,
+    elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
     dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
     picoBg: 'none', picoBorder: AZ_TINTA, picoText: AZ_TINTA,
     saltoBg: 'none', saltoBorder: TERRACOTA, saltoText: TERRACOTA, saltoLabel: TERRACOTA,

@@ -237,7 +237,7 @@
             fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
             inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: AZ_TINTA, linhaConectora: 'rgba(29,58,102,0.55)',
             aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
-            elementoFogo: AZ_TINTA, elementoTerra: AZ_TINTA, elementoAr: AZ_TINTA, elementoAgua: AZ_TINTA,
+            elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
             dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
         } : modoEscuro ? {
             fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',

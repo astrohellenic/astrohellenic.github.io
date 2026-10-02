@@ -162,7 +162,7 @@ const SIGN_COLORS_DIRECOES = ["var(--element-fogo)", "var(--element-terra)", "va
 
 function getSignSVGDir(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${SIGN_COLORS_DIRECOES[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_DIRECOES[signIndex]}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${(window.temaMandala === 'ceu') ? ['#a62b1f', '#6b4a2b', '#17707f', '#1f3a66'][signIndex % 4] : SIGN_COLORS_DIRECOES[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_DIRECOES[signIndex]}</svg>`;
 }
 
 function getPlanet3DSVGDir(planetId) {

@@ -38,7 +38,7 @@ const MONOLINE_ZODIAC_SVGS_DEC = [
 function getSignSvgHtmlDec(signIdx, size = 18) {
   const elem = SIGN_ELEMENTS_DEC[signIdx];
   // Tema Céu (papiro): glifo de signo em azul-tinta (sem cor por elemento) — direto, pra também sair certo nas imagens salvas.
-  const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? '#1d3a66' : ELEMENT_SIGN_COLORS_DEC[elem];
+  const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? ({ fire: '#a62b1f', earth: '#6b4a2b', air: '#17707f', water: '#1f3a66' })[elem] : ELEMENT_SIGN_COLORS_DEC[elem];
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; overflow: visible; display: inline-block; vertical-align: middle; flex-shrink: 0; margin: 0 2px;" title="${ZODIACO_DECENIOS[signIdx]}">${MONOLINE_ZODIAC_SVGS_DEC[signIdx]}</svg>`;
 }
 
