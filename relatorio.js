@@ -3350,6 +3350,11 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   const imgCeuFundoHtml = ceuFundoCapa
     ? `<img class="rel-ceu-fundo" alt="" src="${ceuFundoCapa.url}" style="left: ${((ceuFundoCapa.cx - ceuFundoCapa.ext) / ceuFundoCapa.width * 100).toFixed(3)}%; top: ${((ceuFundoCapa.cy - ceuFundoCapa.ext) / ceuFundoCapa.height * 100).toFixed(3)}%; width: ${(ceuFundoCapa.ext * 2 / ceuFundoCapa.width * 100).toFixed(3)}%; height: ${(ceuFundoCapa.ext * 2 / ceuFundoCapa.height * 100).toFixed(3)}%;">`
     : '';
+  /* Tema Céu + capa com uma imagem CAPTURADA numa ferramenta (Mandala Personalizada, Profecção, Sinastria,
+     Liberação Zodiacal): essas imagens são em tinta sobre o papiro (sem céu), então a capa inteira vira folha de
+     papiro (e não o céu escuro, onde a tinta sumiria) e a imagem ocupa a largura da folha. As capas de Mapa Natal
+     e Fortuna (Mandala Natal/Fortuna do modelo) continuam com o céu. */
+  const capaPapiro = capaClasseCeu !== '' && !!imgCapa && (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria' || (capaFonte || '').indexOf('liberacao_') === 0);
   const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
   const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
@@ -3363,7 +3368,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   return `
     <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
          cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
-    <section class="rel-page rel-capa${capaClasseCeu}${ceuFundoCapa ? ' rel-capa-ceu-fundo' : ''}${capaClasseBorda}" data-pg="capa"${estiloCapaCores}>
+    <section class="rel-page rel-capa${capaPapiro ? ' rel-capa-papiro' : capaClasseCeu}${ceuFundoCapa ? ' rel-capa-ceu-fundo' : ''}${capaClasseBorda}" data-pg="capa"${estiloCapaCores}>
       ${capaComBorda ? '<div class="rel-capa-moldura">' : ''}
       <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
       ${imgCapa ? `
@@ -4100,6 +4105,13 @@ function injetarEstilosRelatorio() {
           linear-gradient(to top, #3a2f5e 0%, #23305f 14%, #15214a 40%, #0d1738 70%, #070d25 100%);
       }
       .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #d4af37; }
+      /* CAPA EM PAPIRO (Tema Céu + imagem capturada: Personalizada/Profecção/Sinastria/Liberação): mesma folha de
+         papiro das outras páginas, título em terracota, resto em tinta. A imagem ocupa a largura da folha (em vez
+         dos 78mm da capa de céu), com folga de altura de sobra pra título e rodapé. */
+      .rel-capa.rel-capa-papiro { background: ${papiroFolhaBg}; outline: 1.2mm double #1a1410; outline-offset: -5mm; }
+      .rel-capa.rel-capa-papiro .rel-titulo-capa { color: #a03e25; }
+      .rel-capa.rel-capa-papiro .rel-powered-by { color: #1a1410; }
+      .rel-capa.rel-capa-papiro .rel-img-capa { max-width: 172mm; max-height: 150mm; }
       /* Capa com o céu DA MANDALA (mesmo Sol/horizonte/brilho da roda): o fundo antigo (degradê com mancha laranja
          fixa no pé) sai; o céu é um SVG enorme atrás da roda, recortado pela folha. z-index negativo dentro da
          própria capa (isolation) = fica atrás do título, da roda e do rodapé. */
