@@ -328,6 +328,7 @@
     <img id="formLogoImg" src="" alt="Logo" style="max-height: 75px; max-width: 100%; display: none; margin: 0 auto;" />
   </div>
   <h2>Escolha seu horário</h2>
+  <div id="avisoTeste" class="sub" style="display:none;color:#a03e25;font-weight:700">MODO DE TESTE — nada será gravado</div>
   <div id="conteudo"><div class="vazio">Carregando horários...</div></div>
 </div>
 <div class="form-powered-by">powered by Astro Hellenic</div>
@@ -340,6 +341,7 @@
   const params = new URLSearchParams(window.location.search);
   const ownerId = params.get('u');
   const clienteId = params.get('c');
+  const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
   const DIAS_A_FRENTE = 45;
   const ANTECEDENCIA_MIN = 120; // não oferece horário que começa em menos de 2h
   const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -410,6 +412,10 @@
 
   async function confirmar() {
     const btn = el('btnConfirmar'); btn.disabled = true; btn.innerText = 'Confirmando...';
+    if (modoTeste) {
+      el('conteudo').innerHTML = `<div class="msg-ok"><strong>Teste concluído!</strong><br>Escolheu ${dataBR(diaEscolhido)} às ${horaEscolhida}.<br><br>Nada foi gravado.</div>`;
+      return;
+    }
     const { data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida });
     if (error || !data || data.ok !== true) {
       const motivo = data && data.erro ? data.erro : 'Não foi possível confirmar. Tente outro horário.';
@@ -440,6 +446,7 @@
       if (c && c.logo_url) { const i = el('formLogoImg'); i.src = c.logo_url.split('?')[0] + '?t=' + Date.now(); i.style.display = 'block'; }
       if (c && c.formulario_tema === 'ceu') document.body.classList.add('tema-ceu');
     } catch (e) { /* sem logo/tema, segue */ }
+    if (modoTeste) el('avisoTeste').style.display = 'block';
     carregar();
   });
 </script>

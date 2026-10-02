@@ -762,6 +762,11 @@ async function abrirConfiguracoesCaptacao() {
         <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">Ao aplicar o Tema Céu, o formulário que o cliente vê fica com papiro e céu estrelado ao fundo. Desmarcado, ele continua claro, como hoje.</div>
       </div>
 
+      <!-- TESTE DA PÁGINA DE AGENDAR -->
+      <button type="button" onclick="testarPaginaAgendar()" style="width: 100%; margin-bottom: 12px; background: transparent; color: var(--primary-blue); border: 1.5px solid var(--primary-blue); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        Testar a página de agendar (sem gravar nada)
+      </button>
+
       <!-- BOTÃO SALVAR -->
       <button onclick="salvarConfiguracoesCaptacao()" style="width: 100%; background: var(--primary-blue); color: var(--bg-sidebar); border: 1px solid var(--gold-primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
         Salvar Configurações
@@ -885,6 +890,19 @@ async function fazerUploadLogo(inputElement) {
   }
 }
 
+
+/* ABRE A PÁGINA DE AGENDAR EM MODO TESTE (usa um dos seus mapas só pra identificar; nada é gravado) */
+async function testarPaginaAgendar() {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+    const { data, error } = await supabaseClient.from('mapas').select('id').eq('user_id', user.id).limit(1);
+    if (error || !data || !data.length) { alert("Cadastre ao menos um mapa para testar."); return; }
+    window.open(`https://astrohellenic.com/agendar.html?u=${encodeURIComponent(user.id)}&c=${encodeURIComponent(data[0].id)}&teste=1`, '_blank');
+  } catch (e) {
+    alert("Erro ao abrir o teste.");
+  }
+}
 
 /* SALVA AS CONFIGURAÇÕES DE CAPTAÇÃO NO SUPABASE */
 async function salvarConfiguracoesCaptacao() {
