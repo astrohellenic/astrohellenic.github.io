@@ -3898,6 +3898,17 @@ function injetarEstilosRelatorio() {
   if (document.getElementById('relatorio-estilos')) return;
   const style = document.createElement('style');
   style.id = 'relatorio-estilos';
+    /* Fundo de papiro das folhas: UMA imagem (papiro-folha.js) em vez de 6 camadas de gradiente — no PDF as
+     camadas deixavam a abertura lenta nos aparelhos (página branca por vários segundos). Sem o arquivo,
+     cai nas camadas de gradiente de sempre. */
+  const papiroFolhaBg = (typeof window !== 'undefined' && window.PAPIRO_FOLHA_JPG)
+    ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #c4a375`
+    : `radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.26) 100%),
+          radial-gradient(ellipse at 18% 10%, rgba(240,222,180,0.40) 0%, transparent 42%),
+          radial-gradient(ellipse at 85% 88%, rgba(90,55,25,0.22) 0%, transparent 48%),
+          repeating-linear-gradient(0deg, rgba(95,65,30,0.09) 0px, rgba(95,65,30,0.09) 1px, transparent 1px, transparent 5px),
+          repeating-linear-gradient(90deg, rgba(110,78,40,0.06) 0px, rgba(110,78,40,0.06) 2px, transparent 2px, transparent 25px),
+          linear-gradient(180deg, #cfb287 0%, #c4a375 55%, #b78f60 100%)`;
   style.textContent = `
       /* position:fixed, não sticky — ver a nota em CLAUDE.md sobre por que
          sticky não é confiável nesse layout (mesmo motivo da barra do
@@ -4201,13 +4212,7 @@ function injetarEstilosRelatorio() {
          oposto, fibras finas). Moldura dupla via outline com offset
          negativo (desenha por dentro da folha, sem ocupar espaço). */
       .rel-tema-papiro .rel-page:not(.rel-capa) {
-        background:
-          radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.26) 100%),
-          radial-gradient(ellipse at 18% 10%, rgba(240,222,180,0.40) 0%, transparent 42%),
-          radial-gradient(ellipse at 85% 88%, rgba(90,55,25,0.22) 0%, transparent 48%),
-          repeating-linear-gradient(0deg, rgba(95,65,30,0.09) 0px, rgba(95,65,30,0.09) 1px, transparent 1px, transparent 5px),
-          repeating-linear-gradient(90deg, rgba(110,78,40,0.06) 0px, rgba(110,78,40,0.06) 2px, transparent 2px, transparent 25px),
-          linear-gradient(180deg, #cfb287 0%, #c4a375 55%, #b78f60 100%);
+        background: ${papiroFolhaBg};
         outline: 1.2mm double #1a1410;
         outline-offset: -5mm;
       }

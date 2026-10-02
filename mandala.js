@@ -1632,6 +1632,30 @@ function montarCeuMandalaSVG(o) {
   return { defs, corpo };
 }
 
+/* Céu da capa do Relatório como imagem JPEG (2000x2000 px): desenha o SVG do céu num canvas. Preenche
+   info.url; nunca rejeita (se algo falhar, usa o SVG embutido como imagem). */
+function rasterizarFundoCeuCapa(info) {
+  return new Promise(resolve => {
+    const comoSvg = () => 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(info.svg)));
+    try {
+      const img = new Image();
+      const blobUrl = URL.createObjectURL(new Blob([info.svg], { type: 'image/svg+xml;charset=utf-8' }));
+      img.onload = () => {
+        try {
+          const L = 2000, canvas = document.createElement('canvas');
+          canvas.width = L; canvas.height = L;
+          canvas.getContext('2d').drawImage(img, 0, 0, L, L);
+          info.url = canvas.toDataURL('image/jpeg', 0.82);
+        } catch (e) { info.url = comoSvg(); }
+        URL.revokeObjectURL(blobUrl);
+        resolve();
+      };
+      img.onerror = () => { info.url = comoSvg(); URL.revokeObjectURL(blobUrl); resolve(); };
+      img.src = blobUrl;
+    } catch (e) { info.url = comoSvg(); resolve(); }
+  });
+}
+
 function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente) {
   if (dadosNovos) currentCalculatedData = dadosNovos;
   const container = document.getElementById('mandala-container');
@@ -1919,9 +1943,12 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      inteiro pro gerador de PDF no servidor, que não enxerga blobs do navegador. */
   window.ceuFundoCapaUltimo = null;
   if (temaCeu && espacoTransparente) {
-    const EXT_CAPA = 3600;
+    const EXT_CAPA = 2800;
     const svgFundo = montarFundoCeuSVG(Object.assign({}, ceuParams, { fatorEstrela: 3, densidadeEstrela: 0.11 }), EXT_CAPA);
-    window.ceuFundoCapaUltimo = { url: 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgFundo))), cx, cy, width, height, ext: EXT_CAPA };
+    // 'url' é preenchida logo antes do onReady (ver rasterizarFundoCeuCapa): o céu vira uma imagem JPEG comum
+    // (e não um SVG enorme), que o Safari/iPad desenha igual ao Chrome — incluindo as estrelas — e que abre
+    // rápido no PDF. Se a rasterização falhar, cai no próprio SVG embutido.
+    window.ceuFundoCapaUltimo = { svg: svgFundo, url: null, cx, cy, width, height, ext: EXT_CAPA };
   }
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
@@ -2336,7 +2363,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       console.error("Erro ao renderizar painel técnico:", err);
     }
 
-    if (typeof onReady === 'function') onReady(lastRenderedPngUrl);
+    const fundoCapaPendente = window.ceuFundoCapaUltimo && !window.ceuFundoCapaUltimo.url ? window.ceuFundoCapaUltimo : null;
+    const concluir = () => { if (typeof onReady === 'function') onReady(lastRenderedPngUrl); };
+    if (fundoCapaPendente) rasterizarFundoCeuCapa(fundoCapaPendente).then(concluir); else concluir();
   };
   imgLoader.src = blobURL;
 }

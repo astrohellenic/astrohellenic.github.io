@@ -58,6 +58,43 @@ function aplicarCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+// Roda DENTRO do Chrome (pagina.evaluate): não pode usar nada daqui de fora.
+const AJUSTAR_EXCESSO_DAS_FOLHAS = function() {
+  /* Rede de segurança contra "folha extra com só o número da página" (ver .rel-page em relatorio.js):
+     já com o layout de IMPRESSÃO pronto, procura folhas (.rel-page, exceto a capa) mais altas que uma A4.
+     - Se o excesso é só "casca" (padding/margem final: nenhum conteúdo visível passa de 297mm), trava a
+       folha em 297mm e corta o resto — nada de conteúdo se perde, só some a folha extra.
+     - Se é uma IMAGEM que ficou grande demais (conteúdo de verdade passando da folha), encolhe a imagem
+       proporcionalmente exatamente pelo excesso.
+     Devolve a lista do que ajustou (pra diagnóstico). */
+  const mm = 96 / 25.4, folha = 297 * mm, ajustes = [];
+  document.querySelectorAll('.rel-page:not(.rel-capa)').forEach((pagina, i) => {
+    const excesso = pagina.scrollHeight - folha;
+    if (excesso <= 1.5) return;
+    const topo = pagina.getBoundingClientRect().top;
+    let maisBaixo = 0;
+    pagina.querySelectorAll('*').forEach(el => {
+      if (el.classList && el.classList.contains('rel-num-pagina-canto')) return;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) maisBaixo = Math.max(maisBaixo, r.bottom - topo);
+    });
+    if (maisBaixo <= folha + 1) {
+      pagina.style.cssText += `;height: 297mm; min-height: 297mm; overflow: hidden; break-inside: avoid; page-break-inside: avoid;`;
+      ajustes.push({ pagina: i + 1, excessoMm: +(excesso / mm).toFixed(1), acao: 'folha travada em 297mm (só casca passava)' });
+      return;
+    }
+    const imagem = pagina.querySelector('.rel-img-mandala, .rel-img-captura');
+    if (!imagem) { ajustes.push({ pagina: i + 1, excessoMm: +(excesso / mm).toFixed(1), acao: 'conteúdo passa da folha, sem imagem pra encolher' }); return; }
+    const caixa = imagem.getBoundingClientRect();
+    const fator = (caixa.height - (maisBaixo - folha) - 1) / caixa.height;
+    if (fator < 0.3 || fator >= 1) { ajustes.push({ pagina: i + 1, excessoMm: +(excesso / mm).toFixed(1), acao: 'fator fora do limite', fator }); return; }
+    const w = (caixa.width * fator) / mm, h = (caixa.height * fator) / mm;
+    imagem.style.cssText += `;flex: none; width: ${w.toFixed(2)}mm; height: ${h.toFixed(2)}mm; max-width: ${w.toFixed(2)}mm; max-height: ${h.toFixed(2)}mm;`;
+    ajustes.push({ pagina: i + 1, excessoMm: +(excesso / mm).toFixed(1), acao: 'imagem encolhida', fator: +fator.toFixed(3) });
+  });
+  return ajustes;
+};
+
 module.exports = async function handler(req, res) {
   aplicarCors(req, res);
 
@@ -135,6 +172,18 @@ module.exports = async function handler(req, res) {
 
     await pagina.emulateMediaType('print');
 
+    /* REDE DE SEGURANÇA contra "folha extra com só o número da página" (29/09 e 02/10/2026): depois do layout
+       de impressão pronto, mede cada folha. Se alguma passou de uma A4 só por "casca" (padding/margem final,
+       nenhum conteúdo visível além de 297mm), trava a folha em 297mm; se foi uma imagem grande demais, encolhe
+       a imagem pelo excesso. Nunca corta conteúdo visível. O que foi ajustado volta no cabeçalho
+       X-PDF-Ajustes (diagnóstico). */
+    let ajustes = [];
+    try {
+      ajustes = await pagina.evaluate(AJUSTAR_EXCESSO_DAS_FOLHAS);
+    } catch (e) {
+      console.error('Ajuste de excesso das folhas falhou (segue sem ele):', e);
+    }
+
     const pdf = await pagina.pdf({
       format: 'A4',
       printBackground: true,
@@ -145,6 +194,8 @@ module.exports = async function handler(req, res) {
     navegador = null;
 
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Access-Control-Expose-Headers', 'X-PDF-Ajustes');
+    res.setHeader('X-PDF-Ajustes', encodeURIComponent(JSON.stringify(ajustes)).slice(0, 1500));
     res.status(200).send(Buffer.from(pdf));
   } catch (err) {
     console.error('Erro ao gerar PDF do relatório:', err);
