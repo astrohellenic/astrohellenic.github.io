@@ -1319,6 +1319,7 @@ async function fazerLogout() {
 
 /* Abrir módulo técnicas */
 function abrirModuloTecnica(modulo) {
+  window.moduloPendenteRestaurar = null; // qualquer navegação explícita cancela a ferramenta que aguardava o mapa carregar
   window.moduloTecnicoAtivo = modulo;
   try { localStorage.setItem('astro_ultimo_modulo', modulo); } catch (e) {}
   const cRadix = document.getElementById('mandala-container');

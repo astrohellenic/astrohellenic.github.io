@@ -707,10 +707,27 @@ async function executarCalculo() {
       }
       iniciarModuloHoras('horas-calculo-oculto');
     }
-    renderMandala();
+    /* O mapa acabou de chegar. Três casos, sem nunca deixar a tela num estado que não bate com o módulo ativo:
+       1) recarregou a página com outra ferramenta aberta (ex.: Horas): só agora, com os dados em mãos, abre ELA
+          (antes ela era desenhada na hora, sem dados, e logo em seguida a Mandala por cima — o "piscar");
+       2) escolheu outro cliente/momento enquanto estava numa ferramenta: a tela vira a Mandala, então o módulo
+          ativo passa a ser a Mandala de verdade (antes a roda era desenhada por cima, mas o módulo guardado
+          continuava sendo o antigo — e era ele que voltava a piscar no próximo recarregamento);
+       3) já estava na Mandala: só redesenha. */
+    const moduloPendente = window.moduloPendenteRestaurar;
+    window.moduloPendenteRestaurar = null;
+    const moduloAtivo = window.moduloTecnicoAtivo || 'mandala';
+    if (moduloPendente && typeof abrirModuloTecnica === 'function') {
+      abrirModuloTecnica(moduloPendente);
+    } else if (moduloAtivo !== 'mandala' && moduloAtivo !== 'radix' && typeof abrirModuloTecnica === 'function') {
+      abrirModuloTecnica('mandala');
+    } else {
+      renderMandala();
+    }
     return true;
 
   } catch (err) {
+    window.moduloPendenteRestaurar = null;
     document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
     return false;
   }
@@ -2734,8 +2751,20 @@ window.onload = function() {
   // depois, quando executarCalculo() terminar, já com o container no
   // tamanho certo.
   const ultimoModulo = localStorage.getItem('astro_ultimo_modulo') || 'mandala';
+  const ultimoEhMandala = (ultimoModulo === 'mandala' || ultimoModulo === 'radix');
   if (typeof abrirModuloTecnica === 'function') {
-    try { abrirModuloTecnica(ultimoModulo); } catch (e) { console.error(e); }
+    try {
+      if (ultimoEhMandala) {
+        abrirModuloTecnica(ultimoModulo);
+      } else {
+        /* Outra ferramenta estava aberta: ainda não há mapa calculado (o fetch acima está em andamento), então
+           desenhá-la agora mostraria a tela dela sem dados por uns instantes e depois a Mandala por cima (o
+           "piscar"). Fica só um spinner e a ferramenta abre quando o mapa chegar (ver executarCalculo). */
+        window.moduloPendenteRestaurar = ultimoModulo;
+        const cAguardo = document.getElementById('mandala-container');
+        if (cAguardo) cAguardo.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37;"></i></div>`;
+      }
+    } catch (e) { console.error(e); }
   }
 
   if (typeof carregarConteudoPastaAtual === 'function') {
