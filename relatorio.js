@@ -3466,6 +3466,45 @@ function nomeArquivoRelatorioPDF(preset) {
    fatiar imagem nenhuma. */
 const RELATORIO_PDF_API_URL = 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
 
+/* A Vercel recusa corpo de requisição maior que ~4,5 MB ANTES de a função rodar — e essa recusa vem sem os cabeçalhos
+   de CORS, então o navegador só mostra "Load failed" (Safari) / "Failed to fetch" (Chrome), sem dizer o motivo. Um
+   relatório com várias capturas grandes (imagens em alta resolução embutidas no HTML) passa fácil disso. Por isso,
+   antes de enviar, as imagens PNG grandes são redimensionadas (continuam PNG, com transparência) até o corpo caber;
+   na folha A4 (190 mm de largura útil) 1500 px já dão ~200 dpi, nitidez de sobra. */
+const RELATORIO_PDF_LIMITE_BYTES = 4.0 * 1024 * 1024;
+
+function relatorioRedimensionarPngDataUrl(dataUrl, ladoMax) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const maior = Math.max(img.naturalWidth, img.naturalHeight);
+      if (!maior || maior <= ladoMax) { resolve(dataUrl); return; }
+      const k = ladoMax / maior;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * k));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      try { resolve(canvas.toDataURL('image/png')); } catch (e) { resolve(dataUrl); }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* Redimensiona, na cópia que vai pro servidor (nunca na tela), as imagens PNG embutidas até o corpo caber no limite. */
+async function relatorioMontarCorpoPdfDentroDoLimite(montarHtml, raiz) {
+  const pngs = Array.from(raiz.querySelectorAll('img')).filter(i => /^data:image\/png/i.test(i.getAttribute('src') || ''));
+  let corpo = JSON.stringify({ html: montarHtml() });
+  for (const ladoMax of [2400, 1800, 1400, 1100, 900]) {
+    if (corpo.length <= RELATORIO_PDF_LIMITE_BYTES) break;
+    for (const img of pngs) img.setAttribute('src', await relatorioRedimensionarPngDataUrl(img.getAttribute('src'), ladoMax));
+    corpo = JSON.stringify({ html: montarHtml() });
+  }
+  return corpo;
+}
+
 async function baixarRelatorioPDF() {
   const viewer = document.querySelector('.rel-viewer');
   if (!viewer) return;
@@ -3512,7 +3551,7 @@ async function baixarRelatorioPDF() {
       });
     }
 
-    const html = `<!doctype html>
+    const montarHtml = () => `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -3524,14 +3563,21 @@ async function baixarRelatorioPDF() {
 <body>${viewerParaPdf.outerHTML}</body>
 </html>`;
 
-    const corpo = JSON.stringify({ html });
-    console.log('[PDF] Tamanho do corpo enviado:', (corpo.length / 1024 / 1024).toFixed(2), 'MB');
+    const corpo = await relatorioMontarCorpoPdfDentroDoLimite(montarHtml, viewerParaPdf);
+    const tamanhoMB = (corpo.length / 1024 / 1024).toFixed(2);
+    console.log('[PDF] Tamanho do corpo enviado:', tamanhoMB, 'MB');
 
-    const resposta = await fetch(RELATORIO_PDF_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: corpo
-    });
+    let resposta;
+    try {
+      resposta = await fetch(RELATORIO_PDF_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: corpo
+      });
+    } catch (errRede) {
+      // "Load failed"/"Failed to fetch": a conexão caiu sem resposta (rede, ou corpo grande demais pra Vercel).
+      throw new Error(`a conexão com o servidor de PDF caiu (relatório com ${tamanhoMB} MB). Tente de novo; se repetir, me avise com este número.`);
+    }
     if (!resposta.ok) {
       // Tenta ler o motivo que o servidor mandou (nosso próprio erro em
       // JSON, ou a página de erro genérica da Vercel) — sem isso, toda
