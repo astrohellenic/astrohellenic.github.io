@@ -1180,6 +1180,8 @@
        saem direto do SVG (rápido); a tabela mensal e a linha "Ano Profectado" são
        HTML e passam pelo html2canvasRapido. As setas do ano ficam de fora. */
     function fundoCapturaProf() {
+        // Tema Céu: a tela é papiro (claro e escuro) — a imagem salva sai sobre papiro, cor chapada pro recorte achar a borda.
+        if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return '#c8a878';
         return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
     }
 
@@ -1220,7 +1222,7 @@
         const pecas = [];
         if (opc.titulo) {
             const h2 = document.querySelector('#profeccao-container h2');
-            const cores = coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+            const cores = (window.temaMandala === 'ceu') ? coresCabecalhoTinta() : coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
             const W = Math.max(320, Math.round((document.getElementById('profeccaoDuasColunas') || document.getElementById('profeccao-container')).getBoundingClientRect().width));
             pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtmlProf(((h2 && h2.textContent) || 'Profecção Anual').trim().toUpperCase())}</text></svg>`, W, 34, fundo, 2));
         }
