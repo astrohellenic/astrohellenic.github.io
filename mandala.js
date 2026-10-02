@@ -2584,16 +2584,24 @@ window.html2canvasRapido = html2canvasRapido;
    Devolve o canvas (escala 2), ainda sem recorte. */
 async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
+  /* opcoes.papiro (Tema Céu; hoje só os Decênios): a imagem sai como a tela — sobre papiro e em tinta, claro ou
+     escuro. O html2canvas lê o DOM com as variáveis de cor da folha, então o corpo já sai certo; o título e o
+     cabeçalho são em tinta. Com título/cabeçalho o papel é o degradê do papiro; sem eles, cor chapada
+     ('#c8a878') pro recorte automático achar a borda. */
+  const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
+  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const fundoChapado = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const comTopo = !!(opcoes.titulo || opcoes.comCabecalho);
+  const papelDegrade = papiro && comTopo;
+  const fundo = papelDegrade ? null : fundoChapado; // null = transparente (o degradê vai por baixo no fim)
   const corpo = await html2canvasRapido(elemento, fundo);
-  if (!opcoes.titulo && !opcoes.comCabecalho) return corpo;
+  if (!comTopo) return corpo;
 
   const W = Math.max(320, Math.round(elemento.getBoundingClientRect().width));
-  const cores = coresCabecalhoMandala(modoEscuro, null);
+  const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   let y = 0, partes = '';
   if (opcoes.titulo) {
-    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtml(opcoes.titulo)}</text>`;
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo)}</text>`;
     y += 44;
   }
   if (opcoes.comCabecalho) {
@@ -2609,7 +2617,13 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   saida.width = Math.max(topo.width, corpo.width);
   saida.height = topo.height + corpo.height;
   const ctx = saida.getContext('2d');
-  ctx.fillStyle = fundo;
+  if (papelDegrade) {
+    const g = ctx.createLinearGradient(0, 0, 0, saida.height);
+    g.addColorStop(0, '#d6bd92'); g.addColorStop(0.55, '#c8a878'); g.addColorStop(1, '#b98f5f');
+    ctx.fillStyle = g;
+  } else {
+    ctx.fillStyle = fundoChapado;
+  }
   ctx.fillRect(0, 0, saida.width, saida.height);
   ctx.drawImage(topo, Math.round((saida.width - topo.width) / 2), 0);
   ctx.drawImage(corpo, Math.round((saida.width - corpo.width) / 2), topo.height);

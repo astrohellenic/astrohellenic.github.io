@@ -1087,6 +1087,63 @@ body {
             clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
         }
 
+        /* TEMA CÉU — Decênios Helenísticos (decenios.js): a tela é uma folha de papiro e tudo é feito só com tinta:
+           azul nas linhas, caixas, planetas e signos; terracota no título, no período ativo e nos avisos; preto
+           no texto. Sem preenchimento, sem sombra, sem faixa escura nos cabeçalhos das tabelas — só traço. As cores
+           vêm de variáveis redefinidas só aqui dentro. SÓ PINTURA (tamanhos, posições e comportamento ficam). */
+        body.tema-ceu #decenios-container {
+            --bg-main: transparent;
+            --bg-card: transparent;
+            --bg-hover: transparent;
+            --bg-selected: rgba(160, 62, 37, 0.14);
+            --border-color: rgba(95, 65, 30, 0.45);
+            --table-border: rgba(29, 58, 102, 0.75);
+            --table-border-soft: rgba(95, 65, 30, 0.45);
+            --dec-ativo-dot: #a03e25; /* bolinha do "Período Ativo" */
+            --primary-blue: #1d3a66;
+            --gold-primary: #1d3a66;
+            --text-muted: #1a1410; --text-muted-2: #1a1410; --text-muted-3: #1a1410;
+            --badge-bg: transparent; --badge-border: #1d3a66; --badge-text: #1d3a66;
+            --info-bg: transparent; --info-border: #1d3a66; --info-text: #1d3a66;
+            --element-fogo: #1d3a66; --element-terra: #1d3a66; --element-ar: #1d3a66; --element-agua: #1d3a66;
+            color: #1a1410;
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.22) 100%),
+                radial-gradient(ellipse at 12% 6%, rgba(240,222,180,0.5) 0%, transparent 40%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%) !important;
+            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
+        }
+        body.tema-ceu #decenios-container h3 { color: #a03e25 !important; }
+        body.tema-ceu #decenios-container [style*="box-shadow"] { box-shadow: none !important; }
+        /* cabeçalhos das tabelas: sem faixa azul-marinho, só tinta e uma linha embaixo */
+        body.tema-ceu #decenios-container thead tr { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid #1d3a66; }
+        body.tema-ceu #decenios-container [style*="#103b70"] { background: transparent !important; color: #1d3a66 !important; }
+        /* botões (planeta inicial, galeria, relatório) e a janelinha do planeta: papiro, como os da Profecção */
+        body.tema-ceu #mandala-container button[onclick*="decStartPlanetMenu"],
+        body.tema-ceu #mandala-container button[onclick^="salvarDeceniosNaGaleria"],
+        body.tema-ceu #mandala-container button[onclick^="capturarDeceniosParaRelatorio"] {
+            background: var(--papiro-botao) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            clip-path: var(--papiro-botao-rasgo);
+        }
+        body.tema-ceu #mandala-container button[onclick^="salvarDeceniosNaGaleria"] svg,
+        body.tema-ceu #mandala-container button[onclick^="capturarDeceniosParaRelatorio"] svg { stroke: #1d3a66; }
+        body.tema-ceu #decStartPlanetMenu {
+            --bg-main: transparent; --gold-primary: #1d3a66;
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80,48,20,0.25) 100%),
+                repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
+                linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%) !important;
+            border-color: transparent !important; box-shadow: none !important;
+            clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
+        }
+        /* aviso "luz em casa não-operante" (triângulo): terracota, só contorno */
+        body.tema-ceu #mandala-container svg path[fill="var(--badge-bg)"] { fill: transparent; stroke: #a03e25; }
+        body.tema-ceu #mandala-container svg rect[fill="var(--badge-text)"] { fill: #a03e25; }
+
         /* TEMA CÉU — tela de configuração do Relatório (lista de relatórios em andamento + modelos): a
            tela inteira é uma folha de papiro; só tinta — nome do cliente e título em terracota, texto
            em preto, azul-tinta nos desenhos (setas, lápis); rascunhos viram linhas de tinta e as
@@ -1802,12 +1859,12 @@ body {
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002a"></script>
 <script src="tabelaTecnica.js?v=20261002a"></script>
-<script src="mandala.js?v=20261002c"></script>
+<script src="mandala.js?v=20261002d"></script>
 <script src="isopsefia.js?v=20260930a"></script>
 <script src="profeccao.js?v=20261002c"></script>
 <script src="sinastria.js?v=20261002b"></script>
 <script src="revolucao.js?v=20260920"></script>
-<script src="decenios.js?v=20260930c"></script>
+<script src="decenios.js?v=20261002b"></script>
 <script src="direcoes.js?v=20261002d"></script>
 <script src="liberacao.js?v=20261002c"></script>
 <script src="lotes-calculadora.js?v=20261001b"></script>

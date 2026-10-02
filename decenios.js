@@ -37,7 +37,8 @@ const MONOLINE_ZODIAC_SVGS_DEC = [
 
 function getSignSvgHtmlDec(signIdx, size = 18) {
   const elem = SIGN_ELEMENTS_DEC[signIdx];
-  const color = ELEMENT_SIGN_COLORS_DEC[elem];
+  // Tema Céu (papiro): glifo de signo em azul-tinta (sem cor por elemento) — direto, pra também sair certo nas imagens salvas.
+  const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? '#1d3a66' : ELEMENT_SIGN_COLORS_DEC[elem];
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; overflow: visible; display: inline-block; vertical-align: middle; flex-shrink: 0; margin: 0 2px;" title="${ZODIACO_DECENIOS[signIdx]}">${MONOLINE_ZODIAC_SVGS_DEC[signIdx]}</svg>`;
 }
 
@@ -135,7 +136,7 @@ function renderDeceniosUI(container) {
       </h3>
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
-      ${montarCabecalhoMandalaImagemHTML(data)}
+      ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
 
       <!-- EXIBIÇÃO DOS RESULTADOS DOS DECÊNIOS -->
       <div id="decennialsResultsArea">
@@ -155,7 +156,7 @@ function salvarDeceniosNaGaleria() {
   const area = document.getElementById('decennialsResultsArea');
   if (!area) return;
   capturarESalvarNaGaleria(
-    () => gerarImagemHtmlComCabecalho(area, { titulo: 'DECÊNIOS HELENÍSTICOS', comCabecalho: true }),
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'DECÊNIOS HELENÍSTICOS', comCabecalho: true, papiro: true }),
     `Astro_Hellenic_Decenios_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
   );
 }
@@ -166,9 +167,10 @@ async function capturarDeceniosParaRelatorio() {
   const area = document.getElementById('decennialsResultsArea');
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
-    const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-    const fundo = modoEscuro ? '#1c1917' : '#fffdf5';
-    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false }), fundo);
+    const papiro = window.temaMandala === 'ceu';
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'));
     alert(`"Decênios Helenísticos" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
@@ -485,7 +487,7 @@ function renderizarResultadosHTML(res) {
     <!-- PERÍODO ATIVO -->
     <div style="background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-hover) 100%); border: 2px solid var(--table-border); border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(29, 95, 168, 0.08);">
       <div style="border-bottom: 1px solid var(--info-border); padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-        <span style="width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; display: inline-block;"></span>
+        <span style="width: 10px; height: 10px; background-color: var(--dec-ativo-dot, #10b981); border-radius: 50%; display: inline-block;"></span>
         <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: var(--primary-blue); font-weight: 800; margin: 0; text-transform: uppercase;">Período Ativo</h3>
       </div>
 
