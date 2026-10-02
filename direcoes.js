@@ -762,7 +762,7 @@ function renderCircumambulaçõesUI() {
         const hojeTop = yOffset + Math.round(10 * k);
         const hojeBottom = yOffset + boxHeight - Math.round(6 * k);
 
-        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--primary-blue)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--hoje-marca, var(--primary-blue))" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
 
         /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "N.N anos" + dd/mm/aaaa.
