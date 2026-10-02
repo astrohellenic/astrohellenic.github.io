@@ -70,7 +70,9 @@ function getLotIconSVG(lotKey) {
   // os ícones simples com partes só de contorno (Necessidade/Eros, por
   // exemplo) ficam quase invisíveis nele, mesmo bug já visto e corrigido
   // na mandala principal.
-  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', loteKey)}`;
+  // Tema Céu (papiro): sem o círculo creme — o fundo é a própria folha de papiro.
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const frag = `${papiro ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', loteKey)}`;
   return svgComoImagemZR(frag, 22, 22, '0 0 100 100');
 }
 
