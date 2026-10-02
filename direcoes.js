@@ -514,7 +514,7 @@ async function capturarCircumambulacaoParaRelatorio() {
   if (!circumambulacaoMontador) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   const papiro = circumambulacaoPapiroAtivo();
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-  const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5');
   const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
   const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
   try {

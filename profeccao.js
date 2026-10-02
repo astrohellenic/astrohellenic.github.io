@@ -1181,7 +1181,8 @@
        HTML e passam pelo html2canvasRapido. As setas do ano ficam de fora. */
     function fundoCapturaProf() {
         // Tema Céu: a tela é papiro (claro e escuro) — a imagem salva sai sobre papiro, cor chapada pro recorte achar a borda.
-        if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return '#c8a878';
+        // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
+        if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : '#c8a878';
         return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
     }
 
@@ -1245,8 +1246,7 @@
         saida.width = Math.max(...pecas.map(c => c.width));
         saida.height = pecas.reduce((h, c) => h + c.height, 0) + gap * (pecas.length - 1);
         const ctx = saida.getContext('2d');
-        ctx.fillStyle = fundo;
-        ctx.fillRect(0, 0, saida.width, saida.height);
+        if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
         let y = 0;
         pecas.forEach(c => { ctx.drawImage(c, Math.round((saida.width - c.width) / 2), y); y += c.height + gap; });
         return saida;
@@ -1271,6 +1271,7 @@
         const opc = modo === 'tabela' ? { tabela: true }
             : modo === 'mandalas' ? { topo: true }
             : { ano: true, topo: true, tabela: true };
+        window.__capturaSemFundo = true;
         const fundo = fundoCapturaProf();
         try {
             const bruto = await montarImagemProfeccao(opc);
@@ -1282,6 +1283,8 @@
         } catch (err) {
             console.error('Erro ao adicionar a Profecção ao relatório:', err);
             alert('Não foi possível adicionar esta tela ao relatório.');
+        } finally {
+            window.__capturaSemFundo = false;
         }
     }
     window.capturarProfeccaoParaRelatorio = capturarProfeccaoParaRelatorio;

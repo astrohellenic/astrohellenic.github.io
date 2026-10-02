@@ -1264,8 +1264,11 @@ function recortarCanvasAoConteudo(canvas, fundo, margemCssPx) {
     const margem = Math.round((margemCssPx === undefined ? 11 : margemCssPx) * 2); // escala 2 da captura
     const w = canvas.width, h = canvas.height;
     const dados = canvas.getContext('2d').getImageData(0, 0, w, h).data;
-    const bgR = parseInt(fundo.slice(1, 3), 16), bgG = parseInt(fundo.slice(3, 5), 16), bgB = parseInt(fundo.slice(5, 7), 16);
-    const difere = (i) => dados[i + 3] > 8 && (Math.abs(dados[i] - bgR) > 10 || Math.abs(dados[i + 1] - bgG) > 10 || Math.abs(dados[i + 2] - bgB) > 10);
+    // "fundo" vazio/null = captura SEM fundo (transparente): conteúdo é tudo que tem alguma opacidade.
+    const bgR = fundo ? parseInt(fundo.slice(1, 3), 16) : 0, bgG = fundo ? parseInt(fundo.slice(3, 5), 16) : 0, bgB = fundo ? parseInt(fundo.slice(5, 7), 16) : 0;
+    const difere = fundo
+      ? (i) => dados[i + 3] > 8 && (Math.abs(dados[i] - bgR) > 10 || Math.abs(dados[i + 1] - bgG) > 10 || Math.abs(dados[i + 2] - bgB) > 10)
+      : (i) => dados[i + 3] > 8;
     let minX = w, minY = h, maxX = -1, maxY = -1;
     for (let y = 0; y < h; y++) {
       const linha = y * w * 4;
@@ -2601,7 +2604,7 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   const fundoChapado = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
   const comTopo = !!(opcoes.titulo || opcoes.comCabecalho);
   const papelDegrade = papiro && comTopo;
-  const fundo = papelDegrade ? null : fundoChapado; // null = transparente (o degradê vai por baixo no fim)
+  const fundo = (papelDegrade || papiro) ? null : fundoChapado; // null = transparente (com título/cabeçalho o degradê vai por baixo no fim; sem eles, fica sem fundo nenhum — imagem pro Relatório)
   const corpo = await html2canvasRapido(elemento, fundo);
   if (!comTopo) return corpo;
 
@@ -2651,7 +2654,8 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
      redefinidas só dentro da folha), claro ou escuro. */
   const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-  const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+  // Tema Céu, imagem pro Relatório (sem cabeçalho): SEM fundo — só as linhas em tinta, pra encaixar no papiro da folha.
+  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? '#c8a878' : null) : (modoEscuro ? '#1c1917' : '#fffdf5');
   const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
   const cs = getComputedStyle(svgEl);
   const borda = parseFloat(cs.borderTopWidth) || 0;

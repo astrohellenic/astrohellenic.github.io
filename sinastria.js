@@ -1031,7 +1031,8 @@
        mandalas saem direto do SVG (rápido), só ao tocar nos botões. */
     function sinastriaFundoCaptura() {
         // Tema Céu: imagem salva sobre papiro (cor chapada pro recorte achar a borda), claro ou escuro.
-        if (window.temaMandala === 'ceu') return '#c8a878';
+        // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
+        if (window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : '#c8a878';
         return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
     }
 
@@ -1048,8 +1049,7 @@
         saida.width = topo.width;
         saida.height = titulo.height + gap + topo.height;
         const ctx = saida.getContext('2d');
-        ctx.fillStyle = fundo;
-        ctx.fillRect(0, 0, saida.width, saida.height);
+        if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
         ctx.drawImage(titulo, 0, 0);
         ctx.drawImage(topo, 0, titulo.height + gap);
         return saida;
@@ -1065,6 +1065,7 @@
 
     /* Manda as duas mandalas (com os cabeçalhos) pro Relatório. */
     async function sinastriaAdicionarAoRelatorio() {
+        window.__capturaSemFundo = true;
         try {
             const bruto = await sinastriaMontarImagem(false);
             if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
@@ -1074,6 +1075,8 @@
         } catch (err) {
             console.error('Erro ao adicionar a Sinastria ao relatório:', err);
             alert('Não foi possível adicionar esta tela ao relatório.');
+        } finally {
+            window.__capturaSemFundo = false;
         }
     }
     window.sinastriaAdicionarAoRelatorio = sinastriaAdicionarAoRelatorio;

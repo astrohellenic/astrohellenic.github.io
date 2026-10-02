@@ -1228,7 +1228,8 @@ const LIB_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main)
 /* Tema Céu: a imagem sai sobre o papiro (cor chapada, pra o recorte automático achar a borda), tanto no modo
    claro quanto no escuro — a tela já é papiro nos dois. */
 function fundoCapturaLiberacao() {
-  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return '#c8a878';
+  // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
+  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : '#c8a878';
   return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
 }
 
@@ -1283,8 +1284,7 @@ async function montarImagemLiberacao(opc) {
   saida.width = Math.max(topoCanvas.width, arvoreCanvas.width);
   saida.height = topoCanvas.height + 32 + arvoreCanvas.height;
   const ctx = saida.getContext('2d');
-  ctx.fillStyle = fundo;
-  ctx.fillRect(0, 0, saida.width, saida.height);
+  if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
   ctx.drawImage(topoCanvas, Math.round((saida.width - topoCanvas.width) / 2), 0);
   ctx.drawImage(arvoreCanvas, Math.round((saida.width - arvoreCanvas.width) / 2), topoCanvas.height + 32);
   return saida;
@@ -1309,6 +1309,7 @@ async function capturarLiberacaoParaRelatorio(modo) {
   const opc = modo === 'tabela' ? { tabela: true }
     : modo === 'mandala' ? { cabecalho: true, mandala: true }
     : { cabecalho: true, mandala: true, tabela: true };
+  window.__capturaSemFundo = true;
   const fundo = fundoCapturaLiberacao();
   try {
     const bruto = await montarImagemLiberacao(opc);
@@ -1321,6 +1322,8 @@ async function capturarLiberacaoParaRelatorio(modo) {
   } catch (err) {
     console.error('Erro ao adicionar a Liberação Zodiacal ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    window.__capturaSemFundo = false;
   }
 }
 window.capturarLiberacaoParaRelatorio = capturarLiberacaoParaRelatorio;

@@ -169,7 +169,7 @@ async function capturarDeceniosParaRelatorio() {
   try {
     const papiro = window.temaMandala === 'ceu';
     const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-    const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo
     const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'));
     alert(`"Decênios Helenísticos" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
