@@ -638,7 +638,18 @@ if (!window.stepUnitChangeHandlerAdicionado) {
   });
 }
 
-async function executarCalculo() {
+/* "opcoes.soCalcular": só preenche currentCalculatedData (busca o céu no motor) e devolve — sem calcular as Horas
+   Planetárias, sem desenhar nem trocar de módulo. Usado pela tela de login (gerarMandalaDoMomentoParaLogin). */
+/* Conta os cálculos em andamento: a tela de login (gerarMandalaDoMomentoParaLogin) só mexe no estado global
+   quando nenhum está rodando, pra não atropelar o cálculo que o carregamento da página faz por baixo. */
+window.__calculosEmAndamento = 0;
+async function executarCalculo(opcoes) {
+  window.__calculosEmAndamento++;
+  try { return await executarCalculoInterno(opcoes); }
+  finally { window.__calculosEmAndamento--; }
+}
+
+async function executarCalculoInterno(opcoes) {
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
   const dia = String(currentMoment.getDate()).padStart(2, '0');
@@ -691,6 +702,8 @@ async function executarCalculo() {
       Júpiter: { grau_absoluto: planetas.Jupiter ? planetas.Jupiter.grau_absoluto : 0, retro: checkRetro(planetas.Jupiter), lat: planetas.Jupiter ? parseFloat(planetas.Jupiter.latitude) || 0 : 0 },
       Saturno: { grau_absoluto: planetas.Saturno ? planetas.Saturno.grau_absoluto : 0, retro: checkRetro(planetas.Saturno), lat: planetas.Saturno ? parseFloat(planetas.Saturno.latitude) || 0 : 0 }
       };
+
+    if (opcoes && opcoes.soCalcular) return true;
 
     /* Só precisamos que essa chamada calcule window.horasPlanetariasAtual
        (regente do dia/da hora, usado em mais telas) — não que ela apareça
@@ -2715,6 +2728,43 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   return rasterizarSvgParaCanvas(svg, largura, altura, fundo, 2);
 }
 window.gerarImagemFerramentaDoSvg = gerarImagemFerramentaDoSvg;
+
+/* MANDALA DO MOMENTO PARA A TELA DE LOGIN. Ainda não há conta nem mapa: calcula o céu de AGORA (São Paulo como
+   lugar padrão, fuso do aparelho) e desenha a roda no Tema Céu, do mesmo jeito da capa do Relatório — a roda
+   (PNG transparente) + o céu enorme alinhado ao centro dela. Devolve { png, ceu } ou null se falhar (sem rede
+   etc.; a tela de login então fica só com o céu). Não deixa rastro: guarda e devolve o estado global que usa
+   (mapa, momento, local, tema...), e redesenha o que havia na tela. */
+async function gerarMandalaDoMomentoParaLogin() {
+  // espera a página terminar de carregar e o cálculo inicial dela acabar (no máximo ~10 s), pra não atropelar o estado
+  if (document.readyState !== 'complete') await new Promise(r => window.addEventListener('load', r, { once: true }));
+  for (let i = 0; i < 50 && window.__calculosEmAndamento > 0; i++) await new Promise(r => setTimeout(r, 200));
+  if (window.__calculosEmAndamento > 0) return null;
+  const salvo = {
+    dados: currentCalculatedData, momento: currentMoment, geo: currentGeo, nome: currentSubjectName,
+    lotes: window.currentLotes, tema: window.temaMandala, casa1: (typeof selectedHouse1Lot !== 'undefined') ? selectedHouse1Lot : 'ASC',
+    capa: window.ceuFundoCapaUltimo
+  };
+  try {
+    const agora = new Date();
+    currentMoment = agora;
+    currentGeo = { lat: -23.5505, lon: -46.6333, fuso: -agora.getTimezoneOffset() / 60, city: 'São Paulo, SP' };
+    currentSubjectName = 'Agora';
+    if (!(await executarCalculo({ soCalcular: true }))) return null;
+    window.temaMandala = 'ceu';
+    selectedHouse1Lot = 'ASC';
+    const png = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, true, true));
+    const ceu = window.ceuFundoCapaUltimo ? Object.assign({}, window.ceuFundoCapaUltimo) : null;
+    return png && ceu && ceu.url ? { png, ceu } : null;
+  } catch (e) {
+    console.error('Mandala do momento (login):', e);
+    return null;
+  } finally {
+    currentCalculatedData = salvo.dados; currentMoment = salvo.momento; currentGeo = salvo.geo; currentSubjectName = salvo.nome;
+    window.currentLotes = salvo.lotes; window.temaMandala = salvo.tema; selectedHouse1Lot = salvo.casa1; window.ceuFundoCapaUltimo = salvo.capa;
+    if (salvo.dados) { try { renderMandala(); } catch (e) { /* tela de trás: sem problema */ } }
+  }
+}
+window.gerarMandalaDoMomentoParaLogin = gerarMandalaDoMomentoParaLogin;
 
 window.onload = function() {
   restaurarUnidadeStepperMandala();

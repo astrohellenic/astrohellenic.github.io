@@ -2037,7 +2037,7 @@ body {
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261002b"></script>
-<script src="mandala.js?v=20261003a"></script>
+<script src="mandala.js?v=20261003b"></script>
 <script src="isopsefia.js?v=20261003a"></script>
 <script src="profeccao.js?v=20261002d"></script>
 <script src="sinastria.js?v=20261002c"></script>
@@ -2100,7 +2100,11 @@ body {
 
   #loginOverlay.visible {
     display: flex;
+    overflow: hidden;
   }
+
+  /* celular em pé: a roda do momento ocupa a parte de cima e o cartão desce, pra não esconderem um ao outro */
+  #loginOverlay.login-retrato { align-items: flex-end; padding-bottom: 5vh; box-sizing: border-box; }
 
   /* Camada do céu (atrás do cartão) — pintada por JS em renderizarCeuLogin. */
   #loginPlanetsDecor {
@@ -2436,6 +2440,44 @@ body:not(.modo-mandala) #main-stage {
     camada.style.backgroundImage = `url("${_ceuLoginUrl}")`;
     camada.style.backgroundSize = `${lado}px ${lado}px`;
     camada.style.backgroundPosition = `${(vw / 2 - EXT * escala).toFixed(0)}px ${(vh * 0.68 - EXT * escala).toFixed(0)}px`;
+    if (_mandalaLogin) posicionarMandalaLogin();
+    else if (!_mandalaLoginPedida) {
+      _mandalaLoginPedida = true;
+      if (typeof gerarMandalaDoMomentoParaLogin === 'function') {
+        gerarMandalaDoMomentoParaLogin().then(res => {
+          if (!res) return; // sem rede etc.: fica só o céu
+          _mandalaLogin = res;
+          const overlay = document.getElementById('loginOverlay');
+          if (overlay && overlay.classList.contains('visible')) posicionarMandalaLogin();
+        });
+      }
+    }
+  }
+
+  /* A roda do momento (PNG transparente) com o céu enorme dela alinhado ao centro, igual à capa do Relatório. */
+  let _mandalaLogin = null, _mandalaLoginPedida = false;
+  function posicionarMandalaLogin() {
+    const camada = document.getElementById('loginPlanetsDecor');
+    const overlay = document.getElementById('loginOverlay');
+    if (!camada || !overlay || !_mandalaLogin) return;
+    const { png, ceu } = _mandalaLogin;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const retrato = vw / vh < 0.8;
+    overlay.classList.toggle('login-retrato', retrato);
+    const proporcao = ceu.width / ceu.height;
+    const D = retrato ? Math.min(vw * 1.0, vh * 0.55 * proporcao) : Math.min(vw * 1.0, vh * proporcao);
+    const topo = retrato ? vh * 0.03 : (vh - D / proporcao) / 2;
+    let roda = document.getElementById('loginRoda');
+    if (!roda) { roda = document.createElement('div'); roda.id = 'loginRoda'; camada.appendChild(roda); }
+    roda.style.cssText = `position: absolute; left: ${((vw - D) / 2).toFixed(0)}px; top: ${topo.toFixed(0)}px; width: ${D.toFixed(0)}px; line-height: 0; isolation: isolate;`;
+    const pct = v => (v * 100).toFixed(3) + '%';
+    roda.innerHTML =
+      `<img alt="" src="${ceu.url}" style="position: absolute; max-width: none; max-height: none; z-index: -1; left: ${pct((ceu.cx - ceu.ext) / ceu.width)}; top: ${pct((ceu.cy - ceu.ext) / ceu.height)}; width: ${pct(ceu.ext * 2 / ceu.width)}; height: ${pct(ceu.ext * 2 / ceu.height)};">` +
+      // celular em pé: corta a faixa de papiro com o nome/data (fica embaixo da roda e vazaria ao lado do cartão)
+      `<img alt="" src="${png}" style="width: 100%; height: auto; display: block;${retrato ? ` clip-path: inset(0 0 ${Math.max(0, (1 - 2 * ceu.cy / ceu.height) * 100).toFixed(2)}% 0);` : ''}">`;
+    // o céu da roda cobre a tela inteira; o céu rápido de antes sai de cena
+    camada.style.backgroundImage = 'none';
+    camada.style.backgroundColor = '#070d25';
   }
 
   let _resizeCeuLoginTimeout = null;
@@ -2443,7 +2485,7 @@ body:not(.modo-mandala) #main-stage {
     const overlay = document.getElementById('loginOverlay');
     if (!overlay || !overlay.classList.contains('visible')) return;
     clearTimeout(_resizeCeuLoginTimeout);
-    _resizeCeuLoginTimeout = setTimeout(renderizarCeuLogin, 200);
+    _resizeCeuLoginTimeout = setTimeout(() => { renderizarCeuLogin(); }, 200);
   });
 
   function fecharTelaLogin() {
