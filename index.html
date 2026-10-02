@@ -931,10 +931,10 @@ body {
         body.tema-ceu #relBibliotecaEditorOverlay > div .btn-primary,
         body.tema-ceu .rel-seletor-imagem-box .btn-primary,
         body.tema-ceu #modalSaveCurrentMap > div .btn-primary {
-            /* botão principal (Salvar / Salvar Alterações / Criar...): pedaço de papiro com borda rasgada, letra em terracota — como os botões da Mandala */
-            background: var(--papiro-botao) !important; color: #a03e25 !important; font-weight: 800 !important;
-            border: 1px solid transparent !important; border-radius: 0 !important; box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
+            /* botão principal (Salvar / Salvar Alterações / Criar...): sem fundo e sem sombra, mesmo contorno do "Cancelar" ao lado; só a letra em terracota o destaca */
+            background: transparent !important; color: #a03e25 !important; font-weight: 800 !important;
+            border: 1px solid rgba(95, 65, 30, 0.55) !important; border-radius: 6px !important; box-shadow: none !important;
+            clip-path: none;
         }
         body.tema-ceu .modal-box .btn-secondary,
         body.tema-ceu #salvarImagemOverlay > div .btn-secondary,
