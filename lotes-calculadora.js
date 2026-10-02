@@ -48,7 +48,9 @@ function getSignSVGLotes(signIndex, size = 22) {
   const cores = modoEscuro
     ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
     : SIGN_COLORS_LOTES;
-  const interno = `<g style="color: ${cores[signIndex]};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
+  // Tema Céu (papiro): glifo de signo em azul-tinta, sem cor por elemento.
+  const corSigno = window.temaMandala === 'ceu' ? '#1d3a66' : cores[signIndex];
+  const interno = `<g style="color: ${corSigno};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
   return svgComoImagemLotes(interno, size, size, '0 0 64 64');
 }
 
@@ -85,7 +87,7 @@ const LOTE_ICON_KEY_LOTES = {
 };
 function getLoteHermeticoIconSVG(loteKey, size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
-  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', LOTE_ICON_KEY_LOTES[loteKey])}`;
+  const frag = `${window.temaMandala === 'ceu' ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', LOTE_ICON_KEY_LOTES[loteKey])}`;
   return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
@@ -95,7 +97,7 @@ function getLoteHermeticoIconSVG(loteKey, size = 22) {
    mesma cor usada em todos os lugares que chamam esta função (ver
    renderLoteCardHTML/renderSeletorLotes). */
 function getLoteAbbrevIconSVG(abbrev, size = 22) {
-  const cor = document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70';
+  const cor = window.temaMandala === 'ceu' ? '#1d3a66' : (document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70');
   const len = (abbrev || '').length;
   const fontSize = len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6));
   const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" text-anchor="middle">${abbrev}</text>`;
@@ -104,13 +106,13 @@ function getLoteAbbrevIconSVG(abbrev, size = 22) {
 
 function getLoteFortunaIconSVG(size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
-  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', 'fortune')}`;
+  const frag = `${window.temaMandala === 'ceu' ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', 'fortune')}`;
   return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
 function getLoteEspiritoIconSVG(size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
-  const frag = `<circle cx="50" cy="50" r="48" fill="#fffdf5"/>${getIconeFragmento('lote', 'spirit')}`;
+  const frag = `${window.temaMandala === 'ceu' ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', 'spirit')}`;
   return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
@@ -513,7 +515,7 @@ function renderLotesUI() {
   const btnCssLotes = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
 
   let html = `
-    <div class="lotes-outer" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="lotes-outer" id="lotes-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
       <h3 class="lotes-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
         Calculadora de Lotes
@@ -536,7 +538,7 @@ function renderLotesUI() {
       </div>
 
       <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
-      ${montarCabecalhoMandalaImagemHTML(data)}
+      ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
 
       <div id="lotesConteudoArea">
 
@@ -676,6 +678,7 @@ async function capturarLotesSelecionadosParaRelatorio() {
   const larguraTotal = (numCols * CARD_W) + ((numCols - 1) * GAP) + (PAD * 2);
 
   const temp = document.createElement('div');
+  temp.className = 'lotes-captura-temp'; // no Tema Céu herda as variáveis de cor em tinta da folha
   temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: ${larguraTotal}px; padding: ${PAD}px; background: var(--bg-main); font-family: "Montserrat", sans-serif;`;
   temp.innerHTML = `
     <div style="display: grid; grid-template-columns: repeat(${numCols}, ${CARD_W}px); gap: ${GAP}px;">
@@ -708,7 +711,7 @@ function salvarLotesNaGaleria() {
   const area = document.getElementById('lotesConteudoArea');
   if (!area) return;
   capturarESalvarNaGaleria(
-    () => gerarImagemHtmlComCabecalho(area, { titulo: 'CALCULADORA DE LOTES', comCabecalho: true }),
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'CALCULADORA DE LOTES', comCabecalho: true, papiro: true }),
     `Astro_Hellenic_Lotes_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
   );
 }
