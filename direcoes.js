@@ -730,6 +730,7 @@ function renderCircumambulaçõesUI() {
     });
 
     // MARCAÇÃO DA POSIÇÃO NATAL INICIAL
+    let ocupadoNatal = null; // faixa de x onde ficou o texto da marca, pro texto do "hoje" não cair em cima
     if (ehPrimeiraGlobal) {
       const xNatal = x0 + (natalDegInSign * scale);
       const natalTop = yOffset + Math.round(10 * k);
@@ -744,6 +745,7 @@ function renderCircumambulaçõesUI() {
         const meiaIcone = Math.max(10, termHeight - 6) / 2 + 2;
         if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 40 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
       }
+      ocupadoNatal = ancoraNatal === 'start' ? [xTextoNatal, xTextoNatal + 40] : [xTextoNatal - 40, xTextoNatal];
       rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--natal-marca, var(--element-fogo))" text-anchor="${ancoraNatal}">0.0 anos</text>`;
       rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--natal-marca, var(--element-fogo))" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
     }
@@ -762,6 +764,24 @@ function renderCircumambulaçõesUI() {
 
         rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--primary-blue)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
+
+        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "N.N anos" + dd/mm/aaaa.
+           O texto vai pro lado direito do cursor; se ali bater no ícone de um termo, no texto da marca do
+           nascimento ou passar da moldura, vai pro lado esquerdo. */
+        const idadeHoje = ((hoje.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)).toFixed(1);
+        const LARG_TEXTO_HOJE = 40;
+        const meiaIconeTermo = Math.max(10, termHeight - 6) / 2 + 2;
+        const ocupados = passage.terms.map(t => { const xc = x0 + ((t.termStartDeg + t.termEndDeg) / 2) * scale; return [xc - meiaIconeTermo, xc + meiaIconeTermo]; });
+        if (ocupadoNatal) ocupados.push(ocupadoNatal);
+        const bate = (ini, fim) => ocupados.some(([a, b]) => ini < b && fim > a);
+        const iniDir = xHoje + 13, iniEsq = xHoje - 13 - LARG_TEXTO_HOJE;
+        const dirLivre = (iniDir + LARG_TEXTO_HOJE <= 905) && !bate(iniDir, iniDir + LARG_TEXTO_HOJE);
+        const esqLivre = (iniEsq >= 14) && !bate(iniEsq, iniEsq + LARG_TEXTO_HOJE);
+        const ladoDir = dirLivre || !esqLivre; // se nenhum lado está livre, mantém o direito
+        const xTextoHoje = ladoDir ? iniDir : iniEsq + LARG_TEXTO_HOJE;
+        const ancoraHoje = ladoDir ? 'start' : 'end';
+        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--primary-blue)" text-anchor="${ancoraHoje}">${idadeHoje} anos</text>`;
+        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--primary-blue)" text-anchor="${ancoraHoje}">${formatarDataBRDir(hoje)}</text>`;
       }
     });
 
