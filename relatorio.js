@@ -3556,6 +3556,8 @@ async function baixarRelatorioPDF() {
   const rotuloOriginal = botao ? botao.innerHTML : '';
   if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando PDF...'; }
   viewer.dataset.gerandoPdf = '1';
+  // aba nova pro PDF: tem que abrir AGORA, no toque (depois do await o navegador bloquearia)
+  const abaPdf = window.astroAbaPdf ? window.astroAbaPdf.abrir() : null;
 
   try {
     const estilos = document.getElementById('relatorio-estilos');
@@ -3648,15 +3650,9 @@ async function baixarRelatorioPDF() {
       }
     } catch (_) { /* sem diagnóstico: segue */ }
     const blobPdf = await resposta.blob();
-    const url = URL.createObjectURL(blobPdf);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {});
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    window.astroAbaPdf.mostrar(abaPdf, blobPdf, nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {}));
   } catch (err) {
+    if (window.astroAbaPdf) window.astroAbaPdf.fechar(abaPdf);
     console.error('Erro ao gerar o PDF do relatório:', err);
     alert('Não foi possível gerar o PDF: ' + err.message);
   } finally {

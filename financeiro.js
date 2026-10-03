@@ -364,6 +364,8 @@ async function baixarEntradasPDF(papiro) {
   const botao = document.getElementById('finBtnPdf');
   const original = botao ? botao.innerHTML : '';
   if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+  // aba nova pro PDF: tem que abrir AGORA, no toque (depois do await o navegador bloquearia)
+  const abaPdf = window.astroAbaPdf ? window.astroAbaPdf.abrir() : null;
   try {
     const { html } = finMontarPaginasRelatorio();
     const cores = finCoresPdf(papiro === true);
@@ -383,14 +385,9 @@ async function baixarEntradasPDF(papiro) {
       throw new Error(`o servidor de PDF respondeu ${resposta.status}${detalhe ? ': ' + detalhe : ''}`);
     }
     const blob = await resposta.blob();
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = finNomeArquivoRelatorio('pdf');
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+    if (window.astroAbaPdf) window.astroAbaPdf.mostrar(abaPdf, blob, finNomeArquivoRelatorio('pdf'));
   } catch (err) {
+    if (window.astroAbaPdf) window.astroAbaPdf.fechar(abaPdf);
     console.error('Erro ao gerar o PDF das entradas:', err);
     alert('Não foi possível gerar o PDF: ' + err.message);
   } finally {
