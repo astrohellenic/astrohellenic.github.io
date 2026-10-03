@@ -978,7 +978,7 @@ window.criarNovoPresetRelatorio = criarNovoPresetRelatorio;
 async function excluirPresetRelatorio(idx) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset || !preset.id) return;
-  if (!await astroConfirm(`Excluir o modelo "${preset.nome}"?\n\nIsso também vai apagar o serviço vinculado a ele (o mesmo cadastrado em Configurações → Captação de Clientes → Serviços). Essa ação não pode ser desfeita.`)) return;
+  if (!await astroConfirm(`Excluir o modelo "${preset.nome}"?\n\nIsso também vai apagar o serviço vinculado a ele (o mesmo cadastrado em Configurações → Serviços). Essa ação não pode ser desfeita.`)) return;
 
   const client = relatorioSupabaseClient();
   if (!client) return;
