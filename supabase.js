@@ -203,10 +203,11 @@ function abrirConfiguracoesAparencia() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
-  const temaAtual = window.temaMandala || 'claro';
   const estiloPlanetasAtual = window.estiloPlanetas || 'simples';
   let modoCorAtual = 'auto';
   try { modoCorAtual = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
+  // Uma escolha só: Céu, Claro, Escuro ou Automático. O Céu vence os outros; os outros só valem fora dele.
+  const escolhaAparencia = window.temaMandala === 'ceu' ? 'ceu' : modoCorAtual;
   const ordemBotoesAtual = completarOrdemBotoesTopo(window.ordemBotoesTopo);
   const opcaoStyle = (ativa) => `display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 10px; border: 2px solid ${ativa ? 'var(--primary-blue)' : 'var(--border-color)'}; border-radius: 8px; background: var(--bg-card); cursor: pointer;`;
   const botaoSetaStyle = (desabilitado) => `width: 28px; height: 28px; border: 1px solid var(--gold-primary); border-radius: 6px; background: ${desabilitado ? 'var(--bg-disabled)' : 'var(--bg-card)'}; color: ${desabilitado ? 'var(--text-disabled)' : 'var(--primary-blue)'}; cursor: ${desabilitado ? 'default' : 'pointer'}; display: flex; align-items: center; justify-content: center;`;
@@ -236,13 +237,22 @@ function abrirConfiguracoesAparencia() {
     <div style="flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-sidebar);">
 
       <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
-        Escolha entre tela clara e escura. É uma preferência <strong>deste navegador/aparelho</strong> —
-        não fica salva na sua conta, porque cada aparelho pode ter uma preferência diferente.
-        Ainda só o menu lateral (este que você está vendo agora) muda de verdade; as demais telas
-        seguem sendo ajustadas aos poucos.
+        Escolha como o software é exibido. É uma preferência <strong>deste navegador/aparelho</strong> — não fica salva
+        na sua conta, porque cada aparelho pode ter uma preferência diferente.
       </div>
 
-      <div onclick="salvarModoCor('claro')" style="${opcaoStyle(modoCorAtual === 'claro')}">
+      <div onclick="salvarAparencia('ceu')" style="${opcaoStyle(escolhaAparencia === 'ceu')}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-star" style="color: var(--gold-primary);"></i>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Céu</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Papiro e tinta sobre o céu e o espaço sideral</div>
+          </div>
+        </div>
+        ${escolhaAparencia === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+      </div>
+
+      <div onclick="salvarAparencia('claro')" style="${opcaoStyle(escolhaAparencia === 'claro')}">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-sun" style="color: var(--gold-primary);"></i>
           <div>
@@ -250,10 +260,10 @@ function abrirConfiguracoesAparencia() {
             <div style="font-size: 11px; color: var(--text-muted);">Sempre com fundo claro, não importa o aparelho</div>
           </div>
         </div>
-        ${modoCorAtual === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+        ${escolhaAparencia === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
-      <div onclick="salvarModoCor('escuro')" style="${opcaoStyle(modoCorAtual === 'escuro')}">
+      <div onclick="salvarAparencia('escuro')" style="${opcaoStyle(escolhaAparencia === 'escuro')}">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-moon" style="color: var(--gold-primary);"></i>
           <div>
@@ -261,44 +271,18 @@ function abrirConfiguracoesAparencia() {
             <div style="font-size: 11px; color: var(--text-muted);">Sempre com fundo escuro, não importa o aparelho</div>
           </div>
         </div>
-        ${modoCorAtual === 'escuro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+        ${escolhaAparencia === 'escuro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
-      <div onclick="salvarModoCor('auto')" style="${opcaoStyle(modoCorAtual === 'auto')}">
+      <div onclick="salvarAparencia('auto')" style="${opcaoStyle(escolhaAparencia === 'auto')}">
         <div style="display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-circle-half-stroke" style="color: var(--gold-primary);"></i>
           <div>
             <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Automático</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Acompanha o tema claro/escuro configurado neste aparelho</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Acompanha o tema claro/escuro configurado neste aparelho (nunca escolhe o Céu)</div>
           </div>
         </div>
-        ${modoCorAtual === 'auto' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
-      </div>
-
-      <div style="font-size: 11px; color: var(--text-muted); margin: 20px 0 16px; line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 16px;">
-        Escolha como o software é exibido. Essa preferência fica salva neste aparelho (cada aparelho ou navegador tem a sua).
-      </div>
-
-      <div onclick="salvarTemaMandala('claro')" style="${opcaoStyle(temaAtual === 'claro')}">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-sun" style="color: var(--gold-primary);"></i>
-          <div>
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Tema Claro</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Fundo branco, sem céu nem espaço sideral</div>
-          </div>
-        </div>
-        ${temaAtual === 'claro' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
-      </div>
-
-      <div onclick="salvarTemaMandala('ceu')" style="${opcaoStyle(temaAtual === 'ceu')}">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-star" style="color: var(--gold-primary);"></i>
-          <div>
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Tema Céu</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Céu diurno/noturno e espaço sideral ao redor da mandala</div>
-          </div>
-        </div>
-        ${temaAtual === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
+        ${escolhaAparencia === 'auto' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
       </div>
 
       <div style="font-size: 11px; color: var(--text-muted); margin: 20px 0 16px; line-height: 1.4;">
@@ -494,19 +478,6 @@ async function salvarPerfilRelatorio() {
   }
 }
 
-/* SALVA O MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) ESCOLHIDO NA TELA
-   APARÊNCIA. É preferência do NAVEGADOR/APARELHO (localStorage), não da
-   conta — diferente de estilo_planetas (Supabase). O Tema Céu logo abaixo
-   também é do aparelho (astro_tema_mandala). Isso é deliberado: "seguir o tema do aparelho"
-   só faz sentido por aparelho, não tem como isso "valer" num aparelho
-   diferente. window.aplicarModoCor vem do script inline em index.html
-   (roda antes de supabase.js, pra já aplicar o tema certo sem piscar). */
-function salvarModoCor(modo) {
-  try { localStorage.setItem('astro_modo_cor', modo); } catch (e) {}
-  if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(modo);
-  abrirConfiguracoesAparencia();
-}
-
 /* TEMA CÉU (claro/céu): preferência do APARELHO, no localStorage (chave astro_tema_mandala) — igual ao modo de
    cor claro/escuro. O Céu hoje cobre o software inteiro, então é aparência, não dado da conta; e assim o
    index.html já abre no tema certo, sem piscar o claro/escuro por trás (ver o script no <head>/<body>).
@@ -548,9 +519,19 @@ async function carregarTemaMandala(userId) {
   aplicarTemaMandala(tema);
 }
 
-/* SALVA O TEMA ESCOLHIDO NESTE APARELHO E ATUALIZA A TELA NA HORA */
-function salvarTemaMandala(tema) {
+/* SALVA A APARÊNCIA ESCOLHIDA NA TELA APARÊNCIA: 'ceu' | 'claro' | 'escuro' | 'auto'. Uma escolha só, tudo no
+   APARELHO (localStorage), não na conta: o modo de cor (astro_modo_cor: claro/escuro/auto — "seguir o tema do
+   aparelho" só faz sentido por aparelho) e o Tema Céu (astro_tema_mandala: ceu/claro).
+   - 'ceu': liga o Céu; o modo de cor guardado não muda (não vale enquanto o Céu estiver ligado).
+   - 'claro' / 'escuro' / 'auto': desliga o Céu e aplica o modo — o automático só escolhe entre claro e escuro, nunca Céu.
+   window.aplicarModoCor vem do script inline em index.html (roda antes de supabase.js). */
+function salvarAparencia(escolha) {
+  const tema = escolha === 'ceu' ? 'ceu' : 'claro';
   try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
+  if (tema !== 'ceu') {
+    try { localStorage.setItem('astro_modo_cor', escolha); } catch (e) {}
+    if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(escolha);
+  }
   window.temaMandala = tema;
   document.body.classList.toggle('tema-ceu', tema === 'ceu');
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {

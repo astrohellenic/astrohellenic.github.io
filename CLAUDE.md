@@ -65,6 +65,10 @@ navegação da aba", diferente de preferência, e devem **continuar em
   Céu entrava). `carregarTemaMandala` só lê a coluna antiga UMA vez, num
   aparelho que ainda não escolheu (migração). **Não migrar de volta pro
   Supabase por semelhança com a Regra de ouro 2.**
+  A tela Aparência tem **uma lista só**: Céu, Claro, Escuro, Automático
+  (`salvarAparencia`). O Automático só escolhe entre claro e escuro, nunca
+  Céu; escolher Claro/Escuro/Automático desliga o Céu, e escolher Céu não
+  mexe no modo de cor guardado.
 
 Ou seja, a régua não é "localStorage é sempre errado" — é "preferência/
 configuração consciente do astrólogo (algo que ele foi lá e escolheu,
