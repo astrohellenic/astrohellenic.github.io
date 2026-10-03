@@ -59,6 +59,12 @@ function finIntervaloDoMes() {
   return { ini, fim };
 }
 
+/* Serviços de uma entrada: um pagamento pode ter vários (combo). Entradas antigas, sem "itens", valem como um serviço só. */
+function finItensDaEntrada(e) {
+  if (Array.isArray(e.itens) && e.itens.length) return e.itens;
+  return [{ produto: e.produto || '', area_id: e.area_id || null, valor: Number(e.valor || 0) }];
+}
+
 /* "0150 - Nome" quando a entrada está ligada a um cliente cadastrado (o código é da organização do astrólogo); senão só o nome gravado */
 function finNomeClienteEntrada(e) {
   const m = e.mapa_id && finMapaPorId[String(e.mapa_id)];
@@ -145,8 +151,10 @@ function renderFinanceiro(container, ctx) {
   // subtotais por área (inclui "Sem área" só se houver)
   const subtotais = {};
   finEntradasCache.forEach(e => {
-    const chave = e.area_id && areaPorId[e.area_id] ? e.area_id : '_sem';
-    subtotais[chave] = (subtotais[chave] || 0) + Number(e.valor || 0);
+    finItensDaEntrada(e).forEach(it => {
+      const chave = it.area_id && areaPorId[it.area_id] ? it.area_id : '_sem';
+      subtotais[chave] = (subtotais[chave] || 0) + Number(it.valor || 0);
+    });
   });
   const linhasSubtotais = Object.keys(subtotais).map(k => {
     const nome = k === '_sem' ? 'Sem área' : areaPorId[k].nome;
@@ -159,7 +167,7 @@ function renderFinanceiro(container, ctx) {
 
   const linhas = finEntradasCache.length
     ? finEntradasCache.map(e => {
-        const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
+        const area = [...new Set(finItensDaEntrada(e).map(it => it.area_id && areaPorId[it.area_id] ? areaPorId[it.area_id].nome : '').filter(Boolean))].join(' + ');
         const detalhe = [e.produto, e.observacao].filter(Boolean).join(' — ');
         return `
         <div onclick="abrirFormEntradaFin('${e.id}')" style="display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--border-color); cursor: pointer;">
@@ -229,8 +237,6 @@ function abrirFormEntradaFin(id) {
   const e = id ? finEntradasCache.find(x => x.id === id) : null;
   if (id && !e) return;
 
-  const opcoesArea = '<option value="">Sem área</option>' +
-    finAreasCache.map(a => `<option value="${a.id}" ${e && e.area_id === a.id ? 'selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
   const opcoesForma = '<option value="">—</option>' +
     FIN_FORMAS_PAGAMENTO.map(f => `<option ${e && e.forma_pagamento === f ? 'selected' : ''}>${f}</option>`).join('');
   // cliente já gravado: se ainda está nas pastas da busca mostra "código - nome"; senão (outra pasta, ou nome digitado) mantém o nome
@@ -254,19 +260,16 @@ function abrirFormEntradaFin(id) {
       <label style="${lbl}">Data</label>
       <input type="date" id="finData" class="modal-input" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
 
-      <label style="${lbl}">Valor (R$)</label>
-      <input type="text" id="finValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${e ? String(e.valor).replace('.', ',') : ''}" autocomplete="off">
-
       <label style="${lbl}">Cliente</label>
       <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <div id="finSugCliente" style="display: none;"></div>
 
-      <label style="${lbl}">Produto / serviço</label>
-      <input type="text" id="finProduto" class="modal-input" placeholder="Ex.: Mapa Natal Clássico" value="${e ? escapeHtml(e.produto || '') : ''}" autocomplete="off">
-      <div id="finSugProduto" style="display: none;"></div>
-
-      <label style="${lbl}">Área</label>
-      <select id="finArea" class="modal-select">${opcoesArea}</select>
+      <label style="${lbl}">Serviços</label>
+      <div id="finItens"></div>
+      <button type="button" class="btn-secondary" id="finAddItem" style="margin-top: 8px;">+ Serviço (combo)</button>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; font-size: 12px; font-weight: 700;">
+        <span>Total do pagamento</span><span id="finTotalForm" style="font-size: 16px;">R$ 0,00</span>
+      </div>
 
       <label style="${lbl}">Forma de pagamento</label>
       <select id="finForma" class="modal-select">${opcoesForma}</select>
@@ -287,9 +290,46 @@ function abrirFormEntradaFin(id) {
   if (e) overlay.querySelector('#finApagar').onclick = () => apagarEntradaFin(id);
   finLigarBusca(overlay.querySelector('#finCliente'), overlay.querySelector('#finSugCliente'),
     finMapasCache.map(m => ({ rotulo: finRotuloCliente(m), mapa: m })), item => { finClienteEscolhido = item ? item.mapa : null; }, false);
-  finLigarBusca(overlay.querySelector('#finProduto'), overlay.querySelector('#finSugProduto'),
+  (e ? finItensDaEntrada(e) : [{}]).forEach(it => finAdicionarLinhaServico(it));
+  overlay.querySelector('#finAddItem').onclick = () => finAdicionarLinhaServico({}, true);
+  if (!e) setTimeout(() => { try { overlay.querySelector('.finItValor').focus(); } catch (x) {} }, 30);
+}
+
+/* uma linha de serviço (produto + área + valor) dentro da janela da entrada */
+function finAdicionarLinhaServico(it, focar) {
+  const lista = document.getElementById('finItens');
+  if (!lista) return;
+  const opcoesArea = '<option value="">Sem área</option>' +
+    finAreasCache.map(a => `<option value="${a.id}" ${it.area_id === a.id ? 'selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
+  const linha = document.createElement('div');
+  linha.className = 'finItem';
+  linha.style.cssText = 'border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; margin-top: 6px;';
+  linha.innerHTML = `
+    <input type="text" class="modal-input finItProduto" placeholder="Serviço (ex.: Mapa Natal Clássico)" value="${escapeHtml(it.produto || '')}" autocomplete="off">
+    <div class="finItSug" style="display: none;"></div>
+    <div style="display: grid; grid-template-columns: 1fr 110px auto; gap: 6px; margin-top: 6px; align-items: center;">
+      <select class="modal-select finItArea">${opcoesArea}</select>
+      <input type="text" class="modal-input finItValor" inputmode="decimal" placeholder="275,00" value="${it.valor !== undefined && it.valor !== null ? String(it.valor).replace('.', ',') : ''}" autocomplete="off">
+      <i class="fa-solid fa-xmark finItRemover" title="Tirar este serviço" style="cursor: pointer; padding: 6px; color: var(--danger);"></i>
+    </div>`;
+  lista.appendChild(linha);
+  finLigarBusca(linha.querySelector('.finItProduto'), linha.querySelector('.finItSug'),
     finServicosCache.map(s => ({ rotulo: s.nome })), () => {}, true);
-  if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
+  linha.querySelector('.finItValor').addEventListener('input', finAtualizarTotalForm);
+  linha.querySelector('.finItRemover').onclick = () => { if (lista.children.length > 1) { linha.remove(); finAtualizarTotalForm(); } };
+  finAtualizarTotalForm();
+  if (focar) { try { linha.querySelector('.finItProduto').focus(); } catch (x) {} }
+}
+
+function finAtualizarTotalForm() {
+  const alvo = document.getElementById('finTotalForm');
+  if (!alvo) return;
+  let t = 0;
+  document.querySelectorAll('#finItens .finItValor').forEach(i => { t += finLerValor(i.value) || 0; });
+  alvo.textContent = finFormatarMoeda(t);
+  // um serviço só: esconde o "x" (não dá pra ficar sem nenhum)
+  const linhas = document.querySelectorAll('#finItens .finItem');
+  linhas.forEach(l => { l.querySelector('.finItRemover').style.visibility = linhas.length > 1 ? 'visible' : 'hidden'; });
 }
 
 /* BUSCA NA JANELA: lista de sugestões própria, embaixo do campo. Só filtra enquanto a pessoa digita e NUNCA mexe no que
@@ -320,9 +360,20 @@ function finLigarBusca(input, caixa, itens, aoEscolher, mostrarTudoNoFoco) {
 
 async function salvarEntradaFin(id) {
   const data = document.getElementById('finData').value;
-  const valor = finLerValor(document.getElementById('finValor').value);
   if (!data) { alert('Informe a data.'); return; }
-  if (valor === null) { alert('Informe um valor válido (ex.: 275,00).'); return; }
+
+  const itens = [];
+  for (const l of document.querySelectorAll('#finItens .finItem')) {
+    const produto = l.querySelector('.finItProduto').value.trim();
+    const textoValor = l.querySelector('.finItValor').value.trim();
+    if (!produto && !textoValor) continue; // linha vazia: ignora
+    const v = finLerValor(textoValor);
+    if (v === null) { alert('Informe um valor válido em cada serviço (ex.: 275,00).'); return; }
+    itens.push({ produto: produto || null, area_id: l.querySelector('.finItArea').value || null, valor: v });
+  }
+  if (!itens.length) { alert('Informe o valor do serviço.'); return; }
+  const valor = Math.round(itens.reduce((t, i) => t + i.valor, 0) * 100) / 100;
+  const areasUnicas = [...new Set(itens.map(i => i.area_id))];
 
   // cliente: se o texto bate com um cliente cadastrado, liga o cadastro; senão guarda só o nome digitado
   const textoCliente = document.getElementById('finCliente').value.trim();
@@ -331,8 +382,9 @@ async function salvarEntradaFin(id) {
   const registro = {
     data,
     valor,
-    produto: document.getElementById('finProduto').value.trim() || null,
-    area_id: document.getElementById('finArea').value || null,
+    itens,
+    produto: itens.map(i => i.produto).filter(Boolean).join(' + ') || null,
+    area_id: areasUnicas.length === 1 ? areasUnicas[0] : null, // combo com áreas diferentes: a divisão fica em itens
     forma_pagamento: document.getElementById('finForma').value || null,
     observacao: document.getElementById('finObs').value.trim() || null,
     mapa_id: mapa ? String(mapa.id) : null,
