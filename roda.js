@@ -545,10 +545,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      termos) foram separados em duas passadas: uma só de linha aqui,
      outra só de ícone lá embaixo, depois das linhas dos eixos. */
 
-  if (!estiloRoda.faixaZodiaco && !inv) { // com a faixa do zodíaco as divisas dos signos são os tracejados da faixa; no invertido não há divisa nenhuma
+  if (!estiloRoda.faixaZodiaco) { // com a faixa do zodíaco as divisas dos signos são os tracejados da faixa; sem ela (francês, invertido) são estas linhas
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
+    const pt2 = polarToCart(cx, cy, inv ? aTer[0] : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
   }
   }
