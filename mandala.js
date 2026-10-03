@@ -1430,6 +1430,15 @@ function desenharPlanetaCeuSVG(o) {
   return corpo;
 }
 
+/* Estilo da mandala escolhido em Configurações → Aparência (carregado do Supabase depois do login, ver
+   carregarEstiloMandala em supabase.js): 'frances' (o de sempre) ou 'astrohellenic' (ou nenhuma escolha ainda = o padrão de sempre de cada pintura). Só o formato do desenho. */
+function estiloMandalaAtual(naPinturaCeu) {
+  if (window.estiloMandala === 'astrohellenic' || window.estiloMandala === 'frances') return window.estiloMandala;
+  // Ainda sem escolha explícita: o padrão é o que sempre foi — a roda do Céu (pintura de céu) já nasceu no desenho
+  // Astro Hellenic; todas as outras (claro, escuro, papiro, tinta do relatório) são no francês.
+  return naPinturaCeu ? 'astrohellenic' : 'frances';
+}
+
 /* ÍCONE DOS ÂNGULOS (ASC/DSC/MC/IC) NO TEMA CÉU — mesmo estilo dos nodos e dos lotes: traço
    claro (azul-marinho de dia) dentro de um retículo tracejado, sem brilho. O triângulo vem
    do ícone do software e aponta pro ângulo certo (rotação aScreen - 180). */
@@ -1525,7 +1534,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos, rTerra, rAneis } = o;
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos, rTerra, rAneis, corUnica } = o; // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1557,8 +1566,8 @@ function montarBandaZodiacoCeuSVG(o) {
     const seg = `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)}L${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
     if (deg % 10 === 0) marcas.forte += seg; else if (deg % 5 === 0) marcas.media += seg; else marcas.fina += seg;
   }
-  const grupoTinta = (cor, clip) => `<g clip-path="url(#${clip})" stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
-  svg += grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo');
+  const grupoTinta = (cor, clip) => `<g ${clip ? `clip-path="url(#${clip})" ` : ''}stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
+  svg += corUnica ? grupoTinta(corUnica, null) : (grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo'));
   return svg;
 }
 
@@ -1985,6 +1994,12 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      nunca escolheu) — controla só a decoração de céu/espaço sideral. O
      tamanho e o layout do desenho continuam iguais nos dois temas. */
   const temaCeu = !papiro && (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
+  /* ESTILO DA MANDALA (Configurações → Aparência): só o FORMATO do desenho — onde cada coisa fica. "astrohellenic" = o
+     desenho que nasceu no Tema Céu (anéis maiores, faixa do zodíaco na eclíptica com os planetas dentro, divisas
+     tracejadas, lotes por dentro); "frances" = o de sempre. Cores e ícones NÃO dependem disso: seguem o tema
+     (temaCeu/papiro/claro/escuro). Por isso há duas bandeiras separadas: temaCeu = pintura/decoração de céu,
+     formatoAH = posição das coisas. */
+  const formatoAH = estiloMandalaAtual(temaCeu) === 'astrohellenic';
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -2009,7 +2024,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   const width = cx * 2, height = headerY + headerH + headerGapBottom;
   // Tema Céu: os anéis de termos (fora) e dodecatemória (dentro) ficam logo ABAIXO da faixa dos
   // signos (que começa no raio 282); os lotes ficam abaixo deles e a Terra no centro.
-  const R = temaCeu ? { Aspects: 110, SignSector: 233, Dodec: 256, Termos: 280 } : { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
+  const R = formatoAH ? { Aspects: 110, SignSector: 233, Dodec: 256, Termos: 280 } : { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
   const R_OuterLine = 399;
 
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
@@ -2081,13 +2096,16 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
      desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
   svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
 
-  if (temaCeu) {
-    // Tema Céu: faixa do zodíaco na eclíptica (por trás de tudo) + a Terra no miolo
+  if (formatoAH) {
+    // Estilo Astro Hellenic: faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
     svg += montarBandaZodiacoCeuSVG({
-      cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams.dia, tinta,
+      cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
       elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
-      rTerra: R.Aspects, rAneis: R.SignSector
+      rTerra: R.Aspects, rAneis: R.SignSector, corUnica: temaCeu ? null : goldColor
     });
+  }
+  if (temaCeu) {
+    // Tema Céu: a Terra no miolo (decoração de céu — não existe fora dele, lá o miolo é o disco liso de sempre)
     svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor, ceuParams.dia, skyRotation);
   } else {
     svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
@@ -2122,8 +2140,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   }
 
   // Tema Céu: as divisas dos termos e da dodecatemória são tracejadas (foram postas ali, não são do céu); os dentinhos ficam sólidos.
-  const tracejadoCeu = temaCeu ? ' stroke-dasharray="6 4"' : '';
-  const tracejadoFinoCeu = temaCeu ? ' stroke-dasharray="3 3"' : '';
+  const tracejadoCeu = formatoAH ? ' stroke-dasharray="6 4"' : '';
+  const tracejadoFinoCeu = formatoAH ? ' stroke-dasharray="3 3"' : '';
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"${tracejadoCeu}/>`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
@@ -2138,7 +2156,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      termos) foram separados em duas passadas: uma só de linha aqui,
      outra só de ícone lá embaixo, depois das linhas dos eixos. */
 
-  if (!temaCeu) { // no Tema Céu as divisas dos signos são os tracejados da faixa
+  if (!formatoAH) { // no estilo Astro Hellenic as divisas dos signos são os tracejados da faixa
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
     const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
@@ -2238,7 +2256,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   });
 
   const refSignIdx = Math.floor(house1RefAbs / 30);
-  if (!temaCeu) { // no Tema Céu os números e glifos dos signos ficam na faixa
+  if (!formatoAH) { // no estilo Astro Hellenic os números e glifos dos signos ficam na faixa
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, 122, aMid);
@@ -2295,9 +2313,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
-    const raioEfetivo = (item.type === 'lot' ? (temaCeu ? 190 : 276) : pR) + (item.rOffset || 0);
+    const raioEfetivo = (item.type === 'lot' ? (formatoAH ? 190 : 276) : pR) + (item.rOffset || 0);
 
-    const p1 = polarToCart(cx, cy, temaCeu ? R.Aspects : R.Termos, item.aScreen);
+    const p1 = polarToCart(cx, cy, formatoAH ? R.Aspects : R.Termos, item.aScreen);
     const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
@@ -2345,16 +2363,21 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
       const estiloGrau = `font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill"`;
 
+      /* POSIÇÃO (formato): no estilo Astro Hellenic o planeta fica sempre na posição real (ângulo da longitude, raio da
+         latitude), sem desvio nem empilhamento, e o fio sai do disco do miolo (R.Aspects); no francês ele pode ser
+         empurrado (aShift/rOffset, pra conjunções coladas) e o fio sai do anel dos termos (R.Termos). */
+      const rPonto = pR + (item.eclLat * latPxPerGrau) + (formatoAH ? 0 : (item.rOffset || 0));
+      const aPonto = formatoAH ? item.aScreen : item.aShift;
+      const pPonto = polarToCart(cx, cy, rPonto, aPonto);
+      const recuoFio = temaCeu ? 10 : 19; // o ponto de luz é menor que o ícone
+      const p1c = polarToCart(cx, cy, formatoAH ? R.Aspects : R.Termos, item.aScreen);
+      const p2c = polarToCart(cx, cy, rPonto - recuoFio, aPonto);
+      svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
+
+      /* PINTURA (tema): no Céu o planeta é um ponto de luz com o glifo ACIMA e o grau ABAIXO; nos outros temas é o
+         ícone do tema (esférico/simples/tinta) com o grau abaixo. */
       if (temaCeu) {
-        const rPonto = pR + (item.eclLat * latPxPerGrau);
-        const pPonto = polarToCart(cx, cy, rPonto, item.aScreen);
-        // O PONTO de luz fica sempre na posição real (ângulo da longitude, raio da
-        // latitude), sem nenhum desvio. O glifo vai sempre ACIMA do ponto e o grau
-        // sempre ABAIXO.
         const pGlifo = { x: pPonto.x, y: pPonto.y - 34 };
-        const p1c = polarToCart(cx, cy, R.Aspects, item.aScreen);
-        const p2c = polarToCart(cx, cy, rPonto - 10, item.aScreen);
-        svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
         // Acima do horizonte (metade de cima do referencial girado) vale o dia/noite do Sol.
         const rad = -skyRotation * Math.PI / 180, dx = pPonto.x - cx, dy = pPonto.y - cy;
         const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
@@ -2369,12 +2392,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
         return;
       }
 
-      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
-      const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-      const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
-      const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+      svg += `<g transform="translate(${pPonto.x}, ${pPonto.y})">
         <g transform="scale(0.36) translate(-50, -50)">${papiro ? getIconeFragmento('planeta', item.id, data) : planetIconFragment(item.id)}</g>
         <text x="0" y="27" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;

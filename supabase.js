@@ -226,6 +226,50 @@ async function salvarEstiloPlanetas(estilo) {
   }
 }
 
+/* ESTILO DA MANDALA (Astro Hellenic / francês) — preferência do astrólogo, guardada no Supabase (configuracoes.estilo_mandala),
+   não no aparelho. Só o FORMATO do desenho (ver estiloMandalaAtual em mandala.js); cores e ícones seguem o tema.
+   Sem escolha salva (ou coluna ainda não criada), vale o padrão de sempre de cada tema. */
+async function carregarEstiloMandala(userId) {
+  let estilo = null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('estilo_mandala')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data && (data.estilo_mandala === 'astrohellenic' || data.estilo_mandala === 'frances')) estilo = data.estilo_mandala;
+  } catch (e) {
+    console.error("Erro ao carregar o estilo da mandala:", e);
+  }
+  if (estilo && estilo !== window.estiloMandala) {
+    window.estiloMandala = estilo;
+    reRenderizarModuloAtivo();
+  }
+}
+
+async function salvarEstiloMandala(estilo) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, estilo_mandala: estilo }, { onConflict: 'user_id' });
+
+    if (!error) {
+      window.estiloMandala = estilo;
+      reRenderizarModuloAtivo();
+      if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+    } else if (/estilo_mandala/i.test(error.message || '')) {
+      alert("Falta criar a coluna do estilo da mandala no banco. No Supabase, abra o SQL Editor e rode:\n\nalter table configuracoes add column estilo_mandala text;\n\nDepois escolha o estilo de novo.");
+    } else {
+      alert("Erro ao salvar o estilo da mandala: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar o estilo da mandala.");
+  }
+}
+
 /* REDESENHA A FERRAMENTA ATUALMENTE ABERTA (usado ao trocar o estilo dos ícones dos planetas) */
 function reRenderizarModuloAtivo() {
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
