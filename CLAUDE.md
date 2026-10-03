@@ -757,17 +757,21 @@ baixo. A Mandala no papiro (botão da barra) desenha a textura em `lastRenderedP
   Outros `[style*=...]` do `index.html` (Decênios, Lotes, Liberação, Isopsefia) podem ter o mesmo problema nas imagens salvas — não
   foram mexidos por não terem sido pedidos.
 
-## Estilo da mandala: Astro Hellenic ou francês (03/10/2026)
+## Estilo da mandala: Astro Hellenic ou francês — e a RODA CENTRAL `roda.js` (03/10/2026)
 
-Configurações → Aparência → "Estilo da mandala". **Só o FORMATO do desenho** (onde cada coisa fica); cores e ícones seguem o tema. Em
-`renderMandala` (`mandala.js`) são duas bandeiras separadas — **nunca misturar**:
-- `temaCeu` = PINTURA/decoração de céu (céu, Terra no miolo, planetas como pontos de luz, eixos brancos tracejados, ícones do Céu);
-- `formatoAH` = POSIÇÃO das coisas (anéis 233/256/280 em vez de 215/238/262, faixa do zodíaco na eclíptica com os planetas dentro e
-  divisas tracejadas, lotes por dentro (raio 190), fios saindo do miolo, planeta na posição real sem desvio).
-`estiloMandalaAtual(temaCeu)`: se o astrólogo escolheu (`window.estiloMandala` = `'astrohellenic'`/`'frances'`) vale a escolha em qualquer tema;
-**sem escolha, o padrão de sempre**: pintura de Céu = Astro Hellenic, o resto (claro, escuro, papiro, tinta do relatório) = francês. Foi
-conferido byte a byte (SVG antes/depois idênticos nos 5 casos: claro, escuro, tinta de papiro, Céu ao vivo, capa) — repetir essa conferência
-se mexer em `renderMandala`. Preferência vai pro Supabase: coluna `configuracoes.estilo_mandala` (**criar:** `alter table configuracoes add column
-estilo_mandala text;`), carregada após o login por `carregarEstiloMandala`, salva por `salvarEstiloMandala` (`supabase.js`).
-**Só `renderMandala` entende o estilo** (Mandala, Revolução Solar, páginas e capa do Relatório). As cópias do desenho em `profeccao.js`,
-`sinastria.js` e `liberacao.js` ainda são só francesas — próxima fase (mexeu num, mexe nos quatro).
+Configurações → Aparência → "Estilo da mandala". **Só o FORMATO do desenho** (onde cada coisa fica); cores e ícones seguem o tema.
+
+**O desenho da roda mora em UM lugar: `roda.js`, função `desenharRodaSVG(opcoes)`** (devolve `{ svg, width, height, papiroNaTela, ceuParams }`).
+`renderMandala` (`mandala.js`) só cuida da tela/PNG/cache. Cada ESTILO é uma entrada de `RODA_ESTILOS` (topo do `roda.js`):
+raios dos anéis, `faixaZodiaco`, `aneisTracejados`, `eixosTracejados`, `raioLotes`, `fioPlanetaDe`, `planetaComDesvio`. **Estilo novo = entrada
+nova** (e, se precisar de geometria que não cabe nesses botões, um ramo novo em `desenharRodaSVG`). Mudou o francês ou o Astro Hellenic? É ali.
+Duas coisas SEPARADAS dentro da função — **nunca misturar**: `temaCeu` = PINTURA/decoração de céu (céu, Terra no miolo, planetas como pontos
+de luz, ícones do Céu, **cor** branca dos eixos); `estiloRoda` = POSIÇÃO/forma (inclusive se os eixos ASC-DSC/MC-IC são tracejados: faz parte do
+estilo — liso no francês, tracejado no Astro Hellenic, em qualquer tema).
+`estiloMandalaAtual(temaCeu)`: se o astrólogo escolheu (`window.estiloMandala`) vale a escolha em qualquer tema; **sem escolha, o padrão de
+sempre**: pintura de Céu = Astro Hellenic, o resto = francês. **Conferência obrigatória ao mexer em `desenharRodaSVG`:** comparar o SVG
+antes/depois (byte a byte) nos 5 casos — claro, escuro, tinta de papiro, Céu ao vivo e capa — com o estilo padrão e com cada estilo forçado
+(script de teste: ver "Como testar sem login" acima; interceptar `URL.createObjectURL` ou ler `window.mandalaSvgTelaUrlAtual`).
+Preferência vai pro Supabase: `configuracoes.estilo_mandala` (já criada), carregada por `carregarEstiloMandala`, salva por `salvarEstiloMandala` (`supabase.js`).
+**Etapa 1 do plano "função global" feita; as cópias do desenho em `profeccao.js`, `sinastria.js` e `liberacao.js` AINDA não usam `roda.js`** (e por
+isso ainda são só francesas) — próximas etapas: migrar uma por vez, cada uma comparada com o SVG de hoje.
