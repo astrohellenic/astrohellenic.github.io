@@ -491,7 +491,10 @@ async function carregarOuSemearPresetsRelatorio() {
     if (!user) return [{ id: null, nome: 'Mapa Natal Clássico', blocos: RELATORIO_BLOCOS_PADRAO }];
 
     const { data, error } = await client.from('relatorio_presets').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
-    if (!error && data && data.length) return data;
+    if (!error && data && data.length) {
+      // serviço sem modelo (tem_modelo = false, ver "Remover modelo") não aparece aqui; pode sobrar lista vazia
+      return data.filter(p => p.tem_modelo !== false);
+    }
 
     // Ainda sem presets (ou tabela indisponível): tenta criar o padrão pro usuário;
     // se não conseguir salvar, ainda assim devolve um preset "em memória" pra o
@@ -862,7 +865,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   // quem trabalha com "Retificação de Mapa Natal" o dia todo tinha que
   // trocar o seletor toda vez que voltava nessa tela.
   const indicePresetPadrao = indicePresetLembrado(presets);
-  const opcoesPreset = presets.map((p, idx) => `<option value="${idx}" ${idx === indicePresetPadrao ? 'selected' : ''}>${escapeHtml(p.nome)}</option>`).join('');
+  const opcoesPreset = !presets.length ? '<option value="">Nenhum modelo — toque em + Novo</option>' : presets.map((p, idx) => `<option value="${idx}" ${idx === indicePresetPadrao ? 'selected' : ''}>${escapeHtml(p.nome)}</option>`).join('');
   const listaModelosHTML = renderizarListaModelosRelatorioHTML(presets);
 
   // Agrupa os rascunhos por cliente (nome) — o mesmo cliente pode ter
@@ -944,7 +947,7 @@ function renderizarListaModelosRelatorioHTML(presets) {
       <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(p.nome)}</span>
       <div style="display: flex; gap: 12px;">
         <i class="fa-solid fa-pen" style="color: var(--primary-blue); cursor: pointer; font-size: 12px;" onclick="abrirEditorPresetRelatorio(${idx})" title="Editar"></i>
-        ${presets.length > 1 ? `<i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 12px;" onclick="excluirPresetRelatorio(${idx})" title="Excluir"></i>` : ''}
+        <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 12px;" onclick="excluirPresetRelatorio(${idx})" title="Remover modelo (o serviço continua)"></i>
       </div>
     </div>
   `).join('');
@@ -963,9 +966,14 @@ async function criarNovoPresetRelatorio() {
     const { data: { user } } = await client.auth.getUser();
     if (!user) { alert("Sessão não identificada."); return; }
 
-    const { error } = await client
-      .from('relatorio_presets')
-      .insert({ user_id: user.id, nome: nome.trim(), blocos: RELATORIO_BLOCOS_PADRAO });
+    // Serviço que já existe sem modelo (Configurações → Serviços) com esse mesmo nome: devolve o modelo a ele
+    // em vez de criar um serviço duplicado.
+    const { data: semModelo } = await client.from('relatorio_presets').select('id, nome').eq('user_id', user.id).eq('tem_modelo', false);
+    const existente = (semModelo || []).find(s => (s.nome || '').trim().toLowerCase() === nome.trim().toLowerCase());
+
+    const { error } = existente
+      ? await client.from('relatorio_presets').update({ tem_modelo: true, blocos: RELATORIO_BLOCOS_PADRAO, updated_at: new Date().toISOString() }).eq('id', existente.id)
+      : await client.from('relatorio_presets').insert({ user_id: user.id, nome: nome.trim(), blocos: RELATORIO_BLOCOS_PADRAO });
 
     if (error) { alert("Erro ao criar modelo: " + error.message); return; }
     iniciarModuloRelatorio();
@@ -978,14 +986,15 @@ window.criarNovoPresetRelatorio = criarNovoPresetRelatorio;
 async function excluirPresetRelatorio(idx) {
   const preset = (window.relatorioPresetsCarregados || [])[idx];
   if (!preset || !preset.id) return;
-  if (!await astroConfirm(`Excluir o modelo "${preset.nome}"?\n\nIsso também vai apagar o serviço vinculado a ele (o mesmo cadastrado em Configurações → Serviços). Essa ação não pode ser desfeita.`)) return;
+  if (!await astroConfirm(`Remover o modelo "${preset.nome}"?\n\nO serviço continua cadastrado em Configurações → Serviços; só o modelo de relatório dele é removido (dá pra criar de novo depois). Os relatórios que você já criou não mudam.`)) return;
 
   const client = relatorioSupabaseClient();
   if (!client) return;
 
   try {
-    const { error } = await client.from('relatorio_presets').delete().eq('id', preset.id);
-    if (error) { alert("Erro ao excluir: " + error.message); return; }
+    // NÃO apaga a linha: ela também é o serviço. Só tira o modelo (tem_modelo = false).
+    const { error } = await client.from('relatorio_presets').update({ tem_modelo: false, blocos: [], updated_at: new Date().toISOString() }).eq('id', preset.id);
+    if (error) { alert("Erro ao remover o modelo: " + error.message); return; }
     iniciarModuloRelatorio();
   } catch (e) {
     alert("Erro de conexão ao excluir modelo.");

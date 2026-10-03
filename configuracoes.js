@@ -726,9 +726,13 @@ async function carregarServicos() {
 
     let res = await supabaseClient
       .from('relatorio_presets')
-      .select('id, nome, valor, duracao_minutos, area_id')
+      .select('id, nome, valor, duracao_minutos, area_id, tem_modelo')
       .eq('user_id', user.id)
       .order('nome', { ascending: true });
+    // coluna tem_modelo ainda não criada: tenta sem ela
+    if (res.error) {
+      res = await supabaseClient.from('relatorio_presets').select('id, nome, valor, duracao_minutos, area_id').eq('user_id', user.id).order('nome', { ascending: true });
+    }
     // colunas novas ainda não criadas no Supabase: cai pra lista só com nome (não quebra a tela)
     if (res.error) {
       res = await supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true });
@@ -775,6 +779,7 @@ function renderServicosList() {
       <div style="min-width: 0;">
         <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</div>
         ${detalhe ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(detalhe)}</div>` : ''}
+        ${servico.tem_modelo === false ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Sem modelo de relatório · <a href="#" onclick="criarModeloDoServico('${servico.id}'); return false;" style="color: var(--primary-blue); font-weight: 700;">Criar modelo</a></div>` : ''}
       </div>
       <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
         <i class="fa-solid fa-pen" onclick="abrirFormServico('${servico.id}')" title="Editar serviço" style="color: var(--primary-blue); cursor: pointer;"></i>
@@ -808,6 +813,7 @@ function abrirFormServico(id) {
       <input type="text" id="svValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${sv && sv.valor !== null && sv.valor !== undefined ? String(sv.valor).replace('.', ',') : ''}" autocomplete="off">
       <label style="${lbl}">Duração (minutos)</label>
       <input type="text" id="svDuracao" class="modal-input" inputmode="numeric" placeholder="60" value="${sv && sv.duracao_minutos ? sv.duracao_minutos : ''}" autocomplete="off">
+      ${sv ? '' : `<label style="display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; font-weight: 600; cursor: pointer;"><input type="checkbox" id="svComModelo" checked style="width: 18px; height: 18px;"> Este serviço tem relatório (cria o modelo de relatório)</label>`}
       <div class="modal-actions" style="margin-top: 16px;">
         <button type="button" class="btn-secondary" id="svCancelar">Cancelar</button>
         <button type="button" class="btn-primary" id="svSalvar">Salvar</button>
@@ -849,8 +855,11 @@ async function salvarServico(id) {
     if (id) {
       ({ error } = await supabaseClient.from('relatorio_presets').update({ ...campos, updated_at: new Date().toISOString() }).eq('id', id));
     } else {
+      const comModelo = !document.getElementById('svComModelo') || document.getElementById('svComModelo').checked;
       const blocosPadrao = (typeof RELATORIO_BLOCOS_PADRAO !== 'undefined') ? RELATORIO_BLOCOS_PADRAO : [];
-      ({ error } = await supabaseClient.from('relatorio_presets').insert({ user_id: user.id, blocos: blocosPadrao, ...campos }));
+      ({ error } = await supabaseClient.from('relatorio_presets').insert(comModelo
+        ? { user_id: user.id, blocos: blocosPadrao, ...campos }
+        : { user_id: user.id, blocos: [], tem_modelo: false, ...campos }));
     }
     if (error) { alert("Erro ao salvar o serviço: " + error.message); return false; }
     await carregarServicos();
@@ -858,6 +867,18 @@ async function salvarServico(id) {
   } catch (e) {
     alert("Erro de conexão ao salvar o serviço.");
     return false;
+  }
+}
+
+/* DEVOLVE O MODELO DE RELATÓRIO A UM SERVIÇO QUE ESTAVA SEM (conteúdo padrão, editável em Relatório → Modelos) */
+async function criarModeloDoServico(id) {
+  try {
+    const blocosPadrao = (typeof RELATORIO_BLOCOS_PADRAO !== 'undefined') ? RELATORIO_BLOCOS_PADRAO : [];
+    const { error } = await supabaseClient.from('relatorio_presets').update({ tem_modelo: true, blocos: blocosPadrao, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) { alert("Erro ao criar o modelo: " + error.message); return; }
+    await carregarServicos();
+  } catch (e) {
+    alert("Erro de conexão ao criar o modelo.");
   }
 }
 
