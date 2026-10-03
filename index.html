@@ -1320,6 +1320,11 @@ body {
         }
         body.tema-ceu #profeccaoJanelaAno span, body.tema-ceu #profeccaoMenuRelatorio div { color: #1a1410 !important; }
         body.tema-ceu #profeccaoJanelaNome { color: #a03e25 !important; }
+        /* lista de anos da janelinha: as linhas vinham com --bg-card (escuro) e texto escuro — viram papiro transparente,
+           linha fina de tinta, ano escolhido com um tom mais fundo e o "visto" em terracota (igual à Revolução Solar) */
+        body.tema-ceu #profeccaoListaAnos > div { background: transparent !important; border-bottom-color: rgba(95, 65, 30, 0.3) !important; color: #1a1410 !important; }
+        body.tema-ceu #profeccaoListaAnos > div.ano-item-selecionado { background: rgba(120, 80, 30, 0.22) !important; }
+        body.tema-ceu #profeccaoListaAnos i { color: #a03e25 !important; }
 
         /* TEMA CÉU — Sinastria: a tela é uma folha de papiro e as duas rodas são desenhadas em tinta direto nela
            (ver gerarMandalaSVG em sinastria.js, cópia da Profecção). Mesma pintura da Profecção; SÓ PINTURA —
