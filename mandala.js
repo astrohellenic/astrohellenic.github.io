@@ -2405,6 +2405,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     canvas.height = height * exportScale;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Mandala no papiro (botão da barra): a imagem salva vai SOBRE o papiro com textura, não transparente
+    if (papiroNaTela) papiroTexturaCanvas(ctx, canvas.width, canvas.height, exportScale);
     ctx.drawImage(imgLoader, 0, 0, canvas.width, canvas.height);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
@@ -2547,7 +2549,23 @@ async function capturarESalvarNaGaleria(gerarCanvas, nome) {
   document.body.appendChild(aviso);
   let dataUrl = null;
   try {
-    const canvas = await gerarCanvas();
+    /* Tema Céu: toda imagem salva sai SOBRE O PAPIRO COM TEXTURA (luz, sombra e fibras — papiroTexturaCanvas), não só
+       com a cor bege. As ferramentas que pintam o papel sozinhas já saem prontas; as que só passavam uma cor chapada
+       de fundo (Liberação, Profecção, Sinastria...) são pedidas SEM fundo (o mesmo modo da imagem pro Relatório) e
+       aqui o papel vai por baixo. */
+    const ceu = window.temaMandala === 'ceu';
+    const semFundoAntes = window.__capturaSemFundo;
+    if (ceu) window.__capturaSemFundo = true;
+    let canvas;
+    try { canvas = await gerarCanvas(); } finally { window.__capturaSemFundo = semFundoAntes; }
+    if (ceu) {
+      const comPapel = document.createElement('canvas');
+      comPapel.width = canvas.width; comPapel.height = canvas.height;
+      const pctx = comPapel.getContext('2d');
+      papiroTexturaCanvas(pctx, comPapel.width, comPapel.height, 2);
+      pctx.drawImage(canvas, 0, 0);
+      canvas = comPapel;
+    }
     dataUrl = canvas.toDataURL('image/png');
   } catch (err) {
     console.error('Erro ao gerar a imagem:', err);
@@ -2698,11 +2716,11 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   saida.height = topo.height + corpo.height;
   const ctx = saida.getContext('2d');
   if (papelDegrade) {
-    ctx.fillStyle = papiroGradienteCanvas(ctx, saida.height);
+    papiroTexturaCanvas(ctx, saida.width, saida.height, 2);
   } else {
     ctx.fillStyle = fundoChapado;
+    ctx.fillRect(0, 0, saida.width, saida.height);
   }
-  ctx.fillRect(0, 0, saida.width, saida.height);
   ctx.drawImage(topo, Math.round((saida.width - topo.width) / 2), 0);
   ctx.drawImage(corpo, Math.round((saida.width - corpo.width) / 2), topo.height);
   return saida;
@@ -2755,7 +2773,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const altura = yConteudo + Hk + 20;
   const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
     .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
-  const papelFundo = papiro ? `<defs>${papiroGradienteSvg('papiroCaptura')}</defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
+  const papelFundo = papiro ? papiroTexturaSvg('papiroCaptura', largura, altura) : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
     ${papelFundo}
     <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>

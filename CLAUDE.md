@@ -733,3 +733,13 @@ no meio da tela com o resto vazio.
   `renderizarMandalasDoPreset` + `montarConteudoRelatorioHtml`. Dá pra tirar print e gerar PDF (`page.pdf()`).
 - **Se o deploy não aparecer:** conferir em Actions se há um "pages build and deployment" pro commit (um push de duas
   refs de uma vez — `main` e a branch — não disparou o Pages em 03/10; empurrar `main` sozinho).
+
+## Imagens salvas no Tema Céu saem sobre o papiro COM textura (03/10/2026)
+
+Antes, toda imagem salva (galeria) em papiro saía só com o degradê ou uma cor bege chapada — sem a textura — e a
+mandala no papiro saía transparente. Agora `papiro.js` tem `papiroTexturaCanvas(ctx, w, h, esc)` e
+`papiroTexturaSvg(id, w, h)` (degradê + luz + sombra + fibras, as mesmas camadas de `--papiro-fundo`). Usar SEMPRE essas
+duas pra pintar papel em imagem salva; **nunca** `papiroGradienteCanvas` + `fillRect` nem `papiroCores().chapado` direto
+(sem textura). `capturarESalvarNaGaleria` (`mandala.js`) já resolve as ferramentas que só passavam cor chapada
+(Liberação, Profecção, Sinastria...): no Tema Céu pede a imagem SEM fundo (`window.__capturaSemFundo`) e põe o papel por
+baixo. A Mandala no papiro (botão da barra) desenha a textura em `lastRenderedPngUrl` (`renderMandala`).

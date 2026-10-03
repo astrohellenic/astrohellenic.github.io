@@ -495,7 +495,7 @@ function salvarCircumambulacaoNaGaleria() {
     let pautasSvg = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas, k);
     if (papiro) pautasSvg = resolverVarsDaFolhaCircumambulacao(pautasSvg);
     const pautas = pautasSvg.replace('<svg ', '<svg x="' + ((largura - (920 * k)) / 2) + '" y="' + yPautas + '" ');
-    const papelFundo = papiro ? `<defs>${papiroGradienteSvg('papiroCaptura')}</defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
+    const papelFundo = papiro ? papiroTexturaSvg('papiroCaptura', largura, altura) : '';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
       ${papelFundo}
       <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">CIRCUMAMBULAÇÃO PELOS TERMOS</text>
