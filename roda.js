@@ -140,7 +140,7 @@ function desenharRodaSVG(o) {
      (alternarMandalaPapiro), só no Tema Céu. É o mesmo desenho "tinta sobre papiro" das páginas do Relatório. */
   const papiroNaTela = !ferr && !estiloForcado && !tintaPapiro && temaEhCeu && !!window.mandalaPapiroTela;
   const papiro = (!!tintaPapiro || papiroNaTela) && temaEhCeu;
-  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
+  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25', PRETO_TINTA = '#1a1410'; // PRETO_TINTA: lotes, nodos e sizígia em tinta sobre papiro (menos azul)
   if (papiro && !ferr) fundoTransparente = true; // (as ferramentas pintam o próprio fundo: tinta.fundoDisco)
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
   /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
@@ -685,7 +685,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   /* No estilo reto o retículo tracejado vira uma SOMBRA translúcida embaixo do ícone (dois discos leves, sem filtro/blur pra sair igual em PNG e PDF):
      no papiro, o azul-quase-preto da tinta de escrever; nos outros temas, a própria tinta do tema. */
   const sombraIcone = (r, cor) => `<circle cx="0" cy="0" r="${r + 3}" fill="${cor}" fill-opacity=".07"/><circle cx="0" cy="0" r="${r}" fill="${cor}" fill-opacity=".13"/>`;
-  const reticuloTinta = (r, cor) => !estiloRoda.reticulosTracejados ? '' : estiloRoda.retas ? sombraIcone(r, papiro ? COR_TINTA_SOMBRA : cor) : `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
+  const reticuloTinta = (r, cor) => !estiloRoda.reticulosTracejados ? '' : estiloRoda.retas ? sombraIcone(r, papiro ? (cor === PRETO_TINTA ? PRETO_TINTA : COR_TINTA_SOMBRA) : cor) : `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
   const semReticuloCeu = estiloRoda.reticulosTracejados ? (estiloRoda.retas ? 'reto' : false) : true; // true = sem retículo; 'reto' = retículo em traço liso
 
   eixosInternos.forEach(eixo => {
@@ -784,6 +784,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
   };
 
+  const corCalc = papiro ? PRETO_TINTA : tinta.inkForte; // cor dos pontos calculados (lotes, nodos, sizígia)
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
@@ -795,7 +796,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const p1 = polarToCart(cx, cy, rFio, item.aScreen);
     const dFio = item.type === 'lot' ? 12 : 19;
     const p2 = polarToCart(cx, cy, fioPraFora ? raioEfetivo + dFio : raioEfetivo - dFio, item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${papiro ? PRETO_TINTA : item.color}" stroke-width="1.2"/>`; // lotes/nodos/sizígia: preto sobre papiro
 
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
@@ -807,22 +808,22 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, tinta.inkForte)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>`}
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey, undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
+        <text x="0" y="19" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, tinta.inkForte)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>`}
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia', undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
+        <text x="0" y="21" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, semReticuloCeu) : `${reticuloTinta(14, tinta.inkForte)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>`}
-        <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey, undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
+        <text x="0" y="17" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     }
   });

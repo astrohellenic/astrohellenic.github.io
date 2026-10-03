@@ -858,3 +858,5 @@ tela. Vale pra qualquer roda em papiro (Mandala, Profecção, Liberação, Sinas
 
 **Termos e dodecatemória por signo (Astro Hellenic tracejado e reto, 03/10/2026):** eles fazem parte do signo, então ficam no CAMPO dele (do `SignSector` ao `Termos`), na cor do elemento do signo: contorno, divisas da dodecatemória/termos e os dentinhos de grau,
 com o mesmo vãozinho (`INS = 0,55°`) do contorno da faixa dos signos — por isso o dentinho do grau 0 não aparece, só 1 a 29 (`aneisPorSigno`, bloco `if (porSigno)` em `roda.js`). O Comum e o francês não mudaram (byte a byte).
+
+**Lotes, nodos e sizígia em preto no papiro (03/10/2026):** em tinta sobre papiro esses pontos calculados (ícone, grau, fio e retículo/sombra) saem em `PRETO_TINTA` (`#1a1410`, `roda.js`) em vez do azul-tinta, pra tirar o excesso de azul. Claro, escuro e Céu não mudaram (byte a byte). Ângulos continuam ocre/terracota.
