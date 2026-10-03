@@ -823,6 +823,8 @@ O branco adaptativo do Céu vale pros dois (condição `faixaZodiaco`). Conferid
 embaixo do ícone (dois discos, opacidade .07 e .13, sem filtro/blur pra sair igual em PNG e PDF). No papiro usa `COR_TINTA_SOMBRA` (`#1b2a4a`, azul quase preto da tinta de escrever, `planetIcons.js`); nos outros
 temas, a cor do ícone naquele tema (no Céu, a mesma que muda de branco pra azul-tinta). `roda.js` (`sombraIcone`/`reticuloTinta`) e `iconeAnguloCeuSVG`/`iconeCalculadoCeuSVG` (`semReticulo === 'reto'`). O tracejado e o francês não mudaram (byte a byte).
 
-**Rascunho "Astro Hellenic Invertido" (03/10/2026, `astrohellenic_invertido`):** herda do reto, mas `faixaZodiaco:false` e `invertido:true`: signos num anel só por dentro (do `SignSector` até `signos.fora`, linha única dourada como no francês, número e glifo nas posições
-`signos.numero/glifo`), e termos (`anelTermos`) + dodecatemória (`anelDodec`, na borda) por FORA da faixa dos planetas, com a régua de graus nos dentinhos pra fora. `desenharRodaSVG` usa `aDod`/`aTer`/`inv` (nos outros estilos valem
-os raios de sempre — conferido byte a byte). `R_Ceu` e `raioDestaque` crescem pros anéis de fora. Ainda é rascunho, só na branch: o astrólogo está avaliando o desenho.
+**Rascunho "Astro Hellenic Invertido" (03/10/2026, `astrohellenic_invertido`):** herda do reto com `faixaZodiaco:false` e `invertido:true`. Desenho (pedido do astrólogo, depois de ver o 1º rascunho): signos num anel por dentro (número + glifo,
+`signos.numero/glifo`) **sem nenhuma linha** dividindo signos nem planetas; termos (`anelTermos`) por fora da faixa dos planetas e dodecatemória (`anelDodec`) na borda; **os dentinhos de grau ficam na borda de DENTRO dos termos, apontando
+pra dentro**, e **os fios dos planetas/lotes vão pra FORA, até esses dentinhos** (é assim que se vê em que grau cada um encosta). Linhas que existem: miolo (aspectos), divisória termos/dodecatemória e a borda; as linhas radiais da
+dodecatemória e dos termos e os eixos ASC-DSC/MC-IC continuam. Pontos calculados (lotes, ângulos) ficam onde estão. `desenharRodaSVG` usa `aDod`/`aTer`/`inv`; nos outros estilos valem os raios de sempre (conferido byte a byte).
+`R_Ceu` e `raioDestaque` crescem pros anéis de fora. Ainda é rascunho, só na branch.

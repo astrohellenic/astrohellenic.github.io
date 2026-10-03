@@ -529,7 +529,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     : fn(corPadrao);
   svg += emitirTracejado(cor =>
     (inv
-      ? [[R.SignSector, 2], [estiloRoda.signos.fora, 2], [aTer[0], 2], [aTer[1], 1.5], [aDod[1], 2]]
+      ? [[aTer[1], 1.5], [aDod[1], 2]] // só a linha entre termos e dodecatemória e a da borda; nenhuma outra divide a roda
       : [[R.SignSector, 2], [R.Dodec, 1.5], [R.Termos, 2]]
     ).map(([rr, sw]) => `<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="${cor}" stroke-width="${sw}"${tracejadoCeu}/>`).join(''), goldColor);
 
@@ -543,7 +543,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      termos) foram separados em duas passadas: uma só de linha aqui,
      outra só de ícone lá embaixo, depois das linhas dos eixos. */
 
-  if (!estiloRoda.faixaZodiaco) { // com a faixa do zodíaco as divisas dos signos são os tracejados da faixa
+  if (!estiloRoda.faixaZodiaco && !inv) { // com a faixa do zodíaco as divisas dos signos são os tracejados da faixa; no invertido não há divisa nenhuma
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
     const pt2 = polarToCart(cx, cy, inv ? estiloRoda.signos.divisasAte : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
@@ -580,13 +580,13 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   for (let deg = 0; deg < 360; deg++) {
     const aScreen = eclToScreenAngle(deg, house1RefAbs);
     const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-    const rRegua = inv ? aDod[1] : R.Termos; // invertido: régua de graus na borda de fora, dentinhos pra fora
+    const rRegua = inv ? aTer[0] : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
     const p1 = polarToCart(cx, cy, rRegua, aScreen);
-    const p2 = polarToCart(cx, cy, inv ? rRegua + tickLen : rRegua - tickLen, aScreen);
+    const p2 = polarToCart(cx, cy, rRegua - tickLen, aScreen);
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
   }
 
-  for (let deg = 0; deg < 360; deg++) {
+  for (let deg = 0; deg < (inv ? 0 : 360); deg++) { // no invertido só existe a régua dos termos
     const aScreen = eclToScreenAngle(deg, house1RefAbs);
     const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
     const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
@@ -719,8 +719,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
     const raioEfetivo = (item.type === 'lot' ? estiloRoda.raioLotes : pR) + (item.rOffset || 0);
 
-    const p1 = polarToCart(cx, cy, R[estiloRoda.fioPlanetaDe], item.aScreen);
-    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
+    const p1 = polarToCart(cx, cy, inv ? aTer[0] : R[estiloRoda.fioPlanetaDe], item.aScreen);
+    const p2 = polarToCart(cx, cy, inv ? (item.type === 'lot' ? raioEfetivo + 12 : raioEfetivo + 19) : (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
@@ -774,9 +774,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       const aPonto = estiloRoda.planetaComDesvio ? item.aShift : item.aScreen;
       const pPonto = polarToCart(cx, cy, rPonto, aPonto);
       const recuoFio = temaCeu ? 10 : 19; // o ponto de luz é menor que o ícone
-      const p1c = polarToCart(cx, cy, R[estiloRoda.fioPlanetaDe], item.aScreen);
-      const p2c = polarToCart(cx, cy, rPonto - recuoFio, aPonto);
-      svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
+      const p1c = polarToCart(cx, cy, inv ? aTer[0] : R[estiloRoda.fioPlanetaDe], item.aScreen);
+      const p2c = polarToCart(cx, cy, inv ? rPonto + recuoFio : rPonto - recuoFio, aPonto);
+      if (!inv || rPonto + recuoFio < aTer[0]) svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
       /* PINTURA (tema): no Céu o planeta é um ponto de luz com o glifo ACIMA e o grau ABAIXO; nos outros temas é o
          ícone do tema (esférico/simples/tinta) com o grau abaixo. */
