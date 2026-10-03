@@ -203,7 +203,17 @@ function renderFinanceiro(container, ctx) {
         </div>
 
         <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; background: var(--bg-card);">
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btn} padding: 6px 8px; line-height: 0;">
+                <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="8" x2="32" y2="40"/><polyline points="19,28 32,41 45,28"/><polyline points="10,42 10,55 54,55 54,42"/></svg>
+              </button>
+              <button type="button" id="finBtnPdf" onclick="baixarEntradasPDF()" title="Salvar em PDF" style="${btn} padding: 6px 8px; line-height: 0;">
+                <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5 H39 L51 17 V59 H16 Z"/><path d="M39 5 V17 H51"/><line x1="23" y1="31" x2="44" y2="31"/><line x1="23" y1="40" x2="44" y2="40"/><line x1="23" y1="49" x2="35" y2="49"/></svg>
+              </button>
+            </div>
+          </div>
           <div class="fin-total" style="font-size: 26px; font-weight: 800; color: var(--primary-blue); margin: 2px 0 8px 0;">${finFormatarMoeda(total)}</div>
           ${linhasSubtotais}
         </div>
@@ -224,6 +234,174 @@ function navegarMesFin(delta) {
   if (mes > 11) { mes = 0; ano++; }
   finMes = { ano, mes };
   iniciarModuloFinanceiro();
+}
+
+/* ---------- RELATÓRIO DO MÊS (imagem e PDF) ----------
+   Uma folha A4 por página, montada à mão (linhas de altura fixa): o servidor de PDF (api/gerar-pdf.js) conta as
+   folhas pela classe .rel-page e refaz o PDF "folha por folha" se o Chrome paginar diferente, então cada página
+   daqui TEM que ser um .rel-page e caber certinho em 297mm. */
+
+const FIN_REL_ALTURA_LINHA = 10.5;   // mm
+const FIN_REL_CABECALHO = 32;        // mm: faixa do título (só na 1ª página)
+const FIN_REL_TOPO_TABELA = 9;       // mm: linha de títulos das colunas
+const FIN_REL_UTIL = 267;            // mm: 297 - margem de cima (14) - rodapé (16)
+
+function finRelCss(semFundo) {
+  return `
+  .finrp-pg { width: 210mm; height: 297mm; padding: 14mm 13mm 16mm 13mm; position: relative; overflow: hidden; background: ${semFundo ? 'transparent' : '#ffffff'}; color: #1a1410; font-family: 'Montserrat', sans-serif; box-sizing: border-box; page-break-after: always; break-after: page; }
+  .finrp-pg:last-child { page-break-after: auto; break-after: auto; }
+  .finrp-pg * { box-sizing: border-box; margin: 0; padding: 0; }
+  .finrp-faixa { height: ${FIN_REL_CABECALHO - 4}mm; background: #103b70; border-top: 1.2mm solid #c59b27; border-bottom: 0.5mm solid #1d3a66; text-align: center; padding-top: 4.5mm; margin-bottom: 4mm; }
+  .finrp-titulo { font-family: 'Cinzel', serif; font-weight: 800; font-size: 17pt; color: #f3dc8b; letter-spacing: 0.4pt; text-transform: uppercase; line-height: 1.15; }
+  .finrp-periodo { font-family: 'Cinzel', serif; font-weight: 700; font-size: 11pt; color: #f3dc8b; margin-top: 2mm; }
+  .finrp-grade { display: grid; grid-template-columns: 17mm 25mm 1fr 46mm 25mm; column-gap: 3mm; align-items: center; }
+  .finrp-cab { height: ${FIN_REL_TOPO_TABELA}mm; border-bottom: 0.4mm solid #1d3a66; font-family: 'Cinzel', serif; font-weight: 800; font-size: 9pt; color: #103b70; text-transform: uppercase; }
+  .finrp-cab > div:last-child { text-align: right; }
+  .finrp-lin { height: ${FIN_REL_ALTURA_LINHA}mm; border-bottom: 0.2mm solid #b9b3a6; font-size: 8.4pt; line-height: 1.25; }
+  .finrp-lin > div { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .finrp-lin > div:nth-child(1) { color: #5b5346; }
+  .finrp-lin > div:nth-child(3) { color: #103b70; font-weight: 600; }
+  .finrp-lin > div:last-child { text-align: right; font-weight: 700; color: #1a1410; display: block; white-space: nowrap; }
+  .finrp-resumo { margin-top: 7mm; border-top: 0.6mm solid #c59b27; padding-top: 4mm; }
+  .finrp-total-rot { font-family: 'Cinzel', serif; font-weight: 800; font-size: 10pt; color: #103b70; text-transform: uppercase; }
+  .finrp-total-val { font-weight: 800; font-size: 19pt; color: #103b70; margin: 1mm 0 3mm 0; }
+  .finrp-area { display: flex; justify-content: space-between; font-size: 9pt; height: 6.5mm; align-items: center; border-bottom: 0.2mm dotted #b9b3a6; }
+  .finrp-rodape { position: absolute; left: 13mm; right: 13mm; bottom: 7mm; display: flex; justify-content: space-between; font-size: 7pt; color: #7a7263; }
+  .finrp-vazio { padding: 10mm 0; text-align: center; font-size: 10pt; color: #7a7263; }`;
+}
+
+/* monta as páginas (HTML) do mês que está na tela */
+function finMontarPaginasRelatorio() {
+  const areaPorId = {};
+  finAreasCache.forEach(a => { areaPorId[a.id] = a; });
+  const { ano, mes } = finMes;
+  const mm2 = String(mes + 1).padStart(2, '0');
+  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+  const periodo = `01/${mm2}/${String(ano).slice(2)} - ${String(ultimoDia).padStart(2, '0')}/${mm2}/${String(ano).slice(2)}`;
+  const total = finEntradasCache.reduce((t, e) => t + Number(e.valor || 0), 0);
+
+  const linhaHtml = e => {
+    const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
+    const detalhe = [e.produto, e.observacao].filter(Boolean).join(' — ');
+    return `<div class="finrp-grade finrp-lin"><div>${finFormatarDataBR(e.data)}</div><div>${escapeHtml(area)}</div><div>${escapeHtml(finNomeClienteEntrada(e) || '')}</div><div>${escapeHtml(detalhe)}</div><div>${finFormatarMoeda(e.valor)}</div></div>`;
+  };
+
+  // reparte as linhas nas páginas
+  const porPrimeira = Math.floor((FIN_REL_UTIL - FIN_REL_CABECALHO - FIN_REL_TOPO_TABELA) / FIN_REL_ALTURA_LINHA);
+  const porOutra = Math.floor((FIN_REL_UTIL - FIN_REL_TOPO_TABELA) / FIN_REL_ALTURA_LINHA);
+  const grupos = [];
+  let i = 0;
+  grupos.push(finEntradasCache.slice(i, i + porPrimeira)); i += porPrimeira;
+  while (i < finEntradasCache.length) { grupos.push(finEntradasCache.slice(i, i + porOutra)); i += porOutra; }
+
+  // resumo (total + áreas)
+  const subtotais = {};
+  finEntradasCache.forEach(e => {
+    const chave = e.area_id && areaPorId[e.area_id] ? e.area_id : '_sem';
+    subtotais[chave] = (subtotais[chave] || 0) + Number(e.valor || 0);
+  });
+  const chaves = Object.keys(subtotais);
+  const linhasArea = chaves.map(k => {
+    const nome = k === '_sem' ? 'Sem área' : areaPorId[k].nome;
+    const pct = total > 0 ? Math.round((subtotais[k] / total) * 100) : 0;
+    return `<div class="finrp-area"><span>${escapeHtml(nome)} (${pct}%)</span><strong>${finFormatarMoeda(subtotais[k])}</strong></div>`;
+  }).join('');
+  const resumoHtml = `<div class="finrp-resumo"><div class="finrp-total-rot">Total do mês</div><div class="finrp-total-val">${finFormatarMoeda(total)}</div>${linhasArea}</div>`;
+  const alturaResumo = 7 + 4 + 5 + 12 + chaves.length * 6.5 + 4; // mm, com folga
+
+  // o resumo vai na última página se couber; senão numa página só dele
+  const ultimaGrupo = grupos[grupos.length - 1];
+  const usadoUltima = (grupos.length === 1 ? FIN_REL_CABECALHO : 0) + FIN_REL_TOPO_TABELA + ultimaGrupo.length * FIN_REL_ALTURA_LINHA;
+  const resumoSozinho = (FIN_REL_UTIL - usadoUltima) < alturaResumo;
+
+  const cabecalhoTabela = '<div class="finrp-grade finrp-cab"><div>Data</div><div>Área</div><div>Cliente</div><div>Serviço / Obs.</div><div>Valor</div></div>';
+  const faixa = `<div class="finrp-faixa"><div class="finrp-titulo">Relatório de Entradas - ${FIN_MESES[mes]} ${ano}</div><div class="finrp-periodo">${periodo}</div></div>`;
+  const paginas = grupos.map((g, idx) => {
+    const ehUltima = idx === grupos.length - 1;
+    const corpo = g.length ? g.map(linhaHtml).join('') : '<div class="finrp-vazio">Nenhuma entrada neste mês.</div>';
+    return (idx === 0 ? faixa : '') + cabecalhoTabela + corpo + (ehUltima && !resumoSozinho ? resumoHtml : '');
+  });
+  if (resumoSozinho) paginas.push(resumoHtml);
+
+  const hoje = finFormatarDataBR(finHojeISO());
+  return {
+    total: paginas.length,
+    html: paginas.map((p, n) => `<div class="finrp-pg rel-page">${p}<div class="finrp-rodape"><span>Astro Hellenic · Entradas ${FIN_MESES[mes]} ${ano}</span><span>emitido em ${hoje} · página ${n + 1} de ${paginas.length}</span></div></div>`).join('')
+  };
+}
+
+function finNomeArquivoRelatorio(ext) {
+  return `Entradas_${finMes.ano}-${String(finMes.mes + 1).padStart(2, '0')}.${ext}`;
+}
+
+/* PDF: manda o HTML pro mesmo servidor de PDF do Relatório (Chrome de verdade) e baixa o resultado */
+async function baixarEntradasPDF() {
+  if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
+  const botao = document.getElementById('finBtnPdf');
+  const original = botao ? botao.innerHTML : '';
+  if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+  try {
+    const { html } = finMontarPaginasRelatorio();
+    const doc = `<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
+<style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(false)}</style></head><body>${html}</body></html>`;
+    const url = (typeof RELATORIO_PDF_API_URL !== 'undefined') ? RELATORIO_PDF_API_URL : 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
+    let resposta;
+    try {
+      resposta = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ html: doc }) });
+    } catch (errRede) {
+      throw new Error('a conexão com o servidor de PDF caiu. Tente de novo.');
+    }
+    if (!resposta.ok) {
+      let detalhe = '';
+      try { detalhe = (await resposta.text()).slice(0, 200); } catch (_) {}
+      throw new Error(`o servidor de PDF respondeu ${resposta.status}${detalhe ? ': ' + detalhe : ''}`);
+    }
+    const blob = await resposta.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = finNomeArquivoRelatorio('pdf');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+  } catch (err) {
+    console.error('Erro ao gerar o PDF das entradas:', err);
+    alert('Não foi possível gerar o PDF: ' + err.message);
+  } finally {
+    if (botao) { botao.disabled = false; botao.innerHTML = original; }
+  }
+}
+
+/* IMAGEM: as páginas do mês, uma embaixo da outra, num PNG só (mesma folha de salvar das outras ferramentas) */
+function salvarEntradasImagem() {
+  if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
+  capturarESalvarNaGaleria(async () => {
+    const semFundo = window.__capturaSemFundo === true; // Tema Céu: a folha de papiro entra por baixo
+    const { html } = finMontarPaginasRelatorio();
+    const palco = document.createElement('div');
+    palco.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 210mm;';
+    palco.innerHTML = `<style>${finRelCss(semFundo)}</style>${html}`;
+    document.body.appendChild(palco);
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const pecas = [];
+      for (const pg of palco.querySelectorAll('.finrp-pg')) {
+        pecas.push(await html2canvas(pg, { scale: 2, backgroundColor: semFundo ? null : '#ffffff', useCORS: true }));
+      }
+      const gap = 32;
+      const saida = document.createElement('canvas');
+      saida.width = Math.max(...pecas.map(c => c.width));
+      saida.height = pecas.reduce((h, c) => h + c.height, 0) + gap * (pecas.length - 1);
+      const ctx = saida.getContext('2d');
+      if (!semFundo) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, saida.width, saida.height); }
+      let y = 0;
+      pecas.forEach(c => { ctx.drawImage(c, 0, y); y += c.height + gap; });
+      return saida;
+    } finally {
+      palco.remove();
+    }
+  }, 'Astro_Hellenic_' + finNomeArquivoRelatorio('png'));
 }
 
 /* ---------- janela de nova entrada / edição ---------- */
