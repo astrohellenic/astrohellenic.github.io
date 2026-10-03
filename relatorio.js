@@ -4153,7 +4153,7 @@ function injetarEstilosRelatorio() {
           radial-gradient(ellipse 90% 380px at 50% 100%, rgba(232,112,44,0.55) 0%, rgba(196,84,52,0.28) 40%, transparent 100%),
           linear-gradient(to top, #3a2f5e 0%, #23305f 14%, #15214a 40%, #0d1738 70%, #070d25 100%);
       }
-      .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #d4af37; }
+      .rel-capa.rel-capa-ceu .rel-titulo-capa { color: #B5852F; }
       /* CAPA EM PAPIRO (Tema Céu + imagem capturada: Personalizada/Profecção/Sinastria/Liberação): mesma folha de
          papiro das outras páginas, título em terracota, resto em tinta. A imagem ocupa a largura da folha (em vez
          dos 78mm da capa de céu), com folga de altura de sobra pra título e rodapé. */
