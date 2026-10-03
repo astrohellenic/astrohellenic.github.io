@@ -91,7 +91,7 @@ async function iniciarModuloFinanceiro() {
       supabaseClient.from('areas').select('*').eq('user_id', user.id).order('ordem', { ascending: true }).order('nome', { ascending: true }),
       supabaseClient.from('entradas').select('*').eq('user_id', user.id).gte('data', ini).lt('data', fim).order('data', { ascending: true }).order('created_at', { ascending: true }),
       supabaseClient.from('mapas').select('id, nome, codigo, pasta'),
-      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
+      supabaseClient.from('relatorio_presets').select('id, nome, valor, area_id').eq('user_id', user.id).order('nome', { ascending: true }),
       supabaseClient.from('configuracoes').select('financeiro_pastas_clientes, financeiro_combos').eq('user_id', user.id).maybeSingle()
     ]);
 
@@ -112,6 +112,11 @@ async function iniciarModuloFinanceiro() {
       .filter(m => finPastasClientes.includes(m.pasta))
       .sort((a, b) => finRotuloCliente(a).localeCompare(finRotuloCliente(b), 'pt-BR', { numeric: true }));
     finServicosCache = (!servicosRes.error && servicosRes.data) ? servicosRes.data : [];
+    if (servicosRes.error) {
+      // colunas valor/area_id ainda não criadas em relatorio_presets: cai pra lista só com nome
+      const alt = await supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true });
+      finServicosCache = (!alt.error && alt.data) ? alt.data : [];
+    }
 
     renderFinanceiro(container, {});
   } catch (e) {
@@ -263,6 +268,17 @@ function abrirFormEntradaFin(id) {
       <label style="${lbl}">Cliente</label>
       <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <div id="finSugCliente" style="display: none;"></div>
+      <button type="button" class="btn-secondary" id="finNovoCli" style="margin-top: 6px; align-self: flex-start;">+ Novo cliente</button>
+      <div id="finNovoCliPainel" style="display: none; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-top: 6px;">
+        <label style="${lbl}; margin-top: 0;">Nome do novo cliente</label>
+        <input type="text" id="finNcNome" class="modal-input" autocomplete="off">
+        <label style="${lbl}">Código (ex.: 0153 ou T0010 - 0139)</label>
+        <input type="text" id="finNcCodigo" class="modal-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <div class="modal-actions" style="margin-top: 10px;">
+          <button type="button" class="btn-secondary" id="finNcCancelar">Cancelar</button>
+          <button type="button" class="btn-primary" id="finNcCriar">Criar cliente</button>
+        </div>
+      </div>
 
       <label style="${lbl}">Produto / serviço</label>
       <input type="text" id="finProduto" class="modal-input" placeholder="Ex.: Mapa Natal Clássico" value="${e ? escapeHtml(e.produto || '') : ''}" autocomplete="off">
@@ -288,17 +304,44 @@ function abrirFormEntradaFin(id) {
   overlay.querySelector('#finCancelar').onclick = fecharModalFin;
   overlay.querySelector('#finSalvar').onclick = () => salvarEntradaFin(id || null);
   if (e) overlay.querySelector('#finApagar').onclick = () => apagarEntradaFin(id);
+  const painelNc = overlay.querySelector('#finNovoCliPainel');
+  overlay.querySelector('#finNovoCli').onclick = () => { painelNc.style.display = 'block'; try { overlay.querySelector('#finNcNome').focus(); } catch (x) {} };
+  overlay.querySelector('#finNcCancelar').onclick = () => { painelNc.style.display = 'none'; };
+  overlay.querySelector('#finNcCriar').onclick = () => criarClienteFin(overlay);
   finLigarBusca(overlay.querySelector('#finCliente'), overlay.querySelector('#finSugCliente'),
     finMapasCache.map(m => ({ rotulo: finRotuloCliente(m), mapa: m })), item => { finClienteEscolhido = item ? item.mapa : null; }, false);
-  // sugestões do serviço: combos cadastrados primeiro (escolher um já preenche área e valor), depois os serviços
+  // sugestões do serviço: combos cadastrados primeiro, depois os serviços (Configurações → Serviços); escolher um já preenche área e valor, se ele tiver
   finLigarBusca(overlay.querySelector('#finProduto'), overlay.querySelector('#finSugProduto'),
-    [...finCombos.map(c => ({ rotulo: c.nome, combo: c })), ...finServicosCache.map(s => ({ rotulo: s.nome }))],
+    [...finCombos.map(c => ({ rotulo: c.nome, combo: c })), ...finServicosCache.map(s => ({ rotulo: s.nome, combo: s }))],
     item => {
       if (!item || !item.combo) return;
-      overlay.querySelector('#finArea').value = item.combo.area_id || '';
-      if (item.combo.valor !== undefined && item.combo.valor !== null) overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
+      if (item.combo.area_id) overlay.querySelector('#finArea').value = item.combo.area_id;
+      if (item.combo.valor !== undefined && item.combo.valor !== null && item.combo.valor !== '') overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
     }, true);
   if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
+}
+
+/* CLIENTE NOVO direto da entrada (quem não tem mapa, ex.: terapia). Entra na pasta "Clientes" como o "Importar Lista em Massa"
+   faz com quem só tem nome e código: data de nascimento provisória, que o astrólogo troca se um dia fizer o mapa dele. */
+async function criarClienteFin(overlay) {
+  const nome = overlay.querySelector('#finNcNome').value.trim();
+  const codigo = overlay.querySelector('#finNcCodigo').value.trim();
+  if (!nome) { alert('Informe o nome do cliente.'); return; }
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert('Sessão não identificada.'); return; }
+    const { data, error } = await supabaseClient.from('mapas').insert([{
+      pasta: 'Clientes', tipo: 'Natal', codigo: codigo || null, nome,
+      data_nascimento: '01/01/2000', hora_nascimento: '', cidade: 'Brasil',
+      latitude: -23.5505, longitude: -46.6333, user_id: user.id
+    }]).select('id, nome, codigo, pasta').single();
+    if (error || !data) { alert('Erro ao criar o cliente: ' + (error ? error.message : 'sem resposta')); return; }
+    finMapaPorId[String(data.id)] = data;
+    finMapasCache.push(data);
+    finClienteEscolhido = data;
+    overlay.querySelector('#finCliente').value = finRotuloCliente(data);
+    overlay.querySelector('#finNovoCliPainel').style.display = 'none';
+  } catch (e) { alert('Erro de conexão ao criar o cliente.'); }
 }
 
 /* BUSCA NA JANELA: lista de sugestões própria, embaixo do campo. Só filtra enquanto a pessoa digita e NUNCA mexe no que

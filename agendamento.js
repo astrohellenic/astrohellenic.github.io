@@ -59,7 +59,7 @@ async function iniciarModuloAgenda() {
       supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
       supabaseClient.from('agendamentos').select('*').eq('user_id', user.id).gte('data', hojeISO).order('data', { ascending: true }).order('hora_inicio', { ascending: true }),
       supabaseClient.from('mapas').select('id, nome, codigo, pasta, cidade, tipo'),
-      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
+      supabaseClient.from('relatorio_presets').select('id, nome, duracao_minutos').eq('user_id', user.id).order('nome', { ascending: true }),
       supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
     ]);
 
@@ -76,6 +76,11 @@ async function iniciarModuloAgenda() {
     agendaAgendamentosCache = agsRes.data || [];
     const todosOsMapas = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
     agendaServicosCache = (!servicosRes.error && servicosRes.data) ? servicosRes.data : [];
+    if (servicosRes.error) {
+      // coluna duracao_minutos ainda não criada no Supabase: cai pra lista só com nome (duração padrão da agenda)
+      const alt = await supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true });
+      agendaServicosCache = (!alt.error && alt.data) ? alt.data : [];
+    }
 
     // pastasVisiveis null = ainda não configurado -> mostra todas as pastas
     // (comportamento de antes, pra não sumir cliente sem o astrólogo pedir).
@@ -190,7 +195,7 @@ function renderAgendaSetup(container, ctx) {
         <select id="agNovoCliente" class="modal-select" style="margin-bottom: 10px;">${opcoesClientes}</select>
 
         <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Serviço</label>
-        <select id="agNovoServico" class="modal-select" style="margin-bottom: 10px;">${opcoesServicos}</select>
+        <select id="agNovoServico" class="modal-select" style="margin-bottom: 10px;" onchange="atualizarHorariosDisponiveisAgenda()">${opcoesServicos}</select>
 
         <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Data</label>
         <input type="date" id="agNovaData" class="modal-input" min="${hojeISO}" style="margin-bottom: 10px;" onchange="atualizarHorariosDisponiveisAgenda()">
@@ -210,6 +215,13 @@ function renderAgendaSetup(container, ctx) {
 
     </div>
   `;
+}
+
+/* Duração do horário: a do serviço escolhido (Configurações → Serviços), ou a duração padrão da agenda se o serviço não tem */
+function agendaDuracaoDoServicoEscolhido() {
+  const sel = document.getElementById('agNovoServico');
+  const sv = sel ? agendaServicosCache.find(x => String(x.id) === String(sel.value)) : null;
+  return (sv && Number(sv.duracao_minutos) > 0) ? Number(sv.duracao_minutos) : agendaConfigCache.duracao;
 }
 
 /* RECALCULA OS HORÁRIOS LIVRES PRA DATA ESCOLHIDA NO FORM DE NOVO AGENDAMENTO */
@@ -233,7 +245,7 @@ async function atualizarHorariosDisponiveisAgenda() {
 
     if (error) { selectHorario.innerHTML = '<option value="">Erro ao calcular horários</option>'; return; }
 
-    const horarios = agendaGerarHorariosDisponiveis(dataStr, agendaDisponibilidadeCache, agendamentosDoDia || [], agendaConfigCache.duracao, agendaConfigCache.intervalo);
+    const horarios = agendaGerarHorariosDisponiveis(dataStr, agendaDisponibilidadeCache, agendamentosDoDia || [], agendaDuracaoDoServicoEscolhido(), agendaConfigCache.intervalo);
 
     selectHorario.innerHTML = horarios.length
       ? horarios.map(h => `<option value="${h}">${h}</option>`).join('')
@@ -255,7 +267,7 @@ async function confirmarNovoAgendamento() {
   if (!data) { alert("Selecione a data."); return; }
   if (!horaInicio) { alert("Selecione um horário disponível."); return; }
 
-  const horaFim = agendaSomarMinutosAoHorario(horaInicio, agendaConfigCache.duracao);
+  const horaFim = agendaSomarMinutosAoHorario(horaInicio, agendaDuracaoDoServicoEscolhido());
   const opcaoCliente = clienteSelect.options[clienteSelect.selectedIndex];
   const clienteNome = opcaoCliente.dataset.nome || opcaoCliente.text;
   const servicoNome = servicoSelect.options[servicoSelect.selectedIndex].text;
