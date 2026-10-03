@@ -1298,6 +1298,8 @@ body {
         body.tema-ceu #financeiro-container .fin-btn-nova { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; }
 
         #financeiro-container input, #financeiro-container select { box-sizing: border-box; max-width: 100%; min-width: 0; }
+        /* janelas do Financeiro: .modal-box é flex em coluna; sem isto, quando a janela passa de 90vh (teclado aberto, lista de sugestões) os campos ENCOLHEM em vez de a janela rolar */
+        #finModalOverlay .modal-box > * { flex-shrink: 0; }
         body.tema-ceu #financeiro-container .fin-total { color: #a03e25 !important; }
 
         /* TEMA CÉU — tela de configuração do Relatório (lista de relatórios em andamento + modelos): a
