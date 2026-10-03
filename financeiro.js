@@ -186,11 +186,11 @@ function renderFinanceiro(container, ctx) {
 
   container.innerHTML = `
     <div id="financeiro-container" style="width: 100%; min-height: 100%; padding: 20px; box-sizing: border-box; font-family: 'Montserrat', sans-serif; background-color: var(--bg-main);">
-      <div style="max-width: 640px; margin: 0 auto;">
+      <div id="finColuna" style="max-width: 640px; margin: 0 auto;">
 
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;">
           <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Entradas</h2>
-          <div style="display: flex; gap: 8px;">
+          <div data-html2canvas-ignore="true" style="display: flex; gap: 8px;">
             <button onclick="abrirCombosFin()" style="${btn}">Combos</button>
             <button onclick="abrirPastasFin()" style="${btn}">Pastas</button>
             <button onclick="abrirAreasFin()" style="${btn}">Áreas</button>
@@ -198,16 +198,16 @@ function renderFinanceiro(container, ctx) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <button onclick="navegarMesFin(-1)" style="${btn}" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="finLinhaMes" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <button data-html2canvas-ignore="true" onclick="navegarMesFin(-1)" style="${btn}" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
           <div style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">${FIN_MESES[finMes.mes]} ${finMes.ano}</div>
-          <button onclick="navegarMesFin(1)" style="${btn}" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
+          <button data-html2canvas-ignore="true" onclick="navegarMesFin(1)" style="${btn}" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
         <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; background: var(--bg-card);">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
-            <div style="display: flex; gap: 8px;">
+            <div data-html2canvas-ignore="true" style="display: flex; gap: 8px;">
               <button type="button" class="fin-ico-btn" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btnIco}">
                 <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
               </button>
@@ -375,34 +375,34 @@ async function baixarEntradasPDF() {
   }
 }
 
-/* IMAGEM: as páginas do mês, uma embaixo da outra, num PNG só (mesma folha de salvar das outras ferramentas) */
+/* IMAGEM: salva a tela do mês IGUAL ao que está na tela (título, mês, total com as áreas e a lista), sem os botões.
+   É a mesma captura das outras ferramentas: no Tema Céu sai só a tinta e a folha de papiro entra por baixo
+   (capturarESalvarNaGaleria); nos outros temas sai com o fundo da tela. */
 function salvarEntradasImagem() {
+  const coluna = document.getElementById('finColuna');
+  if (!coluna) return;
   if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
   capturarESalvarNaGaleria(async () => {
-    const semFundo = window.__capturaSemFundo === true; // Tema Céu: a folha de papiro entra por baixo
-    const { html } = finMontarPaginasRelatorio();
-    const palco = document.createElement('div');
-    palco.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 210mm;';
-    palco.innerHTML = `<style>${finRelCss(semFundo)}</style>${html}`;
-    document.body.appendChild(palco);
-    try {
-      if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const pecas = [];
-      for (const pg of palco.querySelectorAll('.finrp-pg')) {
-        pecas.push(await html2canvas(pg, { scale: 2, backgroundColor: semFundo ? null : '#ffffff', useCORS: true }));
-      }
-      const gap = 32;
-      const saida = document.createElement('canvas');
-      saida.width = Math.max(...pecas.map(c => c.width));
-      saida.height = pecas.reduce((h, c) => h + c.height, 0) + gap * (pecas.length - 1);
-      const ctx = saida.getContext('2d');
-      if (!semFundo) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, saida.width, saida.height); }
-      let y = 0;
-      pecas.forEach(c => { ctx.drawImage(c, 0, y); y += c.height + gap; });
-      return saida;
-    } finally {
-      palco.remove();
+    const semFundo = window.__capturaSemFundo === true;
+    let fundo = null;
+    if (!semFundo) {
+      const folha = document.getElementById('financeiro-container');
+      fundo = folha ? getComputedStyle(folha).backgroundColor : '';
+      if (!fundo || fundo === 'rgba(0, 0, 0, 0)' || fundo === 'transparent') fundo = '#ffffff';
     }
+    return html2canvas(coluna, {
+      scale: 2,
+      backgroundColor: semFundo ? null : fundo,
+      useCORS: true,
+      onclone: doc => {
+        const c = doc.getElementById('finColuna');
+        if (c) { c.style.padding = '24px'; c.style.background = 'transparent'; }
+        // linhas de texto de uma linha só (com reticências) perdiam a base das letras na captura: dá um respiro de altura
+        doc.querySelectorAll('#finColuna [style*="text-overflow"]').forEach(el => { el.style.lineHeight = '1.3'; });
+        const mes = doc.getElementById('finLinhaMes');
+        if (mes) mes.style.justifyContent = 'center'; // sem as setas, o mês fica no meio
+      }
+    });
   }, 'Astro_Hellenic_' + finNomeArquivoRelatorio('png'));
 }
 
