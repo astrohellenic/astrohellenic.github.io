@@ -822,3 +822,7 @@ O branco adaptativo do Céu vale pros dois (condição `faixaZodiaco`). Conferid
 **Sombra no lugar do retículo (estilo reto, 03/10/2026):** no `astrohellenic_reto` o círculo em volta dos ícones que não são do céu (ângulos, lotes, nodos, sizígia) não é mais um traço: é uma SOMBRA translúcida
 embaixo do ícone (dois discos, opacidade .07 e .13, sem filtro/blur pra sair igual em PNG e PDF). No papiro usa `COR_TINTA_SOMBRA` (`#1b2a4a`, azul quase preto da tinta de escrever, `planetIcons.js`); nos outros
 temas, a cor do ícone naquele tema (no Céu, a mesma que muda de branco pra azul-tinta). `roda.js` (`sombraIcone`/`reticuloTinta`) e `iconeAnguloCeuSVG`/`iconeCalculadoCeuSVG` (`semReticulo === 'reto'`). O tracejado e o francês não mudaram (byte a byte).
+
+**Rascunho "Astro Hellenic Invertido" (03/10/2026, `astrohellenic_invertido`):** herda do reto, mas `faixaZodiaco:false` e `invertido:true`: signos num anel só por dentro (do `SignSector` até `signos.fora`, linha única dourada como no francês, número e glifo nas posições
+`signos.numero/glifo`), e termos (`anelTermos`) + dodecatemória (`anelDodec`, na borda) por FORA da faixa dos planetas, com a régua de graus nos dentinhos pra fora. `desenharRodaSVG` usa `aDod`/`aTer`/`inv` (nos outros estilos valem
+os raios de sempre — conferido byte a byte). `R_Ceu` e `raioDestaque` crescem pros anéis de fora. Ainda é rascunho, só na branch: o astrólogo está avaliando o desenho.

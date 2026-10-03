@@ -237,7 +237,7 @@ async function carregarEstiloMandala(userId) {
       .select('estilo_mandala')
       .eq('user_id', userId)
       .maybeSingle();
-    if (!error && data && (data.estilo_mandala === 'astrohellenic' || data.estilo_mandala === 'astrohellenic_reto' || data.estilo_mandala === 'frances')) estilo = data.estilo_mandala;
+    if (!error && data && (data.estilo_mandala === 'astrohellenic' || data.estilo_mandala === 'astrohellenic_reto' || data.estilo_mandala === 'astrohellenic_invertido' || data.estilo_mandala === 'frances')) estilo = data.estilo_mandala;
   } catch (e) {
     console.error("Erro ao carregar o estilo da mandala:", e);
   }
