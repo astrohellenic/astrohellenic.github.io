@@ -12,7 +12,7 @@
    Colunas origem / status / id_externo já existem de olho no webhook (etapa futura):
    hoje tudo nasce 'manual' / 'confirmada'.
 
-   Enquanto o SQL não for rodado, a tela mostra um aviso em vez de quebrar.
+   Se as tabelas não existirem no Supabase, a tela mostra um aviso em vez de quebrar.
    ========================================== */
 
 const FIN_FORMAS_PAGAMENTO = ['Pix', 'Cartão de crédito', 'Cartão de débito', 'Dinheiro', 'Transferência', 'Outro'];
@@ -112,7 +112,7 @@ function renderFinanceiro(container, ctx) {
       <div style="max-width: 480px; margin: 40px auto; background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 24px; text-align: center;">
         <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0 0 10px 0; text-transform: uppercase;">Financeiro</h2>
         <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">
-          As tabelas do Financeiro ainda não existem no Supabase. Rode o SQL de configuração e recarregue a página.
+          Não foi possível carregar o Financeiro (as tabelas "areas" e "entradas" não responderam). Recarregue a página; se continuar, avise o suporte.
         </p>
       </div>`;
     return;
@@ -389,45 +389,3 @@ async function finRecarregarAreas() {
   await iniciarModuloFinanceiro();
   abrirAreasFin();
 }
-
-/* ==========================================
-   SQL DE CONFIGURAÇÃO (rodar uma vez no SQL Editor do Supabase — este
-   arquivo só documenta, não executa nada sozinho):
-
-   create table areas (
-     id uuid primary key default gen_random_uuid(),
-     user_id uuid references auth.users(id) not null,
-     nome text not null,
-     ordem integer not null default 0,
-     created_at timestamptz default now()
-   );
-   alter table areas enable row level security;
-   create policy "Usuário gerencia suas próprias áreas"
-     on areas for all
-     using (auth.uid() = user_id)
-     with check (auth.uid() = user_id);
-
-   create table entradas (
-     id uuid primary key default gen_random_uuid(),
-     user_id uuid references auth.users(id) not null,
-     data date not null,
-     valor numeric(12,2) not null,
-     produto text,
-     area_id uuid references areas(id) on delete set null,
-     mapa_id text, -- id de "mapas" (não é uuid nesse projeto, por isso text)
-     cliente_nome text,
-     observacao text,
-     forma_pagamento text,
-     origem text not null default 'manual',      -- manual | webhook | importacao
-     status text not null default 'confirmada',  -- confirmada | pendente (webhook, no futuro)
-     id_externo text,                            -- id do pagamento no meio de pagamento (evita duplicar)
-     created_at timestamptz default now()
-   );
-   create index entradas_user_data_idx on entradas (user_id, data);
-   create unique index entradas_id_externo_idx on entradas (user_id, id_externo) where id_externo is not null;
-   alter table entradas enable row level security;
-   create policy "Usuário gerencia suas próprias entradas"
-     on entradas for all
-     using (auth.uid() = user_id)
-     with check (auth.uid() = user_id);
-   ========================================== */
