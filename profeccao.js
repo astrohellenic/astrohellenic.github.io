@@ -527,11 +527,11 @@
                         { signIdx: profectedSignIdx, cor: papiro ? TERRACOTA : "#65a30d", de: 24, ate: 32 }
                     ],
                     // coroa sobre o regente do signo profectado do ano
-                    coroa: (profectedSignIdx !== null && SIGNS[profectedSignIdx]) ? {
+                    coroas: (profectedSignIdx !== null && SIGNS[profectedSignIdx]) ? [{
                         rulerId: SIGNS[profectedSignIdx].ruler,
                         preenchimento: papiro ? 'none' : '#f5c518', contorno: papiro ? TERRACOTA : '#a8790a',
                         espessura: papiro ? 1.4 : 0.9, ponto: papiro ? TERRACOTA : '#dc2626'
-                    } : null
+                    }] : []
                 }
             }
         }).svg;

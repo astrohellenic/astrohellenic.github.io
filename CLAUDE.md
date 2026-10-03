@@ -773,10 +773,10 @@ sempre**: pintura de Céu = Astro Hellenic, o resto = francês. **Conferência o
 antes/depois (byte a byte) nos 5 casos — claro, escuro, tinta de papiro, Céu ao vivo e capa — com o estilo padrão e com cada estilo forçado
 (script de teste: ver "Como testar sem login" acima; interceptar `URL.createObjectURL` ou ler `window.mandalaSvgTelaUrlAtual`).
 Preferência vai pro Supabase: `configuracoes.estilo_mandala` (já criada), carregada por `carregarEstiloMandala`, salva por `salvarEstiloMandala` (`supabase.js`).
-**Plano "função global" (etapas):** 1) roda principal em `roda.js` (feita); 2) **Profecção** usa `desenharRodaSVG` (feita, 03/10); 3) Sinastria e 4) Liberação — **ainda têm
-cópia própria do desenho em `sinastria.js` e `liberacao.js`** (e por isso ainda são só francesas). **Como uma ferramenta usa a roda central:** passa
-`ferramenta: { dados, abertura({canvasSize,fundoDisco}) (a tag `<svg>`+defs+fundo que ela sempre montou), fundoEscuro, fragmentoPlaneta(id),
-glowSol(pos, raio, tinta), destaques: { fatias, faixas, coroa } }` + `tintaPapiro: (tema Céu)`; sem cabeçalho nem céu, canvas quadrado. A ferramenta
+**Plano "função global" (etapas):** 1) roda principal em `roda.js` (feita); 2) **Profecção** (feita, 03/10); 3) **Liberação** (feita, 03/10); 4) **Sinastria — ainda tem
+cópia própria do desenho em `sinastria.js`** (por isso ainda é só francesa). **Como uma ferramenta usa a roda central:** passa
+`ferramenta: { dados, loteCasa1, folgaCanvas, abertura({canvasSize,fundoDisco}) (a tag `<svg>`+defs+fundo que ela sempre montou), fundoEscuro,
+fragmentoPlaneta(id), glowSol(pos, raio, tinta), destaques: { fatias, faixas, coroas, depoisDasFaixas(ctx) } }` + `tintaPapiro: (tema Céu)`; sem cabeçalho nem céu, canvas quadrado. A ferramenta
 só decide signos e CORES dos destaques; a posição vem do estilo (`raioDestaque` em `RODA_ESTILOS`). Ver `gerarMandalaSVG` em `profeccao.js` como modelo.
 **Conferência da migração da Profecção (03/10):** SVG antes/depois nos 9 casos (claro/escuro/papiro × sem destaque/com os 3 destaques/só mês) =
 idêntico salvo espaços em branco e 2 diferenças INVISÍVEIS nos glifos do zodíaco (a cópia antiga tinha uma versão velha de `MONOLINE_ZODIAC_SVGS`:
@@ -784,3 +784,7 @@ sem `stroke-miterlimit="10"` e com um ponto de controle em `0` onde o da roda pr
 guarda a sua versão das constantes** (`SIGNS`, `MONOLINE_ZODIAC_SVGS`, `PLANETS_DEF`, `EGYPTIAN_TERMS`, `polarToCart`, `calculateSevenLots`...) — ao migrar
 uma ferramenta, comparar essas constantes com as de `mandala.js` antes (o script de comparação está no histórico desta sessão: normalizar
 espaços e olhar o primeiro ponto de diferença). Hook de teste: `window.__gerarMandalaSVGProfeccao` (não remover sem atualizar os testes).
+
+**Migração da Liberação (03/10):** a Liberação já reaproveitava as constantes globais de `mandala.js` (só os glifos dos signos da UI, `MONOLINE_ZODIAC_SVGS_ZR`, são
+cópia — e nem entram na roda), então o SVG antes/depois nos 12 casos (3 temas × 4 combinações de níveis/saltos/lote) saiu igual salvo espaços em branco. O que é
+só da Liberação continua em `liberacao.js`: cores de pico/salto, rótulos PICO/SALTO (`depoisDasFaixas`, posição = `raioDestaque + 23` do estilo) e as coroas com o número do nível.

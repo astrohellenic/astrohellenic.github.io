@@ -48,7 +48,9 @@ function desenharRodaSVG(o) {
   /* o.ferramenta: a roda como ela é desenhada DENTRO de uma ferramenta (Profecção, Sinastria, Liberação) — sem cabeçalho nem céu,
      canvas quadrado, no mapa que a ferramenta passa. Campos: dados, abertura({canvasSize,fundoDisco}) (a tag <svg> + defs + fundo, como a
      ferramenta sempre fez), fundoEscuro (cor do cartão no tema escuro), fragmentoPlaneta(id), glowSol(pos, raio, tinta),
-     destaques { fatias:[{signIdx,cor}], faixas:[{signIdx,cor,de,ate}], coroa:{signIdx, preenchimento, contorno, espessura, pontos} }. */
+     loteCasa1 (chave do lote na Casa 1; sem ela, o Ascendente), folgaCanvas (px além do raio dos destaques; padrão 40),
+     destaques { fatias:[{signIdx,cor}], faixas:[{signIdx,cor,de,ate}], coroas:[{rulerId, rotulo?:{texto,cor}, preenchimento, contorno, espessura, ponto}],
+     depoisDasFaixas(ctx) (SVG extra da ferramenta, entre as etiquetas e a mancha do Sol; ctx = {cx,cy,house1RefAbs,raioDestaque,lotes,tinta}) }. */
   const ferr = o.ferramenta || null;
   /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
      index.html). Como este SVG vira imagem (Blob -> <img>, ver abaixo),
@@ -200,8 +202,9 @@ function desenharRodaSVG(o) {
   if (!ferr) window.currentLotes = lotes;
 
   let house1RefAbs = ascAbs;
-  if (!ferr && selectedHouse1Lot !== "ASC") {
-    const targetLot = lotes.find(l => l.key === selectedHouse1Lot);
+  const loteCasa1Efetivo = ferr ? (ferr.loteCasa1 || null) : (selectedHouse1Lot !== "ASC" ? selectedHouse1Lot : null);
+  if (loteCasa1Efetivo) {
+    const targetLot = lotes.find(l => l.key === loteCasa1Efetivo);
     if (targetLot) house1RefAbs = targetLot.deg;
   }
 
@@ -321,7 +324,7 @@ function desenharRodaSVG(o) {
   const margemVertical = 10;
   const R_OuterLine = 399;
   // Ferramentas (Profecção...): canvas QUADRADO, sem cabeçalho nem céu. A folga acompanha o raio dos destaques do estilo.
-  const R_canvasFerr = Math.max(maxRaioItens + 50, Math.max(R_OuterLine, estiloRoda.raioDestaque) + 40);
+  const R_canvasFerr = Math.max(maxRaioItens + 50, Math.max(R_OuterLine, estiloRoda.raioDestaque) + ((ferr && ferr.folgaCanvas) || 40));
   const cy = ferr ? R_canvasFerr : R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
   const headerH = 75;
@@ -637,6 +640,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
   /* ETIQUETAS: faixas sólidas na borda externa, uma ao lado da outra (de/ate = deslocamento a partir de raioDestaque). */
   if (destaques) (destaques.faixas || []).forEach(f => { svg += faixaDestaque(f.signIdx, f.cor, estiloRoda.raioDestaque + f.de, estiloRoda.raioDestaque + f.ate); });
+  if (destaques && destaques.depoisDasFaixas) svg += destaques.depoisDasFaixas({ cx, cy, house1RefAbs, raioDestaque: estiloRoda.raioDestaque, lotes, tinta });
 
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
@@ -745,21 +749,20 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       </g>`;
     });
 
-  /* COROA sobre o regente do signo destacado (Profecção). */
-  if (destaques && destaques.coroa) {
-    const c = destaques.coroa;
+  /* COROAS sobre o regente de cada signo destacado (Profecção: uma; Liberação: uma por regente, com o número dos níveis em cima). */
+  if (destaques) (destaques.coroas || []).forEach(c => {
     const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === c.rulerId);
-    if (rulerItem) {
-      const rCoroa = pR + (rulerItem.eclLat * latPxPerGrau) + (estiloRoda.planetaComDesvio ? (rulerItem.rOffset || 0) : 0);
-      const pCoroa = polarToCart(cx, cy, rCoroa, estiloRoda.planetaComDesvio ? rulerItem.aShift : rulerItem.aScreen);
-      svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${c.preenchimento}" stroke="${c.contorno}" stroke-width="${c.espessura}" stroke-linejoin="round"/>
+    if (!rulerItem) return;
+    const rCoroa = pR + (rulerItem.eclLat * latPxPerGrau) + (estiloRoda.planetaComDesvio ? (rulerItem.rOffset || 0) : 0);
+    const pCoroa = polarToCart(cx, cy, rCoroa, estiloRoda.planetaComDesvio ? rulerItem.aShift : rulerItem.aScreen);
+    const rotulo = c.rotulo ? `<text x="0" y="-11" font-size="9" font-weight="900" fill="${c.rotulo.cor}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2.5" paint-order="stroke fill">${c.rotulo.texto}</text>` : '';
+    svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
+                    ${rotulo}<path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${c.preenchimento}" stroke="${c.contorno}" stroke-width="${c.espessura}" stroke-linejoin="round"/>
                     <circle cx="0" cy="-7" r="1.6" fill="${c.ponto}"/>
                     <circle cx="-9" cy="-2" r="1.3" fill="${c.ponto}"/>
                     <circle cx="9" cy="-2" r="1.3" fill="${c.ponto}"/>
                 </g>`;
-    }
-  }
+  });
 
   svg += `</svg>`;
   return { svg, width, height, papiroNaTela, ceuParams };
