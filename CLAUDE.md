@@ -713,3 +713,23 @@ no meio da tela com o resto vazio.
 - **A ferramenta Agenda ainda usa colunas de 480px** (`max-width: 480px` em
   `agendamento.js`) — o mesmo "estreitinho" que a página de Configurações
   evita; não foi mexida por não ter sido pedida.
+
+## Mandala no céu ou no papiro, e capa Céu ou Papiro (03/10/2026)
+
+- **Botão `#btn-mandala-papiro`** (`index.html`, no `#mandala-actions-overlay`, entre a Matriz de Visibilidade e a
+  Revolução Solar): só aparece no Tema Céu (`body.tema-ceu`). `alternarMandalaPapiro` (`mandala.js`) liga/desliga
+  `window.mandalaPapiroTela` e redesenha. Fica no modo escolhido até apertar de novo; **não é salvo** (ao recarregar
+  abre no céu). Em `renderMandala`, o modo papiro desenha a roda "tinta sobre papiro" (`tintaPapiro`) e a folha de papiro
+  cobre o palco por uma classe no body (`mandala-papiro-tela`, em `index.html`); o céu continua pintado por baixo
+  (inline), então as outras ferramentas e a volta pro céu não perdem nada. `abrirModuloTecnica` tira a classe ao sair da Mandala.
+- **"Adicionar ao Relatório" da Mandala** (`capturarMandalaAtualParaRelatorio`) manda o que está na tela: no papiro, a roda
+  em tinta sem fundo; no céu, a mandala com o céu (PNG reduzido a 1600px por `relatorioRedimensionarPngDataUrl`).
+- **Capa Céu ou Papiro** por modelo: `blocoCapa.capaPapiro` (checkbox/radio `#relCapaPapiro` no editor, só visível no Tema
+  Céu, mas existe sempre pra não perder a escolha salva). Papiro = `rel-capa-papiro` (folha inteira, título terracota); com a
+  Mandala Natal/Fortuna usa a roda em tinta (`png1`/`png2`), não a do céu.
+- **Como testar sem login/Supabase** (foi assim em 03/10): servir a pasta com `http-server`, abrir `index.html` no
+  Chromium (Playwright), stubar `window.supabase`, interceptar o motor de astrologia com JSON falso, setar
+  `window.temaMandala='ceu'` + `body.tema-ceu`, `executarCalculo({soCalcular:true})` e chamar `renderMandala()` /
+  `renderizarMandalasDoPreset` + `montarConteudoRelatorioHtml`. Dá pra tirar print e gerar PDF (`page.pdf()`).
+- **Se o deploy não aparecer:** conferir em Actions se há um "pages build and deployment" pro commit (um push de duas
+  refs de uma vez — `main` e a branch — não disparou o Pages em 03/10; empurrar `main` sozinho).
