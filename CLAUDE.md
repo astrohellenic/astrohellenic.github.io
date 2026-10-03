@@ -810,3 +810,11 @@ um bloco de tracejados no Céu); Claro, Escuro, capa e francês no Céu saem id�
 **Branco adaptativo (03/10/2026, depois):** o "branco" do Céu NÃO é branco chapado — é o mesmo dos ícones calculados: azul-esbranquiçado (`#e6eeff`/`#dbe6ff`) de noite/abaixo do horizonte e azul-tinta
 (`#1d3a66`) por cima do céu claro do dia (`ceuParams.dia`). Os tracejados (anéis, dodecatemória, divisas dos termos; `emitirTracejado` em `roda.js`) usam os clips `ceuMeiaTela`/`ceuMeiaTelaBaixo`,
 e o número das casas (faixa do zodíaco do Astro Hellenic via `corNumero` em `montarBandaZodiacoCeuSVG`, e o francês no Céu) usa `corCalculadoCeu(x,y)`. Ícones dos termos no Céu continuam amarelos.
+
+## Dois Astro Hellenic: tracejado e reto (03/10/2026)
+
+`RODA_ESTILOS` (`roda.js`) tem 3 estilos: `frances`, `astrohellenic` (**Estilo Astro Hellenic Tracejado** — a chave ficou a antiga porque é a que já está salva no Supabase e o padrão do Céu, então nada
+mudou pra quem já usava) e `astrohellenic_reto` (**Estilo Astro Hellenic**, a mesma roda com todo traço liso: anéis, divisas da dodecatemória/termos, eixos, retículos dos ícones calculados e divisas da faixa
+do zodíaco). O reto é o tracejado + o botão `retas: true` (e `aneisTracejados`/`eixosTracejados` falsos); `retas` chega às funções de `mandala.js` por `semReticulo === 'reto'` (retículo liso) e `reto` (faixa).
+O branco adaptativo do Céu vale pros dois (condição `faixaZodiaco`). Conferido: francês, tracejado e padrão saem idênticos byte a byte nos 5 casos; o reto tem 0 `dasharray`. `estilo_mandala` aceita os 3 valores
+(`carregarEstiloMandala`), sem coluna nova. **Atenção ao testar: refazer `/tmp/*.main.js` a partir do `origin/main` atual antes de comparar, senão a base é antiga.**

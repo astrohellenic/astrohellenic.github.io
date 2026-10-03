@@ -31,9 +31,18 @@ const RODA_ESTILOS = {
     planetaComDesvio: false       // planeta sempre na posição real
   }
 };
+/* "Astro Hellenic" de linhas retas: a MESMA roda do tracejado (a chave 'astrohellenic' ficou sendo a tracejada porque é a que já estava
+   salva no Supabase e é o padrão do Céu), só que com todos os traços lisos — anéis, divisas, eixos, retículos e divisas da faixa do zodíaco. */
+RODA_ESTILOS.astrohellenic.nome = 'Estilo Astro Hellenic Tracejado';
+RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, {
+  nome: 'Estilo Astro Hellenic',
+  aneisTracejados: false,
+  eixosTracejados: false,
+  retas: true                     // retículos e divisas da faixa do zodíaco também em traço liso
+});
 
 /* Estilo da mandala escolhido em Configurações → Aparência (carregado do Supabase depois do login, ver
-   carregarEstiloMandala em supabase.js): 'frances' ou 'astrohellenic'. Sem escolha ainda: o padrão de sempre — a pintura do
+   carregarEstiloMandala em supabase.js): 'frances', 'astrohellenic' (tracejado) ou 'astrohellenic_reto'. Sem escolha ainda: o padrão de sempre — a pintura do
    Céu já nasceu no desenho Astro Hellenic; todas as outras (claro, escuro, papiro, tinta do relatório) são no francês. */
 function estiloMandalaAtual(naPinturaCeu) {
   if (RODA_ESTILOS[window.estiloMandala]) return window.estiloMandala;
@@ -453,7 +462,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
       cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
       elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
       rTerra: R.Aspects, rAneis: R.SignSector, corUnica: temaCeu ? null : goldColor,
-      corNumero: temaCeu ? corCalculadoCeu : null // números das casas: o mesmo branco/azul-escuro dos ícones calculados
+      corNumero: temaCeu ? corCalculadoCeu : null, reto: !!estiloRoda.retas // números das casas: o mesmo branco/azul-escuro dos ícones calculados
     });
   }
   if (temaCeu) {
@@ -497,7 +506,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   /* No Céu os tracejados (anéis, divisas da dodecatemória e dos termos) são BRANCOS — o mesmo "branco" dos ícones calculados: branco-azulado
      abaixo do horizonte (noite) e azul-marinho escuro sobre o céu claro de dia (acima do horizonte), pra continuar legível. Cada peça é
      desenhada duas vezes, uma recortada pela metade de cima do horizonte e outra pela de baixo (os mesmos recortes da linha da eclíptica). */
-  const tracejadoAdaptativo = temaCeu && estiloRoda.aneisTracejados;
+  const tracejadoAdaptativo = temaCeu && estiloRoda.faixaZodiaco; // as duas variantes do Astro Hellenic (tracejada ou reta) usam o branco adaptativo
   const tintaCimaCeu = tracejadoAdaptativo ? misturarHexCeu('#e6eeff', '#1d3a66', ceuParams.dia) : null;
   const emitirTracejado = (fn, corPadrao) => tracejadoAdaptativo
     ? `<g clip-path="url(#ceuMeiaTela)">${fn(tintaCimaCeu)}</g><g clip-path="url(#ceuMeiaTelaBaixo)">${fn('#e6eeff')}</g>`
@@ -598,8 +607,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
   /* Retículo tracejado em volta dos ícones calculados (não são corpos do céu): faz parte do ESTILO, em qualquer tema. No Céu os
      ícones já o desenham (iconeCalculadoCeuSVG/iconeAnguloCeuSVG, que recebem semReticulo); nos outros temas desenha-se aqui, na tinta do tema. */
-  const reticuloTinta = (r, cor) => estiloRoda.reticulosTracejados ? `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>` : '';
-  const semReticuloCeu = !estiloRoda.reticulosTracejados;
+  const reticuloTinta = (r, cor) => estiloRoda.reticulosTracejados ? `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3"${estiloRoda.retas ? '' : ' stroke-dasharray="3 4"'}/>` : '';
+  const semReticuloCeu = estiloRoda.reticulosTracejados ? (estiloRoda.retas ? 'reto' : false) : true; // true = sem retículo; 'reto' = retículo em traço liso
 
   eixosInternos.forEach(eixo => {
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
