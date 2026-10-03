@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261005a">
+    <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
@@ -1396,14 +1397,10 @@ body {
         body.tema-ceu #liberacaoMandalaCapture { background: transparent !important; border: none !important; box-shadow: none !important; }
         body.tema-ceu #liberacaoArvoreCapture strong { color: #a03e25 !important; }
         body.tema-ceu #liberacaoArvoreCapture thead tr { background: transparent !important; color: #1d3a66 !important; }
-        /* TEMA CÉU — barra lateral, telas de configuração: botões só contornados (nunca preenchidos), caixa de marcar e setas em papiro */
-        body.tema-ceu #sidebar button[onclick="copiarLinkFormulario()"] { background: transparent !important; color: #1d3a66 !important; border: 1.5px solid #1d3a66 !important; box-shadow: none !important; }
-        body.tema-ceu #sidebar button[onclick="salvarConfiguracoesCaptacao()"] { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; box-shadow: none !important; }
+        /* TEMA CÉU — barra lateral: botões só contornados (nunca preenchidos) e caixa de marcar em papiro. (As telas de configuração agora são uma página própria: configuracoes.css.) */
         body.tema-ceu #sidebar button[style*="background: var(--primary-blue)"]:not([onclick="copiarLinkFormulario()"]) { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; box-shadow: none !important; }
         body.tema-ceu #sidebar input[type="checkbox"] { -webkit-appearance: none; appearance: none; background: transparent !important; border: 1.5px solid #1d3a66; border-radius: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
         body.tema-ceu #sidebar input[type="checkbox"]:checked { background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5 L6.5 12 L13 4' fill='none' stroke='%231d3a66' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/80% no-repeat !important; }
-        body.tema-ceu #sidebar button[onclick^="moverBotaoTopo"] { background: transparent !important; color: #1d3a66 !important; border-color: #1d3a66 !important; }
-        body.tema-ceu #sidebar button[onclick^="moverBotaoTopo"]:disabled { background: transparent !important; color: #a03e25 !important; border-color: #a03e25 !important; opacity: 1 !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="163, 230, 53"] { background: rgba(160, 62, 37, 0.20) !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="254, 240, 138"] { background: rgba(107, 74, 43, 0.18) !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="224, 231, 255"] { background: rgba(29, 58, 102, 0.14) !important; }
@@ -1721,6 +1718,18 @@ body {
   <line x1="18" y1="44" x2="26" y2="44"/>
   <line x1="30" y1="44" x2="38" y2="44"/>
 </svg></button>
+<button class="icon-btn" data-modulo-key="configuracoes" onclick="abrirModuloTecnica('configuracoes')" title="Configurações"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="32" cy="32" r="16"/>
+  <circle cx="32" cy="32" r="6"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(45 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(90 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(135 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(180 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(225 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(270 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(315 32 32)"/>
+</svg></button>
 
             </div>
         </div>
@@ -1964,11 +1973,11 @@ body {
 <script src="tz-lookup.js?v=20260919"></script>
 <script src="papiro.js?v=20261005a"></script>
 <script src="dialogos.js?v=20261004c"></script>
-<script src="supabase.js?v=20261005d"></script>
+<script src="supabase.js?v=20261006a"></script>
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261003z"></script>
-<script src="mandala.js?v=20261005a"></script>
+<script src="mandala.js?v=20261006a"></script>
 <script src="isopsefia.js?v=20261003z"></script>
 <script src="profeccao.js?v=20261005a"></script>
 <script src="sinastria.js?v=20261005a"></script>
@@ -1979,8 +1988,9 @@ body {
 <script src="lotes-calculadora.js?v=20261003z"></script>
 <script src="horas.js?v=20261005a"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
-<script src="relatorio.js?v=20261005a"></script>
-<script src="agendamento.js?v=20261003b"></script>
+<script src="relatorio.js?v=20261006a"></script>
+<script src="agendamento.js?v=20261006a"></script>
+<script src="configuracoes.js?v=20261006a"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
      de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão

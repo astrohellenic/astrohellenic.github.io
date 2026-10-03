@@ -8,9 +8,9 @@
 
    O que é "configura uma vez e não mexe mais" (disponibilidade — dias/
    horários que atende — e quais pastas de clientes entram no seletor)
-   NÃO fica aqui, fica em Configurações → Agenda (telas e funções de
-   salvar em supabase.js: abrirConfiguracoesAgenda, carregarConfiguracoesAgenda,
-   salvarDisponibilidadeAgenda, salvarPastasVisiveisAgenda). Este arquivo
+   NÃO fica aqui, fica em Configurações → Agenda (página configuracoes.js:
+   carregarConfiguracoesAgenda, salvarDisponibilidadeAgenda,
+   salvarPastasVisiveisAgenda). Este arquivo
    só LÊ o resultado dessas configurações (agenda_disponibilidade,
    configuracoes.agenda_pastas_visiveis) pra calcular horários livres e
    filtrar a lista de clientes.
@@ -147,7 +147,7 @@ function renderAgendaSetup(container, ctx) {
 
   const avisoSemDisponibilidade = disponibilidade.length === 0
     ? `<div style="font-size: 11px; color: var(--badge-text); background: var(--badge-bg); border: 1px solid var(--badge-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.4;">
-        Você ainda não configurou sua disponibilidade — vá em <strong>Configurações → Agenda</strong> pra escolher os dias/horários que atende antes de marcar um agendamento.
+        Você ainda não configurou sua disponibilidade — vá em <a href="#" onclick="abrirConfiguracoes('agenda'); return false;" style="color: inherit; font-weight: 700;">Configurações → Agenda</a> (engrenagem na barra superior) pra escolher os dias/horários que atende antes de marcar um agendamento.
       </div>`
     : '';
 

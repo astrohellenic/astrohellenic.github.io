@@ -679,3 +679,37 @@ Exceção: o CSS do Relatório (`relatorio.js`) também vai pro PDF, que não te
 `papiroCores()`), não `var()`. E **o JPEG `papiro-folha.js` é gerado a partir de
 `--papiro-fundo`: se as cores mudarem, regerar** (794x1123 px a 1,5x, JPEG
 q80, via Chromium headless).
+
+## Página de Configurações (04/10/2026)
+
+As configurações **não ficam mais no menu lateral** (estreito, uma tela por
+vez, ~4 cliques até uma opção). Viraram uma **página inteira**, módulo
+`configuracoes` (`configuracoes.js` + `configuracoes.css`): botão de engrenagem
+na barra superior, como os das ferramentas (`data-modulo-key="configuracoes"`,
+posição escolhida em Configurações → Aparência → Barra superior; quem já tinha
+ordem salva recebe o botão no fim da barra), navegação de seções à esquerda
+(no celular vira uma fileira de abas que rola) e cartões em `grid auto-fit`
+que se reorganizam sozinhos. **Ocupa a largura toda** — nada de coluna estreita
+no meio da tela com o resto vazio.
+
+- **Seção nova** = uma entrada em `CONFIG_SECOES` (`id`, `titulo`, `icone`,
+  `descricao`, `html()` e, se buscar dados, `depois()`); **configuração nova**
+  = um cartão dentro de uma seção. Classes `.cfg-*` em `configuracoes.css`,
+  que usa as variáveis de cor do software (claro/escuro valem sozinhos) e traz
+  o **Tema Céu** no fim do arquivo (papiro, só tinta).
+- O que o resto do software usa fora da página (carregar tema/estilo dos
+  planetas/ordem dos botões depois do login, `salvarAparencia`,
+  `moverBotaoTopo`, `reRenderizarModuloAtivo`...) continua em `supabase.js`;
+  as telas e os salvamentos que só existem pra elas moram em
+  `configuracoes.js`. Depois de salvar, quem precisa redesenhar a página chama
+  `atualizarTelaConfiguracoes()` (mantém a rolagem; só refaz a seção aberta).
+- Pra outras telas mandarem o astrólogo pra lá: `abrirConfiguracoes('agenda')`
+  (ou `'relatorios'`, `'captacao'`, `'aparencia'`, `'seguranca'`).
+- **Não depende de mapa**: ao recarregar nela, abre na hora e **fica nela**
+  quando o primeiro mapa chega (`window.configuracoesAbertaNoCarregamento`
+  em `mandala.js`); escolher um cliente na lista lateral volta pra Mandala como
+  nas outras ferramentas. Erro do cálculo não apaga a página.
+- Sem `position: sticky` de propósito (ver a seção sobre `sticky` acima).
+- **A ferramenta Agenda ainda usa colunas de 480px** (`max-width: 480px` em
+  `agendamento.js`) — o mesmo "estreitinho" que a página de Configurações
+  evita; não foi mexida por não ter sido pedida.

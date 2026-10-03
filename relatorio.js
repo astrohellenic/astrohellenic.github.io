@@ -8,7 +8,7 @@
    Os presets (nome, textos, quais blocos entram) e o perfil do
    astrólogo (logo, nome, contato) ficam salvos no Supabase, nas tabelas
    relatorio_presets e relatorio_perfil — editáveis em
-   Configurações > Relatórios (telas em supabase.js).
+   Configurações > Relatórios (página configuracoes.js).
    ========================================== */
 
 const RELATORIO_LOT_NOMES = {
@@ -913,7 +913,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
         <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Modelo de Relatório</label>
         <select id="relPresetEscolhido" class="modal-select" style="margin-bottom: 6px;">${opcoesPreset}</select>
         <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">
-          O logo e os seus dados de contato ficam configurados em <strong>Configurações → Relatórios</strong>, no menu lateral. O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
+          O logo e os seus dados de contato ficam configurados em <a href="#" onclick="abrirConfiguracoes('relatorios'); return false;" style="color: var(--primary-blue); font-weight: 700;">Configurações → Relatórios</a> (botão de engrenagem na barra superior). O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
         </div>
 
         <button type="button" class="btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="confirmarGerarRelatorio()">

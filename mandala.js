@@ -733,8 +733,14 @@ async function executarCalculoInterno(opcoes) {
     const moduloPendente = window.moduloPendenteRestaurar;
     window.moduloPendenteRestaurar = null;
     const moduloAtivo = window.moduloTecnicoAtivo || 'mandala';
+    // Recarregou na página de Configurações (abriu sem esperar o mapa): fica nela. Vale só pra este primeiro
+    // cálculo; depois, escolher um cliente na lista lateral volta pra Mandala como sempre.
+    const ficaNasConfiguracoes = moduloAtivo === 'configuracoes' && window.configuracoesAbertaNoCarregamento;
+    window.configuracoesAbertaNoCarregamento = false;
     if (moduloPendente && typeof abrirModuloTecnica === 'function') {
       abrirModuloTecnica(moduloPendente);
+    } else if (ficaNasConfiguracoes) {
+      // nada a redesenhar: o mapa já está calculado pra quando uma ferramenta for aberta
     } else if (!(opcoes && opcoes.manterModulo) && moduloAtivo !== 'mandala' && moduloAtivo !== 'radix' && typeof abrirModuloTecnica === 'function') {
       abrirModuloTecnica('mandala');
     } else {
@@ -744,7 +750,9 @@ async function executarCalculoInterno(opcoes) {
 
   } catch (err) {
     window.moduloPendenteRestaurar = null;
-    document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
+    window.configuracoesAbertaNoCarregamento = false;
+    // Na página de Configurações o erro do cálculo não deve apagar a tela (ela não depende do mapa).
+    if (window.moduloTecnicoAtivo !== 'configuracoes') document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
     return false;
   }
 }
@@ -2805,6 +2813,11 @@ window.onload = function() {
     try {
       if (ultimoEhMandala) {
         abrirModuloTecnica(ultimoModulo);
+      } else if (ultimoModulo === 'configuracoes') {
+        /* A página de Configurações não depende de mapa: abre na hora (sem esperar o cálculo) e, quando o mapa
+           chegar (executarCalculo), fica onde está em vez de virar a Mandala. */
+        window.configuracoesAbertaNoCarregamento = true;
+        abrirModuloTecnica('configuracoes');
       } else {
         /* Outra ferramenta estava aberta: ainda não há mapa calculado (o fetch acima está em andamento), então
            desenhá-la agora mostraria a tela dela sem dados por uns instantes e depois a Mandala por cima (o

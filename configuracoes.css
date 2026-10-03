@@ -1,0 +1,307 @@
+/* CONFIGURAÇÕES — página inteira (ver configuracoes.js)
+   Layout: navegação de seções à esquerda + cartões que se reorganizam sozinhos (grid auto-fit). Abaixo de 900px
+   a navegação vira uma fileira de abas no topo e os cartões ficam em uma coluna só. Tudo usa as variáveis de cor
+   do software (--bg-card, --border-color, --primary-blue...), então claro e escuro valem sozinhos; o Tema Céu
+   (papiro e tinta) está no fim do arquivo. Sem position:sticky de propósito (ver CLAUDE.md). */
+
+#configuracoes-container {
+  width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding: 20px;
+  font-family: 'Montserrat', sans-serif;
+  color: var(--text-muted);
+}
+
+.cfg-cabecalho {
+  background: var(--bg-main);
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1.5px solid var(--gold-primary);
+  margin-bottom: 20px;
+}
+.cfg-cabecalho h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary-blue);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.cfg-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---- navegação das seções ---- */
+.cfg-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px;
+}
+.cfg-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary-blue);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cfg-nav-item i { color: var(--gold-primary); width: 18px; text-align: center; flex-shrink: 0; }
+.cfg-nav-item:hover { background: var(--bg-hover); }
+.cfg-nav-item.ativa { border-color: var(--primary-blue); background: var(--bg-hover); font-weight: 700; }
+
+/* ---- conteúdo da seção ---- */
+.cfg-conteudo { min-width: 0; }
+.cfg-secao-titulo {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary-blue);
+  margin: 0;
+}
+.cfg-secao-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 4px 0 16px;
+}
+
+.cfg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.cfg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.cfg-card-largo { grid-column: 1 / -1; }
+.cfg-card-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 4px;
+}
+.cfg-card-desc {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+.cfg-card-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.cfg-card-cabecalho .cfg-card-titulo { margin: 0; }
+.cfg-carregando { font-size: 11px; color: var(--text-muted); padding: 8px 0; }
+
+/* ---- opções escolhíveis (tema, ícones) ---- */
+.cfg-opcoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+}
+.cfg-opcao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--primary-blue);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cfg-opcao:hover { background: var(--bg-hover); }
+.cfg-opcao.ativa { border-color: var(--primary-blue); background: var(--bg-hover); }
+.cfg-opcao-corpo { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cfg-opcao-icone { color: var(--gold-primary); font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.cfg-opcao-glifo { font-size: 20px; }
+.cfg-opcao-nome { display: block; font-size: 13px; font-weight: 700; }
+.cfg-opcao-desc { display: block; font-size: 11px; font-weight: 400; line-height: 1.4; color: var(--text-muted); margin-top: 2px; }
+.cfg-opcao-check { color: var(--primary-blue); flex-shrink: 0; }
+
+/* ---- ordem dos botões da barra superior ---- */
+.cfg-ordem {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+}
+.cfg-ordem-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+.cfg-ordem-nome { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; font-weight: 600; color: var(--primary-blue); }
+.cfg-ordem-pos {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 50%; border: 1px solid var(--gold-primary);
+  font-size: 10px; font-weight: 700; color: var(--gold-primary);
+}
+.cfg-ordem-setas { display: flex; gap: 6px; flex-shrink: 0; }
+.cfg-seta {
+  width: 30px; height: 30px;
+  border: 1px solid var(--gold-primary);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--primary-blue);
+  cursor: pointer;
+}
+.cfg-seta:disabled { background: var(--bg-disabled); color: var(--text-disabled); cursor: not-allowed; }
+
+/* ---- formulários ---- */
+.cfg-duas-colunas { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.cfg-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px 16px; }
+.cfg-campos-topo { margin-top: 16px; }
+.cfg-campo-largo { grid-column: 1 / -1; }
+.cfg-rotulo { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 4px; }
+.cfg-linha-campo { display: flex; gap: 8px; }
+.cfg-linha-campo .modal-input { flex: 1; min-width: 0; }
+.cfg-logo-preview { text-align: center; margin-bottom: 8px; }
+.cfg-logo-preview img {
+  max-height: 80px; max-width: 100%;
+  border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px; background: var(--bg-card);
+}
+.cfg-checkbox {
+  display: flex; align-items: center; gap: 8px;
+  margin: 16px 0 4px;
+  font-size: 12px; font-weight: 700; color: var(--primary-blue); cursor: pointer;
+}
+.cfg-checkbox input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-blue); flex-shrink: 0; }
+.cfg-linha {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 0 0; margin-top: 12px;
+  border-top: 1px solid var(--border-color);
+  font-size: 13px; font-weight: 600; color: var(--primary-blue); cursor: pointer;
+}
+.cfg-linha input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-blue); }
+.cfg-conta-email { font-size: 13px; font-weight: 600; color: var(--primary-blue); word-break: break-all; }
+
+/* ---- botões ---- */
+.cfg-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.cfg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--gold-primary);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--primary-blue);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+}
+.cfg-btn:hover { background: var(--bg-hover); }
+.cfg-btn-primario { background: var(--primary-blue); color: var(--bg-sidebar); }
+.cfg-btn-primario:hover { background: var(--primary-blue); filter: brightness(1.1); }
+.cfg-btn-perigo { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+.cfg-btn-tracejado { border-style: dashed; }
+.cfg-btn-bloco { width: 100%; }
+.cfg-btn-pequeno { padding: 5px 10px; font-size: 11px; }
+
+/* ---- agenda ---- */
+.cfg-dias { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 4px 24px; }
+.cfg-dia { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+.cfg-dia > input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; accent-color: var(--primary-blue); }
+.cfg-dia-nome { width: 78px; flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--primary-blue); }
+.cfg-dia-horas { align-items: center; gap: 6px; min-width: 0; }
+.cfg-dia-horas .modal-input { width: 104px; padding: 6px 8px; font-size: 12px; }
+.cfg-dia-horas span { font-size: 11px; color: var(--text-muted); }
+.cfg-pastas { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 12px; }
+.cfg-pasta { margin: 0; font-weight: 600; }
+.cfg-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 0 12px; }
+
+/* ---- celular e telas estreitas ---- */
+@media (max-width: 899px) {
+  #configuracoes-container { padding: 12px; }
+  .cfg-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .cfg-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cfg-nav::-webkit-scrollbar { display: none; }
+  .cfg-nav-item { width: auto; flex: 0 0 auto; white-space: nowrap; }
+  .cfg-duas-colunas { grid-template-columns: minmax(0, 1fr); }
+  .cfg-card { padding: 16px; }
+}
+
+/* ==========================================
+   TEMA CÉU — a página é uma folha de papiro e tudo é só tinta: azul-tinta nas linhas e desenhos, terracota nos
+   títulos e botões de ação, preto no texto. Sem preenchimento e sem sombra. As cores vêm de variáveis
+   redefinidas só aqui dentro (mesmo padrão da Agenda e das outras ferramentas). SÓ PINTURA.
+   ========================================== */
+body.tema-ceu #configuracoes-container {
+  --bg-main: transparent;
+  --bg-card: transparent;
+  --bg-hover: rgba(120, 80, 30, 0.14);
+  --bg-disabled: transparent;
+  --border-color: rgba(95, 65, 30, 0.45);
+  --primary-blue: #1d3a66;
+  --gold-primary: #1d3a66;
+  --text-dark: #1a1410;
+  --text-muted: #1a1410;
+  --text-muted-2: #1a1410;
+  --text-disabled: #a03e25;
+  --danger: #a03e25;
+  --danger-bg: transparent;
+  --danger-border: #a03e25;
+  color: #1a1410;
+  background: var(--papiro-fundo) !important;
+  clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
+}
+body.tema-ceu #configuracoes-container h2,
+body.tema-ceu #configuracoes-container .cfg-secao-titulo { color: #a03e25 !important; }
+body.tema-ceu #configuracoes-container .cfg-cabecalho { border-color: transparent; border-bottom: 1.5px solid #1d3a66; border-radius: 0; }
+body.tema-ceu #configuracoes-container .modal-input,
+body.tema-ceu #configuracoes-container .modal-select { background: transparent !important; color: #1a1410 !important; border: 1.5px solid #1d3a66 !important; border-radius: 6px !important; }
+body.tema-ceu #configuracoes-container .cfg-btn { background: transparent; color: #1d3a66; border: 1.5px solid #1d3a66; }
+body.tema-ceu #configuracoes-container .cfg-btn:hover { background: rgba(120, 80, 30, 0.14); }
+body.tema-ceu #configuracoes-container .cfg-btn-primario,
+body.tema-ceu #configuracoes-container .cfg-btn-perigo { background: transparent; color: #a03e25; border: 1.5px solid #a03e25; filter: none; }
+body.tema-ceu #configuracoes-container .cfg-opcao-check { color: #a03e25; }
+body.tema-ceu #configuracoes-container .cfg-opcao.ativa { border-color: #1d3a66; }
+body.tema-ceu #configuracoes-container .cfg-nav-item.ativa { border-color: #1d3a66; }
+body.tema-ceu #configuracoes-container .cfg-ordem-pos { border-color: #1d3a66; color: #1d3a66; }
+body.tema-ceu #configuracoes-container .cfg-seta:disabled { border-color: #a03e25; color: #a03e25; opacity: 1; }
+body.tema-ceu #configuracoes-container input[type="checkbox"] { -webkit-appearance: none; appearance: none; background: transparent !important; border: 1.5px solid #1d3a66; border-radius: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
+body.tema-ceu #configuracoes-container input[type="checkbox"]:checked { background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5 L6.5 12 L13 4' fill='none' stroke='%231d3a66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / 14px no-repeat !important; }
+body.tema-ceu #configuracoes-container .cfg-logo-preview img { background: transparent; }
+body.tema-ceu #configuracoes-container [style*="box-shadow"] { box-shadow: none !important; }
