@@ -262,9 +262,6 @@ function abrirFormEntradaFin(id) {
       <label style="${lbl}">Data</label>
       <input type="date" id="finData" class="modal-input" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
 
-      <label style="${lbl}">Valor (R$)</label>
-      <input type="text" id="finValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${e ? String(e.valor).replace('.', ',') : ''}" autocomplete="off">
-
       <label style="${lbl}">Cliente</label>
       <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <div id="finSugCliente" style="display: none;"></div>
@@ -286,6 +283,9 @@ function abrirFormEntradaFin(id) {
 
       <label style="${lbl}">Área</label>
       <select id="finArea" class="modal-select">${opcoesArea}</select>
+
+      <label style="${lbl}">Valor (R$)</label>
+      <input type="text" id="finValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${e ? String(e.valor).replace('.', ',') : ''}" autocomplete="off">
 
       <label style="${lbl}">Forma de pagamento</label>
       <select id="finForma" class="modal-select">${opcoesForma}</select>
@@ -318,7 +318,7 @@ function abrirFormEntradaFin(id) {
       if (item.combo.area_id) overlay.querySelector('#finArea').value = item.combo.area_id;
       if (item.combo.valor !== undefined && item.combo.valor !== null && item.combo.valor !== '') overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
     }, true);
-  if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
+  if (!e) setTimeout(() => { try { overlay.querySelector('#finCliente').focus(); } catch (x) {} }, 30);
 }
 
 /* CLIENTE NOVO direto da entrada (quem não tem mapa, ex.: terapia). Entra na pasta "Clientes" como o "Importar Lista em Massa"
