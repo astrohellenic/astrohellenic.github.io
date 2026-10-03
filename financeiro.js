@@ -23,6 +23,7 @@ let finEntradasCache = [];
 let finMapasCache = [];
 let finServicosCache = [];
 let finPastasClientes = ['Clientes']; // pastas cujos mapas aparecem na busca de cliente (configuracoes.financeiro_pastas_clientes)
+let finMapaPorId = {}; // TODOS os mapas por id, pra mostrar o código do cliente mesmo se a pasta dele não está na busca
 let finClienteEscolhido = null; // cliente tocado na busca da janela de entrada ({id, nome, codigo})
 let finMes = null; // { ano, mes } — mes de 0 a 11
 
@@ -56,6 +57,12 @@ function finIntervaloDoMes() {
   const prox = mes === 11 ? { a: ano + 1, m: 1 } : { a: ano, m: mes + 2 };
   const fim = `${prox.a}-${String(prox.m).padStart(2, '0')}-01`;
   return { ini, fim };
+}
+
+/* "0150 - Nome" quando a entrada está ligada a um cliente cadastrado (o código é da organização do astrólogo); senão só o nome gravado */
+function finNomeClienteEntrada(e) {
+  const m = e.mapa_id && finMapaPorId[String(e.mapa_id)];
+  return m ? finRotuloCliente(m) : e.cliente_nome;
 }
 
 /* PONTO DE ENTRADA DO MÓDULO — chamado por abrirModuloTecnica('financeiro') (supabase.js) */
@@ -97,6 +104,8 @@ async function iniciarModuloFinanceiro() {
       ? configRes.data.financeiro_pastas_clientes
       : ['Clientes'];
     const todosMapas = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
+    finMapaPorId = {};
+    todosMapas.forEach(m => { finMapaPorId[String(m.id)] = m; });
     finMapasCache = todosMapas
       .filter(m => finPastasClientes.includes(m.pasta))
       .sort((a, b) => finRotuloCliente(a).localeCompare(finRotuloCliente(b), 'pt-BR', { numeric: true }));
@@ -156,7 +165,7 @@ function renderFinanceiro(container, ctx) {
         <div onclick="abrirFormEntradaFin('${e.id}')" style="display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--border-color); cursor: pointer;">
           <div style="font-size: 12px; color: var(--text-muted);">${finFormatarDataBR(e.data)}</div>
           <div style="min-width: 0;">
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(e.cliente_nome || 'Sem cliente')}</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(finNomeClienteEntrada(e) || 'Sem cliente')}</div>
             <div style="font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml([area, detalhe, e.forma_pagamento].filter(Boolean).join(' · '))}</div>
           </div>
           <div style="font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap;">${finFormatarMoeda(e.valor)}</div>
@@ -228,7 +237,7 @@ function abrirFormEntradaFin(id) {
   finClienteEscolhido = null;
   let clienteInicial = '';
   if (e && e.cliente_nome) {
-    const m = e.mapa_id && finMapasCache.find(x => String(x.id) === String(e.mapa_id));
+    const m = e.mapa_id && finMapaPorId[String(e.mapa_id)];
     if (m) { finClienteEscolhido = m; clienteInicial = finRotuloCliente(m); }
     else { if (e.mapa_id) finClienteEscolhido = { id: e.mapa_id, nome: e.cliente_nome, codigo: null }; clienteInicial = e.cliente_nome; }
   }
