@@ -842,3 +842,5 @@ Só no Comum — os outros estilos mantêm a régua amarela de sempre (conferido
 **Estilo comum (chave `comum`, 03/10/2026) — aplicado:** o desenho aprovado é a mandala "comum" dos sites por aí (nome definido pelo astrólogo). Layout final: miolo de aspectos 150; número da casa (176) e glifo grande (216, 42px) logo depois, dentro da cunha entre
 as divisas; planetas, nodos e sizígia na eclíptica (`raioPlanetas` 343); ASC/DSC/MC/IC (`raioAngulos` 413) e lotes (`raioLotes` 420) ENCOSTADOS nos dentinhos (régua 7/12/18); termos 446–472 e dodecatemória 472–498; mesmo tamanho total do Astro Hellenic.
 Opções em Configurações → Aparência: Astro Hellenic, Astro Hellenic Tracejado, Estilo comum, Estilo francês. `estilo_mandala` aceita `comum`.
+
+**Comum sem sombra (03/10/2026):** o Estilo comum NÃO tem a sombra translúcida embaixo dos ícones calculados (`reticulosTracejados: false` no estilo): só os ícones normais, como no francês. A sombra é do Astro Hellenic (reto).

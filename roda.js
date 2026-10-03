@@ -45,6 +45,7 @@ RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, 
 RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   nome: 'Estilo comum',
   invertido: true,
+  reticulosTracejados: false,     // sem a sombra embaixo dos ícones calculados: só os ícones normais
   faixaZodiaco: false,            // sem a faixa dupla na cor do elemento: signos em linha única, como no francês
   raios: { Aspects: 150, SignSector: 233, Dodec: 256, Termos: 280 }, // miolo maior
   signos: { fora: 300, numero: 176, glifo: 216, glifoTam: 42 },   // número da casa e glifo logo depois do miolo: a cunha inteira entre duas divisas é o signo e a casa  // anel dos signos (de raios.SignSector até 'fora')
