@@ -389,6 +389,10 @@ function abrirModalNovoMapa() {
   document.getElementById('modalData').value = "";
   document.getElementById('modalHora').value = "";
   document.getElementById('modalCidadeInput').value = "";
+  document.getElementById('modalWhatsapp').value = "";
+  document.getElementById('modalEmail').value = "";
+  // a cidade do mapa anterior não pode "vazar" pra este: volta pro padrão (São Paulo) até escolher outra
+  selectedCityGeo = { lat: -23.5505, lon: -46.6333, name: "São Paulo, SP" };
   document.getElementById('cityResultsList').style.display = "none";
   document.getElementById('modalOverlay').style.display = "flex";
 }
@@ -442,106 +446,56 @@ function selecionarCidadeModal(nomeFormatado, lat, lon, containerId, isEdit) {
   document.getElementById(containerId).style.display = "none";
 }
 
-function confirmarNovoMapaModal() {
+let salvandoNovoMapa = false;
+
+/* "SALVAR MAPA" DO MODAL "NOVO MAPA": só SALVA (com pasta, tipo, WhatsApp e e-mail) — não calcula nem troca o mapa que
+   está na tela. Pra ver o mapa, o astrólogo clica nele na lista depois. */
+async function salvarNovoMapaModal() {
+  if (salvandoNovoMapa) return;
   const codDigitado = document.getElementById('modalCodigo').value.trim();
   const nome = document.getElementById('modalNome').value.trim();
   const dataStr = normalizarDataNascimento(document.getElementById('modalData').value);
   const horaStr = normalizarHoraNascimento(document.getElementById('modalHora').value);
+  const whatsapp = document.getElementById('modalWhatsapp').value.trim();
+  const email = document.getElementById('modalEmail').value.trim();
+  const pasta = (document.getElementById('modalPasta') && document.getElementById('modalPasta').value) || ((typeof activeFolder !== 'undefined' && activeFolder) ? activeFolder : "Clientes");
+  const tipo = (document.getElementById('modalTipoMapa') && document.getElementById('modalTipoMapa').value) || 'Natal';
 
   if (!nome) { alert("Informe o nome."); return; }
   if (!dataStr) { alert("Data inválida. Use o formato DD/MM/AAAA (ex.: 11/06/1999)."); return; }
   if (horaStr === null) { alert("Horário inválido. Use o formato HH:MM (ex.: 18:28), de 00:00 a 23:59."); return; }
   if (!horaStr) { alert("Informe o horário."); return; }
 
-  const partesData = dataStr.split('/');
-  const dia = partesData[0], mes = partesData[1], ano = partesData[2];
-
-  const partesHora = horaStr.split(':');
-  const h = partesHora[0] || 12, m = partesHora[1] || 0;
-
-  const fusoReal = calcularFusoPreciso(selectedCityGeo.lat, selectedCityGeo.lon, parseInt(ano), parseInt(mes), parseInt(dia), parseInt(h), parseInt(m));
-  const codigoFinal = codDigitado !== "" ? codDigitado : null;
-  const cidadeFinal = selectedCityGeo.name;
-  const latFinal = selectedCityGeo.lat;
-  const lonFinal = selectedCityGeo.lon;
-
-  const mapaAnteriorId = currentMapaId;
-
-  currentSubjectName = nome;
-  currentCustomCode = codigoFinal;
-  currentMapaId = null; // ainda não tem id — só ganha um depois que salvarNovoMapaAutomaticamente() inserir e devolver a linha
-  currentRascunhoId = null;
-  window.currentMapType = "Natal";
-
-  // Mesma lógica de isolamento de aplicarDadosDoPerfilNoMapa: um cliente
-  // novo nunca começa com as capturas de tela de quem estava carregado
-  // antes. Sem pool pra buscar ainda (mapaId só existe depois do insert
-  // em salvarNovoMapaAutomaticamente), então só limpa.
-  if (mapaAnteriorId) window.relatorioCapturas = {};
-  currentMoment = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), parseInt(h), parseInt(m));
-  currentGeo = { lat: latFinal, lon: lonFinal, fuso: fusoReal, city: cidadeFinal };
-
-  try {
-    localStorage.setItem('astro_ultimo_perfil', JSON.stringify({
-      nome, dataNascimento: dataStr, horaNascimento: horaStr, codigo: codigoFinal,
-      id: null, tipo: 'Natal', latitude: latFinal, longitude: lonFinal, fuso: fusoReal, cidade: cidadeFinal
-    }));
-  } catch (e) {}
-
-  fecharModalNovoMapa();
-  executarCalculo();
-
-  salvarNovoMapaAutomaticamente({
-    nome, dataStr, horaStr, codigo: codigoFinal, cidade: cidadeFinal, lat: latFinal, lon: lonFinal
-  });
-}
-
-/* SALVA AUTOMATICAMENTE O MAPA RECÉM-CRIADO PELO MODAL "NOVO MAPA ASTRAL", NA PASTA ATIVA */
-async function salvarNovoMapaAutomaticamente(dados) {
-  if (typeof supabaseClient === 'undefined') return;
-  const pastaAlvo = (typeof activeFolder !== 'undefined' && activeFolder) ? activeFolder : "Clientes";
-
+  salvandoNovoMapa = true;
   try {
     let userId = null;
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (user) userId = user.id;
 
-    const { data: linhaInserida, error } = await supabaseClient
-      .from('mapas')
-      .insert([{
-        pasta: pastaAlvo,
-        tipo: 'Natal',
-        codigo: dados.codigo,
-        nome: dados.nome,
-        data_nascimento: dados.dataStr,
-        hora_nascimento: dados.horaStr,
-        cidade: dados.cidade,
-        latitude: dados.lat,
-        longitude: dados.lon,
-        user_id: userId
-      }])
-      .select()
-      .single();
+    const { error } = await supabaseClient.from('mapas').insert([{
+      pasta,
+      tipo,
+      codigo: codDigitado !== "" ? codDigitado : null,
+      nome,
+      data_nascimento: dataStr,
+      hora_nascimento: horaStr,
+      cidade: selectedCityGeo.name,
+      latitude: selectedCityGeo.lat,
+      longitude: selectedCityGeo.lon,
+      whatsapp: whatsapp || null,
+      email: email || null,
+      user_id: userId
+    }]);
 
-    if (!error) {
-      // só assume o id se o astrólogo ainda estiver olhando pro mesmo
-      // nativo (ele pode ter trocado de mapa enquanto isso salvava)
-      if (linhaInserida && currentSubjectName === dados.nome && currentCustomCode == dados.codigo) {
-        currentMapaId = linhaInserida.id;
-        try {
-          const perfilSalvo = JSON.parse(localStorage.getItem('astro_ultimo_perfil') || 'null');
-          if (perfilSalvo && perfilSalvo.nome === dados.nome && perfilSalvo.codigo == dados.codigo) {
-            perfilSalvo.id = linhaInserida.id;
-            localStorage.setItem('astro_ultimo_perfil', JSON.stringify(perfilSalvo));
-          }
-        } catch (e) {}
-      }
-      if (typeof carregarMapasDoBanco === 'function') carregarMapasDoBanco(pastaAlvo);
-    } else {
-      alert("O mapa foi carregado na tela, mas houve um erro ao salvá-lo automaticamente: " + error.message);
-    }
+    if (error) { alert("Erro ao salvar o mapa: " + error.message); return; }
+
+    fecharModalNovoMapa();
+    if (typeof carregarMapasDoBanco === 'function' && typeof activeFolder !== 'undefined' && activeFolder) carregarMapasDoBanco(activeFolder);
+    alert(`Mapa "${nome}" salvo na pasta "${pasta}".`);
   } catch (err) {
-    alert("O mapa foi carregado na tela, mas houve um erro de conexão ao salvá-lo automaticamente.");
+    alert("Erro de conexão ao salvar o mapa.");
+  } finally {
+    salvandoNovoMapa = false;
   }
 }
 
