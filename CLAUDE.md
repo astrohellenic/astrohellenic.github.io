@@ -767,7 +767,7 @@ raios dos anéis, `faixaZodiaco`, `aneisTracejados`, `eixosTracejados`, `raioLot
 nova** (e, se precisar de geometria que não cabe nesses botões, um ramo novo em `desenharRodaSVG`). Mudou o francês ou o Astro Hellenic? É ali.
 Duas coisas SEPARADAS dentro da função — **nunca misturar**: `temaCeu` = PINTURA/decoração de céu (céu, Terra no miolo, planetas como pontos
 de luz, ícones do Céu, **cor** branca dos eixos); `estiloRoda` = POSIÇÃO/forma (inclusive se os eixos ASC-DSC/MC-IC são tracejados: faz parte do
-estilo — liso no francês, tracejado no Astro Hellenic, em qualquer tema).
+estilo — liso no francês, tracejado no Astro Hellenic, em qualquer tema). **O mesmo vale pro retículo tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos): `reticulosTracejados` — só no Astro Hellenic, em qualquer tema; no francês não existe, nem no Céu.**
 `estiloMandalaAtual(temaCeu)`: se o astrólogo escolheu (`window.estiloMandala`) vale a escolha em qualquer tema; **sem escolha, o padrão de
 sempre**: pintura de Céu = Astro Hellenic, o resto = francês. **Conferência obrigatória ao mexer em `desenharRodaSVG`:** comparar o SVG
 antes/depois (byte a byte) nos 5 casos — claro, escuro, tinta de papiro, Céu ao vivo e capa — com o estilo padrão e com cada estilo forçado
