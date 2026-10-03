@@ -211,7 +211,7 @@ function renderFinanceiro(container, ctx) {
               <button type="button" class="fin-ico-btn" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btnIco}">
                 <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
               </button>
-              <button type="button" class="fin-ico-btn" id="finBtnPdf" onclick="baixarEntradasPDF()" title="Salvar em PDF" style="${btnIco}">
+              <button type="button" class="fin-ico-btn" id="finBtnPdf" onclick="imprimirEntradasPDF()" title="Salvar em PDF" style="${btnIco}">
                 <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18,22 V8 H46 V22"/><rect x="8" y="22" width="48" height="24" rx="4"/><path d="M18,38 H46 V58 H18 Z"/><circle cx="47" cy="30" r="1.5"/></svg>
               </button>
             </div>
@@ -239,37 +239,52 @@ function navegarMesFin(delta) {
 }
 
 /* ---------- RELATÓRIO DO MÊS (imagem e PDF) ----------
-   Uma folha A4 por página, montada à mão (linhas de altura fixa): o servidor de PDF (api/gerar-pdf.js) conta as
-   folhas pela classe .rel-page e refaz o PDF "folha por folha" se o Chrome paginar diferente, então cada página
-   daqui TEM que ser um .rel-page e caber certinho em 297mm. */
+   O PDF tem o MESMO desenho da tela (título, mês, cartão do total com as áreas e a lista), em páginas A4. Tudo em
+   px com alturas fixas (linha da lista = 50px etc.), pra reparti-las nas páginas sem medir nada. O servidor de PDF
+   (api/gerar-pdf.js) conta as folhas pela classe .rel-page e refaz o PDF "folha por folha" se o Chrome paginar
+   diferente, então cada página daqui TEM que ser um .rel-page e caber em 297mm. */
 
-const FIN_REL_ALTURA_LINHA = 10.5;   // mm
-const FIN_REL_CABECALHO = 32;        // mm: faixa do título (só na 1ª página)
-const FIN_REL_TOPO_TABELA = 9;       // mm: linha de títulos das colunas
-const FIN_REL_UTIL = 267;            // mm: 297 - margem de cima (14) - rodapé (16)
+const FIN_PG_ALTURA = 1122;      // px (297mm)
+const FIN_PG_TOPO = 36;          // px
+const FIN_PG_BASE = 44;          // px: rodapé
+const FIN_PG_LINHA = 50;         // px: cada entrada da lista
+const FIN_PG_CABECALHO = 108;    // px: título + mês (só na 1ª página)
 
-function finRelCss(semFundo) {
+/* cores do PDF: com papiro, a tinta do Tema Céu; sem papiro, as cores do tema atual (lidas do CSS) */
+function finCoresPdf(papiro) {
+  if (papiro) {
+    return { fundo: (window.PAPIRO_FOLHA_JPG ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #e8d5a0` : '#e8d5a0'),
+      azul: '#1d3a66', titulo: '#a03e25', total: '#a03e25', texto: '#1a1410', mudo: '#1a1410', borda: 'rgba(95, 65, 30, 0.45)', cartao: 'transparent' };
+  }
+  const v = nome => (getComputedStyle(document.documentElement).getPropertyValue(nome) || '').trim();
+  const azul = v('--primary-blue') || '#103b70';
+  return { fundo: v('--bg-main') || '#ffffff', azul, titulo: azul, total: azul, texto: v('--text-dark') || '#1a1410',
+    mudo: v('--text-muted') || '#666666', borda: v('--border-color') || '#dddddd', cartao: v('--bg-card') || 'transparent' };
+}
+
+function finRelCss(c) {
   return `
-  .finrp-pg { width: 210mm; height: 297mm; padding: 14mm 13mm 16mm 13mm; position: relative; overflow: hidden; background: ${semFundo ? 'transparent' : '#ffffff'}; color: #1a1410; font-family: 'Montserrat', sans-serif; box-sizing: border-box; page-break-after: always; break-after: page; }
+  .finrp-pg { width: 210mm; height: 297mm; padding: ${FIN_PG_TOPO}px 40px 0 40px; position: relative; overflow: hidden; background: ${c.fundo}; color: ${c.texto}; font-family: 'Montserrat', sans-serif; box-sizing: border-box; page-break-after: always; break-after: page; }
   .finrp-pg:last-child { page-break-after: auto; break-after: auto; }
   .finrp-pg * { box-sizing: border-box; margin: 0; padding: 0; }
-  .finrp-faixa { height: ${FIN_REL_CABECALHO - 4}mm; background: #103b70; border-top: 1.2mm solid #c59b27; border-bottom: 0.5mm solid #1d3a66; text-align: center; padding-top: 4.5mm; margin-bottom: 4mm; }
-  .finrp-titulo { font-family: 'Cinzel', serif; font-weight: 800; font-size: 17pt; color: #f3dc8b; letter-spacing: 0.4pt; text-transform: uppercase; line-height: 1.15; }
-  .finrp-periodo { font-family: 'Cinzel', serif; font-weight: 700; font-size: 11pt; color: #f3dc8b; margin-top: 2mm; }
-  .finrp-grade { display: grid; grid-template-columns: 17mm 25mm 1fr 46mm 25mm; column-gap: 3mm; align-items: center; }
-  .finrp-cab { height: ${FIN_REL_TOPO_TABELA}mm; border-bottom: 0.4mm solid #1d3a66; font-family: 'Cinzel', serif; font-weight: 800; font-size: 9pt; color: #103b70; text-transform: uppercase; }
-  .finrp-cab > div:last-child { text-align: right; }
-  .finrp-lin { height: ${FIN_REL_ALTURA_LINHA}mm; border-bottom: 0.2mm solid #b9b3a6; font-size: 8.4pt; line-height: 1.25; }
-  .finrp-lin > div { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .finrp-lin > div:nth-child(1) { color: #5b5346; }
-  .finrp-lin > div:nth-child(3) { color: #103b70; font-weight: 600; }
-  .finrp-lin > div:last-child { text-align: right; font-weight: 700; color: #1a1410; display: block; white-space: nowrap; }
-  .finrp-resumo { margin-top: 7mm; border-top: 0.6mm solid #c59b27; padding-top: 4mm; }
-  .finrp-total-rot { font-family: 'Cinzel', serif; font-weight: 800; font-size: 10pt; color: #103b70; text-transform: uppercase; }
-  .finrp-total-val { font-weight: 800; font-size: 19pt; color: #103b70; margin: 1mm 0 3mm 0; }
-  .finrp-area { display: flex; justify-content: space-between; font-size: 9pt; height: 6.5mm; align-items: center; border-bottom: 0.2mm dotted #b9b3a6; }
-  .finrp-rodape { position: absolute; left: 13mm; right: 13mm; bottom: 7mm; display: flex; justify-content: space-between; font-size: 7pt; color: #7a7263; }
-  .finrp-vazio { padding: 10mm 0; text-align: center; font-size: 10pt; color: #7a7263; }`;
+  .finrp-col { width: 640px; margin: 0 auto; }
+  .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: ${c.titulo}; text-transform: uppercase; line-height: 44px; }
+  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: ${c.azul}; text-transform: uppercase; line-height: 36px; }
+  .finrp-cartao { border: 1px solid ${c.borda}; border-radius: 12px; background: ${c.cartao}; margin-bottom: 14px; overflow: hidden; }
+  .finrp-total { padding: 14px 16px; }
+  .finrp-total-rot { height: 16px; line-height: 16px; font-size: 11px; font-weight: 700; color: ${c.mudo}; text-transform: uppercase; letter-spacing: 0.03em; }
+  .finrp-total-val { height: 32px; line-height: 32px; margin: 2px 0 8px 0; font-size: 26px; font-weight: 800; color: ${c.total}; }
+  .finrp-area { height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .finrp-area span span { color: ${c.mudo}; }
+  .finrp-area strong { color: ${c.azul}; }
+  .finrp-lista { padding: 4px 12px; }
+  .finrp-lin { height: ${FIN_PG_LINHA}px; display: grid; grid-template-columns: 62px 1fr auto; column-gap: 10px; align-items: center; padding: 0 4px; border-bottom: 1px solid ${c.borda}; }
+  .finrp-lin:last-child { border-bottom: 0; }
+  .finrp-data { font-size: 12px; color: ${c.mudo}; }
+  .finrp-nome { font-size: 13px; line-height: 18px; font-weight: 700; color: ${c.azul}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .finrp-det { font-size: 11px; line-height: 15px; color: ${c.mudo}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .finrp-val { font-size: 13px; font-weight: 700; color: ${c.texto}; white-space: nowrap; }
+  .finrp-rodape { position: absolute; left: 40px; right: 40px; bottom: 16px; display: flex; justify-content: space-between; font-size: 9px; color: ${c.mudo}; opacity: 0.8; }`;
 }
 
 /* monta as páginas (HTML) do mês que está na tela */
@@ -277,26 +292,8 @@ function finMontarPaginasRelatorio() {
   const areaPorId = {};
   finAreasCache.forEach(a => { areaPorId[a.id] = a; });
   const { ano, mes } = finMes;
-  const mm2 = String(mes + 1).padStart(2, '0');
-  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-  const periodo = `01/${mm2}/${String(ano).slice(2)} - ${String(ultimoDia).padStart(2, '0')}/${mm2}/${String(ano).slice(2)}`;
   const total = finEntradasCache.reduce((t, e) => t + Number(e.valor || 0), 0);
 
-  const linhaHtml = e => {
-    const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
-    const detalhe = [e.produto, e.observacao].filter(Boolean).join(' — ');
-    return `<div class="finrp-grade finrp-lin"><div>${finFormatarDataBR(e.data)}</div><div>${escapeHtml(area)}</div><div>${escapeHtml(finNomeClienteEntrada(e) || '')}</div><div>${escapeHtml(detalhe)}</div><div>${finFormatarMoeda(e.valor)}</div></div>`;
-  };
-
-  // reparte as linhas nas páginas
-  const porPrimeira = Math.floor((FIN_REL_UTIL - FIN_REL_CABECALHO - FIN_REL_TOPO_TABELA) / FIN_REL_ALTURA_LINHA);
-  const porOutra = Math.floor((FIN_REL_UTIL - FIN_REL_TOPO_TABELA) / FIN_REL_ALTURA_LINHA);
-  const grupos = [];
-  let i = 0;
-  grupos.push(finEntradasCache.slice(i, i + porPrimeira)); i += porPrimeira;
-  while (i < finEntradasCache.length) { grupos.push(finEntradasCache.slice(i, i + porOutra)); i += porOutra; }
-
-  // resumo (total + áreas)
   const subtotais = {};
   finEntradasCache.forEach(e => {
     const chave = e.area_id && areaPorId[e.area_id] ? e.area_id : '_sem';
@@ -306,24 +303,28 @@ function finMontarPaginasRelatorio() {
   const linhasArea = chaves.map(k => {
     const nome = k === '_sem' ? 'Sem área' : areaPorId[k].nome;
     const pct = total > 0 ? Math.round((subtotais[k] / total) * 100) : 0;
-    return `<div class="finrp-area"><span>${escapeHtml(nome)} (${pct}%)</span><strong>${finFormatarMoeda(subtotais[k])}</strong></div>`;
+    return `<div class="finrp-area"><span>${escapeHtml(nome)} <span>(${pct}%)</span></span><strong>${finFormatarMoeda(subtotais[k])}</strong></div>`;
   }).join('');
-  const resumoHtml = `<div class="finrp-resumo"><div class="finrp-total-rot">Total do mês</div><div class="finrp-total-val">${finFormatarMoeda(total)}</div>${linhasArea}</div>`;
-  const alturaResumo = 7 + 4 + 5 + 12 + chaves.length * 6.5 + 4; // mm, com folga
+  const cartaoTotal = `<div class="finrp-cartao finrp-total"><div class="finrp-total-rot">Total do mês</div><div class="finrp-total-val">${finFormatarMoeda(total)}</div>${linhasArea}</div>`;
+  const alturaCartaoTotal = 2 + 28 + 16 + 2 + 32 + 8 + 24 * chaves.length + 14; // borda + padding + conteúdo + margem de baixo
 
-  // o resumo vai na última página se couber; senão numa página só dele
-  const ultimaGrupo = grupos[grupos.length - 1];
-  const usadoUltima = (grupos.length === 1 ? FIN_REL_CABECALHO : 0) + FIN_REL_TOPO_TABELA + ultimaGrupo.length * FIN_REL_ALTURA_LINHA;
-  const resumoSozinho = (FIN_REL_UTIL - usadoUltima) < alturaResumo;
+  const linhaHtml = e => {
+    const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
+    const detalhe = [e.produto, e.observacao].filter(Boolean).join(' — ');
+    return `<div class="finrp-lin"><div class="finrp-data">${finFormatarDataBR(e.data)}</div><div style="min-width: 0;"><div class="finrp-nome">${escapeHtml(finNomeClienteEntrada(e) || 'Sem cliente')}</div><div class="finrp-det">${escapeHtml([area, detalhe, e.forma_pagamento].filter(Boolean).join(' · '))}</div></div><div class="finrp-val">${finFormatarMoeda(e.valor)}</div></div>`;
+  };
 
-  const cabecalhoTabela = '<div class="finrp-grade finrp-cab"><div>Data</div><div>Área</div><div>Cliente</div><div>Serviço / Obs.</div><div>Valor</div></div>';
-  const faixa = `<div class="finrp-faixa"><div class="finrp-titulo">Relatório de Entradas - ${FIN_MESES[mes]} ${ano}</div><div class="finrp-periodo">${periodo}</div></div>`;
+  const util = FIN_PG_ALTURA - FIN_PG_TOPO - FIN_PG_BASE;
+  const porPrimeira = Math.max(1, Math.floor((util - FIN_PG_CABECALHO - alturaCartaoTotal - 10) / FIN_PG_LINHA));
+  const porOutra = Math.max(1, Math.floor((util - 10) / FIN_PG_LINHA));
+  const grupos = [finEntradasCache.slice(0, porPrimeira)];
+  for (let i = porPrimeira; i < finEntradasCache.length; i += porOutra) grupos.push(finEntradasCache.slice(i, i + porOutra));
+
+  const cabecalho = `<div class="finrp-titulo">Entradas</div><div class="finrp-mes">${FIN_MESES[mes]} ${ano}</div>`;
   const paginas = grupos.map((g, idx) => {
-    const ehUltima = idx === grupos.length - 1;
-    const corpo = g.length ? g.map(linhaHtml).join('') : '<div class="finrp-vazio">Nenhuma entrada neste mês.</div>';
-    return (idx === 0 ? faixa : '') + cabecalhoTabela + corpo + (ehUltima && !resumoSozinho ? resumoHtml : '');
+    const lista = g.length ? `<div class="finrp-cartao finrp-lista">${g.map(linhaHtml).join('')}</div>` : '';
+    return `<div class="finrp-col">${idx === 0 ? cabecalho + cartaoTotal : ''}${lista}</div>`;
   });
-  if (resumoSozinho) paginas.push(resumoHtml);
 
   const hoje = finFormatarDataBR(finHojeISO());
   return {
@@ -336,17 +337,39 @@ function finNomeArquivoRelatorio(ext) {
   return `Entradas_${finMes.ano}-${String(finMes.mes + 1).padStart(2, '0')}.${ext}`;
 }
 
+/* Botão da impressora. No Tema Céu pergunta se é pra sair sobre o papiro (como a capa do Relatório); nos outros temas vai direto. */
+function imprimirEntradasPDF() {
+  if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
+  if (!document.body.classList.contains('tema-ceu')) { baixarEntradasPDF(false); return; }
+  fecharModalFin();
+  const overlay = document.createElement('div');
+  overlay.id = 'finModalOverlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
+  overlay.innerHTML = `
+    <div class="modal-box" style="width: 340px; max-width: 100%; box-sizing: border-box;" role="dialog" aria-modal="true">
+      <div style="font-size: 14px; font-weight: 800;">Salvar em PDF</div>
+      <button type="button" class="btn-primary" id="finPdfPapiro" style="width: 100%;">Sobre papiro (tinta sobre papiro)</button>
+      <button type="button" class="btn-secondary" id="finPdfSimples" style="width: 100%;">Sem papiro (fundo liso)</button>
+      <button type="button" class="btn-secondary" id="finPdfCancelar" style="width: 100%;">Cancelar</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#finPdfPapiro').onclick = () => { fecharModalFin(); baixarEntradasPDF(true); };
+  overlay.querySelector('#finPdfSimples').onclick = () => { fecharModalFin(); baixarEntradasPDF(false); };
+  overlay.querySelector('#finPdfCancelar').onclick = fecharModalFin;
+}
+
 /* PDF: manda o HTML pro mesmo servidor de PDF do Relatório (Chrome de verdade) e baixa o resultado */
-async function baixarEntradasPDF() {
+async function baixarEntradasPDF(papiro) {
   if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
   const botao = document.getElementById('finBtnPdf');
   const original = botao ? botao.innerHTML : '';
   if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
   try {
     const { html } = finMontarPaginasRelatorio();
+    const cores = finCoresPdf(papiro === true);
     const doc = `<!doctype html><html><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
-<style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(false)}</style></head><body>${html}</body></html>`;
+<style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(cores)}</style></head><body>${html}</body></html>`;
     const url = (typeof RELATORIO_PDF_API_URL !== 'undefined') ? RELATORIO_PDF_API_URL : 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
     let resposta;
     try {
