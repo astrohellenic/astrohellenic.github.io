@@ -25,9 +25,11 @@ const RODA_ESTILOS = {
     aneisTracejados: true,
     eixosTracejados: true,
     reticulosTracejados: true,    // tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos) — em qualquer tema
-    raioLotes: 190,               // lotes por dentro
+    raioLotes: 209,               // lotes por dentro, ENCOSTADOS nos dentinhos de graus do anel SignSector (que apontam pro miolo)
+    fioLoteDe: 'SignSector',      // o fio dos lotes vai até esses dentinhos
+    reguaTermosPraFora: true,     // dentinhos do anel dos termos apontam pra FORA, na direção dos planetas
     raioDestaque: 498,            // por fora da faixa do zodíaco (pR + 9 graus de latitude)
-    fioPlanetaDe: 'Aspects',      // o fio sai do disco do miolo
+    fioPlanetaDe: 'Termos',       // o fio dos planetas/eclíptica vai até os dentinhos do anel dos termos
     planetaComDesvio: false       // planeta sempre na posição real
   }
 };
@@ -45,6 +47,8 @@ RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, 
 RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   nome: 'Estilo comum',
   invertido: true,
+  reguaTermosPraFora: false,      // o comum tem a sua própria régua (borda de dentro dos termos, pra dentro)
+  fioLoteDe: null,
   reticulosTracejados: false,     // sem a sombra embaixo dos ícones calculados: só os ícones normais
   faixaZodiaco: false,            // sem a faixa dupla na cor do elemento: signos em linha única, como no francês
   raios: { Aspects: 150, SignSector: 233, Dodec: 256, Termos: 280 }, // miolo maior
@@ -593,7 +597,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       const tickLen = inv ? ((deg % 10 === 0) ? 18 : ((deg % 5 === 0) ? 12 : 7)) : ((deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4));
       const rRegua = inv ? aTer[0] : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
       const p1 = polarToCart(cx, cy, rRegua, aScreen);
-      const p2 = polarToCart(cx, cy, rRegua - tickLen, aScreen);
+      const p2 = polarToCart(cx, cy, estiloRoda.reguaTermosPraFora ? rRegua + tickLen : rRegua - tickLen, aScreen);
       out += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${cor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
     }
     return out;
@@ -746,8 +750,12 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
     const raioEfetivo = (item.type === 'lot' ? estiloRoda.raioLotes : pR) + (item.rOffset || 0);
 
-    const p1 = polarToCart(cx, cy, inv ? aTer[0] : R[estiloRoda.fioPlanetaDe], item.aScreen);
-    const p2 = polarToCart(cx, cy, inv ? (item.type === 'lot' ? raioEfetivo + 12 : raioEfetivo + 19) : (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
+    // Fio do ponto até os dentinhos de grau: lotes → régua do anel indicado em fioLoteDe (se o estilo tiver); o resto → régua do anel dos termos
+    const rFio = inv ? aTer[0] : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
+    const fioPraFora = inv || rFio > raioEfetivo; // anel por fora do ponto: o fio sai pra fora; por dentro: pra dentro
+    const p1 = polarToCart(cx, cy, rFio, item.aScreen);
+    const dFio = item.type === 'lot' ? 12 : 19;
+    const p2 = polarToCart(cx, cy, fioPraFora ? raioEfetivo + dFio : raioEfetivo - dFio, item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
     svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
 
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);

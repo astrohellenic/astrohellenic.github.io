@@ -848,3 +848,7 @@ Opções em Configurações → Aparência: Astro Hellenic, Astro Hellenic Trace
 **Mancha de combustão do Sol no papiro (03/10/2026):** antes `roda.js` só desenhava a mancha fora do papiro (`sunItem && !papiro`), então toda roda de papiro saía sem ela. Agora o papiro tem a SUA mancha, "pintada na folha": lavagem de tinta ocre/terracota translúcida
 (`#C98A2B` → `#B5852F` → `#A03E25` → transparente), sem o branco-amarelado do céu, no mesmo raio (`rSobRaiosGlow`) em todos os estilos. Cada mancha leva gradiente de id único (`combustaoPapiro_N`, contador `__combustaoPapiroN`) — a Sinastria desenha duas rodas na mesma
 tela. Vale pra qualquer roda em papiro (Mandala, Profecção, Liberação, Sinastria, Relatório, capa). Claro, escuro e Céu não mudaram (byte a byte).
+
+**Fios e dentinhos no Astro Hellenic (tracejado e reto, 03/10/2026):** o fio dos planetas/nodos/sizígia (tudo que fica na eclíptica) agora vai até os dentinhos do anel dos TERMOS (`fioPlanetaDe: 'Termos'`), que apontam pra FORA, na direção dos planetas
+(`reguaTermosPraFora: true`); antes iam até o miolo. Os lotes ficam ENCOSTADOS nos dentinhos do anel `SignSector` (que apontam pro miolo; `raioLotes: 209`) e o fio deles vai até lá (`fioLoteDe: 'SignSector'`), como ASC/DSC/MC/IC. O Comum desliga isso
+(`reguaTermosPraFora: false`, `fioLoteDe: null`) e tem a régua dele. Francês e Comum conferidos byte a byte; no padrão só muda o Céu (que usa o Astro Hellenic tracejado).
