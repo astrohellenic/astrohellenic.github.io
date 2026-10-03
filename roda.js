@@ -486,9 +486,12 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   // Tema Céu: as divisas dos termos e da dodecatemória são tracejadas (foram postas ali, não são do céu); os dentinhos ficam sólidos.
   const tracejadoCeu = estiloRoda.aneisTracejados ? ' stroke-dasharray="6 4"' : '';
   const tracejadoFinoCeu = estiloRoda.aneisTracejados ? ' stroke-dasharray="3 3"' : '';
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"${tracejadoCeu}/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
+  // No Céu os tracejados (anéis, divisas da dodecatemória e dos termos) são BRANCOS, pra não se confundirem com o amarelo dos ícones dos termos.
+  const corTracejado = (temaCeu && estiloRoda.aneisTracejados) ? '#ffffff' : goldColor;
+  const corTracejadoDodec = (temaCeu && estiloRoda.aneisTracejados) ? 'rgba(255,255,255,0.7)' : tinta.dodecatemoriaLinha;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${corTracejado}" stroke-width="2"${tracejadoCeu}/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${corTracejado}" stroke-width="1.5"${tracejadoCeu}/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${corTracejado}" stroke-width="2"${tracejadoCeu}/>`;
 
   /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
      estrutura da mandala (círculos, raios, dentinhos) sempre por trás
@@ -512,7 +515,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     for (let d = 0; d < 12; d++) {
       const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"${tracejadoFinoCeu}/>`;
+      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${corTracejadoDodec}" stroke-width="0.8"${tracejadoFinoCeu}/>`;
     }
   }
 
@@ -521,7 +524,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     EGYPTIAN_TERMS[s].forEach(term => {
       const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
       const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
+      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${corTracejado}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
       prev = term.deg;
     });
   }
@@ -634,7 +637,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     EGYPTIAN_TERMS[s].forEach(term => {
       const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
       const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
-      const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, goldColor)
+      // papiro: ícones dos termos em ocre (como os eixos); Céu: o amarelo de sempre
+      const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, papiro ? COR_TINTA_OCRE : goldColor)
         .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanho / 2}" y="${pTerm.y - termoIconTamanho / 2}" `);
       svg += termoSvg;
       prev = term.deg;

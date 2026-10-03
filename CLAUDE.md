@@ -799,3 +799,10 @@ Os 5 botões do container esquerdo da Mandala (`#mandala-actions-overlay`: salva
 Font Awesome PREENCHIDOS; agora são SVG monoline (grade 64, `stroke="currentColor"` `stroke-width="3"`, pontas/juntas redondas, 22px), como todos os
 outros ícones do software (o do céu/papiro é o MESMO desenho do Font Awesome `scroll`, só que contornado em vez de preenchido) — a cor vem do `color` do botão em cada tema (dourado, azul-tinta no Céu, claro quando apertado). **Botão novo nesse container = SVG monoline, nunca `<i class="fa-solid ...">`.**
 (Ainda são Font Awesome: os passos de tempo `fa-backward-step`/`fa-forward-step` do canto direito e outros ícones de telas/janelas — não mexidos por não terem sido pedidos.)
+
+## Termos em ocre no papiro; tracejados brancos no Céu (03/10/2026)
+
+Em `roda.js`: (1) na roda em tinta sobre papiro os 60 ícones dos termos saem em `COR_TINTA_OCRE` (como os eixos e os triângulos) — quebra o excesso de azul; no Céu e nos outros
+temas continuam na cor de sempre; (2) no Céu com o estilo Astro Hellenic os TRACEJADOS (os 3 anéis, as divisas da dodecatemória e as divisas dos termos) são brancos (`corTracejado`),
+pra não se confundirem com o amarelo dos ícones dos termos; os dentinhos (traço cheio) e os ícones dos termos ficam amarelos. Conferido: só essas cores mudam (60 ícones no papiro;
+um bloco de tracejados no Céu); Claro, Escuro, capa e francês no Céu saem idênticos.
