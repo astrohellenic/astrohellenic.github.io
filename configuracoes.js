@@ -156,7 +156,7 @@ function htmlCfgAparencia() {
         <p class="cfg-card-desc">Só o <strong>formato</strong> do desenho — onde cada coisa fica. As cores e os ícones não mudam: seguem o tema (Céu, Claro, Escuro, papiro).</p>
         <div class="cfg-opcoes">
           ${opcao("salvarEstiloMandala('astrohellenic_reto')", estiloMandalaEscolhido === 'astrohellenic_reto', fa('fa-bullseye'), 'Estilo Astro Hellenic', 'Faixa do zodíaco com os planetas dentro, linhas retas')}
-          ${opcao("salvarEstiloMandala('astrohellenic_invertido')", estiloMandalaEscolhido === 'astrohellenic_invertido', fa('fa-bullseye'), 'Estilo Astro Hellenic Invertido', 'Signos por dentro em linha única; termos e dodecatemória por fora')}
+          ${opcao("salvarEstiloMandala('comum')", estiloMandalaEscolhido === 'comum', fa('fa-bullseye'), 'Estilo comum', 'Signos e casas por dentro, planetas na eclíptica, régua de graus com termos e dodecatemória por fora')}
           ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', fa('fa-bullseye'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
           ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', fa('fa-chart-pie'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
         </div>

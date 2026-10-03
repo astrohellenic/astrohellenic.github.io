@@ -34,7 +34,7 @@ const RODA_ESTILOS = {
 /* "Astro Hellenic" de linhas retas: a MESMA roda do tracejado (a chave 'astrohellenic' ficou sendo a tracejada porque é a que já estava
    salva no Supabase e é o padrão do Céu), só que com todos os traços lisos — anéis, divisas, eixos, retículos e divisas da faixa do zodíaco. */
 RODA_ESTILOS.astrohellenic.nome = 'Estilo Astro Hellenic Tracejado';
-/* "Invertido" (rascunho): signos num anel único por dentro (linha única, como no francês) e termos + dodecatemória por fora da faixa dos
+/* "Comum" (a mandala de sempre dos sites por aí): signos num anel único por dentro (linha única, como no francês) e termos + dodecatemória por fora da faixa dos
    planetas (termos mais perto, dodecatemória na borda). Os raios dos anéis de fora e do anel dos signos são deste estilo. */
 RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, {
   nome: 'Estilo Astro Hellenic',
@@ -42,12 +42,15 @@ RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, 
   eixosTracejados: false,
   retas: true                     // retículos e divisas da faixa do zodíaco também em traço liso
 });
-RODA_ESTILOS.astrohellenic_invertido = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
-  nome: 'Estilo Astro Hellenic Invertido',
+RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
+  nome: 'Estilo comum',
   invertido: true,
   faixaZodiaco: false,            // sem a faixa dupla na cor do elemento: signos em linha única, como no francês
-  signos: { fora: 300, numero: 247, glifo: 281, glifoTam: 30 },  // anel dos signos (de raios.SignSector até 'fora')
-  raioPlanetas: 373,             // eclíptica dos planetas: entre o anel dos signos (até 300) e os termos (a partir de 446)
+  raios: { Aspects: 150, SignSector: 233, Dodec: 256, Termos: 280 }, // miolo maior
+  signos: { fora: 300, numero: 176, glifo: 216, glifoTam: 42 },   // número da casa e glifo logo depois do miolo: a cunha inteira entre duas divisas é o signo e a casa  // anel dos signos (de raios.SignSector até 'fora')
+  raioLotes: 420,                 // pontos calculados (lotes, nodos, sizígia) encostados nos dentinhos da régua de graus (446, dentinhos de até 12)
+  raioAngulos: 413,               // ASC/DSC/MC/IC também encostados nos dentinhos
+  raioPlanetas: 343,             // eclíptica dos planetas: entre o anel dos signos (até 300) e os termos (a partir de 446)
   anelTermos: [446, 472],         // termos logo por fora da faixa dos planetas
   anelDodec: [472, 498],          // dodecatemória na borda — a roda inteira tem o MESMO tamanho do Astro Hellenic (borda em 498)
   raioDestaque: 498
@@ -559,11 +562,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       for (let d = 0; d < 12; d++) {
         const pt1 = polarToCart(cx, cy, aDod[0], eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
         const pt2 = polarToCart(cx, cy, aDod[1], eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-        out += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${cor}"${tracejadoAdaptativo ? ' stroke-opacity=".75"' : ''} stroke-width="0.8"${tracejadoFinoCeu}/>`;
+        out += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${cor}"${tracejadoAdaptativo && !inv ? ' stroke-opacity=".75"' : ''} stroke-width="${inv ? 1.2 : 0.8}"${tracejadoFinoCeu}/>`; // invertido: divisas da dodecatemória na mesma cor e espessura das outras linhas
       }
     }
     return out;
-  }, tinta.dodecatemoriaLinha);
+  }, inv ? goldColor : tinta.dodecatemoriaLinha);
 
   svg += emitirTracejado(cor => {
     let out = '';
@@ -585,7 +588,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     let out = '';
     for (let deg = 0; deg < 360; deg++) {
       const aScreen = eclToScreenAngle(deg, house1RefAbs);
-      const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
+      const tickLen = inv ? ((deg % 10 === 0) ? 18 : ((deg % 5 === 0) ? 12 : 7)) : ((deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4));
       const rRegua = inv ? aTer[0] : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
       const p1 = polarToCart(cx, cy, rRegua, aScreen);
       const p2 = polarToCart(cx, cy, rRegua - tickLen, aScreen);
@@ -604,19 +607,19 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   }
 
 
-  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
-  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
+  const ascPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), eclToScreenAngle(ascAbs, house1RefAbs));
+  const dscPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${temaCeu ? '#ffffff' : (papiro ? COR_TINTA_OCRE : tinta.inkForte)}" stroke-width="2.5"${estiloRoda.eixosTracejados ? ' stroke-dasharray="9 6"' : ''}/>`; // Tema Céu: branca tracejada (não faz parte do céu, foi "posta" por cima)
 
-  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
-  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
+  const mcPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), eclToScreenAngle(mcAbs, house1RefAbs));
+  const icPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
   svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${temaCeu ? '#ffffff' : (papiro ? COR_TINTA_OCRE : tinta.inkForte)}" stroke-width="2.5"${estiloRoda.eixosTracejados ? ' stroke-dasharray="9 6"' : ''}/>`;
 
   /* A PARTIR DAQUI SÓ ÍCONE — nada de linha/dentinho novo abaixo disso,
      pra manter a estrutura da roda sempre por trás. */
 
      /* DESENHO DOS 4 EIXOS NA PARTE INTERNA (ENCUSTADOS NO ANEL) */
-  const rEixoInterno = R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
+  const rEixoInterno = inv ? estiloRoda.raioAngulos : R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
 
   const eixosInternos = [
     { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },

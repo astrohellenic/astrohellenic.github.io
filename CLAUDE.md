@@ -823,18 +823,22 @@ O branco adaptativo do Céu vale pros dois (condição `faixaZodiaco`). Conferid
 embaixo do ícone (dois discos, opacidade .07 e .13, sem filtro/blur pra sair igual em PNG e PDF). No papiro usa `COR_TINTA_SOMBRA` (`#1b2a4a`, azul quase preto da tinta de escrever, `planetIcons.js`); nos outros
 temas, a cor do ícone naquele tema (no Céu, a mesma que muda de branco pra azul-tinta). `roda.js` (`sombraIcone`/`reticuloTinta`) e `iconeAnguloCeuSVG`/`iconeCalculadoCeuSVG` (`semReticulo === 'reto'`). O tracejado e o francês não mudaram (byte a byte).
 
-**Rascunho "Astro Hellenic Invertido" (03/10/2026, `astrohellenic_invertido`):** herda do reto com `faixaZodiaco:false` e `invertido:true`. Desenho (pedido do astrólogo, depois de ver o 1º rascunho): signos num anel por dentro (número + glifo,
+**Rascunho "Estilo comum" (03/10/2026, `comum`):** herda do reto com `faixaZodiaco:false` e `invertido:true`. Desenho (pedido do astrólogo, depois de ver o 1º rascunho): signos num anel por dentro (número + glifo,
 `signos.numero/glifo`) **sem nenhuma linha** dividindo signos nem planetas; termos (`anelTermos`) por fora da faixa dos planetas e dodecatemória (`anelDodec`) na borda; **os dentinhos de grau ficam na borda de DENTRO dos termos, apontando
 pra dentro**, e **os fios dos planetas/lotes vão pra FORA, até esses dentinhos** (é assim que se vê em que grau cada um encosta). Linhas que existem: miolo (aspectos), divisória termos/dodecatemória e a borda; as linhas radiais da
 dodecatemória e dos termos e os eixos ASC-DSC/MC-IC continuam. Pontos calculados (lotes, ângulos) ficam onde estão. `desenharRodaSVG` usa `aDod`/`aTer`/`inv`; nos outros estilos valem os raios de sempre (conferido byte a byte).
 `R_Ceu` e `raioDestaque` crescem pros anéis de fora. Ainda é rascunho, só na branch.
 
-**Tamanho do Invertido (03/10/2026):** a roda inteira tem EXATAMENTE o mesmo tamanho do Astro Hellenic (SVG com a mesma largura/altura, conferido nos 5 casos). Pra isso os termos (446–472) e a dodecatemória (472–498) entram
+**Tamanho do Comum (03/10/2026):** a roda inteira tem EXATAMENTE o mesmo tamanho do Astro Hellenic (SVG com a mesma largura/altura, conferido nos 5 casos). Pra isso os termos (446–472) e a dodecatemória (472–498) entram
 dentro do mesmo raio e a eclíptica dos planetas sobe pra `raioPlanetas: 373` (entre os signos, até 300, e os termos). `pRCeu = 390` é o raio de REFERÊNCIA pro tamanho total (`R_Ceu`, canvas das ferramentas) — **todo estilo novo tem que caber
 nele**; `pR` é onde os planetas ficam de verdade (`estiloRoda.raioPlanetas`, padrão 390). `temaCeu`/`estiloRoda` agora são definidos antes de `pR`.
 
-**Correção (03/10/2026):** no Invertido o que sai são os CÍRCULOS em volta do anel dos signos — as DIVISAS RADIAIS dos signos (as 12 linhas do miolo até a borda de dentro dos termos) FICAM, como no francês. Uma sessão tinha tirado as divisas por ler "linha
+**Correção (03/10/2026):** no Comum o que sai são os CÍRCULOS em volta do anel dos signos — as DIVISAS RADIAIS dos signos (as 12 linhas do miolo até a borda de dentro dos termos) FICAM, como no francês. Uma sessão tinha tirado as divisas por ler "linha
 dividindo os signos" como se fossem elas; o astrólogo falava dos círculos. **Regra: ele pediu pra MUDAR coisas de posição; só remover o que ele nomear.**
 
-**Dentinho = mesma cor da linha (Invertido, 03/10/2026):** a régua de graus faz parte do círculo da borda de dentro dos termos, então usa a MESMA cor dele (no Céu o branco/azul-tinta adaptativo via `emitirTracejado`; `reguaTermos` em `roda.js`).
-Só no Invertido — os outros estilos mantêm a régua amarela de sempre (conferido byte a byte).
+**Dentinho = mesma cor da linha (Comum, 03/10/2026):** a régua de graus faz parte do círculo da borda de dentro dos termos, então usa a MESMA cor dele (no Céu o branco/azul-tinta adaptativo via `emitirTracejado`; `reguaTermos` em `roda.js`).
+Só no Comum — os outros estilos mantêm a régua amarela de sempre (conferido byte a byte).
+
+**Estilo comum (chave `comum`, 03/10/2026) — aplicado:** o desenho aprovado é a mandala "comum" dos sites por aí (nome definido pelo astrólogo). Layout final: miolo de aspectos 150; número da casa (176) e glifo grande (216, 42px) logo depois, dentro da cunha entre
+as divisas; planetas, nodos e sizígia na eclíptica (`raioPlanetas` 343); ASC/DSC/MC/IC (`raioAngulos` 413) e lotes (`raioLotes` 420) ENCOSTADOS nos dentinhos (régua 7/12/18); termos 446–472 e dodecatemória 472–498; mesmo tamanho total do Astro Hellenic.
+Opções em Configurações → Aparência: Astro Hellenic, Astro Hellenic Tracejado, Estilo comum, Estilo francês. `estilo_mandala` aceita `comum`.
