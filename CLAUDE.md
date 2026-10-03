@@ -852,3 +852,6 @@ tela. Vale pra qualquer roda em papiro (Mandala, Profecção, Liberação, Sinas
 **Fios e dentinhos no Astro Hellenic (tracejado e reto, 03/10/2026):** o fio dos planetas/nodos/sizígia (tudo que fica na eclíptica) agora vai até os dentinhos do anel dos TERMOS (`fioPlanetaDe: 'Termos'`), que apontam pra FORA, na direção dos planetas
 (`reguaTermosPraFora: true`); antes iam até o miolo. Os lotes ficam ENCOSTADOS nos dentinhos do anel `SignSector` (que apontam pro miolo; `raioLotes: 209`) e o fio deles vai até lá (`fioLoteDe: 'SignSector'`), como ASC/DSC/MC/IC. O Comum desliga isso
 (`reguaTermosPraFora: false`, `fioLoteDe: null`) e tem a régua dele. Francês e Comum conferidos byte a byte; no padrão só muda o Céu (que usa o Astro Hellenic tracejado).
+
+**Dentinho = cor da linha também nos Astro Hellenic (03/10/2026):** as duas réguas de grau (dentinhos pra dentro no anel `SignSector`, pra fora no anel dos termos) saem na MESMA cor dos círculos a que pertencem: no Céu, o branco/azul-tinta adaptativo
+(`reguaSignos`/`reguaTermos` + `emitirTracejado`); antes ficavam amarelas. Fora do Céu já eram iguais. Francês e Comum não mudaram; nos Astro Hellenic só muda o Céu (conferido byte a byte). **Regra geral: dentinho de régua nunca tem cor diferente da linha onde nasce.**

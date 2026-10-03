@@ -602,15 +602,21 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
     return out;
   };
-  svg += inv ? emitirTracejado(reguaTermos, goldColor) : reguaTermos(goldColor);
+  svg += (inv || estiloRoda.faixaZodiaco) ? emitirTracejado(reguaTermos, goldColor) : reguaTermos(goldColor); // dentinho = mesma cor da linha a que pertence (nos Astro Hellenic e no Comum, no Céu, o branco/azul-tinta adaptativo)
 
-  for (let deg = 0; deg < (inv ? 0 : 360); deg++) { // no invertido só existe a régua dos termos
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-    const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-    const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
-  }
+  // Régua do anel SignSector (dentinhos pra dentro): no invertido não existe; nos Astro Hellenic tem a mesma cor do círculo (adaptativo no Céu)
+  const reguaSignos = cor => {
+    let out = '';
+    for (let deg = 0; deg < 360; deg++) {
+      const aScreen = eclToScreenAngle(deg, house1RefAbs);
+      const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
+      const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
+      const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
+      out += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${cor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
+    }
+    return out;
+  };
+  if (!inv) svg += estiloRoda.faixaZodiaco ? emitirTracejado(reguaSignos, goldColor) : reguaSignos(goldColor);
 
 
   const ascPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), eclToScreenAngle(ascAbs, house1RefAbs));
