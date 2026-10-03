@@ -2254,6 +2254,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const corCabecalhoCapaAtual = opcoes.corCabecalhoCapaOverride || blocoCapaAtual.corCabecalho;
   const corBordaCapaAtual = opcoes.corBordaCapaOverride || blocoCapaAtual.corBorda;
   const temBordaCapaAtual = opcoes.temBordaCapaOverride != null ? opcoes.temBordaCapaOverride : (blocoCapaAtual.temBorda === true);
+  const capaPapiroAtual = opcoes.capaPapiroOverride != null ? opcoes.capaPapiroOverride : (blocoCapaAtual.capaPapiro === true);
   const corCirculoCapaAtual = opcoes.corCirculoCapaOverride || blocoCapaAtual.corCirculo;
   const temCirculoCapaAtual = opcoes.temCirculoCapaOverride != null ? opcoes.temCirculoCapaOverride : (blocoCapaAtual.temCirculo === true);
   const tamanhoTituloCapaAtual = opcoes.tamanhoTituloCapaOverride || blocoCapaAtual.tamanhoTitulo;
@@ -2341,6 +2342,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
           ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual, corCirculoCapaAtual, temCirculoCapaAtual, tamanhoTituloCapaAtual)}
+          ${relatorioCapaPapiroHtml(capaPapiroAtual)}
 
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
             Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
@@ -2495,6 +2497,25 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
    carregarTemaMandala, chamado logo após o login) — dá pra avisar aqui,
    sem esperar nada, que o Tema Céu (quando ativo) sempre vence essa
    escolha na hora de gerar o relatório de verdade. */
+/* Escolha da capa no Tema Céu: "Céu" (como sempre) ou "Papiro" (folha de papiro inteira, título em terracota, roda em
+   tinta — igual às capas da Profecção/Liberação/Sinastria). Só aparece no Tema Céu, mas o checkbox existe sempre
+   (escondido fora dele) pra uma escolha já salva no modelo não se perder ao editar em outro tema. */
+function relatorioCapaPapiroHtml(capaPapiroAtual) {
+  const ceu = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  return `
+    <div style="${ceu ? '' : 'display: none; '}margin: 0 0 14px 0; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Capa no Tema Céu</div>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">
+          <input type="radio" name="relCapaEstiloCeu" value="ceu" ${capaPapiroAtual ? '' : 'checked'} style="accent-color: var(--primary-blue);"> Capa Céu
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">
+          <input type="radio" name="relCapaEstiloCeu" value="papiro" id="relCapaPapiro" ${capaPapiroAtual ? 'checked' : ''} style="accent-color: var(--primary-blue);"> Capa Papiro (tinta sobre papiro)
+        </label>
+      </div>
+    </div>`;
+}
+
 function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual, corCabecalhoCustomAtual, corBordaCustomAtual, temBordaAtual, corCirculoCustomAtual, temCirculoAtual, tamanhoTituloAtual) {
   const ehCustom = paletaIdAtual === 'custom';
   const fundoCustom = RELATORIO_HEX_RE.test(corFundoCustomAtual) ? corFundoCustomAtual : '#ffffff';
@@ -2806,6 +2827,8 @@ function lerBlocosComCapaDoEditor() {
   }
   const temBordaInput = document.getElementById('relCapaTemBorda');
   blocoCapa.temBorda = temBordaInput ? temBordaInput.checked : false;
+  const capaPapiroInput = document.getElementById('relCapaPapiro');
+  blocoCapa.capaPapiro = capaPapiroInput ? capaPapiroInput.checked : false;
   const temCirculoInput = document.getElementById('relCapaTemCirculo');
   blocoCapa.temCirculo = temCirculoInput ? temCirculoInput.checked : false;
   const tamanhoTituloSelect = document.getElementById('relCapaTamanhoTitulo');
@@ -3027,6 +3050,8 @@ async function atualizarPreviaEditorModelo() {
   const corCabecalhoCapa = corCabecalhoInput ? corCabecalhoInput.value : null;
   const corBordaCapa = corBordaInput ? corBordaInput.value : null;
   const temBordaCapa = temBordaInput ? temBordaInput.checked : false;
+  const capaPapiroInputPrevia = document.getElementById('relCapaPapiro');
+  const capaPapiroCapa = capaPapiroInputPrevia ? capaPapiroInputPrevia.checked : false;
   const corCirculoCapa = corCirculoInput ? corCirculoInput.value : null;
   const temCirculoCapa = temCirculoInput ? temCirculoInput.checked : false;
   const tamanhoTituloCapa = tamanhoTituloSelect ? tamanhoTituloSelect.value : RELATORIO_TAMANHO_TITULO_PADRAO;
@@ -3038,7 +3063,7 @@ async function atualizarPreviaEditorModelo() {
     pane.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
-  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa, temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
+  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa, capaPapiro: capaPapiroCapa, temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
   if (paletaCapa === 'custom') {
     blocoCapaPreview.corFundo = corFundoCapa;
     blocoCapaPreview.corTitulo = corTituloCapa;
@@ -3075,6 +3100,7 @@ async function atualizarPreviaEditorModelo() {
     corCabecalhoCapaOverride: corCabecalhoCapa,
     corBordaCapaOverride: corBordaCapa,
     temBordaCapaOverride: temBordaCapa,
+    capaPapiroOverride: capaPapiroCapa,
     corCirculoCapaOverride: corCirculoCapa,
     temCirculoCapaOverride: temCirculoCapa,
     tamanhoTituloCapaOverride: tamanhoTituloCapa,
@@ -3342,11 +3368,18 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   // escolha da mandala da capa, o texto de fechamento) — não são páginas
   // do corpo do relatório, então nunca entram no map abaixo.
   const blocos = (preset.blocos || []).filter(b => b.type !== 'capa' && b.type !== 'encerramento');
-  const imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa);
+  /* Capa Papiro escolhida no modelo (só vale no Tema Céu): folha de papiro inteira, título em terracota. Com a Mandala
+     Natal/Fortuna na capa, a imagem é a roda em tinta (a mesma das páginas do corpo, png1/png2) e não a roda com céu. */
+  const blocoCapaModelo = (preset.blocos || []).find(b => b.type === 'capa') || {};
+  const capaPapiroEscolhida = capaClasseCeu !== '' && blocoCapaModelo.capaPapiro === true;
+  let imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa);
+  if (capaPapiroEscolhida && (capaFonte === 'mandala_fortuna' ? png2 : (capaFonte === 'mandala_natal' || !capaFonte) ? png1 : null)) {
+    imgCapa = capaFonte === 'mandala_fortuna' ? png2 : png1;
+  }
   /* Tema Céu + capa com a roda da própria mandala: o céu de fundo é o da mandala (ver relatorioCeuFundoCapa).
      A imagem da roda vai dentro de um invólucro do tamanho exato dela; o céu enorme é posicionado em
      porcentagens desse invólucro (alinhado ao centro da roda) e recortado pela folha da capa. */
-  const ceuFundoCapa = (capaClasseCeu && imgCapa && ((capaFonte === 'mandala_fortuna' && imgCapa === png2Capa) || (capaFonte !== 'mandala_fortuna' && imgCapa === png1Capa)))
+  const ceuFundoCapa = (capaClasseCeu && !capaPapiroEscolhida && imgCapa && ((capaFonte === 'mandala_fortuna' && imgCapa === png2Capa) || (capaFonte !== 'mandala_fortuna' && imgCapa === png1Capa)))
     ? relatorioCeuFundoCapa[capaFonte === 'mandala_fortuna' ? 'mandala_fortuna' : 'mandala_natal'] : null;
   const imgCeuFundoHtml = ceuFundoCapa
     ? `<img class="rel-ceu-fundo" alt="" src="${ceuFundoCapa.url}" style="left: ${((ceuFundoCapa.cx - ceuFundoCapa.ext) / ceuFundoCapa.width * 100).toFixed(3)}%; top: ${((ceuFundoCapa.cy - ceuFundoCapa.ext) / ceuFundoCapa.height * 100).toFixed(3)}%; width: ${(ceuFundoCapa.ext * 2 / ceuFundoCapa.width * 100).toFixed(3)}%; height: ${(ceuFundoCapa.ext * 2 / ceuFundoCapa.height * 100).toFixed(3)}%;">`
@@ -3355,7 +3388,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
      Liberação Zodiacal): essas imagens são em tinta sobre o papiro (sem céu), então a capa inteira vira folha de
      papiro (e não o céu escuro, onde a tinta sumiria) e a imagem ocupa a largura da folha. As capas de Mapa Natal
      e Fortuna (Mandala Natal/Fortuna do modelo) continuam com o céu. */
-  const capaPapiro = capaClasseCeu !== '' && !!imgCapa && (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria' || (capaFonte || '').indexOf('liberacao_') === 0);
+  const capaPapiro = capaClasseCeu !== '' && (capaPapiroEscolhida || (!!imgCapa && (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria' || (capaFonte || '').indexOf('liberacao_') === 0)));
   const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
   const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
