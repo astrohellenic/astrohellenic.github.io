@@ -720,14 +720,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   }
   /* Sol sob os raios no PAPIRO: a mesma mancha, mas "pintada na folha" — uma lavagem de tinta ocre/terracota translúcida (sem o branco-amarelado
      do céu, que não existe no papel). Vale pra toda roda em papiro (Mandala, Profecção, Liberação, Sinastria, Relatório, capa). Raio = o de referência
-     (rSobRaiosGlow), igual em todos os estilos. Cada mancha leva o próprio gradiente (id único) pra Sinastria desenhar duas rodas na mesma tela. */
+     (rSobRaiosGlow = 15° do Sol), igual em todos os estilos; a parte de dentro, mais amarela, vai até 8° (combusto: 8/15 = 53% do raio) e a de fora, terracota, de 8° a 15° (sob os raios). Cada mancha leva o próprio gradiente (id único) pra Sinastria desenhar duas rodas na mesma tela. */
   else if (sunItem && papiro) {
     const gid = `combustaoPapiro_${++__combustaoPapiroN}`;
     const posSol = polarToCart(cx, cy, pR, sunItem.aScreen);
     svg += `<defs><radialGradient id="${gid}" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#C98A2B" stop-opacity="0.50"/>
-        <stop offset="35%" stop-color="#B5852F" stop-opacity="0.34"/>
-        <stop offset="68%" stop-color="#A03E25" stop-opacity="0.14"/>
+        <stop offset="0%" stop-color="#D19A2E" stop-opacity="0.52"/>
+        <stop offset="52%" stop-color="#C08A2C" stop-opacity="0.38"/>
+        <stop offset="54%" stop-color="#A03E25" stop-opacity="0.24"/>
         <stop offset="100%" stop-color="#A03E25" stop-opacity="0"/>
       </radialGradient></defs><circle cx="${posSol.x}" cy="${posSol.y}" r="${rSobRaiosGlow}" fill="url(#${gid})"/>`;
   }
