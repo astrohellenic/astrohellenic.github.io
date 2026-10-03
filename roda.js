@@ -48,7 +48,8 @@ function desenharRodaSVG(o) {
   /* o.ferramenta: a roda como ela é desenhada DENTRO de uma ferramenta (Profecção, Sinastria, Liberação) — sem cabeçalho nem céu,
      canvas quadrado, no mapa que a ferramenta passa. Campos: dados, abertura({canvasSize,fundoDisco}) (a tag <svg> + defs + fundo, como a
      ferramenta sempre fez), fundoEscuro (cor do cartão no tema escuro), fragmentoPlaneta(id), glowSol(pos, raio, tinta),
-     loteCasa1 (chave do lote na Casa 1; sem ela, o Ascendente), folgaCanvas (px além do raio dos destaques; padrão 40),
+     loteCasa1 (chave do lote na Casa 1; sem ela, o Ascendente), folgaCanvas (px além do raio dos destaques; padrão 40), rCanvasMinimo (canvas mínimo,
+     pra igualar o tamanho de duas rodas lado a lado; a função devolve rCanvasNatural = o que ESTA roda pediria sozinha),
      destaques { fatias:[{signIdx,cor}], faixas:[{signIdx,cor,de,ate}], coroas:[{rulerId, rotulo?:{texto,cor}, preenchimento, contorno, espessura, ponto}],
      depoisDasFaixas(ctx) (SVG extra da ferramenta, entre as etiquetas e a mancha do Sol; ctx = {cx,cy,house1RefAbs,raioDestaque,lotes,tinta}) }. */
   const ferr = o.ferramenta || null;
@@ -324,7 +325,9 @@ function desenharRodaSVG(o) {
   const margemVertical = 10;
   const R_OuterLine = 399;
   // Ferramentas (Profecção...): canvas QUADRADO, sem cabeçalho nem céu. A folga acompanha o raio dos destaques do estilo.
-  const R_canvasFerr = Math.max(maxRaioItens + 50, Math.max(R_OuterLine, estiloRoda.raioDestaque) + ((ferr && ferr.folgaCanvas) || 40));
+  const R_canvasFerrNatural = Math.max(maxRaioItens + 50, Math.max(R_OuterLine, estiloRoda.raioDestaque) + ((ferr && ferr.folgaCanvas) || 40));
+  // rCanvasMinimo: duas rodas lado a lado (Sinastria) usam o MESMO canvas (o maior dos dois) pra ficarem do mesmo tamanho na tela.
+  const R_canvasFerr = Math.max(R_canvasFerrNatural, (ferr && ferr.rCanvasMinimo) || 0);
   const cy = ferr ? R_canvasFerr : R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
   const headerH = 75;
@@ -765,5 +768,5 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   });
 
   svg += `</svg>`;
-  return { svg, width, height, papiroNaTela, ceuParams };
+  return { svg, width, height, papiroNaTela, ceuParams, rCanvasNatural: R_canvasFerrNatural };
 }
