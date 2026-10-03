@@ -260,7 +260,7 @@ function abrirFormEntradaFin(id) {
       <div style="font-size: 14px; font-weight: 800;">${e ? 'Editar entrada' : 'Nova entrada'}</div>
 
       <label style="${lbl}">Data</label>
-      <input type="date" id="finData" class="modal-input" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
+      <input type="date" id="finData" class="modal-input" max="${finHojeISO()}" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
 
       <label style="${lbl}">Cliente</label>
       <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
@@ -374,6 +374,7 @@ async function salvarEntradaFin(id) {
   const data = document.getElementById('finData').value;
   const valor = finLerValor(document.getElementById('finValor').value);
   if (!data) { alert('Informe a data.'); return; }
+  if (data > finHojeISO()) { alert('Essa data ainda não chegou — só dá para lançar entradas até hoje.'); return; }
   if (valor === null) { alert('Informe um valor válido (ex.: 275,00).'); return; }
 
   // cliente: se o texto bate com um cliente cadastrado, liga o cadastro; senão guarda só o nome digitado
