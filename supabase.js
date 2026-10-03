@@ -276,7 +276,7 @@ function abrirConfiguracoesAparencia() {
       </div>
 
       <div style="font-size: 11px; color: var(--text-muted); margin: 20px 0 16px; line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 16px;">
-        Escolha como a mandala é exibida. Essa preferência fica salva na sua conta.
+        Escolha como o software é exibido. Essa preferência fica salva neste aparelho (cada aparelho ou navegador tem a sua).
       </div>
 
       <div onclick="salvarTemaMandala('claro')" style="${opcaoStyle(temaAtual === 'claro')}">
@@ -496,8 +496,8 @@ async function salvarPerfilRelatorio() {
 
 /* SALVA O MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) ESCOLHIDO NA TELA
    APARÊNCIA. É preferência do NAVEGADOR/APARELHO (localStorage), não da
-   conta — diferente de tema_mandala/estilo_planetas logo abaixo, que são
-   por conta no Supabase. Isso é deliberado: "seguir o tema do aparelho"
+   conta — diferente de estilo_planetas (Supabase). O Tema Céu logo abaixo
+   também é do aparelho (astro_tema_mandala). Isso é deliberado: "seguir o tema do aparelho"
    só faz sentido por aparelho, não tem como isso "valer" num aparelho
    diferente. window.aplicarModoCor vem do script inline em index.html
    (roda antes de supabase.js, pra já aplicar o tema certo sem piscar). */
@@ -507,8 +507,32 @@ function salvarModoCor(modo) {
   abrirConfiguracoesAparencia();
 }
 
-/* CARREGA O TEMA DA MANDALA DO SUPABASE (chamado logo após o login) */
+/* TEMA CÉU (claro/céu): preferência do APARELHO, no localStorage (chave astro_tema_mandala) — igual ao modo de
+   cor claro/escuro. O Céu hoje cobre o software inteiro, então é aparência, não dado da conta; e assim o
+   index.html já abre no tema certo, sem piscar o claro/escuro por trás (ver o script no <head>/<body>).
+   Não migrar de volta pro Supabase por semelhança com a Regra de ouro 2 — decisão do astrólogo (03/10/2026). */
+function lerTemaMandalaLocal() {
+  try {
+    const t = localStorage.getItem('astro_tema_mandala');
+    return (t === 'ceu' || t === 'claro') ? t : null;
+  } catch (e) { return null; }
+}
+
+function aplicarTemaMandala(tema) {
+  window.temaMandala = tema;
+  document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  // Se a mandala já tinha sido desenhada com outro tema, refaz o desenho já com o tema certo.
+  if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
+    if (mandalaEstaNaTela()) renderMandala();
+    else reRenderizarModuloAtivo(); // outra ferramenta aberta: refaz ELA com o tema novo (se ainda esperando o mapa, não faz nada)
+  }
+}
+
+/* CHAMADO LOGO APÓS O LOGIN. Se este aparelho já tem o tema guardado, não há nada a fazer (já foi aplicado na
+   abertura). Só num aparelho que ainda não escolheu: lê UMA VEZ o que estava salvo na conta (tema_mandala, de
+   antes dessa mudança), guarda no aparelho e aplica — quem já usava o Céu não perde a escolha. */
 async function carregarTemaMandala(userId) {
+  if (lerTemaMandalaLocal()) return;
   let tema = 'claro';
   try {
     const { data, error } = await supabaseClient
@@ -518,41 +542,21 @@ async function carregarTemaMandala(userId) {
       .maybeSingle();
     if (!error && data && data.tema_mandala) tema = data.tema_mandala;
   } catch (e) {
-    console.error("Erro ao carregar tema da mandala:", e);
+    console.error("Erro ao ler o tema da mandala da conta:", e);
   }
-  window.temaMandala = tema;
-  document.body.classList.toggle('tema-ceu', tema === 'ceu');
-  // Se a mandala já tinha sido desenhada com o tema padrão antes desse
-  // carregamento terminar, refaz o desenho já com o tema certo.
-  if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
-    if (mandalaEstaNaTela()) renderMandala();
-    else reRenderizarModuloAtivo(); // outra ferramenta aberta: refaz ELA com o tema novo (se ainda esperando o mapa, não faz nada)
-  }
+  try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
+  aplicarTemaMandala(tema);
 }
 
-/* SALVA O TEMA DA MANDALA ESCOLHIDO E ATUALIZA A TELA NA HORA */
-async function salvarTemaMandala(tema) {
-  try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) { alert("Sessão não identificada."); return; }
-
-    const { error } = await supabaseClient
-      .from('configuracoes')
-      .upsert({ user_id: user.id, tema_mandala: tema }, { onConflict: 'user_id' });
-
-    if (!error) {
-      window.temaMandala = tema;
-      document.body.classList.toggle('tema-ceu', tema === 'ceu');
-      if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
-        if (mandalaEstaNaTela()) renderMandala();
-      }
-      abrirConfiguracoesAparencia();
-    } else {
-      alert("Erro ao salvar tema: " + error.message);
-    }
-  } catch (e) {
-    alert("Erro de conexão ao salvar tema.");
+/* SALVA O TEMA ESCOLHIDO NESTE APARELHO E ATUALIZA A TELA NA HORA */
+function salvarTemaMandala(tema) {
+  try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
+  window.temaMandala = tema;
+  document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
+    if (mandalaEstaNaTela()) renderMandala();
   }
+  abrirConfiguracoesAparencia();
 }
 
 /* CARREGA O ESTILO DOS ÍCONES DOS PLANETAS DO SUPABASE (chamado logo após o login) */

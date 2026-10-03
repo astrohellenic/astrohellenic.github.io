@@ -53,6 +53,18 @@ navegação da aba", diferente de preferência, e devem **continuar em
 - `astro_ultimo_perfil` — qual mapa/cliente estava aberto.
 - `relatorioUltimoPreset` — qual modelo de relatório foi usado por
   último.
+- `astro_modo_cor` — modo claro/escuro/automático (aparência do
+  aparelho; "seguir o tema do dispositivo" só faz sentido por aparelho).
+- `astro_tema_mandala` — Tema Céu ou claro (**desde 03/10/2026**; antes
+  era `configuracoes.tema_mandala` no Supabase). Decisão do astrólogo:
+  como o Céu hoje cobre o software inteiro, é aparência do aparelho,
+  igual ao claro/escuro — e precisa estar no `localStorage` pra abrir já
+  no tema certo, lido por um script no `<head>`/início do `<body>` em
+  `index.html` antes de qualquer coisa desenhar (se viesse do Supabase,
+  o claro/escuro apareceria por trás até a resposta chegar e só então o
+  Céu entrava). `carregarTemaMandala` só lê a coluna antiga UMA vez, num
+  aparelho que ainda não escolheu (migração). **Não migrar de volta pro
+  Supabase por semelhança com a Regra de ouro 2.**
 
 Ou seja, a régua não é "localStorage é sempre errado" — é "preferência/
 configuração consciente do astrólogo (algo que ele foi lá e escolheu,
