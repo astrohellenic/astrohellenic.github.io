@@ -828,3 +828,7 @@ temas, a cor do ícone naquele tema (no Céu, a mesma que muda de branco pra azu
 pra dentro**, e **os fios dos planetas/lotes vão pra FORA, até esses dentinhos** (é assim que se vê em que grau cada um encosta). Linhas que existem: miolo (aspectos), divisória termos/dodecatemória e a borda; as linhas radiais da
 dodecatemória e dos termos e os eixos ASC-DSC/MC-IC continuam. Pontos calculados (lotes, ângulos) ficam onde estão. `desenharRodaSVG` usa `aDod`/`aTer`/`inv`; nos outros estilos valem os raios de sempre (conferido byte a byte).
 `R_Ceu` e `raioDestaque` crescem pros anéis de fora. Ainda é rascunho, só na branch.
+
+**Tamanho do Invertido (03/10/2026):** a roda inteira tem EXATAMENTE o mesmo tamanho do Astro Hellenic (SVG com a mesma largura/altura, conferido nos 5 casos). Pra isso os termos (446–472) e a dodecatemória (472–498) entram
+dentro do mesmo raio e a eclíptica dos planetas sobe pra `raioPlanetas: 373` (entre os signos, até 300, e os termos). `pRCeu = 390` é o raio de REFERÊNCIA pro tamanho total (`R_Ceu`, canvas das ferramentas) — **todo estilo novo tem que caber
+nele**; `pR` é onde os planetas ficam de verdade (`estiloRoda.raioPlanetas`, padrão 390). `temaCeu`/`estiloRoda` agora são definidos antes de `pR`.

@@ -46,10 +46,11 @@ RODA_ESTILOS.astrohellenic_invertido = Object.assign({}, RODA_ESTILOS.astrohelle
   nome: 'Estilo Astro Hellenic Invertido',
   invertido: true,
   faixaZodiaco: false,            // sem a faixa dupla na cor do elemento: signos em linha única, como no francês
-  signos: { fora: 300, numero: 247, glifo: 281, glifoTam: 30, divisasAte: 498 },  // anel dos signos (de raios.SignSector até 'fora')
-  anelTermos: [498, 524],         // termos logo por fora da faixa dos planetas
-  anelDodec: [524, 550],          // dodecatemória na borda
-  raioDestaque: 568
+  signos: { fora: 300, numero: 247, glifo: 281, glifoTam: 30 },  // anel dos signos (de raios.SignSector até 'fora')
+  raioPlanetas: 373,             // eclíptica dos planetas: entre o anel dos signos (até 300) e os termos (a partir de 446)
+  anelTermos: [446, 472],         // termos logo por fora da faixa dos planetas
+  anelDodec: [472, 498],          // dodecatemória na borda — a roda inteira tem o MESMO tamanho do Astro Hellenic (borda em 498)
+  raioDestaque: 498
 });
 
 /* Estilo da mandala escolhido em Configurações → Aparência (carregado do Supabase depois do login, ver
@@ -252,7 +253,18 @@ function desenharRodaSVG(o) {
   const min = String(currentMoment.getMinutes()).padStart(2, '0');
 
   const goldColor = tinta.dourado;
-  const pR = 390;
+  /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
+     nunca escolheu) — controla só a decoração de céu/espaço sideral. O
+     tamanho e o layout do desenho continuam iguais nos dois temas. */
+  const temaCeu = !papiro && (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
+  /* ESTILO DA MANDALA (Configurações → Aparência): só o FORMATO do desenho — onde cada coisa fica. "astrohellenic" = o
+     desenho que nasceu no Tema Céu (anéis maiores, faixa do zodíaco na eclíptica com os planetas dentro, divisas
+     tracejadas, lotes por dentro); "frances" = o de sempre. Cores e ícones NÃO dependem disso: seguem o tema
+     (temaCeu/papiro/claro/escuro). Por isso há duas bandeiras separadas: temaCeu = pintura/decoração de céu,
+     estiloRoda = posição das coisas (cada estilo é uma entrada de RODA_ESTILOS). */
+  const estiloRoda = RODA_ESTILOS[estiloMandalaAtual(temaCeu)]; // FORMATO (posição das coisas) — ver RODA_ESTILOS no topo deste arquivo
+  const pRCeu = 390; // raio de referência (o do Astro Hellenic) pro TAMANHO total da roda: todo estilo ocupa o mesmo espaço
+  const pR = estiloRoda.raioPlanetas || pRCeu; // raio da eclíptica onde ficam os planetas (o invertido põe os anéis de fora dentro do mesmo tamanho, então a faixa dos planetas é mais estreita)
 
   /* UNIFICANDO TODOS OS ITENS DA ÓRBITA EXTERNA (Planetas + Eixos + Nodos + Sizígia + Lotes).
      Precisa vir antes do layout vertical (mais abaixo): o tamanho da faixa
@@ -310,27 +322,17 @@ function desenharRodaSVG(o) {
   /* Raio externo da faixa de céu/espaço: precisa cobrir o ponto mais
      distante que qualquer planeta (ou a mancha de combustão) possa
      alcançar nesse mapa específico, senão o planeta "escapa" do céu. */
-  const degToPxPR = (2 * Math.PI * pR) / 360;
+  const degToPxPR = (2 * Math.PI * pRCeu) / 360;
   const rSobRaiosGlow = degToPxPR * 15;
-  let maxRaioItens = pR + rSobRaiosGlow;
+  let maxRaioItens = pRCeu + rSobRaiosGlow;
   outerRingItems.forEach(item => {
     if (item.type === 'lot') return; // lotes ficam bem mais perto do centro, nunca definem o máximo
-    const base = item.type === 'planet' ? pR + (item.eclLat * latPxPerGrau) : pR;
+    const base = item.type === 'planet' ? pRCeu + (item.eclLat * latPxPerGrau) : pRCeu;
     const raio = base + (item.rOffset || 0);
     if (raio > maxRaioItens) maxRaioItens = raio;
   });
 
-  /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
-     nunca escolheu) — controla só a decoração de céu/espaço sideral. O
-     tamanho e o layout do desenho continuam iguais nos dois temas. */
-  const temaCeu = !papiro && (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
-  /* ESTILO DA MANDALA (Configurações → Aparência): só o FORMATO do desenho — onde cada coisa fica. "astrohellenic" = o
-     desenho que nasceu no Tema Céu (anéis maiores, faixa do zodíaco na eclíptica com os planetas dentro, divisas
-     tracejadas, lotes por dentro); "frances" = o de sempre. Cores e ícones NÃO dependem disso: seguem o tema
-     (temaCeu/papiro/claro/escuro). Por isso há duas bandeiras separadas: temaCeu = pintura/decoração de céu,
-     estiloRoda = posição das coisas (cada estilo é uma entrada de RODA_ESTILOS). */
-  const estiloRoda = RODA_ESTILOS[estiloMandalaAtual(temaCeu)]; // FORMATO (posição das coisas) — ver RODA_ESTILOS no topo deste arquivo
-  const R_Ceu = Math.max(maxRaioItens, estiloRoda.invertido ? estiloRoda.anelDodec[1] : 0) + 20; // folga visual (ícone + rótulo de grau)
+  const R_Ceu = maxRaioItens + 20; // folga visual (ícone + rótulo de grau)
 
   /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
      ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
@@ -546,7 +548,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   if (!estiloRoda.faixaZodiaco && !inv) { // com a faixa do zodíaco as divisas dos signos são os tracejados da faixa; no invertido não há divisa nenhuma
   for (let i = 0; i < 12; i++) {
     const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-    const pt2 = polarToCart(cx, cy, inv ? estiloRoda.signos.divisasAte : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
+    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
     svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
   }
   }
