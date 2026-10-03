@@ -14,6 +14,7 @@ const RODA_ESTILOS = {
     eixosTracejados: false,       // ASC-DSC / MC-IC em traço liso
     reticulosTracejados: false,   // sem tracejado em volta dos ícones calculados (nodos, sizígia, lotes, ângulos)
     raioLotes: 276,               // lotes logo por fora do anel dos termos
+    raioDestaque: 399,            // até onde vão as fatias e as etiquetas de destaque de signo das ferramentas (Profecção, Sinastria)
     fioPlanetaDe: 'Termos',       // o fio dos planetas/lotes sai do anel dos termos...
     planetaComDesvio: true        // ...e conjunções coladas são empurradas (aShift/rOffset)
   },
@@ -25,6 +26,7 @@ const RODA_ESTILOS = {
     eixosTracejados: true,
     reticulosTracejados: true,    // tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos) — em qualquer tema
     raioLotes: 190,               // lotes por dentro
+    raioDestaque: 498,            // por fora da faixa do zodíaco (pR + 9 graus de latitude)
     fioPlanetaDe: 'Aspects',      // o fio sai do disco do miolo
     planetaComDesvio: false       // planeta sempre na posição real
   }
@@ -43,6 +45,11 @@ function estiloMandalaAtual(naPinturaCeu) {
 function desenharRodaSVG(o) {
   const { estiloForcado, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro } = o;
   let fundoTransparente = o.fundoTransparente;
+  /* o.ferramenta: a roda como ela é desenhada DENTRO de uma ferramenta (Profecção, Sinastria, Liberação) — sem cabeçalho nem céu,
+     canvas quadrado, no mapa que a ferramenta passa. Campos: dados, abertura({canvasSize,fundoDisco}) (a tag <svg> + defs + fundo, como a
+     ferramenta sempre fez), fundoEscuro (cor do cartão no tema escuro), fragmentoPlaneta(id), glowSol(pos, raio, tinta),
+     destaques { fatias:[{signIdx,cor}], faixas:[{signIdx,cor,de,ate}], coroa:{signIdx, preenchimento, contorno, espessura, pontos} }. */
+  const ferr = o.ferramenta || null;
   /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
      index.html). Como este SVG vira imagem (Blob -> <img>, ver abaixo),
      variável CSS (var(--x)) NÃO funciona aqui dentro (confirmado com teste
@@ -96,10 +103,10 @@ function desenharRodaSVG(o) {
   /* "papiroNaTela": a mandala AO VIVO (sem estiloForcado, ou seja, não é uma cópia pro Relatório) desenhada em
      tinta sobre uma folha de papiro, no lugar do céu — escolhido pelo botão da barra da Mandala
      (alternarMandalaPapiro), só no Tema Céu. É o mesmo desenho "tinta sobre papiro" das páginas do Relatório. */
-  const papiroNaTela = !estiloForcado && !tintaPapiro && temaEhCeu && !!window.mandalaPapiroTela;
+  const papiroNaTela = !ferr && !estiloForcado && !tintaPapiro && temaEhCeu && !!window.mandalaPapiroTela;
   const papiro = (!!tintaPapiro || papiroNaTela) && temaEhCeu;
   const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
-  if (papiro) fundoTransparente = true;
+  if (papiro && !ferr) fundoTransparente = true; // (as ferramentas pintam o próprio fundo: tinta.fundoDisco)
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
   /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
      caixinha de nome/data/cidade como papiro (ver coresCabecalhoPapiro) —
@@ -122,10 +129,10 @@ function desenharRodaSVG(o) {
     elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
     dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
   } : modoEscuro ? {
-    fundoDisco: '#1c1917',
+    fundoDisco: (ferr && ferr.fundoEscuro) || '#1c1917',
     dourado: '#d9ae3f',
     douradoCasas: '#e8c667',
-    halo: '#1c1917',
+    halo: (ferr && ferr.fundoEscuro) || '#1c1917',
     inkForte: '#e8e6df',
     inkPlaneta: '#e8e6df',
     navio: '#8ab4e8',
@@ -174,12 +181,7 @@ function desenharRodaSVG(o) {
      direto e ainda não faz parte desta etapa. */
   const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
 
-  injetarBotaoRotacaoNaBarraSuperior();
-  injetarBotaoRelatorioNaBarraSuperior();
-  injetarControleZoomMandala();
-  ajustarPosicaoMandalaActionsOverlay();
-
-  const data = currentCalculatedData;
+  const data = ferr ? ferr.dados : currentCalculatedData;
   const ascAbs = data.Ascendente.grau_absoluto;
   const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
   const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
@@ -195,10 +197,10 @@ function desenharRodaSVG(o) {
   const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
 
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
-  window.currentLotes = lotes;
+  if (!ferr) window.currentLotes = lotes;
 
   let house1RefAbs = ascAbs;
-  if (selectedHouse1Lot !== "ASC") {
+  if (!ferr && selectedHouse1Lot !== "ASC") {
     const targetLot = lotes.find(l => l.key === selectedHouse1Lot);
     if (targetLot) house1RefAbs = targetLot.deg;
   }
@@ -317,7 +319,10 @@ function desenharRodaSVG(o) {
   /* Espaço extra no topo (e até o cabeçalho) para a faixa de céu/espaço
      (raio R_Ceu) e a mancha de combustão do Sol nunca serem cortadas. */
   const margemVertical = 10;
-  const cy = R_Ceu + margemVertical;
+  const R_OuterLine = 399;
+  // Ferramentas (Profecção...): canvas QUADRADO, sem cabeçalho nem céu. A folga acompanha o raio dos destaques do estilo.
+  const R_canvasFerr = Math.max(maxRaioItens + 50, Math.max(R_OuterLine, estiloRoda.raioDestaque) + 40);
+  const cy = ferr ? R_canvasFerr : R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
   const headerH = 75;
   const headerGapBottom = 20;
@@ -325,12 +330,11 @@ function desenharRodaSVG(o) {
      varia de tamanho por mapa) pode passar dos 480px de raio e ser cortado
      nas laterais pelo próprio SVG, antes mesmo de chegar no navegador —
      nunca menor que 960 (largura original), só cresce quando precisa. */
-  const cx = Math.max(480, R_Ceu + margemVertical);
-  const width = cx * 2, height = headerY + headerH + headerGapBottom;
+  const cx = ferr ? R_canvasFerr : Math.max(480, R_Ceu + margemVertical);
+  const width = cx * 2, height = ferr ? width : headerY + headerH + headerGapBottom;
   // Tema Céu: os anéis de termos (fora) e dodecatemória (dentro) ficam logo ABAIXO da faixa dos
   // signos (que começa no raio 282); os lotes ficam abaixo deles e a Terra no centro.
   const R = Object.assign({}, estiloRoda.raios);
-  const R_OuterLine = 399;
 
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
      aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
@@ -346,7 +350,7 @@ function desenharRodaSVG(o) {
      (mesmo Sol, mesma rotação do horizonte, mesmo brilho no lado do Sol), enorme, pra a capa usar de fundo,
      alinhado ao centro da roda (ver relatorio.js, .rel-ceu-fundo). Data URL (não blob): o HTML da capa vai
      inteiro pro gerador de PDF no servidor, que não enxerga blobs do navegador. */
-  window.ceuFundoCapaUltimo = null;
+  if (!ferr) window.ceuFundoCapaUltimo = null;
   if (temaCeu && espacoTransparente) {
     const EXT_CAPA = 2800;
     const svgFundo = montarFundoCeuSVG(Object.assign({}, ceuParams, { fatorEstrela: 3, densidadeEstrela: 0.11 }), EXT_CAPA);
@@ -356,7 +360,7 @@ function desenharRodaSVG(o) {
     window.ceuFundoCapaUltimo = { svg: svgFundo, url: null, cx, cy, width, height, ext: EXT_CAPA };
   }
 
-  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  let svg = ferr ? ferr.abertura({ canvasSize: width, fundoDisco: tinta.fundoDisco }) : `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- BRILHO DE COMBUSTÃO / SOB OS RAIOS (halo ao redor do Sol) -->
       <radialGradient id="combustionGlow" cx="50%" cy="50%" r="50%">
@@ -399,7 +403,36 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
 
   /* CABEÇALHO (nome, data, local, zodíaco, natividade, Dia/Hora) — o mesmo
      desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
-  svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
+  if (!ferr) svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
+
+  /* DESTAQUES DE SIGNO das ferramentas (Profecção, Sinastria): fatia inteira, do centro até raioDestaque do estilo, por baixo de tudo;
+     etiquetas em faixa e coroa mais adiante. A ferramenta decide signos e cores; a posição é do estilo. */
+  const destaques = (ferr && ferr.destaques) || null;
+  const fatiaDestaque = (signIdx, cor) => {
+    if (signIdx === null || signIdx === undefined) return '';
+    const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+    const passos = 15;
+    let d = `M ${cx} ${cy} `;
+    for (let s = 0; s <= passos; s++) {
+      const p = polarToCart(cx, cy, estiloRoda.raioDestaque, angInicial - (30 * s / passos));
+      d += `L ${p.x} ${p.y} `;
+    }
+    d += 'Z';
+    return `<path d="${d}" fill="${cor}"/>`;
+  };
+  const faixaDestaque = (signIdx, cor, rInterno, rExterno) => {
+    if (signIdx === null || signIdx === undefined) return '';
+    const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
+    const passos = 15;
+    const pontosFora = [];
+    for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
+    const pontosDentro = [];
+    for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
+    const pontos = pontosFora.concat(pontosDentro);
+    const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+    return `<path d="${d}" fill="${cor}"/>`;
+  };
+  if (destaques) (destaques.fatias || []).forEach(f => { svg += fatiaDestaque(f.signIdx, f.cor); });
 
   if (estiloRoda.faixaZodiaco) {
     // Faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
@@ -602,13 +635,17 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     });
   }
 
+  /* ETIQUETAS: faixas sólidas na borda externa, uma ao lado da outra (de/ate = deslocamento a partir de raioDestaque). */
+  if (destaques) (destaques.faixas || []).forEach(f => { svg += faixaDestaque(f.signIdx, f.cor, estiloRoda.raioDestaque + f.de, estiloRoda.raioDestaque + f.ate); });
+
     /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
   const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
   if (sunItem && !papiro) {
     const degToPx = (2 * Math.PI * pR) / 360;
     const rSobRaios = degToPx * 15;
     const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
+    if (ferr) svg += ferr.glowSol(sunGlowPos, rSobRaiosGlow, tinta);
+    else svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
   }
 
   /* item.lotType vem de calculateSevenLots() como o planeta regente do
@@ -703,10 +740,26 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       }
 
       svg += `<g transform="translate(${pPonto.x}, ${pPonto.y})">
-        <g transform="scale(0.36) translate(-50, -50)">${papiro ? getIconeFragmento('planeta', item.id, data) : planetIconFragment(item.id)}</g>
+        <g transform="scale(0.36) translate(-50, -50)">${papiro ? getIconeFragmento('planeta', item.id, data) : (ferr ? ferr.fragmentoPlaneta(item.id) : planetIconFragment(item.id))}</g>
         <text x="0" y="27" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
+
+  /* COROA sobre o regente do signo destacado (Profecção). */
+  if (destaques && destaques.coroa) {
+    const c = destaques.coroa;
+    const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === c.rulerId);
+    if (rulerItem) {
+      const rCoroa = pR + (rulerItem.eclLat * latPxPerGrau) + (estiloRoda.planetaComDesvio ? (rulerItem.rOffset || 0) : 0);
+      const pCoroa = polarToCart(cx, cy, rCoroa, estiloRoda.planetaComDesvio ? rulerItem.aShift : rulerItem.aScreen);
+      svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
+                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${c.preenchimento}" stroke="${c.contorno}" stroke-width="${c.espessura}" stroke-linejoin="round"/>
+                    <circle cx="0" cy="-7" r="1.6" fill="${c.ponto}"/>
+                    <circle cx="-9" cy="-2" r="1.3" fill="${c.ponto}"/>
+                    <circle cx="9" cy="-2" r="1.3" fill="${c.ponto}"/>
+                </g>`;
+    }
+  }
 
   svg += `</svg>`;
   return { svg, width, height, papiroNaTela, ceuParams };

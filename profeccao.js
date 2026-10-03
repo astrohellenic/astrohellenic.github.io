@@ -478,10 +478,10 @@
         return resultado;
     }
 
-    /* GERA A MANDALA COMPLETA EM SVG — CÓPIA FIEL DO DESENHO DE renderMandala()
-       EM mandala.js (aspectos, anel de signos, dodecatemoria, termos egípcios,
-       ticks de grau, eixo ASC/DSC/MC/IC, lotes herméticos, planetas em SVG 3D
-       com sombra e mancha de combustão), só sem a faixa de céu/espaço sideral. */
+    /* GERA A MANDALA DA PROFECÇÃO EM SVG — desenhada pela RODA CENTRAL (desenharRodaSVG, roda.js), a mesma de todas as
+       ferramentas: o estilo (francês / Astro Hellenic) e o desenho em si moram lá. Aqui ficam só as coisas DESTA ferramenta:
+       os destaques de signo (fatia, etiqueta em faixa e coroa) e as cores deles, o cartão escuro, os ids de SVG por instância
+       (as duas mini-mandalas — RS e natal — coexistem na página) e o planeta 3D. Sem cabeçalho nem céu. */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
             return `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
@@ -491,380 +491,52 @@
         const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
         const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
 
-        /* Mesma "tinta" clara/escura de mandala.js/liberacao.js (esta função
-           segue a mesma arquitetura de renderMandala/gerarMandalaNatalZR) —
-           cores resolvidas em hexadecimal porque este SVG acaba virando <img>
-           (ver converterProfeccaoMandalasEmImagem logo depois do render),
-           então var(--x) não seria enxergado por quem lê o canvas depois.
-           ELEMENT_SIGN_COLORS fica sombreado só aqui dentro (a versão do
-           módulo, usada por getSignSvgHtml no cabeçalho e na tabela mensal
-           fora da imagem, continua intocada).
-
-           fundoDisco/halo (escuro) usam --bg-card (#262220), NÃO --bg-main
-           (#1c1917): as duas mandalas (Revolução Solar e Mapa Natal) ficam
-           cada uma dentro do seu próprio cartão (ver iniciarModuloProfeccao,
-           background: var(--bg-card)) — mesmo cuidado já documentado no
-           CLAUDE.md a respeito da Liberação Zodiacal, pra não deixar uma
-           margem clara aparecer entre a borda dourada do cartão e o disco
-           escuro. */
-        const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-        /* TEMA CÉU — roda SECUNDÁRIA (desta ferramenta): "tinta sobre o papiro". Sem fundo nem céu; só azul-tinta
-           (estrutura, glifos) e terracota (destaques: casas, aspectos duros, planetas da seita, ângulos,
-           Profecção). Quem observa o céu é a mandala principal; aqui o astrólogo já está escrevendo no papiro. */
+        /* TEMA CÉU — roda SECUNDÁRIA (desta ferramenta): "tinta sobre o papiro" (as cores vêm da roda central). Aqui só as cores
+           dos destaques: azul-tinta/terracota/marrom no papiro, as cores de sempre fora dele. */
         const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
         const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
-        const tinta = papiro ? {
-            fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
-            inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: AZ_TINTA, linhaConectora: 'rgba(29,58,102,0.55)',
-            aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
-            elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
-            dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
-        } : modoEscuro ? {
-            fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
-            inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
-            aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
-            elementoFogo: '#ff6b4a', elementoTerra: '#d99a5c', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
-            dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
-        } : {
-            fundoDisco: '#ffffff', dourado: '#c59b27', douradoCasas: '#aa820a', halo: '#ffffff',
-            inkForte: '#000000', inkPlaneta: '#0f172a', navio: '#103b70', linhaConectora: '#94a3b8',
-            aspectoOposicao: '#881337', aspectoTrigono: '#1d4ed8', aspectoQuadratura: '#e84118', aspectoSextil: '#0ea5e9',
-            elementoFogo: '#e84118', elementoTerra: '#8b4513', elementoAr: '#0ea5e9', elementoAgua: '#1d4ed8',
-            dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
-        };
-        const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
-
-        const goldColor = tinta.dourado;
         const sufixo = `w${wheelInstanceCounter++}`;
 
-        const ascAbs = dados.Ascendente.grau_absoluto;
-        const mcAbs = dados.MC ? dados.MC.grau_absoluto : (ascAbs + 270) % 360;
-        const nodeAbs = dados.Nodo_Norte ? dados.Nodo_Norte.grau_absoluto : 0;
-        const syzAbs = dados.Sizigia ? dados.Sizigia.grau_absoluto : 0;
-
-        const pObj = {};
-        PLANETS_DEF.forEach(p => {
-            const item = dados[p.key];
-            pObj[p.id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false, lat: item ? (item.lat || 0) : 0 };
-        });
-
-        const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-        const lotes = calculateSevenLots(ascAbs, isDay, pObj);
-        const house1RefAbs = ascAbs;
-
-        const outerRingItems = [];
-        PLANETS_DEF.forEach(p => {
-            outerRingItems.push({
-                type: "planet", id: p.id, deg: pObj[p.id].abs, retro: pObj[p.id].retro,
-                eclLat: pObj[p.id].lat, aScreen: eclToScreenAngle(pObj[p.id].abs, house1RefAbs)
-            });
-        });
-        if (nodeAbs > 0) {
-            outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-            outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
-        }
-        if (syzAbs > 0) {
-            outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
-        }
-        lotes.forEach(lot => {
-            outerRingItems.push({ type: "lot", label: lot.label, lotType: lot.type, sym: lot.sym, deg: lot.deg, color: goldColor, aScreen: eclToScreenAngle(lot.deg, house1RefAbs) });
-        });
-
-        aplicarEmpilhamentoRadial(outerRingItems, 7.5);
-        aplicarDesvioLateralLotes(outerRingItems, 6);
-
-        const latPxPerGrau = 12;
-        const pR = 390;
-        const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
-        const R_OuterLine = 399;
-
-        const degToPxPR = (2 * Math.PI * pR) / 360;
-        const rSobRaiosGlow = degToPxPR * 15;
-        let maxRaioItens = pR + rSobRaiosGlow;
-        outerRingItems.forEach(item => {
-            if (item.type === 'lot') return;
-            const base = item.type === 'planet' ? pR + (item.eclLat * latPxPerGrau) : pR;
-            const raio = base + (item.rOffset || 0);
-            if (raio > maxRaioItens) maxRaioItens = raio;
-        });
-        const R_canvas = Math.max(maxRaioItens + 50, R_OuterLine + 40);
-        const cx = R_canvas, cy = R_canvas;
-        const canvasSize = R_canvas * 2;
-
-        let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+        return desenharRodaSVG({
+            tintaPapiro: papiro,
+            ferramenta: {
+                dados,
+                // fundoDisco/halo do tema escuro usam --bg-card (#262220), NÃO --bg-main (#1c1917): cada mandala fica dentro do seu
+                // cartão (ver iniciarModuloProfeccao) — pra não aparecer margem clara entre a borda dourada do cartão e o disco escuro.
+                fundoEscuro: '#262220',
+                abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
-            <rect width="${canvasSize}" height="${canvasSize}" fill="${tinta.fundoDisco}"/>`;
-
-        /* DESTAQUE DE SIGNO (fatia inteira, do centro até a borda externa,
-           por baixo de todo o resto do desenho) — usado para marcar o signo
-           profectado do ano (verde) e, só no mapa natal, o signo onde cai o
-           Ascendente da Revolução Solar (amarelo). */
-        function desenharFatiaDestaque(signIdx, cor) {
-            if (signIdx === null || signIdx === undefined) return '';
-            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
-            const passos = 15;
-            let d = `M ${cx} ${cy} `;
-            for (let s = 0; s <= passos; s++) {
-                const p = polarToCart(cx, cy, R_OuterLine, angInicial - (30 * s / passos));
-                d += `L ${p.x} ${p.y} `;
-            }
-            d += 'Z';
-            return `<path d="${d}" fill="${cor}"/>`;
-        }
-
-        svg += desenharFatiaDestaque(highlightMesAbertoSignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)");
-        svg += desenharFatiaDestaque(profectedSignIdx, papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)");
-        svg += desenharFatiaDestaque(highlightAscSignIdx, papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)");
-
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
-
-        const occupiedSigns = new Set();
-        PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
-        const occupiedArray = Array.from(occupiedSigns);
-        for (let i = 0; i < occupiedArray.length; i++) {
-            for (let j = i + 1; j < occupiedArray.length; j++) {
-                let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
-                if (diff > 6) diff = 12 - diff;
-                let col = null;
-                if (diff === 6) col = tinta.aspectoOposicao;
-                else if (diff === 4) col = tinta.aspectoTrigono;
-                else if (diff === 3) col = tinta.aspectoQuadratura;
-                else if (diff === 2) col = tinta.aspectoSextil;
-                if (col) {
-                    const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
-                    const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
-                    svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${col}" stroke-width="1.8" opacity="0.9"/>`;
+            <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
+                fragmentoPlaneta: (id) => fragmentoPlaneta3D(id, sufixo),
+                /* Disco branco opaco por baixo do gradiente: a mancha de combustão é parcialmente transparente, então sem isso a fatia
+                   verde/amarela do signo destacado (desenhada bem atrás) vazaria através dela e sujaria o dourado puro da mancha. */
+                glowSol: (pos, raio, tinta) => `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="${tinta.fundoDisco}"/>` +
+                    `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="url(#combustionGlow_${sufixo})"/>`,
+                destaques: {
+                    // fatias (por baixo de tudo): mês aberto, signo profectado, Ascendente da Revolução Solar
+                    fatias: [
+                        { signIdx: highlightMesAbertoSignIdx, cor: papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)" },
+                        { signIdx: profectedSignIdx, cor: papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)" },
+                        { signIdx: highlightAscSignIdx, cor: papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)" }
+                    ],
+                    /* ETIQUETAS: faixas sólidas na borda externa, uma do lado da outra, sem se misturar — quando dois destaques caem no
+                       mesmo signo a fatia de cima disfarça a de baixo; assim dá pra apontar exatamente quais bateram naquele signo. */
+                    faixas: [
+                        { signIdx: highlightMesAbertoSignIdx, cor: papiro ? AZ_TINTA : "#6366f1", de: 4, ate: 12 },
+                        { signIdx: highlightAscSignIdx, cor: papiro ? "#6b4a2b" : "#eab308", de: 14, ate: 22 },
+                        { signIdx: profectedSignIdx, cor: papiro ? TERRACOTA : "#65a30d", de: 24, ate: 32 }
+                    ],
+                    // coroa sobre o regente do signo profectado do ano
+                    coroa: (profectedSignIdx !== null && SIGNS[profectedSignIdx]) ? {
+                        rulerId: SIGNS[profectedSignIdx].ruler,
+                        preenchimento: papiro ? 'none' : '#f5c518', contorno: papiro ? TERRACOTA : '#a8790a',
+                        espessura: papiro ? 1.4 : 0.9, ponto: papiro ? TERRACOTA : '#dc2626'
+                    } : null
                 }
             }
-        }
-
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
-        svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-
-        /* ORDEM DE CAMADAS DA RODA (mesmo padrao de mandala.js, 28/09/2026):
-           a estrutura da mandala (circulos, raios, dentinhos) sempre por
-           tras de tudo; depois as linhas pretas dos eixos ASC/DSC/MC/IC;
-           depois todos os icones por cima. Os loops que desenhavam
-           linha+icone juntos (dodecatemoria, termos) foram separados em
-           duas passadas: uma so de linha aqui, outra so de icone la
-           embaixo, depois das linhas dos eixos. */
-
-        for (let i = 0; i < 12; i++) {
-            const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-            const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
-            svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
-        }
-
-        for (let i = 0; i < 12; i++) {
-            for (let d = 0; d < 12; d++) {
-                const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-                const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-                svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
-            }
-        }
-
-        for (let s = 0; s < 12; s++) {
-            let prev = 0;
-            EGYPTIAN_TERMS[s].forEach(term => {
-                const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-                const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-                svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
-                prev = term.deg;
-            });
-        }
-
-        for (let deg = 0; deg < 360; deg++) {
-            const aScreen = eclToScreenAngle(deg, house1RefAbs);
-            const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-            const p1 = polarToCart(cx, cy, R.Termos, aScreen);
-            const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
-            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
-        }
-
-        for (let deg = 0; deg < 360; deg++) {
-            const aScreen = eclToScreenAngle(deg, house1RefAbs);
-            const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-            const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-            const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
-        }
-
-        const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
-        const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-        svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${papiro ? COR_TINTA_OCRE : tinta.inkForte}" stroke-width="2.5"/>`;
-
-        const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
-        const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-        svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${papiro ? COR_TINTA_OCRE : tinta.inkForte}" stroke-width="2.5"/>`;
-
-        /* A PARTIR DAQUI SO ICONE - nada de linha/dentinho novo abaixo
-           disso, pra manter a estrutura da roda sempre por tras. */
-
-        const rEixoInterno = R.SignSector - 12;
-        const eixosInternos = [
-            { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-            { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
-            { label: "MC", deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-            { label: "IC", deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
-        ];
-        eixosInternos.forEach(eixo => {
-            const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
-            const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
-            const anguloFrag = getIconeFragmento('outro', 'angulo', undefined, papiro ? COR_TINTA_OCRE : undefined);
-            const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
-            svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
-                <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
-                <text x="0" y="24" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
-            </g>`;
-        });
-
-        const refSignIdx = Math.floor(house1RefAbs / 30);
-        for (let i = 0; i < 12; i++) {
-            const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
-            const pNum = polarToCart(cx, cy, 122, aMid);
-            svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
-
-            const pSym = polarToCart(cx, cy, 166, aMid);
-            svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
-        }
-
-        for (let i = 0; i < 12; i++) {
-            for (let d = 0; d < 12; d++) {
-                const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
-                svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
-            }
-        }
-
-        // term.p e so o glifo Unicode ("♃" etc) - de-para pro id do planeta
-        // que o icone novo dos termos usa (mesmo mapa de mandala.js). So os
-        // 5 regentes de termo egipcio (nunca Sol/Lua) entram aqui.
-        const TERMO_PLANET_BY_SYMBOL = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
-        const termoIconTamanho = 18;
-
-        for (let s = 0; s < 12; s++) {
-            let prev = 0;
-            EGYPTIAN_TERMS[s].forEach(term => {
-                const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-                const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
-                svg += getIconeTermoSVG(termoPlanetId, termoIconTamanho, goldColor)
-                    .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanho / 2}" y="${pTerm.y - termoIconTamanho / 2}" `);
-                prev = term.deg;
-            });
-        }
-
-        /* FAIXAS SÓLIDAS NA BORDA EXTERNA — "ETIQUETAS" DE CADA DESTAQUE.
-           A fatia transparente lá atrás dá o clima visual, mas quando dois
-           destaques caem no mesmo signo a cor de cima acaba disfarçando a
-           de baixo. Estas faixas ficam uma do lado da outra, em cores
-           sólidas, sem se misturar — dá pra apontar pro cliente exatamente
-           quais destaques bateram naquele signo. Desenhadas antes dos
-           planetas (e da mancha de combustão), pra nunca cobrirem um
-           planeta que tenha sido empurrado além da borda do mapa. */
-        function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
-            if (signIdx === null || signIdx === undefined) return '';
-            const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
-            const passos = 15;
-            const pontosFora = [];
-            for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
-            const pontosDentro = [];
-            for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
-            const pontos = pontosFora.concat(pontosDentro);
-            const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-            return `<path d="${d}" fill="${cor}"/>`;
-        }
-
-        svg += desenharFaixaDestaque(highlightMesAbertoSignIdx, papiro ? AZ_TINTA : "#6366f1", R_OuterLine + 4, R_OuterLine + 12);
-        svg += desenharFaixaDestaque(highlightAscSignIdx, papiro ? "#6b4a2b" : "#eab308", R_OuterLine + 14, R_OuterLine + 22);
-        svg += desenharFaixaDestaque(profectedSignIdx, papiro ? TERRACOTA : "#65a30d", R_OuterLine + 24, R_OuterLine + 32);
-
-        const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-        if (sunItem && !papiro) { // no papiro não há mancha de combustão (é um brilho de céu)
-            const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-            /* Disco branco opaco por baixo do gradiente: a mancha de combustão é
-               parcialmente transparente, então sem isso a fatia verde/amarela do
-               signo destacado (desenhada bem atrás) vazaria através dela e sujaria
-               o dourado puro da mancha. */
-            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="${tinta.fundoDisco}"/>`;
-            svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
-        }
-
-        // Pontos calculados (nodos, sizígia, lotes): círculo cremoso por trás do ícone; no papiro não há nada atrás (aqui não existe céu, então não precisa do retículo que diz "isto foi posto por cima do céu").
-        const circuloFundoPonto = papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>';
-        outerRingItems.forEach(item => {
-            if (item.type === 'planet') return;
-            const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
-            const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-            const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
-            svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
-
-            const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-            const LOTE_ICON_KEY = {
-                fortune: 'fortune', spirit: 'spirit', venus: 'eros',
-                mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
-            };
-            if (item.type === "node") {
-                const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
-                svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    ${circuloFundoPonto}
-                    <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>
-                    <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-                </g>`;
-            } else if (item.type === "syzygy") {
-                svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    ${circuloFundoPonto}
-                    <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
-                    <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-                </g>`;
-            } else if (item.type === "lot") {
-                const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
-                svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    ${circuloFundoPonto}
-                    <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>
-                    <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-                </g>`;
-            }
-        });
-
-        const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
-        outerRingItems
-            .filter(item => item.type === 'planet')
-            .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
-            .forEach(item => {
-                const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
-                const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-                const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-                svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
-
-                const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-                const planetSvgContent = papiro ? getIconeFragmento('planeta', item.id, dados) : fragmentoPlaneta3D(item.id, sufixo);
-                let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
-                svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-                    <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-                    <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
-                </g>`;
-            });
-
-        /* COROA SOBRE O REGENTE DO SIGNO PROFECTADO DO ANO. */
-        if (profectedSignIdx !== null && SIGNS[profectedSignIdx]) {
-            const rulerId = SIGNS[profectedSignIdx].ruler;
-            const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
-            if (rulerItem) {
-                const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
-                const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
-                svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-                    <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${papiro ? 'none' : '#f5c518'}" stroke="${papiro ? TERRACOTA : '#a8790a'}" stroke-width="${papiro ? 1.4 : 0.9}" stroke-linejoin="round"/>
-                    <circle cx="0" cy="-7" r="1.6" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
-                    <circle cx="-9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
-                    <circle cx="9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
-                </g>`;
-            }
-        }
-
-        svg += `</svg>`;
-        return svg;
+        }).svg;
     }
+    window.__gerarMandalaSVGProfeccao = gerarMandalaSVG; // gancho dos testes de comparação do desenho (ver CLAUDE.md)
 
     async function iniciarModuloProfeccao() {
         const container = document.getElementById('mandala-container');

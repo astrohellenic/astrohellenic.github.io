@@ -1731,6 +1731,10 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
 
   /* O DESENHO da roda (SVG) mora em roda.js (desenharRodaSVG) — função central de todos os estilos de mandala. Aqui fica só o
      que é da tela: pôr a imagem no container, gerar o PNG, o céu de fundo, o cache. */
+  injetarBotaoRotacaoNaBarraSuperior();
+  injetarBotaoRelatorioNaBarraSuperior();
+  injetarControleZoomMandala();
+  ajustarPosicaoMandalaActionsOverlay();
   const roda = desenharRodaSVG({ estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro });
   const { svg, width, height, papiroNaTela, ceuParams } = roda;
 
