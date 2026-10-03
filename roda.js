@@ -579,14 +579,21 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     return out;
   }, goldColor);
 
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-    const rRegua = inv ? aTer[0] : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
-    const p1 = polarToCart(cx, cy, rRegua, aScreen);
-    const p2 = polarToCart(cx, cy, rRegua - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
-  }
+  // Régua de graus. No invertido ela faz parte do círculo da borda de dentro dos termos, então tem a MESMA cor dele (no Céu, o branco/azul-tinta
+  // adaptativo); nos outros estilos continua na cor de sempre.
+  const reguaTermos = cor => {
+    let out = '';
+    for (let deg = 0; deg < 360; deg++) {
+      const aScreen = eclToScreenAngle(deg, house1RefAbs);
+      const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
+      const rRegua = inv ? aTer[0] : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
+      const p1 = polarToCart(cx, cy, rRegua, aScreen);
+      const p2 = polarToCart(cx, cy, rRegua - tickLen, aScreen);
+      out += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${cor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
+    }
+    return out;
+  };
+  svg += inv ? emitirTracejado(reguaTermos, goldColor) : reguaTermos(goldColor);
 
   for (let deg = 0; deg < (inv ? 0 : 360); deg++) { // no invertido só existe a régua dos termos
     const aScreen = eclToScreenAngle(deg, house1RefAbs);
