@@ -806,3 +806,7 @@ Em `roda.js`: (1) na roda em tinta sobre papiro os 60 ícones dos termos saem em
 temas continuam na cor de sempre; (2) no Céu com o estilo Astro Hellenic os TRACEJADOS (os 3 anéis, as divisas da dodecatemória e as divisas dos termos) são brancos (`corTracejado`),
 pra não se confundirem com o amarelo dos ícones dos termos; os dentinhos (traço cheio) e os ícones dos termos ficam amarelos. Conferido: só essas cores mudam (60 ícones no papiro;
 um bloco de tracejados no Céu); Claro, Escuro, capa e francês no Céu saem idênticos.
+
+**Branco adaptativo (03/10/2026, depois):** o "branco" do Céu NÃO é branco chapado — é o mesmo dos ícones calculados: azul-esbranquiçado (`#e6eeff`/`#dbe6ff`) de noite/abaixo do horizonte e azul-tinta
+(`#1d3a66`) por cima do céu claro do dia (`ceuParams.dia`). Os tracejados (anéis, dodecatemória, divisas dos termos; `emitirTracejado` em `roda.js`) usam os clips `ceuMeiaTela`/`ceuMeiaTelaBaixo`,
+e o número das casas (faixa do zodíaco do Astro Hellenic via `corNumero` em `montarBandaZodiacoCeuSVG`, e o francês no Céu) usa `corCalculadoCeu(x,y)`. Ícones dos termos no Céu continuam amarelos.

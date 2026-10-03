@@ -351,6 +351,13 @@ function desenharRodaSVG(o) {
     corDisco: 'none' // sem disco branco: o miolo é uma janela pro céu (ver montarTerraCeuSVG)
   } : null;
   if (ceuParams) { const t = Math.max(0, Math.min(1, (ceuParams.elevacao + 0.10) / 0.60)); ceuParams.dia = t * t * (3 - 2 * t); }
+  // Tema Céu: cor dos pontos calculados conforme dia/noite NO LUGAR onde ele está (acima do
+  // horizonte, de dia -> azul-marinho; à noite ou no espaço -> branco-azulado).
+  const corCalculadoCeu = (px, py) => {
+    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
+    const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
+    return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
+  };
   const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
   /* CAPA do Relatório (espacoTransparente + Tema Céu): além da roda "só com halo", guarda o MESMO céu da tela
      (mesmo Sol, mesma rotação do horizonte, mesmo brilho no lado do Sol), enorme, pra a capa usar de fundo,
@@ -445,7 +452,8 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     svg += montarBandaZodiacoCeuSVG({
       cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
       elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
-      rTerra: R.Aspects, rAneis: R.SignSector, corUnica: temaCeu ? null : goldColor
+      rTerra: R.Aspects, rAneis: R.SignSector, corUnica: temaCeu ? null : goldColor,
+      corNumero: temaCeu ? corCalculadoCeu : null // números das casas: o mesmo branco/azul-escuro dos ícones calculados
     });
   }
   if (temaCeu) {
@@ -486,12 +494,18 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   // Tema Céu: as divisas dos termos e da dodecatemória são tracejadas (foram postas ali, não são do céu); os dentinhos ficam sólidos.
   const tracejadoCeu = estiloRoda.aneisTracejados ? ' stroke-dasharray="6 4"' : '';
   const tracejadoFinoCeu = estiloRoda.aneisTracejados ? ' stroke-dasharray="3 3"' : '';
-  // No Céu os tracejados (anéis, divisas da dodecatemória e dos termos) são BRANCOS, pra não se confundirem com o amarelo dos ícones dos termos.
-  const corTracejado = (temaCeu && estiloRoda.aneisTracejados) ? '#ffffff' : goldColor;
-  const corTracejadoDodec = (temaCeu && estiloRoda.aneisTracejados) ? 'rgba(255,255,255,0.7)' : tinta.dodecatemoriaLinha;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${corTracejado}" stroke-width="2"${tracejadoCeu}/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${corTracejado}" stroke-width="1.5"${tracejadoCeu}/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${corTracejado}" stroke-width="2"${tracejadoCeu}/>`;
+  /* No Céu os tracejados (anéis, divisas da dodecatemória e dos termos) são BRANCOS — o mesmo "branco" dos ícones calculados: branco-azulado
+     abaixo do horizonte (noite) e azul-marinho escuro sobre o céu claro de dia (acima do horizonte), pra continuar legível. Cada peça é
+     desenhada duas vezes, uma recortada pela metade de cima do horizonte e outra pela de baixo (os mesmos recortes da linha da eclíptica). */
+  const tracejadoAdaptativo = temaCeu && estiloRoda.aneisTracejados;
+  const tintaCimaCeu = tracejadoAdaptativo ? misturarHexCeu('#e6eeff', '#1d3a66', ceuParams.dia) : null;
+  const emitirTracejado = (fn, corPadrao) => tracejadoAdaptativo
+    ? `<g clip-path="url(#ceuMeiaTela)">${fn(tintaCimaCeu)}</g><g clip-path="url(#ceuMeiaTelaBaixo)">${fn('#e6eeff')}</g>`
+    : fn(corPadrao);
+  svg += emitirTracejado(cor =>
+    `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${cor}" stroke-width="2"${tracejadoCeu}/>` +
+    `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${cor}" stroke-width="1.5"${tracejadoCeu}/>` +
+    `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${cor}" stroke-width="2"${tracejadoCeu}/>`, goldColor);
 
   /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
      estrutura da mandala (círculos, raios, dentinhos) sempre por trás
@@ -511,23 +525,31 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   }
   }
 
-  for (let i = 0; i < 12; i++) {
-    for (let d = 0; d < 12; d++) {
-      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${corTracejadoDodec}" stroke-width="0.8"${tracejadoFinoCeu}/>`;
+  svg += emitirTracejado(cor => {
+    let out = '';
+    for (let i = 0; i < 12; i++) {
+      for (let d = 0; d < 12; d++) {
+        const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+        const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
+        out += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${cor}"${tracejadoAdaptativo ? ' stroke-opacity=".75"' : ''} stroke-width="0.8"${tracejadoFinoCeu}/>`;
+      }
     }
-  }
+    return out;
+  }, tinta.dodecatemoriaLinha);
 
-  for (let s = 0; s < 12; s++) {
-    let prev = 0;
-    EGYPTIAN_TERMS[s].forEach(term => {
-      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${corTracejado}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
-      prev = term.deg;
-    });
-  }
+  svg += emitirTracejado(cor => {
+    let out = '';
+    for (let s = 0; s < 12; s++) {
+      let prev = 0;
+      EGYPTIAN_TERMS[s].forEach(term => {
+        const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+        const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
+        out += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
+        prev = term.deg;
+      });
+    }
+    return out;
+  }, goldColor);
 
   for (let deg = 0; deg < 360; deg++) {
     const aScreen = eclToScreenAngle(deg, house1RefAbs);
@@ -573,13 +595,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      angulo certo de CADA mapa (ASC/DSC nem sempre caem exatamente em
      180/0deg quando a casa 1 usa um Lote como referencia em vez do
      ASC, e MC/IC quase nunca caem exatamente em 270/90deg). */
-  // Tema Céu: cor dos pontos calculados conforme dia/noite NO LUGAR onde ele está (acima do
-  // horizonte, de dia -> azul-marinho; à noite ou no espaço -> branco-azulado).
-  const corCalculadoCeu = (px, py) => {
-    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
-    const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
-    return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
-  };
 
   /* Retículo tracejado em volta dos ícones calculados (não são corpos do céu): faz parte do ESTILO, em qualquer tema. No Céu os
      ícones já o desenham (iconeCalculadoCeuSVG/iconeAnguloCeuSVG, que recebem semReticulo); nos outros temas desenha-se aqui, na tinta do tema. */
@@ -612,7 +627,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${temaCeu ? corCalculadoCeu(pNum.x, pNum.y) : tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
     const pSym = polarToCart(cx, cy, 166, aMid);
     svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
