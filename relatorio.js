@@ -4165,6 +4165,7 @@ function injetarEstilosRelatorio() {
          fixa no pé) sai; o céu é um SVG enorme atrás da roda, recortado pela folha. z-index negativo dentro da
          própria capa (isolation) = fica atrás do título, da roda e do rodapé. */
       .rel-capa.rel-capa-ceu.rel-capa-ceu-fundo { background: #070d25; isolation: isolate; overflow: hidden; }
+      .rel-capa.rel-capa-ceu-fundo .rel-img-capa { max-width: 150mm; max-height: 160mm; }
       .rel-capa-roda { position: relative; display: inline-block; line-height: 0; }
       .rel-ceu-fundo { position: absolute; max-width: none; max-height: none; z-index: -1; pointer-events: none; }
 
