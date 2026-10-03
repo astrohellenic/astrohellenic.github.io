@@ -463,7 +463,7 @@ function fatorTelaPautasCircumambulacao() {
 
 /* Tema Céu: a imagem salva sai como a tela — papiro + tinta. As cores das pautas vêm de variáveis redefinidas só
    dentro da folha (#circumambulacao-container), então são resolvidas aqui a partir dela (o rasterizador só
-   enxerga as variáveis globais). Fundo chapado '#c8a878' pro recorte automático achar a borda. */
+   enxerga as variáveis globais). Fundo chapado (papiroCores().chapado) pro recorte automático achar a borda. */
 function circumambulacaoPapiroAtivo() { return window.temaMandala === 'ceu'; }
 function resolverVarsDaFolhaCircumambulacao(svgStr) {
   const el = document.getElementById('circumambulacao-container');
@@ -483,7 +483,7 @@ function salvarCircumambulacaoNaGaleria() {
     const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
     const papiro = circumambulacaoPapiroAtivo();
     const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-    const fundo = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const fundo = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
     const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
     const corTitulo = papiro ? '#a03e25' : cores.titulo;
     const k = fatorTelaPautasCircumambulacao();
@@ -495,7 +495,7 @@ function salvarCircumambulacaoNaGaleria() {
     let pautasSvg = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas, k);
     if (papiro) pautasSvg = resolverVarsDaFolhaCircumambulacao(pautasSvg);
     const pautas = pautasSvg.replace('<svg ', '<svg x="' + ((largura - (920 * k)) / 2) + '" y="' + yPautas + '" ');
-    const papelFundo = papiro ? `<defs><linearGradient id="papiroCaptura" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6bd92"/><stop offset=".55" stop-color="#c8a878"/><stop offset="1" stop-color="#b98f5f"/></linearGradient></defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
+    const papelFundo = papiro ? `<defs>${papiroGradienteSvg('papiroCaptura')}</defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
       ${papelFundo}
       <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">CIRCUMAMBULAÇÃO PELOS TERMOS</text>

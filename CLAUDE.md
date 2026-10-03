@@ -640,3 +640,23 @@ página).
 **Regras do projeto (reforço):** só publicar na `main` quando o
 astrólogo pedir; bumpar o `?v=` de todo arquivo mexido; só pintura, sem
 mudar layout; preferência vai pro Supabase e não pro `localStorage`.
+
+## Papiro global (03/10/2026)
+
+O papiro (cores e camadas) agora tem **uma única definição**: `papiro.css`
+(variáveis `--papiro-topo/meio/base`, `--papiro-gradiente`, `--papiro-fundo`,
+`--papiro-fundo-simples`, `--papiro-botao`), carregado por `index.html`,
+`agendar.html` e `formulario.html`. É o mesmo papiro (mais claro, mais
+contraste) do site Falando de Astrologia. **Nunca copiar um degradê de papiro
+em CSS novo — usar `background: var(--papiro-fundo)`** (folhas grandes) ou
+`var(--papiro-fundo-simples)` (botões/janelinhas).
+
+No JS, `papiro.js` expõe `papiroCores()`, `papiroGradienteSvg(id)` e
+`papiroGradienteCanvas(ctx, altura)`, que **leem** as variáveis do CSS — as
+imagens salvas/capturas saem com o mesmo papiro da tela.
+
+Exceção: o CSS do Relatório (`relatorio.js`) também vai pro PDF, que não tem o
+`papiro.css`, então ali as cores entram como valores literais (via
+`papiroCores()`), não `var()`. E **o JPEG `papiro-folha.js` é gerado a partir de
+`--papiro-fundo`: se as cores mudarem, regerar** (794x1123 px a 1,5x, JPEG
+q80, via Chromium headless).

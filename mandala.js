@@ -1086,18 +1086,16 @@ let _papiroCabContador = 0;
 function aplicarPapiroNoCabecalhoSVG(svg) {
   const sf = '_' + (_papiroCabContador++);
   const defs = `<defs>
-    <linearGradient id="papiroCabBase${sf}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d6bd92"/><stop offset="55%" stop-color="#c8a878"/><stop offset="100%" stop-color="#b98f5f"/>
-    </linearGradient>
+    ${papiroGradienteSvg('papiroCabBase' + sf)}
     <radialGradient id="papiroCabLuz${sf}" cx="0.18" cy="0.2" r="0.6">
-      <stop offset="0%" stop-color="#f0deb4" stop-opacity="0.45"/><stop offset="100%" stop-color="#fff0c8" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#fff4d2" stop-opacity="0.6"/><stop offset="100%" stop-color="#fff4d2" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="papiroCabSombra${sf}" cx="0.9" cy="0.9" r="0.6">
-      <stop offset="0%" stop-color="#6e461e" stop-opacity="0.3"/><stop offset="100%" stop-color="#6e461e" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#6e461e" stop-opacity="0.22"/><stop offset="100%" stop-color="#6e461e" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="papiroCabFibras${sf}" width="24" height="5" patternUnits="userSpaceOnUse">
-      <line x1="0" y1="0.5" x2="24" y2="0.5" stroke="#785528" stroke-opacity="0.13" stroke-width="1"/>
-      <line x1="12" y1="0" x2="12" y2="5" stroke="#966e3c" stroke-opacity="0.09" stroke-width="1.5"/>
+    <pattern id="papiroCabFibras${sf}" width="27" height="6" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0.5" x2="27" y2="0.5" stroke="#785528" stroke-opacity="0.07" stroke-width="1"/>
+      <line x1="13.5" y1="0" x2="13.5" y2="6" stroke="#966e3c" stroke-opacity="0.05" stroke-width="2"/>
     </pattern>
   </defs>`;
   const m = svg.match(/<rect x="15" y="[\d.\-]+" width="[\d.]+" height="[\d.]+" rx="10" ry="10"[^>]*\/>/);
@@ -2631,10 +2629,10 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   /* opcoes.papiro (Tema Céu; hoje só os Decênios): a imagem sai como a tela — sobre papiro e em tinta, claro ou
      escuro. O html2canvas lê o DOM com as variáveis de cor da folha, então o corpo já sai certo; o título e o
      cabeçalho são em tinta. Com título/cabeçalho o papel é o degradê do papiro; sem eles, cor chapada
-     ('#c8a878') pro recorte automático achar a borda. */
+     (cor chapada do papiro) pro recorte automático achar a borda. */
   const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-  const fundoChapado = papiro ? '#c8a878' : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundoChapado = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
   const comTopo = !!(opcoes.titulo || opcoes.comCabecalho);
   const papelDegrade = papiro && comTopo;
   const fundo = (papelDegrade || papiro) ? null : fundoChapado; // null = transparente (com título/cabeçalho o degradê vai por baixo no fim; sem eles, fica sem fundo nenhum — imagem pro Relatório)
@@ -2662,9 +2660,7 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   saida.height = topo.height + corpo.height;
   const ctx = saida.getContext('2d');
   if (papelDegrade) {
-    const g = ctx.createLinearGradient(0, 0, 0, saida.height);
-    g.addColorStop(0, '#d6bd92'); g.addColorStop(0.55, '#c8a878'); g.addColorStop(1, '#b98f5f');
-    ctx.fillStyle = g;
+    ctx.fillStyle = papiroGradienteCanvas(ctx, saida.height);
   } else {
     ctx.fillStyle = fundoChapado;
   }
@@ -2688,7 +2684,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
   // Tema Céu, imagem pro Relatório (sem cabeçalho): SEM fundo — só as linhas em tinta, pra encaixar no papiro da folha.
-  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? '#c8a878' : null) : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? papiroCores().chapado : null) : (modoEscuro ? '#1c1917' : '#fffdf5');
   const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
   const cs = getComputedStyle(svgEl);
   const borda = parseFloat(cs.borderTopWidth) || 0;
@@ -2721,7 +2717,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const altura = yConteudo + Hk + 20;
   const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
     .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
-  const papelFundo = papiro ? `<defs><linearGradient id="papiroCaptura" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6bd92"/><stop offset=".55" stop-color="#c8a878"/><stop offset="1" stop-color="#b98f5f"/></linearGradient></defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
+  const papelFundo = papiro ? `<defs>${papiroGradienteSvg('papiroCaptura')}</defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
     ${papelFundo}
     <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>

@@ -3967,17 +3967,19 @@ function injetarEstilosRelatorio() {
   if (document.getElementById('relatorio-estilos')) return;
   const style = document.createElement('style');
   style.id = 'relatorio-estilos';
-    /* Fundo de papiro das folhas: UMA imagem (papiro-folha.js) em vez de 6 camadas de gradiente — no PDF as
+    /* Fundo de papiro das folhas: UMA imagem (papiro-folha.js) em vez de várias camadas de gradiente — no PDF as
      camadas deixavam a abertura lenta nos aparelhos (página branca por vários segundos). Sem o arquivo,
      cai nas camadas de gradiente de sempre. */
+  /* Cores vêm do papiro global (papiro.css/papiro.js) — aqui valores literais, não var(), porque este CSS
+     também vai pro PDF (HTML mandado pro servidor), que não tem o papiro.css. */
+  const papiroCoresRel = papiroCores();
   const papiroFolhaBg = (typeof window !== 'undefined' && window.PAPIRO_FOLHA_JPG)
-    ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #c4a375`
-    : `radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.26) 100%),
-          radial-gradient(ellipse at 18% 10%, rgba(240,222,180,0.40) 0%, transparent 42%),
-          radial-gradient(ellipse at 85% 88%, rgba(90,55,25,0.22) 0%, transparent 48%),
-          repeating-linear-gradient(0deg, rgba(95,65,30,0.09) 0px, rgba(95,65,30,0.09) 1px, transparent 1px, transparent 5px),
-          repeating-linear-gradient(90deg, rgba(110,78,40,0.06) 0px, rgba(110,78,40,0.06) 2px, transparent 2px, transparent 25px),
-          linear-gradient(180deg, #cfb287 0%, #c4a375 55%, #b78f60 100%)`;
+    ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, ${papiroCoresRel.meio}`
+    : `radial-gradient(ellipse at 12% 6%, rgba(255,244,210,0.6) 0%, transparent 40%),
+          radial-gradient(ellipse at 90% 96%, rgba(110,70,30,0.22) 0%, transparent 45%),
+          repeating-linear-gradient(0deg, rgba(120,85,40,0.07) 0px, rgba(120,85,40,0.07) 1px, transparent 1px, transparent 6px),
+          repeating-linear-gradient(90deg, rgba(150,110,60,0.05) 0px, rgba(150,110,60,0.05) 2px, transparent 2px, transparent 27px),
+          linear-gradient(180deg, ${papiroCoresRel.topo} 0%, ${papiroCoresRel.meio} 50%, ${papiroCoresRel.base} 100%)`;
   style.textContent = `
       /* position:fixed, não sticky — ver a nota em CLAUDE.md sobre por que
          sticky não é confiável nesse layout (mesmo motivo da barra do
@@ -4318,12 +4320,7 @@ function injetarEstilosRelatorio() {
          contorno e letra de tinta (azul no Voltar, terracota no Baixar PDF). SÓ PINTURA. */
       body.tema-ceu .rel-viewer { background: transparent; }
       body.tema-ceu .rel-toolbar {
-        background:
-          radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,48,20,0.22) 100%),
-          radial-gradient(ellipse at 10% 25%, rgba(240,222,180,0.45) 0%, transparent 45%),
-          repeating-linear-gradient(0deg, rgba(95,65,30,0.10) 0px, rgba(95,65,30,0.10) 1px, transparent 1px, transparent 5px),
-          repeating-linear-gradient(90deg, rgba(110,78,40,0.07) 0px, rgba(110,78,40,0.07) 2px, transparent 2px, transparent 25px),
-          linear-gradient(180deg, #d6bd92 0%, #c8a878 55%, #b98f5f 100%);
+        background: var(--papiro-fundo);
         border-bottom-color: transparent;
         clip-path: polygon(0 0, 100% 0, calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px), 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px), 4px 70%, 0 45%, 3px 22%);
       }

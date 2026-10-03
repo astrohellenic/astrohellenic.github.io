@@ -1229,7 +1229,7 @@ const LIB_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main)
    claro quanto no escuro — a tela já é papiro nos dois. */
 function fundoCapturaLiberacao() {
   // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
-  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : '#c8a878';
+  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
   return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
 }
 
