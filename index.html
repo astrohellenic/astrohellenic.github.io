@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
 
+    <!-- TEMA CÉU (claro/céu) — preferência do APARELHO (localStorage, chave astro_tema_mandala), igual ao modo de
+         cor logo abaixo: o Céu hoje cobre o software inteiro, então é aparência, não dado da conta. Lido aqui, antes de
+         qualquer coisa desenhar, pra abrir já no tema certo (sem mostrar o claro/escuro por trás e trocar depois);
+         a classe "tema-ceu" entra no <body> logo na abertura dele (script logo depois de <body>). Ver CLAUDE.md. -->
+    <script>
+    (function() {
+      var t = null;
+      try { t = localStorage.getItem('astro_tema_mandala'); } catch (e) {}
+      if (t === 'ceu' || t === 'claro') window.temaMandala = t;
+    })();
+    </script>
+
     <!-- MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) — aplicado o mais cedo possível,
          antes do resto da página desenhar, pra não piscar claro e trocar pra
          escuro um instante depois. Preferência do NAVEGADOR (localStorage),
@@ -19,6 +31,7 @@
       var listenerAtivo = null;
 
       function calcularEscuro(modo) {
+        if (window.temaMandala === 'ceu') return false; // o Céu é um tema independente: não tem base clara nem escura
         if (modo === 'escuro') return true;
         if (modo === 'claro') return false;
         return !!(mediaEscuro && mediaEscuro.matches);
@@ -30,7 +43,7 @@
         if (listenerAtivo) mediaEscuro.removeEventListener('change', listenerAtivo);
         listenerAtivo = null;
         if (modo === 'auto') {
-          listenerAtivo = function(e) { document.documentElement.classList.toggle('tema-escuro', e.matches); };
+          listenerAtivo = function(e) { document.documentElement.classList.toggle('tema-escuro', window.temaMandala !== 'ceu' && e.matches); };
           mediaEscuro.addEventListener('change', listenerAtivo);
         }
       }
@@ -56,17 +69,6 @@
     })();
     </script>
 
-    <!-- TEMA CÉU (claro/céu) — preferência do APARELHO (localStorage, chave astro_tema_mandala), igual ao modo de
-         cor acima: o Céu hoje cobre o software inteiro, então é aparência, não dado da conta. Lido aqui, antes de
-         qualquer coisa desenhar, pra abrir já no tema certo (sem mostrar o claro/escuro por trás e trocar depois);
-         a classe "tema-ceu" entra no <body> logo na abertura dele (script logo depois de <body>). Ver CLAUDE.md. -->
-    <script>
-    (function() {
-      var t = null;
-      try { t = localStorage.getItem('astro_tema_mandala'); } catch (e) {}
-      if (t === 'ceu' || t === 'claro') window.temaMandala = t;
-    })();
-    </script>
 
    <!-- FAVICON -->
    <!-- O "?v=" força o navegador a buscar o arquivo de novo quando o favicon
@@ -1962,7 +1964,7 @@ body {
 <script src="tz-lookup.js?v=20260919"></script>
 <script src="papiro.js?v=20261005a"></script>
 <script src="dialogos.js?v=20261004c"></script>
-<script src="supabase.js?v=20261005c"></script>
+<script src="supabase.js?v=20261005d"></script>
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261003z"></script>
@@ -1976,7 +1978,6 @@ body {
 <script src="liberacao.js?v=20261005a"></script>
 <script src="lotes-calculadora.js?v=20261003z"></script>
 <script src="horas.js?v=20261005a"></script>
-<script src="perguntas.js?v=20260916"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261005a"></script>
 <script src="agendamento.js?v=20261003b"></script>

@@ -67,8 +67,11 @@ navegação da aba", diferente de preferência, e devem **continuar em
   Supabase por semelhança com a Regra de ouro 2.**
   A tela Aparência tem **uma lista só**: Céu, Claro, Escuro, Automático
   (`salvarAparencia`). O Automático só escolhe entre claro e escuro, nunca
-  Céu; escolher Claro/Escuro/Automático desliga o Céu, e escolher Céu não
-  mexe no modo de cor guardado.
+  Céu; escolher Claro/Escuro/Automático desliga o Céu. **O Céu é um tema
+  INDEPENDENTE: com ele ligado não existe base clara nem escura por trás**
+  (`aplicarModoCor` nunca liga `tema-escuro` enquanto `temaMandala` for
+  'ceu'; o modo de cor guardado só volta a valer quando o Céu é desligado).
+  Por isso o script do Céu vem ANTES do script do modo de cor no `<head>`.
 
 Ou seja, a régua não é "localStorage é sempre errado" — é "preferência/
 configuração consciente do astrólogo (algo que ele foi lá e escolheu,

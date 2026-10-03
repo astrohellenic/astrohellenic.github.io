@@ -246,7 +246,7 @@ function abrirConfiguracoesAparencia() {
           <i class="fa-solid fa-star" style="color: var(--gold-primary);"></i>
           <div>
             <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Céu</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Papiro e tinta sobre o céu e o espaço sideral</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Papiro e tinta sobre o céu</div>
           </div>
         </div>
         ${escolhaAparencia === 'ceu' ? '<i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>' : ''}
@@ -287,6 +287,7 @@ function abrirConfiguracoesAparencia() {
 
       <div style="font-size: 11px; color: var(--text-muted); margin: 20px 0 16px; line-height: 1.4;">
         Escolha como os 7 planetas clássicos aparecem em toda a ferramenta (mandala, horas planetárias, tabela técnica, decênios, profecção e direções).
+        <strong>Vale só para os temas Claro, Escuro e Automático.</strong> No tema Céu essa escolha não se aplica: o Céu tem os seus próprios ícones, que só existem nele.
       </div>
 
       <div onclick="salvarEstiloPlanetas('simples')" style="${opcaoStyle(estiloPlanetasAtual === 'simples')}">
@@ -491,6 +492,10 @@ function lerTemaMandalaLocal() {
 
 function aplicarTemaMandala(tema) {
   window.temaMandala = tema;
+  if (typeof window.aplicarModoCor === 'function') { // o Céu não tem base escura: reaplica o modo com o tema já definido
+    let modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
+    window.aplicarModoCor(modo);
+  }
   document.body.classList.toggle('tema-ceu', tema === 'ceu');
   // Se a mandala já tinha sido desenhada com outro tema, refaz o desenho já com o tema certo.
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
@@ -522,17 +527,18 @@ async function carregarTemaMandala(userId) {
 /* SALVA A APARÊNCIA ESCOLHIDA NA TELA APARÊNCIA: 'ceu' | 'claro' | 'escuro' | 'auto'. Uma escolha só, tudo no
    APARELHO (localStorage), não na conta: o modo de cor (astro_modo_cor: claro/escuro/auto — "seguir o tema do
    aparelho" só faz sentido por aparelho) e o Tema Céu (astro_tema_mandala: ceu/claro).
-   - 'ceu': liga o Céu; o modo de cor guardado não muda (não vale enquanto o Céu estiver ligado).
+   - 'ceu': liga o Céu, que é um tema INDEPENDENTE — sem base clara nem escura por trás (aplicarModoCor desliga o
+     "tema-escuro" enquanto o Céu estiver ligado). O modo de cor guardado não é apagado, só deixa de valer.
    - 'claro' / 'escuro' / 'auto': desliga o Céu e aplica o modo — o automático só escolhe entre claro e escuro, nunca Céu.
    window.aplicarModoCor vem do script inline em index.html (roda antes de supabase.js). */
 function salvarAparencia(escolha) {
   const tema = escolha === 'ceu' ? 'ceu' : 'claro';
   try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
-  if (tema !== 'ceu') {
-    try { localStorage.setItem('astro_modo_cor', escolha); } catch (e) {}
-    if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(escolha);
-  }
-  window.temaMandala = tema;
+  window.temaMandala = tema; // antes do aplicarModoCor: ele consulta se o Céu está ligado
+  let modo = escolha;
+  if (tema === 'ceu') { modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {} }
+  else { try { localStorage.setItem('astro_modo_cor', escolha); } catch (e) {} }
+  if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(modo);
   document.body.classList.toggle('tema-ceu', tema === 'ceu');
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
     if (mandalaEstaNaTela()) renderMandala();
