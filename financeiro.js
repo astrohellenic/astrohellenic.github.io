@@ -22,6 +22,7 @@ let finAreasCache = [];
 let finEntradasCache = [];
 let finMapasCache = [];
 let finServicosCache = [];
+let finCombos = []; // combos cadastrados: [{ id, nome, area_id, valor }] (configuracoes.financeiro_combos)
 let finPastasClientes = ['Clientes']; // pastas cujos mapas aparecem na busca de cliente (configuracoes.financeiro_pastas_clientes)
 let finMapaPorId = {}; // TODOS os mapas por id, pra mostrar o código do cliente mesmo se a pasta dele não está na busca
 let finClienteEscolhido = null; // cliente tocado na busca da janela de entrada ({id, nome, codigo})
@@ -91,7 +92,7 @@ async function iniciarModuloFinanceiro() {
       supabaseClient.from('entradas').select('*').eq('user_id', user.id).gte('data', ini).lt('data', fim).order('data', { ascending: true }).order('created_at', { ascending: true }),
       supabaseClient.from('mapas').select('id, nome, codigo, pasta'),
       supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
-      supabaseClient.from('configuracoes').select('financeiro_pastas_clientes').eq('user_id', user.id).maybeSingle()
+      supabaseClient.from('configuracoes').select('financeiro_pastas_clientes, financeiro_combos').eq('user_id', user.id).maybeSingle()
     ]);
 
     if (areasRes.error || entradasRes.error) { renderFinanceiro(container, { tabelasIndisponiveis: true }); return; }
@@ -103,6 +104,7 @@ async function iniciarModuloFinanceiro() {
     finPastasClientes = (!configRes.error && configRes.data && Array.isArray(configRes.data.financeiro_pastas_clientes))
       ? configRes.data.financeiro_pastas_clientes
       : ['Clientes'];
+    finCombos = (!configRes.error && configRes.data && Array.isArray(configRes.data.financeiro_combos)) ? configRes.data.financeiro_combos : [];
     const todosMapas = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
     finMapaPorId = {};
     todosMapas.forEach(m => { finMapaPorId[String(m.id)] = m; });
@@ -182,6 +184,7 @@ function renderFinanceiro(container, ctx) {
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;">
           <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Entradas</h2>
           <div style="display: flex; gap: 8px;">
+            <button onclick="abrirCombosFin()" style="${btn}">Combos</button>
             <button onclick="abrirPastasFin()" style="${btn}">Pastas</button>
             <button onclick="abrirAreasFin()" style="${btn}">Áreas</button>
             <button class="fin-btn-nova" onclick="abrirFormEntradaFin()" style="${btn}">+ Entrada</button>
@@ -287,8 +290,14 @@ function abrirFormEntradaFin(id) {
   if (e) overlay.querySelector('#finApagar').onclick = () => apagarEntradaFin(id);
   finLigarBusca(overlay.querySelector('#finCliente'), overlay.querySelector('#finSugCliente'),
     finMapasCache.map(m => ({ rotulo: finRotuloCliente(m), mapa: m })), item => { finClienteEscolhido = item ? item.mapa : null; }, false);
+  // sugestões do serviço: combos cadastrados primeiro (escolher um já preenche área e valor), depois os serviços
   finLigarBusca(overlay.querySelector('#finProduto'), overlay.querySelector('#finSugProduto'),
-    finServicosCache.map(s => ({ rotulo: s.nome })), () => {}, true);
+    [...finCombos.map(c => ({ rotulo: c.nome, combo: c })), ...finServicosCache.map(s => ({ rotulo: s.nome }))],
+    item => {
+      if (!item || !item.combo) return;
+      overlay.querySelector('#finArea').value = item.combo.area_id || '';
+      if (item.combo.valor !== undefined && item.combo.valor !== null) overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
+    }, true);
   if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
 }
 
@@ -368,6 +377,96 @@ async function apagarEntradaFin(id) {
   } catch (e) {
     alert('Erro de conexão ao apagar a entrada.');
   }
+}
+
+/* ---------- combos (dois ou mais serviços vendidos juntos, com nome e preço próprios) ---------- */
+
+function abrirCombosFin() {
+  fecharModalFin();
+  const nomeArea = id => { const a = finAreasCache.find(x => x.id === id); return a ? a.nome : ''; };
+  const lista = finCombos.length
+    ? finCombos.map(c => `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+          <div style="min-width: 0;">
+            <div style="font-size: 13px; font-weight: 700;">${escapeHtml(c.nome)}</div>
+            <div style="font-size: 11px;">${escapeHtml([nomeArea(c.area_id), c.valor !== null && c.valor !== undefined ? finFormatarMoeda(c.valor) : ''].filter(Boolean).join(' · ') || 'Sem área nem valor padrão')}</div>
+          </div>
+          <span style="display: flex; gap: 12px; flex-shrink: 0;">
+            <i class="fa-solid fa-pen" onclick="abrirFormComboFin('${c.id}')" title="Editar" style="cursor: pointer;"></i>
+            <i class="fa-solid fa-trash" onclick="apagarComboFin('${c.id}')" title="Apagar" style="cursor: pointer; color: var(--danger);"></i>
+          </span>
+        </div>`).join('')
+    : '<div style="font-size: 12px; padding: 8px 0;">Nenhum combo ainda. Ex.: "Mapa Astral + Retificação".</div>';
+  const overlay = document.createElement('div');
+  overlay.id = 'finModalOverlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
+  overlay.innerHTML = `
+    <div class="modal-box" style="width: 400px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
+      <div style="font-size: 14px; font-weight: 800; margin-bottom: 4px;">Combos</div>
+      <div style="font-size: 12px; line-height: 1.4; margin-bottom: 6px;">Um combo é vendido como um serviço só, com nome e preço próprios. Ao escolher o combo numa entrada, a área e o valor já vêm preenchidos.</div>
+      ${lista}
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" class="btn-secondary" id="finFechar">Fechar</button>
+        <button type="button" class="btn-primary" id="finNovoCombo">+ Combo</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#finFechar').onclick = fecharModalFin;
+  overlay.querySelector('#finNovoCombo').onclick = () => abrirFormComboFin();
+}
+
+function abrirFormComboFin(id) {
+  const c = id ? finCombos.find(x => x.id === id) : null;
+  fecharModalFin();
+  const opcoesArea = '<option value="">Sem área</option>' +
+    finAreasCache.map(a => `<option value="${a.id}" ${c && c.area_id === a.id ? 'selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
+  const lbl = 'font-size: 11px; font-weight: 600; margin-top: 10px; display: block;';
+  const overlay = document.createElement('div');
+  overlay.id = 'finModalOverlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
+  overlay.innerHTML = `
+    <div class="modal-box" style="width: 400px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
+      <div style="font-size: 14px; font-weight: 800;">${c ? 'Editar combo' : 'Novo combo'}</div>
+      <label style="${lbl}">Nome</label>
+      <input type="text" id="finComboNome" class="modal-input" placeholder="Ex.: Mapa Astral + Retificação" value="${c ? escapeHtml(c.nome) : ''}" autocomplete="off">
+      <label style="${lbl}">Área</label>
+      <select id="finComboArea" class="modal-select">${opcoesArea}</select>
+      <label style="${lbl}">Valor padrão (R$) — opcional</label>
+      <input type="text" id="finComboValor" class="modal-input" inputmode="decimal" placeholder="500,00" value="${c && c.valor !== null && c.valor !== undefined ? String(c.valor).replace('.', ',') : ''}" autocomplete="off">
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" class="btn-secondary" id="finCancelar">Cancelar</button>
+        <button type="button" class="btn-primary" id="finSalvarCombo">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#finCancelar').onclick = abrirCombosFin;
+  overlay.querySelector('#finSalvarCombo').onclick = async () => {
+    const nome = document.getElementById('finComboNome').value.trim();
+    if (!nome) { alert('Dê um nome ao combo.'); return; }
+    const txtValor = document.getElementById('finComboValor').value.trim();
+    const valor = txtValor ? finLerValor(txtValor) : null;
+    if (txtValor && valor === null) { alert('Valor inválido (ex.: 500,00).'); return; }
+    const novo = { id: c ? c.id : String(Date.now()), nome, area_id: document.getElementById('finComboArea').value || null, valor };
+    await salvarCombosFin(c ? finCombos.map(x => x.id === c.id ? novo : x) : [...finCombos, novo]);
+  };
+}
+
+async function apagarComboFin(id) {
+  const c = finCombos.find(x => x.id === id);
+  if (!c || !await astroConfirm(`Apagar o combo "${c.nome}"? As entradas já lançadas continuam como estão.`)) return;
+  await salvarCombosFin(finCombos.filter(x => x.id !== id));
+}
+
+async function salvarCombosFin(lista) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert('Sessão não identificada.'); return; }
+    const { error } = await supabaseClient.from('configuracoes')
+      .upsert({ user_id: user.id, financeiro_combos: lista }, { onConflict: 'user_id' });
+    if (error) { alert('Erro ao salvar os combos: ' + error.message); return; }
+    finCombos = lista;
+    abrirCombosFin();
+  } catch (e) { alert('Erro de conexão ao salvar os combos.'); }
 }
 
 /* ---------- pastas de clientes (quais pastas aparecem na busca de cliente) ---------- */
