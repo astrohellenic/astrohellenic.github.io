@@ -818,3 +818,7 @@ mudou pra quem já usava) e `astrohellenic_reto` (**Estilo Astro Hellenic**, a m
 do zodíaco). O reto é o tracejado + o botão `retas: true` (e `aneisTracejados`/`eixosTracejados` falsos); `retas` chega às funções de `mandala.js` por `semReticulo === 'reto'` (retículo liso) e `reto` (faixa).
 O branco adaptativo do Céu vale pros dois (condição `faixaZodiaco`). Conferido: francês, tracejado e padrão saem idênticos byte a byte nos 5 casos; o reto tem 0 `dasharray`. `estilo_mandala` aceita os 3 valores
 (`carregarEstiloMandala`), sem coluna nova. **Atenção ao testar: refazer `/tmp/*.main.js` a partir do `origin/main` atual antes de comparar, senão a base é antiga.**
+
+**Sombra no lugar do retículo (estilo reto, 03/10/2026):** no `astrohellenic_reto` o círculo em volta dos ícones que não são do céu (ângulos, lotes, nodos, sizígia) não é mais um traço: é uma SOMBRA translúcida
+embaixo do ícone (dois discos, opacidade .07 e .13, sem filtro/blur pra sair igual em PNG e PDF). No papiro usa `COR_TINTA_SOMBRA` (`#1b2a4a`, azul quase preto da tinta de escrever, `planetIcons.js`); nos outros
+temas, a cor do ícone naquele tema (no Céu, a mesma que muda de branco pra azul-tinta). `roda.js` (`sombraIcone`/`reticuloTinta`) e `iconeAnguloCeuSVG`/`iconeCalculadoCeuSVG` (`semReticulo === 'reto'`). O tracejado e o francês não mudaram (byte a byte).

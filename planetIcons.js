@@ -150,6 +150,7 @@ function _namespacearIdsIcone(svgTexto) {
 const COR_TINTA_AZUL = '#1d3a66';
 const COR_TINTA_TERRACOTA = '#a03e25';
 const COR_TINTA_OCRE = '#B5852F'; // eixos ASC-DSC / MC-IC (traço + triângulo) nas rodas em tinta sobre papiro
+const COR_TINTA_SOMBRA = '#1b2a4a'; // azul quase preto da tinta de escrever: sombra translúcida embaixo dos ícones calculados no estilo reto, sobre papiro
 
 function temaCeuAtivoNosIcones() {
   return typeof window !== 'undefined' && window.temaMandala === 'ceu';

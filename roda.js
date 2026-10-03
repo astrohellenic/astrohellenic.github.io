@@ -607,7 +607,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
   /* Retículo tracejado em volta dos ícones calculados (não são corpos do céu): faz parte do ESTILO, em qualquer tema. No Céu os
      ícones já o desenham (iconeCalculadoCeuSVG/iconeAnguloCeuSVG, que recebem semReticulo); nos outros temas desenha-se aqui, na tinta do tema. */
-  const reticuloTinta = (r, cor) => estiloRoda.reticulosTracejados ? `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3"${estiloRoda.retas ? '' : ' stroke-dasharray="3 4"'}/>` : '';
+  /* No estilo reto o retículo tracejado vira uma SOMBRA translúcida embaixo do ícone (dois discos leves, sem filtro/blur pra sair igual em PNG e PDF):
+     no papiro, o azul-quase-preto da tinta de escrever; nos outros temas, a própria tinta do tema. */
+  const sombraIcone = (r, cor) => `<circle cx="0" cy="0" r="${r + 3}" fill="${cor}" fill-opacity=".07"/><circle cx="0" cy="0" r="${r}" fill="${cor}" fill-opacity=".13"/>`;
+  const reticuloTinta = (r, cor) => !estiloRoda.reticulosTracejados ? '' : estiloRoda.retas ? sombraIcone(r, papiro ? COR_TINTA_SOMBRA : cor) : `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
   const semReticuloCeu = estiloRoda.reticulosTracejados ? (estiloRoda.retas ? 'reto' : false) : true; // true = sem retículo; 'reto' = retículo em traço liso
 
   eixosInternos.forEach(eixo => {

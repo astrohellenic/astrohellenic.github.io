@@ -1435,7 +1435,7 @@ function desenharPlanetaCeuSVG(o) {
    do ícone do software e aponta pro ângulo certo (rotação aScreen - 180). */
 function iconeAnguloCeuSVG(aScreen, cor, rotulo, semReticulo) { // semReticulo: o retículo tracejado é do ESTILO da mandala (ver RODA_ESTILOS em roda.js)
   const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO.outro && ICONES_SIMPLES_NOVO.outro.angulo) || '';
-  const reticulo = (semReticulo && semReticulo !== 'reto') ? '' : `<circle cx="0" cy="0" r="21" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3"${semReticulo === 'reto' ? '' : ' stroke-dasharray="3 4"'}/>`;
+  const reticulo = (semReticulo && semReticulo !== 'reto') ? '' : (semReticulo === 'reto' ? `<circle cx="0" cy="0" r="24" fill="${cor}" fill-opacity=".07"/><circle cx="0" cy="0" r="21" fill="${cor}" fill-opacity=".13"/>` : `<circle cx="0" cy="0" r="21" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`);
   if (!bruto) return reticulo;
   const miolo = bruto.slice(bruto.indexOf('>') + 1, bruto.lastIndexOf('</svg>')).replace(/<defs>[\s\S]*?<\/defs>/g, '').replace(/<clipPath[\s\S]*?<\/clipPath>/g, '')
     .replace(/clip-path="[^"]*"/g, '').replace(/stroke-width="[\d.]+"/g, 'stroke-width="5"').replace(/fill="#fff"/g, `fill="${cor}" fill-opacity=".18"`).replace(/stroke="#000"/g, `stroke="${cor}"`);
@@ -1450,7 +1450,7 @@ function iconeAnguloCeuSVG(aScreen, cor, rotulo, semReticulo) { // semReticulo: 
    noite, azul-marinho de dia (acima do horizonte, de dia). */
 function iconeCalculadoCeuSVG(categoria, chave, cor, solido, semReticulo) { // semReticulo: o retículo tracejado é do ESTILO da mandala (ver RODA_ESTILOS em roda.js)
   const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO[categoria] && ICONES_SIMPLES_NOVO[categoria][chave]) || '';
-  const reticulo = (semReticulo && semReticulo !== 'reto') ? '' : `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3"${semReticulo === 'reto' ? '' : ' stroke-dasharray="3 4"'}/>`;
+  const reticulo = (semReticulo && semReticulo !== 'reto') ? '' : (semReticulo === 'reto' ? `<circle cx="0" cy="0" r="17" fill="${cor}" fill-opacity=".07"/><circle cx="0" cy="0" r="14" fill="${cor}" fill-opacity=".13"/>` : `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`);
   if (!bruto) return reticulo;
   const vb = (bruto.match(/viewBox="0 0 (\d+(?:\.\d+)?) /) || [0, 100])[1];
   const k = 22 / parseFloat(vb);
