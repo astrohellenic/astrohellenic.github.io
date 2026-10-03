@@ -91,7 +91,7 @@ async function iniciarModuloFinanceiro() {
       supabaseClient.from('areas').select('*').eq('user_id', user.id).order('ordem', { ascending: true }).order('nome', { ascending: true }),
       supabaseClient.from('entradas').select('*').eq('user_id', user.id).gte('data', ini).lt('data', fim).order('data', { ascending: true }).order('created_at', { ascending: true }),
       supabaseClient.from('mapas').select('id, nome, codigo, pasta'),
-      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
+      supabaseClient.from('relatorio_presets').select('id, nome, valor, area_id').eq('user_id', user.id).order('nome', { ascending: true }),
       supabaseClient.from('configuracoes').select('financeiro_pastas_clientes, financeiro_combos').eq('user_id', user.id).maybeSingle()
     ]);
 
@@ -112,6 +112,11 @@ async function iniciarModuloFinanceiro() {
       .filter(m => finPastasClientes.includes(m.pasta))
       .sort((a, b) => finRotuloCliente(a).localeCompare(finRotuloCliente(b), 'pt-BR', { numeric: true }));
     finServicosCache = (!servicosRes.error && servicosRes.data) ? servicosRes.data : [];
+    if (servicosRes.error) {
+      // colunas valor/area_id ainda não criadas em relatorio_presets: cai pra lista só com nome
+      const alt = await supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true });
+      finServicosCache = (!alt.error && alt.data) ? alt.data : [];
+    }
 
     renderFinanceiro(container, {});
   } catch (e) {
@@ -305,13 +310,13 @@ function abrirFormEntradaFin(id) {
   overlay.querySelector('#finNcCriar').onclick = () => criarClienteFin(overlay);
   finLigarBusca(overlay.querySelector('#finCliente'), overlay.querySelector('#finSugCliente'),
     finMapasCache.map(m => ({ rotulo: finRotuloCliente(m), mapa: m })), item => { finClienteEscolhido = item ? item.mapa : null; }, false);
-  // sugestões do serviço: combos cadastrados primeiro (escolher um já preenche área e valor), depois os serviços
+  // sugestões do serviço: combos cadastrados primeiro, depois os serviços (Configurações → Serviços); escolher um já preenche área e valor, se ele tiver
   finLigarBusca(overlay.querySelector('#finProduto'), overlay.querySelector('#finSugProduto'),
-    [...finCombos.map(c => ({ rotulo: c.nome, combo: c })), ...finServicosCache.map(s => ({ rotulo: s.nome }))],
+    [...finCombos.map(c => ({ rotulo: c.nome, combo: c })), ...finServicosCache.map(s => ({ rotulo: s.nome, combo: s }))],
     item => {
       if (!item || !item.combo) return;
-      overlay.querySelector('#finArea').value = item.combo.area_id || '';
-      if (item.combo.valor !== undefined && item.combo.valor !== null) overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
+      if (item.combo.area_id) overlay.querySelector('#finArea').value = item.combo.area_id;
+      if (item.combo.valor !== undefined && item.combo.valor !== null && item.combo.valor !== '') overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
     }, true);
   if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
 }

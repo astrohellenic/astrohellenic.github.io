@@ -21,9 +21,12 @@ const CONFIG_SECOES = [
   { id: 'relatorios', titulo: 'Relatórios', icone: 'fa-file-lines',
     descricao: 'Seus dados de contato e o logo que aparecem nos relatórios gerados.',
     html: () => htmlCfgRelatorios(), depois: () => carregarConfiguracoesRelatorio() },
+  { id: 'servicos', titulo: 'Serviços', icone: 'fa-hand-holding-heart',
+    descricao: 'Os serviços que você oferece, com área, valor e duração. Daqui saem os modelos de relatório, a agenda e o financeiro.',
+    html: () => htmlCfgServicos(), depois: () => carregarServicos() },
   { id: 'captacao', titulo: 'Captação de Clientes', icone: 'fa-user-plus',
-    descricao: 'O formulário externo de coleta de dados dos seus clientes e os serviços que você oferece.',
-    html: () => htmlCfgCaptacao(), depois: async () => { await carregarConfiguracoesCaptacao(); await carregarServicos(); } },
+    descricao: 'O formulário externo de coleta de dados dos seus clientes.',
+    html: () => htmlCfgCaptacao(), depois: () => carregarConfiguracoesCaptacao() },
   { id: 'agenda', titulo: 'Agenda', icone: 'fa-calendar-days',
     descricao: 'Os dias e horários que você atende e quais pastas de clientes entram no agendamento.',
     html: () => '<div id="cfgAgendaConteudo" class="cfg-grid"><div class="cfg-carregando">Carregando...</div></div>',
@@ -269,12 +272,21 @@ function htmlCfgCaptacao() {
         </div>
       </div>
 
-      <div class="cfg-card">
+    </div>`;
+}
+
+/* ==========================================
+   SEÇÃO: SERVIÇOS (cartão com a lista; as funções ficam mais abaixo, em "CADASTRO DE SERVIÇOS")
+   ========================================== */
+function htmlCfgServicos() {
+  return `
+    <div class="cfg-grid">
+      <div class="cfg-card cfg-card-largo">
         <div class="cfg-card-cabecalho">
           <h4 class="cfg-card-titulo">Serviços oferecidos</h4>
-          <button type="button" class="cfg-btn cfg-btn-pequeno" onclick="criarServico()">+ Serviço</button>
+          <button type="button" class="cfg-btn cfg-btn-pequeno" onclick="abrirFormServico()">+ Serviço</button>
         </div>
-        <p class="cfg-card-desc">Cadastre os nomes dos serviços que você presta. Cada serviço vira também um modelo de relatório disponível em Relatório → Modelos, onde você edita o conteúdo dele.</p>
+        <p class="cfg-card-desc">Cadastre cada serviço com nome, área, valor e duração. Cada serviço vira também um modelo de relatório (Relatório → Modelos, onde você edita o conteúdo), aparece na Agenda (a duração define o tamanho do horário) e no Financeiro (área e valor já vêm preenchidos).</p>
         <div id="servicosListContainer" class="cfg-lista">
           <div class="cfg-carregando">Carregando serviços...</div>
         </div>
@@ -687,20 +699,22 @@ async function salvarConfiguracoesCaptacao() {
 }
 
 /* ------------------------------------------
-   CAPTAÇÃO DE CLIENTES — cadastro de serviços
+   SERVIÇOS — cadastro (seção "Serviços")
    ------------------------------------------ */
 
 /* ==========================================
    CADASTRO DE SERVIÇOS
    Reaproveita a MESMA tabela que o módulo de Relatório usa pra "Modelo de
-   Relatório" (relatorio_presets: id, user_id, nome, blocos) — um serviço
-   cadastrado aqui é, no banco, o mesmo registro que aparece como modelo
-   em Relatório > Modelos. A tela do Relatório (relatorio.js) não é
-   tocada por nada disso: aqui só criamos/renomeamos/apagamos pelo nome,
-   e o conteúdo (blocos) continua sendo editado só lá.
+   Relatório" (relatorio_presets) — um serviço cadastrado aqui é, no banco, o
+   mesmo registro que aparece como modelo em Relatório > Modelos. A tela do
+   Relatório (relatorio.js) não é tocada por nada disso: aqui só criamos/
+   editamos/apagamos nome, área, valor e duração; o conteúdo (blocos) continua
+   sendo editado só lá.
 
-   Por enquanto só o nome é pedido (sem valor/duração) — o astrólogo
-   pediu pra deixar esses campos de fora nesta etapa. */
+   Colunas de relatorio_presets que esta tela usa além das de sempre:
+     valor numeric(12,2), duracao_minutos integer, area_id uuid -> areas(id)
+   Quem consome: Financeiro (área e valor ao escolher o serviço numa entrada)
+   e Agenda (duração do horário). */
 
 let cachedServicos = [];
 
@@ -710,19 +724,34 @@ async function carregarServicos() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabaseClient
+    let res = await supabaseClient
       .from('relatorio_presets')
-      .select('id, nome')
+      .select('id, nome, valor, duracao_minutos, area_id')
       .eq('user_id', user.id)
       .order('nome', { ascending: true });
-
-    cachedServicos = (!error && Array.isArray(data)) ? data : [];
+    // colunas novas ainda não criadas no Supabase: cai pra lista só com nome (não quebra a tela)
+    if (res.error) {
+      res = await supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true });
+    }
+    cachedServicos = (!res.error && Array.isArray(res.data)) ? res.data : [];
   } catch (e) {
     console.error("Erro ao carregar serviços:", e);
     cachedServicos = [];
   }
+
+  // nomes das áreas (cadastradas no Financeiro) pra mostrar na lista
+  cachedAreasServicos = [];
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      const ar = await supabaseClient.from('areas').select('id, nome').eq('user_id', user.id).order('ordem', { ascending: true }).order('nome', { ascending: true });
+      if (!ar.error && Array.isArray(ar.data)) cachedAreasServicos = ar.data;
+    }
+  } catch (e) { /* sem áreas: a lista só não mostra o nome delas */ }
+
   renderServicosList();
 }
+let cachedAreasServicos = [];
 
 /* RENDERIZA A LISTA DE SERVIÇOS CADASTRADOS */
 function renderServicosList() {
@@ -734,62 +763,101 @@ function renderServicosList() {
     return;
   }
 
-  container.innerHTML = cachedServicos.map(servico => `
+  const nomeArea = id => { const a = cachedAreasServicos.find(x => x.id === id); return a ? a.nome : ''; };
+  container.innerHTML = cachedServicos.map(servico => {
+    const detalhe = [
+      nomeArea(servico.area_id),
+      (servico.valor !== null && servico.valor !== undefined) ? Number(servico.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '',
+      servico.duracao_minutos ? servico.duracao_minutos + ' min' : ''
+    ].filter(Boolean).join(' · ');
+    return `
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
-      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</span>
+      <div style="min-width: 0;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</div>
+        ${detalhe ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(detalhe)}</div>` : ''}
+      </div>
       <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
-        <i class="fa-solid fa-pen" onclick="editarNomeServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Renomear serviço" style="color: var(--primary-blue); cursor: pointer;"></i>
+        <i class="fa-solid fa-pen" onclick="abrirFormServico('${servico.id}')" title="Editar serviço" style="color: var(--primary-blue); cursor: pointer;"></i>
         <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: var(--danger); cursor: pointer;"></i>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-/* CRIA UM NOVO SERVIÇO — insere em relatorio_presets com os blocos padrão
-   (mesma semente usada ao criar um modelo novo em Relatório > Modelos),
-   pra já nascer utilizável como modelo caso o astrólogo abra o Relatório. */
-async function criarServico() {
-  const nome = await astroPrompt("Nome do novo serviço (ex: Mapa Natal Clássico):");
-  if (!nome || !nome.trim()) return;
+/* JANELA DE NOVO SERVIÇO / EDIÇÃO (nome, área, valor, duração) */
+function abrirFormServico(id) {
+  const sv = id ? cachedServicos.find(x => x.id === id) : null;
+  if (id && !sv) return;
+  const fechar = () => { const o = document.getElementById('servicoFormOverlay'); if (o) o.remove(); };
+  fechar();
+
+  const opcoesArea = '<option value="">Sem área</option>' +
+    cachedAreasServicos.map(a => `<option value="${a.id}" ${sv && sv.area_id === a.id ? 'selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
+  const lbl = 'font-size: 11px; font-weight: 600; margin-top: 10px; display: block;';
+  const overlay = document.createElement('div');
+  overlay.id = 'servicoFormOverlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
+  overlay.innerHTML = `
+    <div class="modal-box" style="width: 400px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
+      <div style="font-size: 14px; font-weight: 800;">${sv ? 'Editar serviço' : 'Novo serviço'}</div>
+      <label style="${lbl}">Nome</label>
+      <input type="text" id="svNome" class="modal-input" placeholder="Ex.: Mapa Natal Clássico" value="${sv ? escapeHtml(sv.nome) : ''}" autocomplete="off">
+      <label style="${lbl}">Área</label>
+      <select id="svArea" class="modal-select">${opcoesArea}</select>
+      <label style="${lbl}">Valor (R$)</label>
+      <input type="text" id="svValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${sv && sv.valor !== null && sv.valor !== undefined ? String(sv.valor).replace('.', ',') : ''}" autocomplete="off">
+      <label style="${lbl}">Duração (minutos)</label>
+      <input type="text" id="svDuracao" class="modal-input" inputmode="numeric" placeholder="60" value="${sv && sv.duracao_minutos ? sv.duracao_minutos : ''}" autocomplete="off">
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" class="btn-secondary" id="svCancelar">Cancelar</button>
+        <button type="button" class="btn-primary" id="svSalvar">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#svCancelar').onclick = fechar;
+  overlay.querySelector('#svSalvar').onclick = async () => { if (await salvarServico(id || null)) fechar(); };
+  if (!sv) setTimeout(() => { try { overlay.querySelector('#svNome').focus(); } catch (x) {} }, 30);
+}
+
+/* SALVA (CRIA OU ATUALIZA) UM SERVIÇO. Um serviço novo nasce com os blocos padrão (mesma semente de um modelo
+   novo em Relatório > Modelos), pra já ser utilizável como modelo. */
+async function salvarServico(id) {
+  const nome = document.getElementById('svNome').value.trim();
+  if (!nome) { alert("Informe o nome do serviço."); return false; }
+
+  const txtValor = document.getElementById('svValor').value.replace(/[R$\s]/g, '');
+  let valor = null;
+  if (txtValor) {
+    const t = txtValor.includes(',') ? txtValor.replace(/\./g, '').replace(',', '.') : txtValor;
+    valor = parseFloat(t);
+    if (!isFinite(valor) || valor < 0) { alert("Valor inválido (ex.: 275,00)."); return false; }
+    valor = Math.round(valor * 100) / 100;
+  }
+  const txtDur = document.getElementById('svDuracao').value.trim();
+  let duracao = null;
+  if (txtDur) {
+    duracao = parseInt(txtDur, 10);
+    if (!(duracao > 0)) { alert("Duração inválida (em minutos, ex.: 60)."); return false; }
+  }
+  const campos = { nome, valor, duracao_minutos: duracao, area_id: document.getElementById('svArea').value || null };
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) { alert("Sessão não identificada."); return; }
+    if (!user) { alert("Sessão não identificada."); return false; }
 
-    const blocosPadrao = (typeof RELATORIO_BLOCOS_PADRAO !== 'undefined') ? RELATORIO_BLOCOS_PADRAO : [];
-    const { error } = await supabaseClient
-      .from('relatorio_presets')
-      .insert({ user_id: user.id, nome: nome.trim(), blocos: blocosPadrao });
-
-    if (!error) {
-      await carregarServicos();
+    let error;
+    if (id) {
+      ({ error } = await supabaseClient.from('relatorio_presets').update({ ...campos, updated_at: new Date().toISOString() }).eq('id', id));
     } else {
-      alert("Erro ao criar serviço: " + error.message);
+      const blocosPadrao = (typeof RELATORIO_BLOCOS_PADRAO !== 'undefined') ? RELATORIO_BLOCOS_PADRAO : [];
+      ({ error } = await supabaseClient.from('relatorio_presets').insert({ user_id: user.id, blocos: blocosPadrao, ...campos }));
     }
+    if (error) { alert("Erro ao salvar o serviço: " + error.message); return false; }
+    await carregarServicos();
+    return true;
   } catch (e) {
-    alert("Erro de conexão ao criar serviço.");
-  }
-}
-
-/* RENOMEIA UM SERVIÇO JÁ EXISTENTE (só o nome — o conteúdo do modelo
-   continua sendo editado em Relatório > Modelos) */
-async function editarNomeServico(id, nomeAtual) {
-  const novoNome = await astroPrompt("Novo nome do serviço:", nomeAtual);
-  if (!novoNome || !novoNome.trim() || novoNome.trim() === nomeAtual) return;
-
-  try {
-    const { error } = await supabaseClient
-      .from('relatorio_presets')
-      .update({ nome: novoNome.trim(), updated_at: new Date().toISOString() })
-      .eq('id', id);
-
-    if (!error) {
-      await carregarServicos();
-    } else {
-      alert("Erro ao renomear serviço: " + error.message);
-    }
-  } catch (e) {
-    alert("Erro de conexão ao renomear serviço.");
+    alert("Erro de conexão ao salvar o serviço.");
+    return false;
   }
 }
 
