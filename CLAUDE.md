@@ -797,5 +797,5 @@ tinha nunca eram usados), então a migração não os levou.
 
 Os 5 botões do container esquerdo da Mandala (`#mandala-actions-overlay`: salvar, atualizar momento, Matriz, céu/papiro, Revolução Solar) eram ícones
 Font Awesome PREENCHIDOS; agora são SVG monoline (grade 64, `stroke="currentColor"` `stroke-width="3"`, pontas/juntas redondas, 22px), como todos os
-outros ícones do software — a cor vem do `color` do botão em cada tema (dourado, azul-tinta no Céu, claro quando apertado). **Botão novo nesse container = SVG monoline, nunca `<i class="fa-solid ...">`.**
+outros ícones do software (o do céu/papiro é o MESMO desenho do Font Awesome `scroll`, só que contornado em vez de preenchido) — a cor vem do `color` do botão em cada tema (dourado, azul-tinta no Céu, claro quando apertado). **Botão novo nesse container = SVG monoline, nunca `<i class="fa-solid ...">`.**
 (Ainda são Font Awesome: os passos de tempo `fa-backward-step`/`fa-forward-step` do canto direito e outros ícones de telas/janelas — não mexidos por não terem sido pedidos.)
