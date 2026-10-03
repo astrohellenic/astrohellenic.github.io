@@ -792,3 +792,10 @@ só da Liberação continua em `liberacao.js`: cores de pico/salto, rótulos PIC
 (as duas rodas lado a lado ficam do mesmo tamanho). SVG antes/depois nos 21 casos (3 temas × mapa normal, mapa com planetas colados, canvas mínimo e par com escala igual) =
 igual salvo espaços e as 2 diferenças invisíveis de glifo (mesma cópia velha de `MONOLINE_ZODIAC_SVGS` da Profecção). A Sinastria nunca passa destaques de signo (os que a cópia antiga
 tinha nunca eram usados), então a migração não os levou.
+
+## Ícones monoline também nos botões da Mandala (03/10/2026)
+
+Os 5 botões do container esquerdo da Mandala (`#mandala-actions-overlay`: salvar, atualizar momento, Matriz, céu/papiro, Revolução Solar) eram ícones
+Font Awesome PREENCHIDOS; agora são SVG monoline (grade 64, `stroke="currentColor"` `stroke-width="3"`, pontas/juntas redondas, 22px), como todos os
+outros ícones do software — a cor vem do `color` do botão em cada tema (dourado, azul-tinta no Céu, claro quando apertado). **Botão novo nesse container = SVG monoline, nunca `<i class="fa-solid ...">`.**
+(Ainda são Font Awesome: os passos de tempo `fa-backward-step`/`fa-forward-step` do canto direito e outros ícones de telas/janelas — não mexidos por não terem sido pedidos.)
