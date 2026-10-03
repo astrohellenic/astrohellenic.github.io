@@ -750,7 +750,7 @@ baixo. A Mandala no papiro (botão da barra) desenha a textura em `lastRenderedP
   triângulo dos 4 ângulos saem ocre (a letra dentro do triângulo continua terracota). Vale nas 4 cópias da roda:
   `renderMandala` (`mandala.js`), `profeccao.js`, `sinastria.js` e `liberacao.js` — **mexeu num, mexe nos quatro**. O triângulo
   usa `getIconeFragmento('outro','angulo', undefined, COR_TINTA_OCRE)` (4º parâmetro = cor forçada, só vale nos ícones de papiro).
-  Os ícones de ângulo das TABELAS (`getAnguloCirculoSVG`, `tabelaTecnica.js`) não foram mexidos.
+  **Triângulo ocre em TODOS os lugares do Tema Céu** (decisão do astrólogo, 03/10): também nas tabelas/direções/botão de rotação (`getAnguloCirculoSVG`, `tabelaTecnica.js`), na Calculadora de Lotes (`getASCIconSVGLotes`) e na roda do Céu principal (`iconeAnguloCeuSVG`, `mandala.js`) — sempre triângulo ocre + letras terracota (`COR_TINTA_TERRACOTA`).
 - **`html2canvas` perde o atributo `style` da cópia que ele pinta**: um seletor CSS `[style*="..."]` NÃO funciona na imagem
   salva (só na tela). Foi por isso que o mês ativo da Profecção Mensal (`tr[style*="e0e7ff"]`) saía sem o destaque. Corrigido com
   `data-mes-ativo` na linha. **Pra qualquer estilo que precisa aparecer em imagem capturada, usar classe/`data-*`, nunca `[style*]`.**
