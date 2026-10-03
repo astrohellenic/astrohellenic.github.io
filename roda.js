@@ -67,6 +67,7 @@ function estiloMandalaAtual(naPinturaCeu) {
 
 /* Desenha a roda e devolve { svg, width, height, papiroNaTela, ceuParams }. Lê o estado global (mapa aberto, momento, Casa 1...)
    como a renderMandala sempre leu; "o" traz só as opções de pintura de cada chamada (as mesmas de renderMandala). */
+let __combustaoPapiroN = 0; // contador pros ids do gradiente da mancha do Sol no papiro
 function desenharRodaSVG(o) {
   const { estiloForcado, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro } = o;
   let fundoTransparente = o.fundoTransparente;
@@ -716,6 +717,19 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
     if (ferr) svg += ferr.glowSol(sunGlowPos, rSobRaiosGlow, tinta);
     else svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
+  }
+  /* Sol sob os raios no PAPIRO: a mesma mancha, mas "pintada na folha" — uma lavagem de tinta ocre/terracota translúcida (sem o branco-amarelado
+     do céu, que não existe no papel). Vale pra toda roda em papiro (Mandala, Profecção, Liberação, Sinastria, Relatório, capa). Raio = o de referência
+     (rSobRaiosGlow), igual em todos os estilos. Cada mancha leva o próprio gradiente (id único) pra Sinastria desenhar duas rodas na mesma tela. */
+  else if (sunItem && papiro) {
+    const gid = `combustaoPapiro_${++__combustaoPapiroN}`;
+    const posSol = polarToCart(cx, cy, pR, sunItem.aScreen);
+    svg += `<defs><radialGradient id="${gid}" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#C98A2B" stop-opacity="0.50"/>
+        <stop offset="35%" stop-color="#B5852F" stop-opacity="0.34"/>
+        <stop offset="68%" stop-color="#A03E25" stop-opacity="0.14"/>
+        <stop offset="100%" stop-color="#A03E25" stop-opacity="0"/>
+      </radialGradient></defs><circle cx="${posSol.x}" cy="${posSol.y}" r="${rSobRaiosGlow}" fill="url(#${gid})"/>`;
   }
 
   /* item.lotType vem de calculateSevenLots() como o planeta regente do
