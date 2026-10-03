@@ -149,6 +149,7 @@ function _namespacearIdsIcone(svgTexto) {
    próprio no Tema Céu (pontos de luz) e não passa por aqui. Fora do Tema Céu nada muda. */
 const COR_TINTA_AZUL = '#1d3a66';
 const COR_TINTA_TERRACOTA = '#a03e25';
+const COR_TINTA_OCRE = '#B5852F'; // eixos ASC-DSC / MC-IC (traço + triângulo) nas rodas em tinta sobre papiro
 
 function temaCeuAtivoNosIcones() {
   return typeof window !== 'undefined' && window.temaMandala === 'ceu';
@@ -199,10 +200,10 @@ function recolorirIconePapiro(bruto, cor) {
 }
 
 /* SVG bruto do ícone: o de sempre, ou o de papiro no Tema Céu. */
-function brutoDoIcone(categoria, chave, dados) {
+function brutoDoIcone(categoria, chave, dados, corForcada) {
   if (temaCeuAtivoNosIcones()) {
     const base = (ICONES_SIMPLES_NOVO[categoria] || {})[chave] || '';
-    return base ? recolorirIconePapiro(base, corIconePapiro(categoria, chave, dados)) : '';
+    return base ? recolorirIconePapiro(base, corForcada || corIconePapiro(categoria, chave, dados)) : '';
   }
   return (conjuntoDeIconesAtivo()[categoria] || {})[chave] || '';
 }
@@ -220,8 +221,8 @@ function getIconeSVG(categoria, chave, tamanho = 34, dados) {
    existente (ex.: a roda da mandala) — sem a tag <svg> externa, só o
    conteúdo (formas + defs) dentro de um <g>, pra quem usa escalar/girar
    como quiser por fora. */
-function getIconeFragmento(categoria, chave, dados) {
-  const bruto = brutoDoIcone(categoria, chave, dados);
+function getIconeFragmento(categoria, chave, dados, corForcada) { // corForcada: só vale no Tema Céu (ícones de papiro)
+  const bruto = brutoDoIcone(categoria, chave, dados, corForcada);
   if (!bruto) return '';
   const abre = bruto.indexOf('>') + 1;
   const fecha = bruto.lastIndexOf('</svg>');

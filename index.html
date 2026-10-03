@@ -1321,6 +1321,8 @@ body {
         body.tema-ceu #profMensalWrapper { background: transparent !important; border: none !important; }
         body.tema-ceu #profMensalTable thead tr { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid #1d3a66; }
         body.tema-ceu #profMensalTable tbody tr { background: transparent !important; border-bottom: 1px solid rgba(95, 65, 30, 0.45) !important; }
+        /* data-mes-ativo além do [style*]: a captura (html2canvas) perde o atributo style da cópia, então só o seletor por style não pintava o mês ativo na imagem salva */
+        body.tema-ceu #profMensalTable tbody tr[data-mes-ativo],
         body.tema-ceu #profMensalTable tbody tr[style*="e0e7ff"] { background: rgba(120, 80, 30, 0.22) !important; }
         /* botões de ano / galeria / relatório e as janelinhas deles: papiro, como os da Mandala */
         body.tema-ceu #mandala-container button[onclick^="toggleJanelaAnoProfeccao"],
@@ -1984,17 +1986,17 @@ body {
 <script src="papiro.js?v=20261006b"></script>
 <script src="dialogos.js?v=20261004c"></script>
 <script src="supabase.js?v=20261006b"></script>
-<script src="planetIcons.js?v=20261002a"></script>
+<script src="planetIcons.js?v=20261006b"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261003z"></script>
-<script src="mandala.js?v=20261006d"></script>
+<script src="mandala.js?v=20261006e"></script>
 <script src="isopsefia.js?v=20261003z"></script>
-<script src="profeccao.js?v=20261005a"></script>
-<script src="sinastria.js?v=20261005a"></script>
+<script src="profeccao.js?v=20261006c"></script>
+<script src="sinastria.js?v=20261006b"></script>
 <script src="revolucao.js?v=20260920"></script>
 <script src="decenios.js?v=20261003z"></script>
 <script src="direcoes.js?v=20261006b"></script>
-<script src="liberacao.js?v=20261005a"></script>
+<script src="liberacao.js?v=20261006b"></script>
 <script src="lotes-calculadora.js?v=20261003z"></script>
 <script src="horas.js?v=20261006b"></script>
 <script src="papiro-folha.js?v=20261005a"></script>

@@ -743,3 +743,16 @@ duas pra pintar papel em imagem salva; **nunca** `papiroGradienteCanvas` + `fill
 (sem textura). `capturarESalvarNaGaleria` (`mandala.js`) já resolve as ferramentas que só passavam cor chapada
 (Liberação, Profecção, Sinastria...): no Tema Céu pede a imagem SEM fundo (`window.__capturaSemFundo`) e põe o papel por
 baixo. A Mandala no papiro (botão da barra) desenha a textura em `lastRenderedPngUrl` (`renderMandala`).
+
+## Eixos ocre nas rodas de papiro e mês ativo da Profecção na imagem salva (03/10/2026)
+
+- **ASC-DSC / MC-IC em ocre (`COR_TINTA_OCRE` = `#B5852F`, `planetIcons.js`)**: nas rodas em tinta sobre papiro, o traço dos dois eixos e o
+  triângulo dos 4 ângulos saem ocre (a letra dentro do triângulo continua terracota). Vale nas 4 cópias da roda:
+  `renderMandala` (`mandala.js`), `profeccao.js`, `sinastria.js` e `liberacao.js` — **mexeu num, mexe nos quatro**. O triângulo
+  usa `getIconeFragmento('outro','angulo', undefined, COR_TINTA_OCRE)` (4º parâmetro = cor forçada, só vale nos ícones de papiro).
+  Os ícones de ângulo das TABELAS (`getAnguloCirculoSVG`, `tabelaTecnica.js`) não foram mexidos.
+- **`html2canvas` perde o atributo `style` da cópia que ele pinta**: um seletor CSS `[style*="..."]` NÃO funciona na imagem
+  salva (só na tela). Foi por isso que o mês ativo da Profecção Mensal (`tr[style*="e0e7ff"]`) saía sem o destaque. Corrigido com
+  `data-mes-ativo` na linha. **Pra qualquer estilo que precisa aparecer em imagem capturada, usar classe/`data-*`, nunca `[style*]`.**
+  Outros `[style*=...]` do `index.html` (Decênios, Lotes, Liberação, Isopsefia) podem ter o mesmo problema nas imagens salvas — não
+  foram mexidos por não terem sido pedidos.
