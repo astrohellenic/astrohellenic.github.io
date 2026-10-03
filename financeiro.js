@@ -180,15 +180,17 @@ function renderFinanceiro(container, ctx) {
       }).join('')
     : `<div style="font-size: 12px; color: var(--text-muted); padding: 16px 0; text-align: center;">Nenhuma entrada em ${FIN_MESES[finMes.mes]} de ${finMes.ano}.</div>`;
 
+  // mesmo botão de ícone das outras ferramentas (salvar na galeria etc.): 36x36, borda dourada fina
+  const btnIco = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
   const btn = 'background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;';
 
   container.innerHTML = `
     <div id="financeiro-container" style="width: 100%; min-height: 100%; padding: 20px; box-sizing: border-box; font-family: 'Montserrat', sans-serif; background-color: var(--bg-main);">
-      <div style="max-width: 640px; margin: 0 auto;">
+      <div id="finColuna" style="max-width: 640px; margin: 0 auto;">
 
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;">
           <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Entradas</h2>
-          <div style="display: flex; gap: 8px;">
+          <div data-html2canvas-ignore="true" style="display: flex; gap: 8px;">
             <button onclick="abrirCombosFin()" style="${btn}">Combos</button>
             <button onclick="abrirPastasFin()" style="${btn}">Pastas</button>
             <button onclick="abrirAreasFin()" style="${btn}">Áreas</button>
@@ -196,14 +198,24 @@ function renderFinanceiro(container, ctx) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <button onclick="navegarMesFin(-1)" style="${btn}" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="finLinhaMes" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <button data-html2canvas-ignore="true" onclick="navegarMesFin(-1)" style="${btn}" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
           <div style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">${FIN_MESES[finMes.mes]} ${finMes.ano}</div>
-          <button onclick="navegarMesFin(1)" style="${btn}" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
+          <button data-html2canvas-ignore="true" onclick="navegarMesFin(1)" style="${btn}" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
         <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; background: var(--bg-card);">
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
+            <div data-html2canvas-ignore="true" style="display: flex; gap: 8px;">
+              <button type="button" class="fin-ico-btn" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btnIco}">
+                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+              </button>
+              <button type="button" class="fin-ico-btn" id="finBtnPdf" onclick="imprimirEntradasPDF()" title="Salvar em PDF" style="${btnIco}">
+                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18,22 V8 H46 V22"/><rect x="8" y="22" width="48" height="24" rx="4"/><path d="M18,38 H46 V58 H18 Z"/><circle cx="47" cy="30" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
           <div class="fin-total" style="font-size: 26px; font-weight: 800; color: var(--primary-blue); margin: 2px 0 8px 0;">${finFormatarMoeda(total)}</div>
           ${linhasSubtotais}
         </div>
@@ -224,6 +236,194 @@ function navegarMesFin(delta) {
   if (mes > 11) { mes = 0; ano++; }
   finMes = { ano, mes };
   iniciarModuloFinanceiro();
+}
+
+/* ---------- RELATÓRIO DO MÊS (imagem e PDF) ----------
+   O PDF tem o MESMO desenho da tela (título, mês, cartão do total com as áreas e a lista), em páginas A4. Tudo em
+   px com alturas fixas (linha da lista = 50px etc.), pra reparti-las nas páginas sem medir nada. O servidor de PDF
+   (api/gerar-pdf.js) conta as folhas pela classe .rel-page e refaz o PDF "folha por folha" se o Chrome paginar
+   diferente, então cada página daqui TEM que ser um .rel-page e caber em 297mm. */
+
+const FIN_PG_ALTURA = 1122;      // px (297mm)
+const FIN_PG_TOPO = 36;          // px
+const FIN_PG_BASE = 44;          // px: rodapé
+const FIN_PG_LINHA = 50;         // px: cada entrada da lista
+const FIN_PG_CABECALHO = 108;    // px: título + mês (só na 1ª página)
+
+/* cores do PDF: com papiro, a tinta do Tema Céu; sem papiro, as cores do tema atual (lidas do CSS) */
+function finCoresPdf(papiro) {
+  if (papiro) {
+    return { fundo: (window.PAPIRO_FOLHA_JPG ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #e8d5a0` : '#e8d5a0'),
+      azul: '#1d3a66', titulo: '#a03e25', total: '#a03e25', texto: '#1a1410', mudo: '#1a1410', borda: 'rgba(95, 65, 30, 0.45)', cartao: 'transparent' };
+  }
+  const v = nome => (getComputedStyle(document.documentElement).getPropertyValue(nome) || '').trim();
+  const azul = v('--primary-blue') || '#103b70';
+  return { fundo: v('--bg-main') || '#ffffff', azul, titulo: azul, total: azul, texto: v('--text-dark') || '#1a1410',
+    mudo: v('--text-muted') || '#666666', borda: v('--border-color') || '#dddddd', cartao: v('--bg-card') || 'transparent' };
+}
+
+function finRelCss(c) {
+  return `
+  .finrp-pg { width: 210mm; height: 297mm; padding: ${FIN_PG_TOPO}px 40px 0 40px; position: relative; overflow: hidden; background: ${c.fundo}; color: ${c.texto}; font-family: 'Montserrat', sans-serif; box-sizing: border-box; page-break-after: always; break-after: page; }
+  .finrp-pg:last-child { page-break-after: auto; break-after: auto; }
+  .finrp-pg * { box-sizing: border-box; margin: 0; padding: 0; }
+  .finrp-col { width: 640px; margin: 0 auto; }
+  .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: ${c.titulo}; text-transform: uppercase; line-height: 44px; }
+  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: ${c.azul}; text-transform: uppercase; line-height: 36px; }
+  .finrp-cartao { border: 1px solid ${c.borda}; border-radius: 12px; background: ${c.cartao}; margin-bottom: 14px; overflow: hidden; }
+  .finrp-total { padding: 14px 16px; }
+  .finrp-total-rot { height: 16px; line-height: 16px; font-size: 11px; font-weight: 700; color: ${c.mudo}; text-transform: uppercase; letter-spacing: 0.03em; }
+  .finrp-total-val { height: 32px; line-height: 32px; margin: 2px 0 8px 0; font-size: 26px; font-weight: 800; color: ${c.total}; }
+  .finrp-area { height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .finrp-area span span { color: ${c.mudo}; }
+  .finrp-area strong { color: ${c.azul}; }
+  .finrp-lista { padding: 4px 12px; }
+  .finrp-lin { height: ${FIN_PG_LINHA}px; display: grid; grid-template-columns: 62px 1fr auto; column-gap: 10px; align-items: center; padding: 0 4px; border-bottom: 1px solid ${c.borda}; }
+  .finrp-lin:last-child { border-bottom: 0; }
+  .finrp-data { font-size: 12px; color: ${c.mudo}; }
+  .finrp-nome { font-size: 13px; line-height: 18px; font-weight: 700; color: ${c.azul}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .finrp-det { font-size: 11px; line-height: 15px; color: ${c.mudo}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .finrp-val { font-size: 13px; font-weight: 700; color: ${c.texto}; white-space: nowrap; }
+  .finrp-rodape { position: absolute; left: 40px; right: 40px; bottom: 16px; display: flex; justify-content: space-between; font-size: 9px; color: ${c.mudo}; opacity: 0.8; }`;
+}
+
+/* monta as páginas (HTML) do mês que está na tela */
+function finMontarPaginasRelatorio() {
+  const areaPorId = {};
+  finAreasCache.forEach(a => { areaPorId[a.id] = a; });
+  const { ano, mes } = finMes;
+  const total = finEntradasCache.reduce((t, e) => t + Number(e.valor || 0), 0);
+
+  const subtotais = {};
+  finEntradasCache.forEach(e => {
+    const chave = e.area_id && areaPorId[e.area_id] ? e.area_id : '_sem';
+    subtotais[chave] = (subtotais[chave] || 0) + Number(e.valor || 0);
+  });
+  const chaves = Object.keys(subtotais);
+  const linhasArea = chaves.map(k => {
+    const nome = k === '_sem' ? 'Sem área' : areaPorId[k].nome;
+    const pct = total > 0 ? Math.round((subtotais[k] / total) * 100) : 0;
+    return `<div class="finrp-area"><span>${escapeHtml(nome)} <span>(${pct}%)</span></span><strong>${finFormatarMoeda(subtotais[k])}</strong></div>`;
+  }).join('');
+  const cartaoTotal = `<div class="finrp-cartao finrp-total"><div class="finrp-total-rot">Total do mês</div><div class="finrp-total-val">${finFormatarMoeda(total)}</div>${linhasArea}</div>`;
+  const alturaCartaoTotal = 2 + 28 + 16 + 2 + 32 + 8 + 24 * chaves.length + 14; // borda + padding + conteúdo + margem de baixo
+
+  const linhaHtml = e => {
+    const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
+    const detalhe = [e.produto, e.observacao].filter(Boolean).join(' — ');
+    return `<div class="finrp-lin"><div class="finrp-data">${finFormatarDataBR(e.data)}</div><div style="min-width: 0;"><div class="finrp-nome">${escapeHtml(finNomeClienteEntrada(e) || 'Sem cliente')}</div><div class="finrp-det">${escapeHtml([area, detalhe, e.forma_pagamento].filter(Boolean).join(' · '))}</div></div><div class="finrp-val">${finFormatarMoeda(e.valor)}</div></div>`;
+  };
+
+  const util = FIN_PG_ALTURA - FIN_PG_TOPO - FIN_PG_BASE;
+  const porPrimeira = Math.max(1, Math.floor((util - FIN_PG_CABECALHO - alturaCartaoTotal - 10) / FIN_PG_LINHA));
+  const porOutra = Math.max(1, Math.floor((util - 10) / FIN_PG_LINHA));
+  const grupos = [finEntradasCache.slice(0, porPrimeira)];
+  for (let i = porPrimeira; i < finEntradasCache.length; i += porOutra) grupos.push(finEntradasCache.slice(i, i + porOutra));
+
+  const cabecalho = `<div class="finrp-titulo">Entradas</div><div class="finrp-mes">${FIN_MESES[mes]} ${ano}</div>`;
+  const paginas = grupos.map((g, idx) => {
+    const lista = g.length ? `<div class="finrp-cartao finrp-lista">${g.map(linhaHtml).join('')}</div>` : '';
+    return `<div class="finrp-col">${idx === 0 ? cabecalho + cartaoTotal : ''}${lista}</div>`;
+  });
+
+  const hoje = finFormatarDataBR(finHojeISO());
+  return {
+    total: paginas.length,
+    html: paginas.map((p, n) => `<div class="finrp-pg rel-page">${p}<div class="finrp-rodape"><span>Astro Hellenic · Entradas ${FIN_MESES[mes]} ${ano}</span><span>emitido em ${hoje} · página ${n + 1} de ${paginas.length}</span></div></div>`).join('')
+  };
+}
+
+function finNomeArquivoRelatorio(ext) {
+  return `Entradas_${finMes.ano}-${String(finMes.mes + 1).padStart(2, '0')}.${ext}`;
+}
+
+/* Botão da impressora. No Tema Céu pergunta se é pra sair sobre o papiro (como a capa do Relatório); nos outros temas vai direto. */
+function imprimirEntradasPDF() {
+  if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
+  if (!document.body.classList.contains('tema-ceu')) { baixarEntradasPDF(false); return; }
+  fecharModalFin();
+  const overlay = document.createElement('div');
+  overlay.id = 'finModalOverlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
+  overlay.innerHTML = `
+    <div class="modal-box" style="width: 340px; max-width: 100%; box-sizing: border-box;" role="dialog" aria-modal="true">
+      <div style="font-size: 14px; font-weight: 800;">Salvar em PDF</div>
+      <button type="button" class="btn-primary" id="finPdfPapiro" style="width: 100%;">Sobre papiro (tinta sobre papiro)</button>
+      <button type="button" class="btn-secondary" id="finPdfSimples" style="width: 100%;">Sem papiro (fundo liso)</button>
+      <button type="button" class="btn-secondary" id="finPdfCancelar" style="width: 100%;">Cancelar</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#finPdfPapiro').onclick = () => { fecharModalFin(); baixarEntradasPDF(true); };
+  overlay.querySelector('#finPdfSimples').onclick = () => { fecharModalFin(); baixarEntradasPDF(false); };
+  overlay.querySelector('#finPdfCancelar').onclick = fecharModalFin;
+}
+
+/* PDF: manda o HTML pro mesmo servidor de PDF do Relatório (Chrome de verdade) e baixa o resultado */
+async function baixarEntradasPDF(papiro) {
+  if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
+  const botao = document.getElementById('finBtnPdf');
+  const original = botao ? botao.innerHTML : '';
+  if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+  // aba nova pro PDF: tem que abrir AGORA, no toque (depois do await o navegador bloquearia)
+  const abaPdf = window.astroAbaPdf ? window.astroAbaPdf.abrir() : null;
+  try {
+    const { html } = finMontarPaginasRelatorio();
+    const cores = finCoresPdf(papiro === true);
+    const doc = `<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
+<style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(cores)}</style></head><body>${html}</body></html>`;
+    const url = (typeof RELATORIO_PDF_API_URL !== 'undefined') ? RELATORIO_PDF_API_URL : 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
+    let resposta;
+    try {
+      resposta = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ html: doc }) });
+    } catch (errRede) {
+      throw new Error('a conexão com o servidor de PDF caiu. Tente de novo.');
+    }
+    if (!resposta.ok) {
+      let detalhe = '';
+      try { detalhe = (await resposta.text()).slice(0, 200); } catch (_) {}
+      throw new Error(`o servidor de PDF respondeu ${resposta.status}${detalhe ? ': ' + detalhe : ''}`);
+    }
+    const blob = await resposta.blob();
+    if (window.astroAbaPdf) window.astroAbaPdf.mostrar(abaPdf, blob, finNomeArquivoRelatorio('pdf'));
+  } catch (err) {
+    if (window.astroAbaPdf) window.astroAbaPdf.fechar(abaPdf);
+    console.error('Erro ao gerar o PDF das entradas:', err);
+    alert('Não foi possível gerar o PDF: ' + err.message);
+  } finally {
+    if (botao) { botao.disabled = false; botao.innerHTML = original; }
+  }
+}
+
+/* IMAGEM: salva a tela do mês IGUAL ao que está na tela (título, mês, total com as áreas e a lista), sem os botões.
+   É a mesma captura das outras ferramentas: no Tema Céu sai só a tinta e a folha de papiro entra por baixo
+   (capturarESalvarNaGaleria); nos outros temas sai com o fundo da tela. */
+function salvarEntradasImagem() {
+  const coluna = document.getElementById('finColuna');
+  if (!coluna) return;
+  if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
+  capturarESalvarNaGaleria(async () => {
+    const semFundo = window.__capturaSemFundo === true;
+    let fundo = null;
+    if (!semFundo) {
+      const folha = document.getElementById('financeiro-container');
+      fundo = folha ? getComputedStyle(folha).backgroundColor : '';
+      if (!fundo || fundo === 'rgba(0, 0, 0, 0)' || fundo === 'transparent') fundo = '#ffffff';
+    }
+    return html2canvas(coluna, {
+      scale: 2,
+      backgroundColor: semFundo ? null : fundo,
+      useCORS: true,
+      onclone: doc => {
+        const c = doc.getElementById('finColuna');
+        if (c) { c.style.padding = '24px'; c.style.background = 'transparent'; }
+        // linhas de texto de uma linha só (com reticências) perdiam a base das letras na captura: dá um respiro de altura
+        doc.querySelectorAll('#finColuna [style*="text-overflow"]').forEach(el => { el.style.lineHeight = '1.3'; });
+        const mes = doc.getElementById('finLinhaMes');
+        if (mes) mes.style.justifyContent = 'center'; // sem as setas, o mês fica no meio
+      }
+    });
+  }, 'Astro_Hellenic_' + finNomeArquivoRelatorio('png'));
 }
 
 /* ---------- janela de nova entrada / edição ---------- */
@@ -260,10 +460,7 @@ function abrirFormEntradaFin(id) {
       <div style="font-size: 14px; font-weight: 800;">${e ? 'Editar entrada' : 'Nova entrada'}</div>
 
       <label style="${lbl}">Data</label>
-      <input type="date" id="finData" class="modal-input" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
-
-      <label style="${lbl}">Valor (R$)</label>
-      <input type="text" id="finValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${e ? String(e.valor).replace('.', ',') : ''}" autocomplete="off">
+      <input type="date" id="finData" class="modal-input" max="${finHojeISO()}" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
 
       <label style="${lbl}">Cliente</label>
       <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
@@ -286,6 +483,9 @@ function abrirFormEntradaFin(id) {
 
       <label style="${lbl}">Área</label>
       <select id="finArea" class="modal-select">${opcoesArea}</select>
+
+      <label style="${lbl}">Valor (R$)</label>
+      <input type="text" id="finValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${e ? String(e.valor).replace('.', ',') : ''}" autocomplete="off">
 
       <label style="${lbl}">Forma de pagamento</label>
       <select id="finForma" class="modal-select">${opcoesForma}</select>
@@ -318,7 +518,7 @@ function abrirFormEntradaFin(id) {
       if (item.combo.area_id) overlay.querySelector('#finArea').value = item.combo.area_id;
       if (item.combo.valor !== undefined && item.combo.valor !== null && item.combo.valor !== '') overlay.querySelector('#finValor').value = String(item.combo.valor).replace('.', ',');
     }, true);
-  if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
+  if (!e) setTimeout(() => { try { overlay.querySelector('#finCliente').focus(); } catch (x) {} }, 30);
 }
 
 /* CLIENTE NOVO direto da entrada (quem não tem mapa, ex.: terapia). Entra na pasta "Clientes" como o "Importar Lista em Massa"
@@ -374,6 +574,7 @@ async function salvarEntradaFin(id) {
   const data = document.getElementById('finData').value;
   const valor = finLerValor(document.getElementById('finValor').value);
   if (!data) { alert('Informe a data.'); return; }
+  if (data > finHojeISO()) { alert('Essa data ainda não chegou — só dá para lançar entradas até hoje.'); return; }
   if (valor === null) { alert('Informe um valor válido (ex.: 275,00).'); return; }
 
   // cliente: se o texto bate com um cliente cadastrado, liga o cadastro; senão guarda só o nome digitado

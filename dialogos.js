@@ -109,3 +109,39 @@ window.normalizarHoraNascimento = function (txt) {
   if (h > 23 || mi > 59) return null;
   return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0');
 };
+
+/* PDF GERADO PELO SERVIDOR: abre numa ABA NOVA em vez de trocar a tela do software (recarregar a página do PDF dava erro e
+   o astrólogo tinha que entrar de novo). O navegador só deixa abrir uma aba num toque, então a aba em branco é aberta NA HORA
+   do toque (abrir) e só depois, quando o PDF chega, recebe o endereço dele (mostrar). Se o navegador bloquear a aba, cai no
+   comportamento de antes (baixar o arquivo). Usado por Relatório e Financeiro. */
+window.astroAbaPdf = {
+  abrir: function () {
+    var aba = null;
+    try { aba = window.open('', '_blank'); } catch (e) { aba = null; }
+    if (aba) {
+      try {
+        aba.document.title = 'Gerando PDF…';
+        aba.document.body.style.cssText = 'margin:0;font-family:sans-serif;color:#103b70;background:#fffdf5;display:flex;align-items:center;justify-content:center;height:100vh;';
+        aba.document.body.textContent = 'Gerando o PDF…';
+      } catch (e) { /* aba sem acesso: segue mesmo assim */ }
+    }
+    return aba;
+  },
+  mostrar: function (aba, blob, nome) {
+    var url = URL.createObjectURL(blob);
+    if (aba && !aba.closed) {
+      aba.location.href = url;
+    } else {
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = nome;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10 * 60 * 1000);
+  },
+  fechar: function (aba) {
+    try { if (aba && !aba.closed) aba.close(); } catch (e) { /* ignora */ }
+  }
+};
