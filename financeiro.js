@@ -180,6 +180,8 @@ function renderFinanceiro(container, ctx) {
       }).join('')
     : `<div style="font-size: 12px; color: var(--text-muted); padding: 16px 0; text-align: center;">Nenhuma entrada em ${FIN_MESES[finMes.mes]} de ${finMes.ano}.</div>`;
 
+  // mesmo botão de ícone das outras ferramentas (salvar na galeria etc.): 36x36, borda dourada fina
+  const btnIco = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
   const btn = 'background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;';
 
   container.innerHTML = `
@@ -206,11 +208,11 @@ function renderFinanceiro(container, ctx) {
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
             <div style="display: flex; gap: 8px;">
-              <button type="button" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btn} padding: 6px 8px; line-height: 0;">
-                <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="8" x2="32" y2="40"/><polyline points="19,28 32,41 45,28"/><polyline points="10,42 10,55 54,55 54,42"/></svg>
+              <button type="button" class="fin-ico-btn" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btnIco}">
+                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
               </button>
-              <button type="button" id="finBtnPdf" onclick="baixarEntradasPDF()" title="Salvar em PDF" style="${btn} padding: 6px 8px; line-height: 0;">
-                <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5 H39 L51 17 V59 H16 Z"/><path d="M39 5 V17 H51"/><line x1="23" y1="31" x2="44" y2="31"/><line x1="23" y1="40" x2="44" y2="40"/><line x1="23" y1="49" x2="35" y2="49"/></svg>
+              <button type="button" class="fin-ico-btn" id="finBtnPdf" onclick="baixarEntradasPDF()" title="Salvar em PDF" style="${btnIco}">
+                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18,22 V8 H46 V22"/><rect x="8" y="22" width="48" height="24" rx="4"/><path d="M18,38 H46 V58 H18 Z"/><circle cx="47" cy="30" r="1.5"/></svg>
               </button>
             </div>
           </div>
