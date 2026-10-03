@@ -613,7 +613,7 @@ function reRenderizarModuloAtivo() {
 /* ORDEM DOS BOTÕES DA BARRA SUPERIOR (Configurações > Aparência)
    As chaves abaixo são as mesmas do atributo data-modulo-key de cada botão
    dentro de #top-bar .top-bar-controls, em index.html. */
-const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'isopsefia', 'agenda'];
+const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'isopsefia', 'agenda', 'financeiro'];
 
 const ROTULOS_BOTOES_TOPO = {
   relatorio: 'Relatório',
@@ -627,7 +627,8 @@ const ROTULOS_BOTOES_TOPO = {
   lotes: 'Calculadora de Lotes',
   horas: 'Horas Planetárias',
   isopsefia: 'Isopsefia',
-  agenda: 'Agenda'
+  agenda: 'Agenda',
+  financeiro: 'Financeiro'
 };
 
 /* Completa uma ordem salva com chaves novas que não existiam quando ela foi
@@ -1556,6 +1557,11 @@ if (telaRestaurada) {
   else if (modulo === 'agenda') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloAgenda === 'function') iniciarModuloAgenda();
+  }
+  // 11B. FINANCEIRO (entradas mensais)
+  else if (modulo === 'financeiro') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloFinanceiro === 'function') iniciarModuloFinanceiro();
   }
   // 12. SINASTRIA (mandala dupla: mapa em tela + segundo mapa escolhido)
   else if (modulo === 'sinastria') {
