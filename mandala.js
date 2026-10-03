@@ -898,14 +898,20 @@ async function capturarMandalaAtualParaRelatorio() {
   // "quadrado" da Mandala Natal/Fortuna, ver renderizarMandalasDoPreset em
   // relatorio.js — só que aqui é capturado uma vez só, então usa sempre a
   // tinta 'claro', a mais segura pro uso mais comum, que é o corpo). */
-  /* Tema Céu: a imagem que vai pro relatório (pra colocar dentro de um bloco de texto) sai SEM o céu — roda em
-     tinta sobre o papiro, mantendo a rotação de Casa 1 que está na tela. O céu fica só na capa (que é sempre a
-     Mandala Natal/Fortuna do modelo, ver renderizarMandalasDoPreset). Depois de capturar, redesenha a mandala
-     normal na tela (o desenho em tinta troca a imagem da tela por uns instantes). */
+  /* Tema Céu: a imagem que vai pro relatório segue o que está na tela (botão céu/papiro, ver alternarMandalaPapiro):
+     - papiro: roda em tinta SEM fundo, pra aproveitar o papiro que já está na folha do relatório;
+     - céu: a mandala COM o céu (um retângulo de céu, "foto" em cima do papiro) — pra mostrar as duas versões.
+     Em ambos mantém a rotação de Casa 1 da tela. Depois de capturar, redesenha a mandala normal na tela (o desenho
+     da captura troca a imagem da tela por uns instantes). */
   const temaCeuCaptura = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
-  const dataUrl = await new Promise(resolve => temaCeuCaptura
-    ? renderMandala(null, resolve, 'claro', true, null, null, false, false, true)
-    : renderMandala(null, resolve, 'claro', true));
+  const ceuComFundo = temaCeuCaptura && !window.mandalaPapiroTela;
+  let dataUrl = await new Promise(resolve => ceuComFundo
+    ? renderMandala(null, resolve, 'claro', false, null, null, true, false) // céu inteiro + cabeçalho em papiro (como na tela)
+    : temaCeuCaptura
+      ? renderMandala(null, resolve, 'claro', true, null, null, false, false, true)
+      : renderMandala(null, resolve, 'claro', true));
+  // O céu é uma imagem cheia (não tem transparência pra aproveitar) e sai bem grande: reduz já aqui pra não pesar no rascunho.
+  if (ceuComFundo && typeof relatorioRedimensionarPngDataUrl === 'function') dataUrl = await relatorioRedimensionarPngDataUrl(dataUrl, 1600);
   if (temaCeuCaptura) renderMandala();
   const total = adicionarCapturaRelatorio('mandala_personalizada', dataUrl);
   alert(`Mandala adicionada ao relatório, do jeito que está na tela agora (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
