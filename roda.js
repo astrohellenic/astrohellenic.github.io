@@ -531,7 +531,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     : fn(corPadrao);
   svg += emitirTracejado(cor =>
     (inv
-      ? [[aTer[1], 1.5], [aDod[1], 2]] // só a linha entre termos e dodecatemória e a da borda; nenhuma outra divide a roda
+      ? [[aTer[0], 2], [aTer[1], 1.5], [aDod[1], 2]] // borda de dentro dos termos, a que divide termos/dodecatemória e a da borda; os círculos em volta do anel dos signos não existem
       : [[R.SignSector, 2], [R.Dodec, 1.5], [R.Termos, 2]]
     ).map(([rr, sw]) => `<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="${cor}" stroke-width="${sw}"${tracejadoCeu}/>`).join(''), goldColor);
 
