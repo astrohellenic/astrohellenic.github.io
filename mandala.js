@@ -870,6 +870,18 @@ function injetarBotaoRelatorioNaBarraSuperior() {
   btn.after(btnGaleria);
 }
 
+/* Botão da barra da Mandala (só aparece no Tema Céu, ver #btn-mandala-papiro em index.html): alterna a mandala
+   da tela entre o céu e a folha de papiro com a roda em tinta (mais contraste, pra mostrar o texto). Fica no
+   modo escolhido até apertar de novo — não volta sozinho. Não é salvo: ao recarregar a página abre no céu. */
+function alternarMandalaPapiro() {
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
+  window.mandalaPapiroTela = !window.mandalaPapiroTela;
+  const botaoMatriz = document.getElementById('btn-matriz-visibilidade-mandala');
+  if (botaoMatriz) botaoMatriz.classList.remove('matriz-visibilidade-ativa'); // se a Matriz estava na tela, o redesenho a substitui
+  renderMandala();
+}
+window.alternarMandalaPapiro = alternarMandalaPapiro;
+
 async function capturarMandalaAtualParaRelatorio() {
   // Com a Matriz de Visibilidade na tela (no lugar da mandala), o botão da
   // barra de cima manda a MATRIZ — não redesenha a mandala por cima dela.
@@ -1760,7 +1772,12 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   /* "tintaPapiro" (opcional, só as PÁGINAS DO CORPO do Relatório com o Tema Céu): a roda sai "tinta sobre o
      papiro" — sem céu, sem fundo, azul-tinta + terracota + preto (a mesma pintura das rodas secundárias:
      Profecção/Liberação/Sinastria). O céu fica só na capa. Mesmo desenho e mesmos tamanhos da roda clássica. */
-  const papiro = !!tintaPapiro && typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  const temaEhCeu = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  /* "papiroNaTela": a mandala AO VIVO (sem estiloForcado, ou seja, não é uma cópia pro Relatório) desenhada em
+     tinta sobre uma folha de papiro, no lugar do céu — escolhido pelo botão da barra da Mandala
+     (alternarMandalaPapiro), só no Tema Céu. É o mesmo desenho "tinta sobre papiro" das páginas do Relatório. */
+  const papiroNaTela = !estiloForcado && !tintaPapiro && temaEhCeu && !!window.mandalaPapiroTela;
+  const papiro = (!!tintaPapiro || papiroNaTela) && temaEhCeu;
   const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
   if (papiro) fundoTransparente = true;
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
@@ -1992,7 +2009,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
      aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
   const solAngulo = ((pObj.Sun.abs - ascAbs + 360) % 360) * Math.PI / 180;
-  const ceuParams = temaCeu ? {
+  const ceuParams = (temaCeu || papiroNaTela) ? { // no modo papiro o céu não aparece, mas segue pintado por baixo da folha
     cx, cy, width, height, termos: R.Aspects, raioCeu: R_Ceu, skyRotation,
     elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
     corDisco: 'none' // sem disco branco: o miolo é uma janela pro céu (ver montarTerraCeuSVG)
@@ -2394,7 +2411,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      
     // Só a mandala ao vivo (não as cópias do Relatório, que passam estiloForcado):
     // com o Tema Céu, o céu continua pra fora da imagem; senão limpa o fundo.
-    if (!estiloForcado) configurarFundoCeuDaTela(container, ceuParams);
+    if (!estiloForcado) {
+      configurarFundoCeuDaTela(container, ceuParams);
+      // Modo papiro: a folha de papiro cobre o palco inteiro por uma classe no body (index.html, "mandala-papiro-tela").
+      // O céu continua pintado por baixo (inline) — assim as outras ferramentas e a volta pro céu não perdem nada.
+      document.body.classList.toggle('mandala-papiro-tela', papiroNaTela);
+      const btnPapiro = document.getElementById('btn-mandala-papiro');
+      if (btnPapiro) btnPapiro.classList.toggle('mandala-papiro-ativa', papiroNaTela);
+    }
 
     URL.revokeObjectURL(blobURL);     
 

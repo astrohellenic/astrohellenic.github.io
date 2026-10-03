@@ -633,6 +633,13 @@ body {
             background: #103b70;
             color: #fcf6ba;
         }
+        /* Botão céu/papiro da Mandala: só existe no Tema Céu; "apertado" enquanto a mandala está no papiro */
+        /* Mandala sobre papiro: a folha cobre o palco (o céu continua por baixo, pintado por JS) */
+        body.tema-ceu.mandala-papiro-tela #main-stage { background: var(--papiro-fundo) !important; }
+        #btn-mandala-papiro { display: none; }
+        body.tema-ceu #btn-mandala-papiro { display: inline-block; }
+        .icon-btn.mandala-papiro-ativa { background: #103b70; color: #fcf6ba; }
+        body.tema-ceu #mandala-actions-overlay > .icon-btn.mandala-papiro-ativa { background: #103b70 !important; color: #e8d9b0; }
         .icon-btn.matriz-visibilidade-ativa:hover {
             background: #0c2c54;
             color: #fcf6ba;
@@ -1756,6 +1763,9 @@ body {
                 <button id="btn-matriz-visibilidade-mandala" class="icon-btn" onclick="toggleMatrizVisibilidadeNaMandala()" title="Matriz de Visibilidade">
                     <i class="fa-solid fa-table-cells"></i>
                 </button>
+                <button id="btn-mandala-papiro" class="icon-btn" onclick="alternarMandalaPapiro()" title="Alternar a mandala entre o céu e o papiro">
+                    <i class="fa-solid fa-scroll"></i>
+                </button>
                 <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
 
                                 <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
@@ -1973,11 +1983,11 @@ body {
 <script src="tz-lookup.js?v=20260919"></script>
 <script src="papiro.js?v=20261005a"></script>
 <script src="dialogos.js?v=20261004c"></script>
-<script src="supabase.js?v=20261006a"></script>
+<script src="supabase.js?v=20261006b"></script>
 <script src="planetIcons.js?v=20261002a"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261003z"></script>
-<script src="mandala.js?v=20261006a"></script>
+<script src="mandala.js?v=20261006b"></script>
 <script src="isopsefia.js?v=20261003z"></script>
 <script src="profeccao.js?v=20261005a"></script>
 <script src="sinastria.js?v=20261005a"></script>

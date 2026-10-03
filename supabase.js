@@ -446,6 +446,7 @@ function abrirModuloTecnica(modulo, forcar) {
   }
 
   document.body.classList.toggle('modo-mandala', modulo === 'mandala' || modulo === 'radix');
+  if (modulo !== 'mandala') document.body.classList.remove('mandala-papiro-tela'); // a folha de papiro é só da tela da Mandala (renderMandala liga de novo ao voltar)
 
   // #mandala-container tem "overflow-y: scroll" fixo no CSS (precisa disso
   // só no modo Mandala/Radix, pra imagem da mandala ter uma altura de
