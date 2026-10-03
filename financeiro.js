@@ -22,6 +22,8 @@ let finAreasCache = [];
 let finEntradasCache = [];
 let finMapasCache = [];
 let finServicosCache = [];
+let finPastasClientes = ['Clientes']; // pastas cujos mapas aparecem na busca de cliente (configuracoes.financeiro_pastas_clientes)
+let finClienteEscolhido = null; // cliente tocado na busca da janela de entrada ({id, nome, codigo})
 let finMes = null; // { ano, mes } — mes de 0 a 11
 
 /* data de hoje no fuso do aparelho (toISOString() devolveria o dia seguinte à noite no Brasil) */
@@ -77,18 +79,27 @@ async function iniciarModuloFinanceiro() {
     if (!user) { renderFinanceiro(container, { semSessao: true }); return; }
 
     const { ini, fim } = finIntervaloDoMes();
-    const [areasRes, entradasRes, mapasRes, servicosRes] = await Promise.all([
+    const [areasRes, entradasRes, mapasRes, servicosRes, configRes] = await Promise.all([
       supabaseClient.from('areas').select('*').eq('user_id', user.id).order('ordem', { ascending: true }).order('nome', { ascending: true }),
       supabaseClient.from('entradas').select('*').eq('user_id', user.id).gte('data', ini).lt('data', fim).order('data', { ascending: true }).order('created_at', { ascending: true }),
-      supabaseClient.from('mapas').select('id, nome, codigo'),
-      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true })
+      supabaseClient.from('mapas').select('id, nome, codigo, pasta'),
+      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
+      supabaseClient.from('configuracoes').select('financeiro_pastas_clientes').eq('user_id', user.id).maybeSingle()
     ]);
 
     if (areasRes.error || entradasRes.error) { renderFinanceiro(container, { tabelasIndisponiveis: true }); return; }
 
     finAreasCache = areasRes.data || [];
     finEntradasCache = entradasRes.data || [];
-    finMapasCache = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
+    // Só a pasta "Clientes" por padrão (as outras guardam mapas de pergunta, de conhecidos etc.);
+    // o astrólogo escolhe outras pastas no botão "Pastas".
+    finPastasClientes = (!configRes.error && configRes.data && Array.isArray(configRes.data.financeiro_pastas_clientes))
+      ? configRes.data.financeiro_pastas_clientes
+      : ['Clientes'];
+    const todosMapas = (!mapasRes.error && mapasRes.data) ? mapasRes.data : [];
+    finMapasCache = todosMapas
+      .filter(m => finPastasClientes.includes(m.pasta))
+      .sort((a, b) => finRotuloCliente(a).localeCompare(finRotuloCliente(b), 'pt-BR', { numeric: true }));
     finServicosCache = (!servicosRes.error && servicosRes.data) ? servicosRes.data : [];
 
     renderFinanceiro(container, {});
@@ -162,6 +173,7 @@ function renderFinanceiro(container, ctx) {
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;">
           <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Entradas</h2>
           <div style="display: flex; gap: 8px;">
+            <button onclick="abrirPastasFin()" style="${btn}">Pastas</button>
             <button onclick="abrirAreasFin()" style="${btn}">Áreas</button>
             <button class="fin-btn-nova" onclick="abrirFormEntradaFin()" style="${btn}">+ Entrada</button>
           </div>
@@ -212,11 +224,14 @@ function abrirFormEntradaFin(id) {
     finAreasCache.map(a => `<option value="${a.id}" ${e && e.area_id === a.id ? 'selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
   const opcoesForma = '<option value="">—</option>' +
     FIN_FORMAS_PAGAMENTO.map(f => `<option ${e && e.forma_pagamento === f ? 'selected' : ''}>${f}</option>`).join('');
-  const listaClientes = finMapasCache.map(m => `<option value="${escapeHtml(finRotuloCliente(m))}"></option>`).join('');
-  const listaProdutos = finServicosCache.map(s => `<option value="${escapeHtml(s.nome)}"></option>`).join('');
-  const clienteInicial = e && e.cliente_nome
-    ? (() => { const m = e.mapa_id && finMapasCache.find(x => String(x.id) === String(e.mapa_id)); return m ? finRotuloCliente(m) : e.cliente_nome; })()
-    : '';
+  // cliente já gravado: se ainda está nas pastas da busca mostra "código - nome"; senão (outra pasta, ou nome digitado) mantém o nome
+  finClienteEscolhido = null;
+  let clienteInicial = '';
+  if (e && e.cliente_nome) {
+    const m = e.mapa_id && finMapasCache.find(x => String(x.id) === String(e.mapa_id));
+    if (m) { finClienteEscolhido = m; clienteInicial = finRotuloCliente(m); }
+    else { if (e.mapa_id) finClienteEscolhido = { id: e.mapa_id, nome: e.cliente_nome, codigo: null }; clienteInicial = e.cliente_nome; }
+  }
   const lbl = 'font-size: 11px; font-weight: 600; margin-top: 10px; display: block;';
 
   fecharModalFin();
@@ -234,12 +249,12 @@ function abrirFormEntradaFin(id) {
       <input type="text" id="finValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${e ? String(e.valor).replace('.', ',') : ''}" autocomplete="off">
 
       <label style="${lbl}">Cliente</label>
-      <input type="text" id="finCliente" class="modal-input" list="finListaClientes" placeholder="Digite para buscar, ou escreva um nome" value="${escapeHtml(clienteInicial)}" autocomplete="off">
-      <datalist id="finListaClientes">${listaClientes}</datalist>
+      <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div id="finSugCliente" style="display: none;"></div>
 
       <label style="${lbl}">Produto / serviço</label>
-      <input type="text" id="finProduto" class="modal-input" list="finListaProdutos" placeholder="Ex.: Mapa Natal Clássico" value="${e ? escapeHtml(e.produto || '') : ''}" autocomplete="off">
-      <datalist id="finListaProdutos">${listaProdutos}</datalist>
+      <input type="text" id="finProduto" class="modal-input" placeholder="Ex.: Mapa Natal Clássico" value="${e ? escapeHtml(e.produto || '') : ''}" autocomplete="off">
+      <div id="finSugProduto" style="display: none;"></div>
 
       <label style="${lbl}">Área</label>
       <select id="finArea" class="modal-select">${opcoesArea}</select>
@@ -261,7 +276,37 @@ function abrirFormEntradaFin(id) {
   overlay.querySelector('#finCancelar').onclick = fecharModalFin;
   overlay.querySelector('#finSalvar').onclick = () => salvarEntradaFin(id || null);
   if (e) overlay.querySelector('#finApagar').onclick = () => apagarEntradaFin(id);
+  finLigarBusca(overlay.querySelector('#finCliente'), overlay.querySelector('#finSugCliente'),
+    finMapasCache.map(m => ({ rotulo: finRotuloCliente(m), mapa: m })), item => { finClienteEscolhido = item ? item.mapa : null; }, false);
+  finLigarBusca(overlay.querySelector('#finProduto'), overlay.querySelector('#finSugProduto'),
+    finServicosCache.map(s => ({ rotulo: s.nome })), () => {}, true);
   if (!e) setTimeout(() => { try { overlay.querySelector('#finValor').focus(); } catch (x) {} }, 30);
+}
+
+/* BUSCA NA JANELA: lista de sugestões própria, embaixo do campo. Só filtra enquanto a pessoa digita e NUNCA mexe no que
+   está escrito — o <datalist> do navegador apagava/trocava o texto no meio da digitação. Escolher = tocar numa sugestão. */
+function finLigarBusca(input, caixa, itens, aoEscolher, mostrarTudoNoFoco) {
+  const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  let achados = [];
+  const esconder = () => { caixa.style.display = 'none'; caixa.innerHTML = ''; };
+  const mostrar = () => {
+    const q = norm(input.value).trim();
+    achados = (q ? itens.filter(i => norm(i.rotulo).includes(q)) : (mostrarTudoNoFoco ? itens : [])).slice(0, 8);
+    if (!achados.length) { esconder(); return; }
+    caixa.style.cssText = 'display: block; margin-top: 4px; max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);';
+    caixa.innerHTML = achados.map((i, k) =>
+      `<div data-k="${k}" style="padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border-color);">${escapeHtml(i.rotulo)}</div>`).join('');
+  };
+  input.addEventListener('input', () => { aoEscolher(null); mostrar(); });
+  if (mostrarTudoNoFoco) input.addEventListener('focus', mostrar);
+  caixa.addEventListener('click', ev => {
+    const el = ev.target.closest('[data-k]');
+    if (!el) return;
+    const item = achados[Number(el.dataset.k)];
+    input.value = item.rotulo;
+    aoEscolher(item);
+    esconder();
+  });
 }
 
 async function salvarEntradaFin(id) {
@@ -272,7 +317,7 @@ async function salvarEntradaFin(id) {
 
   // cliente: se o texto bate com um cliente cadastrado, liga o cadastro; senão guarda só o nome digitado
   const textoCliente = document.getElementById('finCliente').value.trim();
-  const mapa = textoCliente ? finMapasCache.find(m => finRotuloCliente(m) === textoCliente) : null;
+  const mapa = (textoCliente && finClienteEscolhido && (finRotuloCliente(finClienteEscolhido) === textoCliente || finClienteEscolhido.nome === textoCliente)) ? finClienteEscolhido : null;
 
   const registro = {
     data,
@@ -314,6 +359,47 @@ async function apagarEntradaFin(id) {
   } catch (e) {
     alert('Erro de conexão ao apagar a entrada.');
   }
+}
+
+/* ---------- pastas de clientes (quais pastas aparecem na busca de cliente) ---------- */
+
+function abrirPastasFin() {
+  fecharModalFin();
+  const pastas = (typeof customFolders !== 'undefined' && Array.isArray(customFolders)) ? [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR')) : [];
+  const overlay = document.createElement('div');
+  overlay.id = 'finModalOverlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
+  const lista = pastas.map((p, k) => `
+    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: 600; cursor: pointer;">
+      <input type="checkbox" class="finChkPasta" data-pasta="${escapeHtml(p)}" ${finPastasClientes.includes(p) ? 'checked' : ''} style="width: 18px; height: 18px; flex-shrink: 0;">
+      <span>${escapeHtml(p)}</span>
+    </label>`).join('');
+  overlay.innerHTML = `
+    <div class="modal-box" style="width: 380px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
+      <div style="font-size: 14px; font-weight: 800; margin-bottom: 4px;">Pastas de clientes</div>
+      <div style="font-size: 12px; line-height: 1.4; margin-bottom: 8px;">Só os mapas das pastas marcadas aparecem na busca de cliente das entradas.</div>
+      ${lista || '<div style="font-size: 12px;">Nenhuma pasta encontrada.</div>'}
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" class="btn-secondary" id="finCancelar">Cancelar</button>
+        <button type="button" class="btn-primary" id="finSalvarPastas">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#finCancelar').onclick = fecharModalFin;
+  overlay.querySelector('#finSalvarPastas').onclick = salvarPastasFin;
+}
+
+async function salvarPastasFin() {
+  const marcadas = Array.from(document.querySelectorAll('#finModalOverlay .finChkPasta:checked')).map(c => c.dataset.pasta);
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert('Sessão não identificada.'); return; }
+    const { error } = await supabaseClient.from('configuracoes')
+      .upsert({ user_id: user.id, financeiro_pastas_clientes: marcadas }, { onConflict: 'user_id' });
+    if (error) { alert('Erro ao salvar as pastas: ' + error.message); return; }
+    fecharModalFin();
+    await iniciarModuloFinanceiro();
+  } catch (e) { alert('Erro de conexão ao salvar as pastas.'); }
 }
 
 /* ---------- áreas (Astrologia, Psicanálise…) ---------- */
