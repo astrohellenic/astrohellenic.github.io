@@ -27,6 +27,7 @@ const RODA_ESTILOS = {
     reticulosTracejados: true,    // tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos) — em qualquer tema
     raioLotes: 209,               // lotes por dentro, ENCOSTADOS nos dentinhos de graus do anel SignSector (que apontam pro miolo)
     fioLoteDe: 'SignSector',      // o fio dos lotes vai até esses dentinhos
+    aneisPorSigno: true,          // termos e dodecatemória no campo de cada signo, na cor dele (vale pro tracejado e pro reto)
     reguaTermosPraFora: true,     // dentinhos do anel dos termos apontam pra FORA, na direção dos planetas
     raioDestaque: 498,            // por fora da faixa do zodíaco (pR + 9 graus de latitude)
     fioPlanetaDe: 'Termos',       // o fio dos planetas/eclíptica vai até os dentinhos do anel dos termos
@@ -47,6 +48,7 @@ RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, 
 RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   nome: 'Estilo comum',
   invertido: true,
+  aneisPorSigno: false,           // o comum tem os anéis inteiros
   reguaTermosPraFora: false,      // o comum tem a sua própria régua (borda de dentro dos termos, pra dentro)
   fioLoteDe: null,
   reticulosTracejados: false,     // sem a sombra embaixo dos ícones calculados: só os ícones normais
@@ -528,6 +530,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   }
 
   // Tema Céu: as divisas dos termos e da dodecatemória são tracejadas (foram postas ali, não são do céu); os dentinhos ficam sólidos.
+  const porSigno = !!estiloRoda.aneisPorSigno; // anéis/dentinhos/divisas de termos e dodecatemória no CAMPO de cada signo, na cor dele
   const tracejadoCeu = estiloRoda.aneisTracejados ? ' stroke-dasharray="6 4"' : '';
   const tracejadoFinoCeu = estiloRoda.aneisTracejados ? ' stroke-dasharray="3 3"' : '';
   /* No Céu os tracejados (anéis, divisas da dodecatemória e dos termos) são BRANCOS — o mesmo "branco" dos ícones calculados: branco-azulado
@@ -538,7 +541,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   const emitirTracejado = (fn, corPadrao) => tracejadoAdaptativo
     ? `<g clip-path="url(#ceuMeiaTela)">${fn(tintaCimaCeu)}</g><g clip-path="url(#ceuMeiaTelaBaixo)">${fn('#e6eeff')}</g>`
     : fn(corPadrao);
-  svg += emitirTracejado(cor =>
+  if (!porSigno) svg += emitirTracejado(cor =>
     (inv
       ? [[aTer[0], 2], [aTer[1], 1.5], [aDod[1], 2]] // borda de dentro dos termos, a que divide termos/dodecatemória e a da borda; os círculos em volta do anel dos signos não existem
       : [[R.SignSector, 2], [R.Dodec, 1.5], [R.Termos, 2]]
@@ -562,7 +565,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   }
   }
 
-  svg += emitirTracejado(cor => {
+  if (!porSigno) svg += emitirTracejado(cor => {
     let out = '';
     for (let i = 0; i < 12; i++) {
       for (let d = 0; d < 12; d++) {
@@ -574,7 +577,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     return out;
   }, inv ? goldColor : tinta.dodecatemoriaLinha);
 
-  svg += emitirTracejado(cor => {
+  if (!porSigno) svg += emitirTracejado(cor => {
     let out = '';
     for (let s = 0; s < 12; s++) {
       let prev = 0;
@@ -602,7 +605,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
     return out;
   };
-  svg += (inv || estiloRoda.faixaZodiaco) ? emitirTracejado(reguaTermos, goldColor) : reguaTermos(goldColor); // dentinho = mesma cor da linha a que pertence (nos Astro Hellenic e no Comum, no Céu, o branco/azul-tinta adaptativo)
+  if (!porSigno) svg += (inv || estiloRoda.faixaZodiaco) ? emitirTracejado(reguaTermos, goldColor) : reguaTermos(goldColor); // dentinho = mesma cor da linha a que pertence (nos Astro Hellenic e no Comum, no Céu, o branco/azul-tinta adaptativo)
 
   // Régua do anel SignSector (dentinhos pra dentro): no invertido não existe; nos Astro Hellenic tem a mesma cor do círculo (adaptativo no Céu)
   const reguaSignos = cor => {
@@ -616,7 +619,37 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
     return out;
   };
-  if (!inv) svg += estiloRoda.faixaZodiaco ? emitirTracejado(reguaSignos, goldColor) : reguaSignos(goldColor);
+  if (!inv && !porSigno) svg += estiloRoda.faixaZodiaco ? emitirTracejado(reguaSignos, goldColor) : reguaSignos(goldColor);
+
+  /* TERMOS E DODECATEMÓRIAS POR SIGNO (esboço): eles fazem parte do signo, então ficam no CAMPO dele, na cor do elemento, e acompanham o contorno
+     da faixa do zodíaco (que deixa INS graus de folga de cada lado — o "vãozinho" entre um signo e o outro). Tudo que cai nessa folga não é desenhado. */
+  if (porSigno) {
+    const INS = 0.55;
+    for (let i = 0; i < 12; i++) {
+      const cor = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
+      const A = eclToScreenAngle(i * 30, house1RefAbs), a1 = A - INS, a2 = A - 30 + INS;
+      const P = (rr, a) => polarToCart(cx, cy, rr, a);
+      // contorno do campo: três arcos (SignSector, Dodec, Termos) e as duas laterais
+      [R.SignSector, R.Dodec, R.Termos].forEach((rr, k) => {
+        const s = P(rr, a1), e = P(rr, a2);
+        svg += `<path d="M${s.x.toFixed(1)} ${s.y.toFixed(1)} A${rr} ${rr} 0 0 0 ${e.x.toFixed(1)} ${e.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="${k === 1 ? 1.5 : 2}"${tracejadoCeu}/>`;
+      });
+      [a1, a2].forEach(ang => { const s = P(R.SignSector, ang), e = P(R.Termos, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="2"${tracejadoCeu}/>`; });
+      // divisas da dodecatemória (de 2,5° em 2,5°, só as de dentro do signo)
+      for (let d = 1; d < 12; d++) { const ang = eclToScreenAngle(i * 30 + d * 2.5, house1RefAbs), s = P(R.SignSector, ang), e = P(R.Dodec, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; }
+      // divisas dos termos (só as de dentro do signo)
+      let prev = 0;
+      EGYPTIAN_TERMS[i].forEach(term => { if (prev > 0) { const ang = eclToScreenAngle(i * 30 + prev, house1RefAbs), s = P(R.Dodec, ang), e = P(R.Termos, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; } prev = term.deg; });
+      // dentinhos de grau: os dos graus 1 a 29 (o 0 cai na folga entre os signos); de dentro (pra dentro) e de fora (pra fora)
+      for (let g = 1; g < 30; g++) {
+        const ang = eclToScreenAngle(i * 30 + g, house1RefAbs);
+        const lenT = (g % 10 === 0) ? 12 : ((g % 5 === 0) ? 8 : 4), lenS = (g % 10 === 0) ? 10 : ((g % 5 === 0) ? 6 : 3);
+        const t1 = P(R.Termos, ang), t2 = P(R.Termos + lenT, ang), s1 = P(R.SignSector, ang), s2 = P(R.SignSector - lenS, ang);
+        svg += `<line x1="${t1.x}" y1="${t1.y}" x2="${t2.x}" y2="${t2.y}" stroke="${cor}" stroke-width="${g % 10 === 0 ? 1.5 : 0.8}"/>`;
+        svg += `<line x1="${s1.x}" y1="${s1.y}" x2="${s2.x}" y2="${s2.y}" stroke="${cor}" stroke-width="${g % 10 === 0 ? 1.2 : 0.6}"/>`;
+      }
+    }
+  }
 
 
   const ascPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), eclToScreenAngle(ascAbs, house1RefAbs));

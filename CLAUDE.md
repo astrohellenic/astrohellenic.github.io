@@ -855,3 +855,6 @@ tela. Vale pra qualquer roda em papiro (Mandala, Profecção, Liberação, Sinas
 
 **Dentinho = cor da linha também nos Astro Hellenic (03/10/2026):** as duas réguas de grau (dentinhos pra dentro no anel `SignSector`, pra fora no anel dos termos) saem na MESMA cor dos círculos a que pertencem: no Céu, o branco/azul-tinta adaptativo
 (`reguaSignos`/`reguaTermos` + `emitirTracejado`); antes ficavam amarelas. Fora do Céu já eram iguais. Francês e Comum não mudaram; nos Astro Hellenic só muda o Céu (conferido byte a byte). **Regra geral: dentinho de régua nunca tem cor diferente da linha onde nasce.**
+
+**Termos e dodecatemória por signo (Astro Hellenic tracejado e reto, 03/10/2026):** eles fazem parte do signo, então ficam no CAMPO dele (do `SignSector` ao `Termos`), na cor do elemento do signo: contorno, divisas da dodecatemória/termos e os dentinhos de grau,
+com o mesmo vãozinho (`INS = 0,55°`) do contorno da faixa dos signos — por isso o dentinho do grau 0 não aparece, só 1 a 29 (`aneisPorSigno`, bloco `if (porSigno)` em `roda.js`). O Comum e o francês não mudaram (byte a byte).
