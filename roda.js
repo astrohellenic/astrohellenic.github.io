@@ -12,6 +12,7 @@ const RODA_ESTILOS = {
     faixaZodiaco: false,          // signos num anel por dentro (números das casas e glifos), divisas em linha cheia até o miolo
     aneisTracejados: false,
     eixosTracejados: false,       // ASC-DSC / MC-IC em traço liso
+    reticulosTracejados: false,   // sem tracejado em volta dos ícones calculados (nodos, sizígia, lotes, ângulos)
     raioLotes: 276,               // lotes logo por fora do anel dos termos
     fioPlanetaDe: 'Termos',       // o fio dos planetas/lotes sai do anel dos termos...
     planetaComDesvio: true        // ...e conjunções coladas são empurradas (aShift/rOffset)
@@ -22,6 +23,7 @@ const RODA_ESTILOS = {
     faixaZodiaco: true,           // faixa do zodíaco na eclíptica, com os planetas dentro
     aneisTracejados: true,
     eixosTracejados: true,
+    reticulosTracejados: true,    // tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos) — em qualquer tema
     raioLotes: 190,               // lotes por dentro
     fioPlanetaDe: 'Aspects',      // o fio sai do disco do miolo
     planetaComDesvio: false       // planeta sempre na posição real
@@ -537,13 +539,18 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
   };
 
+  /* Retículo tracejado em volta dos ícones calculados (não são corpos do céu): faz parte do ESTILO, em qualquer tema. No Céu os
+     ícones já o desenham (iconeCalculadoCeuSVG/iconeAnguloCeuSVG, que recebem semReticulo); nos outros temas desenha-se aqui, na tinta do tema. */
+  const reticuloTinta = (r, cor) => estiloRoda.reticulosTracejados ? `<circle cx="0" cy="0" r="${r}" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>` : '';
+  const semReticuloCeu = !estiloRoda.reticulosTracejados;
+
   eixosInternos.forEach(eixo => {
     const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
     const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
     if (temaCeu) {
       // mesmo estilo dos nodos/lotes: triângulo em traço claro dentro de um retículo tracejado
       const cor = corCalculadoCeu(pPos.x, pPos.y);
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">${iconeAnguloCeuSVG(aScreen, cor, eixo.label)}
+      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">${iconeAnguloCeuSVG(aScreen, cor, eixo.label, semReticuloCeu)}
         <text x="0" y="29" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
       </g>`;
       return;
@@ -551,7 +558,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const anguloFrag = getIconeFragmento('outro', 'angulo', undefined, papiro ? COR_TINTA_OCRE : undefined);
     const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
 
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
+    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">${reticuloTinta(21, papiro ? COR_TINTA_OCRE : tinta.inkForte)}
       <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
       <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
       <text x="0" y="24" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
@@ -632,20 +639,20 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, tinta.inkForte)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>`}
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, tinta.inkForte)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>`}
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, semReticuloCeu) : `${reticuloTinta(14, tinta.inkForte)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>`}
         <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
