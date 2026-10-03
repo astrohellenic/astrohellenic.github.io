@@ -79,21 +79,8 @@ function getLotIconSVG(lotKey) {
 /* ==========================================
    MINI MANDALA NATAL NO TOPO DA LIBERAÇÃO ZODIACAL
    ==========================================
-   Cópia de gerarMandalaSVG (profeccao.js), que por sua vez é cópia fiel
-   de renderMandala() em mandala.js: mesmos anéis/hastes/ticks dourados,
-   aspectos, dodecatemoria, termos egípcios, lotes herméticos e planetas
-   em SVG 3D com sombra e mancha de combustão, só sem a faixa de céu/
-   espaço sideral (não cabe numa miniatura). Reaproveita direto os
-   globais já carregados por mandala.js antes deste arquivo (PLANETS_DEF,
-   EGYPTIAN_TERMS, MONOLINE_ZODIAC_SVGS, ELEMENT_SIGN_COLORS,
-   SIGN_ELEMENTS, eclToScreenAngle, polarToCart, formatDegMin,
-   calculateSevenLots, aplicarEmpilhamentoRadial, aplicarDesvioLateralLotes)
-   — não os redeclara aqui. Só os defs/planetas em SVG 3D
-   (construirDefsPlanetasZR/fragmentoPlaneta3DZR) precisam de cópia
-   própria, porque em profeccao.js eles só existem dentro do IIFE do
-   módulo, sem versão global reaproveitável, e usam IDs de gradiente/
-   filtro sufixados por instância (não podem colidir com os mesmos IDs
-   fixos usados pela mandala principal em mandala.js). */
+   Desenhada pela roda central (desenharRodaSVG, roda.js) — ver gerarMandalaNatalZR mais abaixo. Aqui ficam só os ids de SVG por
+   instância (a mandala não pode colidir com os mesmos ids fixos usados pela mandala principal) e o planeta. */
 
 let wheelInstanceCounterZR = 0;
 
@@ -114,14 +101,9 @@ function fragmentoPlaneta3DZR(planetId, sufixo) {
   return (typeof getIconeFragmento === 'function') ? getIconeFragmento('planeta', planetId) : '';
 }
 
-/* Gera a mandala natal completa em SVG — cópia fiel de gerarMandalaSVG
-   (profeccao.js), incluindo os destaques de signo (fatia semitransparente
-   do centro até a borda + faixa sólida na borda externa). Em vez dos
-   destaques de Profecção (ano profectado/ASC da RS/mês aberto), aqui são
-   os 4 níveis da árvore da Liberação Zodiacal que estiverem abertos no
-   momento (L1/L2/L3/L4) — mesmos tons e transparência de profeccao.js
-   pros 3 primeiros (verde, amarelo, azul/índigo), com um 4º tom (grafite)
-   criado no mesmo padrão pro L4, que não existia lá. */
+/* Mandala natal da Liberação em SVG — desenhada pela RODA CENTRAL (desenharRodaSVG, roda.js), a mesma de todas as ferramentas: o
+   estilo (francês / Astro Hellenic) e o desenho em si moram lá. Aqui ficam só as coisas DESTA ferramenta: os 4 níveis da árvore
+   (fatias + etiquetas em faixa + coroas com o número do nível), os rótulos de PICO e SALTO e as cores deles. Casa 1 sempre num lote. */
 function gerarMandalaNatalZR(dados, opcoes = {}) {
   if (!dados || !dados.Ascendente) {
     return `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
@@ -131,468 +113,136 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const l2SignIdx = (opcoes.l2SignIdx !== undefined) ? opcoes.l2SignIdx : null;
   const l3SignIdx = (opcoes.l3SignIdx !== undefined) ? opcoes.l3SignIdx : null;
   const l4SignIdx = (opcoes.l4SignIdx !== undefined) ? opcoes.l4SignIdx : null;
-  /* Signo onde vai cair o Salto (Lysis) de cada nível, dentro do
-     período ATIVO do nível pai — independente de "agora" já ter
-     chegado lá ou não (estrutural, não temporal: mesma lógica do
-     PICO, só que a referência do salto é o signo ativo do nível
-     acima, não a Fortuna). null quando o período pai é curto demais
-     pra sequer chegar num salto. L1 nunca tem (não subdivide nada). */
+  /* Signo onde vai cair o Salto (Lysis) de cada nível, dentro do período ATIVO do nível pai — independente de "agora" já ter
+     chegado lá ou não (estrutural, não temporal: mesma lógica do PICO, só que a referência do salto é o signo ativo do nível
+     acima, não a Fortuna). null quando o período pai é curto demais pra sequer chegar num salto. L1 nunca tem. */
   const l2SaltoSignIdx = (opcoes.l2SaltoSignIdx !== undefined) ? opcoes.l2SaltoSignIdx : null;
   const l3SaltoSignIdx = (opcoes.l3SaltoSignIdx !== undefined) ? opcoes.l3SaltoSignIdx : null;
   const l4SaltoSignIdx = (opcoes.l4SaltoSignIdx !== undefined) ? opcoes.l4SaltoSignIdx : null;
-  /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do
-     desenho, no lugar do Ascendente — mesma lógica de rotação de
-     alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui
-     não tem opção "ASC": a Liberação sempre gira em torno de um lote. */
+  /* Chave do lote (fortune/spirit/venus/...) a colocar na Casa 1 do desenho, no lugar do Ascendente — mesma lógica de
+     alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui não tem opção "ASC": a Liberação sempre gira em torno de um lote. */
   const loteCasa1 = (opcoes.loteCasa1 !== undefined) ? opcoes.loteCasa1 : null;
 
-  /* Mesma "tinta" clara/escura de mandala.js (esta função é cópia fiel
-     de renderMandala) — cores resolvidas em hexadecimal porque este SVG
-     acaba virando <img> (ver converterMandalaLiberacaoEmImagem logo
-     depois do render), então var(--x) não seria enxergado por quem lê o
-     canvas depois. ELEMENT_SIGN_COLORS fica sombreado só aqui dentro
-     (a versão global, de mandala.js, continua intocada).
-
-     fundoDisco/halo (escuro) usam --bg-card (#262220), NÃO --bg-main
-     (#1c1917) como em mandala.js — diferença de propósito, não descuido:
-     aqui o disco fica dentro de um cartão próprio (#liberacaoMandalaCapture,
-     fundo var(--bg-card)), enquanto na Mandala principal o disco fica
-     direto sobre #main-stage (fundo var(--bg-main)), sem cartão por
-     baixo. No Tema Claro os dois fundos são o mesmo branco (#ffffff),
-     por isso esse descasamento nunca apareceu antes de existir tema
-     escuro — usar --bg-main aqui deixava uma "moldura" mais clara entre
-     a borda dourada do cartão e o quadrado escuro do disco. */
+  /* Cores PRÓPRIAS da Liberação (pico, salto, rótulo das coroas); as cores da roda em si vêm da roda central. O disco escuro usa
+     --bg-card (#262220), não --bg-main: ele fica dentro de um cartão próprio (#liberacaoMandalaCapture). */
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  /* TEMA CÉU — roda SECUNDÁRIA ("tinta sobre o papiro"): mesma lógica da Profecção (ver gerarMandalaSVG em
-     profeccao.js): sem fundo/céu, azul-tinta na estrutura e terracota nos destaques. Quem observa o céu é a
-     mandala principal; aqui o astrólogo já está escrevendo no papiro. */
   const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
   const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
-  const tinta = papiro ? {
-    fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
-    inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: TERRACOTA, linhaConectora: 'rgba(29,58,102,0.55)',
-    aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
-    elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
-    dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
+  const cores = papiro ? {
     picoBg: 'none', picoBorder: AZ_TINTA, picoText: AZ_TINTA,
-    saltoBg: 'none', saltoBorder: TERRACOTA, saltoText: TERRACOTA, saltoLabel: TERRACOTA,
+    saltoBg: 'none', saltoBorder: TERRACOTA, saltoText: TERRACOTA, saltoLabel: TERRACOTA, navio: TERRACOTA,
   } : modoEscuro ? {
-    fundoDisco: '#262220', dourado: '#d9ae3f', douradoCasas: '#e8c667', halo: '#262220',
-    inkForte: '#e8e6df', inkPlaneta: '#e8e6df', navio: '#8ab4e8', linhaConectora: '#6b7280',
-    aspectoOposicao: '#fb7185', aspectoTrigono: '#60a5fa', aspectoQuadratura: '#ff6b4a', aspectoSextil: '#38bdf8',
-    elementoFogo: '#ff6b4a', elementoTerra: '#d99a5c', elementoAr: '#38bdf8', elementoAgua: '#60a5fa',
-    dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
     picoBg: '#4a3a12', picoBorder: '#d99a2b', picoText: '#f0b35c',
-    saltoBg: '#3a1f1f', saltoBorder: '#6b3232', saltoText: '#f4a8a8', saltoLabel: '#f4a8a8',
+    saltoBg: '#3a1f1f', saltoBorder: '#6b3232', saltoText: '#f4a8a8', saltoLabel: '#f4a8a8', navio: '#8ab4e8',
   } : {
-    fundoDisco: '#ffffff', dourado: '#c59b27', douradoCasas: '#aa820a', halo: '#ffffff',
-    inkForte: '#000000', inkPlaneta: '#0f172a', navio: '#103b70', linhaConectora: '#94a3b8',
-    aspectoOposicao: '#881337', aspectoTrigono: '#1d4ed8', aspectoQuadratura: '#e84118', aspectoSextil: '#0ea5e9',
-    elementoFogo: '#e84118', elementoTerra: '#8b4513', elementoAr: '#0ea5e9', elementoAgua: '#1d4ed8',
-    dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
     picoBg: '#fef3c7', picoBorder: '#f59e0b', picoText: '#b45309',
-    saltoBg: '#fee2e2', saltoBorder: '#f87171', saltoText: '#991b1b', saltoLabel: '#7f1d1d',
+    saltoBg: '#fee2e2', saltoBorder: '#f87171', saltoText: '#991b1b', saltoLabel: '#7f1d1d', navio: '#103b70',
   };
-  const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
 
-  const goldColor = tinta.dourado;
   const sufixo = `zr${wheelInstanceCounterZR++}`;
 
-  const ascAbs = dados.Ascendente.grau_absoluto;
-  const mcAbs = dados.MC ? dados.MC.grau_absoluto : (ascAbs + 270) % 360;
-  const nodeAbs = dados.Nodo_Norte ? dados.Nodo_Norte.grau_absoluto : 0;
-  const syzAbs = dados.Sizigia ? dados.Sizigia.grau_absoluto : 0;
+  /* RÓTULOS DE PICO E SALTO — ficam na mesma faixa de raio das barrinhas coloridas dos níveis, desenhados por cima delas. PICO: os
+     signos das casas 1, 4, 7 e 10 a partir da Fortuna (sempre a Fortuna, nunca o lote da Casa 1 nem o ativo na árvore). SALTO:
+     estrutural — onde o Lysis de cada nível VAI cair; quando mais de um nível cai no mesmo signo, dividem um badge só (números unidos
+     por "-"). Quando o MESMO signo tem pico e salto, os badges são deslocados: um acima/abaixo do outro no lado esquerdo/direito da
+     roda, e um do lado do outro em cima/embaixo. A posição (raio) vem do estilo da mandala (ctx.raioDestaque). */
+  const rotulosPicoSalto = (ctx) => {
+    const { cx, cy, house1RefAbs, raioDestaque, lotes, tinta } = ctx;
+    const fortSignIdx = Math.floor(lotes.find(l => l.key === "fortune").deg / 30);
+    const picoSigns = [fortSignIdx, (fortSignIdx + 3) % 12, (fortSignIdx + 6) % 12, (fortSignIdx + 9) % 12];
+    const rPico = raioDestaque + 23;
+    const signosComPico = new Set(picoSigns);
 
-  const pObj = {};
-  PLANETS_DEF.forEach(p => {
-    const item = dados[p.key];
-    pObj[p.id] = { abs: item ? item.grau_absoluto : 0, retro: item ? Boolean(item.retro) : false, lat: item ? (item.lat || 0) : 0 };
-  });
-
-  const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-  const lotes = calculateSevenLots(ascAbs, isDay, pObj);
-
-  /* Signos de PICO (casas 1, 4, 7 e 10 a partir do signo da Fortuna) —
-     mesma lógica/fonte de angularSignsFromFort em renderLiberacaoUI,
-     sempre a partir da Fortuna, nunca do lote escolhido pra Casa 1 do
-     desenho (loteCasa1) nem do lote ativo na árvore (selectedZRPhase). */
-  const fortSignIdxZR = Math.floor(lotes.find(l => l.key === "fortune").deg / 30);
-  const picoSignsZR = [fortSignIdxZR, (fortSignIdxZR + 3) % 12, (fortSignIdxZR + 6) % 12, (fortSignIdxZR + 9) % 12];
-
-  let house1RefAbs = ascAbs;
-  if (loteCasa1) {
-    const targetLot = lotes.find(l => l.key === loteCasa1);
-    if (targetLot) house1RefAbs = targetLot.deg;
-  }
-
-  const outerRingItems = [];
-  PLANETS_DEF.forEach(p => {
-    outerRingItems.push({
-      type: "planet", id: p.id, deg: pObj[p.id].abs, retro: pObj[p.id].retro,
-      eclLat: pObj[p.id].lat, aScreen: eclToScreenAngle(pObj[p.id].abs, house1RefAbs)
+    const niveisSaltoPorSigno = {};
+    [[2, l2SaltoSignIdx], [3, l3SaltoSignIdx], [4, l4SaltoSignIdx]].forEach(([nivel, signIdx]) => {
+      if (signIdx === null || signIdx === undefined) return;
+      if (!niveisSaltoPorSigno[signIdx]) niveisSaltoPorSigno[signIdx] = [];
+      niveisSaltoPorSigno[signIdx].push(nivel);
     });
-  });
-  if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
-  }
-  if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
-  }
-  lotes.forEach(lot => {
-    outerRingItems.push({ type: "lot", label: lot.label, lotType: lot.type, sym: lot.sym, deg: lot.deg, color: goldColor, aScreen: eclToScreenAngle(lot.deg, house1RefAbs) });
-  });
+    const signosComSalto = new Set(Object.keys(niveisSaltoPorSigno).map(Number));
 
-  aplicarEmpilhamentoRadial(outerRingItems, 7.5);
-  aplicarDesvioLateralLotes(outerRingItems, 6);
-
-  const latPxPerGrau = 12;
-  const pR = 390;
-  const R = { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
-  const R_OuterLine = 399;
-
-  const degToPxPR = (2 * Math.PI * pR) / 360;
-  const rSobRaiosGlow = degToPxPR * 15;
-  let maxRaioItens = pR + rSobRaiosGlow;
-  outerRingItems.forEach(item => {
-    if (item.type === 'lot') return;
-    const base = item.type === 'planet' ? pR + (item.eclLat * latPxPerGrau) : pR;
-    const raio = base + (item.rOffset || 0);
-    if (raio > maxRaioItens) maxRaioItens = raio;
-  });
-  const R_canvas = Math.max(maxRaioItens + 50, R_OuterLine + 55);
-  const cx = R_canvas, cy = R_canvas;
-  const canvasSize = R_canvas * 2;
-
-  let svg = `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
-      <defs>${construirDefsPlanetasZR(sufixo)}</defs>
-      <rect width="${canvasSize}" height="${canvasSize}" fill="${tinta.fundoDisco}"/>`;
-
-  function desenharFatiaDestaque(signIdx, cor) {
-    if (signIdx === null || signIdx === undefined) return '';
-    const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
-    const passos = 15;
-    let d = `M ${cx} ${cy} `;
-    for (let s = 0; s <= passos; s++) {
-      const p = polarToCart(cx, cy, R_OuterLine, angInicial - (30 * s / passos));
-      d += `L ${p.x} ${p.y} `;
+    function deslocamentoBadges(signIdx) {
+      const aScreen = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+      const rad = aScreen * Math.PI / 180;
+      const ladoEsquerdoOuDireito = Math.abs(Math.cos(rad)) > Math.abs(Math.sin(rad));
+      return ladoEsquerdoOuDireito
+        ? { pico: { x: 0, y: -14 }, salto: { x: 0, y: 14 } }
+        : { pico: { x: -19, y: 0 }, salto: { x: 19, y: 0 } };
     }
-    d += 'Z';
-    return `<path d="${d}" fill="${cor}"/>`;
-  }
 
-  svg += desenharFatiaDestaque(l4SignIdx, papiro ? "rgba(23, 112, 127, 0.16)" : "rgba(148, 163, 184, 0.45)");
-  svg += desenharFatiaDestaque(l3SignIdx, papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)");
-  svg += desenharFatiaDestaque(l2SignIdx, papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)");
-  svg += desenharFatiaDestaque(l1SignIdx, papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)");
-
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${tinta.fundoDisco}" stroke="${goldColor}" stroke-width="2"/>`;
-
-  const occupiedSigns = new Set();
-  PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
-  const occupiedArray = Array.from(occupiedSigns);
-  for (let i = 0; i < occupiedArray.length; i++) {
-    for (let j = i + 1; j < occupiedArray.length; j++) {
-      let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
-      if (diff > 6) diff = 12 - diff;
-      let col = null;
-      if (diff === 6) col = tinta.aspectoOposicao;
-      else if (diff === 4) col = tinta.aspectoTrigono;
-      else if (diff === 3) col = tinta.aspectoQuadratura;
-      else if (diff === 2) col = tinta.aspectoSextil;
-      if (col) {
-        const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
-        const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
-        svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${col}" stroke-width="1.8" opacity="0.9"/>`;
-      }
-    }
-  }
-
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"/>`;
-
-  /* ORDEM DE CAMADAS DA RODA (mesmo padrao de mandala.js, 28/09/2026): a
-     estrutura da mandala (circulos, raios, dentinhos) sempre por tras de
-     tudo; depois as linhas pretas dos eixos ASC/DSC/MC/IC; depois todos
-     os icones por cima. Os loops que desenhavam linha+icone juntos
-     (dodecatemoria, termos) foram separados em duas passadas: uma so de
-     linha aqui, outra so de icone la embaixo, depois das linhas dos
-     eixos. */
-
-  for (let i = 0; i < 12; i++) {
-    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
-    svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
-  }
-
-  for (let i = 0; i < 12; i++) {
-    for (let d = 0; d < 12; d++) {
-      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"/>`;
-    }
-  }
-
-  for (let s = 0; s < 12; s++) {
-    let prev = 0;
-    EGYPTIAN_TERMS[s].forEach(term => {
-      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"/>`;
-      prev = term.deg;
-    });
-  }
-
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-    const p1 = polarToCart(cx, cy, R.Termos, aScreen);
-    const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
-  }
-
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-    const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-    const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
-  }
-
-  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
-  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
-
-  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
-  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${tinta.inkForte}" stroke-width="2.5"/>`;
-
-  /* A PARTIR DAQUI SO ICONE - nada de linha/dentinho novo abaixo disso,
-     pra manter a estrutura da roda sempre por tras. */
-
-  const rEixoInterno = R.SignSector - 12;
-  const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "MC", deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "IC", deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
-  ];
-  eixosInternos.forEach(eixo => {
-    const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
-    const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
-    const anguloFrag = getIconeFragmento('outro', 'angulo');
-    const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
-        <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
-        <text x="0" y="24" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
+    let out = '';
+    picoSigns.forEach(signIdx => {
+      const desloc = signosComSalto.has(signIdx) ? deslocamentoBadges(signIdx).pico : { x: 0, y: 0 };
+      const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+      const pPico = polarToCart(cx, cy, rPico, aScreenPico);
+      out += `<g transform="translate(${pPico.x + desloc.x}, ${pPico.y + desloc.y})">
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${cores.picoBg}" stroke="${cores.picoBorder}" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.picoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
     </g>`;
-  });
-
-  const refSignIdx = Math.floor(house1RefAbs / 30);
-  for (let i = 0; i < 12; i++) {
-    const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
-    const pNum = polarToCart(cx, cy, 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
-
-    const pSym = polarToCart(cx, cy, 166, aMid);
-    svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
-  }
-
-  for (let i = 0; i < 12; i++) {
-    for (let d = 0; d < 12; d++) {
-      const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
-      svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
-    }
-  }
-
-  // term.p e so o glifo Unicode ("♃" etc) - de-para pro id do planeta
-  // que o icone novo dos termos usa (mesmo mapa de mandala.js). So os 5
-  // regentes de termo egipcio (nunca Sol/Lua) entram aqui.
-  const TERMO_PLANET_BY_SYMBOL_ZR = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
-  const termoIconTamanhoZR = 18;
-
-  for (let s = 0; s < 12; s++) {
-    let prev = 0;
-    EGYPTIAN_TERMS[s].forEach(term => {
-      const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-      const termoPlanetIdZR = TERMO_PLANET_BY_SYMBOL_ZR[term.p];
-      svg += getIconeTermoSVG(termoPlanetIdZR, termoIconTamanhoZR, goldColor)
-        .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanhoZR / 2}" y="${pTerm.y - termoIconTamanhoZR / 2}" `);
-      prev = term.deg;
-    });
-  }
-
-  function desenharFaixaDestaque(signIdx, cor, rInterno, rExterno) {
-    if (signIdx === null || signIdx === undefined) return '';
-    const angInicial = eclToScreenAngle(signIdx * 30, house1RefAbs);
-    const passos = 15;
-    const pontosFora = [];
-    for (let s = 0; s <= passos; s++) pontosFora.push(polarToCart(cx, cy, rExterno, angInicial - (30 * s / passos)));
-    const pontosDentro = [];
-    for (let s = passos; s >= 0; s--) pontosDentro.push(polarToCart(cx, cy, rInterno, angInicial - (30 * s / passos)));
-    const pontos = pontosFora.concat(pontosDentro);
-    const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-    return `<path d="${d}" fill="${cor}"/>`;
-  }
-
-  svg += desenharFaixaDestaque(l4SignIdx, papiro ? "#17707f" : "#475569", R_OuterLine + 4, R_OuterLine + 12);
-  svg += desenharFaixaDestaque(l3SignIdx, papiro ? AZ_TINTA : "#6366f1", R_OuterLine + 14, R_OuterLine + 22);
-  svg += desenharFaixaDestaque(l2SignIdx, papiro ? "#6b4a2b" : "#eab308", R_OuterLine + 24, R_OuterLine + 32);
-  svg += desenharFaixaDestaque(l1SignIdx, papiro ? TERRACOTA : "#65a30d", R_OuterLine + 34, R_OuterLine + 42);
-
-  /* RÓTULOS DE PICO E SALTO — ficam na mesma faixa de raio das
-     barrinhas coloridas dos níveis, desenhados por cima delas, igual
-     aos planetas. PICO: mesmos signos (casas 1, 4, 7 e 10 a partir da
-     Fortuna) já marcados na tabela, em qualquer lote. SALTO: estrutural,
-     não temporal — mostra onde o Lysis de cada nível VAI cair dentro do
-     período ativo do nível pai, independente de "agora" já ter chegado
-     lá ou não (é por isso que o signo do salto pode aparecer sem
-     nenhuma faixa colorida por baixo: pode não ser o período
-     selecionado no momento, só o que vai virar salto mais adiante
-     dentro do mesmo ciclo). L1 nunca tem (não subdivide nada). Igual às
-     coroas dos regentes, o número do(s) nível(is) em salto fica escrito
-     acima do badge, e quando mais de um nível cai no mesmo signo eles
-     dividem um badge só (números unidos por "-").
-
-     Quando o MESMO signo tem pico e salto ao mesmo tempo, os dois
-     badges se sobreporiam nesse raio — por isso são deslocados um em
-     relação ao outro: um acima/abaixo do outro quando o signo cai do
-     lado esquerdo/direito da roda (ângulo mais horizontal), e um do
-     lado do outro quando cai em cima/embaixo (ângulo mais vertical). */
-  const rPicoZR = R_OuterLine + 23;
-  const signosComPicoZR = new Set(picoSignsZR);
-
-  const niveisSaltoPorSignoZR = {};
-  [[2, l2SaltoSignIdx], [3, l3SaltoSignIdx], [4, l4SaltoSignIdx]].forEach(([nivel, signIdx]) => {
-    if (signIdx === null || signIdx === undefined) return;
-    if (!niveisSaltoPorSignoZR[signIdx]) niveisSaltoPorSignoZR[signIdx] = [];
-    niveisSaltoPorSignoZR[signIdx].push(nivel);
-  });
-  const signosComSaltoZR = new Set(Object.keys(niveisSaltoPorSignoZR).map(Number));
-
-  function deslocamentoBadgesZR(signIdx) {
-    const aScreen = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
-    const rad = aScreen * Math.PI / 180;
-    const ladoEsquerdoOuDireito = Math.abs(Math.cos(rad)) > Math.abs(Math.sin(rad));
-    return ladoEsquerdoOuDireito
-      ? { pico: { x: 0, y: -14 }, salto: { x: 0, y: 14 } }
-      : { pico: { x: -19, y: 0 }, salto: { x: 19, y: 0 } };
-  }
-
-  picoSignsZR.forEach(signIdx => {
-    const desloc = signosComSaltoZR.has(signIdx) ? deslocamentoBadgesZR(signIdx).pico : { x: 0, y: 0 };
-    const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
-    const pPico = polarToCart(cx, cy, rPicoZR, aScreenPico);
-    svg += `<g transform="translate(${pPico.x + desloc.x}, ${pPico.y + desloc.y})">
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${tinta.picoBg}" stroke="${tinta.picoBorder}" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${tinta.picoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
-    </g>`;
-  });
-
-  Object.keys(niveisSaltoPorSignoZR).forEach(signIdxKey => {
-    const signIdx = Number(signIdxKey);
-    const desloc = signosComPicoZR.has(signIdx) ? deslocamentoBadgesZR(signIdx).salto : { x: 0, y: 0 };
-    const aScreenSalto = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
-    const pSalto = polarToCart(cx, cy, rPicoZR, aScreenSalto);
-    const rotuloNiveisSalto = niveisSaltoPorSignoZR[signIdxKey].join('-');
-    svg += `<g transform="translate(${pSalto.x + desloc.x}, ${pSalto.y + desloc.y})">
-        <text x="0" y="-11" font-size="8" font-weight="900" fill="${tinta.saltoLabel}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${tinta.saltoBg}" stroke="${tinta.saltoBorder}" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${tinta.saltoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
-    </g>`;
-  });
-
-  // Pontos calculados (nodos, sizígia, lotes): círculo cremoso por trás do ícone; no papiro não há nada atrás.
-  const circuloFundoPonto = papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>';
-
-  const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-  if (sunItem && !papiro) { // no papiro não há mancha de combustão (é um brilho de céu)
-    const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="${tinta.fundoDisco}"/>`;
-    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaiosGlow}" fill="url(#combustionGlow_${sufixo})"/>`;
-  }
-
-  outerRingItems.forEach(item => {
-    if (item.type === 'planet') return;
-    const raioEfetivo = (item.type === 'lot' ? 276 : pR) + (item.rOffset || 0);
-    const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
-
-    const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-    if (item.type === "node") {
-      const nodeKeyZR = (item.label === '☊') ? 'northNode' : 'southNode';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          ${circuloFundoPonto}
-          <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKeyZR)}</g>
-          <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.type === "syzygy") {
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          ${circuloFundoPonto}
-          <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>
-          <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.type === "lot") {
-      const loteKeyZR = LOTE_ICON_KEY_LIB[item.lotType] || 'fortune';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          ${circuloFundoPonto}
-          <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKeyZR)}</g>
-          <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    }
-  });
-
-  const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
-  outerRingItems
-    .filter(item => item.type === 'planet')
-    .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
-    .forEach(item => {
-      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
-      const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-      const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
-
-      const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      const planetSvgContent = papiro ? getIconeFragmento('planeta', item.id, dados) : fragmentoPlaneta3DZR(item.id, sufixo);
-      let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-          <g transform="scale(0.36) translate(-50, -50)">${planetSvgContent}</g>
-          <text x="0" y="27" font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill">${formatDegMin(item.deg)}${retroSymbol}</text>
-      </g>`;
     });
 
-  /* COROA SOBRE O REGENTE DE CADA NÍVEL DESTACADO (L1/L2/L3/L4). Quando
-     o mesmo planeta rege mais de um nível ao mesmo tempo, ele recebe
-     UMA coroa só (não uma empilhada em cima da outra) — o número acima
-     da coroa é que muda, juntando os níveis com "-" (ex.: "1-3"). */
-  const niveisPorRegenteZR = {};
+    Object.keys(niveisSaltoPorSigno).forEach(signIdxKey => {
+      const signIdx = Number(signIdxKey);
+      const desloc = signosComPico.has(signIdx) ? deslocamentoBadges(signIdx).salto : { x: 0, y: 0 };
+      const aScreenSalto = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
+      const pSalto = polarToCart(cx, cy, rPico, aScreenSalto);
+      const rotuloNiveisSalto = niveisSaltoPorSigno[signIdxKey].join('-');
+      out += `<g transform="translate(${pSalto.x + desloc.x}, ${pSalto.y + desloc.y})">
+        <text x="0" y="-11" font-size="8" font-weight="900" fill="${cores.saltoLabel}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
+        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${cores.saltoBg}" stroke="${cores.saltoBorder}" stroke-width="1"/>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.saltoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
+    </g>`;
+    });
+    return out;
+  };
+
+  /* COROA SOBRE O REGENTE DE CADA NÍVEL DESTACADO (L1/L2/L3/L4). Quando o mesmo planeta rege mais de um nível ao mesmo tempo, ele
+     recebe UMA coroa só — o número acima dela é que muda, juntando os níveis com "-" (ex.: "1-3"). */
+  const niveisPorRegente = {};
   [[1, l1SignIdx], [2, l2SignIdx], [3, l3SignIdx], [4, l4SignIdx]].forEach(([nivel, signIdx]) => {
     if (signIdx === null || signIdx === undefined || !SIGNS_RULERS_ZR[signIdx]) return;
     const rulerId = SIGNS_RULERS_ZR[signIdx];
-    if (!niveisPorRegenteZR[rulerId]) niveisPorRegenteZR[rulerId] = [];
-    niveisPorRegenteZR[rulerId].push(nivel);
+    if (!niveisPorRegente[rulerId]) niveisPorRegente[rulerId] = [];
+    niveisPorRegente[rulerId].push(nivel);
   });
+  const coroas = Object.keys(niveisPorRegente).map(rulerId => ({
+    rulerId,
+    rotulo: { texto: niveisPorRegente[rulerId].join('-'), cor: cores.navio },
+    preenchimento: papiro ? 'none' : '#f5c518', contorno: papiro ? TERRACOTA : '#a8790a',
+    espessura: papiro ? 1.4 : 0.9, ponto: papiro ? TERRACOTA : '#dc2626'
+  }));
 
-  Object.keys(niveisPorRegenteZR).forEach(rulerId => {
-    const rulerItem = outerRingItems.find(it => it.type === 'planet' && it.id === rulerId);
-    if (!rulerItem) return;
-    const raioEfetivo = pR + (rulerItem.eclLat * latPxPerGrau) + (rulerItem.rOffset || 0);
-    const pCoroa = polarToCart(cx, cy, raioEfetivo, rulerItem.aShift);
-    const rotuloNiveis = niveisPorRegenteZR[rulerId].join('-');
-    svg += `<g transform="translate(${pCoroa.x}, ${pCoroa.y - 17})">
-        <text x="0" y="-11" font-size="9" font-weight="900" fill="${tinta.navio}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2.5" paint-order="stroke fill">${rotuloNiveis}</text>
-        <path d="M -9,5 L -9,-2 L -4.5,2.5 L 0,-7 L 4.5,2.5 L 9,-2 L 9,5 Z" fill="${papiro ? 'none' : '#f5c518'}" stroke="${papiro ? TERRACOTA : '#a8790a'}" stroke-width="${papiro ? 1.4 : 0.9}" stroke-linejoin="round"/>
-        <circle cx="0" cy="-7" r="1.6" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
-        <circle cx="-9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
-        <circle cx="9" cy="-2" r="1.3" fill="${papiro ? TERRACOTA : '#dc2626'}"/>
-    </g>`;
-  });
-
-  svg += `</svg>`;
-  return svg;
+  return desenharRodaSVG({
+    tintaPapiro: papiro,
+    ferramenta: {
+      dados, loteCasa1,
+      folgaCanvas: 55, // quatro níveis de etiqueta por fora (até raioDestaque + 42) pedem mais folga que a Profecção (três)
+      fundoEscuro: '#262220',
+      abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+      <defs>${construirDefsPlanetasZR(sufixo)}</defs>
+      <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
+      fragmentoPlaneta: (id) => fragmentoPlaneta3DZR(id, sufixo),
+      glowSol: (pos, raio, tinta) => `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="${tinta.fundoDisco}"/>` +
+        `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="url(#combustionGlow_${sufixo})"/>`,
+      destaques: {
+        // fatias por baixo de tudo, do nível mais fundo (L4) pro mais alto (L1)
+        fatias: [
+          { signIdx: l4SignIdx, cor: papiro ? "rgba(23, 112, 127, 0.16)" : "rgba(148, 163, 184, 0.45)" },
+          { signIdx: l3SignIdx, cor: papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)" },
+          { signIdx: l2SignIdx, cor: papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)" },
+          { signIdx: l1SignIdx, cor: papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)" }
+        ],
+        faixas: [
+          { signIdx: l4SignIdx, cor: papiro ? "#17707f" : "#475569", de: 4, ate: 12 },
+          { signIdx: l3SignIdx, cor: papiro ? AZ_TINTA : "#6366f1", de: 14, ate: 22 },
+          { signIdx: l2SignIdx, cor: papiro ? "#6b4a2b" : "#eab308", de: 24, ate: 32 },
+          { signIdx: l1SignIdx, cor: papiro ? TERRACOTA : "#65a30d", de: 34, ate: 42 }
+        ],
+        depoisDasFaixas: rotulosPicoSalto,
+        coroas
+      }
+    }
+  }).svg;
 }
 
 function iniciarModuloLiberacao() {

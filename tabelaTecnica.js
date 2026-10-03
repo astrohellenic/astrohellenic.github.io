@@ -75,8 +75,9 @@ function getItemSVG(key, tamanho = 20) {
    só o rótulo escrito por cima diferencia um do outro. */
 function getAnguloCirculoSVG(label, tamanho = 24) {
   if (typeof getIconeFragmento !== 'function') return `<span style="font-size: 11px; font-weight: bold;">${label}</span>`;
-  const frag = getIconeFragmento('outro', 'angulo');
-  /* Tema Céu: triângulo só de contorno azul-tinta, SEM preenchimento (o papiro aparece por dentro),
+  const ceuOcre = typeof temaCeuAtivoNosIcones === 'function' && temaCeuAtivoNosIcones();
+  const frag = getIconeFragmento('outro', 'angulo', undefined, ceuOcre ? COR_TINTA_OCRE : undefined);
+  /* Tema Céu: triângulo só de contorno OCRE (COR_TINTA_OCRE; antes azul-tinta), SEM preenchimento (o papiro aparece por dentro),
      com as letras escritas em terracota — como foi desenhado com tinta, só duas cores e nada de
      fundo. É ESTA função que desenha ASC/DSC/MC/IC em todas as ferramentas e no botão da Mandala —
      a cor é decidida só aqui, pra nunca ficar diferente de um lugar pro outro. */

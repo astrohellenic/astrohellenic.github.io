@@ -2,9 +2,22 @@
 <html lang="pt-BR">
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261005a">
+    <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
+
+    <!-- TEMA CÉU (claro/céu) — preferência do APARELHO (localStorage, chave astro_tema_mandala), igual ao modo de
+         cor logo abaixo: o Céu hoje cobre o software inteiro, então é aparência, não dado da conta. Lido aqui, antes de
+         qualquer coisa desenhar, pra abrir já no tema certo (sem mostrar o claro/escuro por trás e trocar depois);
+         a classe "tema-ceu" entra no <body> logo na abertura dele (script logo depois de <body>). Ver CLAUDE.md. -->
+    <script>
+    (function() {
+      var t = null;
+      try { t = localStorage.getItem('astro_tema_mandala'); } catch (e) {}
+      if (t === 'ceu' || t === 'claro') window.temaMandala = t;
+    })();
+    </script>
 
     <!-- MODO DE COR (CLARO/ESCURO/AUTOMÁTICO) — aplicado o mais cedo possível,
          antes do resto da página desenhar, pra não piscar claro e trocar pra
@@ -19,6 +32,7 @@
       var listenerAtivo = null;
 
       function calcularEscuro(modo) {
+        if (window.temaMandala === 'ceu') return false; // o Céu é um tema independente: não tem base clara nem escura
         if (modo === 'escuro') return true;
         if (modo === 'claro') return false;
         return !!(mediaEscuro && mediaEscuro.matches);
@@ -30,7 +44,7 @@
         if (listenerAtivo) mediaEscuro.removeEventListener('change', listenerAtivo);
         listenerAtivo = null;
         if (modo === 'auto') {
-          listenerAtivo = function(e) { document.documentElement.classList.toggle('tema-escuro', e.matches); };
+          listenerAtivo = function(e) { document.documentElement.classList.toggle('tema-escuro', window.temaMandala !== 'ceu' && e.matches); };
           mediaEscuro.addEventListener('change', listenerAtivo);
         }
       }
@@ -56,17 +70,6 @@
     })();
     </script>
 
-    <!-- TEMA CÉU (claro/céu) — preferência do APARELHO (localStorage, chave astro_tema_mandala), igual ao modo de
-         cor acima: o Céu hoje cobre o software inteiro, então é aparência, não dado da conta. Lido aqui, antes de
-         qualquer coisa desenhar, pra abrir já no tema certo (sem mostrar o claro/escuro por trás e trocar depois);
-         a classe "tema-ceu" entra no <body> logo na abertura dele (script logo depois de <body>). Ver CLAUDE.md. -->
-    <script>
-    (function() {
-      var t = null;
-      try { t = localStorage.getItem('astro_tema_mandala'); } catch (e) {}
-      if (t === 'ceu' || t === 'claro') window.temaMandala = t;
-    })();
-    </script>
 
    <!-- FAVICON -->
    <!-- O "?v=" força o navegador a buscar o arquivo de novo quando o favicon
@@ -140,7 +143,7 @@
 }
 
 /* TEMA ESCURO — ligado via classe em <html>, definida em aplicarModoCor()
-   (index.html, script inline no <head>, e supabase.js/salvarModoCor). É
+   (index.html, script inline no <head>, e supabase.js/salvarAparencia). É
    preferência do NAVEGADOR/APARELHO (localStorage, chave astro_modo_cor),
    não da conta: o astrólogo pediu explicitamente que "seguir o tema do
    dispositivo" só faça sentido por aparelho — ver CLAUDE.md antes de
@@ -630,6 +633,13 @@ body {
             background: #103b70;
             color: #fcf6ba;
         }
+        /* Botão céu/papiro da Mandala: só existe no Tema Céu; "apertado" enquanto a mandala está no papiro */
+        /* Mandala sobre papiro: a folha cobre o palco (o céu continua por baixo, pintado por JS) */
+        body.tema-ceu.mandala-papiro-tela #main-stage { background: var(--papiro-fundo) !important; }
+        #btn-mandala-papiro { display: none; }
+        body.tema-ceu #btn-mandala-papiro { display: inline-block; }
+        .icon-btn.mandala-papiro-ativa { background: #103b70; color: #fcf6ba; }
+        body.tema-ceu #mandala-actions-overlay > .icon-btn.mandala-papiro-ativa { background: #103b70 !important; color: #e8d9b0; }
         .icon-btn.matriz-visibilidade-ativa:hover {
             background: #0c2c54;
             color: #fcf6ba;
@@ -1336,6 +1346,8 @@ body {
         body.tema-ceu #profMensalWrapper { background: transparent !important; border: none !important; }
         body.tema-ceu #profMensalTable thead tr { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid #1d3a66; }
         body.tema-ceu #profMensalTable tbody tr { background: transparent !important; border-bottom: 1px solid rgba(95, 65, 30, 0.45) !important; }
+        /* data-mes-ativo além do [style*]: a captura (html2canvas) perde o atributo style da cópia, então só o seletor por style não pintava o mês ativo na imagem salva */
+        body.tema-ceu #profMensalTable tbody tr[data-mes-ativo],
         body.tema-ceu #profMensalTable tbody tr[style*="e0e7ff"] { background: rgba(120, 80, 30, 0.22) !important; }
         /* botões de ano / galeria / relatório e as janelinhas deles: papiro, como os da Mandala */
         body.tema-ceu #mandala-container button[onclick^="toggleJanelaAnoProfeccao"],
@@ -1419,14 +1431,10 @@ body {
         body.tema-ceu #liberacaoMandalaCapture { background: transparent !important; border: none !important; box-shadow: none !important; }
         body.tema-ceu #liberacaoArvoreCapture strong { color: #a03e25 !important; }
         body.tema-ceu #liberacaoArvoreCapture thead tr { background: transparent !important; color: #1d3a66 !important; }
-        /* TEMA CÉU — barra lateral, telas de configuração: botões só contornados (nunca preenchidos), caixa de marcar e setas em papiro */
-        body.tema-ceu #sidebar button[onclick="copiarLinkFormulario()"] { background: transparent !important; color: #1d3a66 !important; border: 1.5px solid #1d3a66 !important; box-shadow: none !important; }
-        body.tema-ceu #sidebar button[onclick="salvarConfiguracoesCaptacao()"] { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; box-shadow: none !important; }
+        /* TEMA CÉU — barra lateral: botões só contornados (nunca preenchidos) e caixa de marcar em papiro. (As telas de configuração agora são uma página própria: configuracoes.css.) */
         body.tema-ceu #sidebar button[style*="background: var(--primary-blue)"]:not([onclick="copiarLinkFormulario()"]) { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; box-shadow: none !important; }
         body.tema-ceu #sidebar input[type="checkbox"] { -webkit-appearance: none; appearance: none; background: transparent !important; border: 1.5px solid #1d3a66; border-radius: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
         body.tema-ceu #sidebar input[type="checkbox"]:checked { background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5 L6.5 12 L13 4' fill='none' stroke='%231d3a66' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/80% no-repeat !important; }
-        body.tema-ceu #sidebar button[onclick^="moverBotaoTopo"] { background: transparent !important; color: #1d3a66 !important; border-color: #1d3a66 !important; }
-        body.tema-ceu #sidebar button[onclick^="moverBotaoTopo"]:disabled { background: transparent !important; color: #a03e25 !important; border-color: #a03e25 !important; opacity: 1 !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="163, 230, 53"] { background: rgba(160, 62, 37, 0.20) !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="254, 240, 138"] { background: rgba(107, 74, 43, 0.18) !important; }
         body.tema-ceu #liberacaoArvoreCapture [style*="224, 231, 255"] { background: rgba(29, 58, 102, 0.14) !important; }
@@ -1744,6 +1752,18 @@ body {
   <line x1="18" y1="44" x2="26" y2="44"/>
   <line x1="30" y1="44" x2="38" y2="44"/>
 </svg></button>
+<button class="icon-btn" data-modulo-key="configuracoes" onclick="abrirModuloTecnica('configuracoes')" title="Configurações"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="32" cy="32" r="16"/>
+  <circle cx="32" cy="32" r="6"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(45 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(90 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(135 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(180 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(225 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(270 32 32)"/>
+  <rect x="28" y="6" width="8" height="8" rx="2" fill="currentColor" stroke="none" transform="rotate(315 32 32)"/>
+</svg></button>
 
                 <button class="icon-btn" data-modulo-key="financeiro" onclick="abrirModuloTecnica('financeiro')" title="Financeiro"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="32" cy="32" r="24"/>
@@ -1768,15 +1788,18 @@ body {
             <!-- AÇÕES EXCLUSIVAS DA MANDALA (canto esquerdo) -->
             <div id="mandala-actions-overlay" style="position: absolute; top: 10px; left: 10px; z-index: 20; display: flex; align-items: center; gap: 6px;">
                 <button class="icon-btn" onclick="salvarMapaNaPlanilha()" title="Salvar Mapa no Banco">
-                    <i class="fa-solid fa-floppy-disk"></i>
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12,8 H44 L56,20 V52 Q56,56 52,56 H12 Q8,56 8,52 V12 Q8,8 12,8 Z"/><path d="M20,8 V22 H40 V8"/><path d="M18,56 V36 H46 V56"/></svg>
                 </button>
                 <button class="icon-btn" onclick="carregarCeuDoMomento()" title="Atualizar Momento">
-                    <i class="fa-solid fa-rotate"></i>
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12,28 A20,20 0 0 1 48,20"/><path d="M47.7,11 L48,20 L39.4,17.2"/><path d="M52,36 A20,20 0 0 1 16,44"/><path d="M16.3,53 L16,44 L24.6,46.8"/></svg>
                 </button>
                 <button id="btn-matriz-visibilidade-mandala" class="icon-btn" onclick="toggleMatrizVisibilidadeNaMandala()" title="Matriz de Visibilidade">
-                    <i class="fa-solid fa-table-cells"></i>
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="48" height="48" rx="3"/><line x1="24" y1="8" x2="24" y2="56"/><line x1="40" y1="8" x2="40" y2="56"/><line x1="8" y1="24" x2="56" y2="24"/><line x1="8" y1="40" x2="56" y2="40"/></svg>
                 </button>
-                <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><i class="fa-solid fa-sun"></i></button>
+                <button id="btn-mandala-papiro" class="icon-btn" onclick="alternarMandalaPapiro()" title="Alternar a mandala entre o céu e o papiro">
+                    <svg width="22" height="22" viewBox="-24 -24 624 560" fill="none" stroke="currentColor" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"><path d="M0 80v48c0 17.7 14.3 32 32 32H48 96V80c0-26.5-21.5-48-48-48S0 53.5 0 80zM112 32c10 13.4 16 30 16 48V384c0 35.3 28.7 64 64 64s64-28.7 64-64v-5.3c0-32.4 26.3-58.7 58.7-58.7H480V128c0-53-43-96-96-96H112zM464 480c61.9 0 112-50.1 112-112c0-8.8-7.2-16-16-16H314.7c-14.7 0-26.7 11.9-26.7 26.7V384c0 53-43 96-96 96H368h96z"/></svg>
+                </button>
+                <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="10"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="13.6" y1="13.6" x2="19.3" y2="19.3"/><line x1="44.7" y1="44.7" x2="50.4" y2="50.4"/><line x1="13.6" y1="50.4" x2="19.3" y2="44.7"/><line x1="44.7" y1="19.3" x2="50.4" y2="13.6"/></svg></button>
 
                                 <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
                   <div style="padding: 10px 14px; border-bottom: 1px solid var(--gold-primary); background: var(--bg-main); border-top-left-radius: 8px; border-top-right-radius: 8px;">
@@ -1991,27 +2014,28 @@ body {
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tz-lookup.js?v=20260919"></script>
-<script src="papiro.js?v=20261005a"></script>
+<script src="papiro.js?v=20261006b"></script>
 <script src="dialogos.js?v=20261004c"></script>
-<script src="supabase.js?v=20261005c"></script>
-<script src="planetIcons.js?v=20261002a"></script>
+<script src="supabase.js?v=20261006h"></script>
+<script src="planetIcons.js?v=20261006c"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
-<script src="tabelaTecnica.js?v=20261003z"></script>
-<script src="mandala.js?v=20261005a"></script>
+<script src="tabelaTecnica.js?v=20261006b"></script>
+<script src="mandala.js?v=20261006o"></script>
+<script src="roda.js?v=20261006x"></script>
 <script src="isopsefia.js?v=20261003z"></script>
-<script src="profeccao.js?v=20261005a"></script>
-<script src="sinastria.js?v=20261005a"></script>
+<script src="profeccao.js?v=20261006e"></script>
+<script src="sinastria.js?v=20261006c"></script>
 <script src="revolucao.js?v=20260920"></script>
 <script src="decenios.js?v=20261003z"></script>
-<script src="direcoes.js?v=20261005a"></script>
-<script src="liberacao.js?v=20261005a"></script>
-<script src="lotes-calculadora.js?v=20261003z"></script>
-<script src="horas.js?v=20261005a"></script>
-<script src="perguntas.js?v=20260916"></script>
+<script src="direcoes.js?v=20261006b"></script>
+<script src="liberacao.js?v=20261006c"></script>
+<script src="lotes-calculadora.js?v=20261006b"></script>
+<script src="horas.js?v=20261006b"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
-<script src="relatorio.js?v=20261005a"></script>
-<script src="agendamento.js?v=20261003b"></script>
-<script src="financeiro.js?v=20261005b"></script>
+<script src="relatorio.js?v=20261006d"></script>
+<script src="agendamento.js?v=20261006a"></script>
+<script src="configuracoes.js?v=20261006g"></script>
+<script src="financeiro.js?v=20261007a"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
      de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão
@@ -2466,6 +2490,7 @@ body:not(.modo-mandala) #main-stage {
         const user = session.user;
         if (typeof carregarTemaMandala === 'function') carregarTemaMandala(user.id);
         if (typeof carregarEstiloPlanetas === 'function') carregarEstiloPlanetas(user.id);
+        if (typeof carregarEstiloMandala === 'function') carregarEstiloMandala(user.id);
         if (typeof carregarOrdenacaoClientes === 'function') carregarOrdenacaoClientes(user.id);
         if (typeof carregarOrdemBotoesTopo === 'function') carregarOrdemBotoesTopo(user.id);
 

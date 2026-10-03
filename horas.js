@@ -419,7 +419,7 @@ async function montarImagemHoras(comCabecalho) {
   saida.height = pecas.reduce((t, c) => t + c.height, 0) + gap * (pecas.length - 1);
   const ctx = saida.getContext('2d');
   if (papiro) {
-    ctx.fillStyle = papiroGradienteCanvas(ctx, saida.height); ctx.fillRect(0, 0, saida.width, saida.height);
+    papiroTexturaCanvas(ctx, saida.width, saida.height, 2);
   } else if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
   let y = 0;
   pecas.forEach(c => { ctx.drawImage(c, Math.round((saida.width - c.width) / 2), y); y += c.height + gap; });

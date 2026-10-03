@@ -733,8 +733,14 @@ async function executarCalculoInterno(opcoes) {
     const moduloPendente = window.moduloPendenteRestaurar;
     window.moduloPendenteRestaurar = null;
     const moduloAtivo = window.moduloTecnicoAtivo || 'mandala';
+    // Recarregou na página de Configurações (abriu sem esperar o mapa): fica nela. Vale só pra este primeiro
+    // cálculo; depois, escolher um cliente na lista lateral volta pra Mandala como sempre.
+    const ficaNasConfiguracoes = moduloAtivo === 'configuracoes' && window.configuracoesAbertaNoCarregamento;
+    window.configuracoesAbertaNoCarregamento = false;
     if (moduloPendente && typeof abrirModuloTecnica === 'function') {
       abrirModuloTecnica(moduloPendente);
+    } else if (ficaNasConfiguracoes) {
+      // nada a redesenhar: o mapa já está calculado pra quando uma ferramenta for aberta
     } else if (!(opcoes && opcoes.manterModulo) && moduloAtivo !== 'mandala' && moduloAtivo !== 'radix' && typeof abrirModuloTecnica === 'function') {
       abrirModuloTecnica('mandala');
     } else {
@@ -744,7 +750,9 @@ async function executarCalculoInterno(opcoes) {
 
   } catch (err) {
     window.moduloPendenteRestaurar = null;
-    document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
+    window.configuracoesAbertaNoCarregamento = false;
+    // Na página de Configurações o erro do cálculo não deve apagar a tela (ela não depende do mapa).
+    if (window.moduloTecnicoAtivo !== 'configuracoes') document.getElementById('mandala-container').innerHTML = `<p style="color: #dc2626;">Erro ao calcular posições.</p>`;
     return false;
   }
 }
@@ -862,6 +870,18 @@ function injetarBotaoRelatorioNaBarraSuperior() {
   btn.after(btnGaleria);
 }
 
+/* Botão da barra da Mandala (só aparece no Tema Céu, ver #btn-mandala-papiro em index.html): alterna a mandala
+   da tela entre o céu e a folha de papiro com a roda em tinta (mais contraste, pra mostrar o texto). Fica no
+   modo escolhido até apertar de novo — não volta sozinho. Não é salvo: ao recarregar a página abre no céu. */
+function alternarMandalaPapiro() {
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
+  window.mandalaPapiroTela = !window.mandalaPapiroTela;
+  const botaoMatriz = document.getElementById('btn-matriz-visibilidade-mandala');
+  if (botaoMatriz) botaoMatriz.classList.remove('matriz-visibilidade-ativa'); // se a Matriz estava na tela, o redesenho a substitui
+  renderMandala();
+}
+window.alternarMandalaPapiro = alternarMandalaPapiro;
+
 async function capturarMandalaAtualParaRelatorio() {
   // Com a Matriz de Visibilidade na tela (no lugar da mandala), o botão da
   // barra de cima manda a MATRIZ — não redesenha a mandala por cima dela.
@@ -878,14 +898,20 @@ async function capturarMandalaAtualParaRelatorio() {
   // "quadrado" da Mandala Natal/Fortuna, ver renderizarMandalasDoPreset em
   // relatorio.js — só que aqui é capturado uma vez só, então usa sempre a
   // tinta 'claro', a mais segura pro uso mais comum, que é o corpo). */
-  /* Tema Céu: a imagem que vai pro relatório (pra colocar dentro de um bloco de texto) sai SEM o céu — roda em
-     tinta sobre o papiro, mantendo a rotação de Casa 1 que está na tela. O céu fica só na capa (que é sempre a
-     Mandala Natal/Fortuna do modelo, ver renderizarMandalasDoPreset). Depois de capturar, redesenha a mandala
-     normal na tela (o desenho em tinta troca a imagem da tela por uns instantes). */
+  /* Tema Céu: a imagem que vai pro relatório segue o que está na tela (botão céu/papiro, ver alternarMandalaPapiro):
+     - papiro: roda em tinta SEM fundo, pra aproveitar o papiro que já está na folha do relatório;
+     - céu: a mandala COM o céu (um retângulo de céu, "foto" em cima do papiro) — pra mostrar as duas versões.
+     Em ambos mantém a rotação de Casa 1 da tela. Depois de capturar, redesenha a mandala normal na tela (o desenho
+     da captura troca a imagem da tela por uns instantes). */
   const temaCeuCaptura = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
-  const dataUrl = await new Promise(resolve => temaCeuCaptura
-    ? renderMandala(null, resolve, 'claro', true, null, null, false, false, true)
-    : renderMandala(null, resolve, 'claro', true));
+  const ceuComFundo = temaCeuCaptura && !window.mandalaPapiroTela;
+  let dataUrl = await new Promise(resolve => ceuComFundo
+    ? renderMandala(null, resolve, 'claro', false, null, null, true, false) // céu inteiro + cabeçalho em papiro (como na tela)
+    : temaCeuCaptura
+      ? renderMandala(null, resolve, 'claro', true, null, null, false, false, true)
+      : renderMandala(null, resolve, 'claro', true));
+  // O céu é uma imagem cheia (não tem transparência pra aproveitar) e sai bem grande: reduz já aqui pra não pesar no rascunho.
+  if (ceuComFundo && typeof relatorioRedimensionarPngDataUrl === 'function') dataUrl = await relatorioRedimensionarPngDataUrl(dataUrl, 1600);
   if (temaCeuCaptura) renderMandala();
   const total = adicionarCapturaRelatorio('mandala_personalizada', dataUrl);
   alert(`Mandala adicionada ao relatório, do jeito que está na tela agora (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
@@ -1407,9 +1433,9 @@ function desenharPlanetaCeuSVG(o) {
 /* ÍCONE DOS ÂNGULOS (ASC/DSC/MC/IC) NO TEMA CÉU — mesmo estilo dos nodos e dos lotes: traço
    claro (azul-marinho de dia) dentro de um retículo tracejado, sem brilho. O triângulo vem
    do ícone do software e aponta pro ângulo certo (rotação aScreen - 180). */
-function iconeAnguloCeuSVG(aScreen, cor, rotulo) {
+function iconeAnguloCeuSVG(aScreen, cor, rotulo, semReticulo) { // semReticulo: o retículo tracejado é do ESTILO da mandala (ver RODA_ESTILOS em roda.js)
   const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO.outro && ICONES_SIMPLES_NOVO.outro.angulo) || '';
-  const reticulo = `<circle cx="0" cy="0" r="21" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
+  const reticulo = (semReticulo && semReticulo !== 'reto') ? '' : (semReticulo === 'reto' ? `<circle cx="0" cy="0" r="24" fill="${cor}" fill-opacity=".07"/><circle cx="0" cy="0" r="21" fill="${cor}" fill-opacity=".13"/>` : `<circle cx="0" cy="0" r="21" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`);
   if (!bruto) return reticulo;
   const miolo = bruto.slice(bruto.indexOf('>') + 1, bruto.lastIndexOf('</svg>')).replace(/<defs>[\s\S]*?<\/defs>/g, '').replace(/<clipPath[\s\S]*?<\/clipPath>/g, '')
     .replace(/clip-path="[^"]*"/g, '').replace(/stroke-width="[\d.]+"/g, 'stroke-width="5"').replace(/fill="#fff"/g, `fill="${cor}" fill-opacity=".18"`).replace(/stroke="#000"/g, `stroke="${cor}"`);
@@ -1422,9 +1448,9 @@ function iconeAnguloCeuSVG(aScreen, cor, rotulo) {
    marcações calculadas sobre ele. Lotes em traço fino (contorno do ícone);
    nodos e sizígia com o preenchimento cheio do ícone. Cor: branco-azulado à
    noite, azul-marinho de dia (acima do horizonte, de dia). */
-function iconeCalculadoCeuSVG(categoria, chave, cor, solido) {
+function iconeCalculadoCeuSVG(categoria, chave, cor, solido, semReticulo) { // semReticulo: o retículo tracejado é do ESTILO da mandala (ver RODA_ESTILOS em roda.js)
   const bruto = (typeof ICONES_SIMPLES_NOVO !== 'undefined' && ICONES_SIMPLES_NOVO[categoria] && ICONES_SIMPLES_NOVO[categoria][chave]) || '';
-  const reticulo = `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`;
+  const reticulo = (semReticulo && semReticulo !== 'reto') ? '' : (semReticulo === 'reto' ? `<circle cx="0" cy="0" r="17" fill="${cor}" fill-opacity=".07"/><circle cx="0" cy="0" r="14" fill="${cor}" fill-opacity=".13"/>` : `<circle cx="0" cy="0" r="14" fill="none" stroke="${cor}" stroke-opacity=".75" stroke-width="1.3" stroke-dasharray="3 4"/>`);
   if (!bruto) return reticulo;
   const vb = (bruto.match(/viewBox="0 0 (\d+(?:\.\d+)?) /) || [0, 100])[1];
   const k = 22 / parseFloat(vb);
@@ -1499,7 +1525,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos, rTerra, rAneis } = o;
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1510,16 +1536,16 @@ function montarBandaZodiacoCeuSVG(o) {
     const q1 = P(r2, a1), q2 = P(r2, a2), q3 = P(r1, a2), q4 = P(r1, a1);
     // sem o fecho de baixo (arco na borda de dentro da faixa): o signo fica aberto pra baixo e as
     // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
-    svg += `<path d="M${q4.x.toFixed(1)} ${q4.y.toFixed(1)} L${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4" stroke-linejoin="round"/>`;
+    svg += `<path d="M${q4.x.toFixed(1)} ${q4.y.toFixed(1)} L${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6"${reto ? '' : ' stroke-dasharray="5 4"'} stroke-linejoin="round"/>`;
     // as divisas do signo seguem pra dentro: pausam nos anéis de termos/dodecatemória (de rAneis
     // pra fora) e continuam até encostar na Terra
     [a1, a2].forEach(ang => {
       const i0 = P(rTerra, ang), i1 = P(rAneis, ang);
-      svg += `<line x1="${i0.x.toFixed(1)}" y1="${i0.y.toFixed(1)}" x2="${i1.x.toFixed(1)}" y2="${i1.y.toFixed(1)}" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+      svg += `<line x1="${i0.x.toFixed(1)}" y1="${i0.y.toFixed(1)}" x2="${i1.x.toFixed(1)}" y2="${i1.y.toFixed(1)}" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6"${reto ? '' : ' stroke-dasharray="5 4"'}/>`;
     });
     const Am = A - 15, pG = P(rOut - 26, Am), pN = P(rIn + 20, Am);
     svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${cor};">${glifos[i]}</svg>`;
-    svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
   }
   // linha da eclíptica + marcas de grau (1°, 5°, 10°), em duas tintas: azul-marinho de dia acima
   // do horizonte, claro à noite e no espaço
@@ -1531,8 +1557,8 @@ function montarBandaZodiacoCeuSVG(o) {
     const seg = `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)}L${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
     if (deg % 10 === 0) marcas.forte += seg; else if (deg % 5 === 0) marcas.media += seg; else marcas.fina += seg;
   }
-  const grupoTinta = (cor, clip) => `<g clip-path="url(#${clip})" stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
-  svg += grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo');
+  const grupoTinta = (cor, clip) => `<g ${clip ? `clip-path="url(#${clip})" ` : ''}stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
+  svg += corUnica ? grupoTinta(corUnica, null) : (grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo'));
   return svg;
 }
 
@@ -1703,653 +1729,14 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   const container = document.getElementById('mandala-container');
   if (!container || !currentCalculatedData) return;
 
-  /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
-     index.html). Como este SVG vira imagem (Blob -> <img>, ver abaixo),
-     variável CSS (var(--x)) NÃO funciona aqui dentro (confirmado com teste
-     isolado antes de mexer) — teria que existir dentro do próprio SVG. Por
-     isso as cores vêm resolvidas em hexadecimal, no par exato usado em
-     :root/:root.tema-escuro (index.html) quando o papel é o mesmo (fundo
-     creme, dourado, azul-marinho); e em tons novos, pensados só pra esse
-     desenho, quando o papel é diferente (linhas de aspecto, elementos dos
-     signos etc. — ver "tinta" logo abaixo).
-
-     "estiloForcado" ('claro'/'escuro', opcional) IGNORA esse menu e decide
-     sozinho — usado só pelo módulo de Relatório (ver renderizarMandalasDoPreset
-     em relatorio.js) pra desenhar a mandala que vai virar PNG dentro de um
-     PDF/imagem exportada, que não pode variar conforme o tema do
-     navegador/app está ligado ou não bem na hora em que o astrólogo aperta
-     "Gerar Relatório" — isso já causou capa branca com a mandala saindo com
-     fundo preto por baixo (o "papel" da mandala seguia o Tema Escuro do
-     menu, sem relação nenhuma com a cor da capa escolhida no modelo).
-     Sem esse parâmetro (uso normal, a mandala ao vivo na tela), o
-     comportamento é o de sempre: segue o Tema Escuro do menu.
-
-     "fundoTransparente" (opcional, também só usado pelo Relatório) tira o
-     retângulo de fundo que cobre a imagem inteira (ver o <rect> logo
-     depois de "</defs>" mais abaixo) — sem ele, o PNG fica com um
-     "quadrado" de cor sólida atrás da mandala que só combinava por
-     coincidência com a capa branca "Clássico" (fundoDisco === '#ffffff'
-     por acaso igual à cor de fundo da capa); em qualquer outra cor de
-     capa (inclusive um "creme" quase branco, ou a variante 'escuro'
-     tentando aproximar um fundo escuro qualquer) sobrava uma borda/
-     retângulo visivelmente de cor diferente da capa ao redor. Com o
-     fundo transparente, a mandala encaixa direto na cor que a própria
-     capa já tem (ver --rel-capa-bg em relatorio.js), sem precisar
-     acertar cor nenhuma. Também some com o fundo dos círculos internos
-     menores (mascaram cruzamento de linha atrás de ícone de planeta/
-     eixo, e o círculo grande da área de aspectos no meio do disco) —
-     sem isso sobrava um "miolinho" sólido no centro da mandala mesmo
-     com o retângulo grande já transparente.
-
-     "corCabecalhoForcada" (opcional, hex "#rrggbb", só pra capa) troca
-     só o fundo da caixinha de nome/data/cidade — independente de
-     modoEscuro/tinta, porque o astrólogo pode querer uma cor pra essa
-     caixinha diferente da paleta clara/escura calculada pro resto do
-     disco (ver corCabecalho no bloco "__capa__", relatorio.js). A
-     legibilidade do texto/borda dentro dela é decidida pela luminância
-     DESSA cor específica, não pelo modoEscuro geral. */
-  const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
-  /* "tintaPapiro" (opcional, só as PÁGINAS DO CORPO do Relatório com o Tema Céu): a roda sai "tinta sobre o
-     papiro" — sem céu, sem fundo, azul-tinta + terracota + preto (a mesma pintura das rodas secundárias:
-     Profecção/Liberação/Sinastria). O céu fica só na capa. Mesmo desenho e mesmos tamanhos da roda clássica. */
-  const papiro = !!tintaPapiro && typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
-  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
-  if (papiro) fundoTransparente = true;
-  const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
-  /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
-     caixinha de nome/data/cidade como papiro (ver coresCabecalhoPapiro) —
-     só cor/textura, o layout do cabeçalho não muda. */
-  const corCabecalhoPng = papiro ? coresCabecalhoTinta() : papiroCabecalho ? coresCabecalhoPapiro() : coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
-
-  /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
-     Tema Claro é exatamente a paleta de sempre (nada muda). No Tema
-     Escuro, o fundo do disco também escurece — o que obriga a inverter o
-     "halo": os textos de grau/eixo/casa usam paint-order="stroke fill"
-     com um contorno pra continuar legíveis por cima de linhas/glifos
-     coloridos atrás deles, não por cima do fundo da página. Contorno
-     branco atrás de tinta escura (Tema Claro) vira contorno escuro atrás
-     de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
-     mancha branca em volta de cada número no meio do disco escuro. */
-  const tinta = papiro ? {
-    fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
-    inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: AZ_TINTA, linhaConectora: 'rgba(29,58,102,0.55)',
-    aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
-    elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
-    dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
-  } : modoEscuro ? {
-    fundoDisco: '#1c1917',
-    dourado: '#d9ae3f',
-    douradoCasas: '#e8c667',
-    halo: '#1c1917',
-    inkForte: '#e8e6df',
-    inkPlaneta: '#e8e6df',
-    navio: '#8ab4e8',
-    linhaConectora: '#6b7280',
-    aspectoOposicao: '#fb7185',
-    aspectoTrigono: '#60a5fa',
-    aspectoQuadratura: '#ff6b4a',
-    aspectoSextil: '#38bdf8',
-    elementoFogo: '#ff6b4a',
-    elementoTerra: '#d99a5c',
-    elementoAr: '#38bdf8',
-    elementoAgua: '#60a5fa',
-    dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
-  } : {
-    fundoDisco: '#ffffff',
-    dourado: '#c59b27',
-    douradoCasas: '#aa820a',
-    halo: '#ffffff',
-    inkForte: '#000000',
-    inkPlaneta: '#0f172a',
-    navio: '#103b70',
-    linhaConectora: '#94a3b8',
-    aspectoOposicao: '#881337',
-    aspectoTrigono: '#1d4ed8',
-    aspectoQuadratura: '#e84118',
-    aspectoSextil: '#0ea5e9',
-    elementoFogo: '#e84118',
-    elementoTerra: '#8b4513',
-    elementoAr: '#0ea5e9',
-    elementoAgua: '#1d4ed8',
-    dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
-  };
-
-  /* Usado em todo "fill" que hoje seria tinta.fundoDisco (o retângulo
-     grande de fundo E os círculos menores que mascaram cruzamento de
-     linha atrás de ícone/eixo/área de aspectos) — com fundoTransparente,
-     nenhum deles pinta nada, senão sobrava um "miolinho" sólido no meio
-     do disco mesmo com o fundo grande já transparente. Não mexe em
-     tinta.halo (o contorno do texto): esse é só uma linha fina, não um
-     bloco sólido, então não cria o mesmo problema de "quadrado" visível. */
-  const fundoDiscoEfetivo = fundoTransparente ? 'transparent' : tinta.fundoDisco;
-
-  /* Sombra só das siglas ELEMENT_SIGN_COLORS usada NESTA função — não é o
-     mesmo objeto global (const ELEMENT_SIGN_COLORS lá em cima, fora da
-     função), que continua intocado porque liberacao.js também lê ele
-     direto e ainda não faz parte desta etapa. */
-  const ELEMENT_SIGN_COLORS = { fire: tinta.elementoFogo, earth: tinta.elementoTerra, air: tinta.elementoAr, water: tinta.elementoAgua };
-
+  /* O DESENHO da roda (SVG) mora em roda.js (desenharRodaSVG) — função central de todos os estilos de mandala. Aqui fica só o
+     que é da tela: pôr a imagem no container, gerar o PNG, o céu de fundo, o cache. */
   injetarBotaoRotacaoNaBarraSuperior();
   injetarBotaoRelatorioNaBarraSuperior();
   injetarControleZoomMandala();
   ajustarPosicaoMandalaActionsOverlay();
-
-  const data = currentCalculatedData;
-  const ascAbs = data.Ascendente.grau_absoluto;
-  const mcAbs = data.MC ? data.MC.grau_absoluto : (ascAbs + 270) % 360;
-  const nodeAbs = data.Nodo_Norte ? data.Nodo_Norte.grau_absoluto : 0;
-  const syzAbs = data.Sizigia ? data.Sizigia.grau_absoluto : 0;
-
-  const pObj = {};
-  PLANETS_DEF.forEach(p => {
-    const item = data[p.key];
-    pObj[p.id] = { abs: item ? item.grau_absoluto : 0, symbol: p.symbol, name: p.name, retro: item ? Boolean(item.retro) : false };
-  });
-
-  const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-  const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
-
-  const lotes = calculateSevenLots(ascAbs, isDay, pObj);
-  window.currentLotes = lotes;
-
-  let house1RefAbs = ascAbs;
-  if (selectedHouse1Lot !== "ASC") {
-    const targetLot = lotes.find(l => l.key === selectedHouse1Lot);
-    if (targetLot) house1RefAbs = targetLot.deg;
-  }
-
-  const diasSemanaMap = [
-    { text: "Dom", sym: "☉" },
-    { text: "Seg", sym: "☽" },
-    { text: "Ter", sym: "♂" },
-    { text: "Qua", sym: "☿" },
-    { text: "Qui", sym: "♃" },
-    { text: "Sex", sym: "♀" },
-    { text: "Sáb", sym: "♄" }
-  ];
-   
-  const dayInfo = diasSemanaMap[currentMoment.getDay()];
-  const diaSemanaFormatted = dayInfo.text;
-
-  const fusoVal = (currentGeo && currentGeo.fuso !== undefined) ? currentGeo.fuso : calcularFusoPorLongitude(currentGeo.lon);
-  const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-
-  const ano = currentMoment.getFullYear();
-  const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
-  const dia = String(currentMoment.getDate()).padStart(2, '0');
-  const hora = String(currentMoment.getHours()).padStart(2, '0');
-  const min = String(currentMoment.getMinutes()).padStart(2, '0');
-
-  const goldColor = tinta.dourado;
-  const pR = 390;
-
-  /* UNIFICANDO TODOS OS ITENS DA ÓRBITA EXTERNA (Planetas + Eixos + Nodos + Sizígia + Lotes).
-     Precisa vir antes do layout vertical (mais abaixo): o tamanho da faixa
-     de céu/espaço depende de o quão longe os planetas acabam sendo
-     empurrados (latitude + empilhamento radial). */
-  const outerRingItems = [];
-
-  /* 1. Adiciona os 7 Planetas */
-    PLANETS_DEF.forEach(p => {
-    const item = data[p.key];
-    const absDeg = item ? item.grau_absoluto : 0;
-    outerRingItems.push({
-      type: "planet",
-      id: p.id,
-      symbol: p.symbol,
-      deg: absDeg,
-      retro: item ? Boolean(item.retro) : false,
-      eclLat: item ? (item.lat || 0) : 0,
-      aScreen: eclToScreenAngle(absDeg, house1RefAbs)
-    });
-  });
-
-  /* 3. Adiciona Nodos */
-  if (nodeAbs > 0) {
-    outerRingItems.push({ type: "node", label: "☊", deg: nodeAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(nodeAbs, house1RefAbs) });
-    outerRingItems.push({ type: "node", label: "☋", deg: (nodeAbs + 180) % 360, color: tinta.inkForte, aScreen: eclToScreenAngle((nodeAbs + 180) % 360, house1RefAbs) });
-  }
-
-  /* 4. Adiciona Sizígia */
-  if (syzAbs > 0) {
-    outerRingItems.push({ type: "syzygy", label: "SIZ", deg: syzAbs, color: tinta.inkForte, aScreen: eclToScreenAngle(syzAbs, house1RefAbs) });
-  }
-
-  /* 5. Adiciona os 7 Lotes */
-  lotes.forEach(lot => {
-    outerRingItems.push({
-      type: "lot",
-      label: lot.label,
-      lotType: lot.type,
-      sym: lot.sym,
-      deg: lot.deg,
-      color: goldColor,
-      aScreen: eclToScreenAngle(lot.deg, house1RefAbs)
-    });
-  });
-
-  /* SEPARA CONJUNÇÕES COLADAS EMPILHANDO POR RAIO, SEM MEXER NO ÂNGULO REAL */
-  aplicarEmpilhamentoRadial(outerRingItems, 7.5);
-
-  /* LOTES SE SEPARAM À PARTE, DESVIANDO NO ÂNGULO (SEM MUDAR DE RAIO) */
-  aplicarDesvioLateralLotes(outerRingItems, 6);
-
-  const latPxPerGrau = 12;
-
-  /* Raio externo da faixa de céu/espaço: precisa cobrir o ponto mais
-     distante que qualquer planeta (ou a mancha de combustão) possa
-     alcançar nesse mapa específico, senão o planeta "escapa" do céu. */
-  const degToPxPR = (2 * Math.PI * pR) / 360;
-  const rSobRaiosGlow = degToPxPR * 15;
-  let maxRaioItens = pR + rSobRaiosGlow;
-  outerRingItems.forEach(item => {
-    if (item.type === 'lot') return; // lotes ficam bem mais perto do centro, nunca definem o máximo
-    const base = item.type === 'planet' ? pR + (item.eclLat * latPxPerGrau) : pR;
-    const raio = base + (item.rOffset || 0);
-    if (raio > maxRaioItens) maxRaioItens = raio;
-  });
-  const R_Ceu = maxRaioItens + 20; // folga visual (ícone + rótulo de grau)
-
-  /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
-     nunca escolheu) — controla só a decoração de céu/espaço sideral. O
-     tamanho e o layout do desenho continuam iguais nos dois temas. */
-  const temaCeu = !papiro && (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
-
-  /* Rotação do céu/espaço junto com o botão "casa 1" (ASC ou um lote): o
-     ASC-DSC (horizonte real) só fica exatamente horizontal quando a casa 1
-     está no próprio ASC. Girando a mesma quantidade que o ASC girou em
-     relação a essa referência horizontal, o céu acompanha o horizonte
-     verdadeiro em vez de ficar sempre travado na horizontal. */
-  const ascScreenAngle = eclToScreenAngle(ascAbs, house1RefAbs);
-  const skyRotation = ascScreenAngle - 180;
-
-  /* Espaço extra no topo (e até o cabeçalho) para a faixa de céu/espaço
-     (raio R_Ceu) e a mancha de combustão do Sol nunca serem cortadas. */
-  const margemVertical = 10;
-  const cy = R_Ceu + margemVertical;
-  const headerY = cy + R_Ceu + margemVertical;
-  const headerH = 75;
-  const headerGapBottom = 20;
-  /* A largura também precisa acompanhar R_Ceu: sem isso, o céu (que agora
-     varia de tamanho por mapa) pode passar dos 480px de raio e ser cortado
-     nas laterais pelo próprio SVG, antes mesmo de chegar no navegador —
-     nunca menor que 960 (largura original), só cresce quando precisa. */
-  const cx = Math.max(480, R_Ceu + margemVertical);
-  const width = cx * 2, height = headerY + headerH + headerGapBottom;
-  // Tema Céu: os anéis de termos (fora) e dodecatemória (dentro) ficam logo ABAIXO da faixa dos
-  // signos (que começa no raio 282); os lotes ficam abaixo deles e a Terra no centro.
-  const R = temaCeu ? { Aspects: 110, SignSector: 233, Dodec: 256, Termos: 280 } : { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 };
-  const R_OuterLine = 399;
-
-  /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
-     aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
-  const solAngulo = ((pObj.Sun.abs - ascAbs + 360) % 360) * Math.PI / 180;
-  const ceuParams = temaCeu ? {
-    cx, cy, width, height, termos: R.Aspects, raioCeu: R_Ceu, skyRotation,
-    elevacao: -Math.sin(solAngulo), ladoSol: Math.cos(solAngulo),
-    corDisco: 'none' // sem disco branco: o miolo é uma janela pro céu (ver montarTerraCeuSVG)
-  } : null;
-  if (ceuParams) { const t = Math.max(0, Math.min(1, (ceuParams.elevacao + 0.10) / 0.60)); ceuParams.dia = t * t * (3 - 2 * t); }
-  const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
-  /* CAPA do Relatório (espacoTransparente + Tema Céu): além da roda "só com halo", guarda o MESMO céu da tela
-     (mesmo Sol, mesma rotação do horizonte, mesmo brilho no lado do Sol), enorme, pra a capa usar de fundo,
-     alinhado ao centro da roda (ver relatorio.js, .rel-ceu-fundo). Data URL (não blob): o HTML da capa vai
-     inteiro pro gerador de PDF no servidor, que não enxerga blobs do navegador. */
-  window.ceuFundoCapaUltimo = null;
-  if (temaCeu && espacoTransparente) {
-    const EXT_CAPA = 2800;
-    const svgFundo = montarFundoCeuSVG(Object.assign({}, ceuParams, { fatorEstrela: 3, densidadeEstrela: 0.11 }), EXT_CAPA);
-    // 'url' é preenchida logo antes do onReady (ver rasterizarFundoCeuCapa): o céu vira uma imagem JPEG comum
-    // (e não um SVG enorme), que o Safari/iPad desenha igual ao Chrome — incluindo as estrelas — e que abre
-    // rápido no PDF. Se a rasterização falhar, cai no próprio SVG embutido.
-    window.ceuFundoCapaUltimo = { svg: svgFundo, url: null, cx, cy, width, height, ext: EXT_CAPA };
-  }
-
-  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <!-- BRILHO DE COMBUSTÃO / SOB OS RAIOS (halo ao redor do Sol) -->
-      <radialGradient id="combustionGlow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.9" />
-        <stop offset="30%" stop-color="#fde68a" stop-opacity="0.75" />
-        <stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" />
-        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
-      </radialGradient>
-
-      ${temaCeu ? ceuMandala.defs : ''}
-    </defs>
-
-    <rect width="${width}" height="${height}" fill="${espacoTransparente ? 'transparent' : fundoDiscoEfetivo}"/>
-    ${HEX_RE_MANDALA.test(corCirculoForcada) ? `
-    <!-- "MEDALHÃO" ATRÁS DA MANDALA (ver corCirculoForcada, só usado pela
-         capa do Relatório) — desenhado exatamente em (cx, cy), o MESMO
-         centro matemático que toda a roda (casas, signos, aspectos) já
-         usa, com raio R_Ceu (já calculado acima grande o bastante pra
-         sempre cobrir o planeta/glow mais distante deste mapa, mais uma
-         folga de 12%). Faz de propósito ANTES de qualquer elemento da
-         roda ("svg +=" só começa depois desta linha), então fica
-         garantidamente por trás de tudo. Nunca fica descentralizado da
-         roda (diferente de tentar centralizar um círculo por CSS em
-         cima da imagem já pronta): não há adivinhação de posição
-         nenhuma — é literalmente o centro que o resto do desenho usa.
-         Raio = R_Ceu exato (sem folga extra): o SVG não tem margem
-         sobrando além dos "margemVertical" (10) já embutidos no cálculo
-         de cx/cy logo acima — um raio maior que R_Ceu passaria do
-         viewBox e cortaria o círculo nas laterais (o <svg> corta
-         conteúdo fora do viewBox por padrão). R_Ceu já é grande o
-         bastante pra cobrir até o planeta/glow mais distante do mapa
-         (é pra isso que ele foi calculado, mais acima). -->
-    <circle cx="${cx}" cy="${cy}" r="${R_Ceu}" fill="${corCirculoForcada}"/>` : ''}
-${temaCeu ? ceuMandala.corpo : ''}`;
-
-  const headerTitle = currentSubjectName;
-
-  const tipoAtual = (typeof window.currentMapType !== 'undefined' && window.currentMapType) ? window.currentMapType : 'Natal';
-  const tipoFormatado = tipoAtual === 'Natal' ? 'Mapa Natal' : `Mapa de ${tipoAtual}`;
-
-  /* CABEÇALHO (nome, data, local, zodíaco, natividade, Dia/Hora) — o mesmo
-     desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
-  svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
-
-  if (temaCeu) {
-    // Tema Céu: faixa do zodíaco na eclíptica (por trás de tudo) + a Terra no miolo
-    svg += montarBandaZodiacoCeuSVG({
-      cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams.dia, tinta,
-      elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
-      rTerra: R.Aspects, rAneis: R.SignSector
-    });
-    svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor, ceuParams.dia, skyRotation);
-  } else {
-    svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
-  }
-
-  const occupiedSigns = new Set();
-  PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
-  const occupiedArray = Array.from(occupiedSigns);
-  for (let i = 0; i < occupiedArray.length; i++) {
-    for (let j = i + 1; j < occupiedArray.length; j++) {
-      let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
-      if (diff > 6) diff = 12 - diff;
-      let col = null;
-      if (diff === 6) col = tinta.aspectoOposicao;      // Oposição (Vinho)
-else if (diff === 4) col = tinta.aspectoTrigono; // Trígono (Azul escuro)
-else if (diff === 3) col = tinta.aspectoQuadratura; // Quadratura (Vermelho vivo)
-else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
-
-      if (col) {
-        const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
-        const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
-        if (temaCeu) {
-          // sobre o chão escuro e o céu claro: cor mais clara + contorno escuro fininho por baixo
-          const corCeu = { [tinta.aspectoOposicao]: '#fb7185', [tinta.aspectoTrigono]: '#60a5fa', [tinta.aspectoQuadratura]: '#ff6b4a', [tinta.aspectoSextil]: '#38bdf8' }[col] || col;
-          svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="rgba(8,14,40,.55)" stroke-width="3.8" stroke-linecap="round"/>`;
-          svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${corCeu}" stroke-width="1.9" stroke-linecap="round"/>`;
-        } else {
-        svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${col}" stroke-width="1.8" opacity="0.9"/>`;
-        }
-      }
-    }
-  }
-
-  // Tema Céu: as divisas dos termos e da dodecatemória são tracejadas (foram postas ali, não são do céu); os dentinhos ficam sólidos.
-  const tracejadoCeu = temaCeu ? ' stroke-dasharray="6 4"' : '';
-  const tracejadoFinoCeu = temaCeu ? ' stroke-dasharray="3 3"' : '';
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.SignSector}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Dodec}" fill="none" stroke="${goldColor}" stroke-width="1.5"${tracejadoCeu}/>`;
-  svg += `<circle cx="${cx}" cy="${cy}" r="${R.Termos}" fill="none" stroke="${goldColor}" stroke-width="2"${tracejadoCeu}/>`;
-
-  /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
-     estrutura da mandala (círculos, raios, dentinhos) sempre por trás
-     de tudo; depois as linhas pretas dos eixos ASC/DSC/MC/IC; depois
-     todos os ícones por cima. Antes disso a ordem seguia a ordem em
-     que cada trecho tinha sido escrito, sem critério — dava pra ver um
-     dentinho cortando por cima do triângulo do ASC, por exemplo. Por
-     isso os loops que desenhavam linha+ícone juntos (dodecatemória,
-     termos) foram separados em duas passadas: uma só de linha aqui,
-     outra só de ícone lá embaixo, depois das linhas dos eixos. */
-
-  if (!temaCeu) { // no Tema Céu as divisas dos signos são os tracejados da faixa
-  for (let i = 0; i < 12; i++) {
-    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-    const pt2 = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
-    svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
-  }
-  }
-
-  for (let i = 0; i < 12; i++) {
-    for (let d = 0; d < 12; d++) {
-      const pt1 = polarToCart(cx, cy, R.SignSector, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((i * 30) + (d * 2.5), house1RefAbs));
-      svg += `<line x1="${pt1.x}" x2="${pt2.x}" y1="${pt1.y}" y2="${pt2.y}" stroke="${tinta.dodecatemoriaLinha}" stroke-width="0.8"${tracejadoFinoCeu}/>`;
-    }
-  }
-
-  for (let s = 0; s < 12; s++) {
-    let prev = 0;
-    EGYPTIAN_TERMS[s].forEach(term => {
-      const pt1 = polarToCart(cx, cy, R.Dodec, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      const pt2 = polarToCart(cx, cy, R.Termos, eclToScreenAngle((s * 30) + prev, house1RefAbs));
-      svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
-      prev = term.deg;
-    });
-  }
-
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4);
-    const p1 = polarToCart(cx, cy, R.Termos, aScreen);
-    const p2 = polarToCart(cx, cy, R.Termos - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
-  }
-
-  for (let deg = 0; deg < 360; deg++) {
-    const aScreen = eclToScreenAngle(deg, house1RefAbs);
-    const tickLen = (deg % 10 === 0) ? 10 : ((deg % 5 === 0) ? 6 : 3);
-    const p1 = polarToCart(cx, cy, R.SignSector, aScreen);
-    const p2 = polarToCart(cx, cy, R.SignSector - tickLen, aScreen);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${goldColor}" stroke-width="${deg % 10 === 0 ? 1.2 : 0.6}"/>`;
-  }
-
-
-  const ascPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(ascAbs, house1RefAbs));
-  const dscPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${temaCeu ? '#ffffff' : tinta.inkForte}" stroke-width="2.5"${temaCeu ? ' stroke-dasharray="9 6"' : ''}/>`; // Tema Céu: branca tracejada (não faz parte do céu, foi "posta" por cima)
-
-  const mcPt = polarToCart(cx, cy, R_OuterLine, eclToScreenAngle(mcAbs, house1RefAbs));
-  const icPt = polarToCart(cx, cy, R_OuterLine, (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${temaCeu ? '#ffffff' : tinta.inkForte}" stroke-width="2.5"${temaCeu ? ' stroke-dasharray="9 6"' : ''}/>`;
-
-  /* A PARTIR DAQUI SÓ ÍCONE — nada de linha/dentinho novo abaixo disso,
-     pra manter a estrutura da roda sempre por trás. */
-
-     /* DESENHO DOS 4 EIXOS NA PARTE INTERNA (ENCUSTADOS NO ANEL) */
-  const rEixoInterno = R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
-
-  const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "MC",  deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "IC",  deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
-  ];
-
-  /* Icone novo: um triangulo so (getIconeFragmento('outro','angulo')),
-     desenhado por padrao apontando pra esquerda (180deg) - por isso a
-     rotacao aplicada e sempre (aScreen - 180), pra ele apontar pro
-     angulo certo de CADA mapa (ASC/DSC nem sempre caem exatamente em
-     180/0deg quando a casa 1 usa um Lote como referencia em vez do
-     ASC, e MC/IC quase nunca caem exatamente em 270/90deg). */
-  // Tema Céu: cor dos pontos calculados conforme dia/noite NO LUGAR onde ele está (acima do
-  // horizonte, de dia -> azul-marinho; à noite ou no espaço -> branco-azulado).
-  const corCalculadoCeu = (px, py) => {
-    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
-    const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
-    return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
-  };
-
-  eixosInternos.forEach(eixo => {
-    const aScreen = eclToScreenAngle(eixo.deg, house1RefAbs);
-    const pPos = polarToCart(cx, cy, rEixoInterno, aScreen);
-    if (temaCeu) {
-      // mesmo estilo dos nodos/lotes: triângulo em traço claro dentro de um retículo tracejado
-      const cor = corCalculadoCeu(pPos.x, pPos.y);
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">${iconeAnguloCeuSVG(aScreen, cor, eixo.label)}
-        <text x="0" y="29" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
-      </g>`;
-      return;
-    }
-    const anguloFrag = getIconeFragmento('outro', 'angulo');
-    const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
-
-    svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-      <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
-      <text x="0" y="3.5" font-size="6.5" font-weight="900" fill="${eixo.color}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="1.8" paint-order="stroke fill">${eixo.label}</text>
-      <text x="0" y="24" font-size="8" font-weight="bold" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(eixo.deg)}</text>
-    </g>`;
-  });
-
-  const refSignIdx = Math.floor(house1RefAbs / 30);
-  if (!temaCeu) { // no Tema Céu os números e glifos dos signos ficam na faixa
-  for (let i = 0; i < 12; i++) {
-    const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
-    const pNum = polarToCart(cx, cy, 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
-
-    const pSym = polarToCart(cx, cy, 166, aMid);
-    svg += `<svg x="${pSym.x - 17}" y="${pSym.y - 17}" width="34" height="34" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
-  }
-  }
-
-  for (let i = 0; i < 12; i++) {
-    for (let d = 0; d < 12; d++) {
-      const pDod = polarToCart(cx, cy, (R.SignSector + R.Dodec) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
-      svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
-    }
-  }
-
-  /* term.p e so o glifo Unicode ("♃" etc) - de-para pro id do planeta
-     que o icone novo dos termos usa. So os 5 regentes de termo egipcio
-     (nunca Sol/Lua) entram aqui. */
-  const TERMO_PLANET_BY_SYMBOL = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
-  const termoIconTamanho = 18;
-
-  for (let s = 0; s < 12; s++) {
-    let prev = 0;
-    EGYPTIAN_TERMS[s].forEach(term => {
-      const pTerm = polarToCart(cx, cy, (R.Dodec + R.Termos) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
-      const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
-      const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, goldColor)
-        .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanho / 2}" y="${pTerm.y - termoIconTamanho / 2}" `);
-      svg += termoSvg;
-      prev = term.deg;
-    });
-  }
-
-    /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
-  const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-  if (sunItem && !papiro) {
-    const degToPx = (2 * Math.PI * pR) / 360;
-    const rSobRaios = degToPx * 15;
-    const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
-  }
-
-  /* item.lotType vem de calculateSevenLots() como o planeta regente do
-     lote ("venus", "mercury"...) pra fortune/spirit, que ja tem nome
-     proprio. Os icones novos (planetIcons.js) usam o nome do lote em
-     si, entao precisa desse de-para. */
-  const LOTE_ICON_KEY = {
-    fortune: 'fortune', spirit: 'spirit', venus: 'eros',
-    mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
-  };
-
-  outerRingItems.forEach(item => {
-    if (item.type === 'planet') return;
-
-    const raioEfetivo = (item.type === 'lot' ? (temaCeu ? 190 : 276) : pR) + (item.rOffset || 0);
-
-    const p1 = polarToCart(cx, cy, temaCeu ? R.Aspects : R.Termos, item.aScreen);
-    const p2 = polarToCart(cx, cy, (item.type === 'lot' ? raioEfetivo - 12 : raioEfetivo - 19), item.aShift);
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${item.color}" stroke-width="1.2"/>`;
-
-    const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-
-    /* Fundo clarinho fixo (não muda com o tema) atrás dos ícones simples:
-       vários deles (Necessidade/Eros, os nodos, o ângulo) têm partes só
-       de contorno, sem preenchimento — sem esse fundo, um traço azul
-       escuro fica invisível em cima do disco escuro do tema escuro, ou
-       da faixa roxa do tema "Ver Céu" mesmo no tema claro. */
-    if (item.type === "node") {
-      const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey)}</g>`}
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.type === "syzygy") {
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia')}</g>`}
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    } else if (item.type === "lot") {
-      const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false) : `${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
-        <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey)}</g>`}
-        <text x="0" y="17" font-size="8" font-weight="bold" fill="${tinta.inkForte}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
-      </g>`;
-    }
-  });
-
-  /* 3. CAMADA 3: OS 7 PLANETAS CLÁSSICOS, NA ORDEM CALDAICA
-     (do mais distante da Terra para o mais próximo). Assim, quando um
-     planeta está "sob os raios" e por isso sobreposto ao Sol (ou a outro
-     planeta), quem fica na frente é sempre o corpo mais próximo da Terra —
-     exatamente como no céu real, onde o mais distante fica encoberto. */
-  const ORDEM_CALDAICA = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
-
-  outerRingItems
-    .filter(item => item.type === 'planet')
-    .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
-    .forEach(item => {
-      let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
-      const estiloGrau = `font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill"`;
-
-      if (temaCeu) {
-        const rPonto = pR + (item.eclLat * latPxPerGrau);
-        const pPonto = polarToCart(cx, cy, rPonto, item.aScreen);
-        // O PONTO de luz fica sempre na posição real (ângulo da longitude, raio da
-        // latitude), sem nenhum desvio. O glifo vai sempre ACIMA do ponto e o grau
-        // sempre ABAIXO.
-        const pGlifo = { x: pPonto.x, y: pPonto.y - 34 };
-        const p1c = polarToCart(cx, cy, R.Aspects, item.aScreen);
-        const p2c = polarToCart(cx, cy, rPonto - 10, item.aScreen);
-        svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
-        // Acima do horizonte (metade de cima do referencial girado) vale o dia/noite do Sol.
-        const rad = -skyRotation * Math.PI / 180, dx = pPonto.x - cx, dy = pPonto.y - cy;
-        const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
-        const elong = (((pObj.Moon.abs - pObj.Sun.abs) % 360) + 360) % 360;
-        svg += desenharPlanetaCeuSVG({
-          id: item.id, x: pPonto.x, y: pPonto.y, gx: pGlifo.x, gy: pGlifo.y,
-          dia: ceuParams.dia, noCeu: yRot < 0, elevacao: ceuParams.elevacao,
-          luaFrac: (1 - Math.cos(elong * Math.PI / 180)) / 2, luaCrescente: elong < 180,
-          luaInvertida: (currentGeo && currentGeo.lat < 0)
-        });
-        svg += `<text x="${pPonto.x.toFixed(1)}" y="${(pPonto.y + 27).toFixed(1)}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>`;
-        return;
-      }
-
-      const raioEfetivo = pR + (item.eclLat * latPxPerGrau) + (item.rOffset || 0);
-      const p1 = polarToCart(cx, cy, R.Termos, item.aScreen);
-      const p2 = polarToCart(cx, cy, raioEfetivo - 19, item.aShift);
-      svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
-      const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
-      svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        <g transform="scale(0.36) translate(-50, -50)">${papiro ? getIconeFragmento('planeta', item.id, data) : planetIconFragment(item.id)}</g>
-        <text x="0" y="27" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
-      </g>`;
-    });
-
-  svg += `</svg>`;
+  const roda = desenharRodaSVG({ estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro });
+  const { svg, width, height, papiroNaTela, ceuParams } = roda;
 
   const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   const blobURL = URL.createObjectURL(svgBlob);
@@ -2374,6 +1761,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     canvas.height = height * exportScale;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Mandala no papiro (botão da barra): a imagem salva vai SOBRE o papiro com textura, não transparente
+    if (papiroNaTela) papiroTexturaCanvas(ctx, canvas.width, canvas.height, exportScale);
     ctx.drawImage(imgLoader, 0, 0, canvas.width, canvas.height);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
@@ -2386,7 +1775,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      
     // Só a mandala ao vivo (não as cópias do Relatório, que passam estiloForcado):
     // com o Tema Céu, o céu continua pra fora da imagem; senão limpa o fundo.
-    if (!estiloForcado) configurarFundoCeuDaTela(container, ceuParams);
+    if (!estiloForcado) {
+      configurarFundoCeuDaTela(container, ceuParams);
+      // Modo papiro: a folha de papiro cobre o palco inteiro por uma classe no body (index.html, "mandala-papiro-tela").
+      // O céu continua pintado por baixo (inline) — assim as outras ferramentas e a volta pro céu não perdem nada.
+      document.body.classList.toggle('mandala-papiro-tela', papiroNaTela);
+      const btnPapiro = document.getElementById('btn-mandala-papiro');
+      if (btnPapiro) btnPapiro.classList.toggle('mandala-papiro-ativa', papiroNaTela);
+    }
 
     URL.revokeObjectURL(blobURL);     
 
@@ -2509,7 +1905,23 @@ async function capturarESalvarNaGaleria(gerarCanvas, nome) {
   document.body.appendChild(aviso);
   let dataUrl = null;
   try {
-    const canvas = await gerarCanvas();
+    /* Tema Céu: toda imagem salva sai SOBRE O PAPIRO COM TEXTURA (luz, sombra e fibras — papiroTexturaCanvas), não só
+       com a cor bege. As ferramentas que pintam o papel sozinhas já saem prontas; as que só passavam uma cor chapada
+       de fundo (Liberação, Profecção, Sinastria...) são pedidas SEM fundo (o mesmo modo da imagem pro Relatório) e
+       aqui o papel vai por baixo. */
+    const ceu = window.temaMandala === 'ceu';
+    const semFundoAntes = window.__capturaSemFundo;
+    if (ceu) window.__capturaSemFundo = true;
+    let canvas;
+    try { canvas = await gerarCanvas(); } finally { window.__capturaSemFundo = semFundoAntes; }
+    if (ceu) {
+      const comPapel = document.createElement('canvas');
+      comPapel.width = canvas.width; comPapel.height = canvas.height;
+      const pctx = comPapel.getContext('2d');
+      papiroTexturaCanvas(pctx, comPapel.width, comPapel.height, 2);
+      pctx.drawImage(canvas, 0, 0);
+      canvas = comPapel;
+    }
     dataUrl = canvas.toDataURL('image/png');
   } catch (err) {
     console.error('Erro ao gerar a imagem:', err);
@@ -2660,11 +2072,11 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   saida.height = topo.height + corpo.height;
   const ctx = saida.getContext('2d');
   if (papelDegrade) {
-    ctx.fillStyle = papiroGradienteCanvas(ctx, saida.height);
+    papiroTexturaCanvas(ctx, saida.width, saida.height, 2);
   } else {
     ctx.fillStyle = fundoChapado;
+    ctx.fillRect(0, 0, saida.width, saida.height);
   }
-  ctx.fillRect(0, 0, saida.width, saida.height);
   ctx.drawImage(topo, Math.round((saida.width - topo.width) / 2), 0);
   ctx.drawImage(corpo, Math.round((saida.width - corpo.width) / 2), topo.height);
   return saida;
@@ -2717,7 +2129,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const altura = yConteudo + Hk + 20;
   const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
     .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
-  const papelFundo = papiro ? `<defs>${papiroGradienteSvg('papiroCaptura')}</defs><rect width="${largura}" height="${altura}" fill="url(#papiroCaptura)"/>` : '';
+  const papelFundo = papiro ? papiroTexturaSvg('papiroCaptura', largura, altura) : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
     ${papelFundo}
     <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>
@@ -2805,6 +2217,11 @@ window.onload = function() {
     try {
       if (ultimoEhMandala) {
         abrirModuloTecnica(ultimoModulo);
+      } else if (ultimoModulo === 'configuracoes') {
+        /* A página de Configurações não depende de mapa: abre na hora (sem esperar o cálculo) e, quando o mapa
+           chegar (executarCalculo), fica onde está em vez de virar a Mandala. */
+        window.configuracoesAbertaNoCarregamento = true;
+        abrirModuloTecnica('configuracoes');
       } else {
         /* Outra ferramenta estava aberta: ainda não há mapa calculado (o fetch acima está em andamento), então
            desenhá-la agora mostraria a tela dela sem dados por uns instantes e depois a Mandala por cima (o

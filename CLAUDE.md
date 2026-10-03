@@ -65,6 +65,13 @@ navegação da aba", diferente de preferência, e devem **continuar em
   Céu entrava). `carregarTemaMandala` só lê a coluna antiga UMA vez, num
   aparelho que ainda não escolheu (migração). **Não migrar de volta pro
   Supabase por semelhança com a Regra de ouro 2.**
+  A tela Aparência tem **uma lista só**: Céu, Claro, Escuro, Automático
+  (`salvarAparencia`). O Automático só escolhe entre claro e escuro, nunca
+  Céu; escolher Claro/Escuro/Automático desliga o Céu. **O Céu é um tema
+  INDEPENDENTE: com ele ligado não existe base clara nem escura por trás**
+  (`aplicarModoCor` nunca liga `tema-escuro` enquanto `temaMandala` for
+  'ceu'; o modo de cor guardado só volta a valer quando o Céu é desligado).
+  Por isso o script do Céu vem ANTES do script do modo de cor no `<head>`.
 
 Ou seja, a régua não é "localStorage é sempre errado" — é "preferência/
 configuração consciente do astrólogo (algo que ele foi lá e escolheu,
@@ -672,3 +679,172 @@ Exceção: o CSS do Relatório (`relatorio.js`) também vai pro PDF, que não te
 `papiroCores()`), não `var()`. E **o JPEG `papiro-folha.js` é gerado a partir de
 `--papiro-fundo`: se as cores mudarem, regerar** (794x1123 px a 1,5x, JPEG
 q80, via Chromium headless).
+
+## Página de Configurações (04/10/2026)
+
+As configurações **não ficam mais no menu lateral** (estreito, uma tela por
+vez, ~4 cliques até uma opção). Viraram uma **página inteira**, módulo
+`configuracoes` (`configuracoes.js` + `configuracoes.css`): botão de engrenagem
+na barra superior, como os das ferramentas (`data-modulo-key="configuracoes"`,
+posição escolhida em Configurações → Aparência → Barra superior; quem já tinha
+ordem salva recebe o botão no fim da barra), navegação de seções à esquerda
+(no celular vira uma fileira de abas que rola) e cartões em `grid auto-fit`
+que se reorganizam sozinhos. **Ocupa a largura toda** — nada de coluna estreita
+no meio da tela com o resto vazio.
+
+- **Seção nova** = uma entrada em `CONFIG_SECOES` (`id`, `titulo`, `icone`,
+  `descricao`, `html()` e, se buscar dados, `depois()`); **configuração nova**
+  = um cartão dentro de uma seção. Classes `.cfg-*` em `configuracoes.css`,
+  que usa as variáveis de cor do software (claro/escuro valem sozinhos) e traz
+  o **Tema Céu** no fim do arquivo (papiro, só tinta).
+- O que o resto do software usa fora da página (carregar tema/estilo dos
+  planetas/ordem dos botões depois do login, `salvarAparencia`,
+  `moverBotaoTopo`, `reRenderizarModuloAtivo`...) continua em `supabase.js`;
+  as telas e os salvamentos que só existem pra elas moram em
+  `configuracoes.js`. Depois de salvar, quem precisa redesenhar a página chama
+  `atualizarTelaConfiguracoes()` (mantém a rolagem; só refaz a seção aberta).
+- Pra outras telas mandarem o astrólogo pra lá: `abrirConfiguracoes('agenda')`
+  (ou `'relatorios'`, `'captacao'`, `'aparencia'`, `'seguranca'`).
+- **Não depende de mapa**: ao recarregar nela, abre na hora e **fica nela**
+  quando o primeiro mapa chega (`window.configuracoesAbertaNoCarregamento`
+  em `mandala.js`); escolher um cliente na lista lateral volta pra Mandala como
+  nas outras ferramentas. Erro do cálculo não apaga a página.
+- Sem `position: sticky` de propósito (ver a seção sobre `sticky` acima).
+- **A ferramenta Agenda ainda usa colunas de 480px** (`max-width: 480px` em
+  `agendamento.js`) — o mesmo "estreitinho" que a página de Configurações
+  evita; não foi mexida por não ter sido pedida.
+
+## Mandala no céu ou no papiro, e capa Céu ou Papiro (03/10/2026)
+
+- **Botão `#btn-mandala-papiro`** (`index.html`, no `#mandala-actions-overlay`, entre a Matriz de Visibilidade e a
+  Revolução Solar): só aparece no Tema Céu (`body.tema-ceu`). `alternarMandalaPapiro` (`mandala.js`) liga/desliga
+  `window.mandalaPapiroTela` e redesenha. Fica no modo escolhido até apertar de novo; **não é salvo** (ao recarregar
+  abre no céu). Em `renderMandala`, o modo papiro desenha a roda "tinta sobre papiro" (`tintaPapiro`) e a folha de papiro
+  cobre o palco por uma classe no body (`mandala-papiro-tela`, em `index.html`); o céu continua pintado por baixo
+  (inline), então as outras ferramentas e a volta pro céu não perdem nada. `abrirModuloTecnica` tira a classe ao sair da Mandala.
+- **"Adicionar ao Relatório" da Mandala** (`capturarMandalaAtualParaRelatorio`) manda o que está na tela: no papiro, a roda
+  em tinta sem fundo; no céu, a mandala com o céu (PNG reduzido a 1600px por `relatorioRedimensionarPngDataUrl`).
+- **Capa Céu ou Papiro** por modelo: `blocoCapa.capaPapiro` (checkbox/radio `#relCapaPapiro` no editor, só visível no Tema
+  Céu, mas existe sempre pra não perder a escolha salva). Papiro = `rel-capa-papiro` (folha inteira, título terracota); com a
+  Mandala Natal/Fortuna usa a roda em tinta (`png1`/`png2`), não a do céu.
+- **Como testar sem login/Supabase** (foi assim em 03/10): servir a pasta com `http-server`, abrir `index.html` no
+  Chromium (Playwright), stubar `window.supabase`, interceptar o motor de astrologia com JSON falso, setar
+  `window.temaMandala='ceu'` + `body.tema-ceu`, `executarCalculo({soCalcular:true})` e chamar `renderMandala()` /
+  `renderizarMandalasDoPreset` + `montarConteudoRelatorioHtml`. Dá pra tirar print e gerar PDF (`page.pdf()`).
+- **Se o deploy não aparecer:** conferir em Actions se há um "pages build and deployment" pro commit (um push de duas
+  refs de uma vez — `main` e a branch — não disparou o Pages em 03/10; empurrar `main` sozinho).
+
+## Imagens salvas no Tema Céu saem sobre o papiro COM textura (03/10/2026)
+
+Antes, toda imagem salva (galeria) em papiro saía só com o degradê ou uma cor bege chapada — sem a textura — e a
+mandala no papiro saía transparente. Agora `papiro.js` tem `papiroTexturaCanvas(ctx, w, h, esc)` e
+`papiroTexturaSvg(id, w, h)` (degradê + luz + sombra + fibras, as mesmas camadas de `--papiro-fundo`). Usar SEMPRE essas
+duas pra pintar papel em imagem salva; **nunca** `papiroGradienteCanvas` + `fillRect` nem `papiroCores().chapado` direto
+(sem textura). `capturarESalvarNaGaleria` (`mandala.js`) já resolve as ferramentas que só passavam cor chapada
+(Liberação, Profecção, Sinastria...): no Tema Céu pede a imagem SEM fundo (`window.__capturaSemFundo`) e põe o papel por
+baixo. A Mandala no papiro (botão da barra) desenha a textura em `lastRenderedPngUrl` (`renderMandala`).
+
+## Eixos ocre nas rodas de papiro e mês ativo da Profecção na imagem salva (03/10/2026)
+
+- **ASC-DSC / MC-IC em ocre (`COR_TINTA_OCRE` = `#B5852F`, `planetIcons.js`)**: nas rodas em tinta sobre papiro, o traço dos dois eixos e o
+  triângulo dos 4 ângulos saem ocre (a letra dentro do triângulo continua terracota). Vale nas 4 cópias da roda:
+  `renderMandala` (`mandala.js`), `profeccao.js`, `sinastria.js` e `liberacao.js` — **mexeu num, mexe nos quatro**. O triângulo
+  usa `getIconeFragmento('outro','angulo', undefined, COR_TINTA_OCRE)` (4º parâmetro = cor forçada, só vale nos ícones de papiro).
+  **Triângulo ocre em TODOS os lugares do Tema Céu** (decisão do astrólogo, 03/10): também nas tabelas/direções/botão de rotação (`getAnguloCirculoSVG`, `tabelaTecnica.js`), e na Calculadora de Lotes (`getASCIconSVGLotes`) — sempre triângulo ocre + letras terracota. **A roda do Céu principal (`iconeAnguloCeuSVG`, `mandala.js`) NÃO muda: o ícone do Céu é branco/azul claro e é outra categoria — só os ícones que vão no papiro são ocre. Foi alterada por engano em 03/10 e revertida.**
+- **`html2canvas` perde o atributo `style` da cópia que ele pinta**: um seletor CSS `[style*="..."]` NÃO funciona na imagem
+  salva (só na tela). Foi por isso que o mês ativo da Profecção Mensal (`tr[style*="e0e7ff"]`) saía sem o destaque. Corrigido com
+  `data-mes-ativo` na linha. **Pra qualquer estilo que precisa aparecer em imagem capturada, usar classe/`data-*`, nunca `[style*]`.**
+  Outros `[style*=...]` do `index.html` (Decênios, Lotes, Liberação, Isopsefia) podem ter o mesmo problema nas imagens salvas — não
+  foram mexidos por não terem sido pedidos.
+
+## Estilo da mandala: Astro Hellenic ou francês — e a RODA CENTRAL `roda.js` (03/10/2026)
+
+Configurações → Aparência → "Estilo da mandala". **Só o FORMATO do desenho** (onde cada coisa fica); cores e ícones seguem o tema.
+
+**O desenho da roda mora em UM lugar: `roda.js`, função `desenharRodaSVG(opcoes)`** (devolve `{ svg, width, height, papiroNaTela, ceuParams }`).
+`renderMandala` (`mandala.js`) só cuida da tela/PNG/cache. Cada ESTILO é uma entrada de `RODA_ESTILOS` (topo do `roda.js`):
+raios dos anéis, `faixaZodiaco`, `aneisTracejados`, `eixosTracejados`, `raioLotes`, `fioPlanetaDe`, `planetaComDesvio`. **Estilo novo = entrada
+nova** (e, se precisar de geometria que não cabe nesses botões, um ramo novo em `desenharRodaSVG`). Mudou o francês ou o Astro Hellenic? É ali.
+Duas coisas SEPARADAS dentro da função — **nunca misturar**: `temaCeu` = PINTURA/decoração de céu (céu, Terra no miolo, planetas como pontos
+de luz, ícones do Céu, **cor** branca dos eixos); `estiloRoda` = POSIÇÃO/forma (inclusive se os eixos ASC-DSC/MC-IC são tracejados: faz parte do
+estilo — liso no francês, tracejado no Astro Hellenic, em qualquer tema). **O mesmo vale pro retículo tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos): `reticulosTracejados` — só no Astro Hellenic, em qualquer tema; no francês não existe, nem no Céu.**
+`estiloMandalaAtual(temaCeu)`: se o astrólogo escolheu (`window.estiloMandala`) vale a escolha em qualquer tema; **sem escolha, o padrão de
+sempre**: pintura de Céu = Astro Hellenic, o resto = francês. **Conferência obrigatória ao mexer em `desenharRodaSVG`:** comparar o SVG
+antes/depois (byte a byte) nos 5 casos — claro, escuro, tinta de papiro, Céu ao vivo e capa — com o estilo padrão e com cada estilo forçado
+(script de teste: ver "Como testar sem login" acima; interceptar `URL.createObjectURL` ou ler `window.mandalaSvgTelaUrlAtual`).
+Preferência vai pro Supabase: `configuracoes.estilo_mandala` (já criada), carregada por `carregarEstiloMandala`, salva por `salvarEstiloMandala` (`supabase.js`).
+**Plano "função global" (etapas):** 1) roda principal em `roda.js` (feita); 2) **Profecção**, 3) **Liberação** e 4) **Sinastria** (todas feitas em 03/10). **Todas as rodas do software agora saem de `roda.js`** — não existe mais cópia do desenho. **Como uma ferramenta usa a roda central:** passa
+`ferramenta: { dados, loteCasa1, folgaCanvas, abertura({canvasSize,fundoDisco}) (a tag `<svg>`+defs+fundo que ela sempre montou), fundoEscuro,
+fragmentoPlaneta(id), glowSol(pos, raio, tinta), destaques: { fatias, faixas, coroas, depoisDasFaixas(ctx) } }` + `tintaPapiro: (tema Céu)`; sem cabeçalho nem céu, canvas quadrado. A ferramenta
+só decide signos e CORES dos destaques; a posição vem do estilo (`raioDestaque` em `RODA_ESTILOS`). Ver `gerarMandalaSVG` em `profeccao.js` como modelo.
+**Conferência da migração da Profecção (03/10):** SVG antes/depois nos 9 casos (claro/escuro/papiro × sem destaque/com os 3 destaques/só mês) =
+idêntico salvo espaços em branco e 2 diferenças INVISÍVEIS nos glifos do zodíaco (a cópia antiga tinha uma versão velha de `MONOLINE_ZODIAC_SVGS`:
+sem `stroke-miterlimit="10"` e com um ponto de controle em `0` onde o da roda principal tem `0.083`). Isso mostra o risco das cópias: **cada cópia
+guarda a sua versão das constantes** (`SIGNS`, `MONOLINE_ZODIAC_SVGS`, `PLANETS_DEF`, `EGYPTIAN_TERMS`, `polarToCart`, `calculateSevenLots`...) — ao migrar
+uma ferramenta, comparar essas constantes com as de `mandala.js` antes (o script de comparação está no histórico desta sessão: normalizar
+espaços e olhar o primeiro ponto de diferença). Hook de teste: `window.__gerarMandalaSVGProfeccao` (não remover sem atualizar os testes).
+
+**Migração da Liberação (03/10):** a Liberação já reaproveitava as constantes globais de `mandala.js` (só os glifos dos signos da UI, `MONOLINE_ZODIAC_SVGS_ZR`, são
+cópia — e nem entram na roda), então o SVG antes/depois nos 12 casos (3 temas × 4 combinações de níveis/saltos/lote) saiu igual salvo espaços em branco. O que é
+só da Liberação continua em `liberacao.js`: cores de pico/salto, rótulos PICO/SALTO (`depoisDasFaixas`, posição = `raioDestaque + 23` do estilo) e as coroas com o número do nível.
+
+**Migração da Sinastria (03/10):** `gerarMandalaSVG` (`sinastria.js`) devolve `{ svg, rCanvas }`; `rCanvas` = `rCanvasNatural` da roda central e `opcoes.rCanvasMinimo` → `ferramenta.rCanvasMinimo`
+(as duas rodas lado a lado ficam do mesmo tamanho). SVG antes/depois nos 21 casos (3 temas × mapa normal, mapa com planetas colados, canvas mínimo e par com escala igual) =
+igual salvo espaços e as 2 diferenças invisíveis de glifo (mesma cópia velha de `MONOLINE_ZODIAC_SVGS` da Profecção). A Sinastria nunca passa destaques de signo (os que a cópia antiga
+tinha nunca eram usados), então a migração não os levou.
+
+## Ícones monoline também nos botões da Mandala (03/10/2026)
+
+Os 5 botões do container esquerdo da Mandala (`#mandala-actions-overlay`: salvar, atualizar momento, Matriz, céu/papiro, Revolução Solar) eram ícones
+Font Awesome PREENCHIDOS; agora são SVG monoline (grade 64, `stroke="currentColor"` `stroke-width="3"`, pontas/juntas redondas, 22px), como todos os
+outros ícones do software (o do céu/papiro é o MESMO desenho do Font Awesome `scroll`, só que contornado em vez de preenchido) — a cor vem do `color` do botão em cada tema (dourado, azul-tinta no Céu, claro quando apertado). **Botão novo nesse container = SVG monoline, nunca `<i class="fa-solid ...">`.**
+(Ainda são Font Awesome: os passos de tempo `fa-backward-step`/`fa-forward-step` do canto direito e outros ícones de telas/janelas — não mexidos por não terem sido pedidos.)
+
+## Termos em ocre no papiro; tracejados brancos no Céu (03/10/2026)
+
+Em `roda.js`: (1) na roda em tinta sobre papiro os 60 ícones dos termos saem em `COR_TINTA_OCRE` (como os eixos e os triângulos) — quebra o excesso de azul; no Céu e nos outros
+temas continuam na cor de sempre; (2) no Céu com o estilo Astro Hellenic os TRACEJADOS (os 3 anéis, as divisas da dodecatemória e as divisas dos termos) são brancos (`corTracejado`),
+pra não se confundirem com o amarelo dos ícones dos termos; os dentinhos (traço cheio) e os ícones dos termos ficam amarelos. Conferido: só essas cores mudam (60 ícones no papiro;
+um bloco de tracejados no Céu); Claro, Escuro, capa e francês no Céu saem idênticos.
+
+**Branco adaptativo (03/10/2026, depois):** o "branco" do Céu NÃO é branco chapado — é o mesmo dos ícones calculados: azul-esbranquiçado (`#e6eeff`/`#dbe6ff`) de noite/abaixo do horizonte e azul-tinta
+(`#1d3a66`) por cima do céu claro do dia (`ceuParams.dia`). Os tracejados (anéis, dodecatemória, divisas dos termos; `emitirTracejado` em `roda.js`) usam os clips `ceuMeiaTela`/`ceuMeiaTelaBaixo`,
+e o número das casas (faixa do zodíaco do Astro Hellenic via `corNumero` em `montarBandaZodiacoCeuSVG`, e o francês no Céu) usa `corCalculadoCeu(x,y)`. Ícones dos termos no Céu continuam amarelos.
+
+## Dois Astro Hellenic: tracejado e reto (03/10/2026)
+
+`RODA_ESTILOS` (`roda.js`) tem 3 estilos: `frances`, `astrohellenic` (**Estilo Astro Hellenic Tracejado** — a chave ficou a antiga porque é a que já está salva no Supabase e o padrão do Céu, então nada
+mudou pra quem já usava) e `astrohellenic_reto` (**Estilo Astro Hellenic**, a mesma roda com todo traço liso: anéis, divisas da dodecatemória/termos, eixos, retículos dos ícones calculados e divisas da faixa
+do zodíaco). O reto é o tracejado + o botão `retas: true` (e `aneisTracejados`/`eixosTracejados` falsos); `retas` chega às funções de `mandala.js` por `semReticulo === 'reto'` (retículo liso) e `reto` (faixa).
+O branco adaptativo do Céu vale pros dois (condição `faixaZodiaco`). Conferido: francês, tracejado e padrão saem idênticos byte a byte nos 5 casos; o reto tem 0 `dasharray`. `estilo_mandala` aceita os 3 valores
+(`carregarEstiloMandala`), sem coluna nova. **Atenção ao testar: refazer `/tmp/*.main.js` a partir do `origin/main` atual antes de comparar, senão a base é antiga.**
+
+**Sombra no lugar do retículo (estilo reto, 03/10/2026):** no `astrohellenic_reto` o círculo em volta dos ícones que não são do céu (ângulos, lotes, nodos, sizígia) não é mais um traço: é uma SOMBRA translúcida
+embaixo do ícone (dois discos, opacidade .07 e .13, sem filtro/blur pra sair igual em PNG e PDF). No papiro usa `COR_TINTA_SOMBRA` (`#1b2a4a`, azul quase preto da tinta de escrever, `planetIcons.js`); nos outros
+temas, a cor do ícone naquele tema (no Céu, a mesma que muda de branco pra azul-tinta). `roda.js` (`sombraIcone`/`reticuloTinta`) e `iconeAnguloCeuSVG`/`iconeCalculadoCeuSVG` (`semReticulo === 'reto'`). O tracejado e o francês não mudaram (byte a byte).
+
+**Rascunho "Estilo comum" (03/10/2026, `comum`):** herda do reto com `faixaZodiaco:false` e `invertido:true`. Desenho (pedido do astrólogo, depois de ver o 1º rascunho): signos num anel por dentro (número + glifo,
+`signos.numero/glifo`) **sem nenhuma linha** dividindo signos nem planetas; termos (`anelTermos`) por fora da faixa dos planetas e dodecatemória (`anelDodec`) na borda; **os dentinhos de grau ficam na borda de DENTRO dos termos, apontando
+pra dentro**, e **os fios dos planetas/lotes vão pra FORA, até esses dentinhos** (é assim que se vê em que grau cada um encosta). Linhas que existem: miolo (aspectos), divisória termos/dodecatemória e a borda; as linhas radiais da
+dodecatemória e dos termos e os eixos ASC-DSC/MC-IC continuam. Pontos calculados (lotes, ângulos) ficam onde estão. `desenharRodaSVG` usa `aDod`/`aTer`/`inv`; nos outros estilos valem os raios de sempre (conferido byte a byte).
+`R_Ceu` e `raioDestaque` crescem pros anéis de fora. Ainda é rascunho, só na branch.
+
+**Tamanho do Comum (03/10/2026):** a roda inteira tem EXATAMENTE o mesmo tamanho do Astro Hellenic (SVG com a mesma largura/altura, conferido nos 5 casos). Pra isso os termos (446–472) e a dodecatemória (472–498) entram
+dentro do mesmo raio e a eclíptica dos planetas sobe pra `raioPlanetas: 373` (entre os signos, até 300, e os termos). `pRCeu = 390` é o raio de REFERÊNCIA pro tamanho total (`R_Ceu`, canvas das ferramentas) — **todo estilo novo tem que caber
+nele**; `pR` é onde os planetas ficam de verdade (`estiloRoda.raioPlanetas`, padrão 390). `temaCeu`/`estiloRoda` agora são definidos antes de `pR`.
+
+**Correção (03/10/2026):** no Comum o que sai são os CÍRCULOS em volta do anel dos signos — as DIVISAS RADIAIS dos signos (as 12 linhas do miolo até a borda de dentro dos termos) FICAM, como no francês. Uma sessão tinha tirado as divisas por ler "linha
+dividindo os signos" como se fossem elas; o astrólogo falava dos círculos. **Regra: ele pediu pra MUDAR coisas de posição; só remover o que ele nomear.**
+
+**Dentinho = mesma cor da linha (Comum, 03/10/2026):** a régua de graus faz parte do círculo da borda de dentro dos termos, então usa a MESMA cor dele (no Céu o branco/azul-tinta adaptativo via `emitirTracejado`; `reguaTermos` em `roda.js`).
+Só no Comum — os outros estilos mantêm a régua amarela de sempre (conferido byte a byte).
+
+**Estilo comum (chave `comum`, 03/10/2026) — aplicado:** o desenho aprovado é a mandala "comum" dos sites por aí (nome definido pelo astrólogo). Layout final: miolo de aspectos 150; número da casa (176) e glifo grande (216, 42px) logo depois, dentro da cunha entre
+as divisas; planetas, nodos e sizígia na eclíptica (`raioPlanetas` 343); ASC/DSC/MC/IC (`raioAngulos` 413) e lotes (`raioLotes` 420) ENCOSTADOS nos dentinhos (régua 7/12/18); termos 446–472 e dodecatemória 472–498; mesmo tamanho total do Astro Hellenic.
+Opções em Configurações → Aparência: Astro Hellenic, Astro Hellenic Tracejado, Estilo comum, Estilo francês. `estilo_mandala` aceita `comum`.
+
+**Comum sem sombra (03/10/2026):** o Estilo comum NÃO tem a sombra translúcida embaixo dos ícones calculados (`reticulosTracejados: false` no estilo): só os ícones normais, como no francês. A sombra é do Astro Hellenic (reto).
+
+**Mancha de combustão do Sol no papiro (03/10/2026):** antes `roda.js` só desenhava a mancha fora do papiro (`sunItem && !papiro`), então toda roda de papiro saía sem ela. Agora o papiro tem a SUA mancha, "pintada na folha": lavagem de tinta ocre/terracota translúcida
+(`#C98A2B` → `#B5852F` → `#A03E25` → transparente), sem o branco-amarelado do céu, no mesmo raio (`rSobRaiosGlow`) em todos os estilos. Cada mancha leva gradiente de id único (`combustaoPapiro_N`, contador `__combustaoPapiroN`) — a Sinastria desenha duas rodas na mesma
+tela. Vale pra qualquer roda em papiro (Mandala, Profecção, Liberação, Sinastria, Relatório, capa). Claro, escuro e Céu não mudaram (byte a byte).
