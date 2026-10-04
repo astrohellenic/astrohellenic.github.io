@@ -177,7 +177,10 @@ function planetaEstaNaSeita(planetId, dados) {
   return s.diurno ? ['Sun', 'Jupiter', 'Saturn'].includes(planetId) : ['Moon', 'Venus', 'Mars'].includes(planetId);
 }
 
+/* Regra geral do papiro: lotes, nodos e lunação pré-natal (sizígia) são sempre em preto de tinta (não o preto puro). */
+const COR_TINTA_PRETO = '#1a1410';
 function corIconePapiro(categoria, chave, dados) {
+  if (categoria === 'lote' || (categoria === 'outro' && ['northNode', 'southNode', 'sizigia'].includes(chave))) return COR_TINTA_PRETO;
   return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? COR_TINTA_TERRACOTA : COR_TINTA_AZUL;
 }
 

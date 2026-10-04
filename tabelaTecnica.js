@@ -185,7 +185,7 @@ const TERMO_PLANET_BY_SYMBOL_TABELA = { '♃': 'Jupiter', '♀': 'Venus', '☿':
 function getTermoIconeTabelaSVG(simbolo, tamanho = 20) {
   if (typeof getIconeTermoSVG !== 'function') return `<svg width="${tamanho}" height="${tamanho}"><text x="${tamanho / 2}" y="${tamanho / 2 + 5}" font-size="14" font-weight="700" fill="var(--gold-primary)" text-anchor="middle">${simbolo}</text></svg>`;
   const planetId = TERMO_PLANET_BY_SYMBOL_TABELA[simbolo];
-  return getIconeTermoSVG(planetId, tamanho, 'var(--gold-primary)');
+  return getIconeTermoSVG(planetId, tamanho, (window.temaMandala === 'ceu' && typeof COR_TINTA_OCRE !== 'undefined') ? COR_TINTA_OCRE : 'var(--gold-primary)'); // Tema Céu (papiro): ícones dos termos sempre em amarelo ocre
 }
 
 /* Reconstrói a tabela do Painel Principal (Ponto/Signo/Grau/Latitude/
