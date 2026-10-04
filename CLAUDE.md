@@ -860,3 +860,5 @@ tela. Vale pra qualquer roda em papiro (Mandala, Profecção, Liberação, Sinas
 com o mesmo vãozinho (`INS = 0,55°`) do contorno da faixa dos signos — por isso o dentinho do grau 0 não aparece, só 1 a 29 (`aneisPorSigno`, bloco `if (porSigno)` em `roda.js`). O Comum e o francês não mudaram (byte a byte).
 
 **Lotes, nodos e sizígia em preto no papiro (03/10/2026):** em tinta sobre papiro esses pontos calculados (ícone, grau, fio e retículo/sombra) saem em `PRETO_TINTA` (`#1a1410`, `roda.js`) em vez do azul-tinta, pra tirar o excesso de azul. Claro, escuro e Céu não mudaram (byte a byte). Ângulos continuam ocre/terracota.
+
+**Circunambulação pelos termos (04/10/2026):** no Tema Céu os ícones dos planetas dentro dos termos (`direcoes.js`) saem em `COR_TINTA_OCRE` (amarelo ocre), pra destacar; nos outros temas continuam em `var(--gold-primary)`. A Tabela Técnica (que também usa `getIconeTermoSVG`) não foi mexida.

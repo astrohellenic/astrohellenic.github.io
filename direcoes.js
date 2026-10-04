@@ -663,7 +663,7 @@ function renderCircumambulaçõesUI() {
       const xCenter = xStart + (wTerm / 2);
       const termIconTamanhoDir = Math.max(10, termHeight - 6);
       if (typeof getIconeTermoSVG === 'function') {
-        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, 'var(--gold-primary)')
+        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, (window.temaMandala === 'ceu' && typeof COR_TINTA_OCRE !== 'undefined') ? COR_TINTA_OCRE : 'var(--gold-primary)') // Tema Céu (papiro): ícones dos planetas dos termos em amarelo ocre, pra destacar
           .replace('<svg ', `<svg x="${xCenter - termIconTamanhoDir / 2}" y="${yBaseline + 1 + (termHeight - termIconTamanhoDir) / 2}" `);
       }
 
