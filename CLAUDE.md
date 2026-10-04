@@ -14,6 +14,22 @@ astrólogo, não de publicar a troca. "Resolver o problema" significa sair
 com aquele problema a menos e **nada** a mais quebrado, mesmo que isso
 signifique deixar o problema original em aberto por enquanto.
 
+## Como conversar com o astrólogo: curto, e UMA pergunta por vez
+
+O astrólogo reclamou várias vezes (04/10/2026, de novo depois de uma
+resposta longa sobre a Sinastria): respostas com muitos detalhes e várias
+perguntas juntas fazem ele se perder e esquecer o que tinha que responder.
+Ele é humano, não consegue guardar 10 coisas de uma vez.
+
+- **Respostas curtas e diretas.** Sem explicar o "porquê" de cada coisa.
+- **Perguntar UMA coisa por vez.** Só faz a próxima pergunta depois que ele
+  responder a anterior. Nunca uma lista de perguntas numa mensagem só.
+- **Cada pergunta é só a pergunta**, sem justificativa comprida. Se
+  precisar de contexto, no máximo uma frase.
+- Texto que vai pra um site dele: mostrar o texto completo antes de
+  publicar (ele precisa ler o que vai ao ar), mas o resto da conversa
+  fica enxuto.
+
 ## Regra de ouro 2: nada de `localStorage` pra estado que devia estar no Supabase
 
 Esse software tem Supabase pra guardar estado — **qualquer preferência ou

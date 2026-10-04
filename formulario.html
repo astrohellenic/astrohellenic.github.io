@@ -313,7 +313,8 @@
   <div id="formLogoContainer" style="text-align: center; margin-bottom: 20px;">
     <img id="formLogoImg" src="" alt="Logo" style="max-height: 75px; max-width: 100%; display: none; margin: 0 auto;" />
   </div>
-  <h2>Dados para Atendimento</h2>
+  <h2 id="formTitulo">Dados para Atendimento</h2>
+  <p id="formAviso" style="display:none; text-align:center; font-size:13px; margin:-8px 0 16px 0;"></p>
   <form id="clientForm" onsubmit="event.preventDefault(); abrirConfirmacao();">
     <div class="form-group">
       <label for="nome">Nome Completo</label>
@@ -337,17 +338,18 @@
       <div id="cityResultsList" class="city-results"></div>
     </div>
 
-    <div class="form-group">
+    <div class="form-group" id="grupoWhatsapp">
       <label for="whatsapp">WhatsApp</label>
       <input type="tel" inputmode="tel" id="whatsapp" required placeholder="(11) 99999-9999">
     </div>
 
-    <div class="form-group">
+    <div class="form-group" id="grupoEmail">
       <label for="email">E-mail</label>
       <input type="email" id="email" required placeholder="seu@email.com">
     </div>
 
-    <button type="submit" class="btn-submit">Enviar Informações</button>
+    <button type="submit" class="btn-submit" id="btnSubmitForm">Enviar Informações</button>
+    <button type="button" class="btn-secondary" id="btnVoltarA" style="display:none; width:100%; margin-top:10px;" onclick="voltarParaEtapaA()">Voltar para os meus dados</button>
   </form>
 </div>
 
@@ -357,13 +359,22 @@
 <div id="confirmModal" class="modal-overlay">
   <div class="modal-card" id="confirmModalCard">
     <div id="confirmStepDados">
-      <h3>Confirme seus dados</h3>
+      <h3 id="confirmTitulo">Confirme seus dados</h3>
+      <div id="sumTituloA" style="display:none; font-weight:700; font-size:12px; text-transform:uppercase; margin:0 0 6px 0;">Você (A)</div>
       <div class="summary-list">
         <div class="summary-item"><strong>Nome:</strong> <span id="sumNome"></span></div>
         <div class="summary-item"><strong>Data e Horário:</strong> <span id="sumDataHora"></span></div>
         <div class="summary-item"><strong>Cidade:</strong> <span id="sumCidade"></span></div>
         <div class="summary-item"><strong>WhatsApp:</strong> <span id="sumWhatsapp"></span></div>
         <div class="summary-item"><strong>E-mail:</strong> <span id="sumEmail"></span></div>
+      </div>
+      <div id="sumBlocoB" style="display:none;">
+        <div style="font-weight:700; font-size:12px; text-transform:uppercase; margin:0 0 6px 0;">Pessoa analisada junto (B)</div>
+        <div class="summary-list">
+          <div class="summary-item"><strong>Nome:</strong> <span id="sumNomeB"></span></div>
+          <div class="summary-item"><strong>Data e Horário:</strong> <span id="sumDataHoraB"></span></div>
+          <div class="summary-item"><strong>Cidade:</strong> <span id="sumCidadeB"></span></div>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="fecharConfirmacao()">Corrigir</button>
@@ -480,35 +491,100 @@
     return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0');
   }
 
-  function abrirConfirmacao() {
+  /* SINASTRIA (link com &servico=sinastria): duas etapas — A (quem paga) e B (pessoa analisada junto).
+     Os dois mapas só são gravados juntos, no fim. */
+  const modoSinastria = new URLSearchParams(window.location.search).get('servico') === 'sinastria';
+  let etapaSinastria = 'A';
+  let dadosA = null, dadosB = null;
+
+  function aplicarEtapa(etapa) {
+    etapaSinastria = etapa;
+    if (!modoSinastria) return;
+    const b = etapa === 'B';
+    document.getElementById('formTitulo').innerText = b ? 'Sinastria: dados da outra pessoa' : 'Sinastria: seus dados';
+    const aviso = document.getElementById('formAviso');
+    aviso.innerText = b ? 'Informe os dados da pessoa que será analisada junto com você.' : '';
+    aviso.style.display = b ? 'block' : 'none';
+    document.getElementById('grupoWhatsapp').style.display = b ? 'none' : '';
+    document.getElementById('grupoEmail').style.display = b ? 'none' : '';
+    document.getElementById('whatsapp').required = !b;
+    document.getElementById('email').required = !b;
+    document.getElementById('btnSubmitForm').innerText = b ? 'Revisar e Enviar' : 'Continuar';
+    document.getElementById('btnVoltarA').style.display = b ? 'block' : 'none';
+  }
+
+  function irParaEtapaB() {
+    ['nome', 'data', 'hora', 'cidade'].forEach(id => { document.getElementById(id).value = ''; });
+    selectedGeo = { lat: null, lon: null, name: '' };
+    aplicarEtapa('B');
+    window.scrollTo(0, 0);
+  }
+
+  function voltarParaEtapaA() {
+    if (!dadosA) return;
+    document.getElementById('nome').value = dadosA.nome;
+    document.getElementById('data').value = dadosA.data;
+    document.getElementById('hora').value = dadosA.hora;
+    document.getElementById('cidade').value = dadosA.cidade;
+    document.getElementById('whatsapp').value = dadosA.whatsapp;
+    document.getElementById('email').value = dadosA.email;
+    selectedGeo = { ...dadosA.geo };
+    aplicarEtapa('A');
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => { if (modoSinastria) aplicarEtapa('A'); });
+
+  /* Valida os campos da etapa atual; devolve os dados já normalizados, ou null se algo estiver errado. */
+  function lerEtapaAtual() {
+    const precisaContato = !(modoSinastria && etapaSinastria === 'B');
     const nome = document.getElementById('nome').value.trim();
     const campoWhats = document.getElementById('whatsapp');
     const digitosWhats = campoWhats.value.replace(/\D/g, '');
-    if (/[^0-9\s()+.\-]/.test(campoWhats.value) || digitosWhats.length < 10 || digitosWhats.length > 15) {
-      alert('WhatsApp inválido. Digite só números, com DDD (ex.: (11) 99999-9999).'); campoWhats.focus(); return;
+    if (precisaContato && (/[^0-9\s()+.\-]/.test(campoWhats.value) || digitosWhats.length < 10 || digitosWhats.length > 15)) {
+      alert('WhatsApp inválido. Digite só números, com DDD (ex.: (11) 99999-9999).'); campoWhats.focus(); return null;
     }
     const campoData = document.getElementById('data'), campoHora = document.getElementById('hora');
     const dataNorm = normalizarData(campoData.value);
-    if (!dataNorm) { alert('Data de nascimento inválida. Use o formato DD/MM/AAAA (ex.: 06/03/1978).'); campoData.focus(); return; }
+    if (!dataNorm) { alert('Data de nascimento inválida. Use o formato DD/MM/AAAA (ex.: 06/03/1978).'); campoData.focus(); return null; }
     const horaNorm = normalizarHora(campoHora.value);
-    if (horaNorm === null) { alert('Horário inválido. Use o formato HH:MM (ex.: 14:30), de 00:00 a 23:59.'); campoHora.focus(); return; }
+    if (horaNorm === null) { alert('Horário inválido. Use o formato HH:MM (ex.: 14:30), de 00:00 a 23:59.'); campoHora.focus(); return null; }
     campoData.value = dataNorm; campoHora.value = horaNorm;
-    const data = dataNorm;
-    const hora = horaNorm || 'Não informada';
     const cidadeInput = document.getElementById('cidade').value.trim();
-    const whatsapp = document.getElementById('whatsapp').value.trim();
-    const email = document.getElementById('email').value.trim();
 
     if (!selectedGeo.name || selectedGeo.name !== cidadeInput || !selectedGeo.lat || !selectedGeo.lon) {
       alert('Por favor, selecione a cidade clicando em uma das opções da lista sugerida.');
-      return;
+      return null;
     }
+    return {
+      nome, data: dataNorm, hora: horaNorm, cidade: selectedGeo.name, lat: selectedGeo.lat, lon: selectedGeo.lon,
+      whatsapp: precisaContato ? campoWhats.value.trim() : '', email: precisaContato ? document.getElementById('email').value.trim() : '',
+      geo: { ...selectedGeo }
+    };
+  }
 
-    document.getElementById('sumNome').innerText = nome;
-    document.getElementById('sumDataHora').innerText = `${data} às ${hora}`;
-    document.getElementById('sumCidade').innerText = selectedGeo.name;
-    document.getElementById('sumWhatsapp').innerText = whatsapp;
-    document.getElementById('sumEmail').innerText = email;
+  function abrirConfirmacao() {
+    const d = lerEtapaAtual();
+    if (!d) return;
+
+    if (modoSinastria && etapaSinastria === 'A') { dadosA = d; irParaEtapaB(); return; }
+    if (modoSinastria) dadosB = d;
+
+    const a = modoSinastria ? dadosA : d;
+    document.getElementById('sumNome').innerText = a.nome;
+    document.getElementById('sumDataHora').innerText = `${a.data} às ${a.hora || 'Não informada'}`;
+    document.getElementById('sumCidade').innerText = a.cidade;
+    document.getElementById('sumWhatsapp').innerText = a.whatsapp;
+    document.getElementById('sumEmail').innerText = a.email;
+
+    if (modoSinastria) {
+      document.getElementById('confirmTitulo').innerText = 'Confirme os dados dos dois mapas';
+      document.getElementById('sumTituloA').style.display = 'block';
+      document.getElementById('sumBlocoB').style.display = 'block';
+      document.getElementById('sumNomeB').innerText = dadosB.nome;
+      document.getElementById('sumDataHoraB').innerText = `${dadosB.data} às ${dadosB.hora || 'Não informada'}`;
+      document.getElementById('sumCidadeB').innerText = dadosB.cidade;
+    }
 
     document.getElementById('confirmModal').style.display = 'flex';
   }
@@ -540,17 +616,27 @@
 
     try {
       /* O servidor grava o mapa E dispara o webhook (o endereço do webhook não passa mais pelo navegador). */
-      const { data: novoClienteId, error } = await supabaseClient.rpc('registrar_cliente_formulario', {
-        p_user: payload.user_id, p_nome: payload.nome, p_data: payload.data_nascimento, p_hora: payload.hora_nascimento,
-        p_cidade: payload.cidade, p_lat: payload.latitude, p_lon: payload.longitude,
-        p_whatsapp: payload.whatsapp, p_email: payload.email
-      });
+      /* Sinastria: grava A e B juntos (código 0157 A / 0157 B, calculado no servidor). Devolve o id do A. */
+      const resposta = modoSinastria
+        ? await supabaseClient.rpc('registrar_par_sinastria', {
+            p_user: ownerId,
+            p_nome_a: dadosA.nome, p_data_a: dadosA.data, p_hora_a: dadosA.hora, p_cidade_a: dadosA.cidade, p_lat_a: dadosA.lat, p_lon_a: dadosA.lon,
+            p_whatsapp: dadosA.whatsapp, p_email: dadosA.email,
+            p_nome_b: dadosB.nome, p_data_b: dadosB.data, p_hora_b: dadosB.hora, p_cidade_b: dadosB.cidade, p_lat_b: dadosB.lat, p_lon_b: dadosB.lon
+          })
+        : await supabaseClient.rpc('registrar_cliente_formulario', {
+            p_user: payload.user_id, p_nome: payload.nome, p_data: payload.data_nascimento, p_hora: payload.hora_nascimento,
+            p_cidade: payload.cidade, p_lat: payload.latitude, p_lon: payload.longitude,
+            p_whatsapp: payload.whatsapp, p_email: payload.email
+          });
+      const { data: novoClienteId, error } = resposta;
       if (!error) {
         /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
         const cfgData = { redirect_url: redirectUrlForm ? redirectUrlForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
         document.getElementById('clientForm').reset();
         selectedGeo = { lat: null, lon: null, name: '' };
+        if (modoSinastria) { dadosA = null; dadosB = null; aplicarEtapa('A'); }
 
         document.getElementById('confirmStepDados').style.display = 'none';
         document.getElementById('confirmStepSucesso').style.display = 'block';

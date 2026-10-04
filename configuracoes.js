@@ -252,6 +252,13 @@ function htmlCfgCaptacao() {
             </div>
           </div>
           <div class="cfg-campo-largo">
+            <label class="cfg-rotulo" for="cfgPublicFormSinastriaUrl">Link do formulário da Sinastria (capta os dois mapas)</label>
+            <div class="cfg-linha-campo">
+              <input type="text" id="cfgPublicFormSinastriaUrl" class="modal-input" readonly>
+              <button type="button" class="cfg-btn" onclick="copiarLinkFormulario('cfgPublicFormSinastriaUrl')">Copiar</button>
+            </div>
+          </div>
+          <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgWebhookUrl">URL do webhook (integração)</label>
             <input type="url" id="cfgWebhookUrl" class="modal-input" placeholder="https://hook.make.com/...">
           </div>
@@ -562,6 +569,9 @@ document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
 const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
 if (document.getElementById('cfgPublicFormUrl')) {
   document.getElementById('cfgPublicFormUrl').value = publicLink;
+}
+if (document.getElementById('cfgPublicFormSinastriaUrl')) {
+  document.getElementById('cfgPublicFormSinastriaUrl').value = publicLink + '&servico=sinastria';
 }        
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
@@ -641,8 +651,8 @@ async function fazerUploadLogo(inputElement) {
 }
 
 /* COPIA O LINK DO FORMULÁRIO PARA A ÁREA DE TRANSFERÊNCIA */
-function copiarLinkFormulario() {
-  const input = document.getElementById('cfgPublicFormUrl');
+function copiarLinkFormulario(idCampo) {
+  const input = document.getElementById(idCampo || 'cfgPublicFormUrl');
   if (!input || !input.value) return;
   
   navigator.clipboard.writeText(input.value).then(() => {
