@@ -741,7 +741,7 @@ async function abrirRascunhoRelatorio(rascunhoId) {
   const container = document.getElementById('mandala-container');
   if (!client || !container) return;
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o rascunho...</div>`;
+  container.innerHTML = `<div class="menu-vazio" style="padding: 60px;">Abrindo o rascunho...</div>`;
 
   try {
     const rascunho = await carregarRascunhoPorId(rascunhoId);
@@ -810,7 +810,7 @@ async function iniciarModuloRelatorio() {
   if (!container) return;
 
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
-    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para gerar o Relatório.</div>`;
+    container.innerHTML = `<div class="menu-vazio">Carregue um mapa de cliente no menu lateral para gerar o Relatório.</div>`;
     return;
   }
 
@@ -843,7 +843,7 @@ async function iniciarModuloRelatorio() {
     return;
   }
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Carregando seus modelos de relatório...</div>`;
+  container.innerHTML = `<div class="menu-vazio" style="padding: 60px;">Carregando seus modelos de relatório...</div>`;
 
   const [presets, rascunhos] = await Promise.all([
     carregarOuSemearPresetsRelatorio(),
@@ -878,61 +878,67 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   });
 
   const listaRascunhosHTML = gruposRascunhos.length ? `
-    <div style="max-width: 480px; margin: 0 auto 20px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-      <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 10px;">Relatórios em Andamento</label>
+    <div class="re-bloco">
+      <div class="titulo-secao">Relatórios em Andamento</div>
       ${gruposRascunhos.map(g => `
-        <div style="margin-bottom: 10px;">
-          <div class="rel-setup-cliente" style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">${escapeHtml(g.nome)}</div>
+        <div class="re-grupo">
+          <div class="re-cliente rel-setup-cliente">${escapeHtml(g.nome)}</div>
           ${g.itens.map(r => `
-            <div class="rel-setup-rascunho${r.id === currentRascunhoId ? ' rel-setup-rascunho-atual' : ''}" onclick="abrirRascunhoRelatorio('${r.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; margin-left: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: ${r.id === currentRascunhoId ? 'var(--bg-main)' : 'var(--bg-card)'};">
-              <span style="font-size: 12px; color: var(--text-muted-2);">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
-              <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-                <i class="fa-solid fa-trash" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" style="color: var(--danger); cursor: pointer; font-size: 12px;" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)"></i>
-                <i class="fa-solid fa-chevron-right" style="color: var(--gold-primary); font-size: 11px;"></i>
+            <div class="re-item rel-setup-rascunho${r.id === currentRascunhoId ? ' atual' : ''}" onclick="abrirRascunhoRelatorio('${r.id}')">
+              <span class="re-item-nome">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
+              <div class="re-item-acoes">
+                <button type="button" class="botao-icone botao-apagar" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)">${menuIcone('lixeira', 18)}</button>
+                <span class="botao-icone" style="width: 20px;">${menuIcone('avancar', 18)}</span>
               </div>
             </div>
           `).join('')}
         </div>
       `).join('')}
     </div>
+    <hr class="divisa">
   ` : '';
 
   container.innerHTML = `
-    <div class="rel-setup-tela" style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="rel-setup-tela painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
-      <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-        Relatório
-      </h3>
+      <div class="cabeca-ferramenta">
+        <h3 class="titulo-ferramenta">Relatório</h3>
+      </div>
 
       <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas — assim também vira papiro no Tema Céu).
            Sem código do cliente: só o nome, igual às outras ferramentas. -->
       ${(typeof montarCabecalhoMandalaImagemHTML === 'function' && currentCalculatedData)
         ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true })
-        : `<div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px;"><div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${escapeHtml(headerTitle)} • ${dia}/${mes}/${ano} às ${hora}:${min} • ${escapeHtml(currentGeo.city || "Local n/i")}</div></div>`}
+        : `<div class="re-ajuda">${escapeHtml(headerTitle)}</div>`}
 
-      ${listaRascunhosHTML}
+      <div class="re-coluna">
+        ${listaRascunhosHTML}
 
-      <div style="max-width: 480px; margin: 0 auto 20px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Modelo de Relatório</label>
-        <select id="relPresetEscolhido" class="modal-select" style="margin-bottom: 6px;">${opcoesPreset}</select>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">
-          O logo e os seus dados de contato ficam configurados em <a href="#" onclick="abrirConfiguracoes('relatorios'); return false;" style="color: var(--primary-blue); font-weight: 700;">Configurações → Relatórios</a> (botão de engrenagem na barra superior). O relatório do mapa atual é salvo automaticamente como rascunho sempre que você gera a prévia.
+        <div class="re-bloco">
+          <label class="rotulo re-rotulo">Modelo de Relatório</label>
+          <select id="relPresetEscolhido" class="modal-select">${opcoesPreset}</select>
+          <div class="re-ajuda">
+            O logo e os seus dados de contato ficam configurados em <a href="#" onclick="abrirConfiguracoes('relatorios'); return false;">Configurações → Relatórios</a> (botão de engrenagem na barra superior).
+          </div>
+          <div class="re-acoes">
+            <button type="button" class="botao-texto" onclick="confirmarGerarRelatorio()">Gerar Relatório</button>
+          </div>
         </div>
 
-        <button type="button" class="btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="confirmarGerarRelatorio()">
-          <i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i> Gerar Relatório
-        </button>
-      </div>
+        <hr class="divisa">
 
-      <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Modelos de Relatório</div>
-          <button onclick="criarNovoPresetRelatorio()" style="font-size: 11px; font-weight: 700; color: var(--primary-blue); padding: 6px 10px; border: 1px solid var(--gold-primary); border-radius: 6px; background: var(--bg-card); cursor: pointer;">+ Novo</button>
+        <div class="re-bloco">
+          <div class="re-bloco-topo">
+            <div class="titulo-secao" style="margin: 0;">Modelos de Relatório</div>
+            <button type="button" class="botao-texto" onclick="criarNovoPresetRelatorio()">+ Novo</button>
+          </div>
+          <div class="re-ajuda">
+            Cada modelo escolhe quais textos e ferramentas entram no relatório, e com que conteúdo.
+          </div>
+          <div id="relListaModelos">${listaModelosHTML}</div>
         </div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
-          Cada modelo escolhe quais textos e ferramentas entram no relatório, e com que conteúdo.
-        </div>
-        <div id="relListaModelos">${listaModelosHTML}</div>
+
+        <hr class="divisa">
       </div>
 
     </div>
@@ -943,11 +949,11 @@ function renderRelatorioSetup(container, presets, rascunhos) {
 
 function renderizarListaModelosRelatorioHTML(presets) {
   return presets.map((p, idx) => `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 6px;">
-      <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(p.nome)}</span>
-      <div style="display: flex; gap: 12px;">
-        <i class="fa-solid fa-pen" style="color: var(--primary-blue); cursor: pointer; font-size: 12px;" onclick="abrirEditorPresetRelatorio(${idx})" title="Editar"></i>
-        <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 12px;" onclick="excluirPresetRelatorio(${idx})" title="Remover modelo (o serviço continua)"></i>
+    <div class="re-item re-item-simples">
+      <span class="re-item-nome">${escapeHtml(p.nome)}</span>
+      <div class="re-item-acoes">
+        <button type="button" class="botao-icone" style="color: var(--cinza);" onclick="abrirEditorPresetRelatorio(${idx})" title="Editar">${menuIcone('editar', 18)}</button>
+        <button type="button" class="botao-icone botao-apagar" onclick="excluirPresetRelatorio(${idx})" title="Remover modelo (o serviço continua)">${menuIcone('lixeira', 18)}</button>
       </div>
     </div>
   `).join('');
@@ -1042,24 +1048,20 @@ window.excluirRascunhoRelatorio = excluirRascunhoRelatorio;
    Renderiza na tela principal (não mais na sidebar) pra sobrar bem mais
    espaço pra digitar os textos. */
 function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, formato, ferramentaId, capturaIndex, rotuloIndice, bibliotecaId }) {
-  const setaCss = 'width: 26px; height: 20px; border: 1px solid var(--gold-primary); background: var(--bg-card); color: var(--primary-blue); border-radius: 4px; font-size: 10px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;';
   const setas = `
-    <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
-      <button type="button" onclick="moverBlocoEditor(this, -1)" title="Mover para cima" style="${setaCss}">▲</button>
-      <button type="button" onclick="moverBlocoEditor(this, 1)" title="Mover para baixo" style="${setaCss}">▼</button>
+    <div class="re-setas">
+      <button type="button" class="botao-icone" onclick="moverBlocoEditor(this, -1)" title="Mover para cima">${menuIcone('cima', 16)}</button>
+      <button type="button" class="botao-icone" onclick="moverBlocoEditor(this, 1)" title="Mover para baixo">${menuIcone('baixo', 16)}</button>
     </div>
   `;
 
   if (tipo === 'ferramenta') {
     // Ferramentas "capturadas" (Profecção, Isopsefia, Liberação Zodiacal
     // etc.) podem entrar MAIS DE UMA VEZ no mesmo modelo, cada uma numa
-    // posição diferente — ex.: uma Profecção logo no início (comentada
-    // ali) e outra Profecção bem mais pra frente (comentada com outro
-    // texto). "ferramentaId" é a ferramenta de verdade (pra achar o
-    // rótulo e as capturas); "id" é único por LINHA (pra não colidir no
-    // editor quando há mais de uma). A primeira instância de cada
-    // ferramenta usa ferramentaId === id (igual sempre foi); a partir da
-    // segunda, o botão "+" abaixo cria uma linha nova com um id próprio.
+    // posição diferente. "ferramentaId" é a ferramenta de verdade (pra
+    // achar o rótulo e as capturas); "id" é único por LINHA. A primeira
+    // instância de cada ferramenta usa ferramentaId === id; a partir da
+    // segunda, o botão "+" cria uma linha nova com um id próprio.
     const idFerramenta = ferramentaId || id;
     const idx = typeof capturaIndex === 'number' ? capturaIndex : 0;
     const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[idFerramenta];
@@ -1073,34 +1075,29 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
         : 'sem captura pra esta posição';
       const rotuloEscapado = escapeHtml(info.label).replace(/'/g, '&#39;');
       extrasCapturada = `
-        <span style="font-size: 11px; font-weight: 700; color: ${temImagemNestaLinha ? 'var(--primary-blue)' : 'var(--gold-dark)'}; background: ${temImagemNestaLinha ? 'var(--bg-hover)' : 'var(--warning-bg)'}; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;">
-          ${rotuloBadge}
-        </span>
-        <i class="fa-solid fa-plus" style="color: var(--primary-blue); cursor: pointer; font-size: 12px; flex-shrink: 0;" title="Adicionar mais uma página desta ferramenta em outro lugar do relatório" onclick="adicionarInstanciaFerramentaEditor('${idFerramenta}', '${rotuloEscapado}')"></i>
+        <span class="re-etiqueta${temImagemNestaLinha ? '' : ' falta'}">${rotuloBadge}</span>
+        <button type="button" class="botao-icone" title="Adicionar mais uma página desta ferramenta em outro lugar do relatório" onclick="adicionarInstanciaFerramentaEditor('${idFerramenta}', '${rotuloEscapado}')">${menuIcone('mais', 18)}</button>
       `;
     }
 
     // Nome que aparece no Índice pra ESTA posição — editável, porque com
-    // a mesma ferramenta podendo entrar várias vezes (ver o "+" acima),
-    // o nome padrão (sempre o mesmo, ex. "Mandala Personalizada") repete
-    // no Índice e não dá pra saber qual é qual. Pré-preenchido com o
-    // nome padrão, mas o astrólogo pode reescrever pra algo específico
-    // dessa posição (ex. "Mandala com a Fortuna em Casa 1").
+    // a mesma ferramenta podendo entrar várias vezes o nome padrão repete
+    // no Índice e não dá pra saber qual é qual.
     const tituloIndicePadrao = (info && (info.tituloIndice || info.label)) || rotulo;
     const rotuloIndiceAtual = rotuloIndice || tituloIndicePadrao;
 
     return `
-      <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}" style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 8px; padding: 12px 14px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="rel-editor-linha re-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}">
+        <div class="re-linha-topo">
           ${setas}
           <input type="checkbox" data-bloco-check="${id}" checked>
-          <span style="flex: 1; font-size: 13px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(rotulo)}</span>
+          <span class="re-linha-nome">${escapeHtml(rotulo)}</span>
           ${extrasCapturada}
-          <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px; flex-shrink: 0;" title="Remover esta página" onclick="removerBlocoEditor(this, '${id}')"></i>
+          <button type="button" class="botao-icone botao-apagar" title="Remover esta página" onclick="removerBlocoEditor(this, '${id}')">${menuIcone('lixeira', 18)}</button>
         </div>
-        <div style="margin-top: 8px; padding-left: 36px;">
-          <label style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Nome no Índice</label>
-          <input type="text" data-bloco-titulo-indice="${id}" class="modal-input" value="${escapeHtml(rotuloIndiceAtual)}" style="font-size: 12.5px; padding: 6px 8px; margin-top: 2px;">
+        <div class="re-linha-indice">
+          <label class="rotulo re-rotulo">Nome no Índice</label>
+          <input type="text" data-bloco-titulo-indice="${id}" class="modal-input" value="${escapeHtml(rotuloIndiceAtual)}">
         </div>
       </div>
     `;
@@ -1110,25 +1107,22 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
 
   // O <textarea> antigo virou um "mount" vazio: o Quill de verdade só pode
   // ser criado depois que esse HTML já estiver no DOM (ver
-  // inicializarQuillsPendentes, chamada logo depois de qualquer innerHTML/
-  // insertAdjacentHTML que use esta função). Por isso o conteúdo inicial
-  // fica registrado aqui num mapa global em vez de ir direto pro HTML —
-  // texto rico teria que escapar pra caber num atributo, o que é frágil;
-  // um mapa em memória evita isso de vez.
+  // inicializarQuillsPendentes). Por isso o conteúdo inicial fica
+  // registrado aqui num mapa global em vez de ir direto pro HTML.
   window.relatorioQuillPendentes = window.relatorioQuillPendentes || {};
   window.relatorioQuillPendentes[id] = { corpo: corpo || '', formato: formato || 'texto' };
 
   return `
-    <div class="rel-editor-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}"${bibliotecaId ? ` data-biblioteca-id="${bibliotecaId}"` : ''} style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); margin-bottom: 8px; overflow: hidden;">
-      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
+    <div class="rel-editor-linha re-linha" data-bloco-id="${id}" data-bloco-tipo="texto" data-custom="${custom ? '1' : '0'}"${bibliotecaId ? ` data-biblioteca-id="${bibliotecaId}"` : ''}>
+      <div class="re-linha-topo">
         ${setas}
         <input type="checkbox" data-bloco-check="${id}" checked onchange="this.closest('.rel-editor-linha').querySelector('.rel-editor-campos').style.display = this.checked ? 'block' : 'none'">
-        <span style="flex: 1; font-size: ${custom ? '11px' : '13px'}; font-weight: 700; color: ${custom ? 'var(--gold-dark)' : 'var(--primary-blue)'}; ${custom ? 'text-transform: uppercase; letter-spacing: 0.03em;' : ''}">${rotuloLinha}</span>
-        <i class="fa-solid fa-bookmark" style="color: var(--primary-blue); cursor: pointer; font-size: 13px;" title="Salvar na biblioteca (fica na lista &quot;Meus blocos&quot; pra usar em outros relatórios)" onclick="salvarBlocoNaBiblioteca('${id}')"></i>
-        <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px;" title="Remover este bloco" onclick="removerBlocoEditor(this, '${id}')"></i>
+        <span class="re-linha-nome${custom ? ' custom' : ''}">${rotuloLinha}</span>
+        <button type="button" class="botao-icone" title="Salvar na biblioteca (fica na lista &quot;Meus blocos&quot; pra usar em outros relatórios)" onclick="salvarBlocoNaBiblioteca('${id}')">${menuIcone('marcador', 18)}</button>
+        <button type="button" class="botao-icone botao-apagar" title="Remover este bloco" onclick="removerBlocoEditor(this, '${id}')">${menuIcone('lixeira', 18)}</button>
       </div>
-      <div class="rel-editor-campos" style="padding: 0 14px 14px;">
-        <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}" style="margin-bottom: 8px; font-size: 13px;">
+      <div class="rel-editor-campos re-linha-campos">
+        <input type="text" data-bloco-titulo="${id}" class="modal-input" value="${escapeHtml(titulo || '')}" placeholder="${custom ? 'Título do bloco' : ''}">
         <div id="quill-mount-${id}" class="rel-quill-mount"></div>
       </div>
     </div>
@@ -1600,7 +1594,7 @@ function abrirSeletorImagemCapturaQuill(quill) {
     <div class="rel-seletor-imagem-box">
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <span class="modal-title">Inserir imagem de uma captura</span>
-        <i class="fa-solid fa-xmark" style="cursor: pointer; color: var(--text-muted); font-size: 16px;" id="relSeletorImagemFechar"></i>
+        <button type="button" class="botao-icone" id="relSeletorImagemFechar" title="Fechar">${menuIcone('fechar', 18)}</button>
       </div>
       <div class="rel-seletor-imagem-lista">${gruposHtml}</div>
     </div>
@@ -1700,8 +1694,8 @@ function relatorioAtualizarVisibilidadeAdicionar() {
 function relatorioItemCatalogoHtml(padrao) {
   const rotulo = padrao.type === 'ferramenta' ? (RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] || {}).label : padrao.titulo;
   return `
-    <div data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed var(--gold-primary); border-radius: 8px; background: var(--bg-main); margin-bottom: 8px; cursor: pointer;">
-      <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">+ ${escapeHtml(rotulo || padrao.id)}</span>
+    <div class="re-item re-add" data-adicionar-id="${padrao.id}" onclick="adicionarItemCatalogoAoEditor('${padrao.id}', '${padrao.type}')">
+      <span class="re-item-nome">+ ${escapeHtml(rotulo || padrao.id)}</span>
     </div>
   `;
 }
@@ -1860,21 +1854,23 @@ function renderizarBibliotecaNoEditor() {
   if (!lista) return;
   const itens = window.relatorioBiblioteca || [];
   if (!itens.length) {
-    lista.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">Nenhum bloco guardado ainda. Escreva um bloco de texto e toque no marcador <i class="fa-solid fa-bookmark"></i> dele pra guardar aqui.</div>';
+    lista.innerHTML = `<div class="menu-vazio" style="text-align: left; padding: 8px 0;">Nenhum bloco guardado ainda. Escreva um bloco de texto e toque no marcador <span class="re-inline-icone">${menuIcone('marcador', 14)}</span> dele pra guardar aqui.</div>`;
     return;
   }
   lista.innerHTML = itens.map(item => `
-    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px dashed var(--gold-primary); border-radius: 8px; background: var(--bg-main); margin-bottom: 8px;">
-      <span onclick="adicionarItemBibliotecaAoEditor('${item.id}')" style="flex: 1; font-size: 13px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">+ ${escapeHtml(item.titulo || 'Sem título')}</span>
-      <i class="fa-solid fa-pen" style="color: var(--primary-blue); cursor: pointer; font-size: 13px;" title="Editar este bloco guardado" onclick="editarItemDaBiblioteca('${item.id}')"></i>
-      <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; font-size: 13px;" title="Apagar da biblioteca (não mexe em relatórios já feitos)" onclick="apagarItemDaBiblioteca('${item.id}')"></i>
+    <div class="re-item re-add">
+      <span class="re-item-nome" onclick="adicionarItemBibliotecaAoEditor('${item.id}')" style="flex: 1;">+ ${escapeHtml(item.titulo || 'Sem título')}</span>
+      <div class="re-item-acoes">
+        <button type="button" class="botao-icone" style="color: var(--cinza);" title="Editar este bloco guardado" onclick="editarItemDaBiblioteca('${item.id}')">${menuIcone('editar', 18)}</button>
+        <button type="button" class="botao-icone botao-apagar" title="Apagar da biblioteca (não mexe em relatórios já feitos)" onclick="apagarItemDaBiblioteca('${item.id}')">${menuIcone('lixeira', 18)}</button>
+      </div>
     </div>
   `).join('');
 }
 
 function relatorioAvisoCurto(texto, duracaoMs) {
   const aviso = document.createElement('div');
-  aviso.style.cssText = 'position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 8px; padding: 10px 18px; font: 700 13px Montserrat, sans-serif; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);';
+  aviso.className = 'menu-flutuante re-aviso-curto';
   aviso.textContent = texto;
   document.body.appendChild(aviso);
   setTimeout(() => aviso.remove(), duracaoMs || 2200);
@@ -2009,23 +2005,6 @@ function injetarEstilosEditorRelatorio() {
   const style = document.createElement('style');
   style.id = 'relatorio-editor-estilos';
   style.textContent = `
-      /* Travada no topo com position:fixed (não mais sticky) — presa direto
-         na tela, sem depender de qual elemento é "o ancestral com scroll"
-         (isso variava demais entre navegador/aparelho e nunca ficou 100%
-         confiável). Como um elemento fixed sai do fluxo normal da página,
-         #relEditorEspacadorBarra logo abaixo dela (ver renderizarTelaEditorRelatorio)
-         reserva o mesmo espaço que ela ocupa, pra nada ficar escondido
-         atrás — a altura exata é medida e aplicada em JS (ver
-         ajustarEspacadorBarraFixaEditor), já que ela muda com o tamanho
-         da tela. */
-      .rel-editor-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-main); padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-      .rel-editor-btn-voltar-fixo { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); cursor: pointer; font-size: 14px; padding: 0; }
-      .rel-editor-tabs-conteudo { flex: 1; min-width: 0; max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      .rel-editor-tabs-grupo { display: flex; gap: 4px; }
-      .rel-editor-tab { padding: 10px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); }
-      .rel-editor-tab.ativa { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
-      .rel-editor-btn-salvar { background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 9px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
-
       /* .rel-quill-mount (barra de ferramentas + área de texto do Quill) e
          .rel-seletor-imagem-item (miniatura de captura) ficam de propósito
          sempre claros, mesmo no Tema Escuro: são o "papel" do relatório —
@@ -2045,8 +2024,8 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-mount .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: 'Subtítulo'; }
       .rel-quill-mount .ql-picker.ql-header { width: 110px; }
 
-      .rel-quill-mount .ql-toolbar.ql-snow { border-color: #e2d9c2; border-radius: 6px 6px 0 0; background: #fffdf5; }
-      .rel-quill-mount .ql-container.ql-snow { border-color: #e2d9c2; border-radius: 0 0 6px 6px; font-family: 'Montserrat', sans-serif; }
+      .rel-quill-mount .ql-toolbar.ql-snow { border-radius: 0; background: #fffdf5; }
+      .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: 'Montserrat', sans-serif; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
 
@@ -2075,29 +2054,6 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-toolbar-espacador { display: none; }
       .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 999999; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
-      .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; background: var(--warning-bg); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--gold-dark); font-weight: 600; }
-
-      /* Modal do seletor "Inserir imagem de uma captura" (botão extra na
-         barra do Quill) — mesmo padrão visual dos modais do site
-         (.modal-box do CSS global), só que montado por JS porque a lista
-         de capturas muda a cada abertura. */
-      #relSeletorImagemOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-      .rel-seletor-imagem-box { background: var(--bg-card); width: 100%; max-width: 640px; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
-      .rel-seletor-imagem-lista { overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-      .rel-seletor-imagem-grupo-titulo { font-size: 11px; font-weight: 700; color: var(--gold-dark); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
-      .rel-seletor-imagem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-      .rel-seletor-imagem-item { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg-main); }
-      .rel-seletor-imagem-item:hover { border-color: var(--gold-primary); }
-      .rel-seletor-imagem-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
-
-      /* Quadrinhos de paleta (ver relatorioPaletaCapaHtml/selecionarPaletaCapaEditor) */
-      .rel-capa-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
-      .rel-capa-swatch { position: relative; width: 68px; cursor: pointer; text-align: center; }
-      .rel-capa-swatch-cor { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; }
-      .rel-capa-swatch-custom-icone { background: repeating-linear-gradient(45deg, #f1f5f9, #f1f5f9 6px, #e2e8f0 6px, #e2e8f0 12px); color: var(--text-muted); font-size: 15px; }
-      .rel-capa-swatch.ativa .rel-capa-swatch-cor { border-color: var(--primary-blue); box-shadow: 0 0 0 2px var(--primary-blue); }
-      .rel-capa-swatch-nome { font-size: 9.5px; font-weight: 600; color: var(--text-muted); margin-top: 4px; line-height: 1.3; }
-      .rel-capa-swatch-check { position: absolute; top: -6px; right: -4px; color: var(--primary-blue); background: var(--bg-card); border-radius: 50%; font-size: 14px; }
   `;
   document.head.appendChild(style);
 }
@@ -2182,7 +2138,7 @@ async function abrirEditorRascunhoRelatorio(rascunhoId, opcoes) {
   let rascunho = window.relatorioRascunhoEmEdicao;
   if (!rascunho || rascunho.id !== rascunhoId) {
     const container = document.getElementById('mandala-container');
-    if (container) container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Abrindo o relatório...</div>`;
+    if (container) container.innerHTML = `<div class="menu-vazio" style="padding: 60px;">Abrindo o relatório...</div>`;
     rascunho = await carregarRascunhoPorId(rascunhoId);
     if (!rascunho) { alert('Não foi possível carregar este relatório.'); iniciarModuloRelatorio(); return; }
     window.relatorioRascunhoEmEdicao = rascunho;
@@ -2200,7 +2156,7 @@ async function abrirEditorRascunhoRelatorio(rascunhoId, opcoes) {
     labelAdicionar: 'Adicionar a este Relatório',
     rotuloSalvar: 'Salvar Agora',
     aoVoltarJs: `voltarDoEditorRascunho('${rascunhoId}')`,
-    avisoAutosave: '<i class="fa-solid fa-circle-check"></i> Suas alterações são salvas automaticamente — o botão "Salvar Agora" é só pra forçar na hora, se quiser.'
+    avisoAutosave: menuIcone('checkCirculo', 16) + ' Suas alterações são salvas automaticamente — o botão "Salvar Agora" é só pra forçar na hora, se quiser.'
   });
 }
 window.abrirEditorRascunhoRelatorio = abrirEditorRascunhoRelatorio;
@@ -2314,26 +2270,16 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   injetarEstilosEditorRelatorio();
 
   container.innerHTML = `
-    <div class="rel-editor-tela" style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
-
-      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">${escapeHtml(config.tituloTela)}</h2>
-      </div>
+    <div class="rel-editor-tela painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
       <div class="rel-editor-tabs" id="relEditorTabsFixa">
-        <button type="button" class="rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
+        <button type="button" class="botao-icone rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">${menuIcone('voltar', 22)}</button>
         <div class="rel-editor-tabs-conteudo">
           <div class="rel-editor-tabs-grupo">
-            <button type="button" id="relAbaEditarBtn" class="rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
-            <button type="button" id="relAbaPreviaBtn" class="rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">
-              <i class="fa-solid fa-eye"></i> Prévia
-            </button>
+            <button type="button" id="relAbaEditarBtn" class="folder-tab-btn rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
+            <button type="button" id="relAbaPreviaBtn" class="folder-tab-btn rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">${menuIcone('olho', 16)} Prévia</button>
           </div>
-          <button type="button" class="rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">
-            <i class="fa-solid fa-floppy-disk"></i> ${escapeHtml(config.rotuloSalvar)}
-          </button>
+          <button type="button" class="botao-texto rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">${menuIcone('salvar', 16)} ${escapeHtml(config.rotuloSalvar)}</button>
         </div>
       </div>
       <!-- Como a barra acima é position:fixed (fora do fluxo normal), este
@@ -2342,48 +2288,68 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
            medida e aplicada logo abaixo, em JS (ajustarEspacadorBarraFixaEditor). -->
       <div id="relEditorEspacadorBarra"></div>
 
-      <div id="relEditorFormPane">
-        <div style="max-width: 720px; margin: 0 auto;">
-          <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">${escapeHtml(config.labelNome)}</label>
-          <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(nomeAtual)}" style="margin-bottom: 18px; font-size: 13px;">
+      <div class="cabeca-ferramenta">
+        <h3 class="titulo-ferramenta">${escapeHtml(config.tituloTela)}</h3>
+      </div>
 
-          ${config.avisoAutosave ? `<div style="font-size: 11.5px; color: var(--success-text); background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 8px; padding: 8px 12px; margin-bottom: 18px;">${config.avisoAutosave}</div>` : ''}
+      <div id="relEditorFormPane">
+        <div class="re-coluna">
+          <div class="re-bloco">
+            <label class="rotulo re-rotulo">${escapeHtml(config.labelNome)}</label>
+            <input type="text" id="relEditorNome" class="modal-input" value="${escapeHtml(nomeAtual)}">
+            ${config.avisoAutosave ? `<div class="re-nota">${config.avisoAutosave}</div>` : ''}
+          </div>
+
+          <hr class="divisa">
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
           ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual, corCirculoCapaAtual, temCirculoCapaAtual, tamanhoTituloCapaAtual)}
           ${relatorioCapaPapiroHtml(capaPapiroAtual)}
 
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
-            Esta é a ordem do relatório. Use as setas ▲▼ pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver o resultado sem sair daqui e sem salvar.
+          <div class="re-bloco">
+            <div class="titulo-secao">Ordem do relatório</div>
+            <div class="re-ajuda">
+              Use as setas pra reordenar — dá pra intercalar textos, mandalas e capturas de ferramenta do jeito que quiser — e desmarque pra tirar um bloco sem perder o texto dele. A qualquer momento, clique em "Prévia" ali em cima pra ver como está ficando.
+            </div>
+            <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
           </div>
 
-          <div id="relEditorOrdenavel">${linhasOrdenadas}</div>
+          <hr class="divisa">
 
-          <div id="relAdicionarSecao" style="${linhasParaAdicionar ? '' : 'display: none;'}">
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">${escapeHtml(config.labelAdicionar)}</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+          <div id="relAdicionarSecao" class="re-bloco" style="${linhasParaAdicionar ? '' : 'display: none;'}">
+            <div class="titulo-secao">${escapeHtml(config.labelAdicionar)}</div>
+            <div class="re-ajuda">
               Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
             </div>
             <div id="relAdicionarLista">${linhasParaAdicionar}</div>
+            <hr class="divisa">
           </div>
 
-          <div id="relBibliotecaSecao">
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin: 20px 0 10px;">Meus blocos</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+          <div id="relBibliotecaSecao" class="re-bloco">
+            <div class="titulo-secao">Meus blocos</div>
+            <div class="re-ajuda">
               Blocos de texto que você guardou (pelo marcador em cada bloco de texto). Clique pra colocar uma cópia no relatório; eles continuam aqui pra usar em outros.
             </div>
-            <div id="relBibliotecaLista"><div style="font-size: 12px; color: var(--text-muted);">Carregando...</div></div>
+            <div id="relBibliotecaLista"><div class="menu-vazio" style="text-align: left; padding: 8px 0;">Carregando...</div></div>
           </div>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px;">
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Bloco Personalizado Novo</div>
-            <button onclick="adicionarBlocoCustomizadoEditor()" style="font-size: 12px; font-weight: 700; color: var(--primary-blue); padding: 8px 12px; border: 1px solid var(--gold-primary); border-radius: 6px; background: var(--bg-card); cursor: pointer;">+ Adicionar</button>
+          <hr class="divisa">
+
+          <div class="re-bloco">
+            <div class="re-bloco-topo">
+              <div class="titulo-secao" style="margin: 0;">Bloco Personalizado Novo</div>
+              <button type="button" class="botao-texto" onclick="adicionarBlocoCustomizadoEditor()">+ Adicionar</button>
+            </div>
+            <div class="re-ajuda">
+              Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
+            </div>
           </div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
-            Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
-          </div>
+
+          <hr class="divisa">
 
           ${relatorioEncerramentoHtml(encerramentoAtual)}
+
+          <hr class="divisa">
         </div>
       </div>
 
@@ -2483,14 +2449,15 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
   const opcoesHtml = opcoes.map(o => `<option value="${o.valor}" ${o.valor === capaFonteAtual ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
 
   return `
-    <div style="background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
-      <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Mandala da Capa</label>
-      <div style="font-size: 11.5px; color: var(--text-muted); margin: 4px 0 8px; line-height: 1.5;">
+    <div class="re-bloco">
+      <div class="titulo-secao">Mandala da Capa</div>
+      <div class="re-ajuda">
         Escolhe qual imagem aparece na capa deste modelo — pra você nunca ficar no escuro sobre o que vai ser gerado.
       </div>
       <select id="relCapaFonte" class="modal-select" onchange="atualizarPreviewCapaEditor()">${opcoesHtml}</select>
-      <div id="relCapaPreviewWrap" style="margin-top: 10px;"></div>
+      <div id="relCapaPreviewWrap" class="re-previa-capa"></div>
     </div>
+    <hr class="divisa">
   `;
 }
 
@@ -2512,17 +2479,18 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
 function relatorioCapaPapiroHtml(capaPapiroAtual) {
   const ceu = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
   return `
-    <div style="${ceu ? '' : 'display: none; '}margin: 0 0 14px 0; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
-      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Capa no Tema Céu</div>
-      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">
-          <input type="radio" name="relCapaEstiloCeu" value="ceu" ${capaPapiroAtual ? '' : 'checked'} style="accent-color: var(--primary-blue);"> Capa Céu
+    <div class="re-bloco"${ceu ? '' : ' style="display: none;"'}>
+      <div class="titulo-secao">Capa no Tema Céu</div>
+      <div class="re-opcoes-linha">
+        <label class="re-opcao-radio">
+          <input type="radio" name="relCapaEstiloCeu" value="ceu" ${capaPapiroAtual ? '' : 'checked'}> Capa Céu
         </label>
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">
-          <input type="radio" name="relCapaEstiloCeu" value="papiro" id="relCapaPapiro" ${capaPapiroAtual ? 'checked' : ''} style="accent-color: var(--primary-blue);"> Capa Papiro (tinta sobre papiro)
+        <label class="re-opcao-radio">
+          <input type="radio" name="relCapaEstiloCeu" value="papiro" id="relCapaPapiro" ${capaPapiroAtual ? 'checked' : ''}> Capa Papiro (tinta sobre papiro)
         </label>
       </div>
-    </div>`;
+    </div>
+    <hr class="divisa"${ceu ? '' : ' style="display: none;"'}>`;
 }
 
 function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual, corCabecalhoCustomAtual, corBordaCustomAtual, temBordaAtual, corCirculoCustomAtual, temCirculoAtual, tamanhoTituloAtual) {
@@ -2544,53 +2512,53 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
           <span style="color: ${p.corTitulo};">Aa</span>
         </div>
         <div class="rel-capa-swatch-nome">${escapeHtml(p.nome)}</div>
-        ${ativa ? '<i class="fa-solid fa-circle-check rel-capa-swatch-check"></i>' : ''}
+        ${ativa ? `<span class="rel-capa-swatch-check">${menuIcone('checkCirculo', 16)}</span>` : ''}
       </div>
     `;
   }).join('');
 
   const avisoCeu = (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu')
-    ? `<div style="font-size: 11px; color: var(--gold-dark); margin-top: 8px; line-height: 1.5;"><i class="fa-solid fa-circle-info"></i> O Tema Céu está ativo na sua conta — enquanto ele estiver ligado, a capa sai sempre roxa com título dourado, e a cor escolhida aqui fica guardada mas não aparece. Desligue o Tema Céu em Configurações pra ver essa paleta valendo.</div>`
-    : `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">Se o Tema Céu (Configurações → Aparência) estiver ativo, a capa sai sempre roxa com título dourado, independente da cor escolhida aqui.</div>`;
+    ? `<div class="re-nota">${menuIcone('info', 16)} O Tema Céu está ativo na sua conta — enquanto ele estiver ligado, a capa sai sempre roxa com título dourado, e a cor escolhida aqui fica guardada mas não aparece. Desligue o Tema Céu em Configurações pra ver essa paleta valendo.</div>`
+    : `<div class="re-nota">Se o Tema Céu (Configurações → Aparência) estiver ativo, a capa sai sempre roxa com título dourado, independente da cor escolhida aqui.</div>`;
 
   return `
-    <div style="background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
-      <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Cores da Capa</label>
-      <div style="font-size: 11.5px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.5;">
+    <div class="re-bloco">
+      <div class="titulo-secao">Cores da Capa</div>
+      <div class="re-ajuda">
         Escolhe a combinação de cor de fundo + título deste modelo. Fica salva junto com o modelo — cada serviço/relatório pode ter a sua.
       </div>
       <input type="hidden" id="relCapaPaletaId" value="${escapeHtml(paletaIdAtual)}">
       <div class="rel-capa-swatches">
         ${swatchesHtml}
         <div class="rel-capa-swatch${ehCustom ? ' ativa' : ''}" data-paleta-id="custom" onclick="selecionarPaletaCapaEditor('custom')" title="Personalizada">
-          <div class="rel-capa-swatch-cor rel-capa-swatch-custom-icone"><i class="fa-solid fa-palette"></i></div>
+          <div class="rel-capa-swatch-cor rel-capa-swatch-custom-icone">${menuIcone('aparencia', 22)}</div>
           <div class="rel-capa-swatch-nome">Personalizada</div>
-          ${ehCustom ? '<i class="fa-solid fa-circle-check rel-capa-swatch-check"></i>' : ''}
+          ${ehCustom ? `<span class="rel-capa-swatch-check">${menuIcone('checkCirculo', 16)}</span>` : ''}
         </div>
       </div>
-      <div id="relCapaCustomWrap" style="${ehCustom ? '' : 'display: none;'} margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
+      <div id="relCapaCustomWrap" class="re-cores-custom" style="${ehCustom ? '' : 'display: none;'}">
         <div>
-          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Fundo</label>
-          <input type="color" id="relCapaCorFundo" value="${fundoCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+          <label class="rotulo re-rotulo">Fundo</label>
+          <input type="color" id="relCapaCorFundo" value="${fundoCustom}" class="re-cor">
         </div>
         <div>
-          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Título</label>
-          <input type="color" id="relCapaCorTitulo" value="${tituloCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+          <label class="rotulo re-rotulo">Título</label>
+          <input type="color" id="relCapaCorTitulo" value="${tituloCustom}" class="re-cor">
         </div>
         <div>
-          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Cabeçalho</label>
-          <input type="color" id="relCapaCorCabecalho" value="${cabecalhoCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+          <label class="rotulo re-rotulo">Cabeçalho</label>
+          <input type="color" id="relCapaCorCabecalho" value="${cabecalhoCustom}" class="re-cor">
         </div>
         <div id="relCapaCorBordaWrap" style="${temBorda ? '' : 'display: none;'}">
-          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Borda</label>
-          <input type="color" id="relCapaCorBorda" value="${bordaCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+          <label class="rotulo re-rotulo">Borda</label>
+          <input type="color" id="relCapaCorBorda" value="${bordaCustom}" class="re-cor">
         </div>
         <div id="relCapaCorCirculoWrap" style="${temCirculo ? '' : 'display: none;'}">
-          <label style="font-size: 10.5px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Círculo</label>
-          <input type="color" id="relCapaCorCirculo" value="${circuloCustom}" style="width: 44px; height: 32px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+          <label class="rotulo re-rotulo">Círculo</label>
+          <input type="color" id="relCapaCorCirculo" value="${circuloCustom}" class="re-cor">
         </div>
       </div>
-      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+      <div class="re-ajuda">
         "Cabeçalho" é a cor de fundo da caixinha de nome/data/cidade que aparece dentro da imagem da mandala, na capa.
       </div>
 
@@ -2598,39 +2566,36 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
            coloca o conteúdo (título + mandala + rodapé) num retângulo
            menor, com a cor de fundo normal, encolhido pra dentro — a cor
            de fora sobra como uma moldura ao redor. Nas paletas prontas
-           usa a mesma cor do título (já combina, sem precisar de campo
-           novo); na Personalizada, o astrólogo escolhe a cor da borda à
-           parte (ver #relCapaCorBordaWrap acima). -->
-      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox" id="relCapaTemBorda" ${temBorda ? 'checked' : ''} onchange="alternarBordaCapaEditor(this.checked)" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary-blue);">
-        <label for="relCapaTemBorda" style="font-size: 12px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">Capa com borda (moldura ao redor)</label>
+           usa a mesma cor do título; na Personalizada, o astrólogo escolhe
+           a cor da borda à parte (ver #relCapaCorBordaWrap acima). -->
+      <div class="re-linha-check">
+        <input type="checkbox" id="relCapaTemBorda" ${temBorda ? 'checked' : ''} onchange="alternarBordaCapaEditor(this.checked)">
+        <label for="relCapaTemBorda">Capa com borda (moldura ao redor)</label>
       </div>
-      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+      <div class="re-ajuda">
         Nas paletas prontas, a borda sai na mesma cor do título. Na Personalizada, dá pra escolher a cor da borda à parte, acima.
       </div>
 
       <!-- CÍRCULO ATRÁS DA MANDALA: um disco colorido desenhado DENTRO do
            próprio SVG da mandala (ver corCirculoForcada em renderMandala,
-           mandala.js), exatamente no centro matemático (cx/cy) que a roda
-           inteira já usa — nunca por CSS em cima da imagem pronta, que
-           não tem como saber onde a roda de fato fica dentro do PNG (não
-           é o centro geométrico da imagem: sobra espaço embaixo pra
-           caixinha de nome/data/cidade). Nas paletas prontas usa a mesma
-           cor do Cabeçalho (já combina); na Personalizada, cor à parte
-           (ver #relCapaCorCirculoWrap acima). -->
-      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox" id="relCapaTemCirculo" ${temCirculo ? 'checked' : ''} onchange="alternarCirculoCapaEditor(this.checked)" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary-blue);">
-        <label for="relCapaTemCirculo" style="font-size: 12px; font-weight: 600; color: var(--primary-blue); cursor: pointer;">Círculo colorido atrás da mandala</label>
+           mandala.js), exatamente no centro matemático que a roda inteira
+           já usa. Nas paletas prontas usa a mesma cor do Cabeçalho; na
+           Personalizada, cor à parte (ver #relCapaCorCirculoWrap acima). -->
+      <div class="re-linha-check">
+        <input type="checkbox" id="relCapaTemCirculo" ${temCirculo ? 'checked' : ''} onchange="alternarCirculoCapaEditor(this.checked)">
+        <label for="relCapaTemCirculo">Círculo colorido atrás da mandala</label>
       </div>
-      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+      <div class="re-ajuda">
         Nas paletas prontas, o círculo sai na mesma cor do Cabeçalho. Na Personalizada, dá pra escolher a cor do círculo à parte, acima.
       </div>
       ${avisoCeu}
     </div>
 
-    <div style="background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
-      <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em;">Tamanho do Título</label>
-      <div style="font-size: 11.5px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.5;">
+    <hr class="divisa">
+
+    <div class="re-bloco">
+      <div class="titulo-secao">Tamanho do Título</div>
+      <div class="re-ajuda">
         Controla só o tamanho do título na capa deste modelo — o resto do relatório não muda.
       </div>
       <select id="relCapaTamanhoTitulo" class="modal-select">
@@ -2640,6 +2605,8 @@ function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCu
         <option value="extra-grande" ${tamanhoTitulo === 'extra-grande' ? 'selected' : ''}>Extra Grande</option>
       </select>
     </div>
+
+    <hr class="divisa">
   `;
 }
 
@@ -2657,7 +2624,7 @@ function selecionarPaletaCapaEditor(paletaId) {
     const ativa = el.dataset.paletaId === paletaId;
     el.classList.toggle('ativa', ativa);
     const check = el.querySelector('.rel-capa-swatch-check');
-    if (ativa && !check) el.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-circle-check rel-capa-swatch-check"></i>');
+    if (ativa && !check) el.insertAdjacentHTML('beforeend', `<span class="rel-capa-swatch-check">${menuIcone('checkCirculo', 16)}</span>`);
     if (!ativa && check) check.remove();
   });
 
@@ -2701,9 +2668,9 @@ function relatorioEncerramentoHtml(corpoAtual) {
   window.relatorioQuillPendentes['__encerramento__'] = { corpo: corpoAtual || '', formato: 'rich' };
 
   return `
-    <div style="margin: 24px 0 10px;">
-      <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px;">Texto de Encerramento</div>
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5;">
+    <div class="re-bloco">
+      <div class="titulo-secao">Texto de Encerramento</div>
+      <div class="re-ajuda">
         Aparece sempre na ÚLTIMA página do relatório, junto com seu nome/telefone/e-mail (esses vêm de Configurações → Relatórios).
       </div>
       <div id="quill-mount-__encerramento__" class="rel-quill-mount"></div>
@@ -2741,22 +2708,22 @@ function atualizarPreviewCapaEditor() {
     if (capturas.length) {
       const ultima = capturas[capturas.length - 1];
       wrap.innerHTML = `
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">${capturas.length > 1 ? `Vai a mais recente das ${capturas.length} capturadas:` : 'Prévia da captura:'}</div>
-        <img src="${ultima.dataUrl}" style="max-width: 160px; max-height: 160px; border: 1px solid var(--border-color); border-radius: 8px; display: block;">
+        <div class="re-ajuda">${capturas.length > 1 ? `Vai a mais recente das ${capturas.length} capturadas:` : 'Prévia da captura:'}</div>
+        <img src="${ultima.dataUrl}" class="re-miniatura">
       `;
     } else {
-      wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--gold-dark);">Nenhuma imagem capturada ainda pra essa opção. ${dicaOndeCapturar[valor]} — depois volte aqui.</div>`;
+      wrap.innerHTML = `<div class="re-nota">Nenhuma imagem capturada ainda pra essa opção. ${dicaOndeCapturar[valor]} — depois volte aqui.</div>`;
     }
     return;
   }
 
   if (valor === 'nenhuma') {
-    wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--text-muted);">A capa vai mostrar só o título do relatório, sem nenhuma imagem.</div>`;
+    wrap.innerHTML = `<div class="re-ajuda">A capa vai mostrar só o título do relatório, sem nenhuma imagem.</div>`;
     return;
   }
 
   const nomePagina = valor === 'mandala_natal' ? 'Mapa Natal' : 'Mandala com a Fortuna';
-  wrap.innerHTML = `<div style="font-size: 11.5px; color: var(--text-muted);">Calculada na hora, a partir dos dados do cliente carregado — sai igual à própria página "${nomePagina}" deste relatório (se ela estiver marcada como página aqui embaixo).</div>`;
+  wrap.innerHTML = `<div class="re-ajuda">Calculada na hora, a partir dos dados do cliente carregado — sai igual à própria página "${nomePagina}" deste relatório (se ela estiver marcada como página aqui embaixo).</div>`;
 }
 window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 
@@ -2938,7 +2905,7 @@ function mostrarIndicadorSalvoRelatorio() {
   const btn = document.querySelector('.rel-editor-btn-salvar');
   if (!btn) return;
   if (!btn.dataset.rotuloOriginal) btn.dataset.rotuloOriginal = btn.innerHTML;
-  btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvo';
+  btn.innerHTML = menuIcone('check', 16) + ' Salvo';
   clearTimeout(window.relatorioIndicadorSalvoTimeout);
   window.relatorioIndicadorSalvoTimeout = setTimeout(() => {
     if (btn.dataset.rotuloOriginal) btn.innerHTML = btn.dataset.rotuloOriginal;
@@ -3039,7 +3006,7 @@ async function atualizarPreviaEditorModelo() {
   const pane = document.getElementById('relEditorPreviaPane');
   if (!pane) return;
 
-  pane.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando a prévia...</div>`;
+  pane.innerHTML = `<div class="menu-vazio" style="padding: 60px;">Gerando a prévia...</div>`;
 
   const nomeCampo = (document.getElementById('relEditorNome').value || '').trim();
   const capaFonteSelect = document.getElementById('relCapaFonte');
@@ -3094,7 +3061,7 @@ async function atualizarPreviaEditorModelo() {
   const conteudoHtml = montarConteudoRelatorioHtml(presetPreview, perfil, png1, png2, lotesNatal, ascAbsNatal, capaFonte, png1Capa, png2Capa);
   const previaProntaHtml = `
     <div class="rel-previa-aviso no-print">
-      <i class="fa-solid fa-circle-info"></i> Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
+      ${menuIcone('info', 16)} Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
     </div>
     <div class="rel-viewer${classeTemaPapiroRelatorio()}">${conteudoHtml}</div>
   `;
@@ -3179,7 +3146,7 @@ async function gerarRelatorioCompleto(preset) {
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
-  container.innerHTML = `<div style="padding: 60px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 12px; display: block;"></i>Gerando o relatório...</div>`;
+  container.innerHTML = `<div class="menu-vazio" style="padding: 60px;">Gerando o relatório...</div>`;
 
   const perfil = await carregarPerfilRelatorio();
   const blocos = preset.blocos || [];
@@ -3208,7 +3175,7 @@ function adicionarBotaoEditarNaToolbarRelatorio() {
   const toolbar = document.querySelector('.rel-toolbar');
   if (!toolbar || !currentRascunhoId || document.getElementById('relBtnEditarRascunho')) return;
   const botaoVoltar = toolbar.querySelector('button');
-  const html = `<button type="button" id="relBtnEditarRascunho" class="btn-secondary" onclick="abrirEditorRascunhoRelatorio('${currentRascunhoId}')"><i class="fa-solid fa-pen"></i> Editar</button>`;
+  const html = `<button type="button" id="relBtnEditarRascunho" class="botao-texto" onclick="abrirEditorRascunhoRelatorio('${currentRascunhoId}')">${menuIcone('editar', 16)} Editar</button>`;
   if (botaoVoltar) botaoVoltar.insertAdjacentHTML('afterend', html);
   else toolbar.insertAdjacentHTML('afterbegin', html);
 }
@@ -3459,8 +3426,8 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
 
   const htmlRelatorio = `
     <div class="rel-toolbar no-print" id="relToolbarFixa">
-      <button type="button" class="btn-secondary" onclick="voltarConfigRelatorio()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
-      <button type="button" id="relBtnBaixarPdf" class="btn-primary" onclick="baixarRelatorioPDF()"><i class="fa-solid fa-file-arrow-down"></i> Baixar PDF</button>
+      <button type="button" class="botao-texto" onclick="voltarConfigRelatorio()">${menuIcone('voltar', 16)} Voltar</button>
+      <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
     </div>
     <div id="relToolbarEspacador" class="no-print"></div>
 
@@ -3554,7 +3521,7 @@ async function baixarRelatorioPDF() {
 
   const botao = document.getElementById('relBtnBaixarPdf');
   const rotuloOriginal = botao ? botao.innerHTML : '';
-  if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando PDF...'; }
+  if (botao) { botao.disabled = true; botao.innerHTML = 'Gerando PDF...'; }
   viewer.dataset.gerandoPdf = '1';
   // aba nova pro PDF: tem que abrir AGORA, no toque (depois do await o navegador bloquearia)
   const abaPdf = window.astroAbaPdf ? window.astroAbaPdf.abrir() : null;
@@ -4019,17 +3986,6 @@ function injetarEstilosRelatorio() {
           repeating-linear-gradient(90deg, rgba(150,110,60,0.05) 0px, rgba(150,110,60,0.05) 2px, transparent 2px, transparent 27px),
           linear-gradient(180deg, ${papiroCoresRel.topo} 0%, ${papiroCoresRel.meio} 50%, ${papiroCoresRel.base} 100%)`;
   style.textContent = `
-      /* position:fixed, não sticky — ver a nota em CLAUDE.md sobre por que
-         sticky não é confiável nesse layout (mesmo motivo da barra do
-         editor, .rel-editor-tabs). #relToolbarEspacador logo depois dela
-         no HTML reserva o espaço que ela ocupa. */
-      .rel-toolbar { display: flex; justify-content: center; gap: 10px; padding: 12px; position: fixed; top: 0; left: 0; right: 0; background: var(--bg-main); z-index: 50; border-bottom: 1px solid var(--border-color); }
-      .rel-toolbar button { display: flex; align-items: center; gap: 6px; }
-      /* .btn-secondary é global (também usado nos modais .modal-box, que
-         ainda não fazem parte do tema escuro) — sobrescrito só aqui dentro
-         da barra do relatório, pra não escurecer um botão que continua
-         sobre um modal claro em outro lugar do site. */
-      .rel-toolbar .btn-secondary { background: var(--bg-card); color: var(--primary-blue); }
       /* .rel-viewer é só a "mesa" cinza atrás das folhas — as folhas em si
          (.rel-page e tudo dentro dela, mais abaixo) ficam de propósito
          sempre brancas/creme, porque são exatamente o que vira PDF/imagem
@@ -4354,20 +4310,8 @@ function injetarEstilosRelatorio() {
       .rel-tema-papiro .tabela-enxuta th { background-color: transparent; color: #1d3a66; }
       .rel-tema-papiro .rel-captura-faltando { color: #a03e25; }
 
-      /* TEMA CÉU — a "mesa" atrás das folhas é o próprio céu do site (não o cinza da prévia comum), e a
-         barra de cima (Voltar / Baixar PDF) é um pedaço de papiro com borda rasgada, botões só de
-         contorno e letra de tinta (azul no Voltar, terracota no Baixar PDF). SÓ PINTURA. */
+      /* TEMA CÉU — a "mesa" atrás das folhas é o próprio céu do site (não o cinza da prévia comum). SÓ PINTURA. */
       body.tema-ceu .rel-viewer { background: transparent; }
-      body.tema-ceu .rel-toolbar {
-        background: var(--papiro-fundo);
-        border-bottom-color: transparent;
-        clip-path: polygon(0 0, 100% 0, calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px), 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px), 4px 70%, 0 45%, 3px 22%);
-      }
-      body.tema-ceu .rel-toolbar .btn-secondary,
-      body.tema-ceu .rel-toolbar .btn-primary { background: transparent; border: 1.5px solid #1d3a66; color: #1d3a66; }
-      body.tema-ceu .rel-toolbar .btn-primary { border-color: #a03e25; color: #a03e25; }
-      body.tema-ceu .rel-toolbar .btn-secondary:hover, body.tema-ceu .rel-toolbar .btn-primary:hover { background: rgba(120, 80, 30, 0.14); }
-
       @media print {
         .rel-viewer { background: #ffffff; padding: 0; }
 

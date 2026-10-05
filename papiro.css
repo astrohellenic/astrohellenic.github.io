@@ -43,11 +43,11 @@ body.tema-ceu .menu-flutuante::after {
 
 /* TEMA CÉU — barras de botões (superior e os dois grupos flutuantes da mandala): o papiro é UMA folha por barra, MAIOR que ela, e passa POR FORA
    das linhas duplas — a borda quebrada fica sempre por fora. O papel vai no ::before; as linhas duplas no ::after (por cima do papel). */
-body.tema-ceu #top-bar, body.tema-ceu #mandala-actions-overlay, body.tema-ceu #mandala-controls-overlay {
+body.tema-ceu #top-bar, body.tema-ceu #mandala-actions-overlay, body.tema-ceu #mandala-controls-overlay, body.tema-ceu .rel-editor-tabs, body.tema-ceu .rel-toolbar {
     background: transparent; overflow: visible; border-top-color: transparent; border-bottom-color: transparent;
 }
 body.tema-ceu:not(.topbar-fixo) #top-bar { position: relative; }
-body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, body.tema-ceu #mandala-controls-overlay::before {
+body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, body.tema-ceu #mandala-controls-overlay::before, body.tema-ceu .rel-editor-tabs::before, body.tema-ceu .rel-toolbar::before {
     content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none;
     background: var(--papiro-fundo);
     clip-path: polygon(
@@ -56,7 +56,7 @@ body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, 
                 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px),
                 4px 70%, 0 45%, 3px 22%);
 }
-body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, body.tema-ceu #mandala-controls-overlay::after {
+body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, body.tema-ceu #mandala-controls-overlay::after, body.tema-ceu .rel-editor-tabs::after, body.tema-ceu .rel-toolbar::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
     border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);

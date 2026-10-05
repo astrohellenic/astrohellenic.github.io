@@ -66,6 +66,14 @@ async function carregarPastasSalvas() {
 
 /* ÍCONES MONOLINE DO MENU LATERAL (grade 64, traço vem de .icone) */
 const MENU_ICONES = {
+  cima: '<polyline points="12,40 32,20 52,40"/>',
+  baixo: '<polyline points="12,24 32,44 52,24"/>',
+  olho: '<path d="M6 32 C14 18 24 14 32 14 C40 14 50 18 58 32 C50 46 40 50 32 50 C24 50 14 46 6 32 Z"/><circle cx="32" cy="32" r="8"/>',
+  salvar: '<path d="M10 8 H46 L56 18 V56 H10 Z"/><path d="M20 8 V24 H44 V8"/><rect x="18" y="36" width="28" height="20"/>',
+  marcador: '<path d="M16 8 H48 V58 L32 46 L16 58 Z"/>',
+  info: '<circle cx="32" cy="32" r="22"/><line x1="32" y1="28" x2="32" y2="44"/><circle cx="32" cy="20" r="1.5"/>',
+  baixarArquivo: '<path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="32" y1="26" x2="32" y2="46"/><polyline points="24,38 32,46 40,38"/>',
+  check: '<polyline points="14,34 26,46 50,18"/>',
   imprimir: '<path d="M18,22 V8 H46 V22"/><rect x="8" y="22" width="48" height="24" rx="4"/><path d="M18,38 H46 V58 H18 Z"/><circle cx="47" cy="30" r="1.5"/>',
   aparencia: '<path d="M32 8 C18 8 8 18 8 30 C8 44 20 56 34 56 C40 56 42 52 40 48 C38 44 40 40 46 40 H50 C54 40 56 37 56 33 C56 19 46 8 32 8 Z"/><circle cx="20" cy="30" r="3"/><circle cx="28" cy="20" r="3"/><circle cx="40" cy="20" r="3"/>',
   relatorio: '<path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/>',
