@@ -166,7 +166,7 @@ function desenharRodaSVG(o) {
     dourado: pal.azulEscuro, douradoCasas: pal.terracota,
     halo: papiro ? 'none' : modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff',
     inkForte: pal.azulEscuro, inkPlaneta: pal.pretoTinta, navio: pal.azulEscuro, linhaConectora: rgbaHex(pal.azulEscuro, 0.55),
-    aspectoOposicao: pal.terracota, aspectoTrigono: pal.azulEscuro, aspectoQuadratura: pal.laranja, aspectoSextil: pal.azulClaro,
+    aspectoOposicao: pal.laranja, aspectoTrigono: pal.azulEscuro, aspectoQuadratura: pal.terracota, aspectoSextil: pal.azulClaro, // os mesmos em TODOS os temas
     elementoFogo: pal.laranja, elementoTerra: pal.marrom, elementoAr: pal.cinza, elementoAgua: pal.azulClaro,
     dodecatemoriaLinha: rgbaHex(pal.azulEscuro, 0.45),
   };
@@ -479,17 +479,17 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
       let diff = Math.abs(occupiedArray[i] - occupiedArray[j]);
       if (diff > 6) diff = 12 - diff;
       let col = null;
-      if (diff === 6) col = tinta.aspectoOposicao;      // Oposição (Vinho)
-else if (diff === 4) col = tinta.aspectoTrigono; // Trígono (Azul escuro)
-else if (diff === 3) col = tinta.aspectoQuadratura; // Quadratura (Vermelho vivo)
-else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
+      if (diff === 6) col = tinta.aspectoOposicao;      // Oposição (laranja)
+else if (diff === 4) col = tinta.aspectoTrigono; // Trígono (azul egípcio escuro)
+else if (diff === 3) col = tinta.aspectoQuadratura; // Quadratura (terracota)
+else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
 
       if (col) {
         const pt1 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[i] * 30 + 15, house1RefAbs));
         const pt2 = polarToCart(cx, cy, R.Aspects - 4, eclToScreenAngle(occupiedArray[j] * 30 + 15, house1RefAbs));
         if (temaCeu) {
-          // sobre o chão escuro e o céu claro: cor mais clara + contorno escuro fininho por baixo
-          const corCeu = { [tinta.aspectoOposicao]: '#fb7185', [tinta.aspectoTrigono]: '#60a5fa', [tinta.aspectoQuadratura]: '#ff6b4a', [tinta.aspectoSextil]: '#38bdf8' }[col] || col;
+          // sobre o chão escuro e o céu claro: as MESMAS cores dos outros temas, com um contorno escuro fininho por baixo
+          const corCeu = col;
           svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="rgba(8,14,40,.55)" stroke-width="3.8" stroke-linecap="round"/>`;
           svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${corCeu}" stroke-width="1.9" stroke-linecap="round"/>`;
         } else {
