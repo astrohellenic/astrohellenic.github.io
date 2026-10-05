@@ -312,3 +312,6 @@
 /* SELETOR DE TEMPO (trânsito na Sinastria): setas + unidade + "agora", numa linha fina entre o cabeçalho e a mandala */
 .passo-tempo { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 0; margin-bottom: 8px; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
 .passo-tempo .menu-select { flex: 0 0 auto; width: auto; padding: 4px 6px; }
+
+/* GRADE DOS LOTES (Calculadora de Lotes): cartões lado a lado, quebrando linha sozinhos */
+.grade-lotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 8px; }

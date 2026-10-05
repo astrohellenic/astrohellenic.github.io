@@ -321,6 +321,10 @@ let lotesSelecionadosRelatorio = new Set();
 function alternarSelecaoLoteRelatorio(key, marcado) {
   if (marcado) lotesSelecionadosRelatorio.add(key);
   else lotesSelecionadosRelatorio.delete(key);
+  // o cartão marcado leva a marca terracota na margem (mesmo padrão do item ativo das outras ferramentas)
+  const caixa = document.querySelector(`input[data-lote-relatorio-key="${key}"]`);
+  const cartao = caixa && caixa.closest('.cartao');
+  if (cartao) cartao.classList.toggle('ativo', !!marcado);
 }
 window.alternarSelecaoLoteRelatorio = alternarSelecaoLoteRelatorio;
 
@@ -379,28 +383,25 @@ function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
   opts = opts || {};
   const signo = Math.floor(norm360Lotes(deg) / 30);
   const casa = casaDoGrauLotes(deg, ascAbs);
-  const checkboxHTML = opts.key ? `
-    <input type="checkbox" data-html2canvas-ignore="true" data-lote-relatorio-key="${opts.key}" ${lotesSelecionadosRelatorio.has(opts.key) ? 'checked' : ''} onchange="alternarSelecaoLoteRelatorio('${opts.key}', this.checked)" title="Selecionar para o Relatório" style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;">
-  ` : '';
-  const removerHTML = opts.onRemover ? `
-    <i class="fa-solid fa-trash" data-html2canvas-ignore="true" style="color: var(--danger); cursor: pointer; font-size: 11px; margin-left: auto; flex-shrink: 0;" title="Remover este lote salvo" onclick="${opts.onRemover}"></i>
-  ` : '';
+  const marcado = !!(opts.key && lotesSelecionadosRelatorio.has(opts.key));
+  const checkboxHTML = opts.key ? `<input type="checkbox" data-html2canvas-ignore="true" data-lote-relatorio-key="${opts.key}" ${marcado ? 'checked' : ''} onchange="alternarSelecaoLoteRelatorio('${opts.key}', this.checked)" title="Selecionar para o Relatório">` : '';
+  const removerHTML = opts.onRemover ? `<button type="button" class="botao-icone botao-apagar" data-html2canvas-ignore="true" style="margin-left: auto; width: 28px; height: 28px;" title="Remover este lote salvo" onclick="${opts.onRemover}">${menuIcone('lixeira', 16)}</button>` : '';
   return `
-    <div style="border: 1px solid var(--gold-primary); border-radius: 10px; background: var(--bg-card); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="cartao${marcado ? ' ativo' : ''}" style="display: flex; flex-direction: column; gap: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         ${checkboxHTML}
-        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); flex-shrink: 0;">${iconHTML}</div>
-        <div style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 12.5px; color: var(--primary-blue); line-height: 1.25; flex: 1;">${escapeHtml(nome)}</div>
+        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--azul-egipcio-escuro); flex-shrink: 0;">${iconHTML}</div>
+        <div class="nome-nivel" style="flex: 1; line-height: 1.25;">${escapeHtml(nome)}</div>
         ${removerHTML}
       </div>
-      <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px;">
-        ${getSignSVGLotes(signo, 22)}
+      <div class="linha-info" style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 22px; flex: 0 0 22px;">${getSignSVGLotes(signo, 22)}</div>
         <div>
-          <div style="font-size: 12.5px; font-weight: 700; color: var(--primary-blue);">${SIGN_NAMES_LOTES[signo]} ${formatDegMin(deg)}</div>
-          <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Casa ${casa}</div>
+          <div style="font-size: 12.5px; font-weight: 700;">${SIGN_NAMES_LOTES[signo]} ${formatDegMin(deg)}</div>
+          <div class="texto-apagado" style="font-size: 10.5px; font-weight: 600;">Casa ${casa}</div>
         </div>
       </div>
-      <div style="font-size: 10px; color: var(--text-muted); font-style: italic; line-height: 1.35;">${escapeHtml(legenda)}</div>
+      <div class="texto-apagado" style="font-size: 10px; font-style: italic; line-height: 1.35;">${escapeHtml(legenda)}</div>
     </div>
   `;
 }
@@ -408,12 +409,12 @@ function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
 function renderSeletorLotes(menuId, iconHTML, menuRowsHTML, label) {
   return `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-      <span style="font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">${label}</span>
+      <span class="rotulo" style="color: var(--preto-tinta);">${label}</span>
       <div style="position: relative;">
-        <button type="button" onclick="document.querySelectorAll('.lotesCalcMenu').forEach(m => { if (m.id !== '${menuId}') m.style.display = 'none'; }); const menu = document.getElementById('${menuId}'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 42px; height: 42px; border-radius: 8px; background: var(--bg-main); color: var(--primary-blue); border: 1px solid var(--gold-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button type="button" class="botao-icone" style="width: 44px; height: 44px;" onclick="document.querySelectorAll('.lotesCalcMenu').forEach(m => { if (m.id !== '${menuId}') m.style.display = 'none'; }); const menu = document.getElementById('${menuId}'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';">
           ${iconHTML}
         </button>
-        <div id="${menuId}" class="lotesCalcMenu" style="display: none; position: absolute; top: 46px; left: 50%; transform: translateX(-50%); background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 44px; max-height: 240px; overflow-y: auto; box-sizing: border-box;">
+        <div id="${menuId}" class="lotesCalcMenu menu-flutuante" style="display: none; position: absolute; top: 48px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 44px; box-sizing: border-box; max-height: 260px; overflow-y: auto;">
           ${menuRowsHTML}
         </div>
       </div>
@@ -473,13 +474,13 @@ function renderToggleSeitaLotes(isDayAuto) {
     { val: 'true', label: 'Dia', icon: '☉', ativo: lotesCalcManualSect === true },
     { val: 'false', label: 'Noite', icon: '☽', ativo: lotesCalcManualSect === false }
   ];
-  const buttons = opts.map(o => {
-    return `<button type="button" onclick="alternarLotesSeitaManual(${o.val})" style="padding: 0 10px; height: 42px; font-size: 10.5px; font-weight: 700; border: 1px solid var(--gold-primary); border-left: none; background: ${o.ativo ? '#103b70' : 'var(--bg-main)'}; color: ${o.ativo ? '#ffffff' : 'var(--primary-blue)'}; cursor: pointer;">${o.icon} ${o.label}</button>`;
-  }).join('');
+  const buttons = opts.map(o =>
+    `<button type="button" class="folder-tab-btn${o.ativo ? ' active' : ''}" onclick="alternarLotesSeitaManual(${o.val})"><span>${o.icon}</span> ${o.label}</button>`
+  ).join('');
   return `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-      <span style="font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Seita</span>
-      <div style="display: flex; border-radius: 8px; overflow: hidden; border-left: 1px solid var(--gold-primary);">${buttons}</div>
+      <span class="rotulo" style="color: var(--preto-tinta);">Seita</span>
+      <div style="display: flex; gap: 14px; align-items: center; height: 44px;">${buttons}</div>
     </div>
   `;
 }
@@ -489,7 +490,7 @@ function iniciarModuloLotes() {
   if (!container) return;
 
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
-    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Calculadora de Lotes.</div>`;
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar a Calculadora de Lotes.</div>`;
     return;
   }
 
@@ -506,27 +507,23 @@ function renderLotesUI() {
 
   const lotesPart1 = computeAllLotesPrecalculados(data, isDayAuto);
 
-  const btnCssLotes = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+  const svgGaleriaL = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  const svgRelatorioL = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
 
   let html = `
-    <div class="lotes-outer" id="lotes-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="lotes-outer painel" id="lotes-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
 
-      <h3 class="lotes-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-        Calculadora de Lotes
-      </h3>
-
-      <!-- Barra de ícones (sem texto), igual às outras ferramentas -->
-      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
-        <button type="button" onclick="salvarLotesNaGaleria()" title="Salvar a Calculadora de Lotes como imagem na galeria (com título e cabeçalho)" style="${btnCssLotes}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-        </button>
-        <div style="position: relative; flex-shrink: 0;">
-          <button type="button" onclick="const m=document.getElementById('lotesMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" style="${btnCssLotes}">
-            <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-          </button>
-          <div id="lotesMenuRelatorio" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; min-width: 230px; overflow: hidden;">
-            <div onclick="capturarLotesInteiraParaRelatorio()" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Ferramenta inteira (sem cabeçalho)</div>
-            <div onclick="capturarLotesSelecionadosParaRelatorio()" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue);">Só os lotes marcados</div>
+      <!-- Título e, na mesma linha, os botões: galeria e relatório -->
+      <div class="cabeca-ferramenta">
+        <h3 class="lotes-titulo titulo-ferramenta">Calculadora de Lotes</h3>
+        <div class="acoes-ferramenta">
+          <button type="button" class="botao-icone" onclick="salvarLotesNaGaleria()" title="Salvar a Calculadora de Lotes como imagem na galeria (com título e cabeçalho)">${svgGaleriaL}</button>
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" class="botao-icone" onclick="const m=document.getElementById('lotesMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório">${svgRelatorioL}</button>
+            <div id="lotesMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 230px;">
+              <div class="item-menu" onclick="capturarLotesInteiraParaRelatorio()">Ferramenta inteira (sem cabeçalho)</div>
+              <div class="item-menu" onclick="capturarLotesSelecionadosParaRelatorio()">Só os lotes marcados</div>
+            </div>
           </div>
         </div>
       </div>
@@ -537,25 +534,23 @@ function renderLotesUI() {
       <div id="lotesConteudoArea">
 
       <!-- PARTE 1: LOTES PRÉ-CALCULADOS -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px;">Parte 1 — Lotes Pré-Calculados</span>
-        <div style="flex: 1; height: 1px; background: var(--gold-primary); opacity: 0.5;"></div>
-      </div>
+      <h4 class="titulo-secao">Parte 1 — Lotes Pré-Calculados</h4>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
+      <div class="grade-lotes">
         ${lotesPart1.map(l => renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda, { key: l.key })).join('')}
       </div>
 
+      <hr class="divisa">
+
       ${lotesCustomSalvos.length ? `
       <!-- LOTES SALVOS DA CALCULADORA LIVRE -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px;">Lotes Salvos (Calculadora Livre)</span>
-        <div style="flex: 1; height: 1px; background: var(--gold-primary); opacity: 0.5;"></div>
-      </div>
+      <h4 class="titulo-secao">Lotes Salvos (Calculadora Livre)</h4>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px;">
+      <div class="grade-lotes">
         ${lotesCustomSalvos.map(c => renderLoteCardHTML(getLoteAbbrevIconSVG('✓', 24), c.nome, c.deg, p.asc, c.legenda, { key: c.id, onRemover: `removerLoteCustomSalvo('${c.id}')` })).join('')}
       </div>
+
+      <hr class="divisa">
       ` : ''}
   `;
 
@@ -582,7 +577,7 @@ function renderLotesUI() {
   ];
 
   const startMenuRows = startPointOptions.map(o =>
-    `<div onclick="alternarLotesStartPoint('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--primary-blue);">${getPontoIconHTMLLotes(o.key, lotesPart1, 22)}</div>`
+    `<div onclick="alternarLotesStartPoint('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--azul-egipcio-escuro);">${getPontoIconHTMLLotes(o.key, lotesPart1, 22)}</div>`
   ).join('');
   const planetAMenuRows = planetOptions.map(o =>
     `<div onclick="alternarLotesPlanetA('${o.key}')" title="${escapeHtml(o.label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVGLotes(o.key, 22)}</div>`
@@ -599,12 +594,9 @@ function renderLotesUI() {
 
   html += `
       <!-- PARTE 2: CALCULADORA LIVRE -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px;">Parte 2 — Calculadora Livre</span>
-        <div style="flex: 1; height: 1px; background: var(--gold-primary); opacity: 0.5;"></div>
-      </div>
+      <h4 class="titulo-secao">Parte 2 — Calculadora Livre</h4>
 
-      <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
         <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 22px;">
           ${renderSeletorLotes('lotesPlanetBMenu', planetBIconHTML, planetBMenuRows, 'Distância de')}
           ${renderSeletorLotes('lotesPlanetAMenu', planetAIconHTML, planetAMenuRows, 'Até')}
@@ -614,11 +606,11 @@ function renderLotesUI() {
 
         <div style="max-width: 260px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 8px;">
           ${renderLoteCardHTML(getLoteAbbrevIconSVG('=', 24), formulaTxt, resultAbs, p.asc, resultLegenda)}
-          <button type="button" data-html2canvas-ignore="true" onclick="salvarLoteCalculadoraLivre()" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif;">
-            <i class="fa-solid fa-floppy-disk"></i> Salvar este Lote
-          </button>
+          <button type="button" class="botao-texto" data-html2canvas-ignore="true" onclick="salvarLoteCalculadoraLivre()" style="align-self: center; padding: 6px 16px; font-size: 12px;">Salvar este Lote</button>
         </div>
       </div>
+
+      <hr class="divisa">
 
       </div>
     </div>
@@ -673,7 +665,7 @@ async function capturarLotesSelecionadosParaRelatorio() {
 
   const temp = document.createElement('div');
   temp.className = 'lotes-captura-temp'; // no Tema Céu herda as variáveis de cor em tinta da folha
-  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: ${larguraTotal}px; padding: ${PAD}px; background: var(--bg-main); font-family: "Montserrat", sans-serif;`;
+  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: ${larguraTotal}px; padding: ${PAD}px; background: transparent; font-family: "Montserrat", sans-serif;`;
   temp.innerHTML = `
     <div style="display: grid; grid-template-columns: repeat(${numCols}, ${CARD_W}px); gap: ${GAP}px;">
       ${selecionados.map(l => renderLoteCardHTML(l.iconHTML, l.nome, l.deg, p.asc, l.legenda)).join('')}
