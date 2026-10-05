@@ -486,3 +486,5 @@
 .rel-seletor-imagem-item { overflow: hidden; cursor: pointer; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
 .rel-seletor-imagem-item:hover { border-color: var(--terracota); }
 .rel-seletor-imagem-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
+.re-grupo .re-item:last-child { border-bottom: 0; }
+.re-grupo { margin-bottom: 0; }

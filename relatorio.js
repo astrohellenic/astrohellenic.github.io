@@ -893,7 +893,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
             </div>
           `).join('')}
         </div>
-      `).join('')}
+      `).join('<hr class="divisa">')}
     </div>
     <hr class="divisa">
   ` : '';
