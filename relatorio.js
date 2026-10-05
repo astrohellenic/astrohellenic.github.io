@@ -921,6 +921,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   const listaRascunhosHTML = gruposRascunhos.length ? `
     <div class="re-bloco">
       <div class="titulo-secao">Relatórios em Andamento</div>
+      <hr class="divisa">
       ${gruposRascunhos.map(g => `
         <div class="re-grupo">
           <div class="re-cliente rel-setup-cliente">${escapeHtml(g.nome)}</div>
