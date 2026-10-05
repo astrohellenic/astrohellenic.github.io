@@ -31,8 +31,13 @@ body.tema-ceu .painel {
     background: var(--papiro-fundo) !important;
     clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
 }
+/* Menu flutuante no Céu: o papel (com a borda quebrada) é o ::after; a SOMBRA é um drop-shadow do menu inteiro, que acompanha a forma recortada
+   (clip-path no próprio elemento cortaria a sombra, por isso o recorte fica só no papel). */
 body.tema-ceu .menu-flutuante {
-    background: var(--papiro-fundo-simples) !important;
+    background: transparent !important; box-shadow: none; position: absolute; filter: drop-shadow(3px 6px 6px rgba(0, 0, 10, .75));
+}
+body.tema-ceu .menu-flutuante::after {
+    content: ''; position: absolute; inset: -1px 0; z-index: -1; pointer-events: none; background: var(--papiro-fundo-simples);
     clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
 }
 
@@ -63,6 +68,6 @@ body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, bo
 body.tema-ceu.mandala-papiro-tela #top-bar::before,
 body.tema-ceu.mandala-papiro-tela #mandala-actions-overlay::before,
 body.tema-ceu.mandala-papiro-tela #mandala-controls-overlay::before { display: none; }
-body.tema-ceu .painel .menu-flutuante { clip-path: none; }
+body.tema-ceu .painel .menu-flutuante::after { clip-path: none; }
 /* Ferramenta aberta DENTRO da mandala em papiro (ex.: Matriz de Visibilidade): o painel dela não leva papiro próprio — a folha da mandala já é o papel. */
 body.tema-ceu.mandala-papiro-tela #mandala-container .painel { background: transparent !important; clip-path: none; }

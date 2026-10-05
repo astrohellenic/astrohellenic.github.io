@@ -70,3 +70,7 @@
     --element-ar: var(--cinza);
     --element-agua: var(--azul-egipcio-claro);
 }
+
+/* SOMBRA DAS JANELAS QUE FLUTUAM (menus flutuantes): só estas têm sombra, pra ficar claro que estão por cima. No Céu a sombra é do papiro (papiro.css). */
+:root, .paleta-clara { --sombra-janela: 0 4px 14px rgba(26, 20, 16, .30); }
+:root.tema-escuro, .paleta-escura { --sombra-janela: 0 4px 16px rgba(0, 0, 0, .70); }

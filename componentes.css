@@ -67,7 +67,7 @@
     border: 0;
     border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);
     border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
-    box-shadow: var(--sombra, none);
+    box-shadow: var(--sombra-janela, none);   /* janela que flutua por cima: precisa de sombra pra se ver que está afastada do que está atrás */
     padding: 4px;
 }
 
