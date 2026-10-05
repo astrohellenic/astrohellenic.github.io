@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
+    window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
     <link rel="stylesheet" href="papiro.css?v=20261010c">
     <link rel="stylesheet" href="temas.css?v=20261009c">
     <link rel="stylesheet" href="componentes.css?v=20261010h">
@@ -1117,7 +1119,7 @@ body {
   .login-options { display: flex; align-items: center; justify-content: flex-start; font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); margin: 4px 0 20px; }
   #loginOverlay .login-options label { margin: 0; font-family: inherit; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--azul-egipcio-escuro); display: flex; align-items: center; gap: 8px; cursor: pointer; }
   .login-btn { width: 100%; padding: 11px 10px; font-size: 13px; }
-  .login-toggle-link { margin-top: 18px; display: inline-block; padding: 8px 14px; }
+  .login-toggle-link { margin: 14px auto 0; display: block; padding: 8px 14px; }
   #loginErrorMsg { color: var(--terracota) !important; font-size: 12px; font-weight: 700; margin-bottom: 12px; text-align: left; }
 
     /* LIBERA A ROLAGEM GLOBAL DA PÁGINA — só fora do modo mandala. Com o
@@ -1174,18 +1176,23 @@ body:not(.modo-mandala) #main-stage {
    <div class="janela-corpo">
     <div class="login-brand"><img src="astrohellenic.svg?v=20261008" alt="Astro Hellenic" style="width: 100%; height: auto;"><!-- a tela de entrada é sempre uma folha de papiro, em qualquer tema: usa sempre o logo claro --></div>
 
+    <div id="loginHint" class="re-ajuda" style="display:none; text-align: left;"></div>
     <div id="loginErrorMsg" style="display:none;"></div>
 
-    <div class="login-field-container">
+    <div class="login-field-container" id="loginEmailBox">
       <input type="email" id="loginEmail" class="login-field" placeholder="Seu e-mail">
     </div>
 
-    <div class="login-field-container">
+    <div class="login-field-container" id="loginPasswordBox">
       <input type="password" id="loginPassword" class="login-field" placeholder="Sua senha">
       <button type="button" class="botao-icone password-toggle-icon" id="togglePasswordBtn" onclick="alternarVisibilidadeSenha()" title="Mostrar ou esconder a senha"><svg class="icone" viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><path d="M6 32 C14 18 24 14 32 14 C40 14 50 18 58 32 C50 46 40 50 32 50 C24 50 14 46 6 32 Z"/><circle cx="32" cy="32" r="8"/></svg></button>
     </div>
 
-    <div class="login-options">
+    <div class="login-field-container" id="loginConfirmBox" style="display:none;">
+      <input type="password" id="loginPasswordConfirm" class="login-field" placeholder="Repita a nova senha">
+    </div>
+
+    <div class="login-options" id="loginOptionsBox">
       <label>
         <input type="checkbox" id="loginKeepLogged"> Manter-se logado
       </label>
@@ -1194,6 +1201,7 @@ body:not(.modo-mandala) #main-stage {
     <button type="button" class="botao-texto login-btn" id="loginSubmitBtn" onclick="executarAcaoAuth()">Entrar</button>
 
     <button type="button" class="botao-texto janela-sec login-toggle-link" id="loginToggleMode" onclick="alternarModoAuth()">Não tem uma conta? Criar nova conta</button>
+    <button type="button" class="botao-texto janela-sec login-toggle-link" id="loginForgot" onclick="aplicarModoAuth('recuperar')">Esqueci minha senha</button>
    </div>
   </div>
 </div>
@@ -1209,21 +1217,77 @@ body:not(.modo-mandala) #main-stage {
     icon.innerHTML = menuIcone(mostrar ? 'olhoCortado' : 'olho', 20); // monoline (ícones do menu, supabase.js)
   }
 
+  /* MODOS DA TELA: 'entrar', 'cadastro', 'recuperar' (esqueci a senha: só o e-mail) e 'novaSenha' (depois de abrir o link do e-mail). */
+  let modoAuth = 'entrar';
+  function aplicarModoAuth(modo) {
+    modoAuth = modo;
+    isCadastroMode = modo === 'cadastro';
+    const el = id => document.getElementById(id);
+    const mostrar = (id, sim) => { const e = el(id); if (e) e.style.display = sim ? '' : 'none'; };
+    const erro = el('loginErrorMsg'); if (erro) erro.style.display = 'none';
+    const dica = el('loginHint');
+    const textos = {
+      entrar:   { botao: 'Entrar',             link: 'Não tem uma conta? Criar nova conta', dica: '' },
+      cadastro: { botao: 'Criar Conta',        link: 'Já tem uma conta? Fazer login',       dica: '' },
+      recuperar:{ botao: 'Enviar link',        link: 'Voltar ao login',                     dica: 'Digite o e-mail da sua conta. Vamos enviar um link para você criar uma nova senha.' },
+      novaSenha:{ botao: 'Salvar nova senha',  link: '',                                    dica: 'Escolha a nova senha (mínimo de 6 caracteres).' }
+    }[modo];
+    el('loginSubmitBtn').innerText = textos.botao;
+    el('loginToggleMode').innerText = textos.link;
+    mostrar('loginToggleMode', !!textos.link);
+    mostrar('loginForgot', modo === 'entrar');
+    mostrar('loginEmailBox', modo !== 'novaSenha');
+    mostrar('loginPasswordBox', modo !== 'recuperar');
+    mostrar('loginConfirmBox', modo === 'novaSenha');
+    mostrar('loginOptionsBox', modo === 'entrar' || modo === 'cadastro');
+    el('loginPassword').placeholder = modo === 'novaSenha' ? 'Nova senha' : 'Sua senha';
+    if (dica) { dica.textContent = textos.dica; dica.style.display = textos.dica ? '' : 'none'; }
+  }
   function alternarModoAuth() {
-    isCadastroMode = !isCadastroMode;
-    const btn = document.getElementById('loginSubmitBtn');
-    const link = document.getElementById('loginToggleMode');
-    const errorEl = document.getElementById('loginErrorMsg');
-    
-    if (errorEl) errorEl.style.display = 'none';
+    // o link de baixo: entre "criar conta" e "entrar", ou "voltar ao login" quando está recuperando a senha
+    aplicarModoAuth(modoAuth === 'entrar' ? 'cadastro' : 'entrar');
+  }
 
-    if (isCadastroMode) {
-      btn.innerText = 'Criar Conta';
-      link.innerText = 'Já tem uma conta? Fazer login';
-    } else {
-      btn.innerText = 'Entrar';
-      link.innerText = 'Não tem uma conta? Criar nova conta';
-    }
+  /* ESQUECI A SENHA: o Supabase manda um e-mail com um link; ao abrir o link o site volta aqui (PASSWORD_RECOVERY) e mostra
+     a tela de nova senha. O endereço do site precisa estar nas "Redirect URLs" do Supabase (Authentication > URL Configuration). */
+  async function enviarLinkRecuperacao() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const erro = document.getElementById('loginErrorMsg');
+    const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    const falha = msg => { erro.innerText = msg; erro.style.display = 'block'; };
+    if (!email) { falha('Digite o seu e-mail.'); return; }
+    if (!client) { falha('Erro: Conexão com o Supabase não foi iniciada.'); return; }
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (error) { falha('Não foi possível enviar o link: ' + error.message); return; }
+    erro.style.display = 'none';
+    const dica = document.getElementById('loginHint');
+    dica.textContent = 'Pronto! Se esse e-mail tem uma conta, o link para criar a nova senha chegou na caixa de entrada (olhe também o spam).';
+    dica.style.display = '';
+  }
+
+  async function salvarNovaSenhaLogin() {
+    const nova = document.getElementById('loginPassword').value;
+    const repete = document.getElementById('loginPasswordConfirm').value;
+    const erro = document.getElementById('loginErrorMsg');
+    const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+    const falha = msg => { erro.innerText = msg; erro.style.display = 'block'; };
+    if (!nova || nova.length < 6) { falha('A senha precisa ter pelo menos 6 caracteres.'); return; }
+    if (nova !== repete) { falha('As duas senhas não são iguais.'); return; }
+    if (!client) { falha('Erro: Conexão com o Supabase não foi iniciada.'); return; }
+    const { error } = await client.auth.updateUser({ password: nova });
+    if (error) { falha('Não foi possível salvar a nova senha: ' + error.message); return; }
+    window.__recuperacaoSenha = false;
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    document.getElementById('loginPassword').value = ''; document.getElementById('loginPasswordConfirm').value = '';
+    aplicarModoAuth('entrar');
+    fecharTelaLogin();
+    alert('Senha alterada. Você já está dentro.');
+  }
+
+  /* chegou pelo link do e-mail: mostra a tela de nova senha (a sessão de recuperação já foi aberta pelo Supabase) */
+  function entrarModoNovaSenha() {
+    mostrarTelaLogin();
+    aplicarModoAuth('novaSenha');
   }
 
   async function fazerLogin(email, password) {
@@ -1278,6 +1342,8 @@ body:not(.modo-mandala) #main-stage {
   }
 
   async function executarAcaoAuth() {
+    if (modoAuth === 'recuperar') { await enviarLinkRecuperacao(); return; }
+    if (modoAuth === 'novaSenha') { await salvarNovaSenhaLogin(); return; }
     const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
     const errorEl = document.getElementById('loginErrorMsg');
@@ -1399,11 +1465,14 @@ body:not(.modo-mandala) #main-stage {
   window.addEventListener('DOMContentLoaded', async () => {
     const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
     if (client) {
+      client.auth.onAuthStateChange(evento => { if (evento === 'PASSWORD_RECOVERY') entrarModoNovaSenha(); });
       /* Checagem rápida e local (sem esperar resposta do servidor) pra não
          piscar a tela de login à toa quando o usuário já está logado e só
          voltou de outro app ou desbloqueou o celular. */
       const { data: { session } } = await client.auth.getSession();
-      if (!session) {
+      if (window.__recuperacaoSenha && session) {
+        entrarModoNovaSenha();
+      } else if (!session) {
         mostrarTelaLogin();
       } else {
         const user = session.user;
