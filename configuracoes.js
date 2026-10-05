@@ -58,10 +58,11 @@ function iniciarModuloConfiguracoes() {
     </button>`).join('');
 
   container.innerHTML = `
-    <div id="configuracoes-container">
-      <div class="cfg-cabecalho">
-        <h2>Configurações</h2>
+    <div id="configuracoes-container" class="painel">
+      <div class="cabeca-ferramenta">
+        <h3 class="titulo-ferramenta">Configurações</h3>
       </div>
+      <hr class="divisa">
       <div class="cfg-layout">
         <nav id="cfgNav" class="cfg-nav" aria-label="Seções das configurações">${navHtml}</nav>
         <section id="cfgConteudo" class="cfg-conteudo"></section>
@@ -80,7 +81,7 @@ function mostrarSecaoConfiguracoes(id) {
 
   document.querySelectorAll('#cfgNav .cfg-nav-item').forEach(b => b.classList.toggle('ativa', b.dataset.secao === secao.id));
   conteudo.innerHTML = `
-    <h3 class="cfg-secao-titulo">${secao.titulo}</h3>
+    <h3 class="titulo-secao cfg-secao-titulo">${secao.titulo}</h3>
     <p class="cfg-secao-desc">${secao.descricao}</p>
     ${secao.html()}
   `;
@@ -782,7 +783,7 @@ function renderServicosList() {
   if (!container) return;
 
   if (!cachedServicos || cachedServicos.length === 0) {
-    container.innerHTML = `<div style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Nenhum serviço cadastrado ainda.</div>`;
+    container.innerHTML = `<div class="menu-vazio">Nenhum serviço cadastrado ainda.</div>`;
     return;
   }
 
@@ -794,15 +795,15 @@ function renderServicosList() {
       servico.duracao_minutos ? servico.duracao_minutos + ' min' : ''
     ].filter(Boolean).join(' · ');
     return `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
-      <div style="min-width: 0;">
-        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(servico.nome)}</div>
-        ${detalhe ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(detalhe)}</div>` : ''}
-        ${servico.tem_modelo === false ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Sem modelo de relatório · <a href="#" onclick="criarModeloDoServico('${servico.id}'); return false;" style="color: var(--primary-blue); font-weight: 700;">Criar modelo</a></div>` : ''}
+    <div class="cfg-servico">
+      <div class="cfg-servico-corpo">
+        <div class="cfg-servico-nome">${escapeHtml(servico.nome)}</div>
+        ${detalhe ? `<div class="cfg-servico-det">${escapeHtml(detalhe)}</div>` : ''}
+        ${servico.tem_modelo === false ? `<div class="cfg-servico-det">Sem modelo de relatório · <a href="#" onclick="criarModeloDoServico('${servico.id}'); return false;">Criar modelo</a></div>` : ''}
       </div>
-      <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
-        <i class="fa-solid fa-pen" onclick="abrirFormServico('${servico.id}')" title="Editar serviço" style="color: var(--primary-blue); cursor: pointer;"></i>
-        <i class="fa-solid fa-trash" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço" style="color: var(--danger); cursor: pointer;"></i>
+      <div class="card-actions">
+        <button type="button" class="action-record-btn edit-btn" onclick="abrirFormServico('${servico.id}')" title="Editar serviço"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" class="action-record-btn delete-btn" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço"><i class="fa-solid fa-trash"></i></button>
       </div>
     </div>`;
   }).join('');
