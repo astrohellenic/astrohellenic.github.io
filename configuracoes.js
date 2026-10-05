@@ -155,11 +155,11 @@ function htmlCfgAparencia() {
       </div>
 
       <div class="cfg-card cfg-card-largo">
-        <h4 class="cfg-card-titulo">Nomes dos planetas</h4>
-        <p class="cfg-card-desc">Escreve o nome do planeta ao lado do ícone (Sol, Lua, Marte...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Vale para todas as ferramentas que já usam essa opção.</p>
+        <h4 class="cfg-card-titulo">Rótulos dos glifos</h4>
+        <p class="cfg-card-desc">Escreve o nome do planeta ao lado do glifo (Sol, Lua, Marte...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Aparece em todas as ferramentas, <strong>menos dentro das mandalas</strong>, onde não há espaço.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarMostrarNomesPlanetas(true)", window.mostrarNomesPlanetas !== false, fa('fa-font'), 'Mostrar os nomes', 'Ícone com o nome ao lado')}
-          ${opcao("salvarMostrarNomesPlanetas(false)", window.mostrarNomesPlanetas === false, fa('fa-eye-slash'), 'Só os ícones', 'Sem os nomes')}
+          ${opcao("salvarMostrarRotulosGlifos(true)", window.mostrarRotulosGlifos !== false, fa('fa-font'), 'Rótulos ativados', 'Glifo com o nome ao lado')}
+          ${opcao("salvarMostrarRotulosGlifos(false)", window.mostrarRotulosGlifos === false, fa('fa-eye-slash'), 'Rótulos desativados', 'Só os glifos')}
         </div>
       </div>
 

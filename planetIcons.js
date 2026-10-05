@@ -273,11 +273,11 @@ function getIconeTermoSVG(planetId, tamanho = 18, cor = '#c59b27') {
 }
 
 /* NOME DO PLANETA AO LADO DO ÍCONE — ajuda quem vê o mapa e não conhece os símbolos. É uma preferência do astrólogo
-   (Configurações → Aparência → Nomes dos planetas), guardada no Supabase (configuracoes.mostrar_nomes_planetas) e carregada
-   após o login em carregarMostrarNomesPlanetas (supabase.js). Ligado por padrão. Toda ferramenta usa estas duas funções. */
+   (Configurações → Aparência → Rótulos dos glifos; não vale dentro das mandalas), guardada no Supabase (configuracoes.mostrar_rotulos_glifos) e carregada
+   após o login em carregarMostrarRotulosGlifos (supabase.js). Ligado por padrão. Toda ferramenta usa estas duas funções. */
 const NOMES_PLANETA = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
 // nome por extenso do planeta, ou '' se o astrólogo desligou os nomes
-function nomePlaneta(id) { return (window.mostrarNomesPlanetas === false) ? '' : (NOMES_PLANETA[id] || ''); }
+function nomePlaneta(id) { return (window.mostrarRotulosGlifos === false) ? '' : (NOMES_PLANETA[id] || ''); }
 // ícone do planeta; com o nome ao lado quando os nomes estão ligados
 function planetaComNome(id, tam) {
   const icone = getIconeSVG('planeta', id, tam || 34);
