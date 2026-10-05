@@ -247,7 +247,7 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
 
   return `
     <h3 class="titulo-ferramenta">Matriz de Visibilidade (Theoria)</h3>
-    ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
+    ${montarCabecalhoMandalaImagemHTML(data, 'matrizVisibilidadeCabecalho', { tintaSobreFolha: true })}
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
     </div>
@@ -284,12 +284,14 @@ function toggleMatrizVisibilidadeNaMandala() {
   } else {
     if (botao) botao.classList.add('matriz-visibilidade-ativa');
     container.innerHTML = `
-      <div style="width: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
+      <div id="matrizVisibilidadeRecuo" style="width: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
         <div id="matrizVisibilidadeMandalaContainer" class="painel">
           ${renderMatrizVisibilidadeResponsivaHTML(currentCalculatedData)}
         </div>
       </div>
     `;
+    sincronizarLarguraCabecalhoComGrade('matrizVisibilidadeCabecalho', '#matrizVisibilidadeResponsivaRoot svg');
+    ajustarRecuoMatrizVisibilidade();
   }
 }
 
@@ -333,3 +335,18 @@ async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
   }
 }
 window.capturarMatrizVisibilidadeMandalaParaRelatorio = capturarMatrizVisibilidadeMandalaParaRelatorio;
+
+/* A Matriz fica abaixo dos dois grupos de botões flutuantes da mandala (que no celular se empilham em duas linhas): o recuo de cima é medido
+   pela parte de baixo do último grupo, e não chutado — senão o título ficava escondido atrás das barras. */
+function ajustarRecuoMatrizVisibilidade() {
+  const recuo = document.getElementById('matrizVisibilidadeRecuo');
+  const container = document.getElementById('mandala-container');
+  if (!recuo || !container) return;
+  let base = 0;
+  ['mandala-actions-overlay', 'mandala-controls-overlay'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) base = Math.max(base, el.getBoundingClientRect().bottom - container.getBoundingClientRect().top);
+  });
+  recuo.style.paddingTop = Math.max(70, Math.ceil(base + 14)) + 'px';
+}
+window.addEventListener('resize', () => setTimeout(ajustarRecuoMatrizVisibilidade, 60));

@@ -279,17 +279,16 @@ function montarSVGPainelPrincipal(listaElementos) {
   alturasLinha.forEach(h => { rowY.push(y); y += h; });
   const totalH = y;
 
-  const corBorda = 'var(--table-border)';
-  let svg = `<svg width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" style="display: inline-block; max-width: 100%; height: auto; font-family: 'Montserrat', sans-serif; border: 2px solid ${corBorda}; border-radius: 12px; overflow: hidden;">`;
-  svg += `<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="var(--bg-card)"/>`;
+  const corBorda = 'var(--azul-egipcio-claro)'; // grade quadriculada: linhas nos lados mantidas, cantos retos, na cor das divisas
+  let svg = `<svg width="${totalW + 2}" height="${totalH + 2}" viewBox="0 0 ${totalW + 2} ${totalH + 2}" style="display: inline-block; max-width: 100%; height: auto; font-family: 'Montserrat', sans-serif;"><g transform="translate(1 1)">`;
 
   // Cabeçalho — Ponto/Signo/Grau/Latitude/Termo ocupam as duas linhas
   // (equivalente ao rowspan="2" de antes); Dodecatemória ocupa as duas
   // colunas da direita na linha 1 (equivalente ao colspan="2"), com
   // Signo/Grau embaixo na linha 2.
   function celulaHeader(x, y, w, h, texto) {
-    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--bg-main)" stroke="${corBorda}" stroke-width="1"/>` +
-      `<text x="${x + w / 2}" y="${y + h / 2}" font-size="${F_HEADER.size}" font-weight="${F_HEADER.weight}" letter-spacing="0.5" fill="var(--primary-blue)" text-anchor="middle" dominant-baseline="central">${texto}</text>`;
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${corBorda}" stroke-width="1"/>` +
+      `<text x="${x + w / 2}" y="${y + h / 2}" font-size="${F_HEADER.size}" font-weight="${F_HEADER.weight}" letter-spacing="0.5" fill="var(--azul-egipcio-escuro)" text-anchor="middle" dominant-baseline="central">${texto}</text>`;
   }
   svg += celulaHeader(colX.ponto, 0, wPonto, headerH, 'PONTO');
   svg += celulaHeader(colX.signo, 0, wSigno, headerH, 'SIGNO');
@@ -307,7 +306,7 @@ function montarSVGPainelPrincipal(listaElementos) {
     const cy = y0 + h / 2;
 
     function celula(x, w, conteudoSVG) {
-      return `<rect x="${x}" y="${y0}" width="${w}" height="${h}" fill="var(--bg-card)" stroke="${corBorda}" stroke-width="1"/>${conteudoSVG}`;
+      return `<rect x="${x}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="${corBorda}" stroke-width="1"/>${conteudoSVG}`;
     }
 
     // Ponto: ícone em cima, nome embaixo
@@ -316,7 +315,7 @@ function montarSVGPainelPrincipal(listaElementos) {
     const blocoAltura = iconeTam.h + 2 + alturaLabel;
     const topoBloco = cy - blocoAltura / 2;
     const iconePosicionado = posicionarIconeMatrizSVG(l.iconeSVG, colX.ponto + wPonto / 2, topoBloco + iconeTam.h / 2);
-    const labelPonto = `<text x="${colX.ponto + wPonto / 2}" y="${topoBloco + iconeTam.h + 2 + alturaLabel / 2}" font-size="${F_PONTO_LABEL.size}" font-weight="${F_PONTO_LABEL.weight}" fill="var(--primary-blue)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.pointName)}</text>`;
+    const labelPonto = `<text x="${colX.ponto + wPonto / 2}" y="${topoBloco + iconeTam.h + 2 + alturaLabel / 2}" font-size="${F_PONTO_LABEL.size}" font-weight="${F_PONTO_LABEL.weight}" fill="var(--preto-tinta)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.pointName)}</text>`;
     svg += celula(colX.ponto, wPonto, iconePosicionado + labelPonto);
 
     // Signo
@@ -324,12 +323,12 @@ function montarSVGPainelPrincipal(listaElementos) {
 
     // Grau (com ℞ em vermelho quando retrógrado)
     const textoGrau = l.temRetro
-      ? `${escapeHtml(l.grauBase)}<tspan fill="var(--danger)" font-weight="900"> ℞</tspan>`
+      ? `${escapeHtml(l.grauBase)}<tspan fill="var(--terracota)" font-weight="900"> ℞</tspan>`
       : escapeHtml(l.grauBase);
-    svg += celula(colX.grau, wGrau, `<text x="${colX.grau + wGrau / 2}" y="${cy}" font-size="${F_GRAU.size}" font-weight="${F_GRAU.weight}" fill="var(--text-dark)" text-anchor="middle" dominant-baseline="central">${textoGrau}</text>`);
+    svg += celula(colX.grau, wGrau, `<text x="${colX.grau + wGrau / 2}" y="${cy}" font-size="${F_GRAU.size}" font-weight="${F_GRAU.weight}" fill="var(--preto-tinta)" text-anchor="middle" dominant-baseline="central">${textoGrau}</text>`);
 
     // Latitude
-    svg += celula(colX.lat, wLat, `<text x="${colX.lat + wLat / 2}" y="${cy}" font-size="${F_LAT.size}" font-weight="${F_LAT.weight}" fill="var(--text-muted-2)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.latFormatted)}</text>`);
+    svg += celula(colX.lat, wLat, `<text x="${colX.lat + wLat / 2}" y="${cy}" font-size="${F_LAT.size}" font-weight="${F_LAT.weight}" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.latFormatted)}</text>`);
 
     // Termo
     svg += celula(colX.termo, wTermo, posicionarIconeMatrizSVG(l.termoIconeSVG, colX.termo + wTermo / 2, cy));
@@ -338,10 +337,10 @@ function montarSVGPainelPrincipal(listaElementos) {
     svg += celula(colX.dodecSigno, wDodecSigno, posicionarIconeMatrizSVG(l.dodecSignoSVG, colX.dodecSigno + wDodecSigno / 2, cy));
 
     // Dodecatemória — Grau
-    svg += celula(colX.dodecGrau, wDodecGrau, `<text x="${colX.dodecGrau + wDodecGrau / 2}" y="${cy}" font-size="${F_DODEC_GRAU.size}" font-weight="${F_DODEC_GRAU.weight}" fill="var(--text-dark)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.dodecGrauFormatted)}</text>`);
+    svg += celula(colX.dodecGrau, wDodecGrau, `<text x="${colX.dodecGrau + wDodecGrau / 2}" y="${cy}" font-size="${F_DODEC_GRAU.size}" font-weight="${F_DODEC_GRAU.weight}" fill="var(--preto-tinta)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.dodecGrauFormatted)}</text>`);
   });
 
-  svg += `</svg>`;
+  svg += `</g></svg>`;
   return svg;
 }
 
@@ -404,58 +403,32 @@ function renderPainelTecnico(data, containerId) {
       { type: 'item', key: 'IC', abs: (mcAbs + 180) % 360 }
     ];
 
-    let html = `
+    const btnSalvar = `<button type="button" onclick="salvarPainelTecnicoNaGaleria()" title="Salvar o Painel Técnico como imagem na galeria (com título e cabeçalho)" class="botao-icone">
+          <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        </button>`;
+    const btnRelatorio = `<button type="button" onclick="capturarPainelTecnicoParaRelatorio()" title="Adicionar ao Relatório (só a tabela, sem título nem cabeçalho)" class="botao-icone">
+          <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+        </button>`;
+
+    const html = `
       <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
-        <button type="button" onclick="salvarPainelTecnicoNaGaleria()" title="Salvar o Painel Técnico como imagem na galeria (com título e cabeçalho)" style="${PAINEL_BTN_ICONE_CSS}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-        </button>
-        <button type="button" onclick="capturarPainelTecnicoParaRelatorio()" title="Adicionar ao Relatório (só a tabela, sem título nem cabeçalho)" style="${PAINEL_BTN_ICONE_CSS}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-        </button>
+      <div style="display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; padding: 0 20px;">${btnSalvar}${btnRelatorio}</div>
+      <div id="painel-tecnico-container" class="painel painel-tecnico-folha" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
+        <h3 class="titulo-ferramenta">Painel Técnico de Natividades</h3>
+
+        ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader', { tintaSobreFolha: true })}
+
+        <div id="painelPrincipalContainer" style="text-align: center; margin: 12px 0;">
+          ${montarSVGPainelPrincipal(listaElementos)}
+        </div>
+        <hr class="divisa">
       </div>
-      <div id="painel-tecnico-container" class="painel-tecnico-folha" style="width: 100%; min-height: 100%; padding: 10px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
-      <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Painel Técnico de Natividades</h3>
-
-      ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader', { tintaSobreFolha: true })}
-    `;
-
-    html += `
-      <div id="painelPrincipalContainer" style="text-align: center; margin: 12px 0;">
-        ${montarSVGPainelPrincipal(listaElementos)}
       </div>
     `;
-
-    html += `</div></div>`;
     container.innerHTML = html;
 
-    const headerEl = document.getElementById('painelTecnicoHeader');
-    const painelEl = document.querySelector('#painelPrincipalContainer svg');
-
-    // Em telas estreitas a tabela rola dentro do próprio contêiner e sua
-    // largura "natural" (offsetWidth) pode ultrapassar o espaço realmente
-    // visível na tela; sem esse limite o cabeçalho ficaria largo demais e a
-    // página inteira passaria a rolar na horizontal. Descontamos o padding do
-    // contêiner pai porque clientWidth inclui o padding, e um filho com esse
-    // valor "cru" como largura acaba ultrapassando a área de conteúdo real.
-    let availableWidth = Infinity;
-    if (headerEl && headerEl.parentElement) {
-      const parentStyles = getComputedStyle(headerEl.parentElement);
-      availableWidth = headerEl.parentElement.clientWidth
-        - parseFloat(parentStyles.paddingLeft || 0)
-        - parseFloat(parentStyles.paddingRight || 0);
-    }
-
-    if (headerEl && painelEl) {
-      headerEl.style.width = 'fit-content';
-      const naturalWidth = headerEl.offsetWidth;
-      // painelEl é o <svg> raiz da tabela — offsetWidth é propriedade de
-      // HTMLElement, não existe em SVGElement (fica undefined), por isso
-      // mede com getBoundingClientRect() aqui, que funciona pros dois.
-      const painelWidth = painelEl.getBoundingClientRect().width;
-      const finalWidth = Math.min(Math.max(naturalWidth, painelWidth), availableWidth);
-      if (finalWidth > 0) headerEl.style.width = finalWidth + 'px';
-    }
+    // O cabeçalho (o global) fica com a largura exata da grade, no celular e no desktop (ver sincronizarLarguraCabecalhoComGrade, mandala.js).
+    sincronizarLarguraCabecalhoComGrade('painelTecnicoHeader', '#painelPrincipalContainer svg');
   } catch (err) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -490,7 +463,6 @@ async function capturarPainelTecnicoParaRelatorio() {
 }
 window.capturarPainelTecnicoParaRelatorio = capturarPainelTecnicoParaRelatorio;
 
-const PAINEL_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0;";
 
 /* Botão de galeria: captura título + cabeçalho + tabela SÓ AO TOCAR (ver
    capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */

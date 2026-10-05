@@ -1289,6 +1289,24 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
 }
 window.montarCabecalhoMandalaImagemHTML = montarCabecalhoMandalaImagemHTML;
 
+/* Cabeçalho PROPORCIONAL à grade: ferramentas com grade (Matriz, Painel Técnico) chamam isto depois de desenhar. O cabeçalho (o mesmo global,
+   um desenho que escala por viewBox) passa a ter EXATAMENTE a largura da grade na tela — no celular e no desktop — e é reajustado quando a
+   janela muda de tamanho. Sem isso o cabeçalho ficava com a largura fixa do desenho e destoava da tabela. */
+function sincronizarLarguraCabecalhoComGrade(headerId, gradeSelector) {
+  const aplicar = () => {
+    const h = document.getElementById(headerId), g = document.querySelector(gradeSelector);
+    if (!h || !g) return;
+    const w = g.getBoundingClientRect().width;
+    if (w > 0) h.style.width = w + 'px';
+  };
+  aplicar();
+  requestAnimationFrame(aplicar);
+  window.__cabecalhoGradeAplicar = aplicar;
+}
+window.sincronizarLarguraCabecalhoComGrade = sincronizarLarguraCabecalhoComGrade;
+window.addEventListener('resize', () => { if (window.__cabecalhoGradeAplicar) window.__cabecalhoGradeAplicar(); });
+
+
 /* Recorta uma captura rente ao conteúdo, com uma margem de ~3 mm desenhada nos 4 lados — pra imagem que vai pro Relatório não
    levar um monte de fundo creme ao redor de uma tabela estreita. "fundo" é a
    cor de fundo usada na captura (hex). Nunca falha: se algo der errado ou não

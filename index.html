@@ -630,44 +630,6 @@ body {
         body.tema-ceu #relBibliotecaEditorOverlay .ql-toolbar, body.tema-ceu #relBibliotecaEditorOverlay .ql-container { background: rgba(255, 244, 215, 0.45); border-color: rgba(95, 65, 30, 0.5) !important; }
 
 
-        /* TEMA CÉU — Painel Técnico de Natividades: a folha de papiro começa no título e vai até o
-           cabeçalho do cliente, MAIOR que a grade (a grade é desenhada dentro dela, com
-           folga em volta). Título em terracota; linhas e células da grade em tinta sobre o
-           papiro (as cores da grade vêm de variáveis, redefinidas só aqui dentro). As imagens
-           salvas/enviadas pro Relatório saem como a tela (papiro + tinta, ver gerarImagemFerramentaDoSvg). */
-        body.tema-ceu .painel-tecnico-folha {
-            /* sem preenchimento nenhum nas células: o que separa é só o traço de tinta */
-            --bg-card: transparent;
-            --bg-main: transparent;
-            --bg-hover: transparent;
-            --table-border: rgba(29, 58, 102, 0.75);
-            --text-disabled: rgba(42, 33, 24, 0.55);
-            --primary-blue: #1d3a66;
-            --text-dark: #1a1410;
-            --text-muted-2: #1a1410;
-            --danger: #a03e25;
-            --gold-primary: #1d3a66;
-            --element-fogo: #a62b1f; --element-terra: #6b4a2b; --element-ar: #17707f; --element-agua: #1f3a66;
-            width: fit-content;
-            max-width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-            padding: 26px 26px 12px;
-            background: var(--papiro-fundo);
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 85%, 0 62%, 3px 40%, 0 18%);
-        }
-        body.tema-ceu .painel-tecnico-folha h3 { color: #a03e25 !important; }
-        body.tema-ceu .painel-tecnico-folha #painelPrincipalContainer svg { border-radius: 4px !important; }
-        /* Botões de salvar/enviar da Matriz (acima da folha): pedaços de papiro como os da Mandala. */
-        body.tema-ceu #mandala-container button[onclick^="salvarPainelTecnicoNaGaleria"],
-        body.tema-ceu #mandala-container button[onclick^="capturarPainelTecnicoParaRelatorio"] {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-container button[onclick^="salvarPainelTecnicoNaGaleria"] svg,
-        body.tema-ceu #mandala-container button[onclick^="capturarPainelTecnicoParaRelatorio"] svg { stroke: #1d3a66; }
 
         /* TEMA CÉU — Circumambulação pelos Termos (direcoes.js): a tela é uma folha de papiro e as pautas dos signos
            são desenhadas só com tinta: azul nas linhas, régua, signos e termos; terracota no título, na marca do
@@ -1597,9 +1559,9 @@ body {
 <script src="dialogos.js?v=20261007a"></script>
 <script src="supabase.js?v=20261008i"></script>
 <script src="planetIcons.js?v=20261008d"></script>
-<script src="matrizVisibilidade.js?v=20261009b"></script>
-<script src="tabelaTecnica.js?v=20261007a"></script>
-<script src="mandala.js?v=20261009c"></script>
+<script src="matrizVisibilidade.js?v=20261009d"></script>
+<script src="tabelaTecnica.js?v=20261009a"></script>
+<script src="mandala.js?v=20261009d"></script>
 <script src="roda.js?v=20261009g"></script>
 <script src="isopsefia.js?v=20261003z"></script>
 <script src="profeccao.js?v=20261009a"></script>
