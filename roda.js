@@ -140,7 +140,11 @@ function desenharRodaSVG(o) {
      (alternarMandalaPapiro), só no Tema Céu. É o mesmo desenho "tinta sobre papiro" das páginas do Relatório. */
   const papiroNaTela = !ferr && !estiloForcado && !tintaPapiro && temaEhCeu && !!window.mandalaPapiroTela;
   const papiro = (!!tintaPapiro || papiroNaTela) && temaEhCeu;
-  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25', PRETO_TINTA = '#1a1410'; // PRETO_TINTA: lotes, nodos e sizígia em tinta sobre papiro (menos azul)
+  // Cores de época (temas.css): a MESMA paleta no claro, no escuro (versão adaptada) e no papiro. Ninguém decide cor por tela.
+  const pal = paletaEpoca(papiro ? false : modoEscuro);
+  const epoca = papiro || !temaEhCeu; // tinta de época: qualquer roda que não seja o céu de verdade
+  const AZ_TINTA = pal.azulEscuro, TERRACOTA = pal.terracota, PRETO_TINTA = pal.pretoTinta; // PRETO_TINTA: lotes, nodos e sizígia (no escuro, o cinza claro)
+  const rgbaHex = (hex, a) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
   if (papiro && !ferr) fundoTransparente = true; // (as ferramentas pintam o próprio fundo: tinta.fundoDisco)
   const HEX_RE_MANDALA = /^#[0-9a-fA-F]{6}$/;
   /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
@@ -157,48 +161,14 @@ function desenharRodaSVG(o) {
      branco atrás de tinta escura (Tema Claro) vira contorno escuro atrás
      de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
      mancha branca em volta de cada número no meio do disco escuro. */
-  const tinta = papiro ? {
-    fundoDisco: 'none', dourado: AZ_TINTA, douradoCasas: TERRACOTA, halo: 'none',
-    inkForte: AZ_TINTA, inkPlaneta: '#1a1410', navio: AZ_TINTA, linhaConectora: 'rgba(29,58,102,0.55)',
-    aspectoOposicao: TERRACOTA, aspectoTrigono: AZ_TINTA, aspectoQuadratura: TERRACOTA, aspectoSextil: AZ_TINTA,
-    elementoFogo: '#a62b1f', elementoTerra: '#6b4a2b', elementoAr: '#17707f', elementoAgua: '#1f3a66',
-    dodecatemoriaLinha: 'rgba(29,58,102,0.45)',
-  } : modoEscuro ? {
-    fundoDisco: (ferr && ferr.fundoEscuro) || '#1c1917',
-    dourado: '#d9ae3f',
-    douradoCasas: '#e8c667',
-    halo: (ferr && ferr.fundoEscuro) || '#1c1917',
-    inkForte: '#e8e6df',
-    inkPlaneta: '#e8e6df',
-    navio: '#8ab4e8',
-    linhaConectora: '#6b7280',
-    aspectoOposicao: '#fb7185',
-    aspectoTrigono: '#60a5fa',
-    aspectoQuadratura: '#ff6b4a',
-    aspectoSextil: '#38bdf8',
-    elementoFogo: '#ff6b4a',
-    elementoTerra: '#d99a5c',
-    elementoAr: '#38bdf8',
-    elementoAgua: '#60a5fa',
-    dodecatemoriaLinha: 'rgba(217,174,63,0.35)',
-  } : {
-    fundoDisco: '#ffffff',
-    dourado: '#c59b27',
-    douradoCasas: '#aa820a',
-    halo: '#ffffff',
-    inkForte: '#000000',
-    inkPlaneta: '#0f172a',
-    navio: '#103b70',
-    linhaConectora: '#94a3b8',
-    aspectoOposicao: '#881337',
-    aspectoTrigono: '#1d4ed8',
-    aspectoQuadratura: '#e84118',
-    aspectoSextil: '#0ea5e9',
-    elementoFogo: '#e84118',
-    elementoTerra: '#8b4513',
-    elementoAr: '#0ea5e9',
-    elementoAgua: '#1d4ed8',
-    dodecatemoriaLinha: 'rgba(170,130,10,0.3)',
+  const tinta = {
+    fundoDisco: papiro ? 'none' : modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff',
+    dourado: pal.azulEscuro, douradoCasas: pal.terracota,
+    halo: papiro ? 'none' : modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff',
+    inkForte: pal.azulEscuro, inkPlaneta: pal.pretoTinta, navio: pal.azulEscuro, linhaConectora: rgbaHex(pal.azulEscuro, 0.55),
+    aspectoOposicao: pal.terracota, aspectoTrigono: pal.azulEscuro, aspectoQuadratura: pal.laranja, aspectoSextil: pal.azulClaro,
+    elementoFogo: pal.laranja, elementoTerra: pal.marrom, elementoAr: pal.cinza, elementoAgua: pal.azulClaro,
+    dodecatemoriaLinha: rgbaHex(pal.azulEscuro, 0.45),
   };
 
   /* Usado em todo "fill" que hoje seria tinta.fundoDisco (o retângulo
@@ -660,11 +630,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
 
   const ascPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), eclToScreenAngle(ascAbs, house1RefAbs));
   const dscPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), (eclToScreenAngle(ascAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${temaCeu ? '#ffffff' : (papiro ? COR_TINTA_OCRE : tinta.inkForte)}" stroke-width="2.5"${estiloRoda.eixosTracejados ? ' stroke-dasharray="9 6"' : ''}/>`; // Tema Céu: branca tracejada (não faz parte do céu, foi "posta" por cima)
+  svg += `<line x1="${ascPt.x}" y1="${ascPt.y}" x2="${dscPt.x}" y2="${dscPt.y}" stroke="${temaCeu ? '#ffffff' : (epoca ? pal.ocre : tinta.inkForte)}" stroke-width="2.5"${estiloRoda.eixosTracejados ? ' stroke-dasharray="9 6"' : ''}/>`; // Tema Céu: branca tracejada (não faz parte do céu, foi "posta" por cima)
 
   const mcPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), eclToScreenAngle(mcAbs, house1RefAbs));
   const icPt = polarToCart(cx, cy, (inv ? aDod[1] : R_OuterLine), (eclToScreenAngle(mcAbs, house1RefAbs) + 180) % 360);
-  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${temaCeu ? '#ffffff' : (papiro ? COR_TINTA_OCRE : tinta.inkForte)}" stroke-width="2.5"${estiloRoda.eixosTracejados ? ' stroke-dasharray="9 6"' : ''}/>`;
+  svg += `<line x1="${mcPt.x}" y1="${mcPt.y}" x2="${icPt.x}" y2="${icPt.y}" stroke="${temaCeu ? '#ffffff' : (epoca ? pal.ocre : tinta.inkForte)}" stroke-width="2.5"${estiloRoda.eixosTracejados ? ' stroke-dasharray="9 6"' : ''}/>`;
 
   /* A PARTIR DAQUI SÓ ÍCONE — nada de linha/dentinho novo abaixo disso,
      pra manter a estrutura da roda sempre por trás. */
@@ -673,10 +643,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   const rEixoInterno = inv ? estiloRoda.raioAngulos : R.SignSector - 12; // Posiciona as bolinhas encostadas por dentro do anel dos signos (aprox. 203px)
 
   const eixosInternos = [
-    { label: "ASC", deg: ascAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "DSC", deg: (ascAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "MC",  deg: mcAbs, color: papiro ? TERRACOTA : tinta.inkForte },
-    { label: "IC",  deg: (mcAbs + 180) % 360, color: papiro ? TERRACOTA : tinta.inkForte }
+    { label: "ASC", deg: ascAbs, color: epoca ? TERRACOTA : tinta.inkForte },
+    { label: "DSC", deg: (ascAbs + 180) % 360, color: epoca ? TERRACOTA : tinta.inkForte },
+    { label: "MC",  deg: mcAbs, color: epoca ? TERRACOTA : tinta.inkForte },
+    { label: "IC",  deg: (mcAbs + 180) % 360, color: epoca ? TERRACOTA : tinta.inkForte }
   ];
 
   /* Icone novo: um triangulo so (getIconeFragmento('outro','angulo')),
@@ -747,7 +717,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
       const pTerm = polarToCart(cx, cy, (aTer[0] + aTer[1]) / 2, eclToScreenAngle((s * 30) + (prev + term.deg) / 2, house1RefAbs));
       const termoPlanetId = TERMO_PLANET_BY_SYMBOL[term.p];
       // papiro: ícones dos termos em ocre (como os eixos); Céu: o amarelo de sempre
-      const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, papiro ? COR_TINTA_OCRE : goldColor)
+      const termoSvg = getIconeTermoSVG(termoPlanetId, termoIconTamanho, epoca ? pal.ocre : goldColor)
         .replace('<svg ', `<svg x="${pTerm.x - termoIconTamanho / 2}" y="${pTerm.y - termoIconTamanho / 2}" `);
       svg += termoSvg;
       prev = term.deg;
@@ -790,7 +760,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis'
   };
 
-  const corCalc = papiro ? PRETO_TINTA : tinta.inkForte; // cor dos pontos calculados (lotes, nodos, sizígia)
+  const corCalc = epoca ? PRETO_TINTA : tinta.inkForte; // cor dos pontos calculados (lotes, nodos, sizígia)
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
@@ -802,7 +772,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     const p1 = polarToCart(cx, cy, rFio, item.aScreen);
     const dFio = item.type === 'lot' ? 12 : 19;
     const p2 = polarToCart(cx, cy, fioPraFora ? raioEfetivo + dFio : raioEfetivo - dFio, item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
-    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${papiro ? PRETO_TINTA : item.color}" stroke-width="1.2"/>`; // lotes/nodos/sizígia: preto sobre papiro
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${epoca ? PRETO_TINTA : item.color}" stroke-width="1.2"/>`; // lotes/nodos/sizígia: preto sobre papiro
 
     const pPos = polarToCart(cx, cy, raioEfetivo, item.aShift);
 
@@ -845,7 +815,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     .filter(item => item.type === 'planet')
     .sort((a, b) => ORDEM_CALDAICA.indexOf(a.id) - ORDEM_CALDAICA.indexOf(b.id))
     .forEach(item => {
-      let retroSymbol = item.retro ? `<tspan fill="${papiro ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
+      let retroSymbol = item.retro ? `<tspan fill="${epoca ? TERRACOTA : '#dc2626'}" font-weight="900"> ℞</tspan>` : '';
       const estiloGrau = `font-size="10.5" font-weight="800" fill="${tinta.inkPlaneta}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3.5" paint-order="stroke fill"`;
 
       /* POSIÇÃO (formato): no estilo Astro Hellenic o planeta fica sempre na posição real (ângulo da longitude, raio da
