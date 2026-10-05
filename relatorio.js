@@ -1614,7 +1614,7 @@ function abrirSeletorImagemCapturaQuill(quill) {
   overlay.innerHTML = `
     <div class="rel-seletor-imagem-box">
       <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span class="modal-title">Inserir imagem de uma captura</span>
+        <span class="titulo-secao" style="margin: 0;">Inserir imagem de uma captura</span>
         <button type="button" class="botao-icone" id="relSeletorImagemFechar" title="Fechar">${menuIcone('fechar', 18)}</button>
       </div>
       <div class="rel-seletor-imagem-lista">${gruposHtml}</div>
@@ -1979,15 +1979,15 @@ function editarItemDaBiblioteca(idItem) {
   overlay.id = 'relBibliotecaEditorOverlay';
   overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: flex-start; justify-content: center; z-index: 1900; padding: 20px; overflow-y: auto;';
   overlay.innerHTML = `
-    <div style="background: var(--bg-card); width: 100%; max-width: 720px; border-radius: 8px; padding: 20px; margin-top: 60px;">
-      <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; margin-bottom: 12px;">Editar bloco guardado</div>
-      <input type="text" id="relBibliotecaEdicaoTitulo" class="modal-input" value="${escapeHtml(item.titulo || '')}" placeholder="Título do bloco" style="margin-bottom: 8px; font-size: 13px;">
+    <div class="janela" style="width: 720px; margin-top: 60px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao" style="margin-top: 0;">Editar bloco guardado</div>
+      <input type="text" id="relBibliotecaEdicaoTitulo" class="modal-input" value="${escapeHtml(item.titulo || '')}" placeholder="Título do bloco">
       <div id="quill-mount-${idQuill}" class="rel-quill-mount"></div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
-        <button type="button" id="relBibliotecaEdicaoCancelar" class="btn-secondary">Cancelar</button>
-        <button type="button" id="relBibliotecaEdicaoSalvar" class="btn-primary">Salvar</button>
+      <div class="janela-acoes">
+        <button type="button" id="relBibliotecaEdicaoCancelar" class="botao-texto janela-sec">Cancelar</button>
+        <button type="button" id="relBibliotecaEdicaoSalvar" class="botao-texto">Salvar</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
   inicializarQuillsPendentes();
 

@@ -1877,11 +1877,11 @@ function mostrarBotaoSalvarImagem(pngDataUrl, nome) {
   overlay.id = 'salvarImagemOverlay';
   overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 100000; padding: 20px;';
   overlay.innerHTML = `
-    <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; padding: 20px; text-align: center; font-family: 'Montserrat', sans-serif; color: var(--primary-blue); max-width: 280px;">
-      <div style="font-weight: 700; margin-bottom: 14px;">Imagem pronta</div>
-      <button type="button" id="salvarImagemOk" style="background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 6px; padding: 10px 18px; font-weight: 700; cursor: pointer; width: 100%;">Salvar na galeria</button>
-      <div id="salvarImagemFechar" style="margin-top: 12px; font-size: 12px; cursor: pointer; opacity: 0.7;">Fechar</div>
-    </div>`;
+    <div class="janela" style="width: 280px;" role="dialog" aria-modal="true"><div class="janela-corpo" style="text-align: center; align-items: stretch;">
+      <div class="titulo-secao" style="margin: 0 0 8px;">Imagem pronta</div>
+      <button type="button" class="botao-texto" id="salvarImagemOk">Salvar na galeria</button>
+      <button type="button" class="botao-texto janela-sec" id="salvarImagemFechar">Fechar</button>
+    </div></div>`;
   document.body.appendChild(overlay);
   document.getElementById('salvarImagemOk').onclick = () => { overlay.remove(); salvarPngNaGaleria(pngDataUrl, nome); };
   document.getElementById('salvarImagemFechar').onclick = () => overlay.remove();
@@ -1895,7 +1895,7 @@ async function capturarESalvarNaGaleria(gerarCanvas, nome) {
   if (salvandoImagemEmAndamento) return;
   salvandoImagemEmAndamento = true;
   const aviso = document.createElement('div');
-  aviso.style.cssText = 'position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #103b70; color: #fcf6ba; border: 1px solid #c59b27; border-radius: 8px; padding: 10px 18px; font: 700 13px Montserrat, sans-serif; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);';
+  aviso.className = 'menu-flutuante re-aviso-curto';
   aviso.textContent = 'Gerando imagem…';
   document.body.appendChild(aviso);
   let dataUrl = null;

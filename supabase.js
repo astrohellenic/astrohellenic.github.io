@@ -1269,28 +1269,28 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'modalSaveCurrentMap';
-    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999;";
+    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 16px; box-sizing: border-box;";
     document.body.appendChild(modal);
   }
 
     modal.innerHTML = `
-    <div style="background: #fffdf5; width: 90%; max-width: 420px; border-radius: 12px; border: 2px solid #c59b27; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2d9c2; padding-bottom: 8px;">
-        <h3 style="margin:0; font-size: 16px; font-weight: 800; color: #103b70; font-family: 'Cinzel', serif;">Salvar Mapa Atual</h3>
-        <button onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="background: none; border: none; font-size: 20px; color: #c59b27; cursor: pointer; font-weight: bold;">&times;</button>
+    <div class="janela" style="width: 420px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="janela-topo">
+        <div class="titulo-secao" style="margin: 0;">Salvar Mapa Atual</div>
+        <button type="button" class="botao-icone" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" title="Fechar">${menuIcone('fechar', 18)}</button>
       </div>
 
       <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70;">Salvar na Pasta</label>
-          <span onclick="criarPastaDiretoNoModalSalvamento()" style="font-size: 11px; font-weight: 700; color: #c59b27; cursor: pointer; text-decoration: underline;">+ Criar Nova Pasta</span>
+        <div class="janela-rotulo-linha">
+          <label>Salvar na Pasta</label>
+          <button type="button" class="botao-texto" onclick="criarPastaDiretoNoModalSalvamento()">+ Criar Nova Pasta</button>
         </div>
-        <select id="saveMapFolderSelect" class="modal-select" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70;">${optionsPastas}</select>
+        <select id="saveMapFolderSelect" class="modal-select">${optionsPastas}</select>
       </div>
 
       <div>
-        <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Tipo de Mapa</label>
-        <select id="saveMapTipoSelect" class="modal-select" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70;">
+        <label>Tipo de Mapa</label>
+        <select id="saveMapTipoSelect" class="modal-select">
           <option value="Trânsito" selected>Trânsito</option>
           <option value="Pergunta">Pergunta</option>
           <option value="Evento">Evento</option>
@@ -1301,31 +1301,31 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
       </div>
 
       <div>
-        <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Nome Completo / Título da Pergunta</label>
-        <input type="text" id="saveMapNameInput" class="modal-input" value="${escapeHtml(nomePadrao)}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
+        <label>Nome Completo / Título da Pergunta</label>
+        <input type="text" id="saveMapNameInput" class="modal-input" value="${escapeHtml(nomePadrao)}">
       </div>
 
-      <div style="display: flex; gap: 8px;">
+      <div style="display: flex; gap: 16px;">
         <div style="flex: 1;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Data</label>
-          <input type="text" id="saveMapDataInput" class="modal-input" value="${dia}/${mes}/${ano}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
+          <label>Data</label>
+          <input type="text" id="saveMapDataInput" class="modal-input" value="${dia}/${mes}/${ano}">
         </div>
         <div style="flex: 1;">
-          <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Horário</label>
-          <input type="text" id="saveMapHoraInput" class="modal-input" value="${hora}:${min}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
+          <label>Horário</label>
+          <input type="text" id="saveMapHoraInput" class="modal-input" value="${hora}:${min}">
         </div>
       </div>
 
       <div>
-        <label style="font-size: 11px; font-weight: 700; color: #103b70; display: block; margin-bottom: 4px;">Local</label>
-        <input type="text" id="saveMapCidadeInput" class="modal-input" value="${escapeHtml(currentGeo.city)}" style="width: 100%; padding: 8px 10px; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; background: #ffffff; color: #103b70; box-sizing: border-box;">
+        <label>Local</label>
+        <input type="text" id="saveMapCidadeInput" class="modal-input" value="${escapeHtml(currentGeo.city)}">
       </div>
 
-      <div class="modal-actions" style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
-        <button type="button" class="btn-secondary" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'" style="padding: 8px 16px; background: #ffffff; color: #103b70; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">Cancelar</button>
-        <button type="button" class="btn-primary" onclick="executarSalvarMapaAtual()" style="padding: 8px 16px; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">Salvar Registro</button>
+      <div class="janela-acoes">
+        <button type="button" class="botao-texto janela-sec" onclick="document.getElementById('modalSaveCurrentMap').style.display='none'">Cancelar</button>
+        <button type="button" class="botao-texto" onclick="executarSalvarMapaAtual()">Salvar Registro</button>
       </div>
-    </div>
+    </div></div>
   `;
 
   modal.style.display = 'flex';

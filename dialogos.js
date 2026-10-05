@@ -1,8 +1,8 @@
 /* CAIXAS DE AVISO, CONFIRMAÇÃO E PERGUNTA DO PRÓPRIO SITE.
    Substituem as janelas nativas do navegador (alert/confirm/prompt), que têm cara diferente em cada navegador
    (Safari, Chrome...) e não seguem o tema. Aqui a janela usa as mesmas classes das outras janelas do site
-   (.modal-box, .modal-title, .modal-input, .btn-primary, .btn-secondary), então no Tema Céu vira papiro sozinha
-   (ver o bloco "janelas" do index.html) e nos outros temas segue o tema normal.
+   (.janela, .modal-input, .botao-texto), então no Tema Céu vira papiro sozinha
+   (ver .janela em componentes.css e papiro.css) e nos outros temas segue o tema normal.
 
    - astroAlert(msg)                     -> Promise<void>
    - astroConfirm(msg)                   -> Promise<boolean>
@@ -22,14 +22,14 @@
     overlay.id = 'astroDialogoOverlay';
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: none; align-items: center; justify-content: center; z-index: 100000000; padding: 16px; box-sizing: border-box;';
     overlay.innerHTML =
-      '<div class="modal-box" style="width: 420px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">' +
-        '<div id="astroDialogoMsg" style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;"></div>' +
+      '<div class="janela" style="width: 420px;" role="dialog" aria-modal="true"><div class="janela-corpo">' +
+        '<div id="astroDialogoMsg" class="janela-msg"></div>' +
         '<input type="text" id="astroDialogoInput" class="modal-input" style="display: none;" autocomplete="off">' +
-        '<div class="modal-actions">' +
-          '<button type="button" class="btn-secondary" id="astroDialogoCancelar">Cancelar</button>' +
-          '<button type="button" class="btn-primary" id="astroDialogoOk">OK</button>' +
+        '<div class="janela-acoes">' +
+          '<button type="button" class="botao-texto janela-sec" id="astroDialogoCancelar">Cancelar</button>' +
+          '<button type="button" class="botao-texto" id="astroDialogoOk">OK</button>' +
         '</div>' +
-      '</div>';
+      '</div></div>';
     document.body.appendChild(overlay);
   }
 
