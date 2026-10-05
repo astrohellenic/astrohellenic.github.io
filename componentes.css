@@ -229,3 +229,20 @@
 .action-record-btn.email-btn:hover { color: var(--terracota); }
 /* tabela que abre dentro de outra: mesma marca terracota na margem da tabela de fora */
 .tabela-epoca tr > td.encaixe:first-child { border-left-color: var(--terracota); }
+
+/* BARRA SUPERIOR — entre duas linhas duplas (sem moldura em volta, sem cantos). Ícones em azul egípcio escuro; hover/ativo em terracota. */
+#top-bar {
+    background: var(--fundo-creme);
+    border: 0;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-radius: 0;
+    box-shadow: var(--sombra, none);
+}
+#top-bar .menu-toggle-btn, #top-bar .icon-btn {
+    background: transparent; border: 0; border-radius: 0; color: var(--azul-egipcio-escuro);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 6px 8px; flex-shrink: 0;
+}
+#top-bar .menu-toggle-btn { margin-right: 4px; }
+#top-bar .menu-toggle-btn:hover, #top-bar .icon-btn:hover { background: transparent; color: var(--terracota); }
+#top-bar .icon-btn.matriz-visibilidade-ativa, #top-bar .icon-btn.ativo { background: transparent; color: var(--terracota); }

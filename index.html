@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261008a">
     <link rel="stylesheet" href="temas.css?v=20261008a">
-    <link rel="stylesheet" href="componentes.css?v=20261008l">
+    <link rel="stylesheet" href="componentes.css?v=20261008m">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -339,13 +339,10 @@ body {
 }
 */
         
-        /* BARRA SUPERIOR FIXA - PADRONIZADA COM CONTORNO AZUL E ÍCONES DOURADOS */
+        /* BARRA SUPERIOR FIXA — posição e tamanho aqui; aparência (linhas duplas, cores) em componentes.css */
         #top-bar {
             height: 52px;
             min-height: 52px;
-            background: var(--bg-main);
-            border: 2px solid var(--primary-blue);
-            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -354,7 +351,6 @@ body {
             flex-shrink: 0;
             width: 100%;
             z-index: 10;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             margin-bottom: 10px;
             overflow: hidden;
         }
@@ -399,28 +395,6 @@ body {
 
         .top-bar-controls::-webkit-scrollbar {
             display: none;
-        }
-
-        .menu-toggle-btn {
-            background: var(--bg-card);
-            border: 1px solid #d4af37;
-            color: #d4af37;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-            margin-right: 4px;
-            flex-shrink: 0;
-        }
-
-        .menu-toggle-btn:hover {
-            background: var(--bg-hover);
-            border-color: #b45309;
-            color: #b45309;
         }
 
         .icon-btn {
@@ -534,32 +508,8 @@ body {
             background-color: transparent;
         }
 
-        /* TEMA CÉU: barra superior em papiro (em todas as ferramentas — o Tema Céu é do
-           software inteiro). SÓ PINTURA: não mexe em altura (52px), posição (fixa ou no
-           fluxo), padding nem espaçador medido em JS. O contorno azul vira transparente
-           (mantém a mesma espessura, só some a cor) e a borda rasgada vem de clip-path. */
-        body.tema-ceu #top-bar {
-            background: var(--papiro-fundo);
-            border-color: transparent;
-            border-radius: 0;
-            box-shadow: none;
-            clip-path: polygon(
-                0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px,
-                calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px),
-                98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px),
-                4px 70%, 0 45%, 3px 22%);
-        }
-        body.tema-ceu #top-bar .icon-btn { color: #1d3a66; }
-        body.tema-ceu #top-bar .icon-btn:hover { background: rgba(29, 58, 102, 0.14); color: #0f2a52; }
-        body.tema-ceu #top-bar .icon-btn.matriz-visibilidade-ativa { background: #103b70; color: #fcf6ba; }
-        body.tema-ceu #top-bar .icon-btn.matriz-visibilidade-ativa:hover { background: #0c2c54; color: #fcf6ba; }
-        body.tema-ceu #top-bar .menu-toggle-btn { background: rgba(255, 240, 200, 0.35); border-color: #1d3a66; color: #1d3a66; }
-        body.tema-ceu #top-bar .menu-toggle-btn:hover { background: rgba(255, 240, 200, 0.6); border-color: #0f2a52; color: #0f2a52; }
-
-        /* TEMA CÉU: ícone do menu lateral em terracota (a cor de destaque do tema) — os demais
-           ícones da barra seguem azul-tinta. SÓ COR do desenho. */
-        body.tema-ceu #top-bar .menu-toggle-btn { color: #a03e25; }
-        body.tema-ceu #top-bar .menu-toggle-btn:hover { color: #7f2e1a; }
+        /* TEMA CÉU: a barra superior é uma folha de papiro entre as duas linhas duplas (aparência em componentes.css). */
+        body.tema-ceu #top-bar { background: var(--papiro-fundo); }
 
         /* TEMA CÉU: botões que flutuam sobre a mandala (canto esquerdo: salvar/atualizar/matriz/
            RS; canto direito: Casa 1, Relatório, galeria, zoom, stepper de tempo) viram pedaços
@@ -1366,7 +1316,7 @@ body {
         <!-- BARRA SUPERIOR -->
         <div id="top-bar">
             <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Abrir Menu Lateral">
-                <i class="fa-solid fa-bars"></i>
+                <svg class="icone" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true"><path d="M10 18 H54 M10 32 H54 M10 46 H54"/></svg>
             </button>
             <div class="top-bar-controls">
                 <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
