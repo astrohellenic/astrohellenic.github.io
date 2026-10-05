@@ -230,7 +230,7 @@ function iniciarModuloHoras(containerIdAlvo) {
         <tr>
           <th></th>
           <th class="centro">Período</th>
-          <th class="centro">Regente</th>
+          <th class="horas-regente">Regente</th>
           <th>Início</th>
           <th>Término</th>
         </tr>
@@ -243,7 +243,7 @@ function iniciarModuloHoras(containerIdAlvo) {
       <tr${item.isCurrent ? ' class="ativa aberta"' : ''}>
         <td>${item.index}ª</td>
         <td class="centro">${iconeSolLuaHoras(item.period, 16)}</td>
-        <td class="centro">${planetaComNome(item.planet.id, 30)}</td>
+        <td class="horas-regente">${planetaComNome(item.planet.id, 30)}</td>
         <td>${formatarHoraMinutoSegundo(item.start)}</td>
         <td>${formatarHoraMinutoSegundo(item.end)}</td>
       </tr>

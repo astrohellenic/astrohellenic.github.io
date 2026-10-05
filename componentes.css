@@ -352,3 +352,7 @@
 .tabela-epoca td.iso-col-glifo .com-nome { display: flex; justify-content: flex-start; }
 .iso-coluna-estreita .iso-passo { justify-content: flex-start; gap: 12px; }
 .iso-coluna-estreita .iso-passo > .rotulo { min-width: 120px; }
+
+/* HORAS: a coluna do regente alinha pelo ÍCONE (um embaixo do outro, na mesma vertical); o nome vem depois do ícone */
+.tabela-epoca .horas-regente { text-align: left; padding-left: 28px; }
+.tabela-epoca td.horas-regente .com-nome { display: flex; justify-content: flex-start; }
