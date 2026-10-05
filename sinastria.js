@@ -403,7 +403,7 @@
         // "Agora": o céu do momento, pra ver trânsitos ao lado do mapa em tela (e andar no tempo com o seletor).
         let html = `
             <div class="menu-pasta" onclick="sinastriaEscolherAgora()">
-                <div class="nome-pasta">${menuIcone('relogio')}<span>Agora — céu do momento (trânsito)</span></div>
+                <div class="nome-pasta">${menuIcone('relogio')}<span>Agora</span></div>
                 ${menuIcone('avancar')}
             </div>`;
         pastasOrdenadas.forEach(pasta => {
