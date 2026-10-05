@@ -3680,6 +3680,7 @@ async function baixarRelatorioPDF() {
 <html>
 <head>
 <meta charset="utf-8">
+<title>${escapeHtml(nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {}).replace(/\.pdf$/, ''))}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Montserrat', sans-serif; }</style>

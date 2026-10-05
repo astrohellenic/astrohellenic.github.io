@@ -365,7 +365,7 @@ async function baixarEntradasPDF(papiro) {
   try {
     const { html } = finMontarPaginasRelatorio();
     const cores = finCoresPdf(papiro === true);
-    const doc = `<!doctype html><html><head><meta charset="utf-8">
+    const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${finNomeArquivoRelatorio('pdf').replace(/\.pdf$/, '')}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
 <style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(cores)}</style></head><body>${html}</body></html>`;
     const url = (typeof RELATORIO_PDF_API_URL !== 'undefined') ? RELATORIO_PDF_API_URL : 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
