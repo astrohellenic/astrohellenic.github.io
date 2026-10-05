@@ -995,6 +995,7 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   const cabecalhoValido = HEX_RE.test(corCabecalhoForcada) ? corCabecalhoForcada : null;
   const cabecalhoEscuro = cabecalhoValido ? (luminanciaRelativaHex(cabecalhoValido) < 0.5) : modoEscuro;
   return {
+    escuro: cabecalhoEscuro, // qual paleta de época o filete duplo usa (paletaEpoca, papiro.js)
     fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
     borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27',
     titulo: cabecalhoEscuro ? '#8ab4e8' : '#103b70',
@@ -1015,6 +1016,7 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
 function coresCabecalhoPapiro() {
   // Convenção dos papiros: título em tinta vermelha (rubrica) e o resto em tinta preta.
   return {
+    escuro: false, // o papiro usa a paleta do modo claro
     fundo: 'url(#papiroCabBase)',
     borda: '#1d3a66', // sem uso hoje (o papel não tem contorno), mantido por compatibilidade com o formato das outras paletas
     titulo: '#1d3a66', // usado por quem desenha títulos de ferramenta por fora do cabeçalho (inalterado)
@@ -1142,6 +1144,20 @@ function quebrarTrechosCabecalho(trechos, maxW, px) {
   return linhas;
 }
 
+/* FILETE DUPLO DO CABEÇALHO — no lugar da moldura de um pixel: duas linhas finas EM CIMA e duas EMBAIXO, sem os lados
+   (a divisa do software: ver o guia de design, docs/guia-design.md). A cor é o azul egípcio claro da paleta de época
+   (temas.css, lida por paletaEpoca em papiro.js). No papel (papiro e tinta sobre a folha) as linhas entram um pouco
+   pra dentro, pra a borda rasgada do papel não encostar nelas. */
+function filetesCabecalhoSVG(x, y, w, h, cores) {
+  const papel = !!(cores.papiro || cores.fundo === 'none');
+  const cor = paletaEpoca(!!cores.escuro).azulClaro;
+  const o1 = papel ? 4.5 : 1.2, o2 = papel ? 7.5 : 4.2, recuo = papel ? 10 : 0;
+  const linha = (yy, sw) => `<line x1="${x + recuo}" y1="${yy}" x2="${x + w - recuo}" y2="${yy}" stroke="${cor}" stroke-width="${sw}"/>`;
+  return linha(y + o1, 1.4) + linha(y + o2, 0.8) + linha(y + h - o2, 0.8) + linha(y + h - o1, 1.4);
+}
+// canto do retângulo do cabeçalho: reto (a época não tinha canto arredondado); o recorte do papiro precisa do rx="10" original
+function cantoCabecalho(cores) { return cores.papiro ? 10 : 0; }
+
 function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   opcoes = opcoes || {};
   const largura = opcoes.largura || 960;
@@ -1178,7 +1194,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     altura = 75;
     svg = `<g id="png-discreet-header">
     <!-- Fundo (creme/escuro conforme o modo) e Borda Dourada Estendidos quase até o fim -->
-    <rect x="15" y="${headerY}" width="930" height="75" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />
+    <rect x="15" y="${headerY}" width="930" height="75" rx="${cantoCabecalho(cores)}" ry="${cantoCabecalho(cores)}" fill="${cores.fundo}" stroke="none" />${filetesCabecalhoSVG(15, headerY, 930, 75, cores)}
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${escapeHtml(headerTitle)}</text>
@@ -1226,7 +1242,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
   });
   altura = Math.max(75, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
-  svg = `<g id="png-discreet-header"><rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="10" ry="10" fill="${cores.fundo}" stroke="${cores.borda}" stroke-width="2" />${textos}`;
+  svg = `<g id="png-discreet-header"><rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="${cantoCabecalho(cores)}" ry="${cantoCabecalho(cores)}" fill="${cores.fundo}" stroke="none" />${filetesCabecalhoSVG(15, headerY, largura - 30, altura, cores)}${textos}`;
   if (temDia) {
     svg += `<text x="${largura - 100}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${largura - 100}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
   }
@@ -1256,8 +1272,7 @@ function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
   const largura = (opcoes && opcoes.largura) || 960;
   const layout = montarCabecalhoMandalaLayout(data, 2, cores, opcoes && opcoes.loteCasa1, opcoes);
   /* Tinta sobre a folha: duas linhas finas de tinta (em cima e embaixo) separam o cabeçalho do resto da folha. */
-  const regua = y => `<line x1="15" y1="${y}" x2="${largura - 15}" y2="${y}" stroke="#1a1410" stroke-opacity="0.55" stroke-width="1"/>`;
-  const svgCab = tintaSobreFolha ? regua(1) + layout.svg + regua(layout.altura + 3) : layout.svg;
+  const svgCab = layout.svg;
   const grupo = (cores.papiro ? aplicarPapiroNoCabecalhoSVG(svgCab) : svgCab)
     .replace(/'Cinzel', serif/g, 'serif')
     .replace(/'Montserrat', sans-serif/g, 'sans-serif');
