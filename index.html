@@ -1095,102 +1095,30 @@ body {
     background-repeat: no-repeat;
   }
 
-  .login-card {
-    position: relative;
-    z-index: 1;
-    width: 90%;
-    max-width: 380px;
-    padding: 36px 30px;
-    text-align: center;
-    color: #1a1410;
-    background: var(--papiro-fundo);
-    clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 85%, 0 62%, 3px 40%, 0 18%);
+  /* O cartão é uma .janela do sistema (componentes.css): folha entre duas linhas duplas, campos só com a linha embaixo, botões de texto.
+     Como a tela de login é SEMPRE Tema Céu + papiro (em qualquer tema do software), o papel vem daqui — as mesmas regras de
+     "body.tema-ceu .janela" (papiro.css), presas ao #loginOverlay — e as cores são sempre as da paleta clara (.paleta-clara, temas.css). */
+  #loginOverlay .login-card { position: relative; z-index: 1; width: 90%; max-width: 380px; text-align: center; background: transparent; box-shadow: none; isolation: isolate; filter: drop-shadow(3px 6px 6px rgba(0, 0, 10, .75)); border-top-color: transparent; border-bottom-color: transparent; }
+  #loginOverlay .login-card::before {
+    content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none; background: var(--papiro-fundo);
+    clip-path: polygon(0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px, calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px), 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px), 4px 70%, 0 45%, 3px 22%);
   }
-
-  /* logo sem fundo próprio: fica só o desenho em tinta, direto no papiro */
-  .login-brand {
-    margin-bottom: 24px;
+  #loginOverlay .login-card::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
   }
-
-  .login-field-container {
-    position: relative;
-    width: 100%;
-    margin-bottom: 12px;
-  }
-
-  .login-field {
-    width: 100%;
-    padding: 12px;
-    border: 1.5px solid #1d3a66;
-    border-radius: 6px;
-    font-size: 14px;
-    box-sizing: border-box;
-    outline: none;
-    background: transparent;
-    color: #1a1410;
-  }
-
-  .login-field::placeholder { color: rgba(42, 33, 24, 0.6); }
-
-  .login-field:focus {
-    border-color: #a03e25;
-  }
-
-  .password-toggle-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #1d3a66;
-    cursor: pointer;
-    font-size: 14px;
-  }
-
-  .login-options {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #1a1410;
-    margin-bottom: 20px;
-  }
-
-  .login-options input[type="checkbox"] {
-    -webkit-appearance: none; appearance: none;
-    width: 16px; height: 16px; margin: 0;
-    background: transparent; border: 1.5px solid #1d3a66; border-radius: 3px; cursor: pointer;
-  }
-  .login-options input[type="checkbox"]:checked {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5 L6.5 12 L13 4' fill='none' stroke='%231d3a66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-    background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
-  }
-
-  /* botão: só o contorno em terracota, sem fundo nem sombra */
-  .login-btn {
-    width: 100%;
-    background: transparent;
-    color: #a03e25;
-    border: 1.5px solid #a03e25;
-    padding: 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-  }
-
-  .login-btn:hover {
-    background: rgba(160, 62, 37, 0.12);
-  }
-
-  .login-toggle-link {
-    margin-top: 16px;
-    font-size: 12px;
-    color: #1d3a66;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-
-  #loginErrorMsg { color: #a03e25 !important; }
+  #loginOverlay .janela-corpo { padding: 30px 30px 26px; gap: 0; font-family: 'Montserrat', sans-serif; }
+  .login-brand { margin-bottom: 22px; }
+  .login-field-container { position: relative; width: 100%; margin-bottom: 14px; text-align: left; }
+  #loginOverlay .login-field { box-sizing: border-box; width: 100%; padding: 8px 34px 8px 0; font-family: inherit; font-size: 14px; outline: none; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; }
+  #loginOverlay .login-field:focus { border-bottom-color: var(--terracota); }
+  #loginOverlay .login-field::placeholder { color: var(--preto-tinta); opacity: .55; }
+  .password-toggle-icon { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; }
+  .login-options { display: flex; align-items: center; justify-content: flex-start; font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); margin: 4px 0 20px; }
+  #loginOverlay .login-options label { margin: 0; font-family: inherit; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--azul-egipcio-escuro); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .login-btn { width: 100%; padding: 11px 10px; font-size: 13px; }
+  .login-toggle-link { margin-top: 18px; display: inline-block; padding: 8px 14px; }
+  #loginErrorMsg { color: var(--terracota) !important; font-size: 12px; font-weight: 700; margin-bottom: 12px; text-align: left; }
 
     /* LIBERA A ROLAGEM GLOBAL DA PÁGINA — só fora do modo mandala. Com o
        modo mandala ativo, html/body/#main-stage precisam ficar travados na
@@ -1242,10 +1170,11 @@ body:not(.modo-mandala) #main-stage {
 
 <div id="loginOverlay">
   <div id="loginPlanetsDecor" aria-hidden="true"></div>
-  <div class="login-card">
+  <div class="login-card janela paleta-clara">
+   <div class="janela-corpo">
     <div class="login-brand"><img src="astrohellenic.svg?v=20261008" alt="Astro Hellenic" style="width: 100%; height: auto;"><!-- a tela de entrada é sempre uma folha de papiro, em qualquer tema: usa sempre o logo claro --></div>
-    
-    <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
+
+    <div id="loginErrorMsg" style="display:none;"></div>
 
     <div class="login-field-container">
       <input type="email" id="loginEmail" class="login-field" placeholder="Seu e-mail">
@@ -1253,18 +1182,19 @@ body:not(.modo-mandala) #main-stage {
 
     <div class="login-field-container">
       <input type="password" id="loginPassword" class="login-field" placeholder="Sua senha">
-      <i class="fa-solid fa-eye password-toggle-icon" id="togglePasswordBtn" onclick="alternarVisibilidadeSenha()"></i>
+      <button type="button" class="botao-icone password-toggle-icon" id="togglePasswordBtn" onclick="alternarVisibilidadeSenha()" title="Mostrar ou esconder a senha"><svg class="icone" viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><path d="M6 32 C14 18 24 14 32 14 C40 14 50 18 58 32 C50 46 40 50 32 50 C24 50 14 46 6 32 Z"/><circle cx="32" cy="32" r="8"/></svg></button>
     </div>
 
     <div class="login-options">
-      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <label>
         <input type="checkbox" id="loginKeepLogged"> Manter-se logado
       </label>
     </div>
 
-    <button type="button" class="login-btn" id="loginSubmitBtn" onclick="executarAcaoAuth()">Entrar</button>
+    <button type="button" class="botao-texto login-btn" id="loginSubmitBtn" onclick="executarAcaoAuth()">Entrar</button>
 
-    <div class="login-toggle-link" id="loginToggleMode" onclick="alternarModoAuth()">Não tem uma conta? Criar nova conta</div>
+    <button type="button" class="botao-texto janela-sec login-toggle-link" id="loginToggleMode" onclick="alternarModoAuth()">Não tem uma conta? Criar nova conta</button>
+   </div>
   </div>
 </div>
 
@@ -1274,15 +1204,9 @@ body:not(.modo-mandala) #main-stage {
   function alternarVisibilidadeSenha() {
     const input = document.getElementById('loginPassword');
     const icon = document.getElementById('togglePasswordBtn');
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.classList.remove('fa-eye');
-      icon.classList.add('fa-eye-slash');
-    } else {
-      input.type = 'password';
-      icon.classList.remove('fa-eye-slash');
-      icon.classList.add('fa-eye');
-    }
+    const mostrar = input.type === 'password';
+    input.type = mostrar ? 'text' : 'password';
+    icon.innerHTML = menuIcone(mostrar ? 'olhoCortado' : 'olho', 20); // monoline (ícones do menu, supabase.js)
   }
 
   function alternarModoAuth() {
