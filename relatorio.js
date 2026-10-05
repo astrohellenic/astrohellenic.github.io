@@ -393,14 +393,24 @@ function luminanciaRelativaHex(hex) {
    (ignorando a paleta do modelo) — é o mesmo "disco claro dentro do céu
    estrelado" que já funciona hoje nesse tema, e nada nessa mudança pode
    mexer nisso (ver a nota de "Regra de ouro" no CLAUDE.md). */
-/* ESTILO DA CAPA do modelo: 'paleta' (cores escolhidas), 'ceu' (céu estrelado) ou 'papiro' (tinta sobre papiro, com a
-   moldura de meandros). Vale em QUALQUER tema — não precisa estar no Tema Céu. Modelos antigos, sem escolha salva:
-   no Tema Céu eram Céu (ou Papiro, se marcado); fora dele, paleta. */
-function estiloCapaDoModelo(blocoCapa) {
+/* ESTILO DO PDF do modelo: 'papiro' (páginas sobre papiro, em tinta) ou 'branco' (páginas brancas, sem papiro). Escolha do
+   modelo, independente do tema do software. Modelos antigos, sem escolha salva: seguem o tema que estava ligado (Tema
+   Céu = papiro) ou, se já tinham capa Céu/Papiro salva, papiro. */
+function estiloPdfDoModelo(blocoCapa) {
+  const p = blocoCapa && blocoCapa.estiloPdf;
+  if (p === 'papiro' || p === 'branco') return p;
   const e = blocoCapa && blocoCapa.capaEstilo;
-  if (e === 'paleta' || e === 'ceu' || e === 'papiro') return e;
-  const temaCeu = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
-  if (!temaCeu) return 'paleta';
+  if (e === 'ceu' || e === 'papiro') return 'papiro';
+  if (e === 'paleta') return 'branco';
+  return (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? 'papiro' : 'branco';
+}
+
+/* ESTILO DA CAPA do modelo: 'paleta' (cores escolhidas — só no PDF branco), 'ceu' (céu estrelado) ou 'papiro' (tinta sobre
+   papiro, com a moldura de meandros) — estes dois só no PDF com papiro. */
+function estiloCapaDoModelo(blocoCapa) {
+  if (estiloPdfDoModelo(blocoCapa) === 'branco') return 'paleta';
+  const e = blocoCapa && blocoCapa.capaEstilo;
+  if (e === 'ceu' || e === 'papiro') return e;
   return blocoCapa && blocoCapa.capaPapiro === true ? 'papiro' : 'ceu';
 }
 
@@ -2230,6 +2240,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const corCabecalhoCapaAtual = opcoes.corCabecalhoCapaOverride || blocoCapaAtual.corCabecalho;
   const corBordaCapaAtual = opcoes.corBordaCapaOverride || blocoCapaAtual.corBorda;
   const temBordaCapaAtual = opcoes.temBordaCapaOverride != null ? opcoes.temBordaCapaOverride : (blocoCapaAtual.temBorda === true);
+  const estiloPdfAtual = opcoes.estiloPdfOverride || estiloPdfDoModelo(blocoCapaAtual);
   const capaEstiloAtual = opcoes.capaEstiloOverride || estiloCapaDoModelo(blocoCapaAtual);
   const corCirculoCapaAtual = opcoes.corCirculoCapaOverride || blocoCapaAtual.corCirculo;
   const temCirculoCapaAtual = opcoes.temCirculoCapaOverride != null ? opcoes.temCirculoCapaOverride : (blocoCapaAtual.temCirculo === true);
@@ -2314,7 +2325,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           <hr class="divisa">
 
           ${relatorioCapaSeletorHtml(capaFonteAtual)}
-          ${relatorioCapaEstiloHtml(capaEstiloAtual)}
+          ${relatorioCapaEstiloHtml(estiloPdfAtual, capaEstiloAtual)}
           ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual, corCirculoCapaAtual, temCirculoCapaAtual, tamanhoTituloCapaAtual, capaEstiloAtual)}
           
 
@@ -2485,30 +2496,44 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
    carregarTemaMandala, chamado logo após o login) — dá pra avisar aqui,
    sem esperar nada, que o Tema Céu (quando ativo) sempre vence essa
    escolha na hora de gerar o relatório de verdade. */
-/* ESTILO DA CAPA: Cores (paleta do modelo), Céu ou Papiro — sempre disponível, em qualquer tema. */
-function relatorioCapaEstiloHtml(estiloAtual) {
-  const opcao = (valor, rotulo) => `<label class="re-opcao-radio"><input type="radio" name="relCapaEstilo" value="${valor}" ${estiloAtual === valor ? 'checked' : ''} onchange="alternarEstiloCapaEditor(this.value)"> ${rotulo}</label>`;
+/* ESTILO DO PDF e da CAPA — sempre disponíveis, em qualquer tema do software. Com papiro: capa Céu ou capa Papiro. Sem papiro
+   (branco): as capas de cores. */
+function relatorioCapaEstiloHtml(estiloPdf, estiloCapa) {
+  const radio = (nome, valor, rotulo, marcado, aoMudar) => `<label class="re-opcao-radio"><input type="radio" name="${nome}" value="${valor}" ${marcado ? 'checked' : ''} onchange="${aoMudar}"> ${rotulo}</label>`;
+  const papiro = estiloPdf === 'papiro';
   return `
     <div class="re-bloco">
-      <div class="titulo-secao">Estilo da Capa</div>
+      <div class="titulo-secao">Estilo do PDF</div>
       <div class="re-ajuda">
-        Cores: fundo e título nas cores escolhidas abaixo. Céu: céu estrelado com a mandala. Papiro: tinta sobre papiro, com moldura de meandros. Vale em qualquer tema do software.
+        Com papiro: as páginas saem em tinta sobre papiro. Sem papiro: páginas brancas. Vale em qualquer tema do software.
       </div>
       <div class="re-opcoes-linha">
-        ${opcao('paleta', 'Cores')}
-        ${opcao('ceu', 'Céu')}
-        ${opcao('papiro', 'Papiro')}
+        ${radio('relEstiloPdf', 'papiro', 'Com papiro', papiro, 'alternarEstiloPdfEditor(this.value)')}
+        ${radio('relEstiloPdf', 'branco', 'Sem papiro (branco)', !papiro, 'alternarEstiloPdfEditor(this.value)')}
+      </div>
+      <div id="relCapaOpcoesPapiro"${papiro ? '' : ' style="display: none;"'}>
+        <div class="titulo-secao" style="margin-top: 18px;">Capa com papiro</div>
+        <div class="re-ajuda">
+          Céu: céu estrelado com a mandala. Papiro: tinta sobre papiro, com moldura de meandros.
+        </div>
+        <div class="re-opcoes-linha">
+          ${radio('relCapaEstilo', 'ceu', 'Capa Céu', estiloCapa !== 'papiro', '')}
+          ${radio('relCapaEstilo', 'papiro', 'Capa Papiro', estiloCapa === 'papiro', '')}
+        </div>
       </div>
     </div>
     <hr class="divisa">`;
 }
 
-/* Mostra/esconde o bloco "Cores da Capa" conforme o estilo (as cores só valem no estilo "Cores"). */
-function alternarEstiloCapaEditor(valor) {
-  const wrap = document.getElementById('relCapaCoresWrap');
-  if (wrap) wrap.style.display = valor === 'paleta' ? '' : 'none';
+/* Troca entre PDF com papiro e sem papiro: mostra as capas Céu/Papiro, ou as cores da capa. */
+function alternarEstiloPdfEditor(valor) {
+  const papiro = valor === 'papiro';
+  const opcoes = document.getElementById('relCapaOpcoesPapiro');
+  if (opcoes) opcoes.style.display = papiro ? '' : 'none';
+  const cores = document.getElementById('relCapaCoresWrap');
+  if (cores) cores.style.display = papiro ? 'none' : '';
 }
-window.alternarEstiloCapaEditor = alternarEstiloCapaEditor;
+window.alternarEstiloPdfEditor = alternarEstiloPdfEditor;
 
 function relatorioPaletaCapaHtml(paletaIdAtual, corFundoCustomAtual, corTituloCustomAtual, corCabecalhoCustomAtual, corBordaCustomAtual, temBordaAtual, corCirculoCustomAtual, temCirculoAtual, tamanhoTituloAtual, estiloCapaAtual) {
   const ehCustom = paletaIdAtual === 'custom';
@@ -2820,8 +2845,10 @@ function lerBlocosComCapaDoEditor() {
   }
   const temBordaInput = document.getElementById('relCapaTemBorda');
   blocoCapa.temBorda = temBordaInput ? temBordaInput.checked : false;
+  const estiloPdfInput = document.querySelector('input[name="relEstiloPdf"]:checked');
+  blocoCapa.estiloPdf = estiloPdfInput ? estiloPdfInput.value : 'branco';
   const capaEstiloInput = document.querySelector('input[name="relCapaEstilo"]:checked');
-  blocoCapa.capaEstilo = capaEstiloInput ? capaEstiloInput.value : 'paleta';
+  blocoCapa.capaEstilo = blocoCapa.estiloPdf === 'branco' ? 'paleta' : (capaEstiloInput ? capaEstiloInput.value : 'ceu');
   blocoCapa.capaPapiro = blocoCapa.capaEstilo === 'papiro';
   const temCirculoInput = document.getElementById('relCapaTemCirculo');
   blocoCapa.temCirculo = temCirculoInput ? temCirculoInput.checked : false;
@@ -3044,8 +3071,10 @@ async function atualizarPreviaEditorModelo() {
   const corCabecalhoCapa = corCabecalhoInput ? corCabecalhoInput.value : null;
   const corBordaCapa = corBordaInput ? corBordaInput.value : null;
   const temBordaCapa = temBordaInput ? temBordaInput.checked : false;
+  const estiloPdfInputPrevia = document.querySelector('input[name="relEstiloPdf"]:checked');
+  const estiloPdfCapa = estiloPdfInputPrevia ? estiloPdfInputPrevia.value : 'branco';
   const capaEstiloInputPrevia = document.querySelector('input[name="relCapaEstilo"]:checked');
-  const capaEstiloCapa = capaEstiloInputPrevia ? capaEstiloInputPrevia.value : 'paleta';
+  const capaEstiloCapa = estiloPdfCapa === 'branco' ? 'paleta' : (capaEstiloInputPrevia ? capaEstiloInputPrevia.value : 'ceu');
   const corCirculoCapa = corCirculoInput ? corCirculoInput.value : null;
   const temCirculoCapa = temCirculoInput ? temCirculoInput.checked : false;
   const tamanhoTituloCapa = tamanhoTituloSelect ? tamanhoTituloSelect.value : RELATORIO_TAMANHO_TITULO_PADRAO;
@@ -3057,7 +3086,7 @@ async function atualizarPreviaEditorModelo() {
     pane.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
-  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa, capaEstilo: capaEstiloCapa, capaPapiro: capaEstiloCapa === 'papiro', temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
+  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa, estiloPdf: estiloPdfCapa, capaEstilo: capaEstiloCapa, capaPapiro: capaEstiloCapa === 'papiro', temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
   if (paletaCapa === 'custom') {
     blocoCapaPreview.corFundo = corFundoCapa;
     blocoCapaPreview.corTitulo = corTituloCapa;
@@ -3081,7 +3110,7 @@ async function atualizarPreviaEditorModelo() {
     <div class="rel-previa-aviso no-print">
       ${menuIcone('info', 16)} Prévia gerada a partir do que está na tela agora — nada foi salvo ainda. Clique em "Salvar" ali em cima quando estiver satisfeito.
     </div>
-    <div class="rel-viewer${classeTemaPapiroRelatorio()}">${conteudoHtml}</div>
+    <div class="rel-viewer${classeTemaPapiroRelatorio(blocosComCapa)}">${conteudoHtml}</div>
   `;
 
   reabrirEditorRelatorioAtual({
@@ -3094,6 +3123,7 @@ async function atualizarPreviaEditorModelo() {
     corCabecalhoCapaOverride: corCabecalhoCapa,
     corBordaCapaOverride: corBordaCapa,
     temBordaCapaOverride: temBordaCapa,
+    estiloPdfOverride: estiloPdfCapa,
     capaEstiloOverride: capaEstiloCapa,
     corCirculoCapaOverride: corCirculoCapa,
     temCirculoCapaOverride: temCirculoCapa,
@@ -3265,8 +3295,8 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
   const estiloCapa = estiloMandalaParaCapa(blocoCapa);
   const coresCapaParaMandala = resolverCoresCapaRelatorio(blocoCapa);
   const corCabecalhoCapa = coresCapaParaMandala.corCabecalho;
-  const temaCeuAtivo = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
   const estiloDaCapa = estiloCapaDoModelo(blocoCapa); // 'paleta' | 'ceu' | 'papiro' — vale em qualquer tema
+  const corpoPapiro = estiloPdfDoModelo(blocoCapa) === 'papiro'; // PDF com papiro: mandalas do corpo em tinta
   const precisaCapaSeparada = (capaFonte === 'mandala_natal' || capaFonte === 'mandala_fortuna');
   // O "círculo atrás da mandala" (medalhão) é desenhado DENTRO do SVG,
   // no mesmo centro matemático (cx/cy) que a roda inteira já usa (ver
@@ -3277,11 +3307,17 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
 
   /* Roda da capa nos estilos Céu e Papiro: o desenho é o do Tema Céu mesmo que o software esteja em Claro/Escuro —
      liga o Tema Céu só durante este desenho e devolve como estava. */
-  const comTemaCeu = async (fn) => {
+  const comTema = async (tema, fn) => {
     const antes = window.temaMandala;
-    window.temaMandala = 'ceu';
+    window.temaMandala = tema;
     try { return await fn(); } finally { window.temaMandala = antes; }
   };
+  const comTemaCeu = (fn) => comTema('ceu', fn);
+  const semTemaCeu = (fn) => comTema(antesDoTema === 'ceu' ? 'claro' : antesDoTema, fn); // PDF branco: a roda não pode sair no Céu mesmo com o software no Tema Céu
+  const antesDoTema = window.temaMandala;
+  const rodaDoCorpo = () => corpoPapiro
+    ? comTemaCeu(() => new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, true, false, true)))
+    : semTemaCeu(() => new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, false, false, false)));
   /* Devolve a imagem da roda da capa (e, no estilo Céu, guarda o céu de fundo em relatorioCeuFundoCapa[chave]). */
   const rodaDaCapa = async (chave) => {
     if (estiloDaCapa === 'ceu') {
@@ -3292,17 +3328,17 @@ async function renderizarMandalasDoPreset(blocos, capaFonte) {
     if (estiloDaCapa === 'papiro') {
       return comTemaCeu(() => new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, true, false, true))); // roda de tinta sobre o papiro
     }
-    return new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa));
+    return semTemaCeu(() => new Promise(resolve => renderMandala(null, resolve, estiloCapa, true, corCabecalhoCapa, corCirculoCapa)));
   };
 
   if (precisaNatal) {
     selectedHouse1Lot = 'ASC';
-    png1 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo, false, temaCeuAtivo)); // Céu: roda de tinta sobre o papiro (o céu fica só na capa)
+    png1 = await rodaDoCorpo(); // PDF com papiro: roda de tinta sobre o papiro (o céu fica só na capa)
     if (precisaCapaSeparada && capaFonte === 'mandala_natal') png1Capa = await rodaDaCapa('mandala_natal');
   }
   if (precisaFortuna) {
     selectedHouse1Lot = 'fortune';
-    png2 = await new Promise(resolve => renderMandala(null, resolve, 'claro', false, null, null, temaCeuAtivo, false, temaCeuAtivo));
+    png2 = await rodaDoCorpo();
     if (precisaCapaSeparada && capaFonte === 'mandala_fortuna') png2Capa = await rodaDaCapa('mandala_fortuna');
   }
   selectedHouse1Lot = lotSalvo; // não redesenha agora — só quando o usuário voltar pra mandala
@@ -3326,12 +3362,10 @@ function voltarConfigRelatorio() {
   iniciarModuloRelatorio();
 }
 
-/* TEMA "CÉU + PAPIRO" do relatório: vale quando o Tema Céu da Mandala
-   está ativo (window.temaMandala, que já vem do Supabase). Devolve a
-   classe que vai no .rel-viewer — o CSS correspondente (ver
-   ".rel-tema-papiro" em injetarEstilosRelatorio) é SÓ pintura. */
-function classeTemaPapiroRelatorio() {
-  return (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? ' rel-tema-papiro' : '';
+/* PDF "COM PAPIRO" do relatório: escolha do modelo (Estilo do PDF), independente do tema do software. Devolve a classe que
+   vai no .rel-viewer — o CSS correspondente (ver ".rel-tema-papiro" em injetarEstilosRelatorio) é SÓ pintura. */
+function classeTemaPapiroRelatorio(blocos) {
+  return estiloPdfDoModelo((blocos || []).find(b => b.type === 'capa')) === 'papiro' ? ' rel-tema-papiro' : '';
 }
 
 /* Monta o conteúdo de dentro de ".rel-viewer" (capa + índice + páginas +
@@ -3469,7 +3503,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
     </div>
     <div id="relToolbarEspacador" class="no-print"></div>
 
-    <div class="rel-viewer${classeTemaPapiroRelatorio()}">
+    <div class="rel-viewer${classeTemaPapiroRelatorio(preset.blocos)}">
       ${conteudoHtml}
     </div>
   `;
