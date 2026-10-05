@@ -37,3 +37,19 @@
     --verde: #5FA073;
     --fundo-creme: #1C1917;           /* painel por baixo no modo escuro */
 }
+
+/* MANDALA NO CÉU — as cores que o desenho do céu já usa hoje nos ícones e na mandala, mantidas EXATAMENTE como estão.
+   O céu é o céu: estas cores valem nos três modos (não têm versão adaptada). A cor de cada ponto muda entre a "noite"
+   e o "dia" conforme a altura do Sol naquele lugar (mistura das duas, ver misturarHexCeu em mandala.js). */
+:root {
+    --ceu-linha-noite: #E6EEFF;       /* tracejados e linhas da roda, de noite / abaixo do horizonte */
+    --ceu-icone-noite: #DBE6FF;       /* ícones calculados (lotes, ângulos, nodos, sizígia) e números das casas, de noite */
+    --ceu-tinta-dia: #1D3A66;         /* os mesmos, de dia, acima do horizonte sobre o céu claro */
+    --ceu-glifo-dia: #0B0B10;         /* glifo dos planetas (pontos de luz), de dia */
+    --ceu-glifo-noite: #FFFFFF;       /* glifo dos planetas, de noite */
+    --ceu-luz-fria: #EAF0FF;          /* brilho dos planetas (azulado) */
+    --ceu-luz-quente: #FFC896;        /* brilho do Sol e dos planetas quentes */
+}
+
+/* REGRA: no céu, os SIGNOS e os ÍCONES DOS TERMOS usam as cores do papiro e do modo claro (não as do céu):
+   signos pelas cores dos elementos (laranja, marrom, cinza, azul egípcio claro) e ícones dos termos em ocre. */

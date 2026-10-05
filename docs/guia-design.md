@@ -37,6 +37,8 @@ Só existem **dois azuis**, os dois azuis egípcios. Nenhum outro azul entra no 
 
 **Mancha de combustão do Sol (decidido):** de 0 a 8 graus é o ocre (no escuro, o dourado de antes); de 8 a 15 graus é o laranja do fogo (o laranja de cada modo, o mesmo dos signos de fogo). No papiro é mais opaca; no claro e no escuro mantém o degradê de antes.
 
+**Mandala no céu (decidido):** as cores que o céu já usa hoje nos ícones e na mandala ficam EXATAMENTE como estão e entram na lista (temas.css, seção "Mandala no céu"). Só os signos (cores dos elementos) e os ícones dos termos (ocre) usam as mesmas cores do papiro e do modo claro.
+
 **Regra do padrão (decidida):** cada cor tem um nome e um valor por modo. Onde o software usar "o laranja", usa o laranja daquele modo, sempre o mesmo valor, em qualquer tela. Ninguém decide cor por tela.
 
 **Regra das cores (decidida):** o papiro e o modo claro usam **as mesmas cores**. O modo escuro usa a **mesma cor adaptada**, um pouco mais clara para aparecer no fundo escuro. As cores de época não saem de nenhum tema padrão (claro e escuro).

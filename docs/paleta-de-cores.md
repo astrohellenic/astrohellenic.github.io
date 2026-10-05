@@ -17,3 +17,17 @@ Os códigos estão sem o símbolo na frente (6 caracteres).
 | Fundo creme / fundo escuro | FFFDF5 | 1C1917 |
 
 A água usa o azul egípcio claro. Os elementos: fogo = laranja, terra = marrom, ar = cinza, água = azul egípcio claro.
+
+## Mandala no céu (cores mantidas como estão hoje, iguais nos três modos)
+
+| Uso | Código |
+|---|---|
+| Linhas e tracejados da roda, de noite | E6EEFF |
+| Ícones calculados e números das casas, de noite | DBE6FF |
+| Os mesmos, de dia (sobre o céu claro) | 1D3A66 |
+| Glifo dos planetas, de dia | 0B0B10 |
+| Glifo dos planetas, de noite | FFFFFF |
+| Brilho frio dos planetas | EAF0FF |
+| Brilho quente (Sol) | FFC896 |
+
+No céu, os signos usam as cores dos elementos e os ícones dos termos usam o ocre, iguais ao papiro e ao modo claro.
