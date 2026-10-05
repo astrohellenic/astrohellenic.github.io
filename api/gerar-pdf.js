@@ -113,6 +113,53 @@ const AJUSTAR_EXCESSO_DAS_FOLHAS = function() {
   return ajustes;
 };
 
+/* Lê o corpo da requisição em qualquer um dos três formatos:
+   - JSON { html, nome }            (fetch — o jeito de antes);
+   - formulário multipart/form-data (o navegador navega a ABA NOVA direto pra cá: a resposta traz o nome do arquivo no cabeçalho
+     Content-Disposition, que é o que o "Salvar como" do Safari/iPad usa — com o endereço temporário (blob:) o arquivo saía como "Unknown");
+   - formulário urlencoded.
+   Devolve { html, nome, formulario } (formulario = veio de navegação, então os erros voltam como página de texto, não JSON). */
+async function lerCorpo(req) {
+  const tipo = String(req.headers['content-type'] || '');
+  if (/multipart\/form-data/i.test(tipo)) {
+    let buf = req.body;
+    if (!Buffer.isBuffer(buf)) {
+      // o corpo não foi lido antes: lê o fluxo inteiro
+      buf = await new Promise((ok, falha) => { const partes = []; req.on('data', c => partes.push(c)); req.on('end', () => ok(Buffer.concat(partes))); req.on('error', falha); });
+    }
+    const m = tipo.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+    const campos = {};
+    if (m) {
+      const sep = Buffer.from('--' + (m[1] || m[2]));
+      let pos = buf.indexOf(sep);
+      while (pos !== -1) {
+        const ini = pos + sep.length;
+        const prox = buf.indexOf(sep, ini);
+        if (prox === -1) break;
+        let parte = buf.slice(ini, prox);
+        // tira o CRLF depois do separador e o CRLF antes do próximo
+        if (parte.slice(0, 2).toString() === '\r\n') parte = parte.slice(2);
+        if (parte.slice(-2).toString() === '\r\n') parte = parte.slice(0, -2);
+        const corte = parte.indexOf('\r\n\r\n');
+        if (corte !== -1) {
+          const cab = parte.slice(0, corte).toString('utf8');
+          const nome = (cab.match(/name="([^"]+)"/i) || [])[1];
+          if (nome) campos[nome] = parte.slice(corte + 4).toString('utf8');
+        }
+        pos = prox;
+      }
+    }
+    return { html: campos.html, nome: campos.nome, formulario: true };
+  }
+  const corpo = req.body || {};
+  const formulario = /x-www-form-urlencoded/i.test(tipo);
+  return { html: corpo.html, nome: corpo.nome, formulario };
+}
+
+function nomeSeguro(nome) {
+  return String(nome || '').replace(/[\\/:*?"<>|\r\n]/g, '-').trim().slice(0, 150);
+}
+
 module.exports = async function handler(req, res) {
   aplicarCors(req, res);
 
@@ -126,13 +173,21 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const html = req.body && req.body.html;
+  let corpoLido;
+  try { corpoLido = await lerCorpo(req); } catch (e) { corpoLido = { html: null, nome: null, formulario: false }; }
+  const { html, formulario } = corpoLido;
+  const nomeArquivo = nomeSeguro(corpoLido.nome);
+  // erro: na aba nova (formulário) aparece como texto simples; no fetch continua JSON
+  const erro = (codigo, mensagem) => {
+    if (formulario) { res.status(codigo).setHeader('Content-Type', 'text/plain; charset=utf-8'); res.send(mensagem); }
+    else res.status(codigo).json({ erro: mensagem });
+  };
   if (!html || typeof html !== 'string') {
-    res.status(400).json({ erro: 'Faltou o HTML do relatório no corpo da requisição.' });
+    erro(400, 'Faltou o HTML do relatório no corpo da requisição.');
     return;
   }
   if (html.length > TAMANHO_MAXIMO_HTML) {
-    res.status(413).json({ erro: 'HTML do relatório maior do que o esperado.' });
+    erro(413, 'HTML do relatório maior do que o esperado.');
     return;
   }
 
@@ -263,6 +318,11 @@ module.exports = async function handler(req, res) {
     navegador = null;
 
     res.setHeader('Content-Type', 'application/pdf');
+    // nome do arquivo: é o que o "Salvar como"/baixar usa (ASCII pro navegador antigo + UTF-8 completo pro resto)
+    if (nomeArquivo) {
+      const ascii = nomeArquivo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '');
+      res.setHeader('Content-Disposition', `inline; filename="${ascii}.pdf"; filename*=UTF-8''${encodeURIComponent(nomeArquivo)}.pdf`);
+    }
     // Quantas páginas o PDF realmente tem (conta os objetos /Type /Page) x quantas folhas o relatório tem.
     res.setHeader('Access-Control-Expose-Headers', 'X-PDF-Ajustes, X-PDF-Diag');
     res.setHeader('X-PDF-Ajustes', encodeURIComponent(JSON.stringify(ajustes)).slice(0, 1500));
@@ -271,6 +331,6 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     console.error('Erro ao gerar PDF do relatório:', err);
     if (navegador) { try { await navegador.close(); } catch (_) {} }
-    res.status(500).json({ erro: 'Não foi possível gerar o PDF no servidor.' });
+    erro(500, 'Não foi possível gerar o PDF no servidor.');
   }
 };

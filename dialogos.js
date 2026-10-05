@@ -117,15 +117,37 @@ window.normalizarHoraNascimento = function (txt) {
 window.astroAbaPdf = {
   abrir: function () {
     var aba = null;
-    try { aba = window.open('', '_blank'); } catch (e) { aba = null; }
+    var nome = 'astroPdf' + Date.now();
+    try { aba = window.open('', nome); } catch (e) { aba = null; }
     if (aba) {
       try {
-        aba.document.title = 'Gerando PDF…';
-        aba.document.body.style.cssText = 'margin:0;font-family:sans-serif;color:#103b70;background:#fffdf5;display:flex;align-items:center;justify-content:center;height:100vh;';
-        aba.document.body.textContent = 'Gerando o PDF…';
+        aba.name = nome;
+        aba.document.open();
+        aba.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gerando PDF…</title>' +
+          '<style>html,body{margin:0;height:100%}body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#fffdf5;color:#1034A6;font-family:Georgia,serif}' +
+          '.gira{width:46px;height:46px;border:4px solid #1F5FA3;border-top-color:transparent;border-radius:50%;animation:g 0.9s linear infinite}' +
+          '@keyframes g{to{transform:rotate(360deg)}}p{margin:0;font-size:15px;letter-spacing:.08em}small{color:#A03E25;font-size:12px}</style></head>' +
+          '<body><div class="gira"></div><p>Gerando o PDF…</p><small>pode levar alguns segundos</small></body></html>');
+        aba.document.close();
       } catch (e) { /* aba sem acesso: segue mesmo assim */ }
     }
     return aba;
+  },
+  /* Manda o HTML pro servidor por um FORMULÁRIO que navega a própria aba nova. Assim a resposta do servidor (PDF com o nome do arquivo no cabeçalho
+     Content-Disposition) é aberta direto, com o nome certo no "Salvar como" — o endereço temporário (blob:) do jeito antigo saía como "Unknown".
+     Enquanto o servidor trabalha, a aba continua mostrando o indicador girando. Devolve false se a aba não está disponível (aí o chamador usa o jeito antigo). */
+  enviar: function (aba, url, html, nome) {
+    if (!aba || aba.closed) return false;
+    try {
+      var form = document.createElement('form');
+      form.method = 'POST'; form.action = url; form.target = aba.name; form.enctype = 'multipart/form-data'; form.style.display = 'none';
+      var campo = function (n, v) { var t = document.createElement('textarea'); t.name = n; t.value = v; form.appendChild(t); };
+      campo('html', html); campo('nome', nome || '');
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function () { form.remove(); }, 2000);
+      return true;
+    } catch (e) { return false; }
   },
   mostrar: function (aba, blob, nome) {
     var url = URL.createObjectURL(blob);

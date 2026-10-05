@@ -369,6 +369,7 @@ async function baixarEntradasPDF(papiro) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
 <style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(cores)}</style></head><body>${html}</body></html>`;
     const url = (typeof RELATORIO_PDF_API_URL !== 'undefined') ? RELATORIO_PDF_API_URL : 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
+    if (window.astroAbaPdf && abaPdf && window.astroAbaPdf.enviar(abaPdf, url, doc, finNomeArquivoRelatorio('pdf').replace(/\.pdf$/, ''))) return; // aba nova: o servidor devolve o PDF já com o nome do arquivo
     let resposta;
     try {
       resposta = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ html: doc }) });

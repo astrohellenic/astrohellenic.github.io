@@ -3663,6 +3663,13 @@ async function baixarRelatorioPDF() {
     const tamanhoMB = (corpo.length / 1024 / 1024).toFixed(2);
     console.log('[PDF] Tamanho do corpo enviado:', tamanhoMB, 'MB');
 
+    /* ABA NOVA: o formulário navega a aba direto pro servidor e o PDF chega com o NOME do arquivo (código - cliente - modelo) no cabeçalho —
+       é o que o "Salvar como" do iPad usa. O indicador girando fica na aba enquanto o servidor trabalha. (Sem diagnóstico de folhas
+       ajustadas, que só dava pra ler pelo fetch.) Se a aba foi bloqueada, cai no jeito de antes (fetch + baixar o arquivo). */
+    if (window.astroAbaPdf && abaPdf && window.astroAbaPdf.enviar(abaPdf, RELATORIO_PDF_API_URL, JSON.parse(corpo).html, nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {}).replace(/\.pdf$/, ''))) {
+      return;
+    }
+
     let resposta;
     try {
       resposta = await fetch(RELATORIO_PDF_API_URL, {
