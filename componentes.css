@@ -544,3 +544,5 @@
 .janela-corpo > div { min-width: 0; }
 .janela .re-ajuda { margin: 0 0 4px; }
 .janela .titulo-secao { margin: 0 0 4px; }
+/* botão de texto em foco (ex.: o OK das caixas de aviso, que já abre focado): sem o quadrado do navegador — o botão já tem as linhas, não precisa de moldura de foco */
+.botao-texto:focus, .btn-submit:focus, .btn-primary:focus, .btn-secondary:focus { outline: none; }

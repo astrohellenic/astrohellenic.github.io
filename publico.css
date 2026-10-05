@@ -88,3 +88,4 @@ body.tema-ceu {
 body.tema-ceu .form-powered-by { color: #9fb0d8; opacity: 1; }
 body.tema-ceu .modal-overlay { background: rgba(7, 13, 37, 0.7); }
 body.tema-ceu .city-results { background: var(--papiro-fundo-simples); }
+.btn-submit:focus, .btn-primary:focus, .btn-secondary:focus { outline: none; }
