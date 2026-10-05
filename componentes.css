@@ -356,3 +356,29 @@
 /* HORAS: a coluna do regente alinha pelo ÍCONE (um embaixo do outro, na mesma vertical); o nome vem depois do ícone */
 .tabela-epoca .horas-regente { text-align: left; padding-left: 28px; }
 .tabela-epoca td.horas-regente .com-nome { display: flex; justify-content: flex-start; }
+
+/* AGENDA (agendamento.js): só forma; cores das variáveis do tema */
+.ag-nota { font-size: 12px; text-align: center; margin: 0 0 4px; opacity: .85; }
+.ag-colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 24px 0; }
+.ag-bloco { min-width: 0; padding: 0 24px; }
+.ag-bloco + .ag-bloco { border-left: var(--divisa-espessura) double var(--azul-egipcio-claro); }
+.ag-bloco:first-child { padding-left: 0; }
+.ag-bloco:last-child { padding-right: 0; }
+@media (max-width: 760px) {
+    .ag-bloco { padding: 0; }
+    .ag-bloco + .ag-bloco { border-left: 0; border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); padding-top: 18px; }
+}
+.ag-rotulo { display: block; margin: 12px 0 2px; color: var(--preto-tinta); }
+#agenda-container select, #agenda-container input {
+    box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; display: block; padding: 6px 0; font-family: inherit; font-size: 13px; outline: none;
+    color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0;
+}
+#agenda-container input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 36px; }
+#agenda-container select:focus, #agenda-container input:focus { border-bottom-color: var(--terracota); }
+.ag-acoes { margin-top: 18px; }
+.ag-aviso { font-size: 11.5px; line-height: 1.4; padding: 8px 0; margin-bottom: 4px; border-top: var(--contorno-fino) solid var(--ocre); border-bottom: var(--contorno-fino) solid var(--ocre); }
+.ag-aviso a { color: var(--terracota); font-weight: 700; }
+.ag-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.ag-item-corpo { min-width: 0; }
+.ag-item-nome { font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-item-det { font-size: 11px; margin-top: 2px; opacity: .8; }

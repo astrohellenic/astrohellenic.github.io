@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261009f">
     <link rel="stylesheet" href="temas.css?v=20261009c">
-    <link rel="stylesheet" href="componentes.css?v=20261009v">
+    <link rel="stylesheet" href="componentes.css?v=20261010a">
     <link rel="stylesheet" href="configuracoes.css?v=20261010b">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -606,32 +606,6 @@ body {
 
 
 
-
-        /* AGENDA, qualquer tema: os campos (principalmente o de data, que no Safari tem largura própria) não podem passar da caixa */
-        #agenda-container input, #agenda-container select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; display: block; }
-        #agenda-container input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 36px; }
-
-        /* TEMA CÉU — Agenda (agendamento.js): a tela é uma folha de papiro e tudo é só tinta: azul nas linhas e
-           caixas, terracota no título e no botão de agendar; preto no texto. Sem preenchimento, sem sombra e sem
-           faixa azul-marinho. As cores vêm de variáveis redefinidas só aqui dentro. SÓ PINTURA. */
-        body.tema-ceu #agenda-container {
-            --bg-main: transparent;
-            --bg-card: transparent;
-            --bg-hover: transparent;
-            --border-color: rgba(95, 65, 30, 0.45);
-            --primary-blue: #1d3a66;
-            --gold-primary: #1d3a66;
-            --text-dark: #1a1410; --text-muted: #1a1410; --text-muted-2: #1a1410;
-            --badge-bg: transparent; --badge-border: #a03e25; --badge-text: #a03e25;
-            --danger: #a03e25;
-            color: #1a1410;
-            background: var(--papiro-fundo) !important;
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
-        }
-        body.tema-ceu #agenda-container h2 { color: #a03e25 !important; }
-        body.tema-ceu #agenda-container [style*="box-shadow"] { box-shadow: none !important; }
-        body.tema-ceu #agenda-container .modal-select, body.tema-ceu #agenda-container .modal-input { background: transparent !important; color: #1a1410 !important; border: 1.5px solid #1d3a66 !important; border-radius: 6px !important; }
-        body.tema-ceu #agenda-container .agenda-btn-agendar { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; }
 
         /* TEMA CÉU — Financeiro (financeiro.js): a tela é uma folha de papiro e tudo é só tinta: azul nas linhas e
            caixas, terracota no título e no botão de agendar; preto no texto. Sem preenchimento, sem sombra e sem
@@ -1245,7 +1219,7 @@ body {
 <script src="horas.js?v=20261009c"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261007c"></script>
-<script src="agendamento.js?v=20261007a"></script>
+<script src="agendamento.js?v=20261010a"></script>
 <script src="configuracoes.js?v=20261010b"></script>
 <script src="financeiro.js?v=20261007n"></script>
 

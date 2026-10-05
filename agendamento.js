@@ -44,9 +44,7 @@ async function iniciarModuloAgenda() {
   if (!container) return;
 
   container.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;">
-      <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: var(--gold-primary);"></i>
-    </div>
+    <div class="menu-vazio" style="min-height: 200px;">Carregando...</div>
   `;
 
   try {
@@ -124,17 +122,16 @@ async function iniciarModuloAgenda() {
 /* MONTA A TELA INTEIRA (disponibilidade + novo agendamento + lista) */
 function renderAgendaSetup(container, ctx) {
   if (ctx.semSessao) {
-    container.innerHTML = `<div style="padding: 40px; text-align: center; font-size: 12px; color: var(--text-muted);">Sessão não identificada.</div>`;
+    container.innerHTML = `<div class="menu-vazio">Sessão não identificada.</div>`;
     return;
   }
 
   if (ctx.tabelasIndisponiveis) {
     container.innerHTML = `
-      <div style="max-width: 480px; margin: 40px auto; background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 24px; text-align: center;">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0 0 10px 0; text-transform: uppercase;">Agenda</h2>
-        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">
-          As tabelas de agenda ainda não existem no Supabase deste projeto. Rode o SQL de configuração (o astrólogo já recebeu esse script) e recarregue a página.
-        </p>
+      <div id="agenda-container" class="painel">
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Agenda</h3></div>
+        <hr class="divisa">
+        <p class="ag-nota">As tabelas de agenda ainda não existem no Supabase deste projeto. Rode o SQL de configuração (o astrólogo já recebeu esse script) e recarregue a página.</p>
       </div>
     `;
     return;
@@ -151,8 +148,8 @@ function renderAgendaSetup(container, ctx) {
     : '<option value="">Nenhum cliente nas pastas visíveis</option>';
 
   const avisoSemDisponibilidade = disponibilidade.length === 0
-    ? `<div style="font-size: 11px; color: var(--badge-text); background: var(--badge-bg); border: 1px solid var(--badge-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.4;">
-        Você ainda não configurou sua disponibilidade — vá em <a href="#" onclick="abrirConfiguracoes('agenda'); return false;" style="color: inherit; font-weight: 700;">Configurações → Agenda</a> (engrenagem na barra superior) pra escolher os dias/horários que atende antes de marcar um agendamento.
+    ? `<div class="ag-aviso">
+        Você ainda não configurou sua disponibilidade — vá em <a href="#" onclick="abrirConfiguracoes('agenda'); return false;">Configurações → Agenda</a> (engrenagem na barra superior) pra escolher os dias/horários que atende antes de marcar um agendamento.
       </div>`
     : '';
 
@@ -165,54 +162,57 @@ function renderAgendaSetup(container, ctx) {
         const servicoDataHora = `${escapeHtml(a.servico_nome || 'Serviço')} — ${agendaFormatarDataBR(a.data)} às ${a.hora_inicio.slice(0, 5)}`;
         const rotuloCancelar = escapeHtml((a.cliente_nome || 'Cliente') + ' — ' + (a.servico_nome || 'Serviço') + ' — ' + agendaFormatarDataBR(a.data) + ' ' + a.hora_inicio.slice(0, 5)).replace(/'/g, "\\'");
         return `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
-        <div style="min-width: 0;">
-          <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(a.cliente_nome || 'Cliente')}</div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${servicoDataHora}</div>
+      <div class="ag-item">
+        <div class="ag-item-corpo">
+          <div class="ag-item-nome">${escapeHtml(a.cliente_nome || 'Cliente')}</div>
+          <div class="ag-item-det">${servicoDataHora}</div>
         </div>
-        <i class="fa-solid fa-trash" onclick="apagarAgendamento('${a.id}', '${rotuloCancelar}')" title="Cancelar agendamento" style="color: var(--danger); cursor: pointer; margin-left: 8px; flex-shrink: 0;"></i>
+        <button type="button" class="botao-icone botao-apagar" onclick="apagarAgendamento('${a.id}', '${rotuloCancelar}')" title="Cancelar agendamento">${menuIcone('lixeira', 18)}</button>
       </div>
     `;
       }).join('')
-    : `<div style="font-size: 11px; color: var(--text-muted); padding: 8px 0;">Nenhum agendamento futuro ainda.</div>`;
+    : `<div class="menu-vazio">Nenhum agendamento futuro ainda.</div>`;
 
   container.innerHTML = `
-    <div id="agenda-container" style="width: 100%; height: 100%; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div id="agenda-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
-      <div style="background: var(--bg-main); padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--gold-primary); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Agenda</h2>
-        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
-          Ainda sem sincronizar com a Google Agenda — por enquanto, tudo fica só aqui dentro.
+      <div class="cabeca-ferramenta">
+        <h3 class="titulo-ferramenta">Agenda</h3>
+      </div>
+      <p class="ag-nota">Ainda sem sincronizar com a Google Agenda — por enquanto, tudo fica só aqui dentro.</p>
+
+      <hr class="divisa">
+
+      <div class="ag-colunas">
+        <div class="ag-bloco">
+          <div class="titulo-secao">Novo Agendamento</div>
+
+          ${avisoSemDisponibilidade}
+
+          <label class="rotulo ag-rotulo">Cliente</label>
+          <select id="agNovoCliente" class="modal-select">${opcoesClientes}</select>
+
+          <label class="rotulo ag-rotulo">Serviço</label>
+          <select id="agNovoServico" class="modal-select" onchange="atualizarHorariosDisponiveisAgenda()">${opcoesServicos}</select>
+
+          <label class="rotulo ag-rotulo">Data</label>
+          <input type="date" id="agNovaData" class="modal-input" min="${hojeISO}" onchange="atualizarHorariosDisponiveisAgenda()">
+
+          <label class="rotulo ag-rotulo">Horário</label>
+          <select id="agNovoHorario" class="modal-select"><option value="">Escolha uma data</option></select>
+
+          <div class="ag-acoes">
+            <button type="button" class="botao-texto" onclick="confirmarNovoAgendamento()">Agendar</button>
+          </div>
+        </div>
+
+        <div class="ag-bloco">
+          <div class="titulo-secao">Próximos Agendamentos</div>
+          ${listaAgendamentosHTML}
         </div>
       </div>
 
-      <div style="max-width: 480px; margin: 0 auto 20px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Novo Agendamento</div>
-
-        ${avisoSemDisponibilidade}
-
-        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Cliente</label>
-        <select id="agNovoCliente" class="modal-select" style="margin-bottom: 10px;">${opcoesClientes}</select>
-
-        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Serviço</label>
-        <select id="agNovoServico" class="modal-select" style="margin-bottom: 10px;" onchange="atualizarHorariosDisponiveisAgenda()">${opcoesServicos}</select>
-
-        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Data</label>
-        <input type="date" id="agNovaData" class="modal-input" min="${hojeISO}" style="margin-bottom: 10px;" onchange="atualizarHorariosDisponiveisAgenda()">
-
-        <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Horário</label>
-        <select id="agNovoHorario" class="modal-select" style="margin-bottom: 14px;"><option value="">Escolha uma data</option></select>
-
-        <button class="agenda-btn-agendar" onclick="confirmarNovoAgendamento()" style="width: 100%; background: #103b70; color: #fffdf5; border: 1px solid #c59b27; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
-          Agendar
-        </button>
-      </div>
-
-      <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px;">Próximos Agendamentos</div>
-        ${listaAgendamentosHTML}
-      </div>
-
+      <hr class="divisa">
     </div>
   `;
 }
