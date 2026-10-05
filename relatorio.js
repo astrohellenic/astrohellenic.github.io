@@ -3950,7 +3950,20 @@ function dividirPaginasLongasEmFolhas(container) {
     // Tabela extra (Sete Lotes/Dodecatemorias) é sempre o fecho do
     // bloco — se o texto acabou empurrando ela pra outra folha, segue
     // pra a folha onde o conteúdo realmente terminou.
-    if (tabelaExtra && paginaAtual !== pagina) paginaAtual.appendChild(tabelaExtra);
+    // Mas a tabela também ocupa altura: se ela não cabe no que sobrou da
+    // folha onde o texto terminou, vai sozinha pra uma folha nova (antes
+    // só era movida, sem medir, e saía cortada no PDF).
+    if (tabelaExtra) {
+      const alturaTabela = tabelaExtra.getBoundingClientRect().height + parseFloat(getComputedStyle(tabelaExtra).marginTop || 0);
+      if (alturaUsada + alturaTabela > orcamentoConteudoPx && alturaUsada > 0) {
+        const novaPagina = document.createElement('section');
+        novaPagina.className = pagina.className;
+        paginaAtual.after(novaPagina);
+        paginaAtual = novaPagina;
+        tabelaExtra.style.marginTop = '0';
+      }
+      if (paginaAtual !== pagina) paginaAtual.appendChild(tabelaExtra);
+    }
   });
 }
 
