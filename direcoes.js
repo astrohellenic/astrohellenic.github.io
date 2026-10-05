@@ -606,7 +606,6 @@ function renderCircumambulaçõesUI() {
 
     // Ícone Monoline do Signo
     rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
-    { const nomeSignoPauta = nomeSigno(passage.signIdx); if (nomeSignoPauta) rowHtml += `<text x="${18 + Math.round(34 * k) / 2}" y="${yOffset + Math.round(38 * k) + Math.round(34 * k) + 9}" font-size="8" font-weight="700" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle">${nomeSignoPauta}</text>`; }
 
     const x0 = 75;  // 0°
     const x1 = 880; // 30°

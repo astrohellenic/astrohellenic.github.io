@@ -125,4 +125,4 @@ Um tema novo só precisa preencher essa tabela.
 
 ## Rótulos dos glifos: onde NÃO valem
 
-Mandala (qualquer roda) e Matriz de Visibilidade — grades/rodas de ícones, sem rótulo. Nas demais ferramentas valem planetaComNome/signoComNome (planetIcons.js).
+Mandala (qualquer roda), Matriz de Visibilidade e Circumambulação pelos Termos — muito ícone junto, sem rótulo. Nas demais ferramentas valem planetaComNome/signoComNome (planetIcons.js).
