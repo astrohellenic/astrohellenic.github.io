@@ -96,7 +96,9 @@ function renderDeceniosUI(container) {
 
   container.innerHTML = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
+      <div id="decenios-container" class="painel" style="width: 100%; flex: 1; overflow-y: auto; font-family: 'Montserrat', sans-serif;">
+
+      <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Decênios Helenísticos</h3><div class="acoes-ferramenta">
         ${luzEmCasaNaoOperante ? `
           <div class="aviso-icone" title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) - considere selecionar outro planeta manualmente">
             <svg class="icone" viewBox="0 0 64 64" style="width: 22px; height: 22px;"><path d="M32 8 L58 54 H6 Z"/><line x1="32" y1="26" x2="32" y2="40"/><line x1="32" y1="47" x2="32" y2="47.5"/></svg>
@@ -122,10 +124,7 @@ function renderDeceniosUI(container) {
         <button type="button" onclick="capturarDeceniosParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
           <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
-      </div>
-    <div id="decenios-container" class="painel" style="width: 100%; flex: 1; overflow-y: auto; font-family: 'Montserrat', sans-serif;">
-
-      <h3 class="titulo-ferramenta">Decênios Helenísticos</h3>
+      </div></div>
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
       ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}

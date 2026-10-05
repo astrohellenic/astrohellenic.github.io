@@ -412,9 +412,8 @@ function renderPainelTecnico(data, containerId) {
 
     const html = `
       <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; padding: 0 20px;">${btnSalvar}${btnRelatorio}</div>
       <div id="painel-tecnico-container" class="painel painel-tecnico-folha" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
-        <h3 class="titulo-ferramenta">Painel Técnico de Natividades</h3>
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Painel Técnico de Natividades</h3><div class="acoes-ferramenta">${btnSalvar}${btnRelatorio}</div></div>
 
         ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader', { tintaSobreFolha: true })}
 

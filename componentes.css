@@ -270,3 +270,14 @@
 #mandala-controls-overlay .icone { fill: none; stroke: currentColor; }
 #mandala-actions-overlay .icon-btn svg, #mandala-controls-overlay .icon-btn svg { flex-shrink: 0; }
 .painel input[type="checkbox"] { accent-color: var(--terracota); }
+
+/* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
+   enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */
+.cabeca-ferramenta { position: relative; display: flex; align-items: center; justify-content: center; margin: 0 0 12px; }
+.cabeca-ferramenta .titulo-ferramenta { margin: 0; padding: 0 130px; }
+.acoes-ferramenta { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; }
+@media (max-width: 700px) {
+    .cabeca-ferramenta { flex-direction: column; }
+    .cabeca-ferramenta .titulo-ferramenta { padding: 0; }
+    .acoes-ferramenta { position: static; transform: none; margin-top: 8px; justify-content: center; }
+}

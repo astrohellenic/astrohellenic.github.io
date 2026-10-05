@@ -837,7 +837,11 @@ function renderCircumambulaçõesUI() {
 
   let html = `
     <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
+      <div class="dir-outer painel" id="circumambulacao-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
+
+        <div class="cabeca-ferramenta"><h3 class="dir-titulo titulo-ferramenta">
+          Circumambulação pelos Termos
+        </h3><div class="acoes-ferramenta">
         <div style="position: relative; flex-shrink: 0;">
           <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" class="botao-icone" title="Afeta Direcionado">
             ${iconAtualHTML}
@@ -852,12 +856,7 @@ function renderCircumambulaçõesUI() {
         <button type="button" id="circumambulacaoBtnRelatorio" onclick="capturarCircumambulacaoParaRelatorio()" title="${escapeHtml(dicaRelatorio)}" class="botao-icone">
           <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
-      </div>
-    <div class="dir-outer painel" id="circumambulacao-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
-
-        <h3 class="dir-titulo titulo-ferramenta">
-          Circumambulação pelos Termos
-        </h3>
+      </div></div>
 
         <!-- CABEÇALHO PADRÃO: o mesmo de todas as ferramentas (montarCabecalhoMandalaImagemHTML, mandala.js). O seletor de afeta fica na barra de botões acima, não aqui. -->
         <div class="dir-cabecalho">${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}</div>
