@@ -4029,7 +4029,7 @@ function injetarEstilosRelatorio() {
       .rel-h1 {
         font-family: 'Cinzel', serif; font-size: 19px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
-        border: 1.5px solid #c59b27; border-radius: 8px; padding: 14px; margin-bottom: 26px; background: #fffdf5;
+        border: 0; border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; border-radius: 0; padding: 11px 0; margin-bottom: 26px; background: transparent;
         break-inside: avoid; page-break-inside: avoid;
       }
 
@@ -4061,7 +4061,7 @@ function injetarEstilosRelatorio() {
       .rel-corpo h2 {
         font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.03em;
-        border: 1.5px solid #c59b27; border-radius: 8px; padding: 10px; margin: 22px 0 16px; background: #fffdf5;
+        border: 0; border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; border-radius: 0; padding: 7px 0; margin: 22px 0 16px; background: transparent;
         break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid;
       }
       .rel-corpo h3 { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: #9a6d18; margin: 18px 0 8px; break-after: avoid; page-break-after: avoid; }
@@ -4151,7 +4151,7 @@ function injetarEstilosRelatorio() {
       /* CAPA EM PAPIRO (Tema Céu + imagem capturada: Personalizada/Profecção/Sinastria/Liberação): mesma folha de
          papiro das outras páginas, título em terracota, resto em tinta. A imagem ocupa a largura da folha (em vez
          dos 78mm da capa de céu), com folga de altura de sobra pra título e rodapé. */
-      .rel-capa.rel-capa-papiro { background: ${papiroFolhaBg}; outline: 1.2mm double #1a1410; outline-offset: -5mm; }
+      .rel-capa.rel-capa-papiro { background: ${papiroFolhaBg}; }
       .rel-capa.rel-capa-papiro .rel-titulo-capa { color: #a03e25; }
       .rel-capa.rel-capa-papiro .rel-powered-by { color: #1a1410; }
       .rel-capa.rel-capa-papiro .rel-img-capa { max-width: 172mm; max-height: 150mm; }
@@ -4192,6 +4192,7 @@ function injetarEstilosRelatorio() {
       .rel-titulo-captura {
         font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
+        border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; padding: 8px 0;
         margin-bottom: 14px; flex-shrink: 0;
       }
       /* ATUALIZAÇÃO (29/09/2026): a versão anterior dava "max-height:100%"
@@ -4282,12 +4283,10 @@ function injetarEstilosRelatorio() {
          paginação. Cor, fundo e contorno (outline, que não ocupa espaço)
          são seguros: não mudam o tamanho de nada.
          Fundo de papiro em camadas (luz no canto, sombra no canto
-         oposto, fibras finas). Moldura dupla via outline com offset
-         negativo (desenha por dentro da folha, sem ocupar espaço). */
+         oposto, fibras finas). Sem moldura em volta da folha: a única
+         linha dupla é a de cima e a de baixo de cada título. */
       .rel-tema-papiro .rel-page:not(.rel-capa) {
         background: ${papiroFolhaBg};
-        outline: 1.2mm double #1a1410;
-        outline-offset: -5mm;
       }
       /* Paleta tirada de papiros reais (referências do astrólogo): tinta
          PRETA no texto, vermelho-tijolo só em filetes/molduras e detalhes
@@ -4298,9 +4297,9 @@ function injetarEstilosRelatorio() {
       .rel-tema-papiro .rel-corpo p, .rel-tema-papiro .rel-corpo ul, .rel-tema-papiro .rel-corpo ol { color: #1a1410; }
       /* Só os recursos de ESCRITA do papiro: tinta preta, terracota (rubrica) e azul-tinta, traços e filetes —
          nada de caixas/células com um tom de fundo próprio por cima do papel (por isso transparent). */
-      .rel-tema-papiro .rel-h1, .rel-tema-papiro .rel-corpo h2 { color: #1a1410; border-color: #a03e25; background: transparent; outline: 1px solid #1a1410; outline-offset: 2px; }
+      .rel-tema-papiro .rel-h1, .rel-tema-papiro .rel-corpo h2, .rel-tema-papiro .rel-titulo-captura { color: #a03e25; background: transparent; }
       .rel-tema-papiro .rel-corpo h3, .rel-tema-papiro .rel-num-pagina, .rel-tema-papiro .rel-num-pagina-canto { color: #a03e25; }
-      .rel-tema-papiro .rel-titulo-captura, .rel-tema-papiro .rel-rodape-nome { color: #1a1410; }
+      .rel-tema-papiro .rel-rodape-nome { color: #1a1410; }
       .rel-tema-papiro .rel-legenda-mandala { color: #2a2118; }
       .rel-tema-papiro .rel-indice li { color: #1a1410; border-bottom-color: rgba(26,20,16,0.4); }
       .rel-tema-papiro .rel-rodape-astrologo { border-top-color: #a03e25; color: #1a1410; }
