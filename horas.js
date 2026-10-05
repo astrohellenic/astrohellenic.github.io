@@ -204,7 +204,7 @@ function iniciarModuloHoras(containerIdAlvo) {
 
   if (horaAtual) {
     html += `
-      <div class="cartao horas-atual">
+      <div class="horas-atual">
         <div class="horas-atual-linha">
           <div style="text-align: center;">
             <div class="rotulo" style="color: var(--preto-tinta); margin-bottom: 6px;">Dia</div>
@@ -219,6 +219,7 @@ function iniciarModuloHoras(containerIdAlvo) {
           ${iconeSolLuaHoras(horaAtual.period, 14)} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
         </div>
       </div>
+      <hr class="divisa">
     `;
   }
 
