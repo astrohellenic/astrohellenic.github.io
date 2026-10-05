@@ -291,3 +291,7 @@
 .item-menu.cabeca-menu:hover { color: var(--preto-tinta); }
 /* linha "Ano Profectado" com as setas de trocar o ano */
 .linha-ano-profectado { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; font-size: 13px; color: var(--preto-tinta); }
+
+/* SALTO (Liberação): o mesmo selo, em terracota */
+.selo.salto { color: var(--terracota); border-top-color: var(--terracota); border-bottom-color: var(--terracota); }
+.tabela-epoca tr.aberta > td { font-weight: 700; }

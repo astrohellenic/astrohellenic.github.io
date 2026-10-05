@@ -48,12 +48,9 @@ function svgComoImagemZR(svgInterno, largura, altura, viewBox) {
    a cor certa (clara/escura) precisa vir já resolvida em hexadecimal. */
 function getSignSVGZR(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const cores = modoEscuro
-    ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
-    : SIGN_COLORS_ZR;
-  // Tema Céu (papiro): glifo de signo em azul-tinta, sem cor por elemento.
-  const corSigno = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? ['#a62b1f', '#6b4a2b', '#17707f', '#1f3a66'][signIndex % 4] : cores[signIndex];
+  // Cor do elemento do signo pela paleta de época (fogo laranja, terra marrom, ar cinza, água azul egípcio claro), versão do modo; resolvida em hex porque vira <img>.
+  const pal = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu');
+  const corSigno = [pal.laranja, pal.marrom, pal.cinza, pal.azulClaro][signIndex % 4];
   const interno = `<g style="color: ${corSigno};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
   return svgComoImagemZR(interno, size, size, '0 0 64 64');
 }
@@ -123,20 +120,13 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
      alternarRotacaoCasa1/selectedHouse1Lot em mandala.js, só que aqui não tem opção "ASC": a Liberação sempre gira em torno de um lote. */
   const loteCasa1 = (opcoes.loteCasa1 !== undefined) ? opcoes.loteCasa1 : null;
 
-  /* Cores PRÓPRIAS da Liberação (pico, salto, rótulo das coroas); as cores da roda em si vêm da roda central. O disco escuro usa
-     --bg-card (#262220), não --bg-main: ele fica dentro de um cartão próprio (#liberacaoMandalaCapture). */
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  /* Cores PRÓPRIAS da Liberação (pico, salto, rótulo das coroas), todas da paleta de época: sem preenchimento, só contorno e letra.
+     PICO em azul egípcio escuro, SALTO em terracota; o rótulo das coroas em azul egípcio escuro. */
   const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
-  const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
-  const cores = papiro ? {
-    picoBg: 'none', picoBorder: AZ_TINTA, picoText: AZ_TINTA,
-    saltoBg: 'none', saltoBorder: TERRACOTA, saltoText: TERRACOTA, saltoLabel: TERRACOTA, navio: TERRACOTA,
-  } : modoEscuro ? {
-    picoBg: '#4a3a12', picoBorder: '#d99a2b', picoText: '#f0b35c',
-    saltoBg: '#3a1f1f', saltoBorder: '#6b3232', saltoText: '#f4a8a8', saltoLabel: '#f4a8a8', navio: '#8ab4e8',
-  } : {
-    picoBg: '#fef3c7', picoBorder: '#f59e0b', picoText: '#b45309',
-    saltoBg: '#fee2e2', saltoBorder: '#f87171', saltoText: '#991b1b', saltoLabel: '#7f1d1d', navio: '#103b70',
+  const palZ = paletaEpoca(!papiro && document.documentElement.classList.contains('tema-escuro'));
+  const cores = {
+    picoBg: 'none', picoBorder: palZ.azulEscuro, picoText: palZ.azulEscuro,
+    saltoBg: 'none', saltoBorder: palZ.terracota, saltoText: palZ.terracota, saltoLabel: palZ.terracota, navio: palZ.azulEscuro,
   };
 
   const sufixo = `zr${wheelInstanceCounterZR++}`;
@@ -176,7 +166,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       const aScreenPico = eclToScreenAngle((signIdx * 30) + 15, house1RefAbs);
       const pPico = polarToCart(cx, cy, rPico, aScreenPico);
       out += `<g transform="translate(${pPico.x + desloc.x}, ${pPico.y + desloc.y})">
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${cores.picoBg}" stroke="${cores.picoBorder}" stroke-width="1"/>
+        <rect x="-17" y="-7" width="34" height="14" fill="${cores.picoBg}" stroke="${cores.picoBorder}" stroke-width="1"/>
         <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.picoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
     </g>`;
     });
@@ -189,7 +179,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       const rotuloNiveisSalto = niveisSaltoPorSigno[signIdxKey].join('-');
       out += `<g transform="translate(${pSalto.x + desloc.x}, ${pSalto.y + desloc.y})">
         <text x="0" y="-11" font-size="8" font-weight="900" fill="${cores.saltoLabel}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
-        <rect x="-17" y="-7" width="34" height="14" rx="3" fill="${cores.saltoBg}" stroke="${cores.saltoBorder}" stroke-width="1"/>
+        <rect x="-17" y="-7" width="34" height="14" fill="${cores.saltoBg}" stroke="${cores.saltoBorder}" stroke-width="1"/>
         <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.saltoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
     </g>`;
     });
@@ -208,8 +198,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   const coroas = Object.keys(niveisPorRegente).map(rulerId => ({
     rulerId,
     rotulo: { texto: niveisPorRegente[rulerId].join('-'), cor: cores.navio },
-    preenchimento: papiro ? 'none' : '#f5c518', contorno: papiro ? TERRACOTA : '#a8790a',
-    espessura: papiro ? 1.4 : 0.9, ponto: papiro ? TERRACOTA : '#dc2626'
+    preenchimento: 'none', contorno: palZ.terracota, espessura: 1.4, ponto: palZ.terracota
   }));
 
   return desenharRodaSVG({
@@ -217,7 +206,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
     ferramenta: {
       dados, loteCasa1,
       folgaCanvas: 55, // quatro níveis de etiqueta por fora (até raioDestaque + 42) pedem mais folga que a Profecção (três)
-      fundoEscuro: '#262220',
+      fundoDisco: papiro ? 'none' : palZ.fundoCreme, // o disco tem a cor do painel por baixo
       abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
       <defs>${construirDefsPlanetasZR(sufixo)}</defs>
       <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
@@ -225,18 +214,18 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       glowSol: (pos, raio, tinta) => `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="${tinta.fundoDisco}"/>` +
         `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="url(#combustionGlow_${sufixo})"/>`,
       destaques: {
-        // fatias por baixo de tudo, do nível mais fundo (L4) pro mais alto (L1)
+        // fatias por baixo de tudo, do nível mais fundo (4) pro mais alto (1): as cores dos níveis são as mesmas em toda mandala (corNivelMandala)
         fatias: [
-          { signIdx: l4SignIdx, cor: papiro ? "rgba(23, 112, 127, 0.16)" : "rgba(148, 163, 184, 0.45)" },
-          { signIdx: l3SignIdx, cor: papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)" },
-          { signIdx: l2SignIdx, cor: papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)" },
-          { signIdx: l1SignIdx, cor: papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)" }
+          { signIdx: l4SignIdx, cor: corNivelMandala(4, 0.40) },
+          { signIdx: l3SignIdx, cor: corNivelMandala(3, 0.40) },
+          { signIdx: l2SignIdx, cor: corNivelMandala(2, 0.40) },
+          { signIdx: l1SignIdx, cor: corNivelMandala(1, 0.40) }
         ],
         faixas: [
-          { signIdx: l4SignIdx, cor: papiro ? "#17707f" : "#475569", de: 4, ate: 12 },
-          { signIdx: l3SignIdx, cor: papiro ? AZ_TINTA : "#6366f1", de: 14, ate: 22 },
-          { signIdx: l2SignIdx, cor: papiro ? "#6b4a2b" : "#eab308", de: 24, ate: 32 },
-          { signIdx: l1SignIdx, cor: papiro ? TERRACOTA : "#65a30d", de: 34, ate: 42 }
+          { signIdx: l4SignIdx, cor: corNivelMandala(4), de: 4, ate: 12 },
+          { signIdx: l3SignIdx, cor: corNivelMandala(3), de: 14, ate: 22 },
+          { signIdx: l2SignIdx, cor: corNivelMandala(2), de: 24, ate: 32 },
+          { signIdx: l1SignIdx, cor: corNivelMandala(1), de: 34, ate: 42 }
         ],
         depoisDasFaixas: rotulosPicoSalto,
         coroas
@@ -614,40 +603,39 @@ function renderLiberacaoUI() {
 
   const loteMenuRowsHTML = lotesInfo.map(l => {
     const label = loteLabelsZR[l.key] || l.key;
-    return `<div onclick="alternarLoteLiberacao('${l.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--primary-blue);">${getLotIconSVG(l.key)}</div>`;
+    return `<div onclick="alternarLoteLiberacao('${l.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--azul-egipcio-escuro);">${getLotIconSVG(l.key)}</div>`;
   }).join('');
+
+  const svgGaleriaZ = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  const svgRelatorioZ = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
+  const seloPico = (extra) => `<span class="selo"${extra ? ` style="${extra}"` : ''}>PICO</span>`;
+  const seloSalto = (extra) => `<span class="selo salto"${extra ? ` style="${extra}"` : ''}>SALTO</span>`;
 
   let html = `
     <div style="width: 100%;">
-      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
-        <button type="button" onclick="salvarLiberacaoNaGaleria()" title="Salvar a ferramenta inteira como imagem na galeria (com título e cabeçalho)" style="${LIB_BTN_ICONE_CSS}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-        </button>
-        <div style="position: relative; flex-shrink: 0;">
-          <button type="button" onclick="const m=document.getElementById('liberacaoMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" style="${LIB_BTN_ICONE_CSS}">
-            <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-          </button>
-          <div id="liberacaoMenuRelatorio" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; min-width: 210px; overflow: hidden;">
-            <div onclick="capturarLiberacaoParaRelatorio('inteira')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Ferramenta inteira (com cabeçalho)</div>
-            <div onclick="capturarLiberacaoParaRelatorio('mandala')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Só a mandala (com cabeçalho)</div>
-            <div onclick="capturarLiberacaoParaRelatorio('tabela')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue);">Só a tabela</div>
-          </div>
-        </div>
-      </div>
-    <div class="lib-outer" id="liberacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="lib-outer painel" id="liberacao-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
 
       <div id="liberacaoHeaderCapture">
-        <!-- Título + seletor de lote ativo lado a lado. -->
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
-          <h3 class="lib-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin: 0; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-            Liberação Zodiacal
-          </h3>
-          <div style="position: relative; flex-shrink: 0;">
-            <button type="button" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: 34px; height: 34px; border-radius: 6px; background: var(--bg-main); color: var(--primary-blue); border: 1px solid var(--gold-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Lote Ativo">
-              ${getLotIconSVG(selectedZRPhase)}
-            </button>
-            <div id="liberacaoLoteMenu" style="display: none; position: absolute; top: 38px; left: 50%; transform: translateX(-50%); background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
-              ${loteMenuRowsHTML}
+        <!-- Título, e na mesma linha os botões: lote ativo (Casa 1), salvar na galeria e enviar ao relatório. -->
+        <div class="cabeca-ferramenta">
+          <h3 class="lib-titulo titulo-ferramenta">Liberação Zodiacal</h3>
+          <div class="acoes-ferramenta">
+            <div style="position: relative; flex-shrink: 0;">
+              <button type="button" class="botao-icone" onclick="const menu=document.getElementById('liberacaoLoteMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" title="Lote da Casa 1">
+                ${getLotIconSVG(selectedZRPhase)}
+              </button>
+              <div id="liberacaoLoteMenu" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; width: 44px; box-sizing: border-box; max-height: 260px; overflow-y: auto;">
+                ${loteMenuRowsHTML}
+              </div>
+            </div>
+            <button type="button" class="botao-icone" onclick="salvarLiberacaoNaGaleria()" title="Salvar a ferramenta inteira como imagem na galeria (com título e cabeçalho)">${svgGaleriaZ}</button>
+            <div style="position: relative; flex-shrink: 0;">
+              <button type="button" class="botao-icone" onclick="const m=document.getElementById('liberacaoMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório">${svgRelatorioZ}</button>
+              <div id="liberacaoMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 230px;">
+                <div class="item-menu" onclick="capturarLiberacaoParaRelatorio('inteira')">Ferramenta inteira (com cabeçalho)</div>
+                <div class="item-menu" onclick="capturarLiberacaoParaRelatorio('mandala')">Só a mandala (com cabeçalho)</div>
+                <div class="item-menu" onclick="capturarLiberacaoParaRelatorio('tabela')">Só a tabela</div>
+              </div>
             </div>
           </div>
         </div>
@@ -656,7 +644,7 @@ function renderLiberacaoUI() {
         ${montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'liberacaoCabecalhoPadrao', { loteCasa1: selectedZRPhase, tintaSobreFolha: true })}
       </div>
 
-      <div id="liberacaoMandalaCapture" style="width: 100%; margin: 0 0 20px; background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); box-sizing: border-box;">
+      <div id="liberacaoMandalaCapture" class="cartao" style="width: 100%; margin: 0 0 20px; padding: 12px 10px; box-sizing: border-box;">
         <!-- A mandala fica como SVG (vetorial); as imagens pra galeria/relatório saem dela direto (ver montarImagemLiberacao). -->
         <div id="liberacaoMandalaImgHost">
           <div style="max-width: 480px; margin: 0 auto;">
@@ -674,6 +662,8 @@ function renderLiberacaoUI() {
         </div>
       </div>
 
+      <hr class="divisa">
+
       <div id="liberacaoArvoreCapture">
   `;
 
@@ -687,38 +677,34 @@ function renderLiberacaoUI() {
     const subperiodosL2 = calcularSubperiodosL2(currSign, currentStart, durationYears);
 
     const isPeakL1 = angularSignsFromFort.includes(currSign);
-    let peakBadgeL1 = isPeakL1
-      ? `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; margin-left: 8px;">PICO</span>`
-      : ``;
 
+    // Nível 1: um cartão (linha em cima e embaixo); o aberto leva a marca terracota na margem e o nome em terracota.
     html += `
-      <div style="margin-bottom: 12px; border: 1px solid var(--gold-primary); border-radius: 8px; overflow: hidden; background: var(--bg-card);">
-        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; background: ${isExpanded ? 'rgba(163, 230, 53, 0.4)' : 'var(--bg-card)'}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; border-bottom: ${isExpanded ? '1px solid var(--table-border)' : 'none'};">
+      <div class="cartao${isExpanded ? ' ativo' : ''}" style="margin-bottom: 12px; padding: 0;">
+        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; user-select: none;">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
-              <strong style="color: var(--primary-blue); font-family: 'Cinzel', serif; font-size: 13px;">L1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</strong>
-              <span style="font-size: 12px; color: var(--text-muted); margin-left: 6px;">${durationYears} Anos</span>
-              ${peakBadgeL1}
+              <span class="nome-nivel">Nível 1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</span>
+              <span class="texto-apagado" style="font-size: 12px; margin-left: 6px;">${durationYears} Anos</span>
+              ${isPeakL1 ? seloPico('margin-left: 8px;') : ''}
             </div>
           </div>
-          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted-3);">
-            ${formatarDataBR(currentStart)} a ${formatarDataBR(currentEnd)}
-          </div>
+          <strong class="texto-apagado" style="font-size: 12px;">${formatarDataBR(currentStart)} a ${formatarDataBR(currentEnd)}</strong>
         </div>
     `;
 
     if (isExpanded) {
       html += `
-        <div style="padding: 10px; background: var(--bg-card);">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--table-border); border-radius: 6px; overflow: hidden; font-size: 12px; text-align: center; background: var(--bg-card);">
+        <div class="envolve-tabela" style="padding: 0 10px 10px;">
+          <table class="tabela-epoca" style="font-size: 12px;">
             <thead>
-              <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
-                <th style="padding: 8px;">L2 Subperíodo</th>
-                <th style="padding: 8px;">Duração</th>
-                <th style="padding: 8px;">Início</th>
-                <th style="padding: 8px;">Término</th>
-                <th style="padding: 8px;">Status</th>
+              <tr>
+                <th class="centro">Nível 2 Subperíodo</th>
+                <th>Duração</th>
+                <th>Início</th>
+                <th>Término</th>
+                <th class="centro">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -726,24 +712,16 @@ function renderLiberacaoUI() {
 
       subperiodosL2.forEach((sub, sIdx) => {
         const isL2Expanded = (expandedL2Key === `${i}_${sIdx}`);
-        const bgRow = sIdx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-main)';
         const isPeakL2 = angularSignsFromFort.includes(sub.signIdx);
-
-        let statusL2 = "";
-        if (sub.isLysis) {
-          statusL2 += `<span style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; margin-right: 4px;">SALTO</span>`;
-        }
-        if (isPeakL2) {
-          statusL2 += `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">PICO</span>`;
-        }
+        const statusL2 = (sub.isLysis ? seloSalto('margin-right: 4px;') : '') + (isPeakL2 ? seloPico() : '');
 
         html += `
-          <tr onclick="alternarL2Accordion(${i}, ${sIdx}, event)" style="border-bottom: 1px solid var(--table-border); background-color: ${isL2Expanded ? 'rgba(254, 240, 138, 0.5)' : bgRow}; cursor: pointer;">
-            <td style="padding: 8px; text-align: center;">${getSignSVGZR(sub.signIdx, 20)}</td>
-            <td style="padding: 8px; font-weight: 600; color: var(--primary-blue);">${sub.months} Meses (${sub.days} Dias)</td>
-            <td style="padding: 8px; color: var(--text-muted-3);">${formatarDataBR(sub.start)}</td>
-            <td style="padding: 8px; color: var(--text-muted-3);">${formatarDataBR(sub.end)}</td>
-            <td style="padding: 8px; text-align: center;">${statusL2}</td>
+          <tr class="clicavel${isL2Expanded ? ' ativa aberta' : ''}" onclick="alternarL2Accordion(${i}, ${sIdx}, event)">
+            <td class="centro">${getSignSVGZR(sub.signIdx, 20)}</td>
+            <td>${sub.months} Meses (${sub.days} Dias)</td>
+            <td>${formatarDataBR(sub.start)}</td>
+            <td>${formatarDataBR(sub.end)}</td>
+            <td class="centro">${statusL2}</td>
           </tr>
         `;
 
@@ -751,15 +729,15 @@ function renderLiberacaoUI() {
           const subperiodosL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
           html += `
             <tr>
-              <td colspan="5" style="padding: 8px 12px; background: var(--bg-hover); border-bottom: 1px solid var(--border-color);">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--primary-blue); border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: var(--bg-card);">
+              <td colspan="5" class="encaixe">
+                <table class="tabela-epoca" style="font-size: 11px;">
                   <thead>
-                    <tr style="background-color: #103b70; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
-                      <th style="padding: 6px;">L3 Subperíodo</th>
-                      <th style="padding: 6px;">Duração</th>
-                      <th style="padding: 6px;">Início</th>
-                      <th style="padding: 6px;">Término</th>
-                      <th style="padding: 6px;">Status</th>
+                    <tr>
+                      <th class="centro">Nível 3 Subperíodo</th>
+                      <th>Duração</th>
+                      <th>Início</th>
+                      <th>Término</th>
+                      <th class="centro">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -767,24 +745,16 @@ function renderLiberacaoUI() {
 
           subperiodosL3.forEach((subL3, l3Idx) => {
             const isL3Expanded = (expandedL3Key === `${i}_${sIdx}_${l3Idx}`);
-            const bgRowL3 = l3Idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-hover)';
             const isPeakL3 = angularSignsFromFort.includes(subL3.signIdx);
-
-            let statusL3 = "";
-            if (subL3.isLysis) {
-              statusL3 += `<span style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px; margin-right: 4px;">SALTO</span>`;
-            }
-            if (isPeakL3) {
-              statusL3 += `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 8px;">PICO</span>`;
-            }
+            const statusL3 = (subL3.isLysis ? seloSalto('margin-right: 4px; font-size: 9px;') : '') + (isPeakL3 ? seloPico('font-size: 9px;') : '');
 
             html += `
-              <tr onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)" style="border-bottom: 1px solid var(--table-border-soft); background-color: ${isL3Expanded ? 'rgba(224, 231, 255, 0.6)' : bgRowL3}; cursor: pointer;">
-                <td style="padding: 6px; text-align: center;">${getSignSVGZR(subL3.signIdx, 18)}</td>
-                <td style="padding: 6px; font-weight: 600; color: var(--primary-blue);">${subL3.days} Dias</td>
-                <td style="padding: 6px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
-                <td style="padding: 6px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
-                <td style="padding: 6px; text-align: center;">${statusL3}</td>
+              <tr class="clicavel${isL3Expanded ? ' ativa aberta' : ''}" onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)">
+                <td class="centro">${getSignSVGZR(subL3.signIdx, 18)}</td>
+                <td>${subL3.days} Dias</td>
+                <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
+                <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
+                <td class="centro">${statusL3}</td>
               </tr>
             `;
 
@@ -792,15 +762,15 @@ function renderLiberacaoUI() {
               const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
               html += `
                 <tr>
-                  <td colspan="5" style="padding: 6px 10px; border-bottom: 1px solid var(--table-border-soft);">
-                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--table-border-soft); border-radius: 6px; overflow: hidden; font-size: 10px; text-align: center; background: var(--bg-card);">
+                  <td colspan="5" class="encaixe">
+                    <table class="tabela-epoca" style="font-size: 10px;">
                       <thead>
-                        <tr style="background-color: #475569; color: #ffffff; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px;">
-                          <th style="padding: 5px;">L4 Subperíodo</th>
-                          <th style="padding: 5px;">Duração</th>
-                          <th style="padding: 5px;">Início</th>
-                          <th style="padding: 5px;">Término</th>
-                          <th style="padding: 5px;">Status</th>
+                        <tr>
+                          <th class="centro">Nível 4 Subperíodo</th>
+                          <th>Duração</th>
+                          <th>Início</th>
+                          <th>Término</th>
+                          <th class="centro">Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -808,24 +778,16 @@ function renderLiberacaoUI() {
 
               subperiodosL4.forEach((subL4, l4Idx) => {
                 const isL4Ativo = (hoje >= subL4.start && hoje < subL4.end);
-                const bgRowL4 = isL4Ativo ? 'rgba(148, 163, 184, 0.45)' : (l4Idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-hover)');
                 const isPeakL4 = angularSignsFromFort.includes(subL4.signIdx);
-
-                let statusL4 = "";
-                if (subL4.isLysis) {
-                  statusL4 += `<span style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px; margin-right: 3px;">SALTO</span>`;
-                }
-                if (isPeakL4) {
-                  statusL4 += `<span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border); padding: 1px 4px; border-radius: 3px; font-weight: 700; font-size: 7px;">PICO</span>`;
-                }
+                const statusL4 = (subL4.isLysis ? seloSalto('margin-right: 3px; font-size: 8px;') : '') + (isPeakL4 ? seloPico('font-size: 8px;') : '');
 
                 html += `
-                  <tr style="border-bottom: 1px solid var(--table-border-soft); background-color: ${bgRowL4};">
-                    <td style="padding: 5px; text-align: center;">${getSignSVGZR(subL4.signIdx, 16)}</td>
-                    <td style="padding: 5px; font-weight: 600; color: var(--primary-blue);">${subL4.hours} Horas</td>
-                    <td style="padding: 5px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
-                    <td style="padding: 5px; color: var(--text-muted-3); line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
-                    <td style="padding: 5px; text-align: center;">${statusL4}</td>
+                  <tr${isL4Ativo ? ' class="ativa"' : ''}>
+                    <td class="centro">${getSignSVGZR(subL4.signIdx, 16)}</td>
+                    <td>${subL4.hours} Horas</td>
+                    <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
+                    <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
+                    <td class="centro">${statusL4}</td>
                   </tr>
                 `;
               });
@@ -861,6 +823,7 @@ function renderLiberacaoUI() {
 
   html += `
       </div>
+      <hr class="divisa">
     </div>
     </div>
   `;
@@ -869,7 +832,6 @@ function renderLiberacaoUI() {
   encolherTabelasLZRVisiveis(container);
 }
 
-const LIB_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
 
 /* IMAGENS DA LIBERAÇÃO (galeria e relatório). Título + cabeçalho padrão +
    cartão da mandala saem direto do SVG (rápido); a tabela (árvore L1-L4) é
@@ -913,7 +875,11 @@ async function montarImagemLiberacao(opc) {
     const svgRoda = new XMLSerializer().serializeToString(roda)
       .replace(/ style="[^"]*"/, '')
       .replace('<svg ', `<svg x="${(W - roda_s) / 2}" y="${y + 12}" width="${roda_s}" height="${roda_s}" `);
-    partes += `<rect x="${borda / 2}" y="${y + borda / 2}" width="${W - borda}" height="${alturaCartao - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>${svgRoda}`;
+    const bordaEsq = parseFloat(cs.borderLeftWidth) || 0;
+    const moldura = bordaEsq > 0
+      ? `<rect x="${borda / 2}" y="${y + borda / 2}" width="${W - borda}" height="${alturaCartao - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`
+      : (borda > 0 ? `<line x1="0" y1="${y + borda / 2}" x2="${W}" y2="${y + borda / 2}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/><line x1="0" y1="${y + alturaCartao - borda / 2}" x2="${W}" y2="${y + alturaCartao - borda / 2}" stroke="${cs.borderBottomColor}" stroke-width="${borda}"/>` : '');
+    partes += `${moldura}${svgRoda}`;
     y += alturaCartao + 16;
   }
   const alturaTopo = y > 0 ? y - 16 : 0;
