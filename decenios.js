@@ -45,12 +45,6 @@ function getPlanet3DSVG(planetId, size = 34) {
   return (typeof getIconeSVG === 'function') ? getIconeSVG('planeta', planetId, size || 34) : '';
 }
 
-const NOMES_PLANETA_DEC = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
-// ícone do planeta com o NOME ao lado (ajuda quem não conhece os símbolos)
-function planetaComNomeDec(id, tam) {
-  return `<span class="com-nome">${getPlanet3DSVG(id, tam)}<span class="nome-planeta">${NOMES_PLANETA_DEC[id] || ''}</span></span>`;
-}
-
 let overrideStartPlanet = null;
 let expandedL3KeyDec = null; // Guarda a chave do L3 (regência diária) expandido, ex.: "0_2" ou "active_1"
 
@@ -452,7 +446,7 @@ function renderL3SubTableDec(l2Obj, sortedPlanets) {
       <tbody>
         ${subperiodosL3.map(sub3 => `
           <tr>
-            <td class="centro">${planetaComNomeDec(sub3.planet.id, 26)}</td>
+            <td class="centro">${planetaComNome(sub3.planet.id, 26)}</td>
             <td><strong>${formatDiasDec(sub3.days)}</strong> dias</td>
             <td>${formatDateHoraDec(sub3.startDate)}</td>
             <td>${formatDateHoraDec(sub3.endDate)}</td>
@@ -469,7 +463,7 @@ function linhasNivel2Dec(subperiodos, prefixoChave, argsClique, tamIcone, sorted
     const chave = `${prefixoChave}_${i}`;
     return `
       <tr id="dec_l2_row_${chave}" class="clicavel${sub.isActive ? ' ativa' : ''}" onclick="alternarL3AccordionDec(${argsClique(i)}, event)">
-        <td class="centro">${planetaComNomeDec(sub.planet.id, tamIcone)}</td>
+        <td class="centro">${planetaComNome(sub.planet.id, tamIcone)}</td>
         <td>${sub.months} meses (${sub.days} dias)</td>
         <td>${formatDateDec(sub.startDate)}</td>
         <td>${formatDateDec(sub.endDate)}</td>
@@ -499,7 +493,7 @@ function renderizarResultadosHTML(res) {
       <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
         <div style="display: flex; align-items: center; gap: 10px;">
           ${getPlanet3DSVG(item.planet.id, 42)}
-          <div class="texto-apagado" style="font-size: 11px;">${NOMES_PLANETA_DEC[item.planet.id] || ''} em ${getSignSvgHtmlDec(item.planet.signIdx, 18)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
+          <div class="texto-apagado" style="font-size: 11px;">${nomePlaneta(item.planet.id) ? nomePlaneta(item.planet.id) + ' em' : 'em'} ${getSignSvgHtmlDec(item.planet.signIdx, 18)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
         </div>
         <span class="selo">${meses} meses</span>
       </div>
@@ -556,7 +550,7 @@ function renderizarResultadosHTML(res) {
               <div style="display: flex; align-items: center; gap: 10px;">
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
-                  <span class="nome-nivel">Nível 1 - ${NOMES_PLANETA_DEC[l1.planet.id] || ''}</span>
+                  <span class="nome-nivel">Nível 1${nomePlaneta(l1.planet.id) ? ' - ' + nomePlaneta(l1.planet.id) : ''}</span>
                   <div class="texto-apagado" style="font-size: 11px;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' - 129 meses</div>
                 </div>
               </div>

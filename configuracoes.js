@@ -155,6 +155,15 @@ function htmlCfgAparencia() {
       </div>
 
       <div class="cfg-card cfg-card-largo">
+        <h4 class="cfg-card-titulo">Nomes dos planetas</h4>
+        <p class="cfg-card-desc">Escreve o nome do planeta ao lado do ícone (Sol, Lua, Marte...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Vale para todas as ferramentas que já usam essa opção.</p>
+        <div class="cfg-opcoes">
+          ${opcao("salvarMostrarNomesPlanetas(true)", window.mostrarNomesPlanetas !== false, fa('fa-font'), 'Mostrar os nomes', 'Ícone com o nome ao lado')}
+          ${opcao("salvarMostrarNomesPlanetas(false)", window.mostrarNomesPlanetas === false, fa('fa-eye-slash'), 'Só os ícones', 'Sem os nomes')}
+        </div>
+      </div>
+
+      <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Estilo da mandala</h4>
         <p class="cfg-card-desc">Só o <strong>formato</strong> do desenho — onde cada coisa fica. As cores e os ícones não mudam: seguem o tema (Céu, Claro, Escuro, papiro).</p>
         <div class="cfg-opcoes">

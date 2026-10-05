@@ -270,6 +270,49 @@ async function salvarEstiloMandala(estilo) {
   }
 }
 
+/* NOMES DOS PLANETAS AO LADO DOS ÍCONES — preferência do astrólogo, guardada no Supabase (configuracoes.mostrar_nomes_planetas),
+   não no aparelho. Sem valor salvo (ou coluna ainda não criada), os nomes aparecem (padrão). Ver planetaComNome em planetIcons.js. */
+async function carregarMostrarNomesPlanetas(userId) {
+  let valor = true;
+  try {
+    const { data, error } = await supabaseClient
+      .from('configuracoes')
+      .select('mostrar_nomes_planetas')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data && typeof data.mostrar_nomes_planetas === 'boolean') valor = data.mostrar_nomes_planetas;
+  } catch (e) {
+    console.error("Erro ao carregar a preferência dos nomes dos planetas:", e);
+  }
+  if (valor !== window.mostrarNomesPlanetas) {
+    window.mostrarNomesPlanetas = valor;
+    reRenderizarModuloAtivo();
+  }
+}
+
+async function salvarMostrarNomesPlanetas(valor) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+
+    const { error } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, mostrar_nomes_planetas: valor }, { onConflict: 'user_id' });
+
+    if (!error) {
+      window.mostrarNomesPlanetas = valor;
+      reRenderizarModuloAtivo();
+      if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+    } else if (/mostrar_nomes_planetas/i.test(error.message || '')) {
+      alert("Falta criar a coluna dos nomes dos planetas no banco. No Supabase, abra o SQL Editor e rode:\n\nalter table configuracoes add column mostrar_nomes_planetas boolean default true;\n\nDepois escolha de novo.");
+    } else {
+      alert("Erro ao salvar a preferência dos nomes dos planetas: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar a preferência dos nomes dos planetas.");
+  }
+}
+
 /* REDESENHA A FERRAMENTA ATUALMENTE ABERTA (usado ao trocar o estilo dos ícones dos planetas) */
 function reRenderizarModuloAtivo() {
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) return;
