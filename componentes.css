@@ -51,11 +51,29 @@
 .botao-icone {
     background: transparent;
     border: 0;
-    padding: 6px;
+    padding: 0;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     color: var(--azul-egipcio-escuro);
 }
 .botao-icone:hover { color: var(--azul-egipcio-claro); }
+.botao-icone .icone { width: 22px; height: 22px; }
+.aviso-icone { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; cursor: help; color: var(--terracota); }
+
+/* MENU FLUTUANTE (ex.: escolher o planeta inicial) — folha reta com a linha fina em cima e embaixo, sem sombra de caixa. */
+.menu-flutuante {
+    background: var(--fundo-creme);
+    border: 0;
+    border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+    box-shadow: var(--sombra, none);
+    padding: 4px;
+}
+
+/* NOME DO PLANETA ao lado do ícone (ajuda quem não conhece os símbolos). */
+.com-nome { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.com-nome .nome-planeta { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 
 /* ÍCONE — sempre monoline: só traço, sem preenchimento. A cor vem do pai (currentColor). Grade 64, traço 3. */
 .icone {

@@ -45,6 +45,12 @@ function getPlanet3DSVG(planetId, size = 34) {
   return (typeof getIconeSVG === 'function') ? getIconeSVG('planeta', planetId, size || 34) : '';
 }
 
+const NOMES_PLANETA_DEC = { Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
+// ícone do planeta com o NOME ao lado (ajuda quem não conhece os símbolos)
+function planetaComNomeDec(id, tam) {
+  return `<span class="com-nome">${getPlanet3DSVG(id, tam)}<span class="nome-planeta">${NOMES_PLANETA_DEC[id] || ''}</span></span>`;
+}
+
 let overrideStartPlanet = null;
 let expandedL3KeyDec = null; // Guarda a chave do L3 (regência diária) expandido, ex.: "0_2" ou "active_1"
 
@@ -93,25 +99,20 @@ function renderDeceniosUI(container) {
 
   const headerTitle = currentSubjectName;
 
-  const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
 
   container.innerHTML = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
       <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
         ${luzEmCasaNaoOperante ? `
-          <div title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) — considere selecionar outro planeta manualmente" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; cursor: help;">
-            <svg width="22" height="22" viewBox="0 0 24 24" style="display: block;">
-              <path d="M12 2 L23 21 H1 Z" fill="var(--badge-bg)" stroke="var(--badge-text)" stroke-width="1.5" stroke-linejoin="round"/>
-              <rect x="11" y="9" width="2" height="6" rx="1" fill="var(--badge-text)"/>
-              <rect x="11" y="16.5" width="2" height="2" rx="1" fill="var(--badge-text)"/>
-            </svg>
+          <div class="aviso-icone" title="${nomeLuzDec} em casa não-operante (casa ${casaLuz}) - considere selecionar outro planeta manualmente">
+            <svg class="icone" viewBox="0 0 64 64" style="width: 22px; height: 22px;"><path d="M32 8 L58 54 H6 Z"/><line x1="32" y1="26" x2="32" y2="40"/><line x1="32" y1="47" x2="32" y2="47.5"/></svg>
           </div>
         ` : ''}
         <div style="position: relative; display: inline-block;">
-          <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="${btnCss}" title="Planeta Inicial">
+          <button type="button" onclick="const menu=document.getElementById('decStartPlanetMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" class="botao-icone" title="Planeta Inicial">
             ${getPlanet3DSVG(startPlanetKey, 26)}
           </button>
-          <div id="decStartPlanetMenu" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 38px; box-sizing: border-box;">
+          <div id="decStartPlanetMenu" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; width: 38px; box-sizing: border-box;">
             <div onclick="alternarSeitaManual('Sun')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Sun', 24)}</div>
             <div onclick="alternarSeitaManual('Moon')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Moon', 24)}</div>
             <div onclick="alternarSeitaManual('Mercury')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Mercury', 24)}</div>
@@ -121,11 +122,11 @@ function renderDeceniosUI(container) {
             <div onclick="alternarSeitaManual('Saturn')" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getPlanet3DSVG('Saturn', 24)}</div>
           </div>
         </div>
-        <button type="button" onclick="salvarDeceniosNaGaleria()" title="Salvar os Decênios como imagem na galeria (com título e cabeçalho)" style="${btnCss}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        <button type="button" onclick="salvarDeceniosNaGaleria()" title="Salvar os Decênios como imagem na galeria (com título e cabeçalho)" class="botao-icone">
+          <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
-        <button type="button" onclick="capturarDeceniosParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" style="${btnCss}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+        <button type="button" onclick="capturarDeceniosParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
+          <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
     <div id="decenios-container" class="painel" style="width: 100%; flex: 1; overflow-y: auto; font-family: 'Montserrat', sans-serif;">
@@ -451,7 +452,7 @@ function renderL3SubTableDec(l2Obj, sortedPlanets) {
       <tbody>
         ${subperiodosL3.map(sub3 => `
           <tr>
-            <td class="centro">${getPlanet3DSVG(sub3.planet.id, 26)}</td>
+            <td class="centro">${planetaComNomeDec(sub3.planet.id, 26)}</td>
             <td><strong>${formatDiasDec(sub3.days)}</strong> dias</td>
             <td>${formatDateHoraDec(sub3.startDate)}</td>
             <td>${formatDateHoraDec(sub3.endDate)}</td>
@@ -468,7 +469,7 @@ function linhasNivel2Dec(subperiodos, prefixoChave, argsClique, tamIcone, sorted
     const chave = `${prefixoChave}_${i}`;
     return `
       <tr id="dec_l2_row_${chave}" class="clicavel${sub.isActive ? ' ativa' : ''}" onclick="alternarL3AccordionDec(${argsClique(i)}, event)">
-        <td class="centro">${getPlanet3DSVG(sub.planet.id, tamIcone)}</td>
+        <td class="centro">${planetaComNomeDec(sub.planet.id, tamIcone)}</td>
         <td>${sub.months} meses (${sub.days} dias)</td>
         <td>${formatDateDec(sub.startDate)}</td>
         <td>${formatDateDec(sub.endDate)}</td>
@@ -498,7 +499,7 @@ function renderizarResultadosHTML(res) {
       <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
         <div style="display: flex; align-items: center; gap: 10px;">
           ${getPlanet3DSVG(item.planet.id, 42)}
-          <div class="texto-apagado" style="font-size: 11px;">em ${getSignSvgHtmlDec(item.planet.signIdx, 18)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
+          <div class="texto-apagado" style="font-size: 11px;">${NOMES_PLANETA_DEC[item.planet.id] || ''} em ${getSignSvgHtmlDec(item.planet.signIdx, 18)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
         </div>
         <span class="selo">${meses} meses</span>
       </div>
@@ -555,7 +556,7 @@ function renderizarResultadosHTML(res) {
               <div style="display: flex; align-items: center; gap: 10px;">
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
-                  <span class="nome-nivel">Nível 1</span>
+                  <span class="nome-nivel">Nível 1 - ${NOMES_PLANETA_DEC[l1.planet.id] || ''}</span>
                   <div class="texto-apagado" style="font-size: 11px;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' - 129 meses</div>
                 </div>
               </div>

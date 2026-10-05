@@ -147,7 +147,8 @@ function _namespacearIdsIcone(svgTexto) {
    mapa diurno -> Sol, Júpiter e Saturno; mapa noturno -> Lua, Vênus e Marte; Mercúrio é diurno
    quando oriental (nasce antes do Sol) e noturno quando ocidental. A roda da Mandala tem estilo
    próprio no Tema Céu (pontos de luz) e não passa por aqui. Fora do Tema Céu nada muda. */
-const COR_TINTA_AZUL = '#1d3a66';
+// planetas FORA da seita: azul egípcio claro (a cor de tudo que é pintado; paleta de época, temas.css) — ver corAzulEgipcioClaro
+function corAzulEgipcioClaro() { return (typeof paletaEpoca === 'function') ? paletaEpoca(false).azulClaro : '#1F5FA3'; }
 const COR_TINTA_TERRACOTA = '#a03e25';
 const COR_TINTA_OCRE = '#B5852F'; // eixos ASC-DSC / MC-IC (traço + triângulo) nas rodas em tinta sobre papiro
 const COR_TINTA_SOMBRA = '#1b2a4a'; // azul quase preto da tinta de escrever: sombra translúcida embaixo dos ícones calculados no estilo reto, sobre papiro
@@ -181,7 +182,7 @@ function planetaEstaNaSeita(planetId, dados) {
 const COR_TINTA_PRETO = '#1a1410';
 function corIconePapiro(categoria, chave, dados) {
   if (categoria === 'lote' || (categoria === 'outro' && ['northNode', 'southNode', 'sizigia'].includes(chave))) return COR_TINTA_PRETO;
-  return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? COR_TINTA_TERRACOTA : COR_TINTA_AZUL;
+  return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? COR_TINTA_TERRACOTA : corAzulEgipcioClaro();
 }
 
 /* Recolore o SVG de um ícone simples pra tinta chapada: tira o <defs> (gradientes), pinta cada

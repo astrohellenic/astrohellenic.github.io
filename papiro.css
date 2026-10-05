@@ -24,3 +24,14 @@
         repeating-linear-gradient(0deg, rgba(120,85,40,0.07) 0px, rgba(120,85,40,0.07) 1px, transparent 1px, transparent 6px),
         var(--papiro-gradiente);
 }
+
+/* TEMA CÉU — o PAPEL (só aqui é do tema): o painel de qualquer ferramenta migrada e os menus flutuantes viram folha de papiro
+   com a borda rasgada. As formas e as cores do conteúdo vêm de componentes.css + temas.css. */
+body.tema-ceu .painel {
+    background: var(--papiro-fundo) !important;
+    clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
+}
+body.tema-ceu .menu-flutuante {
+    background: var(--papiro-fundo-simples) !important;
+    clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
+}

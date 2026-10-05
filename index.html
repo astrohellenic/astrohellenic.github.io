@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="papiro.css?v=20261005a">
+    <link rel="stylesheet" href="papiro.css?v=20261008a">
     <link rel="stylesheet" href="temas.css?v=20261008a">
-    <link rel="stylesheet" href="componentes.css?v=20261008b">
+    <link rel="stylesheet" href="componentes.css?v=20261008c">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1080,33 +1080,7 @@ body {
             clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
         }
 
-        /* TEMA CÉU — Decênios Helenísticos (decenios.js): a tela é uma folha de papiro. SÓ o papel e a borda rasgada são do tema (aqui);
-           as formas e as cores da tela vêm de componentes.css + temas.css (migrado em 08/10/2026). Antes, tudo era feito só com tinta:
-           azul nas linhas, caixas, planetas e signos; terracota no título, no período ativo e nos avisos; preto
-           no texto. Sem preenchimento, sem sombra, sem faixa escura nos cabeçalhos das tabelas — só traço. As cores
-           vêm de variáveis redefinidas só aqui dentro. SÓ PINTURA (tamanhos, posições e comportamento ficam). */
-        body.tema-ceu #decenios-container {
-            background: var(--papiro-fundo) !important;
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
-        }
-        /* botões (planeta inicial, galeria, relatório) e a janelinha do planeta: papiro, como os da Profecção */
-        body.tema-ceu #mandala-container button[onclick*="decStartPlanetMenu"],
-        body.tema-ceu #mandala-container button[onclick^="salvarDeceniosNaGaleria"],
-        body.tema-ceu #mandala-container button[onclick^="capturarDeceniosParaRelatorio"] {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-container button[onclick^="salvarDeceniosNaGaleria"] svg,
-        body.tema-ceu #mandala-container button[onclick^="capturarDeceniosParaRelatorio"] svg { stroke: #1d3a66; }
-        body.tema-ceu #decStartPlanetMenu {
-            --bg-main: transparent; --gold-primary: #1d3a66;
-            background: var(--papiro-fundo-simples) !important;
-            border-color: transparent !important; box-shadow: none !important;
-            clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
-        }
-        /* aviso "luz em casa não-operante" (triângulo): terracota, só contorno */
+                /* aviso "luz em casa não-operante" (triângulo): terracota, só contorno */
         body.tema-ceu #mandala-container svg path[fill="var(--badge-bg)"] { fill: transparent; stroke: #a03e25; }
         body.tema-ceu #mandala-container svg rect[fill="var(--badge-text)"] { fill: #a03e25; }
 
@@ -2001,19 +1975,19 @@ body {
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tz-lookup.js?v=20260919"></script>
-<script src="papiro.js?v=20261008a"></script>
+<script src="papiro.js?v=20261008b"></script>
 <script src="dialogos.js?v=20261007a"></script>
 <script src="supabase.js?v=20261006h"></script>
-<script src="planetIcons.js?v=20261007a"></script>
+<script src="planetIcons.js?v=20261008a"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261007a"></script>
-<script src="mandala.js?v=20261008b"></script>
+<script src="mandala.js?v=20261008c"></script>
 <script src="roda.js?v=20261007b"></script>
 <script src="isopsefia.js?v=20261003z"></script>
 <script src="profeccao.js?v=20261006e"></script>
 <script src="sinastria.js?v=20261006c"></script>
 <script src="revolucao.js?v=20260920"></script>
-<script src="decenios.js?v=20261008a"></script>
+<script src="decenios.js?v=20261008b"></script>
 <script src="direcoes.js?v=20261007a"></script>
 <script src="liberacao.js?v=20261006c"></script>
 <script src="lotes-calculadora.js?v=20261007a"></script>

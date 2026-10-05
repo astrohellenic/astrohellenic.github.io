@@ -994,14 +994,18 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   }
   const cabecalhoValido = HEX_RE.test(corCabecalhoForcada) ? corCabecalhoForcada : null;
   const cabecalhoEscuro = cabecalhoValido ? (luminanciaRelativaHex(cabecalhoValido) < 0.5) : modoEscuro;
+  // Cores da paleta de época (temas.css): nome em terracota e todo o resto em preto de tinta (no escuro, o cinza claro).
+  const pal = paletaEpoca(cabecalhoEscuro);
   return {
     escuro: cabecalhoEscuro, // qual paleta de época o filete duplo usa (paletaEpoca, papiro.js)
     fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
-    borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27',
-    titulo: cabecalhoEscuro ? '#8ab4e8' : '#103b70',
-    dataCidade: cabecalhoEscuro ? '#c3cad4' : '#475569',
-    zodiaco: cabecalhoEscuro ? '#a3aab3' : '#64748b',
-    sect: cabecalhoEscuro ? '#f0c869' : '#9a6d18',
+    borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27', // sem uso hoje (o contorno virou o filete duplo)
+    titulo: pal.terracota,
+    nome: pal.terracota,
+    rotulo: pal.pretoTinta,
+    dataCidade: pal.pretoTinta,
+    zodiaco: pal.pretoTinta,
+    sect: pal.pretoTinta,
   };
 }
 
@@ -1019,7 +1023,7 @@ function coresCabecalhoPapiro() {
     escuro: false, // o papiro usa a paleta do modo claro
     fundo: 'url(#papiroCabBase)',
     borda: '#1d3a66', // sem uso hoje (o papel não tem contorno), mantido por compatibilidade com o formato das outras paletas
-    titulo: '#1d3a66', // usado por quem desenha títulos de ferramenta por fora do cabeçalho (inalterado)
+    titulo: '#a03e25', // terracota da paleta: títulos de ferramenta por fora do cabeçalho
     nome: '#a03e25',   // NOME DO CLIENTE: terracota (rubrica)
     rotulo: '#1a1410', // rótulos DIA/HORA: preto
     dataCidade: '#1a1410',
