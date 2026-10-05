@@ -1,0 +1,64 @@
+/* COMPONENTES — as regras de FORMA do Astro Hellenic (valem para TODOS os temas).
+
+   Aqui não existe cor escrita. Toda cor vem das variáveis de temas.css (e o papiro, de papiro.css).
+   O que existe num tema e não existe em outro (ex.: sombra, borda quebrada do papiro) é DO TEMA, não daqui.
+   Ferramenta nova usa estas classes; ela não escreve contorno, sombra nem cor por conta própria.
+
+   Este arquivo ainda NÃO está ligado ao software (nenhuma tela usa estas classes hoje). Ele entra quando a
+   migração começar, uma ferramenta por vez. Ver o guia de design. */
+
+:root {
+    --divisa-espessura: 4px;   /* a linha dupla = duas linhas finas (border-style: double) */
+    --contorno-fino: 1px;      /* contorno dos cartões menores */
+}
+
+/* CANTOS RETOS EM TUDO. Na época não se usava canto arredondado. */
+.painel, .cartao, .botao-icone, .janela, .selo { border-radius: 0; }
+
+/* PAINEL POR BAIXO — toda ferramenta ocupa um painel. Claro/escuro: cor lisa; papiro: o fundo do papiro. */
+.painel {
+    background: var(--fundo-creme);
+    color: var(--preto-tinta);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* DIVISA — linha dupla entre as partes da ferramenta. SEM moldura em volta da ferramenta.
+   Uso: no topo da ferramenta, no fim do cabeçalho, entre cada bloco e no final. */
+.divisa {
+    border: 0;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    margin: 18px 0;
+}
+.divisa-fim {
+    border: 0;
+    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    margin: 18px 0;
+}
+
+/* CARTÃO MENOR (selos, cartões de L1/L2, linhas da linha do tempo): contorno fino, nunca de 2px, sem arredondar. */
+.cartao {
+    background: transparent;
+    border: var(--contorno-fino) solid var(--azul-egipcio-escuro);
+    box-shadow: var(--sombra, none);   /* a sombra é do tema: cada tema define a sua em --sombra */
+    padding: 14px;
+}
+
+/* BOTÃO — só o ícone sobre o painel, sem moldura própria. */
+.botao-icone {
+    background: transparent;
+    border: 0;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--azul-egipcio-escuro);
+}
+.botao-icone:hover { color: var(--azul-egipcio-claro); }
+
+/* ÍCONE — sempre monoline: só traço, sem preenchimento. A cor vem do pai (currentColor). Grade 64, traço 3. */
+.icone {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
