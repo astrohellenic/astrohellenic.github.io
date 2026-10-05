@@ -35,3 +35,24 @@ body.tema-ceu .menu-flutuante {
     background: var(--papiro-fundo-simples) !important;
     clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
 }
+
+/* TEMA CÉU — barras de botões (superior e os dois grupos flutuantes da mandala): o papiro é UMA folha por barra, MAIOR que ela, e passa POR FORA
+   das linhas duplas — a borda quebrada fica sempre por fora. O papel vai no ::before; as linhas duplas no ::after (por cima do papel). */
+body.tema-ceu #top-bar, body.tema-ceu #mandala-actions-overlay, body.tema-ceu #mandala-controls-overlay {
+    background: transparent; overflow: visible; border-top-color: transparent; border-bottom-color: transparent;
+}
+body.tema-ceu:not(.topbar-fixo) #top-bar { position: relative; }
+body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, body.tema-ceu #mandala-controls-overlay::before {
+    content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none;
+    background: var(--papiro-fundo);
+    clip-path: polygon(
+                0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px,
+                calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px),
+                98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px),
+                4px 70%, 0 45%, 3px 22%);
+}
+body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, body.tema-ceu #mandala-controls-overlay::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+}

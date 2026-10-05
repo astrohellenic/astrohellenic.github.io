@@ -776,10 +776,10 @@ function injetarBotaoRotacaoNaBarraSuperior() {
 
     btnContainer.innerHTML = `
     <div style="position: relative; display: inline-block;">
-      <button type="button" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: ${ladoBotao}px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Mudar Casa 1 (Lotes)">
+      <button type="button" class="icon-btn" onclick="const menu=document.getElementById('lotMenuList'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="width: ${ladoBotao}px; height: 36px; display: flex; align-items: center; justify-content: center;" title="Mudar Casa 1 (Lotes)">
         ${iconContent}
       </button>
-      <div id="lotMenuList" style="display: none; position: absolute; top: 36px; left: 0; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: ${ladoBotao}px; box-sizing: border-box;">${itensMenuHTML}
+      <div id="lotMenuList" class="menu-flutuante" style="display: none; position: absolute; top: 44px; left: 0; z-index: 9999; width: ${ladoBotao}px; box-sizing: border-box;">${itensMenuHTML}
       </div>
     </div>
   `;
@@ -805,10 +805,11 @@ function injetarBotaoRelatorioNaBarraSuperior() {
   btn.id = 'mandalaRelatorioBtnContainer';
   btn.type = 'button';
   btn.title = 'Adiciona a mandala ao Relatório, exatamente do jeito que está agora (com a rotação de Casa 1 escolhida)';
-  btn.style.cssText = "width: 32px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);";
+  btn.className = 'icon-btn';
+  btn.style.cssText = "width: 32px; height: 36px; display: flex; align-items: center; justify-content: center;";
   /* Só o ícone monoline do Relatório (o mesmo da barra superior do
      site), sem texto — pedido do astrólogo. */
-  btn.innerHTML = '<svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
+  btn.innerHTML = '<svg class="icone" width="22" height="22" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
   btn.onclick = capturarMandalaAtualParaRelatorio;
   rotationContainer.after(btn);
 
@@ -818,8 +819,9 @@ function injetarBotaoRelatorioNaBarraSuperior() {
   btnGaleria.id = 'mandalaSalvarImagemBtnContainer';
   btnGaleria.type = 'button';
   btnGaleria.title = 'Salvar a mandala como imagem na galeria';
+  btnGaleria.className = 'icon-btn';
   btnGaleria.style.cssText = btn.style.cssText;
-  btnGaleria.innerHTML = '<svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  btnGaleria.innerHTML = '<svg class="icone" width="22" height="22" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
   btnGaleria.onclick = salvarImagemMandala;
   btn.after(btnGaleria);
 }
@@ -916,11 +918,11 @@ function injetarControleZoomMandala() {
 
   const zoomContainer = document.createElement('div');
   zoomContainer.id = 'mandalaZoomContainer';
-  zoomContainer.style.cssText = "background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px 6px; display: flex; align-items: center; gap: 6px;";
+  zoomContainer.style.cssText = "display: flex; align-items: center; gap: 6px;";
   zoomContainer.innerHTML = `
-    <button type="button" onclick="ajustarZoomMandala(-${MANDALA_ZOOM_PASSO})" title="Diminuir zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--gold-primary); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary-blue); font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">－</button>
-    <span id="mandalaZoomLabel" style="min-width: 34px; text-align: center; font-size: 11px; font-weight: 700; color: var(--primary-blue); font-variant-numeric: tabular-nums;">${mandalaZoomPercent}%</span>
-    <button type="button" onclick="ajustarZoomMandala(${MANDALA_ZOOM_PASSO})" title="Aumentar zoom da mandala" style="width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--gold-primary); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary-blue); font-size: 15px; font-weight: 700; line-height: 1; padding: 0;">＋</button>
+    <button type="button" class="icon-btn" onclick="ajustarZoomMandala(-${MANDALA_ZOOM_PASSO})" title="Diminuir zoom da mandala" style="width: 26px; height: 26px; padding: 0; font-size: 15px; font-weight: 700; line-height: 1;">－</button>
+    <span id="mandalaZoomLabel" style="min-width: 34px; text-align: center; font-size: 11px; font-weight: 700; color: var(--preto-tinta); font-variant-numeric: tabular-nums;">${mandalaZoomPercent}%</span>
+    <button type="button" class="icon-btn" onclick="ajustarZoomMandala(${MANDALA_ZOOM_PASSO})" title="Aumentar zoom da mandala" style="width: 26px; height: 26px; padding: 0; font-size: 15px; font-weight: 700; line-height: 1;">＋</button>
   `;
 
   // Entre o botão de Relatório e o stepper de tempo — nunca no início da

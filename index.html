@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="papiro.css?v=20261008a">
+    <link rel="stylesheet" href="papiro.css?v=20261009a">
     <link rel="stylesheet" href="temas.css?v=20261009a">
-    <link rel="stylesheet" href="componentes.css?v=20261008n">
+    <link rel="stylesheet" href="componentes.css?v=20261009b">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -416,28 +416,19 @@ body {
         #btn-mandala-papiro { display: none; }
         body.tema-ceu #btn-mandala-papiro { display: inline-block; }
         .icon-btn.mandala-papiro-ativa { background: #103b70; color: #fcf6ba; }
-        body.tema-ceu #mandala-actions-overlay > .icon-btn.mandala-papiro-ativa { background: #103b70 !important; color: #e8d9b0; }
         .icon-btn.matriz-visibilidade-ativa:hover {
             background: #0c2c54;
             color: #fcf6ba;
         }
 
-        .time-stepper {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            background: var(--bg-card);
-            border: 1px solid #d4af37;
-            border-radius: 6px;
-            padding: 2px 6px;
-        }
+        .time-stepper { display: flex; align-items: center; gap: 6px; }
 
         .time-select {
             border: none;
             background: transparent;
             font-size: 11px;
             font-weight: 700;
-            color: var(--primary-blue);
+            color: var(--azul-egipcio-escuro);
             padding: 2px 4px;
             outline: none;
             cursor: pointer;
@@ -499,28 +490,8 @@ body {
         }
 
         /* TEMA CÉU: a barra superior é uma folha de papiro entre as duas linhas duplas (aparência em componentes.css). */
-        /* O papiro passa POR FORA das linhas duplas: a folha é um pedaço maior que a barra (::before), com a borda quebrada na ponta de fora. */
-        body.tema-ceu #top-bar { background: transparent; overflow: visible; border-top-color: transparent; border-bottom-color: transparent; }
-        body.tema-ceu #top-bar::after {
-            content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-            border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
-            border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
-        }
-        body.tema-ceu:not(.topbar-fixo) #top-bar { position: relative; }
-        body.tema-ceu #top-bar::before {
-            content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none;
-            background: var(--papiro-fundo);
-            clip-path: polygon(
-                0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px,
-                calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px),
-                98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px),
-                4px 70%, 0 45%, 3px 22%);
-        }
 
-        /* TEMA CÉU: botões que flutuam sobre a mandala (canto esquerdo: salvar/atualizar/matriz/
-           RS; canto direito: Casa 1, Relatório, galeria, zoom, stepper de tempo) viram pedaços
-           de papiro com borda rasgada, ícones em azul-tinta. SÓ PINTURA: tamanho, posição e
-           espaçamento ficam como estão (vários desses estilos são inline, por isso !important). */
+        /* TEMA CÉU: variáveis de papiro dos botões/janelinhas (usadas por outras telas). Os grupos de botões da mandala são barras (papiro.css). */
         body.tema-ceu {
             --papiro-botao: var(--papiro-fundo-simples);
             --papiro-botao-rasgo: polygon(
@@ -529,31 +500,6 @@ body {
                 84% calc(100% - 2px), 62% 100%, 40% calc(100% - 2px), 18% 100%, 0 calc(100% - 2px),
                 2px 65%, 0 35%);
         }
-        body.tema-ceu #mandala-actions-overlay > .icon-btn,
-        body.tema-ceu #lotRotationBtnContainer > div > button,
-        body.tema-ceu #mandalaRelatorioBtnContainer,
-        body.tema-ceu #mandalaSalvarImagemBtnContainer,
-        body.tema-ceu #mandalaZoomContainer,
-        body.tema-ceu #mandala-controls-overlay .time-stepper,
-        body.tema-ceu #lotMenuList {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-actions-overlay > .icon-btn { color: #1d3a66; }
-        body.tema-ceu #mandala-actions-overlay > .icon-btn:hover,
-        body.tema-ceu #lotRotationBtnContainer > div > button:hover,
-        body.tema-ceu #mandalaRelatorioBtnContainer:hover,
-        body.tema-ceu #mandalaSalvarImagemBtnContainer:hover { filter: brightness(1.1); color: #0f2a52; }
-        body.tema-ceu #mandala-actions-overlay > .icon-btn.matriz-visibilidade-ativa { background: #103b70 !important; color: #e8d9b0; }
-        body.tema-ceu #mandala-controls-overlay .icon-btn { color: #1d3a66; background: transparent; }
-        body.tema-ceu #mandala-controls-overlay .icon-btn:hover { background: rgba(29, 58, 102, 0.14); color: #0f2a52; }
-        body.tema-ceu #mandala-controls-overlay .time-select { color: #1d3a66; }
-        body.tema-ceu #mandalaZoomContainer button { background: transparent !important; border-color: transparent !important; color: #1d3a66 !important; }
-        body.tema-ceu #mandalaZoomContainer span { color: #1a1410 !important; }
-        body.tema-ceu #mandalaRelatorioBtnContainer svg,
-        body.tema-ceu #mandalaSalvarImagemBtnContainer svg { stroke: #1d3a66; }
 
         /* TEMA CÉU: quadro da Revolução Solar como um papiro aberto (pedaço de papiro com borda
            rasgada, tinta preta, nome do cliente em terracota, setas/marcas em azul-tinta).
@@ -1452,7 +1398,7 @@ body {
 
             <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
             <div id="mandala-controls-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; align-items: center; gap: 8px;">
-                <div class="time-stepper" style="background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 4px 8px; display: flex; align-items: center; gap: 6px;">
+                <div class="time-stepper">
                     <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
                     <select id="stepUnit" class="time-select">
                         <option value="second">Segundo</option>
@@ -1651,9 +1597,9 @@ body {
 <script src="dialogos.js?v=20261007a"></script>
 <script src="supabase.js?v=20261008i"></script>
 <script src="planetIcons.js?v=20261008d"></script>
-<script src="matrizVisibilidade.js?v=20261009a"></script>
+<script src="matrizVisibilidade.js?v=20261009b"></script>
 <script src="tabelaTecnica.js?v=20261007a"></script>
-<script src="mandala.js?v=20261009a"></script>
+<script src="mandala.js?v=20261009b"></script>
 <script src="roda.js?v=20261009c"></script>
 <script src="isopsefia.js?v=20261003z"></script>
 <script src="profeccao.js?v=20261006e"></script>

@@ -248,3 +248,24 @@
 #top-bar .icon-btn.matriz-visibilidade-ativa, #top-bar .icon-btn.ativo { background: transparent; color: var(--terracota); }
 .action-record-btn { display: flex; align-items: center; justify-content: center; }
 .action-record-btn .icone { display: block; }
+
+/* GRUPOS DE BOTÕES FLUTUANTES DA MANDALA — cada grupo é UMA barra, igual à barra superior: fundo creme, linhas duplas em cima e embaixo,
+   botões sem moldura nem cor própria. (No Céu o papiro é da barra, ver papiro.css.) */
+#mandala-actions-overlay, #mandala-controls-overlay {
+    background: var(--fundo-creme);
+    border: 0;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-radius: 0;
+    box-shadow: var(--sombra, none);
+    padding: 2px 12px;
+}
+#mandala-actions-overlay .icon-btn, #mandala-controls-overlay .icon-btn {
+    background: transparent; border: 0; border-radius: 0; color: var(--azul-egipcio-escuro);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+#mandala-actions-overlay .icon-btn:hover, #mandala-controls-overlay .icon-btn:hover { background: transparent; color: var(--terracota); }
+#mandala-actions-overlay .icon-btn.matriz-visibilidade-ativa, #mandala-actions-overlay .icon-btn.mandala-papiro-ativa { background: transparent; color: var(--terracota); }
+#mandala-controls-overlay .time-select { background: transparent; border: 0; color: var(--azul-egipcio-escuro); }
+#mandala-controls-overlay .icone { fill: none; stroke: currentColor; }
+#mandala-actions-overlay .icon-btn svg, #mandala-controls-overlay .icon-btn svg { flex-shrink: 0; }

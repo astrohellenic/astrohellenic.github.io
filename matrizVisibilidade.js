@@ -285,14 +285,6 @@ function toggleMatrizVisibilidadeNaMandala() {
     if (botao) botao.classList.add('matriz-visibilidade-ativa');
     container.innerHTML = `
       <div style="width: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
-        <div style="display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px;">
-          <button type="button" onclick="salvarMatrizVisibilidadeNaGaleria()" title="Salvar a matriz como imagem na galeria (com o cabeçalho)" class="botao-icone">
-            <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-          </button>
-          <button type="button" onclick="capturarMatrizVisibilidadeMandalaParaRelatorio()" title="Adicionar ao Relatório (sem o cabeçalho)" class="botao-icone">
-            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-          </button>
-        </div>
         <div id="matrizVisibilidadeMandalaContainer" class="painel">
           ${renderMatrizVisibilidadeResponsivaHTML(currentCalculatedData)}
         </div>
