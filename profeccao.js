@@ -26,13 +26,13 @@
         const nomeEl = document.getElementById('profeccaoJanelaNome');
         if (nomeEl) nomeEl.innerText = nome;
         const lbl = document.getElementById('profeccaoJanelaAnoLabel');
-        if (lbl) lbl.innerText = `${anoSel}, ${anoSel - nasc} anos`;
+        if (lbl) lbl.innerHTML = `${anoSel}<span class="idade-ano">, ${anoSel - nasc} anos</span>`;
         const lista = document.getElementById('profeccaoListaAnos');
         if (!lista) return;
         let h = '';
         for (let a = nasc; a <= nasc + 120; a++) {
             const sel = a === anoSel;
-            h += `<div class="item-menu${sel ? ' ano-item-selecionado ativa' : ''}" onclick="selecionarAnoProfeccao(${a})"><span><strong>${a}</strong>, ${a - nasc} anos</span></div>`;
+            h += `<div class="item-menu${sel ? ' ano-item-selecionado ativa' : ''}" onclick="selecionarAnoProfeccao(${a})"><span><strong>${a}</strong><span class="idade-ano">, ${a - nasc} anos</span></span></div>`;
         }
         lista.innerHTML = h;
         setTimeout(() => {

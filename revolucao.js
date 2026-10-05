@@ -78,7 +78,7 @@ function atualizarJanelaRS() {
   const idadeAtual = anoAlvoRS - anoNasc;
 
   if (nomeEl) nomeEl.innerText = nomeMapa;
-  if (labelAno) labelAno.innerText = `${anoAlvoRS}, ${idadeAtual} anos`;
+  if (labelAno) labelAno.innerHTML = `${anoAlvoRS}<span class="idade-ano">, ${idadeAtual} anos</span>`;
 
   if (listaDiv) {
     let htmlLista = '';
@@ -86,7 +86,7 @@ function atualizarJanelaRS() {
     for (let a = anoNasc; a <= anoNasc + 120; a++) {
       const idade = a - anoNasc;
       const selecionado = a === anoAlvoRS;
-      htmlLista += `<div class="item-menu${selecionado ? ' ano-item-selecionado ativa' : ''}" onclick="selecionarAnoRS(${a})"><span><strong>${a}</strong>, ${idade} anos</span></div>`;
+      htmlLista += `<div class="item-menu${selecionado ? ' ano-item-selecionado ativa' : ''}" onclick="selecionarAnoRS(${a})"><span><strong>${a}</strong><span class="idade-ano">, ${idade} anos</span></span></div>`;
     }
     listaDiv.innerHTML = htmlLista;
   }

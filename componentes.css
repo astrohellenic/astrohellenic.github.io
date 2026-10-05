@@ -307,3 +307,4 @@
 /* Cabeça dos menus flutuantes: o rótulo ("Mapa Selecionado", "Retorno Solar"...) é só texto, em preto de tinta, sem destaque; o NOME do cliente é nome, não item de lista: terracota. */
 .item-menu .rotulo { color: var(--preto-tinta); }
 .item-menu.cabeca-menu .nome-nivel { color: var(--terracota); }
+.item-menu .idade-ano { color: var(--preto-tinta); font-weight: 600; }   /* o ano é do item (azul/terracota); a idade é texto comum: preto de tinta */
