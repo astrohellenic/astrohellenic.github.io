@@ -68,6 +68,9 @@ body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, bo
 body.tema-ceu.mandala-papiro-tela #top-bar::before,
 body.tema-ceu.mandala-papiro-tela #mandala-actions-overlay::before,
 body.tema-ceu.mandala-papiro-tela #mandala-controls-overlay::before { display: none; }
-body.tema-ceu .painel .menu-flutuante::after { clip-path: none; }
+/* Menu aberto DENTRO de um painel (já é papiro): sem borda quebrada, então não precisa do recorte — o papel é o próprio fundo e a sombra é um box-shadow comum
+   (mais firme que o drop-shadow nos navegadores do iPad). */
+body.tema-ceu .painel .menu-flutuante { background: var(--papiro-fundo-simples) !important; filter: none; box-shadow: 0 6px 16px rgba(30, 20, 5, .6); }
+body.tema-ceu .painel .menu-flutuante::after { display: none; }
 /* Ferramenta aberta DENTRO da mandala em papiro (ex.: Matriz de Visibilidade): o painel dela não leva papiro próprio — a folha da mandala já é o papel. */
 body.tema-ceu.mandala-papiro-tela #mandala-container .painel { background: transparent !important; clip-path: none; }
