@@ -714,7 +714,7 @@ function renderLiberacaoUI() {
 
         html += `
           <tr class="clicavel${isL2Expanded ? ' ativa aberta' : ''}" onclick="alternarL2Accordion(${i}, ${sIdx}, event)">
-            <td class="centro">${getSignSVGZR(sub.signIdx, 20)}</td>
+            <td class="centro">${signoComNome(getSignSVGZR(sub.signIdx, 20), sub.signIdx)}</td>
             <td>${sub.months} Meses (${sub.days} Dias)</td>
             <td>${formatarDataBR(sub.start)}</td>
             <td>${formatarDataBR(sub.end)}</td>
@@ -747,7 +747,7 @@ function renderLiberacaoUI() {
 
             html += `
               <tr class="clicavel${isL3Expanded ? ' ativa aberta' : ''}" onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)">
-                <td class="centro">${getSignSVGZR(subL3.signIdx, 18)}</td>
+                <td class="centro">${signoComNome(getSignSVGZR(subL3.signIdx, 18), subL3.signIdx)}</td>
                 <td>${subL3.days} Dias</td>
                 <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
                 <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
@@ -780,7 +780,7 @@ function renderLiberacaoUI() {
 
                 html += `
                   <tr${isL4Ativo ? ' class="ativa"' : ''}>
-                    <td class="centro">${getSignSVGZR(subL4.signIdx, 16)}</td>
+                    <td class="centro">${signoComNome(getSignSVGZR(subL4.signIdx, 16), subL4.signIdx)}</td>
                     <td>${subL4.hours} Horas</td>
                     <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
                     <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>

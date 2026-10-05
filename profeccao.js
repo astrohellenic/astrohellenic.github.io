@@ -713,7 +713,7 @@
 
         <div id="profeccaoAnoProfectado" class="linha-ano-profectado">
             ${setaAno(-1)}
-            <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</span>
+            <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${signoComNome(getSignSvgHtml(profectedSignIdx, 18), profectedSignIdx)} Senhor: ${planetaComNome(SIGNS[profectedSignIdx].ruler, 26)}</span>
             ${setaAno(1)}
         </div>
 
@@ -760,8 +760,8 @@
             html += `
                 <tr class="clicavel${isExpanded ? ' ativa' : ''}" onclick="alternarMesProfeccao(${i})" ${isExpanded ? 'data-mes-ativo="1"' : ''} style="user-select: none;">
                     <td class="centro"><strong>Mês ${m.monthNum}</strong></td>
-                    <td class="centro">${getSignSvgHtml(m.signIdx, 20)}</td>
-                    <td class="centro">${getPlanet3DSVG(mSign.ruler, 30)}</td>
+                    <td class="centro">${signoComNome(getSignSvgHtml(m.signIdx, 20), m.signIdx)}</td>
+                    <td class="centro">${planetaComNome(mSign.ruler, 30)}</td>
                     <td>${formatarData(m.start)}</td>
                 </tr>
             `;

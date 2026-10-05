@@ -224,7 +224,11 @@ function montarSVGPainelPrincipal(listaElementos) {
     const termoIconeSVG = getTermoIconeTabelaSVG(termoSimbolo, TERMO_ICONE_TAMANHO);
     const dodec = calcDodecatemoriaTabela(absDeg);
     const dodecSignoSVG = getSignSVG(dodec.signIdx, 18);
-    return { iconeSVG, pointName, signoSVG, grauBase, temRetro, latFormatted, termoIconeSVG, dodecSignoSVG, dodecGrauFormatted: dodec.degFormatted };
+    // rótulos dos glifos (Configurações → Aparência): o nome por extenso embaixo do glifo, quando ligado
+    const signoNome = nomeSigno(Math.floor(absDeg / 30));
+    const termoNome = nomePlaneta(TERMO_PLANET_BY_SYMBOL_TABELA[termoSimbolo]);
+    const dodecSignoNome = nomeSigno(dodec.signIdx);
+    return { iconeSVG, pointName, signoSVG, grauBase, temRetro, latFormatted, termoIconeSVG, dodecSignoSVG, dodecGrauFormatted: dodec.degFormatted, signoNome, termoNome, dodecSignoNome };
   });
 
   // Largura de cada coluna = o maior entre o rótulo do cabeçalho e o
@@ -242,11 +246,11 @@ function montarSVGPainelPrincipal(listaElementos) {
   linhas.forEach(l => {
     const iconeTam = extrairTamanhoIconeSVG(l.iconeSVG);
     wPonto = Math.max(wPonto, iconeTam.w, medirLarguraTextoTabela(l.pointName, F_PONTO_LABEL.size, F_PONTO_LABEL.weight));
-    wSigno = Math.max(wSigno, extrairTamanhoIconeSVG(l.signoSVG).w);
+    wSigno = Math.max(wSigno, extrairTamanhoIconeSVG(l.signoSVG).w, medirLarguraTextoTabela(l.signoNome, F_PONTO_LABEL.size, F_PONTO_LABEL.weight));
     wGrau = Math.max(wGrau, medirLarguraTextoTabela(l.grauBase + (l.temRetro ? ' ℞' : ''), F_GRAU.size, F_GRAU.weight));
     wLat = Math.max(wLat, medirLarguraTextoTabela(l.latFormatted, F_LAT.size, F_LAT.weight));
-    wTermo = Math.max(wTermo, extrairTamanhoIconeSVG(l.termoIconeSVG).w);
-    wDodecSigno = Math.max(wDodecSigno, extrairTamanhoIconeSVG(l.dodecSignoSVG).w);
+    wTermo = Math.max(wTermo, extrairTamanhoIconeSVG(l.termoIconeSVG).w, medirLarguraTextoTabela(l.termoNome, F_PONTO_LABEL.size, F_PONTO_LABEL.weight));
+    wDodecSigno = Math.max(wDodecSigno, extrairTamanhoIconeSVG(l.dodecSignoSVG).w, medirLarguraTextoTabela(l.dodecSignoNome, F_PONTO_LABEL.size, F_PONTO_LABEL.weight));
     wDodecGrau = Math.max(wDodecGrau, medirLarguraTextoTabela(l.dodecGrauFormatted, F_DODEC_GRAU.size, F_DODEC_GRAU.weight));
 
     const alturaLabel = Math.ceil(F_PONTO_LABEL.size * 1.3);
@@ -298,6 +302,14 @@ function montarSVGPainelPrincipal(listaElementos) {
   svg += celulaHeader(colX.dodecSigno, alturaHeaderLinha, wDodecSigno, alturaHeaderLinha, 'SIGNO');
   svg += celulaHeader(colX.dodecGrau, alturaHeaderLinha, wDodecGrau, alturaHeaderLinha, 'GRAU');
 
+  // glifo no centro da célula; com o nome embaixo quando os rótulos estão ligados
+  function iconeComRotulo(iconeSVG, nome, x, cy) {
+    if (!nome) return posicionarIconeMatrizSVG(iconeSVG, x, cy);
+    const tam = extrairTamanhoIconeSVG(iconeSVG);
+    return posicionarIconeMatrizSVG(iconeSVG, x, cy - 6) +
+      `<text x="${x}" y="${cy - 6 + tam.h / 2 + 9}" font-size="${F_PONTO_LABEL.size}" font-weight="${F_PONTO_LABEL.weight}" fill="var(--preto-tinta)" text-anchor="middle" dominant-baseline="central">${escapeHtml(nome)}</text>`;
+  }
+
   // Corpo
   linhas.forEach((l, i) => {
     const y0 = rowY[i];
@@ -318,7 +330,7 @@ function montarSVGPainelPrincipal(listaElementos) {
     svg += celula(colX.ponto, wPonto, iconePosicionado + labelPonto);
 
     // Signo
-    svg += celula(colX.signo, wSigno, posicionarIconeMatrizSVG(l.signoSVG, colX.signo + wSigno / 2, cy));
+    svg += celula(colX.signo, wSigno, iconeComRotulo(l.signoSVG, l.signoNome, colX.signo + wSigno / 2, cy));
 
     // Grau (com ℞ em vermelho quando retrógrado)
     const textoGrau = l.temRetro
@@ -330,10 +342,10 @@ function montarSVGPainelPrincipal(listaElementos) {
     svg += celula(colX.lat, wLat, `<text x="${colX.lat + wLat / 2}" y="${cy}" font-size="${F_LAT.size}" font-weight="${F_LAT.weight}" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.latFormatted)}</text>`);
 
     // Termo
-    svg += celula(colX.termo, wTermo, posicionarIconeMatrizSVG(l.termoIconeSVG, colX.termo + wTermo / 2, cy));
+    svg += celula(colX.termo, wTermo, iconeComRotulo(l.termoIconeSVG, l.termoNome, colX.termo + wTermo / 2, cy));
 
     // Dodecatemória — Signo
-    svg += celula(colX.dodecSigno, wDodecSigno, posicionarIconeMatrizSVG(l.dodecSignoSVG, colX.dodecSigno + wDodecSigno / 2, cy));
+    svg += celula(colX.dodecSigno, wDodecSigno, iconeComRotulo(l.dodecSignoSVG, l.dodecSignoNome, colX.dodecSigno + wDodecSigno / 2, cy));
 
     // Dodecatemória — Grau
     svg += celula(colX.dodecGrau, wDodecGrau, `<text x="${colX.dodecGrau + wDodecGrau / 2}" y="${cy}" font-size="${F_DODEC_GRAU.size}" font-weight="${F_DODEC_GRAU.weight}" fill="var(--preto-tinta)" text-anchor="middle" dominant-baseline="central">${escapeHtml(l.dodecGrauFormatted)}</text>`);
