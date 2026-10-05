@@ -73,6 +73,17 @@ function estiloMandalaAtual(naPinturaCeu) {
 
 /* Desenha a roda e devolve { svg, width, height, papiroNaTela, ceuParams }. Lê o estado global (mapa aberto, momento, Casa 1...)
    como a renderMandala sempre leu; "o" traz só as opções de pintura de cada chamada (as mesmas de renderMandala). */
+/* COR DE CADA NÍVEL nas mandalas (destaque de signo): a mesma em toda ferramenta — Nível 1 verde (o do WhatsApp), Nível 2 ocre, Nível 3 azul egípcio
+   claro, Nível 4 cinza (o do elemento ar). Sempre com transparência (alfa), pra a mandala aparecer por baixo. Versão do modo (claro/escuro) automática. */
+function corNivelMandala(nivel, alfa) {
+  const escuro = document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu';
+  const pal = paletaEpoca(escuro);
+  const hex = [null, pal.verde, pal.ocre, pal.azulClaro, pal.cinza][nivel] || pal.cinza;
+  const n = parseInt(hex.slice(1), 16);
+  return alfa === undefined ? hex : `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alfa})`;
+}
+window.corNivelMandala = corNivelMandala;
+
 /* MANCHA DE COMBUSTÃO / SOB OS RAIOS do Sol — as mesmas cores em todo lugar (paleta de época): de 0° a 8° (combusto, 53% do raio) é o ocre,
    de 8° a 15° (sob os raios) é o laranja do fogo; cada um na versão do modo (claro/escuro). Nada muda por tema além da versão do modo. */
 function combustaoStopsSVG(escuro, papiro) {
@@ -171,9 +182,9 @@ function desenharRodaSVG(o) {
      de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
      mancha branca em volta de cada número no meio do disco escuro. */
   const tinta = {
-    fundoDisco: papiro ? 'none' : modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff',
+    fundoDisco: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff'),
     dourado: pal.azulEscuro, douradoCasas: pal.terracota,
-    halo: papiro ? 'none' : modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff',
+    halo: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff'),
     inkForte: pal.azulEscuro, inkPlaneta: pal.pretoTinta, navio: pal.azulEscuro, linhaConectora: rgbaHex(pal.azulEscuro, 0.55),
     aspectoOposicao: pal.laranja, aspectoTrigono: pal.azulEscuro, aspectoQuadratura: pal.terracota, aspectoSextil: pal.azulClaro, // os mesmos em TODOS os temas
     elementoFogo: pal.laranja, elementoTerra: pal.marrom, elementoAr: pal.cinza, elementoAgua: pal.azulClaro,

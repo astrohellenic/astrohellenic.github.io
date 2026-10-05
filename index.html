@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261009c">
     <link rel="stylesheet" href="temas.css?v=20261009a">
-    <link rel="stylesheet" href="componentes.css?v=20261009d">
+    <link rel="stylesheet" href="componentes.css?v=20261009e">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -836,57 +836,6 @@ body {
         body.tema-ceu .rel-setup-tela .rel-setup-rascunho-atual { background: rgba(120, 80, 30, 0.22) !important; }
         body.tema-ceu .rel-setup-tela #relListaModelos > div { background: transparent !important; border: none !important; border-bottom: 1px solid rgba(95, 65, 30, 0.45) !important; border-radius: 0 !important; }
 
-        /* TEMA CÉU — Profecção: a tela é uma folha de papiro (do título até o fim da tabela) e as duas rodas
-           são desenhadas em tinta direto nela (ver gerarMandalaSVG em profeccao.js). Cabeçalhos em "tinta
-           sobre a folha". Só tinta: azul nas linhas e desenhos, terracota nos títulos e destaques, preto
-           no texto. SÓ PINTURA — tamanhos, posições e comportamento ficam como estão. */
-        body.tema-ceu #profeccao-container {
-            --bg-main: transparent;
-            --bg-card: transparent;
-            --bg-hover: rgba(120, 80, 30, 0.14);
-            --border-color: rgba(95, 65, 30, 0.45);
-            --primary-blue: #1d3a66;
-            --gold-primary: #1d3a66;
-            --text-muted: #1a1410;
-            color: #1a1410;
-            background: var(--papiro-fundo) !important;
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
-        }
-        body.tema-ceu #profeccao-container h2, body.tema-ceu #profeccao-container h3 { color: #a03e25 !important; }
-        body.tema-ceu #profeccao-container button[onclick^="mudarAnoProfeccao"] { background: transparent !important; border: 1.5px solid #1d3a66 !important; color: #1d3a66 !important; box-shadow: none !important; }
-        body.tema-ceu #profeccaoDuasColunas > div > div:last-child { background: transparent !important; border: none !important; box-shadow: none !important; }
-        body.tema-ceu #profeccaoTabelaCard { background: transparent !important; border: 1.5px solid rgba(29, 58, 102, 0.55) !important; border-radius: 6px !important; box-shadow: none !important; }
-        body.tema-ceu #profMensalWrapper { background: transparent !important; border: none !important; }
-        body.tema-ceu #profMensalTable thead tr { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid #1d3a66; }
-        body.tema-ceu #profMensalTable tbody tr { background: transparent !important; border-bottom: 1px solid rgba(95, 65, 30, 0.45) !important; }
-        /* data-mes-ativo além do [style*]: a captura (html2canvas) perde o atributo style da cópia, então só o seletor por style não pintava o mês ativo na imagem salva */
-        body.tema-ceu #profMensalTable tbody tr[data-mes-ativo],
-        body.tema-ceu #profMensalTable tbody tr[style*="e0e7ff"] { background: rgba(120, 80, 30, 0.22) !important; }
-        /* botões de ano / galeria / relatório e as janelinhas deles: papiro, como os da Mandala */
-        body.tema-ceu #mandala-container button[onclick^="toggleJanelaAnoProfeccao"],
-        body.tema-ceu #mandala-container button[onclick^="salvarProfeccaoNaGaleria"],
-        body.tema-ceu #mandala-container button[onclick*="profeccaoMenuRelatorio"] {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-container button[onclick^="toggleJanelaAnoProfeccao"] svg,
-        body.tema-ceu #mandala-container button[onclick^="salvarProfeccaoNaGaleria"] svg,
-        body.tema-ceu #mandala-container button[onclick*="profeccaoMenuRelatorio"] svg { stroke: #1d3a66; }
-        body.tema-ceu #profeccaoJanelaAno, body.tema-ceu #profeccaoMenuRelatorio {
-            --bg-main: transparent; --border-color: rgba(95, 65, 30, 0.45); --primary-blue: #1d3a66; --gold-primary: #1d3a66; --text-muted: #1a1410;
-            background: var(--papiro-fundo-simples) !important;
-            border-color: transparent !important; box-shadow: none !important;
-            clip-path: polygon(0 4px, 8% 0, 22% 3px, 38% 0, 55% 4px, 70% 1px, 85% 3px, 100% 0, calc(100% - 3px) 30%, 100% 60%, calc(100% - 3px) 100%, 85% calc(100% - 3px), 65% 100%, 45% calc(100% - 4px), 25% 100%, 8% calc(100% - 3px), 0 100%, 3px 60%, 0 30%);
-        }
-        body.tema-ceu #profeccaoJanelaAno span, body.tema-ceu #profeccaoMenuRelatorio div { color: #1a1410 !important; }
-        body.tema-ceu #profeccaoJanelaNome { color: #a03e25 !important; }
-        /* lista de anos da janelinha: as linhas vinham com --bg-card (escuro) e texto escuro — viram papiro transparente,
-           linha fina de tinta, ano escolhido com um tom mais fundo e o "visto" em terracota (igual à Revolução Solar) */
-        body.tema-ceu #profeccaoListaAnos > div { background: transparent !important; border-bottom-color: rgba(95, 65, 30, 0.3) !important; color: #1a1410 !important; }
-        body.tema-ceu #profeccaoListaAnos > div.ano-item-selecionado { background: rgba(120, 80, 30, 0.22) !important; }
-        body.tema-ceu #profeccaoListaAnos i { color: #a03e25 !important; }
 
         /* TEMA CÉU — Sinastria: a tela é uma folha de papiro e as duas rodas são desenhadas em tinta direto nela
            (ver gerarMandalaSVG em sinastria.js, cópia da Profecção). Mesma pintura da Profecção; SÓ PINTURA —
@@ -1505,16 +1454,16 @@ body {
      pra data de hoje. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tz-lookup.js?v=20260919"></script>
-<script src="papiro.js?v=20261008b"></script>
+<script src="papiro.js?v=20261009a"></script>
 <script src="dialogos.js?v=20261007a"></script>
 <script src="supabase.js?v=20261008i"></script>
 <script src="planetIcons.js?v=20261008d"></script>
 <script src="matrizVisibilidade.js?v=20261009d"></script>
 <script src="tabelaTecnica.js?v=20261009c"></script>
 <script src="mandala.js?v=20261009d"></script>
-<script src="roda.js?v=20261009g"></script>
+<script src="roda.js?v=20261009h"></script>
 <script src="isopsefia.js?v=20261003z"></script>
-<script src="profeccao.js?v=20261009a"></script>
+<script src="profeccao.js?v=20261009b"></script>
 <script src="sinastria.js?v=20261009a"></script>
 <script src="revolucao.js?v=20260920"></script>
 <script src="decenios.js?v=20261009a"></script>

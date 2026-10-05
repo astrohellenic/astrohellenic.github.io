@@ -79,8 +79,8 @@ function paletaEpoca(escuro) {
   const chave = escuro ? 'e' : 'c';
   if (__paletaEpocaCache[chave]) return __paletaEpocaCache[chave];
   const reserva = escuro
-    ? { azulEscuro: '#5F80E7', azulClaro: '#4A8DD4', pretoTinta: '#E2E8F0', ocre: '#D9AE3F', terracota: '#CF6044', laranja: '#F28A33', marrom: '#AE7C4E', cinza: '#A3ADB5', verde: '#5FA073' }
-    : { azulEscuro: '#1034A6', azulClaro: '#1F5FA3', pretoTinta: '#1A1410', ocre: '#B5852F', terracota: '#A03E25', laranja: '#D0610F', marrom: '#6B4A2B', cinza: '#6B7780', verde: '#4A7C59' };
+    ? { azulEscuro: '#5F80E7', azulClaro: '#4A8DD4', pretoTinta: '#E2E8F0', ocre: '#D9AE3F', terracota: '#CF6044', laranja: '#F28A33', marrom: '#AE7C4E', cinza: '#A3ADB5', verde: '#5FA073', fundoCreme: '#1C1917' }
+    : { azulEscuro: '#1034A6', azulClaro: '#1F5FA3', pretoTinta: '#1A1410', ocre: '#B5852F', terracota: '#A03E25', laranja: '#D0610F', marrom: '#6B4A2B', cinza: '#6B7780', verde: '#4A7C59', fundoCreme: '#FFFDF5' };
   if (typeof document === 'undefined' || !document.body) return reserva;
   const sonda = document.createElement('span');
   sonda.className = escuro ? 'paleta-escura' : 'paleta-clara';
@@ -91,7 +91,7 @@ function paletaEpoca(escuro) {
   const r = {
     azulEscuro: ler('--azul-egipcio-escuro', reserva.azulEscuro), azulClaro: ler('--azul-egipcio-claro', reserva.azulClaro),
     pretoTinta: ler('--preto-tinta', reserva.pretoTinta), ocre: ler('--ocre', reserva.ocre), terracota: ler('--terracota', reserva.terracota),
-    laranja: ler('--laranja', reserva.laranja), marrom: ler('--marrom', reserva.marrom), cinza: ler('--cinza', reserva.cinza), verde: ler('--verde', reserva.verde)
+    laranja: ler('--laranja', reserva.laranja), marrom: ler('--marrom', reserva.marrom), cinza: ler('--cinza', reserva.cinza), verde: ler('--verde', reserva.verde), fundoCreme: ler('--fundo-creme', reserva.fundoCreme)
   };
   document.body.removeChild(sonda);
   // só guarda se o CSS realmente carregou (senão tenta de novo na próxima vez)

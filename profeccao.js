@@ -32,7 +32,7 @@
         let h = '';
         for (let a = nasc; a <= nasc + 120; a++) {
             const sel = a === anoSel;
-            h += `<div class="${sel ? 'ano-item-selecionado' : ''}" onclick="selecionarAnoProfeccao(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${sel ? 'var(--bg-hover)' : 'var(--bg-card)'}; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted-2);"><span><strong>${a}</strong>, ${a - nasc} anos</span>${sel ? '<i class="fa-solid fa-check" style="color: var(--primary-blue);"></i>' : ''}</div>`;
+            h += `<div class="item-menu${sel ? ' ano-item-selecionado ativa' : ''}" onclick="selecionarAnoProfeccao(${a})"><span><strong>${a}</strong>, ${a - nasc} anos</span></div>`;
         }
         lista.innerHTML = h;
         setTimeout(() => {
@@ -97,8 +97,9 @@
     const MONTH_MS = (30 + (10.5 / 24)) * MS_PER_DAY;
 
     function getSignSvgHtml(signIdx, size = 18) {
-        // Tema Céu (papiro): glifo de signo em azul-tinta (sem cor por elemento), como os desenhos em tinta.
-        const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? ({ fire: '#a62b1f', earth: '#6b4a2b', air: '#17707f', water: '#1f3a66' })[SIGN_ELEMENTS[signIdx]] : ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[signIdx]];
+        // Cor do elemento do signo pela paleta de época (fogo laranja, terra marrom, ar cinza, água azul egípcio claro), na versão do modo.
+        const pal = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu');
+        const color = ({ fire: pal.laranja, earth: pal.marrom, air: pal.cinza, water: pal.azulClaro })[SIGN_ELEMENTS[signIdx]];
         return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; display: inline-block; vertical-align: middle;">${MONOLINE_ZODIAC_SVGS[signIdx]}</svg>`;
     }
 
@@ -491,19 +492,18 @@
         const highlightAscSignIdx = (opcoes.highlightAscSignIdx !== undefined) ? opcoes.highlightAscSignIdx : null;
         const highlightMesAbertoSignIdx = (opcoes.highlightMesAbertoSignIdx !== undefined) ? opcoes.highlightMesAbertoSignIdx : null;
 
-        /* TEMA CÉU — roda SECUNDÁRIA (desta ferramenta): "tinta sobre o papiro" (as cores vêm da roda central). Aqui só as cores
-           dos destaques: azul-tinta/terracota/marrom no papiro, as cores de sempre fora dele. */
+        /* Roda SECUNDÁRIA (desta ferramenta): tinta de época, as cores vêm da roda central. Aqui só as cores dos destaques — uma por NÍVEL,
+           iguais em toda mandala (corNivelMandala, roda.js): Nível 1 = signo profectado do ano (verde), Nível 2 = Ascendente da Revolução Solar
+           (ocre), Nível 3 = signo profectado do mês (azul egípcio claro). */
         const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
-        const AZ_TINTA = '#1d3a66', TERRACOTA = '#a03e25';
+        const palP = paletaEpoca(!papiro && document.documentElement.classList.contains('tema-escuro'));
         const sufixo = `w${wheelInstanceCounter++}`;
 
         return desenharRodaSVG({
             tintaPapiro: papiro,
             ferramenta: {
                 dados,
-                // fundoDisco/halo do tema escuro usam --bg-card (#262220), NÃO --bg-main (#1c1917): cada mandala fica dentro do seu
-                // cartão (ver iniciarModuloProfeccao) — pra não aparecer margem clara entre a borda dourada do cartão e o disco escuro.
-                fundoEscuro: '#262220',
+                fundoDisco: papiro ? 'none' : palP.fundoCreme, // o disco tem a cor do painel por baixo (creme / escuro); no papiro, nenhuma
                 abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
@@ -513,24 +513,23 @@
                 glowSol: (pos, raio, tinta) => `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="${tinta.fundoDisco}"/>` +
                     `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="url(#combustionGlow_${sufixo})"/>`,
                 destaques: {
-                    // fatias (por baixo de tudo): mês aberto, signo profectado, Ascendente da Revolução Solar
+                    // fatias (por baixo de tudo): Nível 3 = mês aberto, Nível 1 = signo profectado, Nível 2 = Ascendente da Revolução Solar
                     fatias: [
-                        { signIdx: highlightMesAbertoSignIdx, cor: papiro ? "rgba(29, 58, 102, 0.14)" : "rgba(224, 231, 255, 0.6)" },
-                        { signIdx: profectedSignIdx, cor: papiro ? "rgba(160, 62, 37, 0.20)" : "rgba(163, 230, 53, 0.4)" },
-                        { signIdx: highlightAscSignIdx, cor: papiro ? "rgba(107, 74, 43, 0.18)" : "rgba(254, 240, 138, 0.5)" }
+                        { signIdx: highlightMesAbertoSignIdx, cor: corNivelMandala(3, 0.40) },
+                        { signIdx: profectedSignIdx, cor: corNivelMandala(1, 0.40) },
+                        { signIdx: highlightAscSignIdx, cor: corNivelMandala(2, 0.40) }
                     ],
                     /* ETIQUETAS: faixas sólidas na borda externa, uma do lado da outra, sem se misturar — quando dois destaques caem no
                        mesmo signo a fatia de cima disfarça a de baixo; assim dá pra apontar exatamente quais bateram naquele signo. */
                     faixas: [
-                        { signIdx: highlightMesAbertoSignIdx, cor: papiro ? AZ_TINTA : "#6366f1", de: 4, ate: 12 },
-                        { signIdx: highlightAscSignIdx, cor: papiro ? "#6b4a2b" : "#eab308", de: 14, ate: 22 },
-                        { signIdx: profectedSignIdx, cor: papiro ? TERRACOTA : "#65a30d", de: 24, ate: 32 }
+                        { signIdx: highlightMesAbertoSignIdx, cor: corNivelMandala(3), de: 4, ate: 12 },
+                        { signIdx: highlightAscSignIdx, cor: corNivelMandala(2), de: 14, ate: 22 },
+                        { signIdx: profectedSignIdx, cor: corNivelMandala(1), de: 24, ate: 32 }
                     ],
                     // coroa sobre o regente do signo profectado do ano
                     coroas: (profectedSignIdx !== null && SIGNS[profectedSignIdx]) ? [{
                         rulerId: SIGNS[profectedSignIdx].ruler,
-                        preenchimento: papiro ? 'none' : '#f5c518', contorno: papiro ? TERRACOTA : '#a8790a',
-                        espessura: papiro ? 1.4 : 0.9, ponto: papiro ? TERRACOTA : '#dc2626'
+                        preenchimento: 'none', contorno: palP.terracota, espessura: 1.4, ponto: palP.terracota
                     }] : []
                 }
             }
@@ -674,90 +673,81 @@
         const alturaCabProf = Math.max(layoutCabNatal.altura, layoutCabRS ? layoutCabRS.altura : 0);
         const cabecalhoNatalHTML = montarCabecalhoMandalaImagemHTML(dadosNatal, null, { largura: LARGURA_CABECALHO_PROF, alturaMinima: alturaCabProf, tintaSobreFolha: true });
         const cabecalhoRSHTML = opcoesCabRS ? montarCabecalhoMandalaImagemHTML(dadosRS, null, Object.assign({ alturaMinima: alturaCabProf, tintaSobreFolha: true }, opcoesCabRS)) : '';
-        const btnCssProf = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
-        const cardMandalaCssProf = "background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+        const svgCalendario = '<svg class="icone" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="5"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/><circle cx="22" cy="38" r="1.5"/><circle cx="32" cy="38" r="1.5"/><circle cx="42" cy="38" r="1.5"/><circle cx="22" cy="47" r="1.5"/><circle cx="32" cy="47" r="1.5"/></svg>';
+        const svgGaleria = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+        const svgRelatorio = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
+        const setaAno = (dir) => `<button type="button" class="botao-icone" onclick="mudarAnoProfeccao(${dir})" title="${dir < 0 ? 'Ano anterior' : 'Próximo ano'}"><svg class="icone" viewBox="0 0 64 64"><polyline points="${dir < 0 ? '40,12 20,32 40,52' : '24,12 44,32 24,52'}"/></svg></button>`;
 
         let html = `
     <div style="width: 100%;">
-        <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
-            <div style="position: relative; flex-shrink: 0;">
-                <button type="button" onclick="toggleJanelaAnoProfeccao(event)" title="Escolher o ano profectado" style="${btnCssProf}">
-                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="12" width="48" height="44" rx="5"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/><circle cx="22" cy="38" r="1.5"/><circle cx="32" cy="38" r="1.5"/><circle cx="42" cy="38" r="1.5"/><circle cx="22" cy="47" r="1.5"/><circle cx="32" cy="47" r="1.5"/></svg>
-                </button>
-                <div id="profeccaoJanelaAno" style="display: none; position: absolute; top: 42px; right: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
-                    <div style="padding: 10px 14px; border-bottom: 1px solid var(--gold-primary); border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                        <span style="font-size: 10px; text-transform: uppercase; color: var(--gold-primary); font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
-                        <div id="profeccaoJanelaNome" style="font-weight: 700; font-size: 13px; color: var(--primary-blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+    <div id="profeccao-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+
+        <div class="cabeca-ferramenta">
+            <h2 class="titulo-ferramenta">Profecção Anual ${idade} - Anos</h2>
+            <div class="acoes-ferramenta">
+                <div style="position: relative; flex-shrink: 0;">
+                    <button type="button" class="botao-icone" onclick="toggleJanelaAnoProfeccao(event)" title="Escolher o ano profectado">${svgCalendario}</button>
+                    <div id="profeccaoJanelaAno" class="menu-flutuante" style="display: none; position: absolute; top: 42px; right: 0; z-index: 9999; width: 280px; font-family: inherit;">
+                        <div class="item-menu cabeca-menu">
+                            <span class="rotulo">Mapa Selecionado</span>
+                            <div id="profeccaoJanelaNome" class="nome-nivel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+                        </div>
+                        <div class="item-menu cabeca-menu">
+                            <span class="rotulo">Ano Profectado</span>
+                            <span id="profeccaoJanelaAnoLabel" style="font-weight: 700; font-size: 14px;"></span>
+                        </div>
+                        <div id="profeccaoListaAnos" style="max-height: 250px; overflow-y: auto;"></div>
                     </div>
-                    <div style="padding: 12px 14px;">
-                        <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Ano Profectado</span>
-                        <span id="profeccaoJanelaAnoLabel" style="font-weight: 700; font-size: 14px; color: var(--primary-blue);"></span>
-                    </div>
-                    <div id="profeccaoListaAnos" style="max-height: 250px; overflow-y: auto; border-top: 1px solid var(--gold-primary); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
                 </div>
-            </div>
-            <button type="button" onclick="salvarProfeccaoNaGaleria()" title="Salvar a Profecção como imagem na galeria (com título e cabeçalhos)" style="${btnCssProf}">
-                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-            </button>
-            <div style="position: relative; flex-shrink: 0;">
-                <button type="button" onclick="const m=document.getElementById('profeccaoMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" style="${btnCssProf}">
-                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-                </button>
-                <div id="profeccaoMenuRelatorio" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; min-width: 230px; overflow: hidden;">
-                    <div onclick="capturarProfeccaoParaRelatorio('inteira')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Ferramenta inteira (com cabeçalhos)</div>
-                    <div onclick="capturarProfeccaoParaRelatorio('mandalas')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue); border-bottom: 1px solid var(--border-color);">Só as mandalas (com cabeçalhos)</div>
-                    <div onclick="capturarProfeccaoParaRelatorio('tabela')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary-blue);">Só a tabela</div>
+                <button type="button" class="botao-icone" onclick="salvarProfeccaoNaGaleria()" title="Salvar a Profecção como imagem na galeria (com título e cabeçalhos)">${svgGaleria}</button>
+                <div style="position: relative; flex-shrink: 0;">
+                    <button type="button" class="botao-icone" onclick="const m=document.getElementById('profeccaoMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório">${svgRelatorio}</button>
+                    <div id="profeccaoMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 220px;">
+                        <div class="item-menu" onclick="capturarProfeccaoParaRelatorio('inteira')">Ferramenta inteira (com cabeçalhos)</div>
+                        <div class="item-menu" onclick="capturarProfeccaoParaRelatorio('mandalas')">Só as mandalas (com cabeçalhos)</div>
+                        <div class="item-menu" onclick="capturarProfeccaoParaRelatorio('tabela')">Só a tabela</div>
+                    </div>
                 </div>
             </div>
         </div>
-    <div id="profeccao-container"
-         style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
 
-        <div style="text-align: center; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 6px;">
-                <button onclick="mudarAnoProfeccao(-1)" style="background: var(--bg-main); border: 1px solid #d4af37; color: var(--primary-blue); border-radius: 6px; width: 36px; height: 36px; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; padding: 0;">&lt;</button>
-
-                <h2 style="font-family: 'Cinzel', serif; color: var(--primary-blue); margin: 0; font-size: 18px; text-transform: uppercase;">Profecção Anual ${idade} - Anos</h2>
-
-                <button onclick="mudarAnoProfeccao(1)" style="background: var(--bg-main); border: 1px solid #d4af37; color: var(--primary-blue); border-radius: 6px; width: 36px; height: 36px; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; padding: 0;">&gt;</button>
-            </div>
-
-            <div id="profeccaoAnoProfectado" style="font-size: 13px; color: var(--primary-blue); display: flex; align-items: center; justify-content: center; gap: 5px;">
-                <strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}
-            </div>
+        <div id="profeccaoAnoProfectado" class="linha-ano-profectado">
+            ${setaAno(-1)}
+            <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${getSignSvgHtml(profectedSignIdx, 18)} Senhor: ${getPlanet3DSVG(SIGNS[profectedSignIdx].ruler, 26)}</span>
+            ${setaAno(1)}
         </div>
 
         <!-- Dois cabeçalhos PADRÃO (função global), cada um acima da sua mandala, lado a lado. -->
         <div id="profeccaoDuasColunas" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 18px; margin-bottom: 20px;">
             <div style="flex: 1 1 0; min-width: 280px;">
                 ${cabecalhoRSHTML}
-                <div style="${cardMandalaCssProf}">
+                <div class="cartao" style="padding: 12px 10px;">
                     ${gerarMandalaSVG(dadosRS, { profectedSignIdx })}
                 </div>
             </div>
             <div style="flex: 1 1 0; min-width: 280px;">
                 ${cabecalhoNatalHTML}
-                <div style="${cardMandalaCssProf}">
+                <div class="cartao" style="padding: 12px 10px;">
                     ${gerarMandalaSVG(dadosNatal, { profectedSignIdx, highlightAscSignIdx: rsAscSignIdx, highlightMesAbertoSignIdx: expandedMonthSignIdx })}
                 </div>
             </div>
         </div>
 
-        <div id="profeccaoTabelaCard" style="background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(197, 155, 39, 0.08);">
-            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: var(--primary-blue); font-weight: 800; margin: 0; text-transform: uppercase;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
-            </div>
+        <hr class="divisa">
+
+        <div id="profeccaoTabelaCard">
+            <h3 class="titulo-secao" style="margin-top: 0;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
 
             <div id="profMensalOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; margin-top: 10px; touch-action: pan-y;">
               <div id="profMensalScaleBox">
-              <div id="profMensalWrapper" style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; overflow: hidden; transform-origin: top left;">
-                <table id="profMensalTable" style="width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px;">
+              <div id="profMensalWrapper" style="transform-origin: top left;">
+                <table id="profMensalTable" class="tabela-epoca">
                     <thead>
-                        <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                            <th style="padding: 10px 12px; text-align: center;">Mês</th>
-                            <th style="padding: 10px 12px; text-align: center;">Signo</th>
-                            <th style="padding: 10px 12px; text-align: center;">Regente</th>
-                            <th style="padding: 10px 12px; text-align: left;">Início do Período</th>
+                        <tr>
+                            <th class="centro">Mês</th>
+                            <th class="centro">Signo</th>
+                            <th class="centro">Regente</th>
+                            <th>Início do Período</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -766,19 +756,18 @@
         monthlyCache.forEach((m, i) => {
             const mSign = SIGNS[m.signIdx];
             const isExpanded = (window.expandedProfeccaoMes === i);
-            const bgRow = isExpanded ? '#e0e7ff' : (i % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-main)');
 
             html += `
-                <tr onclick="alternarMesProfeccao(${i})" ${isExpanded ? 'data-mes-ativo="1"' : ''} style="border-bottom: 1px solid var(--border-color); background-color: ${bgRow}; cursor: pointer; user-select: none;">
-                    <td style="padding: 10px 12px; text-align: center;"><strong>Mês ${m.monthNum}</strong></td>
-                    <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtml(m.signIdx, 20)}</td>
-                    <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(mSign.ruler, 30)}</td>
-                    <td style="padding: 10px 12px; text-align: left;">${formatarData(m.start)}</td>
+                <tr class="clicavel${isExpanded ? ' ativa' : ''}" onclick="alternarMesProfeccao(${i})" ${isExpanded ? 'data-mes-ativo="1"' : ''} style="user-select: none;">
+                    <td class="centro"><strong>Mês ${m.monthNum}</strong></td>
+                    <td class="centro">${getSignSvgHtml(m.signIdx, 20)}</td>
+                    <td class="centro">${getPlanet3DSVG(mSign.ruler, 30)}</td>
+                    <td>${formatarData(m.start)}</td>
                 </tr>
             `;
         });
 
-        html += `</tbody></table></div></div></div></div></div></div>`;
+        html += `</tbody></table></div></div></div></div><hr class="divisa"></div></div>`;
         container.innerHTML = html;
 
         // Em telas estreitas, em vez de deixar a tabela cortada com rolagem
@@ -881,7 +870,12 @@
             if (cartao) {
                 const rc = cartao.getBoundingClientRect(), cs = getComputedStyle(cartao);
                 const borda = parseFloat(cs.borderTopWidth) || 0, raio = parseFloat(cs.borderTopLeftRadius) || 0;
-                partes += `<rect x="${rc.left - R.left + borda / 2}" y="${rc.top - R.top + borda / 2}" width="${rc.width - borda}" height="${rc.height - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`;
+                const bordaEsq = parseFloat(cs.borderLeftWidth) || 0;
+                if (bordaEsq > 0) {
+                    partes += `<rect x="${rc.left - R.left + borda / 2}" y="${rc.top - R.top + borda / 2}" width="${rc.width - borda}" height="${rc.height - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`;
+                } else if (borda > 0) { // cartão do padrão: só a linha de cima e a de baixo
+                    partes += `<line x1="${rc.left - R.left}" y1="${rc.top - R.top + borda / 2}" x2="${rc.right - R.left}" y2="${rc.top - R.top + borda / 2}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/><line x1="${rc.left - R.left}" y1="${rc.bottom - R.top - borda / 2}" x2="${rc.right - R.left}" y2="${rc.bottom - R.top - borda / 2}" stroke="${cs.borderBottomColor}" stroke-width="${borda}"/>`;
+                }
             }
             if (roda) partes += serializar(roda, roda.getBoundingClientRect());
         });

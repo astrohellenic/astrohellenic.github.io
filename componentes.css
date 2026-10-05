@@ -281,3 +281,13 @@
     .cabeca-ferramenta .titulo-ferramenta { padding: 0; }
     .acoes-ferramenta { position: static; transform: none; margin-top: 8px; justify-content: center; }
 }
+
+/* ITENS DE MENU FLUTUANTE (lista de anos, opções do relatório...): texto azul egípcio escuro, uma linha fina entre os itens; o ativo/ao passar fica terracota. */
+.item-menu { padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--azul-egipcio-escuro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-left: 3px solid transparent; }
+.item-menu:last-child { border-bottom: 0; }
+.item-menu:hover { color: var(--terracota); }
+.item-menu.ativa { color: var(--terracota); border-left-color: var(--terracota); }
+.item-menu.cabeca-menu { cursor: default; color: var(--preto-tinta); }
+.item-menu.cabeca-menu:hover { color: var(--preto-tinta); }
+/* linha "Ano Profectado" com as setas de trocar o ano */
+.linha-ano-profectado { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; font-size: 13px; color: var(--preto-tinta); }
