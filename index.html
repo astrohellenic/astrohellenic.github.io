@@ -817,7 +817,7 @@ body {
             <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
             <div id="mandala-controls-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; align-items: center; gap: 8px;">
                 <div class="time-stepper">
-                    <button class="icon-btn" onclick="ajustarTempo(-1)"><i class="fa-solid fa-backward-step"></i></button>
+                    <button type="button" class="botao-icone" onclick="ajustarTempo(-1)" title="Voltar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="40,12 20,32 40,52"/></svg></button>
                     <select id="stepUnit" class="time-select">
                         <option value="second">Segundo</option>
                         <option value="minute">Minuto</option>
@@ -826,7 +826,7 @@ body {
                         <option value="month">Mês</option>
                         <option value="year">Ano</option>
                     </select>
-                    <button class="icon-btn" onclick="ajustarTempo(1)"><i class="fa-solid fa-forward-step"></i></button>
+                    <button type="button" class="botao-icone" onclick="ajustarTempo(1)" title="Avançar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="24,12 44,32 24,52"/></svg></button>
                 </div>
             </div>
             
