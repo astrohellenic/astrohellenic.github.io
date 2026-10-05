@@ -56,3 +56,11 @@ body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, bo
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
     border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
 }
+
+/* NUNCA PAPIRO EM CIMA DE PAPIRO — onde o fundo já é papiro, a peça de papiro quebrado some e ficam só as linhas duplas / o conteúdo.
+   - Mandala em papiro (botão céu/papiro): a folha cobre o palco inteiro, então a barra superior e os dois grupos de botões perdem o papiro próprio.
+   - Menus flutuantes abertos dentro de um painel (já papiro): continuam com o fundo (precisa cobrir o texto de trás), mas sem a borda quebrada. */
+body.tema-ceu.mandala-papiro-tela #top-bar::before,
+body.tema-ceu.mandala-papiro-tela #mandala-actions-overlay::before,
+body.tema-ceu.mandala-papiro-tela #mandala-controls-overlay::before { display: none; }
+body.tema-ceu .painel .menu-flutuante { clip-path: none; }
