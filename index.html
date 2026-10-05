@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261009f">
     <link rel="stylesheet" href="temas.css?v=20261009c">
-    <link rel="stylesheet" href="componentes.css?v=20261009o">
+    <link rel="stylesheet" href="componentes.css?v=20261009q">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -606,48 +606,6 @@ body {
 
 
 
-        /* TEMA CÉU — Isopsefia Helenística (isopsefia.js): a tela é uma folha de papiro e tudo é só tinta: azul nas
-           linhas, caixas e letras; terracota no título, na aba ativa e nos destaques; preto no texto. Sem
-           preenchimento nem faixa azul-marinho. As cores vêm de variáveis redefinidas só aqui dentro. SÓ PINTURA. */
-        body.tema-ceu #isopsefia-container {
-            --bg-main: transparent;
-            --bg-card: transparent;
-            --bg-hover: transparent;
-            --bg-disabled: transparent;
-            --border-color: rgba(95, 65, 30, 0.45);
-            --table-border: rgba(29, 58, 102, 0.75);
-            --table-border-soft: rgba(95, 65, 30, 0.45);
-            --primary-blue: #1d3a66;
-            --gold-primary: #1d3a66;
-            --text-dark: #1a1410; --text-muted: #1a1410; --text-muted-2: #1a1410; --text-muted-3: #1a1410; --text-faint: #1a1410;
-            --badge-bg: transparent; --badge-border: #1d3a66; --badge-text: #1d3a66;
-            --danger: #a03e25;
-            color: #1a1410;
-            background: var(--papiro-fundo) !important;
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
-        }
-        body.tema-ceu #isopsefia-container h3 { color: #a03e25 !important; }
-        body.tema-ceu #isopsefia-container [style*="box-shadow"] { box-shadow: none !important; }
-        body.tema-ceu #isopsefia-container thead tr { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid #1d3a66; }
-        /* abas: só texto em tinta; a ativa em terracota com uma linha embaixo */
-        body.tema-ceu #isopsefia-container .iso-aba { background: transparent !important; color: #1d3a66 !important; border-bottom: 2px solid transparent !important; }
-        body.tema-ceu #isopsefia-container .iso-aba-ativa { color: #a03e25 !important; border-bottom: 2px solid #a03e25 !important; }
-        body.tema-ceu #isopsefia-container .iso-btn-adicionar { background: transparent !important; color: #a03e25 !important; border: 1.5px solid #a03e25 !important; }
-        /* caixa do resultado (palavra em grego + soma/resto): contorno em tinta, grego em terracota */
-        body.tema-ceu #isopsefia-container .iso-resultado { background: transparent !important; color: #1a1410 !important; border: 1.5px solid #1d3a66 !important; }
-        body.tema-ceu #isopsefia-container .iso-resultado [style*="border-top"] { border-top-color: rgba(95, 65, 30, 0.45) !important; }
-        body.tema-ceu #isopsefia-container .iso-grego { color: #a03e25 !important; }
-        body.tema-ceu #isopsefia-container input[type="text"] { background: transparent !important; color: #1a1410 !important; border: 1.5px solid #1d3a66 !important; }
-        /* botões de galeria e relatório (fora da folha): papiro, como os da Profecção */
-        body.tema-ceu #mandala-container button[onclick^="salvarIsopsefiaNaGaleria"],
-        body.tema-ceu #mandala-container button[onclick^="capturarIsopsefiaParaRelatorio"] {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-container button[onclick^="salvarIsopsefiaNaGaleria"] svg,
-        body.tema-ceu #mandala-container button[onclick^="capturarIsopsefiaParaRelatorio"] svg { stroke: #1d3a66; }
 
         /* AGENDA, qualquer tema: os campos (principalmente o de data, que no Safari tem largura própria) não podem passar da caixa */
         #agenda-container input, #agenda-container select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; display: block; }
@@ -1276,7 +1234,7 @@ body {
 <script src="tabelaTecnica.js?v=20261009f"></script>
 <script src="mandala.js?v=20261009e"></script>
 <script src="roda.js?v=20261009h"></script>
-<script src="isopsefia.js?v=20261009a"></script>
+<script src="isopsefia.js?v=20261009b"></script>
 <script src="profeccao.js?v=20261009f"></script>
 <script src="sinastria.js?v=20261009d"></script>
 <script src="revolucao.js?v=20261009b"></script>

@@ -152,39 +152,34 @@ function iniciarModuloIsopsefia() {
 }
 
 function renderIsopsefiaUI(container) {
-  const btnCssIso = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
+  const svgGaleria = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  const svgRelatorio = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
+  const aba = (id, rotulo) => `<button type="button" class="folder-tab-btn${isoState.activeTab === id ? ' active' : ''}" onclick="mudarAbaIsopsefia('${id}')">${rotulo}</button>`;
 
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
-        <button type="button" onclick="salvarIsopsefiaNaGaleria()" title="Salvar a Isopsefia como imagem na galeria (com título e cabeçalho)" style="${btnCssIso}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-        </button>
-        <button type="button" onclick="capturarIsopsefiaParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" style="${btnCssIso}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-        </button>
-      </div>
-    <div id="isopsefia-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div style="width: 100%;">
+    <div id="isopsefia-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
-      <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-        Isopsefia Helenística
-      </h3>
+      <div class="cabeca-ferramenta">
+        <h3 class="titulo-ferramenta">Isopsefia Helenística</h3>
+        <div class="acoes-ferramenta">
+          <button type="button" class="botao-icone" onclick="salvarIsopsefiaNaGaleria()" title="Salvar a Isopsefia como imagem na galeria (com título e cabeçalho)">${svgGaleria}</button>
+          <button type="button" class="botao-icone" onclick="capturarIsopsefiaParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)">${svgRelatorio}</button>
+        </div>
+      </div>
 
       <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
       ${montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true })}
 
-      <!-- ABAS INTERNAS -->
-      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--table-border-soft); margin-bottom: 20px;">
-        <button class="iso-aba${isoState.activeTab === 'planilha' ? ' iso-aba-ativa' : ''}" onclick="mudarAbaIsopsefia('planilha')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'planilha' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Planilha Dinâmica</button>
-        <button class="iso-aba${isoState.activeTab === 'calculadora' ? ' iso-aba-ativa' : ''}" onclick="mudarAbaIsopsefia('calculadora')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'calculadora' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Análise Passo a Passo</button>
-        <button class="iso-aba${isoState.activeTab === 'referencia' ? ' iso-aba-ativa' : ''}" onclick="mudarAbaIsopsefia('referencia')" style="padding: 10px 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px 6px 0 0; font-family: 'Cinzel', serif; ${isoState.activeTab === 'referencia' ? 'background: #103b70; color: #fcf6ba;' : 'background: var(--bg-disabled); color: var(--text-muted-2);'}">Tabela Jônica Clássica</button>
+      <div class="iso-abas">
+        ${aba('planilha', 'Planilha')}${aba('calculadora', 'Calculadora')}${aba('referencia', 'Referência')}
       </div>
 
-      <!-- CONTEÚDO DAS ABAS -->
       <div id="isoTabContent">
         ${renderConteudoAbaAtual()}
       </div>
 
+      <hr class="divisa">
     </div>
     </div>
   `;
@@ -254,39 +249,39 @@ function renderConteudoAbaAtual() {
 
   if (isoState.activeTab === 'planilha') {
     return `
-      <div data-html2canvas-ignore="true" style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); margin-bottom: 16px; display: flex; gap: 8px;">
-        <input type="text" id="isoNovoInput" placeholder="Digite o nome..." style="flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--table-border-soft); border-radius: 6px; font-size: 13px; outline: none; background: var(--bg-card); color: var(--text-dark);" onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
-        <button class="iso-btn-adicionar" onclick="adicionarTermoPlanilha()" style="background: #103b70; color: #fcf6ba; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Adicionar</button>
+      <div data-html2canvas-ignore="true" class="iso-linha-adicionar">
+        <input type="text" id="isoNovoInput" class="iso-campo" placeholder="Digite o nome..." onkeypress="if(event.key==='Enter') adicionarTermoPlanilha()">
+        <button type="button" class="botao-texto" onclick="adicionarTermoPlanilha()">Adicionar</button>
       </div>
 
-      <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+      <div class="envolve-tabela">
+        <table class="tabela-epoca">
           <thead>
-            <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-              <th style="padding: 12px;">Termo / Nome</th>
-              <th style="padding: 12px;">Transliteração Grega</th>
-              <th style="padding: 12px; text-align: right;">Soma Bruta</th>
-              <th style="padding: 12px; text-align: center;">Fórmula do Resto</th>
-              <th style="padding: 12px; text-align: center;">Topos (Resto)</th>
-              <th style="padding: 12px; text-align: center;">Signo Ativado</th>
-              <th data-html2canvas-ignore="true" style="padding: 12px; text-align: center;">Ações</th>
+            <tr>
+              <th>Termo / Nome</th>
+              <th>Transliteração Grega</th>
+              <th style="text-align: right;">Soma Bruta</th>
+              <th class="centro">Fórmula do Resto</th>
+              <th class="centro">Topos (Resto)</th>
+              <th class="centro">Signo Ativado</th>
+              <th class="centro" data-html2canvas-ignore="true">Ações</th>
             </tr>
           </thead>
           <tbody>
             ${isoState.rows.length === 0 ? `
-              <tr><td colSpan="7" style="padding: 24px; text-align: center; color: var(--text-faint);">Nenhum termo na planilha. Digite acima para começar.</td></tr>
+              <tr><td colspan="7" class="centro iso-vazio">Nenhum termo na planilha. Digite acima para começar.</td></tr>
             ` : isoState.rows.map((r, idx) => {
               const calc = calcularIsopsefiaData(r);
               const ativ = obterAtivacaoAstrologica(calc.resto, ascIdx);
               return `
-                <tr style="border-bottom: 1px solid var(--table-border-soft);">
-                  <td style="padding: 10px 12px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(r)}</td>
-                  <td style="padding: 10px 12px; font-size: 16px; font-family: serif; color: var(--primary-blue);">${calc.grego || '-'}</td>
-                  <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: var(--element-ar);">${calc.bruto}</td>
-                  <td style="padding: 10px 12px; text-align: center; color: var(--text-muted); font-family: monospace;">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
-                  <td style="padding: 10px 12px; text-align: center;"><span style="background: var(--badge-bg); color: var(--badge-text); padding: 2px 8px; border-radius: 12px; font-weight: 700;">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</span></td>
-                  <td style="padding: 10px 12px; text-align: center;">${getSignSvgHtmlIso(ativ.signIdx, 22)}</td>
-                  <td data-html2canvas-ignore="true" style="padding: 10px 12px; text-align: center;"><button onclick="removerTermoPlanilha(${idx})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">Excluir</button></td>
+                <tr>
+                  <td class="iso-nome">${escapeHtml(r)}</td>
+                  <td class="iso-grego">${calc.grego || '-'}</td>
+                  <td style="text-align: right; font-weight: 700;">${calc.bruto}</td>
+                  <td class="centro iso-mono">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
+                  <td class="centro">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</td>
+                  <td class="centro">${getSignSvgHtmlIso(ativ.signIdx, 22)}</td>
+                  <td class="centro" data-html2canvas-ignore="true"><button type="button" class="botao-texto" onclick="removerTermoPlanilha(${idx})">Excluir</button></td>
                 </tr>
               `;
             }).join('')}
@@ -300,43 +295,33 @@ function renderConteudoAbaAtual() {
     const calc = calcularIsopsefiaData(isoState.singleInput);
     const ativ = obterAtivacaoAstrologica(calc.resto, ascIdx);
     return `
-      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <div style="flex: 2; min-width: 280px; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--gold-primary);">
-          <label style="font-size: 11px; font-weight: 700; color: var(--primary-blue); display: block; margin-bottom: 6px; font-family: 'Cinzel', serif;">DIGITE O NOME PARA DECOMPOSIÇÃO DETALHADA:</label>
-          <input type="text" value="${escapeHtml(isoState.singleInput)}" oninput="atualizarSingleInput(this.value)" placeholder="Ex: Alexandros" style="width: 100%; padding: 10px; border: 1px solid var(--table-border-soft); border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; margin-bottom: 20px; background: var(--bg-card); color: var(--text-dark);">
+      <div class="iso-duas-colunas">
+        <div class="iso-coluna-larga">
+          <div class="rotulo">Digite o nome para decomposição detalhada</div>
+          <input type="text" class="iso-campo" value="${escapeHtml(isoState.singleInput)}" oninput="atualizarSingleInput(this.value)" placeholder="Ex: Alexandros">
 
-          <div style="border: 1px solid var(--table-border-soft); border-radius: 6px; overflow: hidden;">
-            <div style="background: var(--bg-main); padding: 10px 14px; font-weight: 700; font-size: 12px; border-bottom: 1px solid var(--table-border-soft); color: var(--text-muted-3); font-family: 'Cinzel', serif;">Decomposição Letra por Letra</div>
-            ${calc.passos.length === 0 ? '<div style="padding: 20px; text-align: center; color: var(--text-faint); font-size: 12px;">Digite um nome para ver a análise.</div>' : calc.passos.map(p => `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--table-border-soft); font-size: 13px;">
-                <div><strong>${p.letra}</strong> → <span style="font-size: 16px; color: var(--primary-blue); font-family: serif; font-weight: bold;">${p.grego}</span> <small style="color: var(--text-muted);">(${p.nome})</small></div>
-                <div style="font-family: monospace; font-weight: 700; color: var(--primary-blue);">+ ${p.valor}</div>
-              </div>
-            `).join('')}
-          </div>
+          <div class="rotulo" style="margin-top: 16px;">Decomposição letra por letra</div>
+          ${calc.passos.length === 0 ? '<div class="iso-vazio">Digite um nome para ver a análise.</div>' : calc.passos.map(p => `
+            <div class="iso-passo">
+              <div><strong>${p.letra}</strong> → <span class="iso-grego">${p.grego}</span> <small>(${p.nome})</small></div>
+              <div class="iso-mono"><strong>+ ${p.valor}</strong></div>
+            </div>
+          `).join('')}
         </div>
 
-        <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 16px;">
-          <div class="iso-resultado" style="background: #103b70; color: #ffffff; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid var(--gold-primary);">
-            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; font-family: 'Cinzel', serif;">Palavra em Grego</span>
-            <div class="iso-grego" style="font-size: 28px; font-family: serif; font-weight: bold; margin: 8px 0; color: #fcf6ba;">${calc.grego || '-'}</div>
-            <div style="display: flex; justify-content: space-around; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
-              <div><small style="display:block; opacity:0.8; font-size:10px;">SOMA</small><strong style="font-size:18px;">${calc.bruto}</strong></div>
-              <div><small style="display:block; opacity:0.8; font-size:10px;">RESTO</small><strong class="iso-grego" style="font-size:18px; color: #fcf6ba;">${calc.resto}</strong></div>
+        <div class="iso-coluna-estreita">
+          <div class="cartao iso-resultado">
+            <div class="rotulo">Palavra em grego</div>
+            <div class="iso-grego iso-grego-grande">${calc.grego || '-'}</div>
+            <div class="iso-soma-resto">
+              <div><div class="rotulo">Soma</div><strong>${calc.bruto}</strong></div>
+              <div><div class="rotulo">Resto</div><strong class="iso-grego">${calc.resto}</strong></div>
             </div>
           </div>
 
-          <div style="background: var(--bg-card); padding: 16px; border-radius: 10px; border: 1px solid var(--gold-primary); font-size: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--table-border-soft);">
-              <span style="color: var(--text-muted);">Ascendente:</span>${getSignSvgHtmlIso(ascIdx, 20)}
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--table-border-soft);">
-              <span style="color: var(--text-muted);">Topos Ativado:</span><strong style="color: var(--badge-text);">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
-              <span style="color: var(--text-muted);">Signo Ativado:</span>${getSignSvgHtmlIso(ativ.signIdx, 20)}
-            </div>
-          </div>
+          <div class="iso-passo"><span class="rotulo">Ascendente</span>${getSignSvgHtmlIso(ascIdx, 20)}</div>
+          <div class="iso-passo"><span class="rotulo">Topos ativado</span><strong>${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong></div>
+          <div class="iso-passo"><span class="rotulo">Signo ativado</span>${getSignSvgHtmlIso(ativ.signIdx, 20)}</div>
         </div>
       </div>
     `;
@@ -344,18 +329,18 @@ function renderConteudoAbaAtual() {
 
   if (isoState.activeTab === 'referencia') {
     return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+      <div class="iso-grade-letras">
         ${Object.entries(MAPA_FONETICO_ISO).reduce((acc, [latino, dados]) => {
           if (!acc.find(item => item.grego === dados.grego)) acc.push({ ...dados, latino: latino.toUpperCase() });
           return acc;
         }, []).map(item => `
-          <div style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--gold-primary); display: flex; align-items: center; justify-content: space-between;">
+          <div class="cartao iso-letra">
             <div>
-              <strong style="font-size: 14px; color: var(--primary-blue);">${item.latino}</strong>
-              <div style="font-size: 18px; color: var(--primary-blue); font-family: serif;">${item.grego}</div>
-              <small style="font-size: 10px; color: var(--text-muted);">${item.nome}</small>
+              <strong>${item.latino}</strong>
+              <div class="iso-grego">${item.grego}</div>
+              <small>${item.nome}</small>
             </div>
-            <div style="background: var(--badge-bg); color: var(--badge-text); font-family: monospace; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 12px;">${item.valor}</div>
+            <div class="iso-mono"><strong>${item.valor}</strong></div>
           </div>
         `).join('')}
       </div>
