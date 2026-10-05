@@ -112,13 +112,11 @@ function montarSVGMatrizVisibilidade(colunas, posicoes, estiloExtra) {
 
   // Cabeçalho de colunas (linha 0) e de linhas (coluna 0)
   colunas.forEach((col, k) => {
-    const nomeCol = (col.type === 'planet' && typeof nomePlaneta === 'function') ? nomePlaneta(col.id) : '';
-    const dyIcone = nomeCol ? -5 : 0;
-    const rotulo = (x, y) => nomeCol ? `<text x="${x}" y="${y}" font-size="7" font-weight="700" fill="var(--preto-tinta)" fill-opacity=".8" text-anchor="middle" dominant-baseline="central">${escapeHtml(nomeCol)}</text>` : '';
-    const iconeSVG = posicionarIconeMatrizSVG(getMatrizIconeSVG(col), (k + 1) * C + C / 2, C / 2 + dyIcone) + rotulo((k + 1) * C + C / 2, C - 7);
+    // A Matriz não leva rótulos dos glifos: é uma grade de ícones, como a mandala.
+    const iconeSVG = posicionarIconeMatrizSVG(getMatrizIconeSVG(col), (k + 1) * C + C / 2, C / 2);
     svg += `<rect x="${(k + 1) * C}" y="0" width="${C}" height="${C}" ${linha}/>${iconeSVG}`;
 
-    const iconeSVGLinha = posicionarIconeMatrizSVG(getMatrizIconeSVG(col), C / 2, (k + 1) * C + C / 2 + dyIcone) + rotulo(C / 2, (k + 1) * C + C - 7);
+    const iconeSVGLinha = posicionarIconeMatrizSVG(getMatrizIconeSVG(col), C / 2, (k + 1) * C + C / 2);
     svg += `<rect x="0" y="${(k + 1) * C}" width="${C}" height="${C}" ${linha}/>${iconeSVGLinha}`;
   });
 
