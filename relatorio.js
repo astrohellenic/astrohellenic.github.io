@@ -124,6 +124,10 @@ const RELATORIO_ENCERRAMENTO_PADRAO = '<p>Caso tenha alguma dúvida ou queira co
    Serve de modelo pra quando o astrólogo cria um preset novo, e é usado
    pra semear automaticamente o primeiro preset de quem ainda não tem
    nenhum salvo (pra não perder a ferramenta que já existia). */
+/* TEXTO ANTIGO do bloco "Os Sete Lotes Herméticos" (padrão de antes de 05/10/2026). Os modelos já salvos no Supabase ainda o trazem; quem ainda tem EXATAMENTE este texto
+   (ninguém editou) é atualizado pro novo ao carregar (ver carregarOuSemearPresetsRelatorio). Texto editado à mão nunca é tocado. */
+const RELATORIO_SETE_LOTES_TEXTO_ANTIGO = 'Os Sete Lotes Herméticos constituem um dos sistemas mais refinados de cálculo e subdivisão temática da astrologia clássica. Atribuída à tradição de Hermes, essa metodologia projeta sete pontos matemáticos específicos no mapa natal, onde cada um está geometricamente atrelado a um dos astros do setenário. Eles funcionam como receptáculos das promessas planetárias, isolando e detalhando áreas cruciais da experiência humana para avaliar como o destino e a ação do nativo se desdobrarão em cenários muito específicos da vida material e factual.\n\nCada lote atua como uma lente especializada para um assunto fundamental: o Lote da Fortuna (associado à Lua) governa o corpo, a saúde e as circunstâncias materiais; o Lote do Espírito (Sol) direciona a mente, a intenção, a vontade e a carreira; o Lote de Eros (Vênus) revela os desejos, os afetos e as escolhas feitas por prazer; o Lote da Necessidade (Mercúrio) sinaliza as restrições, as disputas e o intelecto sob pressão; o Lote da Audácia (Marte) rege a audácia, os riscos e as tomadas de iniciativa; o Lote da Vitória (Júpiter) aponta para o sucesso, as honras e a gratificação; e o Lote da Nêmesis (Saturno) administra as perdas, os fatores ocultos e as limitações inevitáveis.\n\nAnalisando o conjunto dos sete lotes herméticos — observando em quais casas esses pontos se localizam e como seus respectivos senhores se posicionam no mapa — decodificamos a infraestrutura factual que sustenta os sucessos, as crises, as escolhas e as amarras que o nativo encontrará ao longo de sua jornada.';
+
 const RELATORIO_BLOCOS_PADRAO = [
   /* Bloco invisível (não aparece na lista reordenável do editor — tem
      seu próprio seletor no topo) que guarda qual mandala vai na capa.
@@ -142,7 +146,7 @@ const RELATORIO_BLOCOS_PADRAO = [
   },
   {
     id: 'sete-lotes', type: 'texto', titulo: 'Os Sete Lotes Herméticos',
-    corpo: 'Os Sete Lotes Herméticos constituem um dos sistemas mais refinados de cálculo e subdivisão temática da astrologia clássica. Atribuída à tradição de Hermes, essa metodologia projeta sete pontos matemáticos específicos no mapa natal, onde cada um está geometricamente atrelado a um dos astros do setenário. Eles funcionam como receptáculos das promessas planetárias, isolando e detalhando áreas cruciais da experiência humana para avaliar como o destino e a ação do nativo se desdobrarão em cenários muito específicos da vida material e factual.\n\nCada lote atua como uma lente especializada para um assunto fundamental: o Lote da Fortuna (associado à Lua) governa o corpo, a saúde e as circunstâncias materiais; o Lote do Espírito (Sol) direciona a mente, a intenção, a vontade e a carreira; o Lote de Eros (Vênus) revela os desejos, os afetos e as escolhas feitas por prazer; o Lote da Necessidade (Mercúrio) sinaliza as restrições, as disputas e o intelecto sob pressão; o Lote da Audácia (Marte) rege a audácia, os riscos e as tomadas de iniciativa; o Lote da Vitória (Júpiter) aponta para o sucesso, as honras e a gratificação; e o Lote da Nêmesis (Saturno) administra as perdas, os fatores ocultos e as limitações inevitáveis.\n\nAnalisando o conjunto dos sete lotes herméticos — observando em quais casas esses pontos se localizam e como seus respectivos senhores se posicionam no mapa — decodificamos a infraestrutura factual que sustenta os sucessos, as crises, as escolhas e as amarras que o nativo encontrará ao longo de sua jornada.'
+    corpo: 'Os Sete Lotes Herméticos (cuja origem remonta ao texto Panaretus, atribuído à tradição de Hermes Trismegisto) constituem uma das ferramentas mais precisas da Astrologia Helenística. Cada lote funciona como um ponto matemático vinculado a um dos sete astros do setenário.\n\nAo girar o mapa e definir qualquer lote como a Casa 1 (atuando como um "Ascendente temático"), recalibramos todo o zodíaco a partir daquele tópico. As doze casas subsequentes passam a detalhar a infraestrutura factual, os recursos, os desafios e os desdobramentos específicos daquela área na vida prática.\n\nConforme os ensinamentos de Paulo de Alexandria (Capítulo 23), eis o que esperar ao analisar o mapa com cada lote posicionado na Casa 1:\n\n1. Lote da Fortuna (Lua): Colocado na Casa 1, o mapa passa a focar estritamente nas questões do corpo físico, na saúde, no curso da vida material, nas posses, na reputação e nos privilégios. As casas derivadas mostram o destino factual e os bens do nativo.\n\n2. Lote do Espírito (Sol): Na Casa 1, torna-se o centro da mente, da alma, do temperamento e do intelecto. Revela a intenção consciente, o exercício do poder e a determinação que governa as ações e a carreira (praxis).\n\n3. Lote de Eros (Vênus): Na Casa 1, destaca a natureza dos apetites, dos desejos voluntários e das escolhas feitas por afeição. As casas a partir dele mostram como o nativo busca o prazer, atrai amizades e obtém favores mútuos.\n\n4. Lote da Necessidade (Mercúrio): Na Casa 1, traz para o primeiro plano as restrições, as submissões, os conflitos e as lutas. Ilumina a origem das inimizades, dos ódios, das condenações e das amarras impostas pelas circunstâncias.\n\n5. Lote da Coragem (Marte): Na Casa 1, expõe a disposição do nativo para o risco, a ousadia e os atos de bravura. Por derivar de Marte, também sinaliza o potencial para impulsividade, traições, violência ou conflitos.\n\n6. Lote da Vitória (Júpiter): Na Casa 1, revela os caminhos de confiança, boa esperança e triunfo. As casas derivadas indicam o sucesso obtido em disputas, as associações prósperas, o recebimento de prêmios, honras e recompensas.\n\n7. Lote da Nêmesis (Saturno): Na Casa 1, expõe os fatores ocultos e as forças subterrâneas do destino. Mapeia onde o nativo enfrentará limitações profundas, exílio, impotência, perdas inevitáveis e severas provações.'
   },
   {
     id: 'dodecatemorias', type: 'texto', titulo: 'As Dodecatemórias',
@@ -513,6 +517,22 @@ async function carregarOuSemearPresetsRelatorio() {
 
     const { data, error } = await client.from('relatorio_presets').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
     if (!error && data && data.length) {
+      /* ATUALIZA o texto do bloco "Os Sete Lotes Herméticos" nos modelos que ainda têm EXATAMENTE o texto antigo (ninguém editou):
+         troca pelo novo e grava de volta. Texto editado à mão fica como está. */
+      const novoSeteLotes = (RELATORIO_BLOCOS_PADRAO.find(b => b.id === 'sete-lotes') || {}).corpo;
+      if (novoSeteLotes) {
+        for (const preset of data) {
+          let mudou = false;
+          const blocos = (preset.blocos || []).map(b => {
+            if (b && b.id === 'sete-lotes' && b.corpo === RELATORIO_SETE_LOTES_TEXTO_ANTIGO) { mudou = true; return Object.assign({}, b, { corpo: novoSeteLotes }); }
+            return b;
+          });
+          if (mudou) {
+            preset.blocos = blocos;
+            try { await client.from('relatorio_presets').update({ blocos, updated_at: new Date().toISOString() }).eq('id', preset.id); } catch (e) { /* segue: na tela já vale o novo */ }
+          }
+        }
+      }
       // serviço sem modelo (tem_modelo = false, ver "Remover modelo") não aparece aqui; pode sobrar lista vazia
       return data.filter(p => p.tem_modelo !== false);
     }
