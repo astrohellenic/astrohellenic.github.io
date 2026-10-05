@@ -282,5 +282,15 @@ function nomePlaneta(id) { return (window.mostrarRotulosGlifos === false) ? '' :
 function planetaComNome(id, tam) {
   const icone = getIconeSVG('planeta', id, tam || 34);
   const nome = nomePlaneta(id);
-  return nome ? `<span class="com-nome">${icone}<span class="nome-planeta">${nome}</span></span>` : icone;
+  return nome ? `<span class="com-nome">${icone}<span class="nome-glifo">${nome}</span></span>` : icone;
+}
+
+// Signos: mesmo liga e desliga dos rótulos dos glifos (não vale dentro das mandalas). Índice 0 = Áries ... 11 = Peixes.
+const NOMES_SIGNO = ['Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem', 'Libra', 'Escorpião', 'Sagitário', 'Capricórnio', 'Aquário', 'Peixes'];
+// nome por extenso do signo, ou '' se o astrólogo desligou os rótulos
+function nomeSigno(idx) { return (window.mostrarRotulosGlifos === false) ? '' : (NOMES_SIGNO[idx] || ''); }
+// glifo do signo (já desenhado, em HTML) com o nome ao lado quando os rótulos estão ligados
+function signoComNome(glifoHtml, idx) {
+  const nome = nomeSigno(idx);
+  return nome ? `<span class="com-nome">${glifoHtml}<span class="nome-glifo">${nome}</span></span>` : glifoHtml;
 }

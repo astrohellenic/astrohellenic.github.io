@@ -156,9 +156,9 @@ function htmlCfgAparencia() {
 
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Rótulos dos glifos</h4>
-        <p class="cfg-card-desc">Escreve o nome do planeta ao lado do glifo (Sol, Lua, Marte...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Aparece em todas as ferramentas, <strong>menos dentro das mandalas</strong>, onde não há espaço.</p>
+        <p class="cfg-card-desc">Escreve o nome ao lado do glifo dos planetas e dos signos (Sol, Lua, Áries, Touro...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Aparece em todas as ferramentas, <strong>menos dentro das mandalas</strong>, onde não há espaço.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarMostrarRotulosGlifos(true)", window.mostrarRotulosGlifos !== false, fa('fa-font'), 'Rótulos ativados', 'Glifo com o nome ao lado')}
+          ${opcao("salvarMostrarRotulosGlifos(true)", window.mostrarRotulosGlifos !== false, fa('fa-font'), 'Rótulos ativados', 'Glifos com o nome ao lado')}
           ${opcao("salvarMostrarRotulosGlifos(false)", window.mostrarRotulosGlifos === false, fa('fa-eye-slash'), 'Rótulos desativados', 'Só os glifos')}
         </div>
       </div>

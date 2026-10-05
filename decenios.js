@@ -493,7 +493,7 @@ function renderizarResultadosHTML(res) {
       <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
         <div style="display: flex; align-items: center; gap: 10px;">
           ${getPlanet3DSVG(item.planet.id, 42)}
-          <div class="texto-apagado" style="font-size: 11px;">${nomePlaneta(item.planet.id) ? nomePlaneta(item.planet.id) + ' em' : 'em'} ${getSignSvgHtmlDec(item.planet.signIdx, 18)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
+          <div class="texto-apagado linha-glifo" style="font-size: 11px;">${nomePlaneta(item.planet.id) ? nomePlaneta(item.planet.id) + ' em' : 'em'} ${signoComNome(getSignSvgHtmlDec(item.planet.signIdx, 18), item.planet.signIdx)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
         </div>
         <span class="selo">${meses} meses</span>
       </div>
@@ -551,7 +551,7 @@ function renderizarResultadosHTML(res) {
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
                   <span class="nome-nivel">Nível 1${nomePlaneta(l1.planet.id) ? ' - ' + nomePlaneta(l1.planet.id) : ''}</span>
-                  <div class="texto-apagado" style="font-size: 11px;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' - 129 meses</div>
+                  <div class="texto-apagado linha-glifo" style="font-size: 11px;">em ${signoComNome(getSignSvgHtmlDec(l1.planet.signIdx, 15), l1.planet.signIdx)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' - 129 meses</div>
                 </div>
               </div>
               <strong class="texto-apagado" style="font-size: 11px;">${formatDateDec(l1.startDate)} a ${formatDateDec(l1.endDate)}</strong>

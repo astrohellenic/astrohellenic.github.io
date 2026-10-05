@@ -71,9 +71,9 @@
     padding: 4px;
 }
 
-/* NOME DO PLANETA ao lado do ícone (ajuda quem não conhece os símbolos). */
+/* RÓTULO DO GLIFO (nome do planeta ou do signo) ao lado do ícone — ajuda quem não conhece os símbolos. */
 .com-nome { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.com-nome .nome-planeta { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.com-nome .nome-glifo { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 
 /* ÍCONE — sempre monoline: só traço, sem preenchimento. A cor vem do pai (currentColor). Grade 64, traço 3. */
 .icone {
@@ -101,7 +101,7 @@
 
 /* SELO (ex.: "129 meses") — sem fundo e sem arredondar: texto com uma linha fina em cima e outra embaixo. */
 .selo {
-    display: inline-block; padding: 1px 8px; font-weight: 700; font-size: 11px; color: var(--azul-egipcio-escuro);
+    display: inline-block; white-space: nowrap; padding: 1px 8px; font-weight: 700; font-size: 11px; color: var(--azul-egipcio-escuro);
     border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
 }
 
@@ -135,3 +135,6 @@
 .tabela-epoca tr.ativa > :first-child { border-left-color: var(--terracota); }
 .tabela-epoca tr.aberta > td { font-weight: 700; }
 .tabela-epoca small { opacity: .75; }
+
+/* linha de texto com glifos e rótulos no meio ("Lua em ♏ ESCORPIÃO 21°00'"): tudo alinhado pelo centro */
+.linha-glifo { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
