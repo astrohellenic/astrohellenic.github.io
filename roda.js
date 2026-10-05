@@ -496,7 +496,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
   }
   if (temaCeu) {
     // Tema Céu: a Terra no miolo (decoração de céu — não existe fora dele, lá o miolo é o disco liso de sempre)
-    svg += montarTerraCeuSVG(cx, cy, R.Aspects, goldColor, ceuParams.dia, skyRotation);
+    svg += montarTerraCeuSVG(cx, cy, R.Aspects, 'none', ceuParams.dia, skyRotation); // o contorno do disco é desenhado mais abaixo, na cor adaptativa
   } else {
     svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
   }
@@ -536,7 +536,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
   /* No Céu os tracejados (anéis, divisas da dodecatemória e dos termos) são BRANCOS — o mesmo "branco" dos ícones calculados: branco-azulado
      abaixo do horizonte (noite) e azul-marinho escuro sobre o céu claro de dia (acima do horizonte), pra continuar legível. Cada peça é
      desenhada duas vezes, uma recortada pela metade de cima do horizonte e outra pela de baixo (os mesmos recortes da linha da eclíptica). */
-  const tracejadoAdaptativo = temaCeu && (estiloRoda.faixaZodiaco || estiloRoda.invertido); // as duas variantes do Astro Hellenic (tracejada ou reta) usam o branco adaptativo
+  const tracejadoAdaptativo = temaCeu; // no Céu TODO traço da estrutura (círculos, divisas dos signos, termos, dodecatemória, dentinhos), em qualquer estilo, usa o branco/azul-tinta adaptativo — nunca o amarelo antigo
   const tintaCimaCeu = tracejadoAdaptativo ? misturarHexCeu('#e6eeff', '#1d3a66', ceuParams.dia) : null;
   const emitirTracejado = (fn, corPadrao) => tracejadoAdaptativo
     ? `<g clip-path="url(#ceuMeiaTela)">${fn(tintaCimaCeu)}</g><g clip-path="url(#ceuMeiaTelaBaixo)">${fn('#e6eeff')}</g>`
@@ -558,12 +558,18 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
      outra só de ícone lá embaixo, depois das linhas dos eixos. */
 
   if (!estiloRoda.faixaZodiaco) { // com a faixa do zodíaco as divisas dos signos são os tracejados da faixa; sem ela (francês, invertido) são estas linhas
-  for (let i = 0; i < 12; i++) {
-    const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-    const pt2 = polarToCart(cx, cy, inv ? aTer[0] : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
-    svg += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${goldColor}" stroke-width="1.8"/>`;
+  svg += emitirTracejado(cor => {
+    let out = '';
+    for (let i = 0; i < 12; i++) {
+      const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
+      const pt2 = polarToCart(cx, cy, inv ? aTer[0] : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
+      out += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${cor}" stroke-width="1.8"/>`;
+    }
+    return out;
+  }, goldColor);
   }
-  }
+  // contorno do disco do miolo (Céu): mesma cor adaptativa das divisas
+  if (temaCeu) svg += emitirTracejado(cor => `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="none" stroke="${cor}" stroke-width="2"/>`, goldColor);
 
   if (!porSigno) svg += emitirTracejado(cor => {
     let out = '';
@@ -605,7 +611,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
     return out;
   };
-  if (!porSigno) svg += (inv || estiloRoda.faixaZodiaco) ? emitirTracejado(reguaTermos, goldColor) : reguaTermos(goldColor); // dentinho = mesma cor da linha a que pertence (nos Astro Hellenic e no Comum, no Céu, o branco/azul-tinta adaptativo)
+  if (!porSigno) svg += emitirTracejado(reguaTermos, goldColor); // dentinho = mesma cor da linha a que pertence (nos Astro Hellenic e no Comum, no Céu, o branco/azul-tinta adaptativo)
 
   // Régua do anel SignSector (dentinhos pra dentro): no invertido não existe; nos Astro Hellenic tem a mesma cor do círculo (adaptativo no Céu)
   const reguaSignos = cor => {
@@ -619,7 +625,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (Azul claro)
     }
     return out;
   };
-  if (!inv && !porSigno) svg += estiloRoda.faixaZodiaco ? emitirTracejado(reguaSignos, goldColor) : reguaSignos(goldColor);
+  if (!inv && !porSigno) svg += emitirTracejado(reguaSignos, goldColor);
 
   /* TERMOS E DODECATEMÓRIAS POR SIGNO (esboço): eles fazem parte do signo, então ficam no CAMPO dele, na cor do elemento, e acompanham o contorno
      da faixa do zodíaco (que deixa INS graus de folga de cada lado — o "vãozinho" entre um signo e o outro). Tudo que cai nessa folga não é desenhado. */
