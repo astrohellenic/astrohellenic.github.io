@@ -122,3 +122,7 @@ Um tema novo só precisa preencher essa tabela.
 
 ## 8. Pendências para você decidir
 
+
+## Rótulos dos glifos: onde NÃO valem
+
+Mandala (qualquer roda) e Matriz de Visibilidade — grades/rodas de ícones, sem rótulo. Nas demais ferramentas valem planetaComNome/signoComNome (planetIcons.js).
