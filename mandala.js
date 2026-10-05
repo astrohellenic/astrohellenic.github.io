@@ -2085,7 +2085,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const k = larguraTela > 0 ? larguraTela / W : 1;
   const Wk = W * k, Hk = H * k;
   let internoXml = new XMLSerializer().serializeToString(svgEl);
-  if (papiro) internoXml = internoXml.replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m);
+  internoXml = internoXml.replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m);
   const interno = internoXml
     .replace(/ style="[^"]*"/, ' font-family="sans-serif"')
     .replace('<svg ', `<svg x="${borda}" y="${borda}" `);

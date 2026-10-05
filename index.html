@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261008a">
-    <link rel="stylesheet" href="temas.css?v=20261008a">
+    <link rel="stylesheet" href="temas.css?v=20261009a">
     <link rel="stylesheet" href="componentes.css?v=20261008n">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
@@ -129,11 +129,6 @@
   --element-terra: #8b4513;
   --element-ar: #0ea5e9;
   --element-agua: #1d4ed8;
-  --aspect-conjuncao: #000000; /* Cor de cada tipo de aspecto (conjunção/sextil/quadratura/trígono/oposição) */
-  --aspect-sextil: #0ea5e9;
-  --aspect-quadratura: #e84118;
-  --aspect-trigono: #1d4ed8;
-  --aspect-oposicao: #881337;
   --text-muted-3: #334155;  /* Texto secundário mais forte ainda (datas nas tabelas de subperíodo) */
   --table-border-soft: #cbd5e1; /* Contorno mais discreto (tabelas aninhadas L3/L4 da Liberação Zodiacal) */
   --badge-bg: #fef3c7;       /* Selo "PICO" */
@@ -185,11 +180,6 @@
   --element-terra: #d99a5c;
   --element-ar: #38bdf8;
   --element-agua: #60a5fa;
-  --aspect-conjuncao: #e8e6df;
-  --aspect-sextil: #38bdf8;
-  --aspect-quadratura: #ff6b4a;
-  --aspect-trigono: #60a5fa;
-  --aspect-oposicao: #fb7185;
   --text-muted-3: #e2e8f0;
   --table-border-soft: #4b5563;
   --badge-bg: #4a3a12;
@@ -693,41 +683,6 @@ body {
         body.tema-ceu #modalSaveCurrentMap span[onclick], body.tema-ceu #modalSaveCurrentMap button[style*="background: none"] { color: #1d3a66 !important; }
         body.tema-ceu #relBibliotecaEditorOverlay .ql-toolbar, body.tema-ceu #relBibliotecaEditorOverlay .ql-container { background: rgba(255, 244, 215, 0.45); border-color: rgba(95, 65, 30, 0.5) !important; }
 
-        /* TEMA CÉU — Matriz de Visibilidade: a folha de papiro começa no título e vai até o
-           cabeçalho do cliente, MAIOR que a grade (a grade é desenhada dentro dela, com
-           folga em volta). Título em terracota; linhas e células da grade em tinta sobre o
-           papiro (as cores da grade vêm de variáveis, redefinidas só aqui dentro). As imagens
-           salvas/enviadas pro Relatório saem direto do SVG e não mudam. */
-        body.tema-ceu #matrizVisibilidadeMandalaContainer {
-            /* sem preenchimento nenhum nas células (nem cabeçalho, nem as vazias): o que separa é só o traço de tinta */
-            --bg-card: transparent;
-            --bg-main: transparent;
-            --bg-hover: transparent;
-            --table-border: rgba(29, 58, 102, 0.75);
-            /* aspectos só nas três tintas: azul (sextil/trígono), terracota (quadratura/oposição), preto (conjunção) */
-            --aspect-conjuncao: #1a1410; --aspect-sextil: #1d3a66; --aspect-trigono: #1d3a66; --aspect-quadratura: #a03e25; --aspect-oposicao: #a03e25;
-            --text-disabled: rgba(42, 33, 24, 0.55);
-            --primary-blue: #1d3a66;
-            width: fit-content;
-            max-width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-            padding: 26px 26px 12px;
-            background: var(--papiro-fundo);
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 85%, 0 62%, 3px 40%, 0 18%);
-        }
-        body.tema-ceu #matrizVisibilidadeMandalaContainer h3 { color: #a03e25 !important; }
-        body.tema-ceu #matrizVisibilidadeMandalaContainer #matrizVisibilidadeResponsivaRoot svg { border-radius: 4px !important; }
-        /* Botões de salvar/enviar da Matriz (acima da folha): pedaços de papiro como os da Mandala. */
-        body.tema-ceu #mandala-container button[onclick^="salvarMatrizVisibilidadeNaGaleria"],
-        body.tema-ceu #mandala-container button[onclick^="capturarMatrizVisibilidadeMandalaParaRelatorio"] {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-container button[onclick^="salvarMatrizVisibilidadeNaGaleria"] svg,
-        body.tema-ceu #mandala-container button[onclick^="capturarMatrizVisibilidadeMandalaParaRelatorio"] svg { stroke: #1d3a66; }
 
         /* TEMA CÉU — Painel Técnico de Natividades: a folha de papiro começa no título e vai até o
            cabeçalho do cliente, MAIOR que a grade (a grade é desenhada dentro dela, com
@@ -785,7 +740,6 @@ body {
             --natal-marca: #a03e25;
             --hoje-marca: #a03e25;
             --element-fogo: #a62b1f; --element-terra: #6b4a2b; --element-ar: #17707f; --element-agua: #1f3a66;
-            --aspect-conjuncao: #1a1410; --aspect-sextil: #1d3a66; --aspect-trigono: #1d3a66; --aspect-quadratura: #a03e25; --aspect-oposicao: #a03e25;
             color: #1a1410;
             background: var(--papiro-fundo) !important;
             clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
@@ -1697,9 +1651,9 @@ body {
 <script src="dialogos.js?v=20261007a"></script>
 <script src="supabase.js?v=20261008i"></script>
 <script src="planetIcons.js?v=20261008d"></script>
-<script src="matrizVisibilidade.js?v=20261002b"></script>
+<script src="matrizVisibilidade.js?v=20261009a"></script>
 <script src="tabelaTecnica.js?v=20261007a"></script>
-<script src="mandala.js?v=20261008d"></script>
+<script src="mandala.js?v=20261009a"></script>
 <script src="roda.js?v=20261009c"></script>
 <script src="isopsefia.js?v=20261003z"></script>
 <script src="profeccao.js?v=20261006e"></script>

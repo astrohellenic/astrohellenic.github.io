@@ -81,6 +81,12 @@ Um tema novo só precisa preencher essa tabela.
 2. **Níveis escritos por extenso:** "Nível 1", "Nível 2", "Nível 3". Nunca "L1", "L2", "L3" (L vem do inglês).
 3. **Cabeçalho de tabela (a barra de cima com Nível, Duração, Início, Término):** ainda a definir.
 
+## 3c. Grades quadriculadas e aspectos (decididos)
+
+- **Tabela quadriculada** (ex.: Matriz de Visibilidade), em que o conteúdo depende de estar dentro dos quadradinhos: as linhas dos lados **ficam** (diferente das outras tabelas), mas os **cantos são sempre retos**. Linhas na cor das divisas (azul egípcio claro), células sem preenchimento.
+- **Borda quebrada do papiro** sempre fica **por fora** das linhas duplas, nunca por dentro.
+- **Cores dos aspectos, iguais em todos os temas:** conjunção = preto de tinta, sextil = azul egípcio claro, trígono = azul egípcio escuro, quadratura = terracota, oposição = laranja do fogo (variáveis `--aspect-*` em `temas.css`).
+
 ## 4. O que é só de um tema (não vira regra global)
 
 - **Céu:** borda quebrada do papiro e textura do papel (fibras, luz e sombra).

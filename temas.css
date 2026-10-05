@@ -53,3 +53,12 @@
 
 /* REGRA: no céu, os SIGNOS e os ÍCONES DOS TERMOS usam as cores do papiro e do modo claro (não as do céu):
    signos pelas cores dos elementos (laranja, marrom, cinza, azul egípcio claro) e ícones dos termos em ocre. */
+
+/* ASPECTOS — as mesmas cores em TODAS as telas e temas (cada uma já tem a versão do modo escuro pela variável da paleta) */
+:root, .paleta-clara, :root.tema-escuro, .paleta-escura {
+    --aspect-conjuncao: var(--preto-tinta);
+    --aspect-sextil: var(--azul-egipcio-claro);
+    --aspect-trigono: var(--azul-egipcio-escuro);
+    --aspect-quadratura: var(--terracota);
+    --aspect-oposicao: var(--laranja);
+}

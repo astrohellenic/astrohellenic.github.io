@@ -99,21 +99,24 @@ function getAspectoMatrizSVG(deg1, deg2) {
 function montarSVGMatrizVisibilidade(colunas, posicoes, estiloExtra) {
   const N = colunas.length;
   const C = MATRIZ_CELULA_TAM;
-  const total = (N + 1) * C;
+  const grade = (N + 1) * C;
+  const total = grade + 2; // 1px de folga em volta pra o traço das células de borda não ser cortado
+  // Grade quadriculada: as linhas dos lados FICAM (o conteúdo depende de estar dentro dos quadradinhos), mas os cantos são retos.
+  // Células sem preenchimento (o painel aparece por baixo); linhas na mesma cor das divisas (azul egípcio claro).
+  const linha = 'fill="none" stroke="var(--azul-egipcio-claro)" stroke-width="1"';
 
-  let svg = `<svg width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" style="display: block; font-family: 'Montserrat', sans-serif;${estiloExtra || ''}">`;
-  svg += `<rect x="0" y="0" width="${total}" height="${total}" fill="var(--bg-card)"/>`;
+  let svg = `<svg width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" style="display: block; font-family: 'Montserrat', sans-serif;${estiloExtra || ''}"><g transform="translate(1 1)">`;
 
   // Canto vazio (linha 0, coluna 0)
-  svg += `<rect x="0" y="0" width="${C}" height="${C}" fill="var(--bg-main)" stroke="var(--table-border)" stroke-width="1"/>`;
+  svg += `<rect x="0" y="0" width="${C}" height="${C}" ${linha}/>`;
 
   // Cabeçalho de colunas (linha 0) e de linhas (coluna 0)
   colunas.forEach((col, k) => {
     const iconeSVG = posicionarIconeMatrizSVG(getMatrizIconeSVG(col), (k + 1) * C + C / 2, C / 2);
-    svg += `<rect x="${(k + 1) * C}" y="0" width="${C}" height="${C}" fill="var(--bg-main)" stroke="var(--table-border)" stroke-width="1"/>${iconeSVG}`;
+    svg += `<rect x="${(k + 1) * C}" y="0" width="${C}" height="${C}" ${linha}/>${iconeSVG}`;
 
     const iconeSVGLinha = posicionarIconeMatrizSVG(getMatrizIconeSVG(col), C / 2, (k + 1) * C + C / 2);
-    svg += `<rect x="0" y="${(k + 1) * C}" width="${C}" height="${C}" fill="var(--bg-main)" stroke="var(--table-border)" stroke-width="1"/>${iconeSVGLinha}`;
+    svg += `<rect x="0" y="${(k + 1) * C}" width="${C}" height="${C}" ${linha}/>${iconeSVGLinha}`;
   });
 
   // Corpo da matriz
@@ -124,18 +127,17 @@ function montarSVGMatrizVisibilidade(colunas, posicoes, estiloExtra) {
       const cx = x + C / 2;
       const cy = y + C / 2;
 
+      svg += `<rect x="${x}" y="${y}" width="${C}" height="${C}" ${linha}/>`;
       if (j <= i) {
-        svg += `<rect x="${x}" y="${y}" width="${C}" height="${C}" fill="var(--bg-hover)" stroke="var(--table-border)" stroke-width="1"/>`;
-        svg += `<text x="${cx}" y="${cy}" font-size="13" fill="var(--text-disabled)" text-anchor="middle" dominant-baseline="central">-</text>`;
+        svg += `<text x="${cx}" y="${cy}" font-size="13" fill="var(--preto-tinta)" fill-opacity=".45" text-anchor="middle" dominant-baseline="central">-</text>`;
       } else {
-        svg += `<rect x="${x}" y="${y}" width="${C}" height="${C}" fill="var(--bg-card)" stroke="var(--table-border)" stroke-width="1"/>`;
         const asp = getAspectoMatrizSVG(posicoes[row.key], posicoes[col.key]);
         if (asp) svg += posicionarIconeMatrizSVG(asp, cx, cy);
       }
     });
   });
 
-  svg += `</svg>`;
+  svg += `</g></svg>`;
   return svg;
 }
 
@@ -240,15 +242,16 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
   const svgMatriz = montarSVGMatrizVisibilidade(
     colunas,
     posicoes,
-    ' display: inline-block; max-width: 100%; height: auto; border: 2px solid var(--table-border); border-radius: 12px; overflow: hidden;'
+    ' display: inline-block; max-width: 100%; height: auto;'
   );
 
   return `
-    <h3 style="text-align: center; font-family: 'Cinzel', serif; color: var(--primary-blue); font-size: 16px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: 800;">Matriz de Visibilidade (Theoria)</h3>
+    <h3 class="titulo-ferramenta">Matriz de Visibilidade (Theoria)</h3>
     ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
     </div>
+    <hr class="divisa">
   `;
 }
 
@@ -283,14 +286,14 @@ function toggleMatrizVisibilidadeNaMandala() {
     container.innerHTML = `
       <div style="width: 100%; box-sizing: border-box; padding: 70px 16px 24px 16px;">
         <div style="display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px;">
-          <button type="button" onclick="salvarMatrizVisibilidadeNaGaleria()" title="Salvar a matriz como imagem na galeria (com o cabeçalho)" style="${MATRIZ_BTN_ICONE_CSS}">
-            <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+          <button type="button" onclick="salvarMatrizVisibilidadeNaGaleria()" title="Salvar a matriz como imagem na galeria (com o cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
           </button>
-          <button type="button" onclick="capturarMatrizVisibilidadeMandalaParaRelatorio()" title="Adicionar ao Relatório (sem o cabeçalho)" style="${MATRIZ_BTN_ICONE_CSS}">
-            <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          <button type="button" onclick="capturarMatrizVisibilidadeMandalaParaRelatorio()" title="Adicionar ao Relatório (sem o cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
           </button>
         </div>
-        <div id="matrizVisibilidadeMandalaContainer">
+        <div id="matrizVisibilidadeMandalaContainer" class="painel">
           ${renderMatrizVisibilidadeResponsivaHTML(currentCalculatedData)}
         </div>
       </div>
@@ -298,7 +301,6 @@ function toggleMatrizVisibilidadeNaMandala() {
   }
 }
 
-const MATRIZ_BTN_ICONE_CSS = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0;";
 
 /* Botão de galeria: captura título + grade + cabeçalho SÓ AO TOCAR (ver
    capturarESalvarNaGaleria, mandala.js — igual em todas as ferramentas). */
