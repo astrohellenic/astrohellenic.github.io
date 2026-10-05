@@ -479,8 +479,7 @@
 
 /* janela "Inserir imagem de uma captura" */
 #relSeletorImagemOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-.rel-seletor-imagem-box { background: var(--fundo-creme); color: var(--preto-tinta); width: 100%; max-width: 640px; max-height: 80vh; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro); }
-.rel-seletor-imagem-lista { overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.rel-seletor-imagem-lista { display: flex; flex-direction: column; gap: 16px; }
 .rel-seletor-imagem-grupo-titulo { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--preto-tinta); margin-bottom: 6px; }
 .rel-seletor-imagem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .rel-seletor-imagem-item { overflow: hidden; cursor: pointer; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
@@ -551,5 +550,6 @@
    então perde o fundo que tinha lá dentro e ficava transparente — com o texto passando por trás, parecia que a barra "não aparecia".
    Aqui ela leva fundo próprio (o papel claro do editor), linhas do sistema e sombra, em qualquer tema. */
 body .ql-toolbar.ql-snow.rel-quill-toolbar-flutuante {
+    z-index: 1500; /* acima das barras da tela, MAS abaixo das janelas (seletor de imagem, avisos): senão ela passava por cima delas */
     background: #fffdf5; border: var(--contorno-fino) solid var(--azul-egipcio-claro); box-shadow: var(--sombra-janela, 0 2px 8px rgba(0,0,0,.2));
 }

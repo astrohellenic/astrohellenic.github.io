@@ -1612,13 +1612,13 @@ function abrirSeletorImagemCapturaQuill(quill) {
   const overlay = document.createElement('div');
   overlay.id = 'relSeletorImagemOverlay';
   overlay.innerHTML = `
-    <div class="rel-seletor-imagem-box">
-      <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="janela" style="width: 640px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="janela-topo">
         <span class="titulo-secao" style="margin: 0;">Inserir imagem de uma captura</span>
         <button type="button" class="botao-icone" id="relSeletorImagemFechar" title="Fechar">${menuIcone('fechar', 18)}</button>
       </div>
       <div class="rel-seletor-imagem-lista">${gruposHtml}</div>
-    </div>
+    </div></div>
   `;
   document.body.appendChild(overlay);
 
@@ -2073,7 +2073,7 @@ function injetarEstilosEditorRelatorio() {
          .rel-quill-toolbar-espacador reserva, no lugar de origem, o
          espaço que ela deixa vazio ao sair do fluxo. */
       .rel-quill-toolbar-espacador { display: none; }
-      .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; z-index: 999999; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+      .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
   `;
   document.head.appendChild(style);
