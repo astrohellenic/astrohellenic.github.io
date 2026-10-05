@@ -35,6 +35,13 @@
   const clienteId = params.get('c');
   const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
   const DIAS_A_FRENTE = 45;
+  // Serviço (Vercel) que fala com a Google Agenda do astrólogo — ver api/agenda-google.js
+  const GOOGLE_AGENDA_API = 'https://astrohellenicgithubio.vercel.app/api/agenda-google';
+  async function chamarGoogleAgenda(corpo) {
+    const r = await fetch(GOOGLE_AGENDA_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+    let j = null; try { j = await r.json(); } catch (e) { /* resposta sem JSON */ }
+    return { http: r.status, json: j };
+  }
   const ANTECEDENCIA_MIN = 120; // não oferece horário que começa em menos de 2h
   const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -108,8 +115,18 @@
       el('conteudo').innerHTML = `<div class="msg-ok"><strong>Teste concluído!</strong><br>Escolheu ${dataBR(diaEscolhido)} às ${horaEscolhida}.<br><br>Nada foi gravado.</div>`;
       return;
     }
+    // 1) confere na Google Agenda e já reserva o horário lá; 2) grava no sistema; se o 2º falhar, desfaz o 1º
+    let evento;
+    try { evento = await chamarGoogleAgenda({ acao: 'criar', u: ownerId, c: clienteId, data: diaEscolhido, hora: horaEscolhida }); }
+    catch (e) { evento = null; }
+    if (!evento || !evento.json || evento.json.ok !== true) {
+      alert(evento && evento.json && evento.json.erro ? evento.json.erro : 'Não foi possível confirmar agora. Tente de novo em instantes.');
+      await carregar();
+      return;
+    }
     const { data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida });
     if (error || !data || data.ok !== true) {
+      try { await chamarGoogleAgenda({ acao: 'apagar', c: clienteId, eventId: evento.json.eventId }); } catch (e) { /* o astrólogo vê na agenda */ }
       const motivo = data && data.erro ? data.erro : 'Não foi possível confirmar. Tente outro horário.';
       alert(motivo);
       await carregar();
@@ -125,6 +142,17 @@
     agenda = data;
     if (agenda.ja_agendado) {
       el('conteudo').innerHTML = `<div class="msg-ok"><strong>Você já tem um horário marcado.</strong><br>${dataBR(agenda.ja_agendado.data)} às ${agenda.ja_agendado.hora_inicio.slice(0, 5)} (horário de Brasília).</div>`;
+      return;
+    }
+    // Horários em que a Google Agenda do astrólogo já está ocupada entram na mesma lista de "ocupados".
+    // Se não der pra consultar, não mostra horário nenhum (melhor do que oferecer um horário que pode estar ocupado).
+    try {
+      const hoje = agoraBrasilia().dataISO;
+      const g = await chamarGoogleAgenda({ acao: 'ocupados', de: hoje, ate: somarDias(hoje, DIAS_A_FRENTE) });
+      if (!g.json || g.json.ok !== true) throw new Error('google');
+      agenda.ocupados = (agenda.ocupados || []).concat(g.json.ocupados);
+    } catch (e) {
+      el('conteudo').innerHTML = '<div class="vazio">Não foi possível carregar os horários agora. Tente de novo em instantes.</div>';
       return;
     }
     horaEscolhida = null;
