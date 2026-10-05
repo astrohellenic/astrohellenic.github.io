@@ -74,3 +74,17 @@ body.tema-ceu .painel .menu-flutuante { background: var(--papiro-fundo-simples) 
 body.tema-ceu .painel .menu-flutuante::after { display: none; }
 /* Ferramenta aberta DENTRO da mandala em papiro (ex.: Matriz de Visibilidade): o painel dela não leva papiro próprio — a folha da mandala já é o papel. */
 body.tema-ceu.mandala-papiro-tela #mandala-container .painel { background: transparent !important; clip-path: none; }
+
+/* TEMA CÉU — janela (caixa de diálogo): o papel é o ::before, MAIOR que a janela, e passa por fora das linhas duplas (a borda quebrada fica por fora);
+   a sombra é um drop-shadow da janela inteira, que acompanha o recorte. */
+body.tema-ceu .janela { background: transparent; box-shadow: none; isolation: isolate; filter: drop-shadow(3px 6px 6px rgba(0, 0, 10, .75)); }
+body.tema-ceu .janela::before {
+    content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none; background: var(--papiro-fundo);
+    clip-path: polygon(0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px, calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px), 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px), 4px 70%, 0 45%, 3px 22%);
+}
+body.tema-ceu .janela-sugestoes { background: var(--papiro-fundo-simples); }
+body.tema-ceu .janela { border-top-color: transparent; border-bottom-color: transparent; }
+body.tema-ceu .janela::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+}

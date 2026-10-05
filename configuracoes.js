@@ -818,13 +818,13 @@ function abrirFormServico(id) {
 
   const opcoesArea = '<option value="">Sem área</option>' +
     cachedAreasServicos.map(a => `<option value="${a.id}" ${sv && sv.area_id === a.id ? 'selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
-  const lbl = 'font-size: 11px; font-weight: 600; margin-top: 10px; display: block;';
+  const lbl = '';
   const overlay = document.createElement('div');
   overlay.id = 'servicoFormOverlay';
   overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 400px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800;">${sv ? 'Editar serviço' : 'Novo serviço'}</div>
+    <div class="janela" style="width: 400px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">${sv ? 'Editar serviço' : 'Novo serviço'}</div>
       <label style="${lbl}">Nome</label>
       <input type="text" id="svNome" class="modal-input" placeholder="Ex.: Mapa Natal Clássico" value="${sv ? escapeHtml(sv.nome) : ''}" autocomplete="off">
       <label style="${lbl}">Área</label>
@@ -833,12 +833,12 @@ function abrirFormServico(id) {
       <input type="text" id="svValor" class="modal-input" inputmode="decimal" placeholder="275,00" value="${sv && sv.valor !== null && sv.valor !== undefined ? String(sv.valor).replace('.', ',') : ''}" autocomplete="off">
       <label style="${lbl}">Duração (minutos)</label>
       <input type="text" id="svDuracao" class="modal-input" inputmode="numeric" placeholder="60" value="${sv && sv.duracao_minutos ? sv.duracao_minutos : ''}" autocomplete="off">
-      ${sv ? '' : `<label style="display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; font-weight: 600; cursor: pointer;"><input type="checkbox" id="svComModelo" checked style="width: 18px; height: 18px;"> Este serviço tem relatório (cria o modelo de relatório)</label>`}
-      <div class="modal-actions" style="margin-top: 16px;">
-        <button type="button" class="btn-secondary" id="svCancelar">Cancelar</button>
-        <button type="button" class="btn-primary" id="svSalvar">Salvar</button>
+      ${sv ? '' : `<label class="janela-check"><input type="checkbox" id="svComModelo" checked> Este serviço tem relatório (cria o modelo de relatório)</label>`}
+      <div class="janela-acoes">
+        <button type="button" class="botao-texto janela-sec" id="svCancelar">Cancelar</button>
+        <button type="button" class="botao-texto" id="svSalvar">Salvar</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#svCancelar').onclick = fechar;
   overlay.querySelector('#svSalvar').onclick = async () => { if (await salvarServico(id || null)) fechar(); };

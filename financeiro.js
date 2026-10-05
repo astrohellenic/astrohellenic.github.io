@@ -249,13 +249,11 @@ const FIN_PG_BASE = 44;          // px: rodapé
 const FIN_PG_LINHA = 50;         // px: cada entrada da lista
 const FIN_PG_CABECALHO = 108;    // px: título + mês (só na 1ª página)
 
-/* cores do PDF: as do tema que está na tela (lidas do CSS). Com papiro (só no Tema Céu), a folha de papiro por baixo; sem, o fundo liso do tema. */
+/* cores do PDF: as da paleta clara (papel), em qualquer tema do software. Com papiro, a folha de papiro por baixo; sem, fundo branco. */
 function finCoresPdf(papiro) {
-  const v = (nome, padrao) => (getComputedStyle(document.documentElement).getPropertyValue(nome) || '').trim() || padrao;
   return {
-    fundo: papiro ? (window.PAPIRO_FOLHA_JPG ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #e8d5a0` : '#e8d5a0') : v('--fundo-creme', '#ffffff'),
-    azul: v('--azul-egipcio-escuro', '#1034A6'), linha: v('--azul-egipcio-claro', '#1F5FA3'),
-    titulo: v('--terracota', '#A03E25'), total: v('--terracota', '#A03E25'), texto: v('--preto-tinta', '#1A1410'), mudo: v('--preto-tinta', '#1A1410')
+    fundo: papiro ? (window.PAPIRO_FOLHA_JPG ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #e8d5a0` : '#e8d5a0') : '#ffffff',
+    azul: '#1034A6', linha: '#1F5FA3', titulo: '#A03E25', total: '#A03E25', texto: '#1A1410', mudo: '#1A1410'
   };
 }
 
@@ -337,18 +335,19 @@ function finNomeArquivoRelatorio(ext) {
 /* Botão da impressora. No Tema Céu pergunta se é pra sair sobre o papiro (como a capa do Relatório); nos outros temas vai direto. */
 function imprimirEntradasPDF() {
   if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
-  if (!document.body.classList.contains('tema-ceu')) { baixarEntradasPDF(false); return; }
   fecharModalFin();
   const overlay = document.createElement('div');
   overlay.id = 'finModalOverlay';
   overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 340px; max-width: 100%; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800;">Salvar em PDF</div>
-      <button type="button" class="btn-primary" id="finPdfPapiro" style="width: 100%;">Sobre papiro (tinta sobre papiro)</button>
-      <button type="button" class="btn-secondary" id="finPdfSimples" style="width: 100%;">Sem papiro (fundo liso)</button>
-      <button type="button" class="btn-secondary" id="finPdfCancelar" style="width: 100%;">Cancelar</button>
-    </div>`;
+    <div class="janela" style="width: 340px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">Salvar em PDF</div>
+      <div class="janela-linha-botoes">
+        <button type="button" class="botao-texto" id="finPdfPapiro">Com papiro (tinta sobre papiro)</button>
+        <button type="button" class="botao-texto" id="finPdfSimples">Sem papiro (fundo branco)</button>
+        <button type="button" class="botao-texto" id="finPdfCancelar">Cancelar</button>
+      </div>
+    </div></div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#finPdfPapiro').onclick = () => { fecharModalFin(); baixarEntradasPDF(true); };
   overlay.querySelector('#finPdfSimples').onclick = () => { fecharModalFin(); baixarEntradasPDF(false); };
@@ -446,15 +445,15 @@ function abrirFormEntradaFin(id) {
     if (m) { finClienteEscolhido = m; clienteInicial = finRotuloCliente(m); }
     else { if (e.mapa_id) finClienteEscolhido = { id: e.mapa_id, nome: e.cliente_nome, codigo: null }; clienteInicial = e.cliente_nome; }
   }
-  const lbl = 'font-size: 11px; font-weight: 600; margin-top: 10px; display: block;';
+  const lbl = '';
 
   fecharModalFin();
   const overlay = document.createElement('div');
   overlay.id = 'finModalOverlay';
   overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 420px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800;">${e ? 'Editar entrada' : 'Nova entrada'}</div>
+    <div class="janela" style="width: 420px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">${e ? 'Editar entrada' : 'Nova entrada'}</div>
 
       <label style="${lbl}">Data</label>
       <input type="date" id="finData" class="modal-input" max="${finHojeISO()}" value="${e ? e.data : finHojeISO()}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
@@ -462,15 +461,15 @@ function abrirFormEntradaFin(id) {
       <label style="${lbl}">Cliente</label>
       <input type="text" id="finCliente" class="modal-input" placeholder="Digite o código ou o nome" value="${escapeHtml(clienteInicial)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <div id="finSugCliente" style="display: none;"></div>
-      <button type="button" class="btn-secondary" id="finNovoCli" style="margin-top: 6px; align-self: flex-start;">+ Novo cliente</button>
-      <div id="finNovoCliPainel" style="display: none; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-top: 6px;">
+      <button type="button" class="botao-texto" id="finNovoCli" style="align-self: flex-start;">+ Novo cliente</button>
+      <div id="finNovoCliPainel" class="janela-subbloco" style="display: none;">
         <label style="${lbl}; margin-top: 0;">Nome do novo cliente</label>
         <input type="text" id="finNcNome" class="modal-input" autocomplete="off">
         <label style="${lbl}">Código (ex.: 0153 ou T0010 - 0139)</label>
         <input type="text" id="finNcCodigo" class="modal-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-        <div class="modal-actions" style="margin-top: 10px;">
-          <button type="button" class="btn-secondary" id="finNcCancelar">Cancelar</button>
-          <button type="button" class="btn-primary" id="finNcCriar">Criar cliente</button>
+        <div class="janela-acoes">
+          <button type="button" class="botao-texto janela-sec" id="finNcCancelar">Cancelar</button>
+          <button type="button" class="botao-texto" id="finNcCriar">Criar cliente</button>
         </div>
       </div>
 
@@ -490,12 +489,12 @@ function abrirFormEntradaFin(id) {
       <label style="${lbl}">Observação</label>
       <input type="text" id="finObs" class="modal-input" value="${e ? escapeHtml(e.observacao || '') : ''}" autocomplete="off">
 
-      <div class="modal-actions" style="margin-top: 16px;">
-        ${e ? '<button type="button" class="btn-secondary" id="finApagar" style="margin-right: auto;">Apagar</button>' : ''}
-        <button type="button" class="btn-secondary" id="finCancelar">Cancelar</button>
-        <button type="button" class="btn-primary" id="finSalvar">Salvar</button>
+      <div class="janela-acoes">
+        ${e ? '<button type="button" class="botao-texto janela-apagar" id="finApagar" style="margin-right: auto;">Apagar</button>' : ''}
+        <button type="button" class="botao-texto janela-sec" id="finCancelar">Cancelar</button>
+        <button type="button" class="botao-texto" id="finSalvar">Salvar</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
 
   overlay.querySelector('#finCancelar').onclick = fecharModalFin;
@@ -551,9 +550,10 @@ function finLigarBusca(input, caixa, itens, aoEscolher, mostrarTudoNoFoco) {
     const q = norm(input.value).trim();
     achados = (q ? itens.filter(i => norm(i.rotulo).includes(q)) : (mostrarTudoNoFoco ? itens : [])).slice(0, 8);
     if (!achados.length) { esconder(); return; }
-    caixa.style.cssText = 'display: block; margin-top: 4px; max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);';
+    caixa.className = 'janela-sugestoes';
+    caixa.style.display = 'block';
     caixa.innerHTML = achados.map((i, k) =>
-      `<div data-k="${k}" style="padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border-color);">${escapeHtml(i.rotulo)}</div>`).join('');
+      `<div class="janela-sugestao" data-k="${k}">${escapeHtml(i.rotulo)}</div>`).join('');
   };
   input.addEventListener('input', () => { aoEscolher(null); mostrar(); });
   if (mostrarTudoNoFoco) input.addEventListener('focus', mostrar);
@@ -627,30 +627,30 @@ function abrirCombosFin() {
   const nomeArea = id => { const a = finAreasCache.find(x => x.id === id); return a ? a.nome : ''; };
   const lista = finCombos.length
     ? finCombos.map(c => `
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+        <div class="janela-linha">
           <div style="min-width: 0;">
-            <div style="font-size: 13px; font-weight: 700;">${escapeHtml(c.nome)}</div>
-            <div style="font-size: 11px;">${escapeHtml([nomeArea(c.area_id), c.valor !== null && c.valor !== undefined ? finFormatarMoeda(c.valor) : ''].filter(Boolean).join(' · ') || 'Sem área nem valor padrão')}</div>
+            <div class="janela-linha-nome">${escapeHtml(c.nome)}</div>
+            <div class="janela-linha-det">${escapeHtml([nomeArea(c.area_id), c.valor !== null && c.valor !== undefined ? finFormatarMoeda(c.valor) : ''].filter(Boolean).join(' · ') || 'Sem área nem valor padrão')}</div>
           </div>
-          <span style="display: flex; gap: 12px; flex-shrink: 0;">
-            <i class="fa-solid fa-pen" onclick="abrirFormComboFin('${c.id}')" title="Editar" style="cursor: pointer;"></i>
-            <i class="fa-solid fa-trash" onclick="apagarComboFin('${c.id}')" title="Apagar" style="cursor: pointer; color: var(--danger);"></i>
+          <span class="janela-linha-acoes">
+            <button type="button" class="botao-icone" style="color: var(--cinza);" onclick="abrirFormComboFin('${c.id}')" title="Editar">${menuIcone('editar', 18)}</button>
+            <button type="button" class="botao-icone botao-apagar" onclick="apagarComboFin('${c.id}')" title="Apagar">${menuIcone('lixeira', 18)}</button>
           </span>
         </div>`).join('')
-    : '<div style="font-size: 12px; padding: 8px 0;">Nenhum combo ainda. Ex.: "Mapa Astral + Retificação".</div>';
+    : '<div class="menu-vazio" style="text-align: left; padding: 8px 0;">Nenhum combo ainda. Ex.: "Mapa Astral + Retificação".</div>';
   const overlay = document.createElement('div');
   overlay.id = 'finModalOverlay';
   overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 400px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800; margin-bottom: 4px;">Combos</div>
-      <div style="font-size: 12px; line-height: 1.4; margin-bottom: 6px;">Um combo é vendido como um serviço só, com nome e preço próprios. Ao escolher o combo numa entrada, a área e o valor já vêm preenchidos.</div>
+    <div class="janela" style="width: 400px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">Combos</div>
+      <div class="re-ajuda">Um combo é vendido como um serviço só, com nome e preço próprios. Ao escolher o combo numa entrada, a área e o valor já vêm preenchidos.</div>
       ${lista}
-      <div class="modal-actions" style="margin-top: 16px;">
-        <button type="button" class="btn-secondary" id="finFechar">Fechar</button>
-        <button type="button" class="btn-primary" id="finNovoCombo">+ Combo</button>
+      <div class="janela-acoes">
+        <button type="button" class="botao-texto janela-sec" id="finFechar">Fechar</button>
+        <button type="button" class="botao-texto" id="finNovoCombo">+ Combo</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#finFechar').onclick = fecharModalFin;
   overlay.querySelector('#finNovoCombo').onclick = () => abrirFormComboFin();
@@ -666,19 +666,19 @@ function abrirFormComboFin(id) {
   overlay.id = 'finModalOverlay';
   overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 400px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800;">${c ? 'Editar combo' : 'Novo combo'}</div>
+    <div class="janela" style="width: 400px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">${c ? 'Editar combo' : 'Novo combo'}</div>
       <label style="${lbl}">Nome</label>
       <input type="text" id="finComboNome" class="modal-input" placeholder="Ex.: Mapa Astral + Retificação" value="${c ? escapeHtml(c.nome) : ''}" autocomplete="off">
       <label style="${lbl}">Área</label>
       <select id="finComboArea" class="modal-select">${opcoesArea}</select>
       <label style="${lbl}">Valor padrão (R$) — opcional</label>
       <input type="text" id="finComboValor" class="modal-input" inputmode="decimal" placeholder="500,00" value="${c && c.valor !== null && c.valor !== undefined ? String(c.valor).replace('.', ',') : ''}" autocomplete="off">
-      <div class="modal-actions" style="margin-top: 16px;">
-        <button type="button" class="btn-secondary" id="finCancelar">Cancelar</button>
-        <button type="button" class="btn-primary" id="finSalvarCombo">Salvar</button>
+      <div class="janela-acoes">
+        <button type="button" class="botao-texto janela-sec" id="finCancelar">Cancelar</button>
+        <button type="button" class="botao-texto" id="finSalvarCombo">Salvar</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#finCancelar').onclick = abrirCombosFin;
   overlay.querySelector('#finSalvarCombo').onclick = async () => {
@@ -719,20 +719,20 @@ function abrirPastasFin() {
   overlay.id = 'finModalOverlay';
   overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 99999999; padding: 16px; box-sizing: border-box;';
   const lista = pastas.map((p, k) => `
-    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: 600; cursor: pointer;">
-      <input type="checkbox" class="finChkPasta" data-pasta="${escapeHtml(p)}" ${finPastasClientes.includes(p) ? 'checked' : ''} style="width: 18px; height: 18px; flex-shrink: 0;">
+    <label class="janela-linha janela-linha-check">
+      <input type="checkbox" class="finChkPasta" data-pasta="${escapeHtml(p)}" ${finPastasClientes.includes(p) ? 'checked' : ''}>
       <span>${escapeHtml(p)}</span>
     </label>`).join('');
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 380px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800; margin-bottom: 4px;">Pastas de clientes</div>
-      <div style="font-size: 12px; line-height: 1.4; margin-bottom: 8px;">Só os mapas das pastas marcadas aparecem na busca de cliente das entradas.</div>
-      ${lista || '<div style="font-size: 12px;">Nenhuma pasta encontrada.</div>'}
-      <div class="modal-actions" style="margin-top: 16px;">
-        <button type="button" class="btn-secondary" id="finCancelar">Cancelar</button>
-        <button type="button" class="btn-primary" id="finSalvarPastas">Salvar</button>
+    <div class="janela" style="width: 380px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">Pastas de clientes</div>
+      <div class="re-ajuda">Só os mapas das pastas marcadas aparecem na busca de cliente das entradas.</div>
+      ${lista || '<div class="menu-vazio" style="text-align: left; padding: 8px 0;">Nenhuma pasta encontrada.</div>'}
+      <div class="janela-acoes">
+        <button type="button" class="botao-texto janela-sec" id="finCancelar">Cancelar</button>
+        <button type="button" class="botao-texto" id="finSalvarPastas">Salvar</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#finCancelar').onclick = fecharModalFin;
   overlay.querySelector('#finSalvarPastas').onclick = salvarPastasFin;
@@ -761,24 +761,24 @@ function abrirAreasFin() {
 
   const lista = finAreasCache.length
     ? finAreasCache.map(a => `
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-          <span style="font-size: 13px; font-weight: 700;">${escapeHtml(a.nome)}</span>
-          <span style="display: flex; gap: 12px;">
-            <i class="fa-solid fa-pen" onclick="renomearAreaFin('${a.id}')" title="Renomear" style="cursor: pointer;"></i>
-            <i class="fa-solid fa-trash" onclick="apagarAreaFin('${a.id}')" title="Apagar" style="cursor: pointer; color: var(--danger);"></i>
+        <div class="janela-linha">
+          <span class="janela-linha-nome">${escapeHtml(a.nome)}</span>
+          <span class="janela-linha-acoes">
+            <button type="button" class="botao-icone" style="color: var(--cinza);" onclick="renomearAreaFin('${a.id}')" title="Renomear">${menuIcone('editar', 18)}</button>
+            <button type="button" class="botao-icone botao-apagar" onclick="apagarAreaFin('${a.id}')" title="Apagar">${menuIcone('lixeira', 18)}</button>
           </span>
         </div>`).join('')
-    : '<div style="font-size: 12px; padding: 8px 0;">Nenhuma área ainda. Crie a primeira (ex.: Astrologia).</div>';
+    : '<div class="menu-vazio" style="text-align: left; padding: 8px 0;">Nenhuma área ainda. Crie a primeira (ex.: Astrologia).</div>';
 
   overlay.innerHTML = `
-    <div class="modal-box" style="width: 380px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;" role="dialog" aria-modal="true">
-      <div style="font-size: 14px; font-weight: 800; margin-bottom: 6px;">Áreas de atuação</div>
+    <div class="janela" style="width: 380px;" role="dialog" aria-modal="true"><div class="janela-corpo">
+      <div class="titulo-secao">Áreas de atuação</div>
       ${lista}
-      <div class="modal-actions" style="margin-top: 16px;">
-        <button type="button" class="btn-secondary" id="finFechar">Fechar</button>
-        <button type="button" class="btn-primary" id="finNovaArea">+ Área</button>
+      <div class="janela-acoes">
+        <button type="button" class="botao-texto janela-sec" id="finFechar">Fechar</button>
+        <button type="button" class="botao-texto" id="finNovaArea">+ Área</button>
       </div>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('#finFechar').onclick = fecharModalFin;
   overlay.querySelector('#finNovaArea').onclick = criarAreaFin;

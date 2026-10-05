@@ -488,3 +488,43 @@
 .rel-seletor-imagem-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
 .re-grupo .re-item:last-child { border-bottom: 0; }
 .re-grupo { margin-bottom: 0; }
+
+/* JANELA (caixa de diálogo que abre por cima da tela): folha reta entre duas linhas duplas, com sombra; a borda é da janela e o
+   conteúdo rola dentro de .janela-corpo. Campos só com a linha embaixo; botões de texto; rótulos pequenos em preto de tinta. */
+.janela {
+    position: relative; box-sizing: border-box; max-width: 100%;
+    background: var(--fundo-creme); color: var(--preto-tinta);
+    border: 0; border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    box-shadow: var(--sombra-janela, none); font-family: 'Montserrat', sans-serif;
+}
+.janela-corpo { box-sizing: border-box; max-height: 88vh; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 4px; }
+.janela-corpo > * { flex-shrink: 0; }
+.janela label { display: block; margin: 10px 0 0; font-family: 'Cinzel', serif; font-weight: 700; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--preto-tinta); }
+.janela .modal-input, .janela .modal-select, .janela input[type="text"], .janela input[type="date"] {
+    box-sizing: border-box; width: 100%; padding: 6px 0; font-family: inherit; font-size: 13px; outline: none;
+    color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0;
+}
+.janela input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 36px; }
+.janela .modal-input:focus, .janela .modal-select:focus { border-bottom-color: var(--terracota); }
+.janela .modal-input::placeholder { color: var(--preto-tinta); opacity: .55; }
+.janela input[type="checkbox"] {
+    -webkit-appearance: none; appearance: none; background: transparent; width: 16px; height: 16px; margin: 0; cursor: pointer; flex: 0 0 auto;
+    border: 1.5px solid var(--azul-egipcio-escuro); border-radius: 0; position: relative;
+}
+.janela input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 4px; top: 0; width: 4px; height: 9px; border: solid var(--terracota); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.janela .janela-check { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-family: inherit; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--azul-egipcio-escuro); font-weight: 700; cursor: pointer; }
+.janela-acoes { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 18px; }
+.janela-linha-botoes { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.janela-linha-botoes .botao-texto { text-align: center; padding: 8px 10px; }
+.janela .botao-texto.janela-sec { color: var(--azul-egipcio-escuro); border-top-color: var(--azul-egipcio-escuro); border-bottom-color: var(--azul-egipcio-escuro); }
+.janela .botao-texto.janela-apagar { color: var(--terracota); }
+.janela-subbloco { margin-top: 8px; padding: 6px 0 10px; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.janela-linha { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.janela-linha-nome { font-size: 13px; font-weight: 700; color: var(--azul-egipcio-escuro); }
+.janela-linha-det { font-size: 11px; margin-top: 2px; opacity: .8; }
+.janela-linha-acoes { display: flex; gap: 2px; flex-shrink: 0; }
+.janela-linha-check { justify-content: flex-start; gap: 10px; margin: 0; font-family: inherit; font-size: 13px; letter-spacing: 0; text-transform: none; font-weight: 700; color: var(--azul-egipcio-escuro); cursor: pointer; }
+.janela-sugestoes { margin-top: 4px; max-height: 220px; overflow-y: auto; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); background: var(--fundo-creme); }
+.janela-sugestao { padding: 9px 4px; font-size: 13px; cursor: pointer; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.janela-sugestao:last-child { border-bottom: 0; }
+.janela-sugestao:hover { color: var(--terracota); }
