@@ -140,6 +140,9 @@ window.astroAbaPdf = {
     if (!aba || aba.closed) return false;
     try {
       var form = document.createElement('form');
+      /* O iPad usa o ÚLTIMO PEDAÇO DO ENDEREÇO como nome do arquivo ao salvar (ignora o cabeçalho de nome). Por isso o endereço termina com o nome:
+         .../api/pdf/<nome>.pdf (a Vercel reescreve isso pra mesma função, ver vercel.json). */
+      if (nome && /\/api\/gerar-pdf$/.test(url)) url = url.replace(/\/api\/gerar-pdf$/, '/api/pdf/' + encodeURIComponent(nome) + '.pdf');
       form.method = 'POST'; form.action = url; form.target = aba.name; form.enctype = 'multipart/form-data'; form.style.display = 'none';
       var campo = function (n, v) { var t = document.createElement('textarea'); t.name = n; t.value = v; form.appendChild(t); };
       campo('html', html); campo('nome', nome || '');
