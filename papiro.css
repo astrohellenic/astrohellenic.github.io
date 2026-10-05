@@ -88,3 +88,8 @@ body.tema-ceu .janela::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
 }
+
+/* EDITOR DO RELATÓRIO: a folha é MUITO alta (todas as páginas do modelo numa coluna só). Um recorte de borda quebrada (clip-path) numa folha desse
+   tamanho estoura o limite de camada do Safari do iPad: ao tocar fora do texto a tela aparece "dividida na metade" até o próximo toque.
+   Aqui a folha do editor fica sem o recorte (bordas retas, mesmo papiro); as barras e janelas, que são pequenas, mantêm a borda quebrada. */
+body.tema-ceu .rel-editor-tela { clip-path: none !important; }
