@@ -202,7 +202,7 @@
        sem cabeçalho nem céu. Devolve { svg, rCanvas } (rCanvas = a margem que ESTE mapa pediria sozinho). */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return { svg: `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
+            return { svg: `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
         }
 
         // TEMA CÉU — roda SECUNDÁRIA: "tinta sobre o papiro" (as cores vêm da roda central).
@@ -214,9 +214,7 @@
             ferramenta: {
                 dados,
                 rCanvasMinimo: opcoes.rCanvasMinimo || 0,
-                // fundoDisco/halo do tema escuro usam --bg-card (#262220), NÃO --bg-main (#1c1917): cada mandala fica dentro do seu cartão
-                // (ver renderSinastriaTela) — pra não aparecer o "quadrado" claro entre a borda dourada do cartão e o disco escuro.
-                fundoEscuro: '#262220',
+                fundoDisco: papiro ? 'none' : paletaEpoca(document.documentElement.classList.contains('tema-escuro')).fundoCreme, // o disco tem a cor do painel por baixo
                 abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
@@ -259,25 +257,6 @@
     let sinastriaListaMapas = null;
     let sinastriaCarregandoLista = false;
     let sinastriaPastaSelecionada = null; // null = mostrando a lista de pastas
-
-    function sinastriaLinhaInfo(nome, codigo, momentDate, geo) {
-        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        const fusoVal = (geo && geo.fuso !== undefined) ? geo.fuso : -3;
-        const fusoFormatted = `UTC${fusoVal >= 0 ? '+' + fusoVal : fusoVal}`;
-        const dia = String(momentDate.getDate()).padStart(2, '0');
-        const mes = String(momentDate.getMonth() + 1).padStart(2, '0');
-        const ano = momentDate.getFullYear();
-        const hora = String(momentDate.getHours()).padStart(2, '0');
-        const min = String(momentDate.getMinutes()).padStart(2, '0');
-        const diaSemana = diasSemana[momentDate.getDay()];
-        const cidade = (geo && geo.city) ? geo.city : 'Local n/i';
-        const titulo = codigo ? `${codigo} ${nome}` : nome;
-        return `
-            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: var(--primary-blue); margin-bottom: 2px;">${escapeHtml(titulo || 'Sem Nome')}</div>
-            <div style="font-size: 11px; color: var(--text-muted-2); font-weight: 500;">${diaSemana} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted})</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(cidade)}</div>
-        `;
-    }
 
     /* Calcula os dados astrológicos completos de um mapa salvo (linha da
        tabela "mapas") para desenhar a mini-mandala dele — mesma chamada e
@@ -392,12 +371,12 @@
                 sinastriaRenderizarListaPicker(sinastriaFiltrarPorPastaAtual(sinastriaListaMapas));
             } else {
                 const cont = document.getElementById('sinastriaListaContainer');
-                if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--danger);">Erro ao carregar a lista de mapas.</div>`;
+                if (cont) cont.innerHTML = `<div class="menu-vazio" style="color: var(--terracota); opacity: 1;">Erro ao carregar a lista de mapas.</div>`;
             }
         } catch (e) {
             console.error("Erro ao carregar mapas para a Sinastria:", e);
             const cont = document.getElementById('sinastriaListaContainer');
-            if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--danger);">Erro de conexão.</div>`;
+            if (cont) cont.innerHTML = `<div class="menu-vazio" style="color: var(--terracota); opacity: 1;">Erro de conexão.</div>`;
         } finally {
             sinastriaCarregandoLista = false;
         }
@@ -421,20 +400,22 @@
         const pastas = (typeof customFolders !== 'undefined' && Array.isArray(customFolders) && customFolders.length > 0) ? customFolders : ['Clientes'];
         const pastasOrdenadas = [...pastas].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
-        let html = '';
+        // "Agora": o céu do momento, pra ver trânsitos ao lado do mapa em tela (e andar no tempo com o seletor).
+        let html = `
+            <div class="menu-pasta" onclick="sinastriaEscolherAgora()">
+                <div class="nome-pasta">${menuIcone('relogio')}<span>Agora — céu do momento (trânsito)</span></div>
+                ${menuIcone('avancar')}
+            </div>`;
         pastasOrdenadas.forEach(pasta => {
             const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
             html += `
-                <div onclick="sinastriaAbrirPasta('${pastaAttrEscapada}')" style="margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); padding: 10px 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
-                        <span style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">${escapeHtml(pasta)}</span>
-                    </div>
-                    <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
+                <div class="menu-pasta" onclick="sinastriaAbrirPasta('${pastaAttrEscapada}')">
+                    <div class="nome-pasta">${menuIcone('pasta')}<span>${escapeHtml(pasta)}</span></div>
+                    ${menuIcone('avancar')}
                 </div>
             `;
         });
-        cont.innerHTML = html || `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--text-faint);">Nenhuma pasta encontrada.</div>`;
+        cont.innerHTML = html;
     }
 
     window.sinastriaAbrirPasta = function(pasta) {
@@ -454,7 +435,7 @@
         if (!cont) return;
 
         if (!lista || lista.length === 0) {
-            cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--text-faint);">Nenhum mapa encontrado.</div>`;
+            cont.innerHTML = `<div class="menu-vazio">Nenhum mapa encontrado.</div>`;
             return;
         }
 
@@ -463,9 +444,11 @@
             const cod = item.codigo ? `${item.codigo} - ` : '';
             const cidStr = item.cidade || 'Local n/i';
             html += `
-                <div onclick="sinastriaSelecionarMapa(${item.id})" style="margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); padding: 8px 10px; cursor: pointer;">
-                    <div style="color: var(--primary-blue); font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
-                    <div style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">${escapeHtml(cidStr)}</div>
+                <div class="client-card-item" onclick="sinastriaSelecionarMapa(${item.id})">
+                    <div class="client-corpo">
+                        <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}</div>
+                        <div class="client-meta">${escapeHtml(cidStr)}</div>
+                    </div>
                 </div>
             `;
         });
@@ -490,15 +473,16 @@
         if (!row) return;
 
         const cont = document.getElementById('sinastriaListaContainer');
-        if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Calculando mapa...</div>`;
+        if (cont) cont.innerHTML = `<div class="menu-vazio"><i class="fa-solid fa-spinner fa-spin"></i> Calculando mapa...</div>`;
 
         const resultado = await sinastriaCalcularDadosMapa(row);
         if (!resultado) {
-            if (cont) cont.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--danger);">Erro ao calcular esse mapa. Toque para tentar de novo.</div>`;
+            if (cont) cont.innerHTML = `<div class="menu-vazio" style="color: var(--terracota); opacity: 1;">Erro ao calcular esse mapa. Toque para tentar de novo.</div>`;
             return;
         }
 
         sinastriaSegundoMapa = {
+            tipo: 'natal',
             nome: row.nome || 'Sem Nome',
             codigo: row.codigo || null,
             cidade: row.cidade,
@@ -517,113 +501,186 @@
         if (container) renderSinastriaTela(container);
     };
 
-    /* Monta a tela inteira: mandala esquerda (segundo mapa, ou o buscador
-       quando ainda não escolhido) + mandala direita (o mapa que já estava
-       em tela, sem tocar em currentCalculatedData/currentMoment/currentGeo). */
+    /* ===== TRÂNSITO: o segundo mapa é o céu de um MOMENTO (por padrão, agora), no lugar do mapa em tela, e dá pra andar no tempo =====
+       O horário é o de parede do lugar (a posição dos planetas depende do instante, não do fuso do aparelho). Cada passo busca o céu do novo momento. */
+    let sinastriaUnidadeTempo = 'day';
+    let sinastriaPedidoTransito = 0; // descarta respostas atrasadas quando o astrólogo anda rápido no tempo
+
+    function sinastriaAgoraNoLugar(geo) {
+        const agora = new Date();
+        const fuso = (geo && geo.fuso !== undefined) ? geo.fuso : -3;
+        return new Date(agora.getTime() + (fuso * 60 + agora.getTimezoneOffset()) * 60000);
+    }
+
+    function sinastriaRowDeMomento(d, geo) {
+        const p = n => String(n).padStart(2, '0');
+        return {
+            data_nascimento: `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`,
+            hora_nascimento: `${p(d.getHours())}:${p(d.getMinutes())}`,
+            latitude: geo.lat, longitude: geo.lon, cidade: geo.city
+        };
+    }
+
+    async function sinastriaCalcularTransito(momento) {
+        const geoA = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo : { lat: -23.5505, lon: -46.6333, fuso: -3, city: 'São Paulo, SP' };
+        const resultado = await sinastriaCalcularDadosMapa(sinastriaRowDeMomento(momento, geoA));
+        if (!resultado) return null;
+        return { tipo: 'transito', nome: 'Trânsito', codigo: null, cidade: geoA.city, moment: resultado.moment, geo: resultado.geo, dados: resultado.dados };
+    }
+
+    window.sinastriaEscolherAgora = async function() {
+        const cont = document.getElementById('sinastriaListaContainer');
+        if (cont) cont.innerHTML = `<div class="menu-vazio"><i class="fa-solid fa-spinner fa-spin"></i> Calculando o céu de agora...</div>`;
+        const geoA = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo : { lat: -23.5505, lon: -46.6333, fuso: -3, city: 'São Paulo, SP' };
+        const mapa = await sinastriaCalcularTransito(sinastriaAgoraNoLugar(geoA));
+        if (!mapa) {
+            if (cont) cont.innerHTML = `<div class="menu-vazio" style="color: var(--terracota); opacity: 1;">Erro ao calcular o céu de agora. Toque para tentar de novo.</div>`;
+            return;
+        }
+        sinastriaSegundoMapa = mapa;
+        const container = document.getElementById('mandala-container');
+        if (container) renderSinastriaTela(container);
+    };
+
+    window.sinastriaMudarUnidade = function(unidade) { sinastriaUnidadeTempo = unidade; };
+
+    window.sinastriaPassoTempo = async function(direcao) {
+        if (!sinastriaSegundoMapa || sinastriaSegundoMapa.tipo !== 'transito') return;
+        const d = new Date(sinastriaSegundoMapa.moment.getTime());
+        switch (sinastriaUnidadeTempo) {
+            case 'minute': d.setMinutes(d.getMinutes() + direcao); break;
+            case 'hour': d.setHours(d.getHours() + direcao); break;
+            case 'day': d.setDate(d.getDate() + direcao); break;
+            case 'month': d.setMonth(d.getMonth() + direcao); break;
+            case 'year': d.setFullYear(d.getFullYear() + direcao); break;
+        }
+        await sinastriaIrParaMomento(d);
+    };
+
+    window.sinastriaVoltarAgora = async function() {
+        const geoA = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo : { lat: -23.5505, lon: -46.6333, fuso: -3, city: 'São Paulo, SP' };
+        await sinastriaIrParaMomento(sinastriaAgoraNoLugar(geoA));
+    };
+
+    async function sinastriaIrParaMomento(momento) {
+        const meuPedido = ++sinastriaPedidoTransito;
+        const mapa = await sinastriaCalcularTransito(momento);
+        if (meuPedido !== sinastriaPedidoTransito || !mapa) return; // chegou atrasado (ou falhou): mantém o que está na tela
+        sinastriaSegundoMapa = mapa;
+        const container = document.getElementById('mandala-container');
+        if (container && document.getElementById('sinastria-container')) renderSinastriaTela(container);
+    }
+
+    /* Seletor de tempo do trânsito (setas + unidade + "agora"), logo acima da mandala que ele move. */
+    function sinastriaSeletorTempoHtml() {
+        const unidades = [['minute', 'Minuto'], ['hour', 'Hora'], ['day', 'Dia'], ['month', 'Mês'], ['year', 'Ano']];
+        return `
+            <div class="passo-tempo">
+                <button type="button" class="botao-icone" onclick="sinastriaPassoTempo(-1)" title="Voltar no tempo">${menuIcone('voltar')}</button>
+                <select class="menu-select" onchange="sinastriaMudarUnidade(this.value)" title="Quanto andar em cada passo">
+                    ${unidades.map(([v, r]) => `<option value="${v}"${v === sinastriaUnidadeTempo ? ' selected' : ''}>${r}</option>`).join('')}
+                </select>
+                <button type="button" class="botao-icone" onclick="sinastriaPassoTempo(1)" title="Avançar no tempo">${menuIcone('avancar')}</button>
+                <button type="button" class="botao-icone" onclick="sinastriaVoltarAgora()" title="Voltar para agora">${menuIcone('relogio')}</button>
+            </div>`;
+    }
+
+    /* Monta a tela inteira: mandala esquerda (segundo mapa ou trânsito, ou o buscador quando ainda não escolhido) + mandala direita
+       (o mapa que já estava em tela, sem tocar em currentCalculatedData/currentMoment/currentGeo). */
     function renderSinastriaTela(container) {
         const nomeA = (typeof currentSubjectName !== 'undefined') ? currentSubjectName : 'Mapa em tela';
-        const codigoA = (typeof currentCustomCode !== 'undefined') ? currentCustomCode : null;
         const momentA = (typeof currentMoment !== 'undefined' && currentMoment instanceof Date) ? currentMoment : new Date();
         const geoA = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo : { lat: -23.5505, lon: -46.6333, fuso: -3, city: 'São Paulo, SP' };
 
-        let cardEsquerdaHtml;
-        let cardDireitaHtml;
-
-        // Cabeçalho PADRÃO do mapa em tela também enquanto o segundo mapa ainda
-        // não foi escolhido (o da esquerda ganha um espaço invisível do mesmo
-        // tamanho, pra os dois cartões ficarem alinhados).
         const horasSolo = (typeof window.calcularHorasPlanetariasProf === 'function')
             ? window.calcularHorasPlanetariasProf(momentA, geoA.lat, geoA.lon, geoA.fuso !== undefined ? geoA.fuso : -3) : null;
         const cabSolo = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { largura: 480, titulo: nomeA, momento: momentA, geo: geoA, horasInfo: horasSolo, tintaSobreFolha: true });
         const espacoCabSolo = `<div aria-hidden="true" style="visibility: hidden;">${cabSolo}</div>`;
 
+        let cardEsquerdaHtml;
+        let cardDireitaHtml;
+        const ehTransito = !!(sinastriaSegundoMapa && sinastriaSegundoMapa.tipo === 'transito');
+
         if (sinastriaSegundoMapa) {
-            // As duas mandalas são geradas juntas pra ficarem na MESMA escala
-            // visual (ver gerarMandalasComEscalaIgual) — senão quem tem mais
-            // planetas colados (precisa de mais margem) aparece menor que a
-            // outra, mesmo os dois cartões tendo a mesma largura.
+            // As duas mandalas são geradas juntas pra ficarem na MESMA escala visual (ver gerarMandalasComEscalaIgual).
             const { svgEsquerda, svgDireita } = gerarMandalasComEscalaIgual(sinastriaSegundoMapa.dados, currentCalculatedData);
 
-            // Cabeçalho PADRÃO (função global, mandala.js) acima de cada mandala,
-            // cada um na largura de uma mandala e com a mesma altura.
             const LARGURA_CAB = 480;
             const coresCab = coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
             const horasDe = (momento, geo) => (typeof window.calcularHorasPlanetariasProf === 'function')
                 ? window.calcularHorasPlanetariasProf(momento, geo.lat, geo.lon, geo.fuso !== undefined ? geo.fuso : -3) : null;
             const m2 = sinastriaSegundoMapa;
-            const opcEsq = { largura: LARGURA_CAB, titulo: m2.nome, momento: m2.moment, geo: m2.geo, tipoMapa: 'Natal', horasInfo: horasDe(m2.moment, m2.geo) };
+            const opcEsq = { largura: LARGURA_CAB, titulo: m2.nome, momento: m2.moment, geo: m2.geo, tipoMapa: ehTransito ? 'Trânsito' : 'Natal', horasInfo: horasDe(m2.moment, m2.geo) };
             const opcDir = { largura: LARGURA_CAB, titulo: nomeA, momento: momentA, geo: geoA, horasInfo: horasDe(momentA, geoA) };
             const altCab = Math.max(
                 montarCabecalhoMandalaLayout(m2.dados, 2, coresCab, null, opcEsq).altura,
                 montarCabecalhoMandalaLayout(currentCalculatedData, 2, coresCab, null, opcDir).altura);
             const cabEsq = montarCabecalhoMandalaImagemHTML(m2.dados, null, Object.assign({ alturaMinima: altCab, tintaSobreFolha: true }, opcEsq));
             const cabDir = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, Object.assign({ alturaMinima: altCab, tintaSobreFolha: true }, opcDir));
-            const cardCss = "background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+            const seletor = ehTransito ? sinastriaSeletorTempoHtml() : '';
+            const espacoSeletor = ehTransito ? `<div aria-hidden="true" style="visibility: hidden;">${sinastriaSeletorTempoHtml()}</div>` : '';
 
             cardEsquerdaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px;">
                     ${cabEsq}
-                    <div style="${cardCss}">${svgEsquerda}</div>
+                    ${seletor}
+                    <div class="cartao" style="padding: 12px 10px;">${svgEsquerda}</div>
                 </div>
             `;
-
             cardDireitaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px;">
                     ${cabDir}
-                    <div style="${cardCss}">${svgDireita}</div>
+                    ${espacoSeletor}
+                    <div class="cartao" style="padding: 12px 10px;">${svgDireita}</div>
                 </div>
             `;
         } else if (sinastriaPastaSelecionada) {
-            // Dentro de uma pasta: cabeçalho com "voltar" + nome da pasta,
-            // busca (filtra só dentro dela) e a lista de clientes.
+            // Dentro de uma pasta: voltar + nome da pasta, busca (filtra só dentro dela) e a lista de clientes.
             cardEsquerdaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px;">
                 ${espacoCabSolo}
-                <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <button onclick="sinastriaVoltarPastas()" title="Voltar às pastas" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; flex-shrink: 0;">
-                            <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i>
-                        </button>
-                        <div style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; flex: 1; text-align: center;">${escapeHtml(sinastriaPastaSelecionada)}</div>
+                <div class="cartao" style="padding: 0; display: flex; flex-direction: column; min-height: 320px;">
+                    <div class="cabeca-cartao" style="padding: 10px 12px; margin: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);">
+                        <button type="button" class="botao-icone" onclick="sinastriaVoltarPastas()" title="Voltar às pastas">${menuIcone('voltar')}</button>
+                        <span class="sidebar-nome-pasta">${escapeHtml(sinastriaPastaSelecionada)}</span>
+                        <span style="width: 36px;"></span>
                     </div>
-                    <div class="search-box-container" style="margin-bottom: 10px;">
-                        <input type="text" id="sinastriaBuscaInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="sinastriaFiltrarLista(this.value)" style="width: 100%; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); color: var(--primary-blue);">
+                    <div class="search-box-container">
+                        <input type="text" id="sinastriaBuscaInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="sinastriaFiltrarLista(this.value)">
                     </div>
-                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main);">
-                        <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando mapas...</div>
+                    <div id="sinastriaListaContainer" class="client-list-container" style="min-height: 220px; max-height: 420px;">
+                        <div class="menu-vazio"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mapas...</div>
                     </div>
                 </div>
                 </div>
             `;
-
             cardDireitaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px;">
                     ${cabSolo}
-                    <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    <div class="cartao" style="padding: 12px 10px;">
                         ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                     </div>
                 </div>
             `;
         } else {
-            // Ainda sem pasta escolhida: mostra a lista de pastas primeiro
-            // (mesma fonte que a barra lateral usa), pra facilitar achar o
-            // mapa certo em vez de uma lista única com todo mundo junto.
+            // Ainda sem escolha: "Agora" (trânsito) e as pastas.
             cardEsquerdaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px;">
                 ${espacoCabSolo}
-                <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; min-height: 320px;">
-                    <div style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Selecione a Pasta</div>
-                    <div id="sinastriaListaContainer" class="client-list-container" style="flex: 1; overflow-y: auto; min-height: 220px; max-height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main);">
-                        <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando pastas...</div>
+                <div class="cartao" style="padding: 0; display: flex; flex-direction: column; min-height: 320px;">
+                    <div class="cabeca-cartao" style="padding: 12px; margin: 0; justify-content: center; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);">
+                        <span class="sidebar-nome-pasta">Selecione o mapa</span>
+                    </div>
+                    <div id="sinastriaListaContainer" class="client-list-container" style="min-height: 220px; max-height: 420px;">
+                        <div class="menu-vazio"><i class="fa-solid fa-spinner fa-spin"></i> Carregando pastas...</div>
                     </div>
                 </div>
                 </div>
             `;
-
             cardDireitaHtml = `
                 <div style="flex: 1 1 0; min-width: 280px;">
                     ${cabSolo}
-                    <div style="background: var(--bg-card); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 12px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    <div class="cartao" style="padding: 12px 10px;">
                         ${gerarMandalaSVG(currentCalculatedData, {}).svg}
                     </div>
                 </div>
@@ -637,32 +694,30 @@
             </div>
         `;
 
-        /* Barra de ícones (sem texto), igual às outras ferramentas: galeria,
-           relatório e trocar mapa (setinhas). Só com os dois mapas escolhidos. */
-        const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
-        const trocarBtnHtml = sinastriaSegundoMapa ? `
-            <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px;">
-                <button type="button" onclick="sinastriaSalvarNaGaleria()" title="Salvar a Sinastria como imagem na galeria (com título e cabeçalhos)" style="${btnCss}">
-                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        // Botões na linha do título (só com os dois mapas escolhidos): galeria, relatório e trocar o segundo mapa.
+        const acoesHtml = sinastriaSegundoMapa ? `
+            <div class="acoes-ferramenta">
+                <button type="button" class="botao-icone" onclick="sinastriaSalvarNaGaleria()" title="Salvar a Sinastria como imagem na galeria (com título e cabeçalhos)">
+                    <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
                 </button>
-                <button type="button" onclick="sinastriaAdicionarAoRelatorio()" title="Adicionar ao Relatório (as duas mandalas com cabeçalhos)" style="${btnCss}">
-                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+                <button type="button" class="botao-icone" onclick="sinastriaAdicionarAoRelatorio()" title="Adicionar ao Relatório (as duas mandalas com cabeçalhos)">
+                    <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
                 </button>
-                <button type="button" onclick="sinastriaTrocarMapa()" title="Trocar o segundo mapa" style="${btnCss}">
-                    <i class="fa-solid fa-arrow-right-arrow-left" style="font-size: 15px;"></i>
+                <button type="button" class="botao-icone" onclick="sinastriaTrocarMapa()" title="Trocar o segundo mapa">
+                    <svg class="icone" viewBox="0 0 64 64"><polyline points="46,14 58,26 46,38"/><line x1="58" y1="26" x2="14" y2="26"/><polyline points="18,26 6,38 18,50"/><line x1="6" y1="38" x2="50" y2="38"/></svg>
                 </button>
-            </div>
-        ` : '';
-
-        const blocoMandalasHtml = mandalasHtml;
+            </div>` : '';
 
         container.innerHTML = `
-            <div id="sinastria-container" style="width: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <h2 style="font-family: 'Cinzel', serif; color: var(--primary-blue); margin: 0; font-size: 18px; text-transform: uppercase;">Sinastria</h2>
+            <div style="width: 100%;">
+            <div id="sinastria-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+                <div class="cabeca-ferramenta">
+                    <h2 class="titulo-ferramenta">Sinastria</h2>
+                    ${acoesHtml}
                 </div>
-                ${trocarBtnHtml}
-                ${blocoMandalasHtml}
+                ${mandalasHtml}
+                <hr class="divisa">
+            </div>
             </div>
         `;
 
@@ -735,7 +790,7 @@
         if (!container) return;
 
         if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--danger); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--terracota); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
             return;
         }
 
