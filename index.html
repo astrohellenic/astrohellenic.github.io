@@ -79,8 +79,8 @@
         em cache mesmo depois de recarregar a página (o cache de favicon é
         separado do cache normal da página). Trocar esse número toda vez
         que o favicon.svg ou o favicon.png forem atualizados de novo. -->
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=6">
-<link rel="apple-touch-icon" href="favicon.png?v=6">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=7">
+<link rel="apple-touch-icon" href="favicon.png?v=7">
 
     <!-- FONTES E ÍCONES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -844,7 +844,10 @@ body {
         /* botão "+ Pasta": só o contorninho de tinta, sem fundo nem sombra */
         body.tema-ceu #sidebar .add-folder-btn { background: transparent !important; border: 1px solid #1d3a66 !important; box-shadow: none !important; }
         /* logo sem fundo: fica só o desenho, em tinta — encaixa em qualquer papiro; nos temas escuros clareia pra não sumir */
-        html.tema-escuro body:not(.tema-ceu) img[src^="astrohellenic.svg"] { filter: invert(0.88) hue-rotate(180deg); }
+        /* logo "Astro Hellenic": versão clara (papiro e claro) e versão com as cores adaptadas do modo escuro (paleta de época) */
+        .logo-escuro { display: none; }
+        html.tema-escuro .logo-claro { display: none; }
+        html.tema-escuro .logo-escuro { display: inline; }
         body.tema-ceu #sidebar .sidebar-title { color: #a03e25; }
         /* Clientes: linhas de tinta no lugar dos cartões; nome em terracota, o resto em preto. */
         body.tema-ceu #sidebar .client-card-item {
@@ -1977,7 +1980,7 @@ body {
 <script src="tz-lookup.js?v=20260919"></script>
 <script src="papiro.js?v=20261008b"></script>
 <script src="dialogos.js?v=20261007a"></script>
-<script src="supabase.js?v=20261008c"></script>
+<script src="supabase.js?v=20261008d"></script>
 <script src="planetIcons.js?v=20261008d"></script>
 <script src="matrizVisibilidade.js?v=20261002b"></script>
 <script src="tabelaTecnica.js?v=20261007a"></script>
@@ -2209,7 +2212,7 @@ body:not(.modo-mandala) #main-stage {
 <div id="loginOverlay">
   <div id="loginPlanetsDecor" aria-hidden="true"></div>
   <div class="login-card">
-    <div class="login-brand"><img src="astrohellenic.svg?v=20261003" alt="Astro Hellenic" style="width: 100%; height: auto;"></div>
+    <div class="login-brand"><img src="astrohellenic.svg?v=20261008" alt="Astro Hellenic" style="width: 100%; height: auto;"><!-- a tela de entrada é sempre uma folha de papiro, em qualquer tema: usa sempre o logo claro --></div>
     
     <div id="loginErrorMsg" style="display:none; color:#dc2626; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
 
