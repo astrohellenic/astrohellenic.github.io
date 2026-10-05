@@ -77,7 +77,7 @@ function estiloMandalaAtual(naPinturaCeu) {
    de 8° a 15° (sob os raios) é o laranja do fogo; cada um na versão do modo (claro/escuro). No papiro é um pouco mais opaca. */
 function combustaoStopsSVG(escuro, papiro) {
   const pal = paletaEpoca(!!escuro);
-  const [a0, a1, l0] = papiro ? [0.55, 0.42, 0.34] : [0.75, 0.5, 0.42];
+  const [a0, a1, l0] = papiro ? [0.55, 0.34, 0.34] : [0.75, 0.42, 0.42];
   return `<stop offset="0%" stop-color="${pal.ocre}" stop-opacity="${a0}" /><stop offset="53%" stop-color="${pal.ocre}" stop-opacity="${a1}" /><stop offset="53%" stop-color="${pal.laranja}" stop-opacity="${l0}" /><stop offset="100%" stop-color="${pal.laranja}" stop-opacity="0" />`;
 }
 function combustaoStopsAuto() { return combustaoStopsSVG(document.documentElement.classList.contains('tema-escuro'), false); }
@@ -459,6 +459,25 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     const d = pontos.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
     return `<path d="${d}" fill="${cor}"/>`;
   };
+  /* A mancha vai ANTES de qualquer linha da roda: é o fundo de tudo, nada do que está embaixo dela pode ficar apagado. */
+  const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
+  if (sunItem && !papiro) {
+    const degToPx = (2 * Math.PI * pR) / 360;
+    const rSobRaios = degToPx * 15;
+    const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
+    if (ferr) svg += ferr.glowSol(sunGlowPos, rSobRaiosGlow, tinta);
+    else svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
+  }
+  /* Sol sob os raios no PAPIRO: a mesma mancha, mas "pintada na folha" — uma lavagem de tinta ocre/terracota translúcida (sem o branco-amarelado
+     do céu, que não existe no papel). Vale pra toda roda em papiro (Mandala, Profecção, Liberação, Sinastria, Relatório, capa). Raio = o de referência
+     (rSobRaiosGlow = 15° do Sol), igual em todos os estilos; a parte de dentro, mais amarela, vai até 8° (combusto: 8/15 = 53% do raio) e a de fora, terracota, de 8° a 15° (sob os raios). Cada mancha leva o próprio gradiente (id único) pra Sinastria desenhar duas rodas na mesma tela. */
+  else if (sunItem && papiro) {
+    const gid = `combustaoPapiro_${++__combustaoPapiroN}`;
+    const posSol = polarToCart(cx, cy, pR, sunItem.aScreen);
+    svg += `<defs><radialGradient id="${gid}" cx="50%" cy="50%" r="50%">
+        ${combustaoStopsSVG(false, true)}
+      </radialGradient></defs><circle cx="${posSol.x}" cy="${posSol.y}" r="${rSobRaiosGlow}" fill="url(#${gid})"/>`;
+  }
   if (destaques) (destaques.fatias || []).forEach(f => { svg += fatiaDestaque(f.signIdx, f.cor); });
 
   if (estiloRoda.faixaZodiaco) {
@@ -734,25 +753,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   if (destaques) (destaques.faixas || []).forEach(f => { svg += faixaDestaque(f.signIdx, f.cor, estiloRoda.raioDestaque + f.de, estiloRoda.raioDestaque + f.ate); });
   if (destaques && destaques.depoisDasFaixas) svg += destaques.depoisDasFaixas({ cx, cy, house1RefAbs, raioDestaque: estiloRoda.raioDestaque, lotes, tinta });
 
-    /* 1. CAMADA 1: MANCHA DE COMBUSTÃO (FUNDO DE TUDO) */
-  const sunItem = outerRingItems.find(it => it.type === 'planet' && it.id === 'Sun');
-  if (sunItem && !papiro) {
-    const degToPx = (2 * Math.PI * pR) / 360;
-    const rSobRaios = degToPx * 15;
-    const sunGlowPos = polarToCart(cx, cy, pR, sunItem.aScreen);
-    if (ferr) svg += ferr.glowSol(sunGlowPos, rSobRaiosGlow, tinta);
-    else svg += `<circle cx="${sunGlowPos.x}" cy="${sunGlowPos.y}" r="${rSobRaios}" fill="url(#combustionGlow)"/>`;
-  }
-  /* Sol sob os raios no PAPIRO: a mesma mancha, mas "pintada na folha" — uma lavagem de tinta ocre/terracota translúcida (sem o branco-amarelado
-     do céu, que não existe no papel). Vale pra toda roda em papiro (Mandala, Profecção, Liberação, Sinastria, Relatório, capa). Raio = o de referência
-     (rSobRaiosGlow = 15° do Sol), igual em todos os estilos; a parte de dentro, mais amarela, vai até 8° (combusto: 8/15 = 53% do raio) e a de fora, terracota, de 8° a 15° (sob os raios). Cada mancha leva o próprio gradiente (id único) pra Sinastria desenhar duas rodas na mesma tela. */
-  else if (sunItem && papiro) {
-    const gid = `combustaoPapiro_${++__combustaoPapiroN}`;
-    const posSol = polarToCart(cx, cy, pR, sunItem.aScreen);
-    svg += `<defs><radialGradient id="${gid}" cx="50%" cy="50%" r="50%">
-        ${combustaoStopsSVG(false, true)}
-      </radialGradient></defs><circle cx="${posSol.x}" cy="${posSol.y}" r="${rSobRaiosGlow}" fill="url(#${gid})"/>`;
-  }
 
   /* item.lotType vem de calculateSevenLots() como o planeta regente do
      lote ("venus", "mercury"...) pra fortune/spirit, que ja tem nome
