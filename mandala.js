@@ -1004,8 +1004,8 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
     nome: pal.terracota,
     rotulo: pal.pretoTinta,
     dataCidade: pal.pretoTinta,
-    zodiaco: pal.pretoTinta,
-    sect: pal.pretoTinta,
+    zodiaco: pal.ocre,   // "Zodíaco Tropical • Signos Inteiros • Mapa Natal": ocre (mesma cor do tipo do mapa no menu lateral)
+    sect: pal.ocre,
   };
 }
 
@@ -1027,8 +1027,8 @@ function coresCabecalhoPapiro() {
     nome: '#a03e25',   // NOME DO CLIENTE: terracota (rubrica)
     rotulo: '#1a1410', // rótulos DIA/HORA: preto
     dataCidade: '#1a1410',
-    zodiaco: '#1a1410',
-    sect: '#1a1410',   // "Natividade Diurna/Noturna": preto
+    zodiaco: '#B5852F', // ocre (zodíaco, signos inteiros, tipo do mapa)
+    sect: '#B5852F',   // "Natividade Diurna/Noturna": ocre
     papiro: true,
   };
 }
