@@ -3368,6 +3368,19 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
   const blocoEncerramento = (preset.blocos || []).find(b => b.type === 'encerramento');
   const corpoEncerramento = (blocoEncerramento && blocoEncerramento.corpo) || RELATORIO_ENCERRAMENTO_PADRAO;
 
+  /* MOLDURA COM MEANDROS da capa em papiro (Tema Céu): a mesma do site Falando de Astrologia (img/moldura-*.svg) —
+     três filetes (tinta, ocre grosso, tinta) e uma faixa de meandros gregos no alto e no pé. SVG do tamanho da
+     folha (A4 = 794x1123), por cima do papiro e por baixo do texto; só na capa. */
+  const molduraMeandroHtml = capaPapiro ? `
+      <svg class="rel-capa-meandro" viewBox="0 0 794 1123" preserveAspectRatio="none" aria-hidden="true">
+        <defs><pattern id="relMeandro" width="48" height="32" patternUnits="userSpaceOnUse"><path d="M0 28 H 8 V 4 H 40 V 28 H 24 V 14 H 32 V 20" fill="none" stroke="#1F5FA3" stroke-width="3.4" stroke-linejoin="miter"/></pattern></defs>
+        <rect x="28" y="28" width="738" height="1067" fill="none" stroke="#2B1D12" stroke-width="1.5"/>
+        <rect x="35" y="35" width="724" height="1053" fill="none" stroke="#B5852F" stroke-width="4"/>
+        <rect x="42" y="42" width="710" height="1039" fill="none" stroke="#2B1D12" stroke-width="1.5"/>
+        <svg x="64" y="58" width="666" height="32"><rect width="666" height="32" fill="url(#relMeandro)"/></svg>
+        <svg x="64" y="1033" width="666" height="32"><rect width="666" height="32" fill="url(#relMeandro)"/></svg>
+      </svg>` : '';
+
   const itensIndice = [];
   const paginasHtml = blocos.map(bloco => renderBlocoRelatorio(bloco, { png1, png2, lotesNatal, ascAbsNatal, itensIndice })).join('');
 
@@ -3379,6 +3392,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
     <!-- CAPA (nome/data/local não se repetem aqui: já vêm no próprio
          cabeçalho que a mandala desenha dentro da imagem, quando ela existe) -->
     <section class="rel-page rel-capa${capaPapiro ? ' rel-capa-papiro' : capaClasseCeu}${ceuFundoCapa ? ' rel-capa-ceu-fundo' : ''}${capaClasseBorda}" data-pg="capa"${estiloCapaCores}>
+      ${molduraMeandroHtml}
       ${capaComBorda ? '<div class="rel-capa-moldura">' : ''}
       <h1 class="rel-titulo-capa">${escapeHtml(preset.nome)}</h1>
       ${imgCapa ? `
@@ -4121,7 +4135,7 @@ function injetarEstilosRelatorio() {
          quase em branco quando a borda usava "height: 100%" aqui. */
       .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); padding: 5mm; }
       .rel-capa-moldura { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 8px; box-sizing: border-box; padding: 18mm 16mm; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; align-self: stretch; border-top: 4px double currentColor; border-bottom: 4px double currentColor; padding: 10px 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
          altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
@@ -4152,7 +4166,12 @@ function injetarEstilosRelatorio() {
          papiro das outras páginas, título em terracota, resto em tinta. A imagem ocupa a largura da folha (em vez
          dos 78mm da capa de céu), com folga de altura de sobra pra título e rodapé. */
       .rel-capa.rel-capa-papiro { background: ${papiroFolhaBg}; }
-      .rel-capa.rel-capa-papiro .rel-titulo-capa { color: #a03e25; }
+      .rel-capa.rel-capa-papiro .rel-titulo-capa { color: #a03e25; border-top-color: #1F5FA3; border-bottom-color: #1F5FA3; }
+      /* moldura com meandros: ocupa a folha inteira (atrás do texto); a capa em papiro ganha mais respiro em volta pra o
+         texto ficar dentro dela */
+      .rel-capa-meandro { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+      .rel-capa.rel-capa-papiro { padding: 26mm 24mm; }
+      .rel-capa.rel-capa-papiro > :not(.rel-capa-meandro) { position: relative; z-index: 1; }
       .rel-capa.rel-capa-papiro .rel-powered-by { color: #1a1410; }
       .rel-capa.rel-capa-papiro .rel-img-capa { max-width: 172mm; max-height: 150mm; }
       /* Capa com o céu DA MANDALA (mesmo Sol/horizonte/brilho da roda): o fundo antigo (degradê com mancha laranja
