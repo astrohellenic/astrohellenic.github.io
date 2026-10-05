@@ -602,12 +602,8 @@ function renderCircumambulaçõesUI() {
     let rowHtml = '';
 
     // Moldura da Pauta
-    // (padrão: cada pauta é um cartão — só uma linha fina em cima e outra embaixo, sem os lados; cantos retos sempre. window.pautaBorda = 'grade' desenha também os lados.)
-    if (window.pautaBorda === 'grade') {
-      rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" fill="none" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
-    } else {
-      rowHtml += `<line x1="10" y1="${yOffset}" x2="910" y2="${yOffset}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/><line x1="10" y1="${yOffset + boxHeight}" x2="910" y2="${yOffset + boxHeight}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
-    }
+    // Cada pauta é um cartão: só uma linha fina em cima e outra embaixo, sem os lados, cantos retos.
+    rowHtml += `<line x1="10" y1="${yOffset}" x2="910" y2="${yOffset}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/><line x1="10" y1="${yOffset + boxHeight}" x2="910" y2="${yOffset + boxHeight}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
 
     // Ícone Monoline do Signo
     rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
@@ -668,7 +664,7 @@ function renderCircumambulaçõesUI() {
       const xCenter = xStart + (wTerm / 2);
       const termIconTamanhoDir = Math.max(10, termHeight - 6);
       if (typeof getIconeTermoSVG === 'function') {
-        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, (window.temaMandala === 'ceu' && typeof COR_TINTA_OCRE !== 'undefined') ? COR_TINTA_OCRE : 'var(--azul-egipcio-escuro)') // Tema Céu (papiro): ícones dos planetas dos termos em amarelo ocre, pra destacar
+        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, 'var(--ocre)') // ícones dos planetas dos termos: SEMPRE amarelo ocre (cor da paleta, com a versão do modo escuro)
           .replace('<svg ', `<svg x="${xCenter - termIconTamanhoDir / 2}" y="${yBaseline + 1 + (termHeight - termIconTamanhoDir) / 2}" `);
       }
 
