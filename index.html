@@ -493,30 +493,6 @@ body {
                 2px 65%, 0 35%);
         }
 
-        /* TEMA CÉU: quadro da Revolução Solar como um papiro aberto (pedaço de papiro com borda
-           rasgada, tinta preta, nome do cliente em terracota, setas/marcas em azul-tinta).
-           SÓ PINTURA — largura, altura, posição e rolagem da lista seguem como estão (os
-           estilos do quadro são inline, por isso !important). */
-        body.tema-ceu #dropdown-rs-container {
-            background: var(--papiro-fundo) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: polygon(
-                0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px,
-                calc(100% - 3px) 12%, 100% 30%, calc(100% - 4px) 52%, 100% 74%, calc(100% - 3px) 90%, 100% calc(100% - 4px),
-                93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px),
-                4px 85%, 0 62%, 3px 40%, 0 18%);
-        }
-        body.tema-ceu #dropdown-rs-container > div { background: transparent !important; border-color: rgba(95, 65, 30, 0.35) !important; }
-        body.tema-ceu #dropdown-rs-container span { color: #1a1410 !important; }
-        body.tema-ceu #dropdown-rs-container > div:first-child span { color: #1d3a66 !important; }
-        body.tema-ceu #dropdown-rs-container #rs-nome-cliente { color: #a03e25 !important; }
-        body.tema-ceu #dropdown-rs-container #rs-ano-atual-label { color: #1a1410 !important; }
-        body.tema-ceu #dropdown-rs-container #rs-chevron-icon { color: #1d3a66 !important; }
-        body.tema-ceu #dropdown-rs-container #rs-lista-anos > div { background: transparent !important; border-bottom-color: rgba(95, 65, 30, 0.3) !important; color: #1a1410 !important; }
-        body.tema-ceu #dropdown-rs-container #rs-lista-anos > div.ano-item-selecionado { background: rgba(120, 80, 30, 0.22) !important; }
-        body.tema-ceu #dropdown-rs-container #rs-lista-anos i { color: #a03e25 !important; }
-
         /* TEMA CÉU: menu lateral como um rolo de papiro (borda direita rasgada). Só o papel e a borda; cores e linhas vêm de componentes.css. */
         body.tema-ceu #sidebar-overlay { background: rgba(5, 10, 32, 0.62); backdrop-filter: none; }
         body.tema-ceu #sidebar {
@@ -1185,19 +1161,19 @@ body {
                 </button>
                 <button class="icon-btn" onclick="toggleJanelaRS(event)" title="Revolução Solar"><svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="10"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="13.6" y1="13.6" x2="19.3" y2="19.3"/><line x1="44.7" y1="44.7" x2="50.4" y2="50.4"/><line x1="13.6" y1="50.4" x2="19.3" y2="44.7"/><line x1="44.7" y1="19.3" x2="50.4" y2="13.6"/></svg></button>
 
-                                <div id="dropdown-rs-container" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; background: var(--bg-main); border: 1px solid var(--primary-blue); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; font-family: inherit;">
-                  <div style="padding: 10px 14px; border-bottom: 1px solid var(--gold-primary); background: var(--bg-main); border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                    <span style="font-size: 10px; text-transform: uppercase; color: var(--gold-primary); font-weight: 700; letter-spacing: 0.5px;">Mapa Selecionado</span>
-                    <div id="rs-nome-cliente" style="font-weight: 700; font-size: 13px; color: var(--primary-blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
+                                <div id="dropdown-rs-container" class="menu-flutuante" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; width: 280px; font-family: inherit;">
+                  <div class="item-menu cabeca-menu">
+                    <span class="rotulo">Mapa Selecionado</span>
+                    <div id="rs-nome-cliente" class="nome-nivel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
                   </div>
-                  <div onclick="toggleListaAnosRS()" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--bg-main);">
+                  <div class="item-menu" onclick="toggleListaAnosRS()" style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Retorno Solar</span>
-                      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px; color: var(--primary-blue);">Selecione...</span>
+                      <span class="rotulo" style="display: block;">Retorno Solar</span>
+                      <span id="rs-ano-atual-label" style="font-weight: 700; font-size: 14px;">Selecione...</span>
                     </div>
-                    <i id="rs-chevron-icon" class="fa-solid fa-chevron-right" style="font-size: 12px; color: var(--text-muted);"></i>
+                    <svg id="rs-chevron-icon" class="icone" viewBox="0 0 64 64" width="14" height="14" style="transition: transform .15s;"><polyline points="24,12 44,32 24,52"/></svg>
                   </div>
-                  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto; border-top: 1px solid var(--gold-primary); background: var(--bg-main); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
+                  <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto;"></div>
                 </div>
             </div>
 
@@ -1409,7 +1385,7 @@ body {
 <script src="isopsefia.js?v=20261009a"></script>
 <script src="profeccao.js?v=20261009d"></script>
 <script src="sinastria.js?v=20261009b"></script>
-<script src="revolucao.js?v=20260920"></script>
+<script src="revolucao.js?v=20261009a"></script>
 <script src="decenios.js?v=20261009c"></script>
 <script src="direcoes.js?v=20261009e"></script>
 <script src="liberacao.js?v=20261009d"></script>

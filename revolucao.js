@@ -44,7 +44,7 @@ window.toggleListaAnosRS = function() {
 
   const aberta = lista.style.display === 'block';
   lista.style.display = aberta ? 'none' : 'block';
-  if (icon) icon.className = aberta ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down';
+  if (icon) icon.style.transform = aberta ? '' : 'rotate(90deg)';
 
   if (!aberta) {
     setTimeout(() => {
@@ -86,16 +86,7 @@ function atualizarJanelaRS() {
     for (let a = anoNasc; a <= anoNasc + 120; a++) {
       const idade = a - anoNasc;
       const selecionado = a === anoAlvoRS;
-      const bg = selecionado ? 'var(--bg-hover)' : 'var(--bg-card)';
-      const classeSel = selecionado ? 'ano-item-selecionado' : '';
-      const check = selecionado ? '<i class="fa-solid fa-check" style="color: var(--primary-blue);"></i>' : '';
-
-      htmlLista += `
-        <div class="${classeSel}" onclick="selecionarAnoRS(${a})" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${bg}; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted-2);">
-          <span><strong>${a}</strong>, ${idade} anos</span>
-          ${check}
-        </div>
-      `;
+      htmlLista += `<div class="item-menu${selecionado ? ' ano-item-selecionado ativa' : ''}" onclick="selecionarAnoRS(${a})"><span><strong>${a}</strong>, ${idade} anos</span></div>`;
     }
     listaDiv.innerHTML = htmlLista;
   }
