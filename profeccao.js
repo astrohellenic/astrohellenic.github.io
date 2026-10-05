@@ -372,7 +372,7 @@
     function construirDefsPlanetas(sufixo) {
         return `
             <radialGradient id="combustionGlow_${sufixo}" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.9" /><stop offset="30%" stop-color="#fde68a" stop-opacity="0.75" /><stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" /><stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+          ${combustaoStopsAuto()}
             </radialGradient>
         `;
     }

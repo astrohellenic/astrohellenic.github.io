@@ -73,6 +73,15 @@ function estiloMandalaAtual(naPinturaCeu) {
 
 /* Desenha a roda e devolve { svg, width, height, papiroNaTela, ceuParams }. Lê o estado global (mapa aberto, momento, Casa 1...)
    como a renderMandala sempre leu; "o" traz só as opções de pintura de cada chamada (as mesmas de renderMandala). */
+/* MANCHA DE COMBUSTÃO / SOB OS RAIOS do Sol — as mesmas cores em todo lugar (paleta de época): de 0° a 8° (combusto, 53% do raio) é o ocre,
+   de 8° a 15° (sob os raios) é o laranja do fogo; cada um na versão do modo (claro/escuro). No papiro é um pouco mais opaca. */
+function combustaoStopsSVG(escuro, papiro) {
+  const pal = paletaEpoca(!!escuro);
+  const [a0, a1, l0] = papiro ? [0.55, 0.42, 0.34] : [0.75, 0.5, 0.42];
+  return `<stop offset="0%" stop-color="${pal.ocre}" stop-opacity="${a0}" /><stop offset="53%" stop-color="${pal.ocre}" stop-opacity="${a1}" /><stop offset="53%" stop-color="${pal.laranja}" stop-opacity="${l0}" /><stop offset="100%" stop-color="${pal.laranja}" stop-opacity="0" />`;
+}
+function combustaoStopsAuto() { return combustaoStopsSVG(document.documentElement.classList.contains('tema-escuro'), false); }
+
 let __combustaoPapiroN = 0; // contador pros ids do gradiente da mancha do Sol no papiro
 function desenharRodaSVG(o) {
   const { estiloForcado, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro } = o;
@@ -385,10 +394,7 @@ function desenharRodaSVG(o) {
     <defs>
       <!-- BRILHO DE COMBUSTÃO / SOB OS RAIOS (halo ao redor do Sol) -->
       <radialGradient id="combustionGlow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.9" />
-        <stop offset="30%" stop-color="#fde68a" stop-opacity="0.75" />
-        <stop offset="53%" stop-color="#f59e0b" stop-opacity="0.45" />
-        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+        ${combustaoStopsSVG(modoEscuro, false)}
       </radialGradient>
 
       ${temaCeu ? ceuMandala.defs : ''}
@@ -744,10 +750,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     const gid = `combustaoPapiro_${++__combustaoPapiroN}`;
     const posSol = polarToCart(cx, cy, pR, sunItem.aScreen);
     svg += `<defs><radialGradient id="${gid}" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#D19A2E" stop-opacity="0.52"/>
-        <stop offset="52%" stop-color="#C08A2C" stop-opacity="0.38"/>
-        <stop offset="54%" stop-color="#A03E25" stop-opacity="0.24"/>
-        <stop offset="100%" stop-color="#A03E25" stop-opacity="0"/>
+        ${combustaoStopsSVG(false, true)}
       </radialGradient></defs><circle cx="${posSol.x}" cy="${posSol.y}" r="${rSobRaiosGlow}" fill="url(#${gid})"/>`;
   }
 

@@ -1159,9 +1159,9 @@ function quebrarTrechosCabecalho(trechos, maxW, px) {
 function filetesCabecalhoSVG(x, y, w, h, cores) {
   const papel = !!(cores.papiro || cores.fundo === 'none');
   const cor = paletaEpoca(!!cores.escuro).azulClaro;
-  const o1 = papel ? 4.5 : 1.2, o2 = papel ? 7.5 : 4.2, recuo = papel ? 10 : 0;
+  const o1 = papel ? 4.5 : 1.2, o2 = o1 + 4.2, recuo = papel ? 10 : 0; // vão de ~3px entre as duas linhas: sobrevive quando o cabeçalho é reduzido
   const linha = (yy, sw) => `<line x1="${x + recuo}" y1="${yy}" x2="${x + w - recuo}" y2="${yy}" stroke="${cor}" stroke-width="${sw}"/>`;
-  return linha(y + o1, 1.4) + linha(y + o2, 0.8) + linha(y + h - o2, 0.8) + linha(y + h - o1, 1.4);
+  return linha(y + o1, 1.1) + linha(y + o2, 1.1) + linha(y + h - o2, 1.1) + linha(y + h - o1, 1.1);
 }
 // canto do retângulo do cabeçalho: reto (a época não tinha canto arredondado); o recorte do papiro precisa do rx="10" original
 function cantoCabecalho(cores) { return cores.papiro ? 10 : 0; }
