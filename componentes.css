@@ -269,7 +269,6 @@
 #mandala-controls-overlay .time-select { background: transparent; border: 0; color: var(--azul-egipcio-escuro); }
 #mandala-controls-overlay .icone { fill: none; stroke: currentColor; }
 #mandala-actions-overlay .icon-btn svg, #mandala-controls-overlay .icon-btn svg { flex-shrink: 0; }
-.painel input[type="checkbox"] { accent-color: var(--terracota); }
 
 /* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
    enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */
@@ -295,3 +294,13 @@
 /* SALTO (Liberação): o mesmo selo, em terracota */
 .selo.salto { color: var(--terracota); border-top-color: var(--terracota); border-bottom-color: var(--terracota); }
 .tabela-epoca tr.aberta > td { font-weight: 700; }
+
+/* CAIXINHA DE MARCAR — sem preenchimento nenhum (o papiro/painel aparece por baixo): só o contorno em azul egípcio escuro e, marcada, o tique em terracota. */
+.painel input[type="checkbox"], .barra-selecao input[type="checkbox"], #clientsListContainer input[type="checkbox"] {
+    -webkit-appearance: none; appearance: none; background: transparent; width: 16px; height: 16px; margin: 0; cursor: pointer; flex: 0 0 auto;
+    border: 1.5px solid var(--azul-egipcio-escuro); border-radius: 0; position: relative;
+}
+.painel input[type="checkbox"]:checked::after, .barra-selecao input[type="checkbox"]:checked::after, #clientsListContainer input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; left: 4px; top: 0; width: 4px; height: 9px;
+    border: solid var(--terracota); border-width: 0 2px 2px 0; transform: rotate(45deg);
+}

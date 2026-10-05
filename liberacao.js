@@ -26,7 +26,6 @@ const MONOLINE_ZODIAC_SVGS_ZR = [
 ];
 
 const SIGN_NAMES_ZR = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
-const SIGN_COLORS_ZR = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
 
 /* Embrulha um SVG "solto" (string) numa <img src="data:image/svg+xml,...">
    em vez de deixar o <svg> direto no HTML. O html2canvas (usado pelo
@@ -48,9 +47,7 @@ function svgComoImagemZR(svgInterno, largura, altura, viewBox) {
    a cor certa (clara/escura) precisa vir já resolvida em hexadecimal. */
 function getSignSVGZR(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  // Cor do elemento do signo pela paleta de época (fogo laranja, terra marrom, ar cinza, água azul egípcio claro), versão do modo; resolvida em hex porque vira <img>.
-  const pal = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu');
-  const corSigno = [pal.laranja, pal.marrom, pal.cinza, pal.azulClaro][signIndex % 4];
+  const corSigno = corElementoSigno(signIndex); // cor do elemento: papiro.js (fonte única); resolvida em hexadecimal porque vira <img>
   const interno = `<g style="color: ${corSigno};">${MONOLINE_ZODIAC_SVGS_ZR[signIndex]}</g>`;
   return svgComoImagemZR(interno, size, size, '0 0 64 64');
 }

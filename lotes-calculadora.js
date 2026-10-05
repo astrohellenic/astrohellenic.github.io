@@ -27,7 +27,6 @@ const MONOLINE_ZODIAC_SVGS_LOTES = [
 ];
 
 const SIGN_NAMES_LOTES = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
-const SIGN_COLORS_LOTES = ["#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8", "#e84118", "#8b4513", "#0ea5e9", "#1d4ed8"];
 
 /* SVG cru dentro de <img> (data URI) em vez de <svg> inline: o html2canvas
    usado pelas capturas de "Adicionar ao Relatório" tem dois bugs conhecidos
@@ -44,12 +43,7 @@ function svgComoImagemLotes(svgInterno, largura, altura, viewBox) {
    a cor certa (clara/escura) precisa vir já resolvida em hexadecimal. */
 function getSignSVGLotes(signIndex, size = 22) {
   if (signIndex < 0 || signIndex > 11) return '';
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const cores = modoEscuro
-    ? ["#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa", "#ff6b4a", "#d99a5c", "#38bdf8", "#60a5fa"]
-    : SIGN_COLORS_LOTES;
-  // Tema Céu (papiro): glifo de signo em azul-tinta, sem cor por elemento.
-  const corSigno = window.temaMandala === 'ceu' ? ['#a62b1f', '#6b4a2b', '#17707f', '#1f3a66'][signIndex % 4] : cores[signIndex];
+  const corSigno = corElementoSigno(signIndex); // cor do elemento: papiro.js (fonte única); resolvida em hexadecimal porque vira <img>
   const interno = `<g style="color: ${corSigno};">${MONOLINE_ZODIAC_SVGS_LOTES[signIndex]}</g>`;
   return svgComoImagemLotes(interno, size, size, '0 0 64 64');
 }

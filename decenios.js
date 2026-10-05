@@ -18,7 +18,7 @@ const PLANETS_DECENIOS = [
 ];
 
 const SIGN_ELEMENTS_DEC = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
-const ELEMENT_SIGN_COLORS_DEC = { fire: "var(--laranja)", earth: "var(--marrom)", air: "var(--cinza)", water: "var(--azul-egipcio-claro)" }; // paleta de época (temas.css): iguais em todos os temas
+const ELEMENT_SIGN_COLORS_DEC = ELEMENTO_SIGNO_EPOCA; // paleta de época (temas.css): iguais em todos os temas
 
 const MONOLINE_ZODIAC_SVGS_DEC = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,

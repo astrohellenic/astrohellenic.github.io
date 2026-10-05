@@ -140,7 +140,7 @@ const MONOLINE_ZODIAC_SVGS = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="7" y1="32" x2="57" y2="32"></line>`
 ];
 
-const ELEMENT_SIGN_COLORS = { fire: "#e84118", earth: "#8b4513", air: "#0ea5e9", water: "#1d4ed8" };
+const ELEMENT_SIGN_COLORS = ELEMENTO_SIGNO_EPOCA; // cores do elemento: papiro.js (fonte única)
 
 const PLANETS_DEF = [
   { id: "Sun", name: "Sol", symbol: "☉", key: "Sol" },

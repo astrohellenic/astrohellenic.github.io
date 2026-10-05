@@ -17,7 +17,6 @@ const MONOLINE_ZODIAC_SVGS_TABELA = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M54,0c0,0-10,16-10,32s10,32,10,32"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M10,64c0,0,10-16,10-32S10,0,10,0"></path><line fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x1="7" y1="32" x2="57" y2="32"></line>`
 ];
 
-const SIGN_COLORS_TABELA = ["var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)", "var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)", "var(--element-fogo)", "var(--element-terra)", "var(--element-ar)", "var(--element-agua)"];
 
 const EGYPTIAN_TERMS_TABELA = [
   [{ p: "♃", deg: 6 }, { p: "♀", deg: 12 }, { p: "☿", deg: 20 }, { p: "♂", deg: 25 }, { p: "♄", deg: 30 }],
@@ -36,7 +35,7 @@ const EGYPTIAN_TERMS_TABELA = [
 
 function getSignSVG(signIndex, size = 20) {
   if (signIndex < 0 || signIndex > 11) return '';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${(typeof window !== 'undefined' && window.temaMandala === 'ceu') ? ['#a62b1f', '#6b4a2b', '#17707f', '#1f3a66'][signIndex % 4] : SIGN_COLORS_TABELA[signIndex]}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_TABELA[signIndex]}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${corElementoSigno(signIndex)}; display: block; margin: 0 auto;">${MONOLINE_ZODIAC_SVGS_TABELA[signIndex]}</svg>`;
 }
 
 /* Ícone do planeta pronto pra tabela — delega pro bloco central novo em

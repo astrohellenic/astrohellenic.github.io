@@ -62,3 +62,11 @@
     --aspect-quadratura: var(--terracota);
     --aspect-oposicao: var(--laranja);
 }
+
+/* ELEMENTOS DOS SIGNOS — fogo = laranja, terra = marrom, ar = cinza, água = azul egípcio claro (cada um na versão do modo). Fonte única para CSS; para JS: corElementoSigno (papiro.js). */
+:root, .paleta-clara, :root.tema-escuro, .paleta-escura {
+    --element-fogo: var(--laranja);
+    --element-terra: var(--marrom);
+    --element-ar: var(--cinza);
+    --element-agua: var(--azul-egipcio-claro);
+}

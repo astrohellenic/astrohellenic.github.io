@@ -98,3 +98,15 @@ function paletaEpoca(escuro) {
   if (css.getPropertyValue('--azul-egipcio-claro').trim()) __paletaEpocaCache[chave] = r;
   return r;
 }
+
+/* COR DO ELEMENTO DE CADA SIGNO — a ÚNICA fonte: fogo = laranja, terra = marrom, ar = cinza, água = azul egípcio claro (temas.css), na versão do
+   modo (claro/escuro). Toda ferramenta que desenha um signo colorido pede a cor AQUI; ninguém guarda lista própria de cores de signo. */
+function corElementoSigno(signIdx) {
+  const pal = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu');
+  return [pal.laranja, pal.marrom, pal.cinza, pal.azulClaro][(((signIdx % 12) + 12) % 12) % 4];
+}
+const ELEMENTO_SIGNO_EPOCA = {
+  get fire() { return corElementoSigno(0); }, get earth() { return corElementoSigno(1); },
+  get air() { return corElementoSigno(2); }, get water() { return corElementoSigno(3); }
+};
+window.corElementoSigno = corElementoSigno;
