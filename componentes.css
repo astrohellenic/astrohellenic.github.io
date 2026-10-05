@@ -216,7 +216,7 @@
     border: 0; border-top: var(--contorno-fino) solid var(--terracota); border-bottom: var(--contorno-fino) solid var(--terracota); border-radius: 0;
 }
 .sidebar-header .botao-icone, .sidebar-header .botao-icone:hover { width: 32px; height: 32px; }
-.sidebar-header img { display: block; height: 38px; width: auto; }
+.sidebar-header img { height: 38px; width: auto; }
 .sidebar-title { line-height: 38px; }
 
 /* Os botões de ação do topo (novo mapa, importar) são um bloco à parte: fechados por divisa dupla, não por linha simples */
