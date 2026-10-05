@@ -4,7 +4,7 @@
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
     <link rel="stylesheet" href="papiro.css?v=20261010d">
-    <link rel="stylesheet" href="temas.css?v=20261009c">
+    <link rel="stylesheet" href="temas.css?v=20261010d">
     <link rel="stylesheet" href="componentes.css?v=20261010j">
     <link rel="stylesheet" href="configuracoes.css?v=20261010b">
     <meta charset="UTF-8">
@@ -15,7 +15,7 @@
          cor logo abaixo: o Céu hoje cobre o software inteiro, então é aparência, não dado da conta. Lido aqui, antes de
          qualquer coisa desenhar, pra abrir já no tema certo (sem mostrar o claro/escuro por trás e trocar depois);
          a classe "tema-ceu" entra no <body> logo na abertura dele (script logo depois de <body>). Ver CLAUDE.md. -->
-    <script src="tema.js?v=20261010a"></script>
+    <script src="tema.js?v=20261010d"></script>
     <script>
     (function() {
       var t = null;
@@ -152,9 +152,9 @@
    ver comentário em #main-stage sobre o que ainda fica de fora dela.
    As demais ferramentas ainda usam cor cravada e não reagem a isso. */
 :root.tema-escuro {
-  --bg-main: #1c1917;
-  --bg-stage: #1c1917;       /* Igual a --bg-main no escuro — só no claro que difere (ver :root) */
-  --bg-sidebar: #1c1917;
+  --bg-main: var(--fundo-creme);      /* vem da paleta do tema (temas.css): um tema escuro novo muda o fundo sozinho */
+  --bg-stage: var(--fundo-creme);     /* Igual a --bg-main no escuro — só no claro que difere (ver :root) */
+  --bg-sidebar: var(--fundo-creme);
   --bg-card: #262220;
   --bg-hover: #322c26;
   --bg-selected: #2d2a1a;

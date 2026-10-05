@@ -214,7 +214,7 @@
             ferramenta: {
                 dados,
                 rCanvasMinimo: opcoes.rCanvasMinimo || 0,
-                fundoDisco: papiro ? 'none' : paletaEpoca(Tema.modoEscuro()).fundoCreme, // o disco tem a cor do painel por baixo
+                fundoDisco: papiro ? 'none' : Tema.fundoPainel(), // o disco tem a cor do painel por baixo
                 abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,

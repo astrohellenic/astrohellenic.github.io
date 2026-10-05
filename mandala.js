@@ -997,10 +997,10 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   const cabecalhoValido = HEX_RE.test(corCabecalhoForcada) ? corCabecalhoForcada : null;
   const cabecalhoEscuro = cabecalhoValido ? (luminanciaRelativaHex(cabecalhoValido) < 0.5) : modoEscuro;
   // Cores da paleta de época (temas.css): nome em terracota e todo o resto em preto de tinta (no escuro, o cinza claro).
-  const pal = paletaEpoca(cabecalhoEscuro);
+  const pal = paletaEpoca(Tema.nomePaleta(cabecalhoEscuro));
   return {
     escuro: cabecalhoEscuro, // qual paleta de época o filete duplo usa (paletaEpoca, papiro.js)
-    fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
+    fundo: cabecalhoValido || Tema.fundoPainel(modoEscuro),
     borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27', // sem uso hoje (o contorno virou o filete duplo)
     titulo: pal.terracota,
     nome: pal.terracota,
@@ -1158,7 +1158,7 @@ function quebrarTrechosCabecalho(trechos, maxW, px) {
    pra dentro, pra a borda rasgada do papel não encostar nelas. */
 function filetesCabecalhoSVG(x, y, w, h, cores) {
   const papel = !!(cores.papiro || cores.fundo === 'none');
-  const cor = paletaEpoca(!!cores.escuro).azulClaro;
+  const cor = paletaEpoca(Tema.nomePaleta(!!cores.escuro)).azulClaro;
   const o1 = papel ? 4.5 : 1.2, o2 = o1 + 4.2, recuo = papel ? 10 : 0; // vão de ~3px entre as duas linhas: sobrevive quando o cabeçalho é reduzido
   const linha = (yy, sw) => `<line x1="${x + recuo}" y1="${yy}" x2="${x + w - recuo}" y2="${yy}" stroke="${cor}" stroke-width="${sw}"/>`;
   return linha(y + o1, 1.1) + linha(y + o2, 1.1) + linha(y + h - o2, 1.1) + linha(y + h - o1, 1.1);
@@ -2042,7 +2042,7 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
      (cor chapada do papiro) pro recorte automático achar a borda. */
   const papiro = !!(opcoes && opcoes.papiro) && Tema.ceu();
   const modoEscuro = !papiro && Tema.modoEscuro();
-  const fundoChapado = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundoChapado = papiro ? papiroCores().chapado : Tema.fundoPainel(modoEscuro);
   const comTopo = !!(opcoes.titulo || opcoes.comCabecalho);
   const papelDegrade = papiro && comTopo;
   const fundo = (papelDegrade || papiro) ? null : fundoChapado; // null = transparente (com título/cabeçalho o degradê vai por baixo no fim; sem eles, fica sem fundo nenhum — imagem pro Relatório)
@@ -2094,7 +2094,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const papiro = !!(opcoes && opcoes.papiro) && Tema.ceu();
   const modoEscuro = !papiro && Tema.modoEscuro();
   // Tema Céu, imagem pro Relatório (sem cabeçalho): SEM fundo — só as linhas em tinta, pra encaixar no papiro da folha.
-  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? papiroCores().chapado : null) : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? papiroCores().chapado : null) : Tema.fundoPainel(modoEscuro);
   const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
   const cs = getComputedStyle(svgEl);
   const borda = parseFloat(cs.borderTopWidth) || 0;

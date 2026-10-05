@@ -678,7 +678,7 @@ async function capturarLotesSelecionadosParaRelatorio() {
     // atual em vez de cravar sempre o creme do Tema Claro (mesmo padrão
     // de capturarTelaParaRelatorio em relatorio.js).
     const modoEscuroCapturaLotes = Tema.modoEscuro();
-    const fundoCapt = Tema.ceu() ? null : (modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5'); // Tema Céu: sem fundo
+    const fundoCapt = Tema.ceu() ? null : Tema.fundoPainel(modoEscuroCapturaLotes); // Tema Céu: sem fundo
     const canvas = recortarCanvasAoConteudo(await html2canvas(temp, { backgroundColor: fundoCapt, scale: 2, useCORS: true }), fundoCapt);
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`${selecionados.length} lote(s) adicionado(s) ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);

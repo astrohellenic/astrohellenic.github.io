@@ -77,7 +77,7 @@ function estiloMandalaAtual(naPinturaCeu) {
    claro, Nível 4 cinza (o do elemento ar). Sempre com transparência (alfa), pra a mandala aparecer por baixo. Versão do modo (claro/escuro) automática. */
 function corNivelMandala(nivel, alfa) {
   const escuro = Tema.escuro();
-  const pal = paletaEpoca(escuro);
+  const pal = paletaEpoca(Tema.nomePaleta(escuro));
   const hex = [null, pal.verde, pal.ocre, pal.azulClaro, pal.cinza][nivel] || pal.cinza;
   const n = parseInt(hex.slice(1), 16);
   return alfa === undefined ? hex : `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alfa})`;
@@ -87,7 +87,7 @@ window.corNivelMandala = corNivelMandala;
 /* MANCHA DE COMBUSTÃO / SOB OS RAIOS do Sol — as mesmas cores em todo lugar (paleta de época): de 0° a 8° (combusto, 53% do raio) é o ocre,
    de 8° a 15° (sob os raios) é o laranja do fogo; cada um na versão do modo (claro/escuro). Nada muda por tema além da versão do modo. */
 function combustaoStopsSVG(escuro, papiro) {
-  const pal = paletaEpoca(!!escuro);
+  const pal = paletaEpoca(Tema.nomePaleta(!!escuro));
   const [a0, a1, l0] = [0.75, 0.42, 0.42]; // mesmos valores em TODOS os temas: no papiro ela só parece mais opaca porque a folha por baixo é opaca
   return `<stop offset="0%" stop-color="${pal.ocre}" stop-opacity="${a0}" /><stop offset="53%" stop-color="${pal.ocre}" stop-opacity="${a1}" /><stop offset="53%" stop-color="${pal.laranja}" stop-opacity="${l0}" /><stop offset="100%" stop-color="${pal.laranja}" stop-opacity="0" />`;
 }
@@ -161,7 +161,7 @@ function desenharRodaSVG(o) {
   const papiroNaTela = !ferr && !estiloForcado && !tintaPapiro && temaEhCeu && !!window.mandalaPapiroTela;
   const papiro = (!!tintaPapiro || papiroNaTela) && temaEhCeu;
   // Cores de época (temas.css): a MESMA paleta no claro, no escuro (versão adaptada) e no papiro. Ninguém decide cor por tela.
-  const pal = paletaEpoca(papiro ? false : modoEscuro);
+  const pal = paletaEpoca(Tema.nomePaleta(papiro ? false : modoEscuro));
   const epoca = papiro || !temaEhCeu; // tinta de época: qualquer roda que não seja o céu de verdade
   const AZ_TINTA = pal.azulEscuro, TERRACOTA = pal.terracota, PRETO_TINTA = pal.pretoTinta; // PRETO_TINTA: lotes, nodos e sizígia (no escuro, o cinza claro)
   const rgbaHex = (hex, a) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
@@ -182,9 +182,9 @@ function desenharRodaSVG(o) {
      de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
      mancha branca em volta de cada número no meio do disco escuro. */
   const tinta = {
-    fundoDisco: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff'),
+    fundoDisco: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || Tema.fundoPainel(true)) : '#ffffff'),
     dourado: pal.azulEscuro, douradoCasas: pal.terracota,
-    halo: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff'),
+    halo: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || Tema.fundoPainel(true)) : '#ffffff'),
     inkForte: pal.azulEscuro, inkPlaneta: pal.pretoTinta, navio: pal.azulEscuro, linhaConectora: rgbaHex(pal.azulEscuro, 0.55),
     aspectoOposicao: pal.laranja, aspectoTrigono: pal.azulEscuro, aspectoQuadratura: pal.terracota, aspectoSextil: pal.azulClaro, // os mesmos em TODOS os temas
     elementoFogo: pal.laranja, elementoTerra: pal.marrom, elementoAr: pal.cinza, elementoAgua: pal.azulClaro,
@@ -392,7 +392,7 @@ function desenharRodaSVG(o) {
      glifos usam a cor do lugar onde estão (corElemPos). */
   const CHAVE_ELEM = { fire: 'laranja', earth: 'marrom', air: 'cinza', water: 'azulClaro' };
   const corElemCeu = (elem, acima) => {
-    const k = CHAVE_ELEM[elem], esc = paletaEpoca(true)[k];
+    const k = CHAVE_ELEM[elem], esc = paletaEpoca(Tema.nomePaleta(true))[k];
     return (acima && ceuParams) ? misturarHexCeu(esc, paletaEpoca(false)[k], ceuParams.dia) : esc;
   };
   const elemDuplo = (elem, fn) => temaCeu

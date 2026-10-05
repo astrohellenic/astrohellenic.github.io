@@ -120,7 +120,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
   /* Cores PRÓPRIAS da Liberação (pico, salto, rótulo das coroas), todas da paleta de época: sem preenchimento, só contorno e letra.
      PICO em azul egípcio escuro, SALTO em terracota; o rótulo das coroas em azul egípcio escuro. */
   const papiro = typeof window !== 'undefined' && Tema.ceu();
-  const palZ = paletaEpoca(!papiro && Tema.modoEscuro());
+  const palZ = paletaEpoca(Tema.nomePaleta(!papiro && Tema.modoEscuro()));
   const cores = {
     picoBg: 'none', picoBorder: palZ.azulEscuro, picoText: palZ.azulEscuro,
     saltoBg: 'none', saltoBorder: palZ.terracota, saltoText: palZ.terracota, saltoLabel: palZ.terracota, navio: palZ.azulEscuro,

@@ -496,7 +496,7 @@
            iguais em toda mandala (corNivelMandala, roda.js): Nível 1 = signo profectado do ano (verde), Nível 2 = Ascendente da Revolução Solar
            (ocre), Nível 3 = signo profectado do mês (azul egípcio claro). */
         const papiro = typeof window !== 'undefined' && Tema.ceu();
-        const palP = paletaEpoca(!papiro && Tema.modoEscuro());
+        const palP = paletaEpoca(Tema.nomePaleta(!papiro && Tema.modoEscuro()));
         const sufixo = `w${wheelInstanceCounter++}`;
 
         return desenharRodaSVG({

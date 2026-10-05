@@ -326,7 +326,7 @@ async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
   try {
     const papiro = Tema.ceu();
     const modoEscuro = !papiro && Tema.modoEscuro();
-    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo (só as linhas em tinta)
+    const fundo = papiro ? null : Tema.fundoPainel(modoEscuro); // Tema Céu: imagem sem fundo (só as linhas em tinta)
     const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('matriz_visibilidade_mandala', canvas.toDataURL('image/png'));
     alert(`"Matriz de Visibilidade" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);

@@ -34,8 +34,15 @@ const Tema = {
   escuro() { return !this.ceu() && this.def().escuro; },
   /* Só a classe do <html> (modo claro/escuro guardado), sem olhar o Céu — para quem desenha a roda de um estilo fixo. */
   modoEscuro() { return document.documentElement.classList.contains('tema-escuro'); },
-  /* Cor do painel por baixo (fundo das imagens salvas fora do Céu): a do modo guardado. */
-  fundoPainel() { return this.modoEscuro() ? '#1c1917' : '#fffdf5'; },
+  /* Cor do painel por baixo (fundo das imagens salvas fora do Céu). Sem argumento: a do tema ligado; com true/false: a versão escura/clara
+     (num tema escuro novo, a escura dele). Vem da paleta (--fundo-creme em temas.css), nunca cravada. */
+  fundoPainel(escuro) {
+    if (escuro === undefined) escuro = this.modoEscuro();
+    return paletaEpoca(this.nomePaleta(escuro)).fundoCreme;
+  },
+  /* Nome da paleta pra "versão escura" (true) ou "versão clara" (false): ferramentas que recebem um sim/não de escuro (mandala do Relatório,
+     cabeçalhos, halos) pedem a paleta certa por aqui — num tema escuro novo, a escura é a DELE. */
+  nomePaleta(escuro) { return escuro ? (!this.ceu() && this.def().escuro ? this.def().paleta : 'escuro') : 'claro'; },
   /* Cores do tema ligado (a paleta de temas.css): { azulEscuro, azulClaro, pretoTinta, ocre, terracota, laranja, marrom, cinza, verde, fundoCreme }.
      No Céu e no claro é a paleta clara; no escuro, a escura. "papelSobre" = true força a paleta de tinta sobre papel (clara). */
   paleta(papelSobre) {

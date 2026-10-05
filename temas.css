@@ -38,6 +38,7 @@
     --fundo-creme: #1C1917;           /* painel por baixo no modo escuro */
 }
 
+
 /* MANDALA NO CÉU — as cores que o desenho do céu já usa hoje nos ícones e na mandala, mantidas EXATAMENTE como estão.
    O céu é o céu: estas cores valem nos três modos (não têm versão adaptada). A cor de cada ponto muda entre a "noite"
    e o "dia" conforme a altura do Sol naquele lugar (mistura das duas, ver misturarHexCeu em mandala.js). */

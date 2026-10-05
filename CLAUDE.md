@@ -882,3 +882,9 @@ com o mesmo vãozinho (`INS = 0,55°`) do contorno da faixa dos signos — por i
 **Regra geral do papiro (04/10/2026):** em tinta sobre papiro, **lotes, nodos e lunação pré-natal (sizígia)** são SEMPRE `#1a1410` (preto de tinta, nunca azul) em qualquer tela — central em `corIconePapiro` (`planetIcons.js`, `COR_TINTA_PRETO`) pra todo ícone via
 `getIconeSVG`/`getIconeFragmento`, mais o selo com sigla dos lotes (`getLoteAbbrevIconSVG`, `lotes-calculadora.js`) e as rodas (`PRETO_TINTA`, `roda.js`). **Ícones dos planetas dos termos são SEMPRE amarelo ocre** (`COR_TINTA_OCRE`) no Tema Céu: roda, Circunambulação (`direcoes.js`) e Tabela Técnica (`getTermoIconeTabelaSVG`).
 Tela nova com esses ícones: usar essas funções, nunca cor fixa azul.
+
+## Como criar um tema novo (05/10/2026)
+
+`tema.js` é a única fonte de "qual tema está ligado". Nenhuma ferramenta pergunta direto pela classe `tema-escuro` ou por `window.temaMandala`: usar `Tema.id()`, `Tema.escuro()`, `Tema.papel()`, `Tema.paleta()`, `Tema.nomePaleta(escuro)`, `Tema.fundoPainel()`.
+Tema novo = (1) um bloco de cores `:root.tema-<nome>, .paleta-<nome>` em `temas.css` (mesmas variáveis do bloco escuro) e (2) UMA linha em `TEMAS` (`tema.js`: nome, escuro, papel, paleta, icone, desc). Aparece sozinho em Configurações → Aparência.
+**Não conferido ainda num tema novo de verdade:** CSS literal do Relatório/PDF, `publico.css` (login/formulários) e `combustaoStopsAuto` (`roda.js`, ainda usa `Tema.modoEscuro()`). Conferir antes de prometer "tema novo é só uma linha".
