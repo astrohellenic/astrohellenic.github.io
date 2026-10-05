@@ -1510,6 +1510,36 @@ function pousarBarrasFlutuantes(exceto) {
 }
 window.pousarBarrasFlutuantes = pousarBarrasFlutuantes;
 
+/* REPINTAR O EDITOR (Safari/iPad): a folha de papiro do editor é enorme e leva um recorte de borda quebrada (clip-path). Quando o teclado some
+   (tocar fora do texto, na barra, no botão de imagem), o Safari às vezes deixa de pintar uma parte da folha — a tela fica "dividida na
+   metade" até a próxima rolagem/toque. Depois de qualquer saída de foco ou mudança do tamanho visível da tela, damos um empurrãozinho
+   (um quadro com opacidade levemente diferente + 1px de rolagem e volta, na mesma batida) pra o navegador pintar tudo de novo. */
+function repintarEditorRelatorio() {
+  const tela = document.querySelector('.rel-editor-tela');
+  if (!tela) return;
+  tela.style.opacity = '0.999';
+  requestAnimationFrame(() => {
+    tela.style.opacity = '';
+    const y = window.scrollY;
+    window.scrollTo(0, y + 1);
+    window.scrollTo(0, y);
+  });
+}
+window.repintarEditorRelatorio = repintarEditorRelatorio;
+if (!window.relatorioRepintarAtivo) {
+  window.relatorioRepintarAtivo = true;
+  let t1 = null, t2 = null;
+  const agendar = () => {
+    clearTimeout(t1); clearTimeout(t2);
+    t1 = setTimeout(repintarEditorRelatorio, 120);
+    t2 = setTimeout(repintarEditorRelatorio, 600); // de novo depois da animação do teclado
+  };
+  document.addEventListener('focusout', e => { if (e.target && e.target.closest && e.target.closest('.rel-editor-tela')) agendar(); }, true);
+  document.addEventListener('click', e => { if (e.target && e.target.closest && e.target.closest('.rel-editor-tela, #relSeletorImagemOverlay')) agendar(); }, true);
+  window.addEventListener('resize', () => { if (document.querySelector('.rel-editor-tela')) agendar(); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { if (document.querySelector('.rel-editor-tela')) agendar(); });
+}
+
 /* Mantém cada barra solta colada embaixo da barra das abas, a cada quadro, enquanto houver alguma. */
 let __seguindoBarras = false;
 function seguirBarrasFlutuantes() {
