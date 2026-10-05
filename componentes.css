@@ -36,10 +36,13 @@
     margin: 18px 0;
 }
 
-/* CARTÃO MENOR (selos, cartões de L1/L2, linhas da linha do tempo): contorno fino, nunca de 2px, sem arredondar. */
+/* CARTÃO MENOR (selos, cartões de L1/L2, linhas da linha do tempo): SÓ uma linha fina em cima e uma embaixo, SEM os lados
+   (decidido: o canto remete mais à época quando some, e fica leve e moderno). Nunca borda de 2px, nunca arredondado. */
 .cartao {
     background: transparent;
-    border: var(--contorno-fino) solid var(--azul-egipcio-escuro);
+    border: 0;
+    border-top: var(--contorno-fino) solid var(--azul-egipcio-escuro);
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-escuro);
     box-shadow: var(--sombra, none);   /* a sombra é do tema: cada tema define a sua em --sombra */
     padding: 14px;
 }

@@ -69,7 +69,7 @@ Um tema novo só precisa preencher essa tabela.
    - **Sem moldura em volta da ferramenta.**
    - Tabelas mantêm as próprias linhas, sem uma caixa em volta.
 3. **Cabeçalho global.** O cabeçalho é um só para o software inteiro (já existe em `mandala.js`). Ele abre e fecha com a divisa dupla.
-4. **Cartões menores** (selos, cartões de L1/L2, linhas da linha do tempo) têm contorno fino de 1px e cantos pouco arredondados. Nunca borda de 2px.
+4. **Cartões menores** (selos, cartões de L1/L2, linhas da linha do tempo) têm **só uma linha fina em cima e uma embaixo, sem os lados** (decidido). Sem cantos, nunca borda de 2px.
 5. **Ícones sempre monoline** (só traço, sem preenchimento). Quem cria um ícone novo segue isso.
 6. **Botões** são só o ícone sobre o painel, sem moldura própria.
 
@@ -108,4 +108,3 @@ Um tema novo só precisa preencher essa tabela.
 
 ## 8. Pendências para você decidir
 
-- Se o cartão menor (L1/L2) continua com cantos arredondados ou fica reto, mais "da época".
