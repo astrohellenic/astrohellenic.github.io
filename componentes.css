@@ -246,3 +246,5 @@
 #top-bar .menu-toggle-btn { margin-right: 4px; }
 #top-bar .menu-toggle-btn:hover, #top-bar .icon-btn:hover { background: transparent; color: var(--terracota); }
 #top-bar .icon-btn.matriz-visibilidade-ativa, #top-bar .icon-btn.ativo { background: transparent; color: var(--terracota); }
+.action-record-btn { display: flex; align-items: center; justify-content: center; }
+.action-record-btn .icone { display: block; }

@@ -75,10 +75,14 @@ const MENU_ICONES = {
   buscar: '<circle cx="28" cy="28" r="16"/><line x1="40" y1="40" x2="54" y2="54"/>',
   mais: '<path d="M32 12 V52 M12 32 H52"/>',
   novoMapa: '<circle cx="26" cy="16" r="9"/><path d="M10,54 C10,38 17,32 26,32 C35,32 42,38 42,54"/><line x1="50" y1="30" x2="50" y2="46"/><line x1="42" y1="38" x2="58" y2="38"/>',
+  whatsapp: '<path d="M32 8 A24 24 0 1 1 20 52 L8 56 L12 44 A24 24 0 0 1 32 8 Z"/><path d="M24 24 C24 36 28 40 40 40 L42 34 L36 31 L33 34 C30 33 28 31 27 28 L30 25 L28 19 Z"/>',
+  email: '<rect x="8" y="14" width="48" height="36" rx="3"/><polyline points="8,18 32,36 56,18"/>',
+  ordemAsc: '<path d="M18 10 V50 M8 40 L18 50 L28 40 M38 16 H44 M38 28 H50 M38 40 H56"/>',
+  ordemDesc: '<path d="M18 54 V14 M8 24 L18 14 L28 24 M38 48 H44 M38 36 H50 M38 24 H56"/>',
   importar: '<path d="M10,38 V54 A4,4 0 0 0 14,58 H50 A4,4 0 0 0 54,54 V38"/><polyline points="10,38 24,38 28,46 36,46 40,38 54,38"/><line x1="32" y1="6" x2="32" y2="36"/><polyline points="20,24 32,36 44,24"/>'
 };
-function menuIcone(nome) {
-  return `<svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true">${MENU_ICONES[nome]}</svg>`;
+function menuIcone(nome, tam = 22) {
+  return `<svg class="icone" viewBox="0 0 64 64" width="${tam}" height="${tam}" aria-hidden="true">${MENU_ICONES[nome]}</svg>`;
 }
 function menuLogoHtml() {
   return `<img class="logo-claro" src="astrohellenic.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;"><img class="logo-escuro" src="astrohellenic-escuro.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;">`;
@@ -696,7 +700,7 @@ async function abrirConteudoPasta(nomePasta) {
         <option value="tipo" ${currentSortField === 'tipo' ? 'selected' : ''}>Tipo</option>
       </select>
       <button type="button" id="sortDirectionBtn" class="botao-icone" onclick="alternarDirecaoOrdenacao()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="width: 32px; flex: 0 0 auto;">
-        <i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}"></i>
+        ${menuIcone(currentSortDirection === 'asc' ? 'ordemAsc' : 'ordemDesc', 20)}
       </button>
     </div>
 
@@ -828,7 +832,7 @@ function alternarDirecaoOrdenacao() {
   const btn = document.getElementById('sortDirectionBtn');
   if (btn) {
     btn.title = currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente';
-    btn.innerHTML = `<i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}"></i>`;
+    btn.innerHTML = `${menuIcone(currentSortDirection === 'asc' ? 'ordemAsc' : 'ordemDesc', 20)}`;
   }
 
   reordenarERenderizar();
@@ -869,19 +873,19 @@ function renderListaMapas(lista) {
           <div class="card-actions">
             ${linkWhats ? `
               <button type="button" class="action-record-btn whats-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp">
-                <i class="fa-brands fa-whatsapp"></i>
+                ${menuIcone('whatsapp', 18)}
               </button>
             ` : ''}
             ${item.email ? `
               <button type="button" class="action-record-btn email-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail">
-                <i class="fa-solid fa-envelope"></i>
+                ${menuIcone('email', 18)}
               </button>
             ` : ''}
             <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar">
-              <i class="fa-solid fa-pen"></i>
+              ${menuIcone('editar', 18)}
             </button>
             <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar">
-              <i class="fa-solid fa-trash"></i>
+              ${menuIcone('lixeira', 18)}
             </button>
           </div>
         ` : ''}
