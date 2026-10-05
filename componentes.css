@@ -304,3 +304,6 @@
     content: ''; position: absolute; left: 4px; top: 0; width: 4px; height: 9px;
     border: solid var(--terracota); border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
+/* Cabeça dos menus flutuantes: o rótulo ("Mapa Selecionado", "Retorno Solar"...) é só texto, em preto de tinta, sem destaque; o NOME do cliente é nome, não item de lista: terracota. */
+.item-menu .rotulo { color: var(--preto-tinta); }
+.item-menu.cabeca-menu .nome-nivel { color: var(--terracota); }
