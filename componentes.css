@@ -325,8 +325,8 @@
 @media (max-width: 480px) { .horas-atual { padding: 12px; } .horas-atual-linha { gap: 16px; } .horas-table-scroll .tabela-epoca { font-size: 11px; } }
 
 /* ISOPSEFIA (isopsefia.js): só forma; cores das variáveis do tema */
-.iso-abas { display: flex; gap: 16px; padding: 10px 0; margin-bottom: 16px; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); overflow-x: auto; }
-.iso-linha-adicionar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+.iso-abas { display: flex; gap: 16px; padding: 4px 0; overflow-x: auto; }
+.iso-linha-adicionar { display: flex; gap: 12px; align-items: center; }
 .iso-campo { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; padding: 6px 0; font-size: 14px; outline: none; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; }
 .iso-campo::placeholder { color: var(--preto-tinta); opacity: .55; }
 .iso-vazio { padding: 20px; text-align: center; font-size: 12px; color: var(--preto-tinta); opacity: .75; }
@@ -337,9 +337,10 @@
 .iso-duas-colunas { display: flex; gap: 24px; flex-wrap: wrap; }
 .iso-coluna-larga { flex: 2; min-width: 280px; }
 .iso-coluna-estreita { flex: 1; min-width: 240px; }
+.iso-coluna-estreita .iso-resultado { margin-bottom: 0; }
 .iso-coluna-larga .iso-campo { margin-top: 6px; font-weight: 600; }
 .iso-passo { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
-.iso-resultado { text-align: center; margin-bottom: 12px; }
+.iso-resultado { text-align: center; margin-bottom: 12px; border: 0; padding-top: 0; }
 .iso-soma-resto { display: flex; justify-content: space-around; margin-top: 12px; padding-top: 10px; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
 .iso-soma-resto strong { font-size: 18px; }
 .iso-grade-letras { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }

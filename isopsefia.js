@@ -175,6 +175,8 @@ function renderIsopsefiaUI(container) {
         ${aba('planilha', 'Planilha')}${aba('calculadora', 'Calculadora')}${aba('referencia', 'Referência')}
       </div>
 
+      <hr class="divisa">
+
       <div id="isoTabContent">
         ${renderConteudoAbaAtual()}
       </div>
@@ -254,6 +256,8 @@ function renderConteudoAbaAtual() {
         <button type="button" class="botao-texto" onclick="adicionarTermoPlanilha()">Adicionar</button>
       </div>
 
+      <hr class="divisa">
+
       <div class="envolve-tabela">
         <table class="tabela-epoca">
           <thead>
@@ -318,6 +322,8 @@ function renderConteudoAbaAtual() {
               <div><div class="rotulo">Resto</div><strong class="iso-grego">${calc.resto}</strong></div>
             </div>
           </div>
+
+          <hr class="divisa">
 
           <div class="iso-passo"><span class="rotulo">Ascendente</span>${getSignSvgHtmlIso(ascIdx, 20)}</div>
           <div class="iso-passo"><span class="rotulo">Topos ativado</span><strong>${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong></div>
