@@ -81,7 +81,7 @@ function getAnguloCirculoSVG(label, tamanho = 24) {
      fundo. É ESTA função que desenha ASC/DSC/MC/IC em todas as ferramentas e no botão da Mandala —
      a cor é decidida só aqui, pra nunca ficar diferente de um lugar pro outro. */
   const ceu = typeof temaCeuAtivoNosIcones === 'function' && temaCeuAtivoNosIcones();
-  const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', 'var(--bg-card)');
+  const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', (typeof paletaEpoca === 'function' ? paletaEpoca(document.documentElement.classList.contains('tema-escuro')).fundoCreme : '#fffdf5'));
   return `<svg width="${tamanho}" height="${tamanho}" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><g>${fundo}${frag}</g><text x="50" y="58" font-size="16" font-weight="900" fill="${ceu ? '#a03e25' : 'var(--aspect-conjuncao)'}" text-anchor="middle">${label}</text></svg>`;
 }
 
@@ -182,7 +182,7 @@ function getIconePontoTabelaSVG(el) {
    egípcio entram aqui (nunca Sol/Lua). */
 const TERMO_PLANET_BY_SYMBOL_TABELA = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
 function getTermoIconeTabelaSVG(simbolo, tamanho = 20) {
-  if (typeof getIconeTermoSVG !== 'function') return `<svg width="${tamanho}" height="${tamanho}"><text x="${tamanho / 2}" y="${tamanho / 2 + 5}" font-size="14" font-weight="700" fill="var(--gold-primary)" text-anchor="middle">${simbolo}</text></svg>`;
+  if (typeof getIconeTermoSVG !== 'function') return `<svg width="${tamanho}" height="${tamanho}"><text x="${tamanho / 2}" y="${tamanho / 2 + 5}" font-size="14" font-weight="700" fill="var(--ocre)" text-anchor="middle">${simbolo}</text></svg>`;
   const planetId = TERMO_PLANET_BY_SYMBOL_TABELA[simbolo];
   return getIconeTermoSVG(planetId, tamanho, 'var(--ocre)'); // Tema Céu (papiro): ícones dos termos sempre em amarelo ocre
 }
@@ -430,7 +430,7 @@ function renderPainelTecnico(data, containerId) {
   } catch (err) {
     const container = document.getElementById(containerId);
     if (container) {
-      container.innerHTML = `<div style="padding: 15px; color: var(--danger); text-align: center; font-weight: bold; background: var(--danger-bg); border: 1px solid var(--danger-border); margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro no Painel Técnico: ${err.message}</div>`;
+      container.innerHTML = `<div style="padding: 15px; color: var(--terracota); text-align: center; font-weight: bold; border-top: 1px solid var(--terracota); border-bottom: 1px solid var(--terracota); margin: 20px auto; max-width: 960px; border-radius: 6px;">Erro no Painel Técnico: ${err.message}</div>`;
     }
   }
 }

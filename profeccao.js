@@ -485,7 +485,7 @@
        (as duas mini-mandalas — RS e natal — coexistem na página) e o planeta 3D. Sem cabeçalho nem céu. */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+            return `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
         }
 
         const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
@@ -542,7 +542,7 @@
         if (!container) return;
 
         if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--danger); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--terracota); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
             return;
         }
 
@@ -646,12 +646,12 @@
                 <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
                     ${horasInfo.dayRulerId ? `
                     <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">DIA</div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--azul-egipcio-escuro);">DIA</div>
                         ${getPlanet3DSVG(horasInfo.dayRulerId, 28)}
                     </div>` : ''}
                     ${horasInfo.hourRulerId ? `
                     <div style="text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--primary-blue);">HORA</div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--azul-egipcio-escuro);">HORA</div>
                         ${getPlanet3DSVG(horasInfo.hourRulerId, 28)}
                     </div>` : ''}
                 </div>`;

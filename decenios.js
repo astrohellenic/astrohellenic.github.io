@@ -54,7 +54,7 @@ function iniciarModuloDecenios() {
   if (!container) return;
 
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
-    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar os Decênios.</div>`;
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 13px; font-weight: 600;">Carregue um mapa de cliente no menu lateral para visualizar os Decênios.</div>`;
     return;
   }
 

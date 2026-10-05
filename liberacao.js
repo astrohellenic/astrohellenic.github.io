@@ -100,7 +100,7 @@ function fragmentoPlaneta3DZR(planetId, sufixo) {
    (fatias + etiquetas em faixa + coroas com o número do nível), os rótulos de PICO e SALTO e as cores deles. Casa 1 sempre num lote. */
 function gerarMandalaNatalZR(dados, opcoes = {}) {
   if (!dados || !dados.Ascendente) {
-    return `<div style="padding: 40px 10px; text-align: center; color: var(--text-faint); font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+    return `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
   }
 
   const l1SignIdx = (opcoes.l1SignIdx !== undefined) ? opcoes.l1SignIdx : null;
