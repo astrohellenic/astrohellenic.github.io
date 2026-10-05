@@ -391,7 +391,7 @@ function renderLoteCardHTML(iconHTML, nome, deg, ascAbs, legenda, opts) {
       <div style="display: flex; align-items: center; gap: 8px;">
         ${checkboxHTML}
         <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--azul-egipcio-escuro); flex-shrink: 0;">${iconHTML}</div>
-        <div class="nome-nivel" style="flex: 1; line-height: 1.25;">${escapeHtml(nome)}</div>
+        <div class="nome-nivel" style="flex: 1; line-height: 1.25; color: var(--terracota);">${escapeHtml(nome)}</div>
         ${removerHTML}
       </div>
       <div class="linha-info" style="display: flex; align-items: center; gap: 8px;">
@@ -533,8 +533,8 @@ function renderLotesUI() {
 
       <div id="lotesConteudoArea">
 
-      <!-- PARTE 1: LOTES PRÉ-CALCULADOS -->
-      <h4 class="titulo-secao">Parte 1 — Lotes Pré-Calculados</h4>
+      <!-- LOTES PRÉ-CALCULADOS -->
+      <h4 class="titulo-secao">Lotes Pré-Calculados</h4>
 
       <div class="grade-lotes">
         ${lotesPart1.map(l => renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda, { key: l.key })).join('')}
@@ -593,8 +593,8 @@ function renderLotesUI() {
   const { resultAbs, formulaTxt, resultLegenda } = calcularResultadoLotesLivre(p, lotesPart1, isDayAuto);
 
   html += `
-      <!-- PARTE 2: CALCULADORA LIVRE -->
-      <h4 class="titulo-secao">Parte 2 — Calculadora Livre</h4>
+      <!-- CALCULADORA LIVRE -->
+      <h4 class="titulo-secao">Calculadora Livre</h4>
 
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 22px;">
