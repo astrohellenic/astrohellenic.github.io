@@ -493,7 +493,7 @@ function salvarCircumambulacaoNaGaleria() {
     const cabecalho = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, yCabecalho, cores)
       .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
     let pautasSvg = svgPautasComTamanho(montarSvgPautas(signPassages, 0), 920, alturaPautas, k);
-    if (papiro) pautasSvg = resolverVarsDaFolhaCircumambulacao(pautasSvg);
+    pautasSvg = resolverVarsDaFolhaCircumambulacao(pautasSvg);
     const pautas = pautasSvg.replace('<svg ', '<svg x="' + ((largura - (920 * k)) / 2) + '" y="' + yPautas + '" ');
     const papelFundo = papiro ? papiroTexturaSvg('papiroCaptura', largura, altura) : '';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
@@ -522,7 +522,7 @@ async function capturarCircumambulacaoParaRelatorio() {
     const k = fatorTelaPautasCircumambulacao();
     const altura = 20 + (passagens.length * rowHeight);
     let svg = svgPautasComTamanho(montarSvgPautas(passagens, 0, indices.length ? indices : undefined), 920, altura, k);
-    if (papiro) svg = resolverVarsDaFolhaCircumambulacao(svg);
+    svg = resolverVarsDaFolhaCircumambulacao(svg);
     const bruto = await rasterizarSvgParaCanvas(svg, 920 * k, altura * k, fundo, 2);
     const canvas = recortarCanvasAoConteudo(bruto, fundo);
     const total = adicionarCapturaRelatorio('circumambulacao', canvas.toDataURL('image/png'));
@@ -602,7 +602,12 @@ function renderCircumambulaçõesUI() {
     let rowHtml = '';
 
     // Moldura da Pauta
-    rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" rx="8" ry="8" fill="var(--bg-card)" stroke="var(--table-border)" stroke-width="1.2"/>`;
+    // (padrão: cada pauta é um cartão — só uma linha fina em cima e outra embaixo, sem os lados; cantos retos sempre. window.pautaBorda = 'grade' desenha também os lados.)
+    if (window.pautaBorda === 'grade') {
+      rowHtml += `<rect x="10" y="${yOffset}" width="900" height="${boxHeight}" fill="none" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+    } else {
+      rowHtml += `<line x1="10" y1="${yOffset}" x2="910" y2="${yOffset}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/><line x1="10" y1="${yOffset + boxHeight}" x2="910" y2="${yOffset + boxHeight}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+    }
 
     // Ícone Monoline do Signo
     rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
@@ -616,10 +621,10 @@ function renderCircumambulaçõesUI() {
     const yBaseline   = yOffset + Math.round(55 * k); // Linha Guia Central (Régua de Graus)
 
     // LINHA TRACEJADA DA PISTA SUPERIOR (ASPECTOS)
-    rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="var(--gold-primary)" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yAspectLine}" x2="${x1}" y2="${yAspectLine}" stroke="var(--azul-egipcio-escuro)" stroke-width="1.0" stroke-dasharray="3,3" opacity="0.6"/>`;
 
     // LINHA GUIA CENTRAL (RÉGUA DE GRAUS)
-    rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="var(--gold-primary)" stroke-width="1.8"/>`;
+    rowHtml += `<line x1="${x0}" y1="${yBaseline}" x2="${x1}" y2="${yBaseline}" stroke="var(--azul-egipcio-escuro)" stroke-width="1.8"/>`;
 
     // DENTINHOS VISÍVEIS DE TODOS OS 30 GRAUS
     const tickShort = Math.round(4 * k);
@@ -638,7 +643,7 @@ function renderCircumambulaçõesUI() {
         tickY2 = yBaseline + tickTall;
         strokeW = 1.8;
         opacity = 1.0;
-        rowHtml += `<text x="${xDeg}" y="${yBaseline - tickLabelOffset}" font-size="9" font-weight="700" fill="var(--text-faint)" text-anchor="middle">${d}°</text>`;
+        rowHtml += `<text x="${xDeg}" y="${yBaseline - tickLabelOffset}" font-size="9" font-weight="700" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle">${d}°</text>`;
       } else if (d % 5 === 0) {
         tickY1 = yBaseline - tickMed;
         tickY2 = yBaseline + tickMed;
@@ -646,7 +651,7 @@ function renderCircumambulaçõesUI() {
         opacity = 0.85;
       }
 
-      rowHtml += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="var(--gold-primary)" stroke-width="${strokeW}" opacity="${opacity}"/>`;
+      rowHtml += `<line x1="${xDeg}" y1="${tickY1}" x2="${xDeg}" y2="${tickY2}" stroke="var(--azul-egipcio-escuro)" stroke-width="${strokeW}" opacity="${opacity}"/>`;
     }
 
     // BLOCOS DOS 5 TERMOS COMPLETOS
@@ -658,18 +663,18 @@ function renderCircumambulaçõesUI() {
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="var(--bg-card)" stroke="var(--gold-primary)" stroke-width="1"/>`;
+      rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="none" stroke="var(--azul-egipcio-escuro)" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
       const termIconTamanhoDir = Math.max(10, termHeight - 6);
       if (typeof getIconeTermoSVG === 'function') {
-        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, (window.temaMandala === 'ceu' && typeof COR_TINTA_OCRE !== 'undefined') ? COR_TINTA_OCRE : 'var(--gold-primary)') // Tema Céu (papiro): ícones dos planetas dos termos em amarelo ocre, pra destacar
+        rowHtml += getIconeTermoSVG(term.termPlanetId, termIconTamanhoDir, (window.temaMandala === 'ceu' && typeof COR_TINTA_OCRE !== 'undefined') ? COR_TINTA_OCRE : 'var(--azul-egipcio-escuro)') // Tema Céu (papiro): ícones dos planetas dos termos em amarelo ocre, pra destacar
           .replace('<svg ', `<svg x="${xCenter - termIconTamanhoDir / 2}" y="${yBaseline + 1 + (termHeight - termIconTamanhoDir) / 2}" `);
       }
 
       if (term.startYearsOld !== null && term.startDate !== null) {
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="var(--primary-blue)" text-anchor="start">${term.startYearsOld} anos</text>`;
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="var(--text-muted)" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="start">${term.startYearsOld} anos</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
 
@@ -705,17 +710,17 @@ function renderCircumambulaçõesUI() {
       const { xRay, cx } = posRotulos[idxRaio];
       const yTop = yAspectLine;
 
-      rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="var(--gold-primary)" stroke-width="0.8" opacity="0.7"/>`;
+      rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="var(--azul-egipcio-escuro)" stroke-width="0.8" opacity="0.7"/>`;
 
       // fiozinho do raio até o rótulo desviado pro lado (só quando houve desvio)
       if (Math.abs(cx - xRay) > 0.5) {
         const xFim = cx > xRay ? cx - 14 : cx + 19;
-        rowHtml += `<line x1="${xRay}" y1="${yTop}" x2="${xFim}" y2="${yTop}" stroke="var(--gold-primary)" stroke-width="0.8" opacity="0.7"/>`;
+        rowHtml += `<line x1="${xRay}" y1="${yTop}" x2="${xFim}" y2="${yTop}" stroke="var(--azul-egipcio-escuro)" stroke-width="0.8" opacity="0.7"/>`;
       }
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--primary-blue)" text-anchor="middle">${r.yearsOld} anos</text>`;
-      rowHtml += `<text x="${cx}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${r.exactDate}</text>`;
+      rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="middle">${r.yearsOld} anos</text>`;
+      rowHtml += `<text x="${cx}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
 
@@ -736,7 +741,7 @@ function renderCircumambulaçõesUI() {
       const natalTop = yOffset + Math.round(10 * k);
       const natalBottom = yOffset + boxHeight - Math.round(6 * k);
 
-      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="var(--natal-marca, var(--element-fogo))" stroke-width="2"/>`;
+      rowHtml += `<line x1="${xNatal}" y1="${natalTop}" x2="${xNatal}" y2="${natalBottom}" stroke="var(--terracota)" stroke-width="2"/>`;
       // Os textos da marca ficam à direita do traço; se caírem em cima do ícone do termo, vão pro lado esquerdo.
       const termoDaMarca = passage.terms.find(t => natalDegInSign >= t.termStartDeg && natalDegInSign < t.termEndDeg);
       let ancoraNatal = 'start', xTextoNatal = xNatal + 3;
@@ -746,8 +751,8 @@ function renderCircumambulaçõesUI() {
         if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 40 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
       }
       ocupadoNatal = ancoraNatal === 'start' ? [xTextoNatal, xTextoNatal + 40] : [xTextoNatal - 40, xTextoNatal];
-      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--natal-marca, var(--element-fogo))" text-anchor="${ancoraNatal}">0.0 anos</text>`;
-      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--natal-marca, var(--element-fogo))" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0.0 anos</text>`;
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--terracota)" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
     }
 
     // CURSOR DO AFETA NO "HOJE"
@@ -762,7 +767,7 @@ function renderCircumambulaçõesUI() {
         const hojeTop = yOffset + Math.round(10 * k);
         const hojeBottom = yOffset + boxHeight - Math.round(6 * k);
 
-        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--hoje-marca, var(--primary-blue))" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
 
         /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "N.N anos" + dd/mm/aaaa.
@@ -780,8 +785,8 @@ function renderCircumambulaçõesUI() {
         const ladoDir = dirLivre || !esqLivre; // se nenhum lado está livre, mantém o direito
         const xTextoHoje = ladoDir ? iniDir : iniEsq + LARG_TEXTO_HOJE;
         const ancoraHoje = ladoDir ? 'start' : 'end';
-        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--primary-blue)" text-anchor="${ancoraHoje}">${idadeHoje} anos</text>`;
-        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--primary-blue)" text-anchor="${ancoraHoje}">${formatarDataBRDir(hoje)}</text>`;
+        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--azul-egipcio-escuro)" text-anchor="${ancoraHoje}">${idadeHoje} anos</text>`;
+        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--azul-egipcio-escuro)" text-anchor="${ancoraHoje}">${formatarDataBRDir(hoje)}</text>`;
       }
     });
 
@@ -832,30 +837,29 @@ function renderCircumambulaçõesUI() {
     return `<div onclick="alternarAfetaCircumambulation('${af.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${iconeAfetaDir(af)}</div>`;
   }).join('');
 
-  const btnCss = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
   const dicaRelatorio = dicaBotaoRelatorioCircumambulacao();
 
   let html = `
     <div style="width: 100%;">
       <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; margin-bottom: 8px; padding: 0 20px;">
         <div style="position: relative; flex-shrink: 0;">
-          <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" style="${btnCss}" title="Afeta Direcionado">
+          <button type="button" onclick="const menu=document.getElementById('direcoesAfetaMenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none';" class="botao-icone" title="Afeta Direcionado">
             ${iconAtualHTML}
           </button>
-          <div id="direcoesAfetaMenu" style="display: none; position: absolute; top: 40px; right: 0; background: var(--bg-main); border: 1px solid var(--gold-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px; z-index: 9999; width: 40px; max-height: 220px; overflow-y: auto; box-sizing: border-box;">
+          <div id="direcoesAfetaMenu" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; width: 44px; box-sizing: border-box;">
             ${afetaMenuRowsHTML}
           </div>
         </div>
-        <button type="button" onclick="salvarCircumambulacaoNaGaleria()" title="Salvar a página inteira como imagem na galeria (com título e cabeçalho)" style="${btnCss}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+        <button type="button" onclick="salvarCircumambulacaoNaGaleria()" title="Salvar a página inteira como imagem na galeria (com título e cabeçalho)" class="botao-icone">
+          <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
-        <button type="button" id="circumambulacaoBtnRelatorio" onclick="capturarCircumambulacaoParaRelatorio()" title="${escapeHtml(dicaRelatorio)}" style="${btnCss}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+        <button type="button" id="circumambulacaoBtnRelatorio" onclick="capturarCircumambulacaoParaRelatorio()" title="${escapeHtml(dicaRelatorio)}" class="botao-icone">
+          <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
-    <div class="dir-outer" id="circumambulacao-container" style="width: 100%; min-height: 100%; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div class="dir-outer painel" id="circumambulacao-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
 
-        <h3 class="dir-titulo" style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
+        <h3 class="dir-titulo titulo-ferramenta">
           Circumambulação pelos Termos
         </h3>
 
@@ -869,6 +873,7 @@ function renderCircumambulaçõesUI() {
             ${svgTela}
           </div>
         </div>
+        <hr class="divisa">
 
     </div>
     </div>

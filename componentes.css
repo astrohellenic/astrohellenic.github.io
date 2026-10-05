@@ -269,3 +269,4 @@
 #mandala-controls-overlay .time-select { background: transparent; border: 0; color: var(--azul-egipcio-escuro); }
 #mandala-controls-overlay .icone { fill: none; stroke: currentColor; }
 #mandala-actions-overlay .icon-btn svg, #mandala-controls-overlay .icon-btn svg { flex-shrink: 0; }
+.painel input[type="checkbox"] { accent-color: var(--terracota); }
