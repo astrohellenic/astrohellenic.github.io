@@ -4004,7 +4004,7 @@ function relatorioCelulaIconeRotulo(iconHTML, rotulo) {
   return `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
       ${iconHTML}
-      <span style="font-size: 9px; font-weight: 600; color: #103b70; line-height: 1.1; text-align: center;">${escapeHtml(rotulo)}</span>
+      <span class="rel-rotulo-celula">${escapeHtml(rotulo)}</span>
     </div>
   `;
 }
@@ -4199,10 +4199,14 @@ function injetarEstilosRelatorio() {
          O contorno arredondado tem que ficar num DIV por fora da table:
          border-radius não tem efeito numa table com border-collapse. */
       .rel-tabela-wrap { margin-top: 18px; text-align: center; }
-      .rel-tabela-caixa { display: inline-block; text-align: left; border: 2px solid #1e5fa4; border-radius: 12px; overflow: hidden; }
-      .tabela-enxuta { border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: #ffffff; font-size: 12px; color: #0f172a; }
-      .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1e5fa4; padding: 8px 10px; text-align: center; vertical-align: middle; }
-      .tabela-enxuta th { background-color: #fffdf5; font-weight: 700; color: #103b70; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+      /* TABELAS PRONTAS (Lotes, Dodecatemórias): o mesmo padrão das grades do software (Painel Técnico/Matriz) — cantos retos, linhas finas em
+         azul egípcio claro, cabeçalho em Cinzel terracota, texto em preto de tinta, sem fundo próprio. Cores literais da paleta clara
+         (o PDF não tem as variáveis do software). */
+      .rel-tabela-caixa { display: inline-block; text-align: left; border: 0; border-radius: 0; overflow: visible; }
+      .tabela-enxuta { border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: transparent; font-size: 12px; color: #1A1410; border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; }
+      .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1F5FA3; padding: 8px 10px; text-align: center; vertical-align: middle; }
+      .tabela-enxuta th { background-color: transparent; font-family: 'Cinzel', serif; font-weight: 800; color: #A03E25; text-transform: uppercase; font-size: 10px; letter-spacing: 0.14em; }
+      .rel-rotulo-celula { font-size: 9px; font-weight: 700; color: #1A1410; line-height: 1.1; text-align: center; }
       .tabela-enxuta tr { break-inside: avoid; page-break-inside: avoid; }
 
       /* CAPA: título fixo no topo, mandala centralizada no espaço que
@@ -4419,10 +4423,6 @@ function injetarEstilosRelatorio() {
       .rel-tema-papiro .rel-rodape-nome { color: #1a1410; }
       .rel-tema-papiro .rel-indice li { color: #1a1410; border-bottom-color: rgba(26,20,16,0.4); }
       .rel-tema-papiro .rel-rodape-astrologo { border-top-color: #a03e25; color: #1a1410; }
-      .rel-tema-papiro .rel-tabela-caixa { border-color: #1d3a66; }
-      .rel-tema-papiro .tabela-enxuta { background: transparent; color: #1a1410; }
-      .rel-tema-papiro .tabela-enxuta th, .rel-tema-papiro .tabela-enxuta td { border-color: #1d3a66; }
-      .rel-tema-papiro .tabela-enxuta th { background-color: transparent; color: #1d3a66; }
       .rel-tema-papiro .rel-captura-faltando { color: #a03e25; }
 
       /* TEMA CÉU — a "mesa" atrás das folhas é o próprio céu do site (não o cinza da prévia comum). SÓ PINTURA. */
