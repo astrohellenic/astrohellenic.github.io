@@ -118,7 +118,7 @@ function iniciarModuloHoras(containerIdAlvo) {
   const nextSunrise = sunNextAstro ? sunNextAstro.sunrise : null;
 
   if (!sunrise || !sunset || !nextSunrise) {
-    container.innerHTML = `<p style="color: var(--danger); text-align: center;">Erro ao calcular o horário solar.</p>`;
+    container.innerHTML = `<p style="color: var(--terracota); text-align: center;">Erro ao calcular o horário solar.</p>`;
     return;
   }
 
@@ -175,130 +175,28 @@ function iniciarModuloHoras(containerIdAlvo) {
      dois #horas-container na página (o escondido e o de verdade). */
   if (containerIdAlvo) return;
 
-  const btnCssHoras = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
   const cabecalhoHorasHTML = (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof montarCabecalhoMandalaImagemHTML === 'function')
     ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, 'horasCabecalho', { largura: 480, tintaSobreFolha: true }) : '';
+  const svgGaleriaH = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  const svgRelatorioH = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
 
   let html = `
-    <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: 12px 20px 0;">
-        <button type="button" onclick="salvarHorasNaGaleria()" title="Salvar as Horas Planetárias como imagem na galeria (com título e cabeçalho)" style="${btnCssHoras}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-        </button>
-        <button type="button" onclick="capturarHorasParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" style="${btnCssHoras}">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-        </button>
-      </div>
-    <div id="horas-container" style="width: 100%; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif; text-align: center; box-sizing: border-box;">
-    <style>
-      #horas-container, #horas-container * { box-sizing: border-box; }
-      #horas-container .horas-card {
-        width: 100%;
-        max-width: 480px;
-        margin: 0 auto;
-        text-align: left;
-        background: var(--bg-main);
-        border-radius: 12px;
-        padding: 16px;
-      }
-      #horas-container .horas-card-inner {
-        background: var(--bg-card);
-        border: 2px solid var(--gold-primary);
-        border-radius: 10px;
-        padding: 20px;
-        font-family: 'Montserrat', sans-serif;
-        color: var(--text-dark);
-      }
-      #horas-container .horas-info {
-        font-size: 12px;
-        opacity: 0.75;
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      #horas-container .horas-atual-wrap {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      /* display:flex + width:fit-content + margin:auto (em vez de inline-flex): mesmo visual,
-         mas o html2canvas deixava de desenhar o conteúdo de um inline-flex com imagens dentro. */
-      #horas-container .horas-atual-box {
-        display: flex;
-        width: fit-content;
-        margin: 0 auto;
-        max-width: 100%;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: var(--bg-main);
-        border: 2px solid var(--table-border);
-        border-radius: 10px;
-        padding: 20px;
-      }
-      #horas-container .horas-atual-linha {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: center;
-        gap: 32px;
-        margin: 0 0 6px 0;
-      }
-      #horas-container .horas-atual-periodo {
-        font-size: 13px;
-        opacity: 0.8;
-        font-weight: 500;
-      }
-      #horas-container .horas-table-scroll {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: manipulation;
-      }
-      #horas-container table {
-        border-collapse: collapse;
-        font-size: 13px;
-        width: 100%;
-      }
-      #horas-container table th,
-      #horas-container table td {
-        padding: 10px 8px;
-      }
-      #horas-container table td[data-col="regente"] {
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      @media (max-width: 480px) {
-        #horas-container { padding: 10px; }
-        #horas-container .horas-card { padding: 8px; }
-        #horas-container .horas-card-inner { padding: 12px; }
-        #horas-container .horas-atual-box { padding: 12px; }
-        #horas-container .horas-atual-linha { gap: 16px; }
-        #horas-container table { font-size: 11px; }
-        #horas-container table th, #horas-container table td { padding: 7px 2px; }
-        #horas-container table td[data-col="regente"] { font-size: 12px; gap: 4px; }
-        #horas-container table svg { width: 22px !important; height: auto !important; }
-      }
-      @media (max-width: 360px) {
-        #horas-container table { font-size: 10px; }
-        #horas-container table th, #horas-container table td { padding: 6px 2px; }
-        #horas-container table svg { width: 20px !important; }
-      }
-    </style>
-    <!-- [REMOVIDO 28/09/2026] Bloco de <defs> globais (gradSun/gradMoon/...,
-         glyphShadow/planetDropShadow, jupiterClip) que só existia pra
-         alimentar o PLANET_3D_SVGS logo acima no arquivo - código morto,
-         nunca referenciado por getPlanet3DSVG de verdade (ela usa IDs
-         com sufixo único por chamada, não esses fixos). Removido junto
-         com a limpeza do PLANET_3D_SVGS. -->
+    <div style="width: 100%;">
+    <div id="horas-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
-    <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">Horas Planetárias</h3>
+    <!-- Título e, na mesma linha, os botões: galeria e relatório -->
+    <div class="cabeca-ferramenta">
+      <h3 class="titulo-ferramenta">Horas Planetárias</h3>
+      <div class="acoes-ferramenta">
+        <button type="button" class="botao-icone" onclick="salvarHorasNaGaleria()" title="Salvar as Horas Planetárias como imagem na galeria (com título e cabeçalho)">${svgGaleriaH}</button>
+        <button type="button" class="botao-icone" onclick="capturarHorasParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)">${svgRelatorioH}</button>
+      </div>
+    </div>
 
     <!-- CABEÇALHO PADRÃO (função global, o mesmo de todas as ferramentas) -->
     <div style="max-width: 480px; margin: 0 auto;">${cabecalhoHorasHTML}</div>
 
-    <div class="horas-card" id="horasCardArea">
-  <div class="horas-card-inner">
+    <div id="horasCardArea" style="max-width: 480px; margin: 0 auto;">
       <p class="horas-info">
         Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
@@ -306,21 +204,19 @@ function iniciarModuloHoras(containerIdAlvo) {
 
   if (horaAtual) {
     html += `
-      <div class="horas-atual-wrap">
-        <div class="horas-atual-box">
-          <div class="horas-atual-linha">
-            <div style="text-align: center;">
-              <div style="font-size: 13px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Dia</div>
-              ${getPlanet3DSVG(firstPlanetId, 100)}
-            </div>
-            <div style="text-align: center;">
-              <div style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Hora</div>
-              ${getPlanet3DSVG(horaAtual.planet.id, 48)}
-            </div>
+      <div class="cartao horas-atual">
+        <div class="horas-atual-linha">
+          <div style="text-align: center;">
+            <div class="rotulo" style="color: var(--preto-tinta); margin-bottom: 6px;">Dia</div>
+            ${getPlanet3DSVG(firstPlanetId, 100)}
           </div>
-          <div class="horas-atual-periodo">
-            ${iconeSolLuaHoras(horaAtual.period, 14)} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
+          <div style="text-align: center;">
+            <div class="rotulo" style="color: var(--preto-tinta); margin-bottom: 4px;">Hora</div>
+            ${getPlanet3DSVG(horaAtual.planet.id, 48)}
           </div>
+        </div>
+        <div class="horas-atual-periodo">
+          ${iconeSolLuaHoras(horaAtual.period, 14)} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
         </div>
       </div>
     `;
@@ -328,12 +224,12 @@ function iniciarModuloHoras(containerIdAlvo) {
 
   html += `
     <div class="horas-table-scroll">
-    <table>
+    <table class="tabela-epoca">
       <thead>
-        <tr style="border-bottom: 2px solid var(--gold-primary); text-align: left; color: var(--text-dark);">
+        <tr>
           <th></th>
-          <th>Período</th>
-          <th>Regente</th>
+          <th class="centro">Período</th>
+          <th class="centro">Regente</th>
           <th>Início</th>
           <th>Término</th>
         </tr>
@@ -342,14 +238,11 @@ function iniciarModuloHoras(containerIdAlvo) {
   `;
 
   hoursSchedule.forEach(item => {
-    const bgRow = item.isCurrent ? "background-color: var(--horas-atual-bg, var(--bg-main)); font-weight: 700;" : "";
     html += `
-      <tr style="border-bottom: 1px solid var(--primary-blue); ${bgRow}">
+      <tr${item.isCurrent ? ' class="ativa aberta"' : ''}>
         <td>${item.index}ª</td>
-        <td>${iconeSolLuaHoras(item.period, 16)}</td>
-        <td data-col="regente">
-          ${getPlanet3DSVG(item.planet.id)}
-        </td>
+        <td class="centro">${iconeSolLuaHoras(item.period, 16)}</td>
+        <td class="centro">${planetaComNome(item.planet.id, 30)}</td>
         <td>${formatarHoraMinutoSegundo(item.start)}</td>
         <td>${formatarHoraMinutoSegundo(item.end)}</td>
       </tr>
@@ -360,8 +253,8 @@ function iniciarModuloHoras(containerIdAlvo) {
       </tbody>
     </table>
     </div>
-  </div>
-  </div>
+    </div>
+    <hr class="divisa">
   </div>
   </div>
   `;

@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" href="papiro.css?v=20261009f">
     <link rel="stylesheet" href="temas.css?v=20261009c">
-    <link rel="stylesheet" href="componentes.css?v=20261009m">
+    <link rel="stylesheet" href="componentes.css?v=20261009n">
     <link rel="stylesheet" href="configuracoes.css?v=20261006a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -605,36 +605,6 @@ body {
         body.tema-ceu #mandala-container svg rect[fill="var(--badge-text)"] { fill: #a03e25; }
 
 
-        /* TEMA CÉU — Horas Planetárias (horas.js): a tela é uma folha de papiro e tudo é só tinta: azul nas linhas e
-           caixas, terracota no título e no sol; preto no texto. Sem preenchimento, sem sombra. As cores vêm de
-           variáveis redefinidas só aqui dentro. SÓ PINTURA. */
-        body.tema-ceu #horas-container {
-            --bg-main: transparent;
-            --bg-card: transparent;
-            --bg-hover: transparent;
-            --border-color: rgba(95, 65, 30, 0.45);
-            --table-border: rgba(29, 58, 102, 0.75);
-            --primary-blue: #1d3a66;
-            --gold-primary: #1d3a66;
-            --text-dark: #1a1410; --text-muted: #1a1410; --text-muted-2: #1a1410;
-            --horas-atual-bg: rgba(160, 62, 37, 0.14); /* hora atual na tabela */
-            color: #1a1410;
-            background: var(--papiro-fundo) !important;
-            clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
-        }
-        body.tema-ceu #horas-container h3 { color: #a03e25 !important; }
-        body.tema-ceu #horas-container [style*="box-shadow"] { box-shadow: none !important; }
-        body.tema-ceu #horas-container thead tr { border-bottom: 2px solid #1d3a66 !important; color: #1d3a66 !important; }
-        /* botões de galeria e relatório (fora da folha): papiro, como os da Profecção */
-        body.tema-ceu #mandala-container button[onclick^="salvarHorasNaGaleria"],
-        body.tema-ceu #mandala-container button[onclick^="capturarHorasParaRelatorio"] {
-            background: var(--papiro-botao) !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            clip-path: var(--papiro-botao-rasgo);
-        }
-        body.tema-ceu #mandala-container button[onclick^="salvarHorasNaGaleria"] svg,
-        body.tema-ceu #mandala-container button[onclick^="capturarHorasParaRelatorio"] svg { stroke: #1d3a66; }
 
         /* TEMA CÉU — Isopsefia Helenística (isopsefia.js): a tela é uma folha de papiro e tudo é só tinta: azul nas
            linhas, caixas e letras; terracota no título, na aba ativa e nos destaques; preto no texto. Sem
@@ -1314,7 +1284,7 @@ body {
 <script src="direcoes.js?v=20261009g"></script>
 <script src="liberacao.js?v=20261009e"></script>
 <script src="lotes-calculadora.js?v=20261009d"></script>
-<script src="horas.js?v=20261006b"></script>
+<script src="horas.js?v=20261009a"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261007c"></script>
 <script src="agendamento.js?v=20261007a"></script>
