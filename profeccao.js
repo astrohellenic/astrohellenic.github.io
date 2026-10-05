@@ -303,7 +303,7 @@
             { key: "spirit", label: "ESP", type: "spirit", deg: spirAbs },
             { key: "venus", label: "EROS", type: "venus", sym: "♀", deg: erosAbs },
             { key: "mercury", label: "NEC", type: "mercury", sym: "☿", deg: necAbs },
-            { key: "mars", label: "AUD", type: "mars", sym: "♂", deg: courAbs },
+            { key: "mars", label: "COR", type: "mars", sym: "♂", deg: courAbs },
             { key: "jupiter", label: "VIT", type: "jupiter", sym: "♃", deg: vicAbs },
             { key: "saturn", label: "NÊM", type: "saturn", sym: "♄", deg: nemAbs }
         ];

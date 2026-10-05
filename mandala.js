@@ -235,7 +235,7 @@ function calculateSevenLots(ascAbs, isDay, planetObj) {
     { key: "spirit", label: "ESP", type: "spirit", deg: spirAbs },
     { key: "venus", label: "EROS", type: "venus", sym: "♀", deg: erosAbs },
     { key: "mercury", label: "NEC", type: "mercury", sym: "☿", deg: necAbs },
-    { key: "mars", label: "AUD", type: "mars", sym: "♂", deg: courAbs },
+    { key: "mars", label: "COR", type: "mars", sym: "♂", deg: courAbs },
     { key: "jupiter", label: "VIT", type: "jupiter", sym: "♃", deg: vicAbs },
     { key: "saturn", label: "NÊM", type: "saturn", sym: "♄", deg: nemAbs }
   ];
@@ -730,7 +730,7 @@ const OPCOES_ROTACAO_CASA1 = [
   { key: 'spirit', label: 'Espírito' },
   { key: 'mercury', label: 'Necessidade' },
   { key: 'venus', label: 'Eros' },
-  { key: 'mars', label: 'Audácia' },
+  { key: 'mars', label: 'Coragem' },
   { key: 'jupiter', label: 'Vitória' },
   { key: 'saturn', label: 'Nêmesis' }
 ];
@@ -1106,7 +1106,7 @@ function aplicarPapiroNoCabecalhoSVG(svg) {
    Matriz) nunca passa nada aqui e a linha nunca aparece. */
 const ROTULOS_LOTE_CASA1 = {
   fortune: 'Lote da Fortuna', spirit: 'Lote do Espírito', venus: 'Lote de Eros',
-  mercury: 'Lote da Necessidade', mars: 'Lote da Audácia', jupiter: 'Lote da Vitória', saturn: 'Lote de Nêmesis'
+  mercury: 'Lote da Necessidade', mars: 'Lote da Coragem', jupiter: 'Lote da Vitória', saturn: 'Lote de Nêmesis'
 };
 /* opcoes (todas opcionais): { largura (padrão 960; abaixo de 900 usa o
    layout ESTREITO, que quebra as linhas longas em vez de cortar), titulo

@@ -16,7 +16,7 @@ const RELATORIO_LOT_NOMES = {
   spirit: 'Lote do Espírito',
   venus: 'Lote de Eros',
   mercury: 'Lote da Necessidade',
-  mars: 'Lote da Audácia',
+  mars: 'Lote da Coragem',
   jupiter: 'Lote da Vitória',
   saturn: 'Lote da Nêmesis'
 };

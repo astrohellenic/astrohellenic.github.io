@@ -89,7 +89,7 @@ function getAnguloCirculoSVG(label, tamanho = 24) {
 const NOMES_PONTOS_TABELA = {
   Sun: 'Sol', Moon: 'Lua', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno',
   'Nodo Norte': 'Nodo Norte', 'Nodo Sul': 'Nodo Sul', 'Sizígia': 'Sizígia',
-  fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Audácia', jupiter: 'Vitória', saturn: 'Nêmesis',
+  fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Coragem', jupiter: 'Vitória', saturn: 'Nêmesis',
   ASC: 'Ascendente', DSC: 'Descendente', MC: 'Meio-Céu', IC: 'Fundo do Céu'
 };
 
