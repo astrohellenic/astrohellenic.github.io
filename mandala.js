@@ -1085,7 +1085,9 @@ function aplicarPapiroNoCabecalhoSVG(svg) {
   const attrs = m[0].match(/x="15" y="([\d.\-]+)" width="([\d.]+)" height="([\d.]+)"/);
   // Sem contorno: o papel é só o polígono de borda irregular (o retângulo
   // com stroke original é substituído por ele).
-  const d = caminhoBordaPapiro(15, parseFloat(attrs[1]), parseFloat(attrs[2]), parseFloat(attrs[3]));
+  // O papel é um pouco MAIOR que o retângulo do cabeçalho (6px pros lados, 2px em cima e embaixo — o que a margem do desenho permite), pra
+  // a borda rasgada nunca comer as linhas duplas que ficam por dentro (ver filetesCabecalhoSVG).
+  const d = caminhoBordaPapiro(9, parseFloat(attrs[1]) - 2, parseFloat(attrs[2]) + 12, parseFloat(attrs[3]) + 4);
   const camada = fill => `<path d="${d}" fill="${fill}"/>`;
   const papel = camada(`url(#papiroCabBase${sf})`) + camada(`url(#papiroCabLuz${sf})`) + camada(`url(#papiroCabSombra${sf})`) + camada(`url(#papiroCabFibras${sf})`);
   return defs + svg.replace(m[0], papel);
