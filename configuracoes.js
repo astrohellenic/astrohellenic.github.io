@@ -15,23 +15,23 @@
    ========================================== */
 
 const CONFIG_SECOES = [
-  { id: 'aparencia', titulo: 'Aparência', icone: 'fa-palette',
+  { id: 'aparencia', titulo: 'Aparência', icone: 'aparencia',
     descricao: 'Como o software é exibido neste aparelho: tema, ícones dos planetas e a barra superior.',
     html: () => htmlCfgAparencia() },
-  { id: 'relatorios', titulo: 'Relatórios', icone: 'fa-file-lines',
+  { id: 'relatorios', titulo: 'Relatórios', icone: 'relatorio',
     descricao: 'Seus dados de contato e o logo que aparecem nos relatórios gerados.',
     html: () => htmlCfgRelatorios(), depois: () => carregarConfiguracoesRelatorio() },
-  { id: 'servicos', titulo: 'Serviços', icone: 'fa-hand-holding-heart',
+  { id: 'servicos', titulo: 'Serviços', icone: 'servicos',
     descricao: 'Os serviços que você oferece, com área, valor e duração. Daqui saem os modelos de relatório, a agenda e o financeiro.',
     html: () => htmlCfgServicos(), depois: () => carregarServicos() },
-  { id: 'captacao', titulo: 'Captação de Clientes', icone: 'fa-user-plus',
+  { id: 'captacao', titulo: 'Captação de Clientes', icone: 'captacao',
     descricao: 'O formulário externo de coleta de dados dos seus clientes.',
     html: () => htmlCfgCaptacao(), depois: () => carregarConfiguracoesCaptacao() },
-  { id: 'agenda', titulo: 'Agenda', icone: 'fa-calendar-days',
+  { id: 'agenda', titulo: 'Agenda', icone: 'agenda',
     descricao: 'Os dias e horários que você atende e quais pastas de clientes entram no agendamento.',
     html: () => '<div id="cfgAgendaConteudo" class="cfg-grid"><div class="cfg-carregando">Carregando...</div></div>',
     depois: () => carregarConfiguracoesAgenda() },
-  { id: 'seguranca', titulo: 'Segurança e Conta', icone: 'fa-shield-halved',
+  { id: 'seguranca', titulo: 'Segurança e Conta', icone: 'seguranca',
     descricao: 'Sua conta, a senha e a sessão neste aparelho.',
     html: () => htmlCfgSeguranca(), depois: () => carregarEmailContaConfiguracoes() }
 ];
@@ -54,7 +54,7 @@ function iniciarModuloConfiguracoes() {
 
   const navHtml = CONFIG_SECOES.map(s => `
     <button type="button" class="cfg-nav-item" data-secao="${s.id}" onclick="mostrarSecaoConfiguracoes('${s.id}')">
-      <i class="fa-solid ${s.icone}"></i><span>${s.titulo}</span>
+      ${menuIcone(s.icone, 20)}<span>${s.titulo}</span>
     </button>`).join('');
 
   container.innerHTML = `
@@ -119,17 +119,17 @@ function htmlCfgAparencia() {
         ${iconeHtml}
         <span><span class="cfg-opcao-nome">${titulo}</span><span class="cfg-opcao-desc">${desc}</span></span>
       </span>
-      ${ativa ? '<i class="fa-solid fa-circle-check cfg-opcao-check"></i>' : ''}
+      ${ativa ? `<span class="cfg-opcao-check">${menuIcone('checkCirculo', 20)}</span>` : ''}
     </button>`;
-  const fa = (classe) => `<i class="fa-solid ${classe} cfg-opcao-icone"></i>`;
+  const fa = (nome) => `<span class="cfg-opcao-icone">${menuIcone(nome, 22)}</span>`;
 
   const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo);
   const itensOrdem = ordem.map((chave, idx) => `
     <div class="cfg-ordem-item">
       <span class="cfg-ordem-nome"><span class="cfg-ordem-pos">${idx + 1}</span>${escapeHtml(ROTULOS_BOTOES_TOPO[chave] || chave)}</span>
       <span class="cfg-ordem-setas">
-        <button type="button" class="cfg-seta" onclick="moverBotaoTopo('${chave}', -1)" ${idx === 0 ? 'disabled' : ''} title="Mover para o começo da barra"><i class="fa-solid fa-chevron-left"></i></button>
-        <button type="button" class="cfg-seta" onclick="moverBotaoTopo('${chave}', 1)" ${idx === ordem.length - 1 ? 'disabled' : ''} title="Mover para o fim da barra"><i class="fa-solid fa-chevron-right"></i></button>
+        <button type="button" class="cfg-seta" onclick="moverBotaoTopo('${chave}', -1)" ${idx === 0 ? 'disabled' : ''} title="Mover para o começo da barra">${menuIcone('voltar', 16)}</button>
+        <button type="button" class="cfg-seta" onclick="moverBotaoTopo('${chave}', 1)" ${idx === ordem.length - 1 ? 'disabled' : ''} title="Mover para o fim da barra">${menuIcone('avancar', 16)}</button>
       </span>
     </div>`).join('');
 
@@ -139,10 +139,10 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Tema</h4>
         <p class="cfg-card-desc">Uma escolha só: ao escolher uma opção, as outras ficam desmarcadas. O <strong>Automático</strong> acompanha o aparelho (claro quando o aparelho está claro, escuro quando está escuro) e nunca escolhe o Céu. Fica salvo neste aparelho — cada aparelho ou navegador tem o seu.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('fa-star'), 'Céu', 'Papiro e tinta sobre o céu')}
-          ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('fa-sun'), 'Claro', 'Sempre com fundo claro, não importa o aparelho')}
-          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('fa-moon'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho')}
-          ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('fa-circle-half-stroke'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho')}
+          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu')}
+          ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho')}
+          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho')}
+          ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('automatico'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho')}
         </div>
       </div>
 
@@ -150,8 +150,8 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Ícones dos planetas</h4>
         <p class="cfg-card-desc">Como os 7 planetas clássicos aparecem em toda a ferramenta (mandala, horas planetárias, tabela técnica, decênios, profecção e direções). <strong>Vale só para os temas Claro, Escuro e Automático.</strong> No tema Céu essa escolha não se aplica: o Céu tem os seus próprios ícones, que só existem nele. Sua escolha fica guardada e volta quando você sair do Céu.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarEstiloPlanetas('simples')", estiloAtual === 'simples', '<span class="cfg-opcao-icone cfg-opcao-glifo">☉</span>', 'Planetas ícones simples', 'Glifos planetários, iguais aos usados nos termos egípcios')}
-          ${opcao("salvarEstiloPlanetas('esferico')", estiloAtual === 'esferico', fa('fa-circle-dot'), 'Planetas ícones esféricos', 'Ilustrações 3D com gradiente para cada planeta')}
+          ${opcao("salvarEstiloPlanetas('simples')", estiloAtual === 'simples', fa('planetaSimples'), 'Planetas ícones simples', 'Glifos planetários, iguais aos usados nos termos egípcios')}
+          ${opcao("salvarEstiloPlanetas('esferico')", estiloAtual === 'esferico', fa('planetaEsferico'), 'Planetas ícones esféricos', 'Ilustrações 3D com gradiente para cada planeta')}
         </div>
       </div>
 
@@ -159,8 +159,8 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Rótulos dos glifos</h4>
         <p class="cfg-card-desc">Escreve o nome ao lado do glifo dos planetas e dos signos (Sol, Lua, Áries, Touro...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Aparece em todas as ferramentas, <strong>menos dentro das mandalas</strong>, onde não há espaço.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarMostrarRotulosGlifos(true)", window.mostrarRotulosGlifos !== false, fa('fa-font'), 'Rótulos ativados', 'Glifos com o nome ao lado')}
-          ${opcao("salvarMostrarRotulosGlifos(false)", window.mostrarRotulosGlifos === false, fa('fa-eye-slash'), 'Rótulos desativados', 'Só os glifos')}
+          ${opcao("salvarMostrarRotulosGlifos(true)", window.mostrarRotulosGlifos !== false, fa('fonte'), 'Rótulos ativados', 'Glifos com o nome ao lado')}
+          ${opcao("salvarMostrarRotulosGlifos(false)", window.mostrarRotulosGlifos === false, fa('olhoCortado'), 'Rótulos desativados', 'Só os glifos')}
         </div>
       </div>
 
@@ -168,10 +168,10 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Estilo da mandala</h4>
         <p class="cfg-card-desc">Só o <strong>formato</strong> do desenho — onde cada coisa fica. As cores e os ícones não mudam: seguem o tema (Céu, Claro, Escuro, papiro).</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarEstiloMandala('astrohellenic_reto')", estiloMandalaEscolhido === 'astrohellenic_reto', fa('fa-bullseye'), 'Estilo Astro Hellenic', 'Faixa do zodíaco com os planetas dentro, linhas retas')}
-          ${opcao("salvarEstiloMandala('comum')", estiloMandalaEscolhido === 'comum', fa('fa-bullseye'), 'Estilo comum', 'Signos e casas por dentro, planetas na eclíptica, régua de graus com termos e dodecatemória por fora')}
-          ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', fa('fa-bullseye'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
-          ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', fa('fa-chart-pie'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
+          ${opcao("salvarEstiloMandala('astrohellenic_reto')", estiloMandalaEscolhido === 'astrohellenic_reto', fa('alvo'), 'Estilo Astro Hellenic', 'Faixa do zodíaco com os planetas dentro, linhas retas')}
+          ${opcao("salvarEstiloMandala('comum')", estiloMandalaEscolhido === 'comum', fa('alvo'), 'Estilo comum', 'Signos e casas por dentro, planetas na eclíptica, régua de graus com termos e dodecatemória por fora')}
+          ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', fa('alvo'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
+          ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', fa('pizza'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
         </div>
       </div>
 
@@ -203,7 +203,7 @@ function htmlCfgRelatorios() {
             </div>
             <input type="file" id="relCfgLogoFile" accept="image/*" onchange="fazerUploadLogoRelatorio(this)" style="display: none;">
             <button type="button" class="cfg-btn cfg-btn-tracejado cfg-btn-bloco" onclick="document.getElementById('relCfgLogoFile').click()">
-              <i class="fa-solid fa-upload"></i> <span id="relCfgBtnUploadText">Selecionar Logo do Relatório</span>
+              ${menuIcone('enviar', 16)} <span id="relCfgBtnUploadText">Selecionar Logo do Relatório</span>
             </button>
             <input type="hidden" id="relCfgLogoUrl">
           </div>
@@ -249,7 +249,7 @@ function htmlCfgCaptacao() {
         </div>
         <input type="file" id="cfgLogoFile" accept="image/*" onchange="fazerUploadLogo(this)" style="display: none;">
         <button type="button" class="cfg-btn cfg-btn-tracejado cfg-btn-bloco" onclick="document.getElementById('cfgLogoFile').click()">
-          <i class="fa-solid fa-upload"></i> <span id="btnUploadText">Selecionar Imagem do Logo</span>
+          ${menuIcone('enviar', 16)} <span id="btnUploadText">Selecionar Imagem do Logo</span>
         </button>
         <input type="hidden" id="cfgLogoUrl">
 
@@ -436,7 +436,7 @@ function htmlCfgSeguranca() {
       <div class="cfg-card">
         <h4 class="cfg-card-titulo">Sessão</h4>
         <p class="cfg-card-desc">Sai da conta neste aparelho e volta para a tela de login.</p>
-        <button type="button" class="cfg-btn cfg-btn-perigo" onclick="fazerLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair da conta</button>
+        <button type="button" class="cfg-btn cfg-btn-perigo" onclick="fazerLogout()">${menuIcone('sair', 16)} Sair da conta</button>
       </div>
     </div>`;
 }
@@ -802,8 +802,8 @@ function renderServicosList() {
         ${servico.tem_modelo === false ? `<div class="cfg-servico-det">Sem modelo de relatório · <a href="#" onclick="criarModeloDoServico('${servico.id}'); return false;">Criar modelo</a></div>` : ''}
       </div>
       <div class="card-actions">
-        <button type="button" class="action-record-btn edit-btn" onclick="abrirFormServico('${servico.id}')" title="Editar serviço"><i class="fa-solid fa-pen"></i></button>
-        <button type="button" class="action-record-btn delete-btn" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço"><i class="fa-solid fa-trash"></i></button>
+        <button type="button" class="action-record-btn edit-btn" onclick="abrirFormServico('${servico.id}')" title="Editar serviço">${menuIcone('editar', 18)}</button>
+        <button type="button" class="action-record-btn delete-btn" onclick="apagarServico('${servico.id}', '${escapeHtml(servico.nome).replace(/'/g, "\\'")}')" title="Apagar serviço">${menuIcone('lixeira', 18)}</button>
       </div>
     </div>`;
   }).join('');
