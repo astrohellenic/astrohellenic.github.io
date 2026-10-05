@@ -272,7 +272,7 @@
 
 /* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
    enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */
-.cabeca-ferramenta { position: relative; display: flex; align-items: center; justify-content: center; margin: 0 0 12px; }
+.cabeca-ferramenta { position: relative; z-index: 30; display: flex; align-items: center; justify-content: center; margin: 0 0 12px; }
 .cabeca-ferramenta .titulo-ferramenta { margin: 0; padding: 0 130px; }
 .acoes-ferramenta { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; }
 @media (max-width: 700px) {
