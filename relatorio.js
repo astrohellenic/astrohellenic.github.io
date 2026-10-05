@@ -4271,7 +4271,9 @@ function injetarEstilosRelatorio() {
          texto ficar dentro dela */
       .rel-capa-meandro { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
       .rel-capa.rel-capa-papiro { padding: 26mm 24mm; }
-      .rel-capa.rel-capa-papiro > :not(.rel-capa-meandro) { position: relative; z-index: 1; }
+      .rel-capa.rel-capa-papiro > :not(.rel-capa-meandro):not(.rel-num-pagina-canto) { position: relative; z-index: 1; }
+      /* o número da página fica DENTRO da moldura (no canto, entre a faixa de meandros e a linha de dentro) e nunca sobre o logo */
+      .rel-capa.rel-capa-papiro .rel-num-pagina-canto { right: 14mm; bottom: 14mm; z-index: 1; }
       .rel-capa.rel-capa-papiro .rel-powered-by { color: #1a1410; }
       .rel-capa.rel-capa-papiro .rel-img-capa { max-width: 172mm; max-height: 150mm; }
       /* Capa com o céu DA MANDALA (mesmo Sol/horizonte/brilho da roda): o fundo antigo (degradê com mancha laranja
