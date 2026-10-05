@@ -64,56 +64,58 @@ async function carregarPastasSalvas() {
   }
 }
 
+/* ÍCONES MONOLINE DO MENU LATERAL (grade 64, traço vem de .icone) */
+const MENU_ICONES = {
+  fechar: '<path d="M16 16 L48 48 M48 16 L16 48"/>',
+  voltar: '<polyline points="40,12 20,32 40,52"/>',
+  avancar: '<polyline points="24,12 44,32 24,52"/>',
+  lixeira: '<path d="M12 16 H52 M24 16 V10 H40 V16 M16 16 L19 54 H45 L48 16 M28 26 V44 M36 26 V44"/>',
+  editar: '<path d="M12 52 L16 38 L42 12 L52 22 L26 48 Z M36 18 L46 28"/>',
+  pasta: '<path d="M10 18 A4 4 0 0 1 14 14 H26 L32 22 H50 A4 4 0 0 1 54 26 V46 A4 4 0 0 1 50 50 H14 A4 4 0 0 1 10 46 Z"/>',
+  buscar: '<circle cx="28" cy="28" r="16"/><line x1="40" y1="40" x2="54" y2="54"/>',
+  mais: '<path d="M32 12 V52 M12 32 H52"/>',
+  novoMapa: '<circle cx="26" cy="16" r="9"/><path d="M10,54 C10,38 17,32 26,32 C35,32 42,38 42,54"/><line x1="50" y1="30" x2="50" y2="46"/><line x1="42" y1="38" x2="58" y2="38"/>',
+  importar: '<path d="M10,38 V54 A4,4 0 0 0 14,58 H50 A4,4 0 0 0 54,54 V38"/><polyline points="10,38 24,38 28,46 36,46 40,38 54,38"/><line x1="32" y1="6" x2="32" y2="36"/><polyline points="20,24 32,36 44,24"/>'
+};
+function menuIcone(nome) {
+  return `<svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true">${MENU_ICONES[nome]}</svg>`;
+}
+function menuLogoHtml() {
+  return `<img class="logo-claro" src="astrohellenic.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;"><img class="logo-escuro" src="astrohellenic-escuro.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;">`;
+}
+function menuLinhaPasta(pasta, comAvancar) {
+  const attr = escapeHtml(pasta).replace(/'/g, "&#39;");
+  return `
+      <div class="menu-pasta" onclick="abrirConteudoPasta('${attr}')">
+        <div class="nome-pasta">${menuIcone('pasta')}<span>${escapeHtml(pasta)}</span></div>
+        <div class="acoes-pasta" onclick="event.stopPropagation()">
+          <button type="button" class="botao-icone" onclick="editarNomePasta(event, '${attr}')" title="Renomear pasta">${menuIcone('editar')}</button>
+          <button type="button" class="botao-icone botao-apagar" onclick="apagarPasta(event, '${attr}')" title="Apagar pasta">${menuIcone('lixeira')}</button>
+          ${comAvancar ? `<span class="botao-icone" style="width:20px">${menuIcone('avancar')}</span>` : ''}
+        </div>
+      </div>`;
+}
+
 /* NÍVEL 1: MENU PRINCIPAL LIMPO (clientes e pastas — as configurações ficam na página própria, botão da barra superior) */
 function renderMenuPrincipal() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-  let htmlPastas = '';
-  pastasOrdenadas.forEach(pasta => {
-    htmlPastas += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
-        <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="abrirConteudoPasta('${pasta}')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(pasta)}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pasta}')" title="Renomear pasta" style="color: var(--primary-blue); cursor: pointer;"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pasta}')" title="Apagar pasta" style="color: var(--danger); cursor: pointer;"></i>
-        </div>
-      </div>
-    `;
-  });
+  const htmlPastas = pastasOrdenadas.map(p => menuLinhaPasta(p, false)).join('');
 
   sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
-      <img class="logo-claro" src="astrohellenic.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;"><img class="logo-escuro" src="astrohellenic-escuro.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;">
+    <div class="sidebar-header">
+      ${menuLogoHtml()}
     </div>
-    <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar);">
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
-        <button onclick="abrirModalNovoMapa()" title="Novo Mapa Astral" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); cursor: pointer;">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="26" cy="16" r="9"/>
-            <path d="M10,54 C10,38 17,32 26,32 C35,32 42,38 42,54"/>
-            <line x1="50" y1="30" x2="50" y2="46"/>
-            <line x1="42" y1="38" x2="58" y2="38"/>
-          </svg>
-        </button>
-        <button onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa" style="width: 40px; height: 40px; background: transparent; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); cursor: pointer;">
-          <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10,38 V54 A4,4 0 0 0 14,58 H50 A4,4 0 0 0 54,54 V38"/>
-            <polyline points="10,38 24,38 28,46 36,46 40,38 54,38"/>
-            <line x1="32" y1="6" x2="32" y2="36"/>
-            <polyline points="20,24 32,36 44,24"/>
-          </svg>
-        </button>
+    <div style="flex: 1; overflow-y: auto;">
+      <div class="menu-item" style="justify-content: center; gap: 12px; cursor: default;">
+        <button type="button" class="botao-icone" onclick="abrirModalNovoMapa()" title="Novo Mapa Astral">${menuIcone('novoMapa')}</button>
+        <button type="button" class="botao-icone" onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa">${menuIcone('importar')}</button>
       </div>
-
-      <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); background: var(--bg-sidebar); display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); text-transform: uppercase;">Pastas</span>
-        <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 4px 8px; font-weight: 700; cursor: pointer;">+ Pasta</button>
+      <div class="menu-rotulo-linha">
+        <span class="rotulo">Pastas</span>
+        <button type="button" class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
       </div>
       ${htmlPastas}
     </div>
@@ -652,38 +654,17 @@ function abrirNavegacaoPastas() {
   const pastasOrdenadas = [...customFolders].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   let html = `
-     <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
-      <span style="font-size: 13px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">PASTAS</span>
-      <button class="add-folder-btn" onclick="criarNovaPasta()" style="background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 4px 10px; font-weight: 700; cursor: pointer;">+ Pasta</button>
+    <div class="sidebar-header">
+      <span class="sidebar-nome-pasta">Pastas</span>
+      <button type="button" class="add-folder-btn" onclick="criarNovaPasta()">+ Pasta</button>
     </div>
-    <div style="flex: 1; overflow-y: auto; background: var(--bg-sidebar); padding: 4px 0;">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); cursor: pointer;" onclick="abrirModalImportacaoTexto()">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-file-import" style="color: var(--gold-primary);"></i>
-          <span style="font-size: 13px; font-weight: 700; color: var(--primary-blue);">Importar Lista em Massa</span>
-        </div>
-        <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary);"></i>
+    <div style="flex: 1; overflow-y: auto;">
+      <div class="menu-pasta" onclick="abrirModalImportacaoTexto()">
+        <div class="nome-pasta">${menuIcone('importar')}<span>Importar Lista em Massa</span></div>
+        <span class="botao-icone" style="width:20px">${menuIcone('avancar')}</span>
       </div>
   `;
-
-  pastasOrdenadas.forEach(pasta => {
-    const pastaAttrEscapada = escapeHtml(pasta).replace(/'/g, "&#39;");
-
-    html += `
-       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s ease;" onclick="abrirConteudoPasta('${pastaAttrEscapada}')">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-primary); flex-shrink: 0;"><path d="M4,7 A2,2 0 0 1 6,5 H10 L12,7.5 H19 A2,2 0 0 1 21,9.5 V17 A2,2 0 0 1 19,19 H6 A2,2 0 0 1 4,17 Z"/></svg>
-          <span style="font-size: 13px; font-weight: 600; color: var(--primary-blue);">${escapeHtml(pasta)}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
-          <i class="fa-solid fa-pen folder-action-icon" onclick="editarNomePasta(event, '${pastaAttrEscapada}')" title="Renomear pasta" style="color: var(--primary-blue); cursor: pointer;"></i>
-          <i class="fa-solid fa-trash folder-action-icon folder-delete-icon" onclick="apagarPasta(event, '${pastaAttrEscapada}')" title="Apagar pasta" style="color: var(--danger); cursor: pointer;"></i>
-          <i class="fa-solid fa-chevron-right" style="font-size: 11px; color: var(--gold-primary); margin-left: 4px;"></i>
-        </div>
-      </div>
-    `;
-  });
-
+  pastasOrdenadas.forEach(pasta => { html += menuLinhaPasta(pasta, true); });
   html += `</div>`;
   sidebar.innerHTML = html;
 }
@@ -697,45 +678,39 @@ async function abrirConteudoPasta(nomePasta) {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
-    sidebar.innerHTML = `
-    <div class="sidebar-header" style="background: var(--bg-sidebar); border-bottom: 2px solid var(--gold-primary);">
-      <button class="icon-btn" onclick="renderMenuPrincipal()" title="Voltar às pastas" style="color: var(--primary-blue); border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 4px 8px; cursor: pointer; font-size: 11px; font-weight: 700;">
-        <i class="fa-solid fa-chevron-left" style="color: var(--gold-primary);"></i>
-      </button>
-      <span style="font-size: 13px; font-weight: 800; color: var(--primary-blue); font-family: 'Cinzel', serif; letter-spacing: 0.5px;">${escapeHtml(nomePasta)}</span>
-      <button class="icon-btn" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar" style="color: var(--danger); border: 1px solid var(--danger-border); border-radius: 8px; background: var(--danger-bg); padding: 4px 8px; cursor: pointer;">
-        <i class="fa-solid fa-trash-can"></i>
+  sidebar.innerHTML = `
+    <div class="sidebar-header">
+      <button type="button" class="botao-icone" onclick="renderMenuPrincipal()" title="Voltar às pastas">${menuIcone('voltar')}</button>
+      <span class="sidebar-nome-pasta">${escapeHtml(nomePasta)}</span>
+      <button type="button" class="botao-icone botao-apagar" id="trashModeBtn" onclick="alternarModoSelecao()" title="Selecionar para apagar">${menuIcone('lixeira')}</button>
+    </div>
+
+    <div class="search-box-container">
+      <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)">
+    </div>
+    <div class="search-box-container">
+      <select id="sortFieldSelect" class="menu-select" onchange="aplicarOrdenacaoLista(this.value)" title="Ordenar por">
+        <option value="codigo" ${currentSortField === 'codigo' ? 'selected' : ''}>Código</option>
+        <option value="nome" ${currentSortField === 'nome' ? 'selected' : ''}>Nome</option>
+        <option value="cidade" ${currentSortField === 'cidade' ? 'selected' : ''}>Cidade</option>
+        <option value="tipo" ${currentSortField === 'tipo' ? 'selected' : ''}>Tipo</option>
+      </select>
+      <button type="button" id="sortDirectionBtn" class="botao-icone" onclick="alternarDirecaoOrdenacao()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="width: 32px; flex: 0 0 auto;">
+        <i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}"></i>
       </button>
     </div>
 
-    <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-sidebar);">
-      <div class="search-box-container" style="margin-bottom: 8px;">
-        <input type="text" id="filterClientsInput" class="client-search-input" placeholder="Buscar nesta pasta..." oninput="executarBuscaLocal(this.value)" style="flex: 1; min-width: 0; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); color: var(--primary-blue);">
-      </div>
-      <div class="search-box-container" style="margin-bottom: 0;">
-        <select id="sortFieldSelect" class="modal-select" onchange="aplicarOrdenacaoLista(this.value)" title="Ordenar por" style="width: auto; flex: 1; min-width: 0; border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); color: var(--primary-blue); font-size: 11px; padding: 8px 6px;">
-          <option value="codigo" ${currentSortField === 'codigo' ? 'selected' : ''}>Código</option>
-          <option value="nome" ${currentSortField === 'nome' ? 'selected' : ''}>Nome</option>
-          <option value="cidade" ${currentSortField === 'cidade' ? 'selected' : ''}>Cidade</option>
-          <option value="tipo" ${currentSortField === 'tipo' ? 'selected' : ''}>Tipo</option>
-        </select>
-        <button type="button" id="sortDirectionBtn" class="icon-btn" onclick="alternarDirecaoOrdenacao()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="border: 1px solid var(--gold-primary); border-radius: 8px; background: var(--bg-card); padding: 0 12px; cursor: pointer; flex: 0 0 auto;">
-          <i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}" style="color: var(--gold-primary);"></i>
-        </button>
-      </div>
-    </div>
-
-    <div id="selectionActionBar" style="display: none; padding: 8px 12px; background: var(--danger-bg); border-bottom: 1px solid var(--danger-border); justify-content: space-between; align-items: center; margin: 4px 8px; border-radius: 8px;">
-      <label style="font-size: 11px; font-weight: 700; color: var(--danger-text); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-        <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)" style="accent-color: var(--danger);"> Selecionar Todos
+    <div id="selectionActionBar" class="barra-selecao">
+      <label>
+        <input type="checkbox" id="selectAllCheckbox" onchange="marcarTodosMapas(this.checked)" class="map-select-cb" style="margin: 0;"> Selecionar Todos
       </label>
-      <button onclick="confirmarExclusaoSelecionados()" style="background: var(--danger); color: #fff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+      <button type="button" class="botao-texto" onclick="confirmarExclusaoSelecionados()">
         Apagar (<span id="selectedCount">0</span>)
       </button>
     </div>
 
-    <div id="clientsListContainer" class="client-list-container" style="border: none; border-radius: 0; background: var(--bg-sidebar);">
-      <div style="padding: 16px; text-align: center; font-size: 12px; color: var(--primary-blue);"><i class="fa-solid fa-spinner fa-spin" style="color: var(--gold-primary);"></i> Carregando mapas...</div>
+    <div id="clientsListContainer" class="client-list-container">
+      <div class="menu-vazio"><i class="fa-solid fa-spinner fa-spin"></i> Carregando mapas...</div>
     </div>
   `;
 
@@ -853,7 +828,7 @@ function alternarDirecaoOrdenacao() {
   const btn = document.getElementById('sortDirectionBtn');
   if (btn) {
     btn.title = currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente';
-    btn.innerHTML = `<i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}" style="color: #c59b27;"></i>`;
+    btn.innerHTML = `<i class="fa-solid ${currentSortDirection === 'asc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short'}"></i>`;
   }
 
   reordenarERenderizar();
@@ -865,7 +840,7 @@ function renderListaMapas(lista) {
   if (!container) return;
 
   if (!lista || lista.length === 0) {
-    container.innerHTML = `<div style="padding: 16px; text-align: center; font-size: 12px; color: var(--text-faint);">Nenhum mapa encontrado.</div>`;
+    container.innerHTML = `<div class="menu-vazio">Nenhum mapa encontrado.</div>`;
     return;
   }
 
@@ -884,28 +859,28 @@ function renderListaMapas(lista) {
     const linkWhats = numWhats ? (numWhats.length <= 11 ? `55${numWhats}` : numWhats) : '';
 
     html += `
-      <div class="client-card-item" id="card-item-${index}" style="margin: 4px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); padding: 10px 12px; transition: all 0.15s ease;">
-        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)" style="margin-right: 10px; cursor: pointer; accent-color: var(--primary-blue);">` : ''}
-        <div style="flex: 1; cursor: pointer;" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
-          <div class="client-name" style="color: var(--primary-blue); font-weight: 700; font-size: 12px;">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span style="font-size: 10px; font-weight: 600; color: var(--gold-primary); margin-left: 6px;">${escapeHtml(tipoStr)}</span></div>
-          <div class="client-meta" style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">${escapeHtml(dataHoraStr)} • ${escapeHtml(cidStr)}</div>
+      <div class="client-card-item" id="card-item-${index}">
+        ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)">` : ''}
+        <div class="client-corpo" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
+          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span class="client-tipo">${escapeHtml(tipoStr)}</span></div>
+          <div class="client-meta">${escapeHtml(dataHoraStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
-          <div class="card-actions" style="display: flex; gap: 6px; align-items: center;">
+          <div class="card-actions">
             ${linkWhats ? `
-              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp" style="color: #25d366; background: transparent; border: none; cursor: pointer;">
+              <button type="button" class="action-record-btn whats-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp">
                 <i class="fa-brands fa-whatsapp"></i>
               </button>
             ` : ''}
             ${item.email ? `
-              <button type="button" class="action-record-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail" style="color: var(--gold-primary); background: transparent; border: none; cursor: pointer;">
+              <button type="button" class="action-record-btn email-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapeHtml(item.email)}'); alert('E-mail copiado!');" title="Copiar E-mail">
                 <i class="fa-solid fa-envelope"></i>
               </button>
             ` : ''}
-            <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar" style="color: var(--primary-blue); background: transparent; border: none; cursor: pointer;">
+            <button type="button" class="action-record-btn edit-btn" onclick="abrirModalEdicao(event, ${index})" title="Editar">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar" style="color: var(--danger); background: transparent; border: none; cursor: pointer;">
+            <button type="button" class="action-record-btn delete-btn" onclick="deletarRegistroUnico(event, ${item.id})" title="Apagar">
               <i class="fa-solid fa-trash"></i>
             </button>
           </div>

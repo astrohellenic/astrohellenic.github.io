@@ -138,3 +138,83 @@
 
 /* linha de texto com glifos e rótulos no meio ("Lua em ♏ ESCORPIÃO 21°00'"): tudo alinhado pelo centro */
 .linha-glifo { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+
+/* MENU LATERAL — o logo fica entre duas divisas duplas; tudo que vem depois (ações, pastas, busca, lista) é UM bloco só,
+   dividido por linhas simples. Linha dupla = entre blocos principais; linha simples = dentro do mesmo bloco. */
+#sidebar { background: var(--fundo-creme); color: var(--preto-tinta); border-right: 0; box-shadow: var(--sombra, none); }
+.sidebar-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-top: 10px; padding: 14px 16px; background: transparent;
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+}
+.sidebar-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); margin: 0; }
+.sidebar-nome-pasta { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--terracota); }
+.menu-list { list-style: none; margin: 0; padding: 0; }
+.menu-item, .menu-pasta {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; cursor: pointer;
+    font-size: 13px; line-height: 20px; font-weight: 600; color: var(--azul-egipcio-escuro); background: transparent;
+    border: 0; border-left: 3px solid transparent; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+}
+.menu-item:hover, .menu-item.active, .menu-pasta:hover { color: var(--terracota); }
+.menu-item .icone, .menu-pasta .icone { width: 20px; height: 20px; flex: 0 0 auto; }
+.menu-pasta .nome-pasta { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+.menu-pasta .acoes-pasta { display: flex; align-items: center; gap: 4px; }
+.menu-pasta .acoes-pasta .botao-icone { width: 28px; height: 28px; }
+.menu-pasta .acoes-pasta .botao-icone .icone { width: 16px; height: 16px; }
+.menu-pasta .botao-apagar, .botao-icone.botao-apagar { color: var(--terracota); }
+.menu-rotulo-linha {
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+}
+.database-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; background: transparent; }
+.folders-container { display: flex; gap: 16px; align-items: center; overflow-x: auto; padding: 10px 16px; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.folder-tab-btn, .add-folder-btn {
+    background: transparent; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 4px 0; cursor: pointer; white-space: nowrap;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro);
+    display: flex; align-items: center; gap: 6px;
+}
+.folder-tab-btn:hover, .add-folder-btn:hover { color: var(--terracota); }
+.folder-tab-btn.active { color: var(--terracota); border-bottom-color: var(--terracota); background: transparent; }
+.folder-action-icon { font-size: 10px; opacity: .6; padding: 2px; }
+.folder-action-icon:hover { opacity: 1; }
+.search-box-container { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); margin: 0; }
+.client-search-input, .menu-select {
+    flex: 1; min-width: 0; width: 100%; padding: 6px 0; font-size: 12px; outline: none; color: var(--preto-tinta);
+    background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0;
+}
+.client-search-input::placeholder { color: var(--preto-tinta); opacity: .55; }
+.menu-select { width: auto; font-size: 11px; }
+#searchStatusFeedback { padding: 0 16px; font-size: 10px; font-weight: 600; min-height: 0; color: var(--terracota); }
+#searchStatusFeedback:empty { display: none; }
+.client-list-container { flex: 1; overflow-y: auto; border: 0; border-radius: 0; background: transparent; }
+.menu-vazio { padding: 16px; text-align: center; font-size: 12px; color: var(--preto-tinta); opacity: .75; }
+.client-card-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 16px 10px 13px; margin: 0; cursor: pointer;
+    background: transparent; border: 0; border-left: 3px solid transparent; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0;
+}
+.client-card-item:hover .client-name, .client-card-item.selected .client-name { color: var(--terracota); }
+.client-card-item.selected { border-left-color: var(--terracota); background: transparent; }
+.client-corpo { flex: 1; cursor: pointer; min-width: 0; }
+.client-name { font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); }
+.client-name .client-tipo { font-size: 10px; font-weight: 600; color: var(--ocre); margin-left: 6px; }
+.client-meta { font-size: 10px; font-weight: 500; color: var(--preto-tinta); opacity: .75; margin-top: 2px; }
+.card-actions { display: flex; align-items: center; gap: 2px; }
+.action-record-btn { background: transparent; border: 0; cursor: pointer; padding: 6px; font-size: 12px; color: var(--azul-egipcio-escuro); }
+.action-record-btn:hover { color: var(--terracota); }
+.action-record-btn.whats-btn { color: var(--verde); }
+.action-record-btn.email-btn { color: var(--azul-egipcio-claro); }
+.action-record-btn.delete-btn { color: var(--terracota); }
+.map-select-cb { margin-right: 10px; cursor: pointer; width: 16px; height: 16px; accent-color: var(--terracota); }
+.barra-selecao {
+    display: none; padding: 8px 16px; justify-content: space-between; align-items: center;
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+}
+.barra-selecao label { font-size: 11px; font-weight: 700; color: var(--terracota); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.botao-texto {
+    background: transparent; cursor: pointer; padding: 3px 10px; font-size: 11px; font-weight: 700; color: var(--terracota);
+    border: 0; border-top: var(--contorno-fino) solid var(--terracota); border-bottom: var(--contorno-fino) solid var(--terracota); border-radius: 0;
+}
+.sidebar-header .botao-icone, .sidebar-header .botao-icone:hover { width: 32px; height: 32px; }
+.sidebar-header img { display: block; height: 38px; width: auto; }
+.sidebar-title { line-height: 38px; }
