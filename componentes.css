@@ -382,3 +382,23 @@
 .ag-item-corpo { min-width: 0; }
 .ag-item-nome { font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ag-item-det { font-size: 11px; margin-top: 2px; opacity: .8; }
+
+/* FINANCEIRO (financeiro.js): só forma; cores das variáveis do tema */
+.fin-coluna { max-width: 640px; margin: 0 auto; }
+.fin-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.fin-mes { display: flex; align-items: center; justify-content: space-between; }
+.fin-total-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.acoes-fin { display: flex; gap: 6px; }
+.fin-total { font-size: 26px; font-weight: 800; color: var(--terracota); margin: 2px 0 8px; }
+.fin-area { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; padding: 5px 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.fin-area:last-child { border-bottom: 0; }
+.fin-pct { opacity: .75; }
+.fin-area strong { color: var(--azul-egipcio-escuro); }
+.fin-linha { display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center; padding: 10px 4px; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); cursor: pointer; }
+.fin-linha:hover .fin-nome { color: var(--terracota); }
+.fin-data { font-size: 12px; opacity: .8; }
+.fin-nome { font-size: 13px; font-weight: 700; color: var(--azul-egipcio-escuro); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-det { font-size: 11px; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-valor { font-size: 13px; font-weight: 700; white-space: nowrap; }
+#financeiro-container input, #financeiro-container select { box-sizing: border-box; max-width: 100%; min-width: 0; }
+.fin-linha:last-child { border-bottom: 0; }

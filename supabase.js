@@ -66,6 +66,7 @@ async function carregarPastasSalvas() {
 
 /* ÍCONES MONOLINE DO MENU LATERAL (grade 64, traço vem de .icone) */
 const MENU_ICONES = {
+  imprimir: '<path d="M18,22 V8 H46 V22"/><rect x="8" y="22" width="48" height="24" rx="4"/><path d="M18,38 H46 V58 H18 Z"/><circle cx="47" cy="30" r="1.5"/>',
   aparencia: '<path d="M32 8 C18 8 8 18 8 30 C8 44 20 56 34 56 C40 56 42 52 40 48 C38 44 40 40 46 40 H50 C54 40 56 37 56 33 C56 19 46 8 32 8 Z"/><circle cx="20" cy="30" r="3"/><circle cx="28" cy="20" r="3"/><circle cx="40" cy="20" r="3"/>',
   relatorio: '<path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/>',
   servicos: '<path d="M32 54 C10 38 8 24 14 17 C20 10 30 12 32 20 C34 12 44 10 50 17 C56 24 54 38 32 54 Z"/>',

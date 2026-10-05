@@ -77,9 +77,7 @@ async function iniciarModuloFinanceiro() {
   }
 
   container.innerHTML = `
-    <div data-spinner-troca style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px;">
-      <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: var(--gold-primary);"></i>
-    </div>
+    <div data-spinner-troca class="menu-vazio" style="min-height: 200px;">Carregando...</div>
   `;
 
   try {
@@ -131,16 +129,15 @@ function finRotuloCliente(m) {
 
 function renderFinanceiro(container, ctx) {
   if (ctx.semSessao) {
-    container.innerHTML = `<div style="padding: 40px; text-align: center; font-size: 12px; color: var(--text-muted);">Sessão não identificada.</div>`;
+    container.innerHTML = `<div class="menu-vazio">Sessão não identificada.</div>`;
     return;
   }
   if (ctx.tabelasIndisponiveis) {
     container.innerHTML = `
-      <div style="max-width: 480px; margin: 40px auto; background: var(--bg-main); border: 1.5px solid var(--gold-primary); border-radius: 14px; padding: 24px; text-align: center;">
-        <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0 0 10px 0; text-transform: uppercase;">Financeiro</h2>
-        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">
-          Não foi possível carregar o Financeiro (as tabelas "areas" e "entradas" não responderam). Recarregue a página; se continuar, avise o suporte.
-        </p>
+      <div id="financeiro-container" class="painel">
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Financeiro</h3></div>
+        <hr class="divisa">
+        <p class="ag-nota">Não foi possível carregar o Financeiro (as tabelas "areas" e "entradas" não responderam). Recarregue a página; se continuar, avise o suporte.</p>
       </div>`;
     return;
   }
@@ -158,9 +155,9 @@ function renderFinanceiro(container, ctx) {
   const linhasSubtotais = Object.keys(subtotais).map(k => {
     const nome = k === '_sem' ? 'Sem área' : areaPorId[k].nome;
     const pct = total > 0 ? Math.round((subtotais[k] / total) * 100) : 0;
-    return `<div style="display: flex; justify-content: space-between; gap: 12px; font-size: 12px; padding: 3px 0;">
-      <span style="color: var(--text-dark);">${escapeHtml(nome)} <span style="color: var(--text-muted);">(${pct}%)</span></span>
-      <strong style="color: var(--primary-blue);">${finFormatarMoeda(subtotais[k])}</strong>
+    return `<div class="fin-area">
+      <span>${escapeHtml(nome)} <span class="fin-pct">(${pct}%)</span></span>
+      <strong>${finFormatarMoeda(subtotais[k])}</strong>
     </div>`;
   }).join('');
 
@@ -169,61 +166,63 @@ function renderFinanceiro(container, ctx) {
         const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
         const detalhe = [e.produto, e.observacao].filter(Boolean).join(' — ');
         return `
-        <div onclick="abrirFormEntradaFin('${e.id}')" style="display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--border-color); cursor: pointer;">
-          <div style="font-size: 12px; color: var(--text-muted);">${finFormatarDataBR(e.data)}</div>
+        <div class="fin-linha" onclick="abrirFormEntradaFin('${e.id}')">
+          <div class="fin-data">${finFormatarDataBR(e.data)}</div>
           <div style="min-width: 0;">
-            <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(finNomeClienteEntrada(e) || 'Sem cliente')}</div>
-            <div style="font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml([area, detalhe, e.forma_pagamento].filter(Boolean).join(' · '))}</div>
+            <div class="fin-nome">${escapeHtml(finNomeClienteEntrada(e) || 'Sem cliente')}</div>
+            <div class="fin-det">${escapeHtml([area, detalhe, e.forma_pagamento].filter(Boolean).join(' · '))}</div>
           </div>
-          <div style="font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap;">${finFormatarMoeda(e.valor)}</div>
+          <div class="fin-valor">${finFormatarMoeda(e.valor)}</div>
         </div>`;
       }).join('')
-    : `<div style="font-size: 12px; color: var(--text-muted); padding: 16px 0; text-align: center;">Nenhuma entrada em ${FIN_MESES[finMes.mes]} de ${finMes.ano}.</div>`;
+    : `<div class="menu-vazio">Nenhuma entrada em ${FIN_MESES[finMes.mes]} de ${finMes.ano}.</div>`;
 
-  // mesmo botão de ícone das outras ferramentas (salvar na galeria etc.): 36x36, borda dourada fina
-  const btnIco = "width: 36px; height: 36px; background: var(--bg-main); border: 1px solid #d4af37; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0; color: var(--primary-blue);";
-  const btn = 'background: var(--bg-card); border: 1px solid var(--gold-primary); color: var(--primary-blue); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;';
+  const svgGaleria = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
+  const svgImprimir = menuIcone('imprimir', 22);
 
   container.innerHTML = `
-    <div id="financeiro-container" style="width: 100%; min-height: 100%; padding: 20px; box-sizing: border-box; font-family: 'Montserrat', sans-serif; background-color: var(--bg-main);">
-      <div id="finColuna" style="max-width: 640px; margin: 0 auto;">
+    <div id="financeiro-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+      <div id="finColuna" class="fin-coluna">
 
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;">
-          <h2 style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--primary-blue); margin: 0; text-transform: uppercase;">Entradas</h2>
-          <div data-html2canvas-ignore="true" style="display: flex; gap: 8px;">
-            <button onclick="abrirCombosFin()" style="${btn}">Combos</button>
-            <button onclick="abrirPastasFin()" style="${btn}">Pastas</button>
-            <button onclick="abrirAreasFin()" style="${btn}">Áreas</button>
-            <button class="fin-btn-nova" onclick="abrirFormEntradaFin()" style="${btn}">+ Entrada</button>
-          </div>
+        <div class="cabeca-ferramenta">
+          <h3 class="titulo-ferramenta">Entradas</h3>
+        </div>
+        <div data-html2canvas-ignore="true" class="fin-acoes">
+          <button type="button" class="botao-texto" onclick="abrirCombosFin()">Combos</button>
+          <button type="button" class="botao-texto" onclick="abrirPastasFin()">Pastas</button>
+          <button type="button" class="botao-texto" onclick="abrirAreasFin()">Áreas</button>
+          <button type="button" class="botao-texto" onclick="abrirFormEntradaFin()">+ Entrada</button>
         </div>
 
-        <div id="finLinhaMes" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <button data-html2canvas-ignore="true" onclick="navegarMesFin(-1)" style="${btn}" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
-          <div style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">${FIN_MESES[finMes.mes]} ${finMes.ano}</div>
-          <button data-html2canvas-ignore="true" onclick="navegarMesFin(1)" style="${btn}" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
+        <hr class="divisa">
+
+        <div id="finLinhaMes" class="fin-mes">
+          <button type="button" class="botao-icone" data-html2canvas-ignore="true" onclick="navegarMesFin(-1)" title="Mês anterior">${menuIcone('voltar', 22)}</button>
+          <div class="titulo-secao" style="margin: 0;">${FIN_MESES[finMes.mes]} ${finMes.ano}</div>
+          <button type="button" class="botao-icone" data-html2canvas-ignore="true" onclick="navegarMesFin(1)" title="Próximo mês">${menuIcone('avancar', 22)}</button>
         </div>
 
-        <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; background: var(--bg-card);">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">Total do mês</div>
-            <div data-html2canvas-ignore="true" style="display: flex; gap: 8px;">
-              <button type="button" class="fin-ico-btn" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho" style="${btnIco}">
-                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
-              </button>
-              <button type="button" class="fin-ico-btn" id="finBtnPdf" onclick="imprimirEntradasPDF()" title="Salvar em PDF" style="${btnIco}">
-                <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18,22 V8 H46 V22"/><rect x="8" y="22" width="48" height="24" rx="4"/><path d="M18,38 H46 V58 H18 Z"/><circle cx="47" cy="30" r="1.5"/></svg>
-              </button>
+        <hr class="divisa">
+
+        <div class="fin-total-bloco">
+          <div class="fin-total-topo">
+            <div class="rotulo" style="color: var(--preto-tinta);">Total do mês</div>
+            <div data-html2canvas-ignore="true" class="acoes-fin">
+              <button type="button" class="botao-icone" onclick="salvarEntradasImagem()" title="Salvar como imagem no aparelho">${svgGaleria}</button>
+              <button type="button" class="botao-icone" id="finBtnPdf" onclick="imprimirEntradasPDF()" title="Salvar em PDF">${svgImprimir}</button>
             </div>
           </div>
-          <div class="fin-total" style="font-size: 26px; font-weight: 800; color: var(--primary-blue); margin: 2px 0 8px 0;">${finFormatarMoeda(total)}</div>
+          <div class="fin-total">${finFormatarMoeda(total)}</div>
           ${linhasSubtotais}
         </div>
 
-        <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 12px; background: var(--bg-card);">
+        <hr class="divisa">
+
+        <div class="fin-lista">
           ${linhas}
         </div>
 
+        <hr class="divisa">
       </div>
     </div>
   `;
@@ -250,16 +249,14 @@ const FIN_PG_BASE = 44;          // px: rodapé
 const FIN_PG_LINHA = 50;         // px: cada entrada da lista
 const FIN_PG_CABECALHO = 108;    // px: título + mês (só na 1ª página)
 
-/* cores do PDF: com papiro, a tinta do Tema Céu; sem papiro, as cores do tema atual (lidas do CSS) */
+/* cores do PDF: as do tema que está na tela (lidas do CSS). Com papiro (só no Tema Céu), a folha de papiro por baixo; sem, o fundo liso do tema. */
 function finCoresPdf(papiro) {
-  if (papiro) {
-    return { fundo: (window.PAPIRO_FOLHA_JPG ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #e8d5a0` : '#e8d5a0'),
-      azul: '#1d3a66', titulo: '#a03e25', total: '#a03e25', texto: '#1a1410', mudo: '#1a1410', borda: 'rgba(95, 65, 30, 0.45)', cartao: 'transparent' };
-  }
-  const v = nome => (getComputedStyle(document.documentElement).getPropertyValue(nome) || '').trim();
-  const azul = v('--primary-blue') || '#103b70';
-  return { fundo: v('--bg-main') || '#ffffff', azul, titulo: azul, total: azul, texto: v('--text-dark') || '#1a1410',
-    mudo: v('--text-muted') || '#666666', borda: v('--border-color') || '#dddddd', cartao: v('--bg-card') || 'transparent' };
+  const v = (nome, padrao) => (getComputedStyle(document.documentElement).getPropertyValue(nome) || '').trim() || padrao;
+  return {
+    fundo: papiro ? (window.PAPIRO_FOLHA_JPG ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, #e8d5a0` : '#e8d5a0') : v('--fundo-creme', '#ffffff'),
+    azul: v('--azul-egipcio-escuro', '#1034A6'), linha: v('--azul-egipcio-claro', '#1F5FA3'),
+    titulo: v('--terracota', '#A03E25'), total: v('--terracota', '#A03E25'), texto: v('--preto-tinta', '#1A1410'), mudo: v('--preto-tinta', '#1A1410')
+  };
 }
 
 function finRelCss(c) {
@@ -268,17 +265,17 @@ function finRelCss(c) {
   .finrp-pg:last-child { page-break-after: auto; break-after: auto; }
   .finrp-pg * { box-sizing: border-box; margin: 0; padding: 0; }
   .finrp-col { width: 640px; margin: 0 auto; }
-  .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: ${c.titulo}; text-transform: uppercase; line-height: 44px; }
-  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: ${c.azul}; text-transform: uppercase; line-height: 36px; }
-  .finrp-cartao { border: 1px solid ${c.borda}; border-radius: 12px; background: ${c.cartao}; margin-bottom: 14px; overflow: hidden; }
-  .finrp-total { padding: 14px 16px; }
-  .finrp-total-rot { height: 16px; line-height: 16px; font-size: 11px; font-weight: 700; color: ${c.mudo}; text-transform: uppercase; letter-spacing: 0.03em; }
+  .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; letter-spacing: .2em; text-align: center; color: ${c.titulo}; text-transform: uppercase; line-height: 44px; }
+  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 800; letter-spacing: .2em; color: ${c.titulo}; text-transform: uppercase; line-height: 30px; border-bottom: 4px double ${c.linha}; }
+  .finrp-cartao { border: 0; background: transparent; margin-bottom: 14px; overflow: hidden; }
+  .finrp-total { padding: 14px 0; border-bottom: 4px double ${c.linha}; }
+  .finrp-total-rot { height: 16px; line-height: 16px; font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: ${c.texto}; text-transform: uppercase; letter-spacing: .14em; }
   .finrp-total-val { height: 32px; line-height: 32px; margin: 2px 0 8px 0; font-size: 26px; font-weight: 800; color: ${c.total}; }
   .finrp-area { height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
   .finrp-area span span { color: ${c.mudo}; }
   .finrp-area strong { color: ${c.azul}; }
-  .finrp-lista { padding: 4px 12px; }
-  .finrp-lin { height: ${FIN_PG_LINHA}px; display: grid; grid-template-columns: 62px 1fr auto; column-gap: 10px; align-items: center; padding: 0 4px; border-bottom: 1px solid ${c.borda}; }
+  .finrp-lista { padding: 4px 0; }
+  .finrp-lin { height: ${FIN_PG_LINHA}px; display: grid; grid-template-columns: 62px 1fr auto; column-gap: 10px; align-items: center; padding: 0 4px; border-bottom: 1px solid ${c.linha}; }
   .finrp-lin:last-child { border-bottom: 0; }
   .finrp-data { font-size: 12px; color: ${c.mudo}; }
   .finrp-nome { font-size: 13px; line-height: 18px; font-weight: 700; color: ${c.azul}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -306,7 +303,7 @@ function finMontarPaginasRelatorio() {
     return `<div class="finrp-area"><span>${escapeHtml(nome)} <span>(${pct}%)</span></span><strong>${finFormatarMoeda(subtotais[k])}</strong></div>`;
   }).join('');
   const cartaoTotal = `<div class="finrp-cartao finrp-total"><div class="finrp-total-rot">Total do mês</div><div class="finrp-total-val">${finFormatarMoeda(total)}</div>${linhasArea}</div>`;
-  const alturaCartaoTotal = 2 + 28 + 16 + 2 + 32 + 8 + 24 * chaves.length + 14; // borda + padding + conteúdo + margem de baixo
+  const alturaCartaoTotal = 4 + 28 + 16 + 2 + 32 + 8 + 24 * chaves.length + 14; // borda + padding + conteúdo + margem de baixo
 
   const linhaHtml = e => {
     const area = e.area_id && areaPorId[e.area_id] ? areaPorId[e.area_id].nome : '';
@@ -363,7 +360,7 @@ async function baixarEntradasPDF(papiro) {
   if (!finEntradasCache.length) { alert('Não há entradas neste mês para salvar.'); return; }
   const botao = document.getElementById('finBtnPdf');
   const original = botao ? botao.innerHTML : '';
-  if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+  if (botao) { botao.disabled = true; botao.innerHTML = menuIcone('relogio', 22); }
   // aba nova pro PDF: tem que abrir AGORA, no toque (depois do await o navegador bloquearia)
   const abaPdf = window.astroAbaPdf ? window.astroAbaPdf.abrir() : null;
   try {
@@ -418,7 +415,7 @@ function salvarEntradasImagem() {
         const c = doc.getElementById('finColuna');
         if (c) { c.style.padding = '24px'; c.style.background = 'transparent'; }
         // linhas de texto de uma linha só (com reticências) perdiam a base das letras na captura: dá um respiro de altura
-        doc.querySelectorAll('#finColuna [style*="text-overflow"]').forEach(el => { el.style.lineHeight = '1.3'; });
+        doc.querySelectorAll('#finColuna .fin-nome, #finColuna .fin-det').forEach(el => { el.style.lineHeight = '1.3'; });
         const mes = doc.getElementById('finLinhaMes');
         if (mes) mes.style.justifyContent = 'center'; // sem as setas, o mês fica no meio
       }
