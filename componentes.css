@@ -41,8 +41,8 @@
 .cartao {
     background: transparent;
     border: 0;
-    border-top: var(--contorno-fino) solid var(--azul-egipcio-escuro);
-    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-escuro);
+    border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);     /* sempre a mesma cor das linhas duplas (divisa) */
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
     box-shadow: var(--sombra, none);   /* a sombra é do tema: cada tema define a sua em --sombra */
     padding: 14px;
 }

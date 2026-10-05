@@ -73,6 +73,14 @@ Um tema novo só precisa preencher essa tabela.
 5. **Ícones sempre monoline** (só traço, sem preenchimento). Quem cria um ícone novo segue isso.
 6. **Botões** são só o ícone sobre o painel, sem moldura própria.
 
+6b. **Cor das linhas:** todas as linhas (divisas duplas, linhas dos cartões menores, linhas das tabelas) são **sempre da mesma cor da divisa dupla** (azul egípcio claro). Decidido.
+
+## 3b. Regras de texto (decididas)
+
+1. **Parênteses só quando repete a mesma coisa com outras palavras.** Exemplo certo: "19 meses (570 dias)". Se for continuação, usa traço. Nada de explicação solta entre parênteses (ex.: sem "(Regência Diária)").
+2. **Níveis escritos por extenso:** "Nível 1", "Nível 2", "Nível 3". Nunca "L1", "L2", "L3" (L vem do inglês).
+3. **Cabeçalho de tabela (a barra de cima com Nível, Duração, Início, Término):** ainda a definir.
+
 ## 4. O que é só de um tema (não vira regra global)
 
 - **Céu:** borda quebrada do papiro e textura do papel (fibras, luz e sombra).
