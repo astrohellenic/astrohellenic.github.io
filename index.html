@@ -15,6 +15,7 @@
          cor logo abaixo: o Céu hoje cobre o software inteiro, então é aparência, não dado da conta. Lido aqui, antes de
          qualquer coisa desenhar, pra abrir já no tema certo (sem mostrar o claro/escuro por trás e trocar depois);
          a classe "tema-ceu" entra no <body> logo na abertura dele (script logo depois de <body>). Ver CLAUDE.md. -->
+    <script src="tema.js?v=20261010a"></script>
     <script>
     (function() {
       var t = null;
@@ -39,11 +40,14 @@
         if (window.temaMandala === 'ceu') return false; // o Céu é um tema independente: não tem base clara nem escura
         if (modo === 'escuro') return true;
         if (modo === 'claro') return false;
+        if (window.TEMAS && window.TEMAS[modo]) return !!window.TEMAS[modo].escuro; // tema novo (tema.js): escuro ou claro conforme está registrado
         return !!(mediaEscuro && mediaEscuro.matches);
       }
 
       function aplicarModoCor(modo) {
         document.documentElement.classList.toggle('tema-escuro', calcularEscuro(modo));
+        // tema novo registrado em tema.js (além de claro/escuro/Céu): liga a classe tema-<nome> no <html>; só uma por vez
+        if (window.TEMAS) Object.keys(window.TEMAS).forEach(function (k) { if (k !== 'claro' && k !== 'escuro' && k !== 'ceu') document.documentElement.classList.toggle('tema-' + k, modo === k && window.temaMandala !== 'ceu'); });
         if (!mediaEscuro) return;
         if (listenerAtivo) mediaEscuro.removeEventListener('change', listenerAtivo);
         listenerAtivo = null;

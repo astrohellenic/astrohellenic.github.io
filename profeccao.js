@@ -98,7 +98,7 @@
 
     function getSignSvgHtml(signIdx, size = 18) {
         // Cor do elemento do signo pela paleta de época (fogo laranja, terra marrom, ar cinza, água azul egípcio claro), na versão do modo.
-        const pal = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu');
+        const pal = Tema.paleta();
         const color = ({ fire: pal.laranja, earth: pal.marrom, air: pal.cinza, water: pal.azulClaro })[SIGN_ELEMENTS[signIdx]];
         return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; display: inline-block; vertical-align: middle;">${MONOLINE_ZODIAC_SVGS[signIdx]}</svg>`;
     }
@@ -495,8 +495,8 @@
         /* Roda SECUNDÁRIA (desta ferramenta): tinta de época, as cores vêm da roda central. Aqui só as cores dos destaques — uma por NÍVEL,
            iguais em toda mandala (corNivelMandala, roda.js): Nível 1 = signo profectado do ano (verde), Nível 2 = Ascendente da Revolução Solar
            (ocre), Nível 3 = signo profectado do mês (azul egípcio claro). */
-        const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
-        const palP = paletaEpoca(!papiro && document.documentElement.classList.contains('tema-escuro'));
+        const papiro = typeof window !== 'undefined' && Tema.ceu();
+        const palP = paletaEpoca(!papiro && Tema.modoEscuro());
         const sufixo = `w${wheelInstanceCounter++}`;
 
         return desenharRodaSVG({
@@ -661,7 +661,7 @@
            Revolução Solar acima da RS e o do Mapa Natal acima do Natal, cada
            um na largura de uma mandala (layout estreito) e com a mesma altura. */
         const LARGURA_CABECALHO_PROF = 480;
-        const modoEscuroCabProf = document.documentElement.classList.contains('tema-escuro');
+        const modoEscuroCabProf = Tema.modoEscuro();
         const coresCabProf = coresCabecalhoMandala(modoEscuroCabProf, null);
         const rsMomento = (dadosRS && rsTimestamp) ? new Date(rsTimestamp) : null;
         const opcoesCabRS = rsMomento ? {
@@ -843,8 +843,8 @@
     function fundoCapturaProf() {
         // Tema Céu: a tela é papiro (claro e escuro) — a imagem salva sai sobre papiro, cor chapada pro recorte achar a borda.
         // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
-        if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
-        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+        if (typeof window !== 'undefined' && Tema.ceu()) return window.__capturaSemFundo ? null : papiroCores().chapado;
+        return Tema.fundoPainel();
     }
 
     /* Cabeçalhos + cartões das mandalas, na mesma posição em que estão na tela
@@ -889,7 +889,7 @@
         const pecas = [];
         if (opc.titulo) {
             const h2 = document.querySelector('#profeccao-container h2');
-            const cores = (window.temaMandala === 'ceu') ? coresCabecalhoTinta() : coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+            const cores = (Tema.ceu()) ? coresCabecalhoTinta() : coresCabecalhoMandala(Tema.modoEscuro(), null);
             const W = Math.max(320, Math.round((document.getElementById('profeccaoDuasColunas') || document.getElementById('profeccao-container')).getBoundingClientRect().width));
             pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">${escapeHtmlProf(((h2 && h2.textContent) || 'Profecção Anual').trim().toUpperCase())}</text></svg>`, W, 34, fundo, 2));
         }

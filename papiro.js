@@ -75,15 +75,18 @@ function papiroTexturaSvg(id, largura, altura) {
    invisível com a classe do modo pedido), pra desenhos em SVG/canvas saírem com a mesma cor da tela.
    escuro = false -> papiro e modo claro; true -> modo escuro. Valores de reserva = os de temas.css. */
 const __paletaEpocaCache = {};
-function paletaEpoca(escuro) {
-  const chave = escuro ? 'e' : 'c';
+function paletaEpoca(qual) {
+  /* qual: true/false (escuro/claro — o jeito de antes) ou o NOME da paleta ('claro', 'escuro' ou a de um tema novo: classe .paleta-<nome> em temas.css) */
+  const nome = (typeof qual === 'string') ? qual : (qual ? 'escuro' : 'claro');
+  const chave = nome;
   if (__paletaEpocaCache[chave]) return __paletaEpocaCache[chave];
+  const escuro = nome === 'escuro';
   const reserva = escuro
     ? { azulEscuro: '#5F80E7', azulClaro: '#4A8DD4', pretoTinta: '#E2E8F0', ocre: '#D9AE3F', terracota: '#CF6044', laranja: '#F28A33', marrom: '#AE7C4E', cinza: '#A3ADB5', verde: '#5FA073', fundoCreme: '#1C1917' }
     : { azulEscuro: '#1034A6', azulClaro: '#1F5FA3', pretoTinta: '#1A1410', ocre: '#B5852F', terracota: '#A03E25', laranja: '#D0610F', marrom: '#6B4A2B', cinza: '#6B7780', verde: '#4A7C59', fundoCreme: '#FFFDF5' };
   if (typeof document === 'undefined' || !document.body) return reserva;
   const sonda = document.createElement('span');
-  sonda.className = escuro ? 'paleta-escura' : 'paleta-clara';
+  sonda.className = nome === 'escuro' ? 'paleta-escura' : (nome === 'claro' ? 'paleta-clara' : 'paleta-' + nome);
   sonda.style.display = 'none';
   document.body.appendChild(sonda);
   const css = getComputedStyle(sonda);
@@ -102,7 +105,7 @@ function paletaEpoca(escuro) {
 /* COR DO ELEMENTO DE CADA SIGNO — a ÚNICA fonte: fogo = laranja, terra = marrom, ar = cinza, água = azul egípcio claro (temas.css), na versão do
    modo (claro/escuro). Toda ferramenta que desenha um signo colorido pede a cor AQUI; ninguém guarda lista própria de cores de signo. */
 function corElementoSigno(signIdx) {
-  const pal = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu');
+  const pal = Tema.paleta();
   return [pal.laranja, pal.marrom, pal.cinza, pal.azulClaro][(((signIdx % 12) + 12) % 12) % 4];
 }
 const ELEMENTO_SIGNO_EPOCA = {

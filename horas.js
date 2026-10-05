@@ -270,7 +270,7 @@ function iniciarModuloHoras(containerIdAlvo) {
 /* Sol/Lua do período (dia/noite). Fora do Tema Céu continuam os emojis de sempre; no papiro viram um desenho em tinta
    (sol em terracota, lua em azul-tinta) — emoji colorido não combina com nanquim. */
 function iconeSolLuaHoras(periodo, tam) {
-  if (window.temaMandala !== 'ceu') return periodo === 'diurna' ? '☀️' : '🌙';
+  if (!Tema.ceu()) return periodo === 'diurna' ? '☀️' : '🌙';
   const t = tam || 16;
   const sol = `<svg width="${t}" height="${t}" viewBox="0 0 24 24" style="vertical-align: middle; display: inline-block;"><circle cx="12" cy="12" r="5" fill="none" stroke="#a03e25" stroke-width="2"/><g stroke="#a03e25" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="6.7" y2="6.7"/><line x1="17.3" y1="17.3" x2="19.4" y2="19.4"/><line x1="4.6" y1="19.4" x2="6.7" y2="17.3"/><line x1="17.3" y1="6.7" x2="19.4" y2="4.6"/></g></svg>`;
   const lua = `<svg width="${t}" height="${t}" viewBox="0 0 24 24" style="vertical-align: middle; display: inline-block;"><path d="M16.5 3.2 A9 9 0 1 0 20.8 15.5 A7.2 7.2 0 0 1 16.5 3.2 Z" fill="none" stroke="#1d3a66" stroke-width="2" stroke-linejoin="round"/></svg>`;
@@ -280,8 +280,8 @@ function iconeSolLuaHoras(periodo, tam) {
 /* Tema Céu: as peças da imagem saem SEM fundo (transparentes): no relatório encaixam direto no papiro da folha; na
    galeria o papiro (degradê) é pintado por baixo no fim (ver montarImagemHoras). */
 function fundoCapturaHoras() {
-  if (window.temaMandala === 'ceu') return null;
-  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+  if (Tema.ceu()) return null;
+  return Tema.fundoPainel();
 }
 
 async function montarImagemHoras(comCabecalho) {
@@ -291,8 +291,8 @@ async function montarImagemHoras(comCabecalho) {
   const corpo = await html2canvasRapido(area, fundo);
   if (!comCabecalho) return corpo;
 
-  const papiro = window.temaMandala === 'ceu';
-  const escuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const papiro = Tema.ceu();
+  const escuro = !papiro && Tema.modoEscuro();
   const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(escuro, null);
   const corTituloImg = papiro ? '#a03e25' : cores.titulo;
   const W = 480;

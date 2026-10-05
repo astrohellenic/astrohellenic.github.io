@@ -859,7 +859,7 @@ async function capturarMandalaAtualParaRelatorio() {
      - céu: a mandala COM o céu (um retângulo de céu, "foto" em cima do papiro) — pra mostrar as duas versões.
      Em ambos mantém a rotação de Casa 1 da tela. Depois de capturar, redesenha a mandala normal na tela (o desenho
      da captura troca a imagem da tela por uns instantes). */
-  const temaCeuCaptura = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  const temaCeuCaptura = Tema.ceu();
   const ceuComFundo = temaCeuCaptura && !window.mandalaPapiroTela;
   let dataUrl = await new Promise(resolve => ceuComFundo
     ? renderMandala(null, resolve, 'claro', false, null, null, true, false) // céu inteiro + cabeçalho em papiro (como na tela)
@@ -988,7 +988,7 @@ window.addEventListener('resize', ajustarControlesMandalaNaLargura);
 function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   // Tema Céu: o cabeçalho GLOBAL (o mesmo de todas as ferramentas) é o de papiro. Fora do
   // Tema Céu, tudo segue como sempre foi.
-  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return coresCabecalhoPapiro();
+  if (typeof window !== 'undefined' && Tema.ceu()) return coresCabecalhoPapiro();
   const HEX_RE = /^#[0-9a-fA-F]{6}$/;
   function luminanciaRelativaHex(hex) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
@@ -1268,8 +1268,8 @@ function montarCabecalhoMandalaGrupoSVG(data, headerY, cores, loteCasa1, opcoes)
 }
 
 function montarCabecalhoMandalaImagemHTML(data, idOpcional, opcoes) {
-  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
-  const tintaSobreFolha = !!(opcoes && opcoes.tintaSobreFolha) && window.temaMandala === 'ceu';
+  const modoEscuro = Tema.modoEscuro();
+  const tintaSobreFolha = !!(opcoes && opcoes.tintaSobreFolha) && Tema.ceu();
   const cores = tintaSobreFolha ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   /* SVG DIRETO na página (não <img>): o Safari do iPad não desenhava certo
      SVG-dentro-de-<img> na captura (saía vazio/cortado). Direto na página
@@ -1907,7 +1907,7 @@ async function capturarESalvarNaGaleria(gerarCanvas, nome) {
        com a cor bege. As ferramentas que pintam o papel sozinhas já saem prontas; as que só passavam uma cor chapada
        de fundo (Liberação, Profecção, Sinastria...) são pedidas SEM fundo (o mesmo modo da imagem pro Relatório) e
        aqui o papel vai por baixo. */
-    const ceu = window.temaMandala === 'ceu';
+    const ceu = Tema.ceu();
     const semFundoAntes = window.__capturaSemFundo;
     if (ceu) window.__capturaSemFundo = true;
     let canvas;
@@ -2040,8 +2040,8 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
      escuro. O html2canvas lê o DOM com as variáveis de cor da folha, então o corpo já sai certo; o título e o
      cabeçalho são em tinta. Com título/cabeçalho o papel é o degradê do papiro; sem eles, cor chapada
      (cor chapada do papiro) pro recorte automático achar a borda. */
-  const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
-  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const papiro = !!(opcoes && opcoes.papiro) && Tema.ceu();
+  const modoEscuro = !papiro && Tema.modoEscuro();
   const fundoChapado = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
   const comTopo = !!(opcoes.titulo || opcoes.comCabecalho);
   const papelDegrade = papiro && comTopo;
@@ -2091,8 +2091,8 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   /* opcoes.papiro (só a Matriz de Visibilidade por enquanto): Tema Céu — a imagem sai como a tela, sobre papiro,
      com as cores de tinta e as variáveis de cor do ESCOPO da ferramenta (a grade usa var(--bg-card) etc.,
      redefinidas só dentro da folha), claro ou escuro. */
-  const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
-  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const papiro = !!(opcoes && opcoes.papiro) && Tema.ceu();
+  const modoEscuro = !papiro && Tema.modoEscuro();
   // Tema Céu, imagem pro Relatório (sem cabeçalho): SEM fundo — só as linhas em tinta, pra encaixar no papiro da folha.
   const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? papiroCores().chapado : null) : (modoEscuro ? '#1c1917' : '#fffdf5');
   const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));

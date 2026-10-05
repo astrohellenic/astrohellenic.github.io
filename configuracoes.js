@@ -107,11 +107,11 @@ window.atualizarTelaConfiguracoes = atualizarTelaConfiguracoes;
    ========================================== */
 function htmlCfgAparencia() {
   const estiloAtual = window.estiloPlanetas || 'simples';
-  const estiloMandalaEscolhido = (typeof estiloMandalaAtual === 'function') ? estiloMandalaAtual(window.temaMandala === 'ceu') : 'frances'; // sem escolha salva: o padrão de sempre do tema
+  const estiloMandalaEscolhido = (typeof estiloMandalaAtual === 'function') ? estiloMandalaAtual(Tema.ceu()) : 'frances'; // sem escolha salva: o padrão de sempre do tema
   let modo = 'auto';
   try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
   // Uma escolha só: o Céu vence os outros; Claro/Escuro/Automático só valem fora dele.
-  const escolha = window.temaMandala === 'ceu' ? 'ceu' : modo;
+  const escolha = Tema.ceu() ? 'ceu' : modo;
 
   const opcao = (acao, ativa, iconeHtml, titulo, desc) => `
     <button type="button" class="cfg-opcao${ativa ? ' ativa' : ''}" onclick="${acao}">
@@ -139,9 +139,7 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Tema</h4>
         <p class="cfg-card-desc">Uma escolha só: ao escolher uma opção, as outras ficam desmarcadas. O <strong>Automático</strong> acompanha o aparelho (claro quando o aparelho está claro, escuro quando está escuro) e nunca escolhe o Céu. Fica salvo neste aparelho — cada aparelho ou navegador tem o seu.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu')}
-          ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho')}
-          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho')}
+          ${Object.keys(TEMAS).map(k => opcao(`salvarAparencia('${k}')`, escolha === k, fa(TEMAS[k].icone), TEMAS[k].nome, TEMAS[k].desc)).join('')}
           ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('automatico'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho')}
         </div>
       </div>

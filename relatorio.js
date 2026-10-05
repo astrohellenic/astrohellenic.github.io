@@ -406,7 +406,7 @@ function estiloPdfDoModelo(blocoCapa) {
   const e = blocoCapa && blocoCapa.capaEstilo;
   if (e === 'ceu' || e === 'papiro') return 'papiro';
   if (e === 'paleta') return 'branco';
-  return (typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu') ? 'papiro' : 'branco';
+  return (Tema.ceu()) ? 'papiro' : 'branco';
 }
 
 /* ESTILO DA CAPA do modelo: 'paleta' (cores escolhidas — só no PDF branco), 'ceu' (céu estrelado) ou 'papiro' (tinta sobre
@@ -472,8 +472,8 @@ async function capturarTelaParaRelatorio(toolId, containerId, rotulo) {
     // verdade de cada ferramenta já vem do próprio elemento (var(--bg-main)
     // nas que já têm tema escuro); acompanha o modo atual em vez de cravar
     // sempre o creme do Tema Claro.
-    const modoEscuroCaptura = document.documentElement.classList.contains('tema-escuro');
-    const canvas = await html2canvas(elemento, { backgroundColor: window.temaMandala === 'ceu' ? null : (modoEscuroCaptura ? '#1c1917' : '#fffdf5'), scale: 2, useCORS: true }); // Tema Céu: sem fundo (encaixa no papiro da folha)
+    const modoEscuroCaptura = Tema.modoEscuro();
+    const canvas = await html2canvas(elemento, { backgroundColor: Tema.ceu() ? null : (modoEscuroCaptura ? '#1c1917' : '#fffdf5'), scale: 2, useCORS: true }); // Tema Céu: sem fundo (encaixa no papiro da folha)
     const total = adicionarCapturaRelatorio(toolId, canvas.toDataURL('image/png'));
     alert(`"${rotulo}" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {

@@ -158,8 +158,8 @@ async function capturarDeceniosParaRelatorio() {
   const area = document.getElementById('decennialsResultsArea');
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
-    const papiro = window.temaMandala === 'ceu';
-    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const papiro = Tema.ceu();
+    const modoEscuro = !papiro && Tema.modoEscuro();
     const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo
     const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'));

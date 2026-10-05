@@ -154,7 +154,7 @@ const COR_TINTA_OCRE = '#B5852F'; // eixos ASC-DSC / MC-IC (traço + triângulo)
 const COR_TINTA_SOMBRA = '#1b2a4a'; // azul quase preto da tinta de escrever: sombra translúcida embaixo dos ícones calculados no estilo reto, sobre papiro
 
 function temaCeuAtivoNosIcones() {
-  return typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  return typeof window !== 'undefined' && Tema.ceu();
 }
 
 /* Seita do mapa aberto, a partir de currentCalculatedData (posições em graus absolutos).

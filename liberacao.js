@@ -65,7 +65,7 @@ function getLotIconSVG(lotKey) {
   // exemplo) ficam quase invisíveis nele, mesmo bug já visto e corrigido
   // na mandala principal.
   // Tema Céu (papiro): sem o círculo creme — o fundo é a própria folha de papiro.
-  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const papiro = typeof window !== 'undefined' && Tema.ceu();
   const frag = `${papiro ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', loteKey)}`;
   return svgComoImagemZR(frag, 22, 22, '0 0 100 100');
 }
@@ -119,8 +119,8 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
 
   /* Cores PRÓPRIAS da Liberação (pico, salto, rótulo das coroas), todas da paleta de época: sem preenchimento, só contorno e letra.
      PICO em azul egípcio escuro, SALTO em terracota; o rótulo das coroas em azul egípcio escuro. */
-  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
-  const palZ = paletaEpoca(!papiro && document.documentElement.classList.contains('tema-escuro'));
+  const papiro = typeof window !== 'undefined' && Tema.ceu();
+  const palZ = paletaEpoca(!papiro && Tema.modoEscuro());
   const cores = {
     picoBg: 'none', picoBorder: palZ.azulEscuro, picoText: palZ.azulEscuro,
     saltoBg: 'none', saltoBorder: palZ.terracota, saltoText: palZ.terracota, saltoLabel: palZ.terracota, navio: palZ.azulEscuro,
@@ -838,13 +838,13 @@ function renderLiberacaoUI() {
    claro quanto no escuro — a tela já é papiro nos dois. */
 function fundoCapturaLiberacao() {
   // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
-  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
-  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+  if (typeof window !== 'undefined' && Tema.ceu()) return window.__capturaSemFundo ? null : papiroCores().chapado;
+  return Tema.fundoPainel();
 }
 
 async function montarImagemLiberacao(opc) {
-  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
-  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const papiro = typeof window !== 'undefined' && Tema.ceu();
+  const modoEscuro = !papiro && Tema.modoEscuro();
   const fundo = fundoCapturaLiberacao();
   const arvoreEl = document.getElementById('liberacaoArvoreCapture');
   const cardEl = document.getElementById('liberacaoMandalaCapture');

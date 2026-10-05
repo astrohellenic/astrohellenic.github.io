@@ -81,7 +81,7 @@ function getAnguloCirculoSVG(label, tamanho = 24) {
      fundo. É ESTA função que desenha ASC/DSC/MC/IC em todas as ferramentas e no botão da Mandala —
      a cor é decidida só aqui, pra nunca ficar diferente de um lugar pro outro. */
   const ceu = typeof temaCeuAtivoNosIcones === 'function' && temaCeuAtivoNosIcones();
-  const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', (typeof paletaEpoca === 'function' ? paletaEpoca(document.documentElement.classList.contains('tema-escuro')).fundoCreme : '#fffdf5'));
+  const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', (typeof paletaEpoca === 'function' ? paletaEpoca(Tema.modoEscuro()).fundoCreme : '#fffdf5'));
   return `<svg width="${tamanho}" height="${tamanho}" viewBox="0 0 100 100" style="display: block; margin: 0 auto;"><g>${fundo}${frag}</g><text x="50" y="58" font-size="16" font-weight="900" fill="${ceu ? '#a03e25' : 'var(--aspect-conjuncao)'}" text-anchor="middle">${label}</text></svg>`;
 }
 
@@ -460,8 +460,8 @@ async function capturarPainelTecnicoParaRelatorio() {
   if (!svgEl) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
     // Só a tabela (sem título nem cabeçalho do cliente), direto do SVG (rápido).
-    const papiro = window.temaMandala === 'ceu';
-    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const papiro = Tema.ceu();
+    const modoEscuro = !papiro && Tema.modoEscuro();
     const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo (só as linhas em tinta)
     const canvas = recortarCanvasAoConteudo(await gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('tabela_tecnica', canvas.toDataURL('image/png'));

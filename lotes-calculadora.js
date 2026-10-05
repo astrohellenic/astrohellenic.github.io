@@ -81,7 +81,7 @@ const LOTE_ICON_KEY_LOTES = {
 };
 function getLoteHermeticoIconSVG(loteKey, size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
-  const frag = `${window.temaMandala === 'ceu' ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', LOTE_ICON_KEY_LOTES[loteKey])}`;
+  const frag = `${Tema.ceu() ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', LOTE_ICON_KEY_LOTES[loteKey])}`;
   return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
@@ -91,7 +91,7 @@ function getLoteHermeticoIconSVG(loteKey, size = 22) {
    mesma cor usada em todos os lugares que chamam esta função (ver
    renderLoteCardHTML/renderSeletorLotes). */
 function getLoteAbbrevIconSVG(abbrev, size = 22) { // Tema Céu (papiro): lotes sempre em preto de tinta (#1a1410)
-  const cor = window.temaMandala === 'ceu' ? '#1a1410' : (document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70');
+  const cor = Tema.ceu() ? '#1a1410' : (Tema.modoEscuro() ? '#8ab4e8' : '#103b70');
   const len = (abbrev || '').length;
   const fontSize = len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6));
   const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" text-anchor="middle">${abbrev}</text>`;
@@ -100,13 +100,13 @@ function getLoteAbbrevIconSVG(abbrev, size = 22) { // Tema Céu (papiro): lotes 
 
 function getLoteFortunaIconSVG(size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
-  const frag = `${window.temaMandala === 'ceu' ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', 'fortune')}`;
+  const frag = `${Tema.ceu() ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', 'fortune')}`;
   return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
 function getLoteEspiritoIconSVG(size = 22) {
   if (typeof getIconeFragmento !== 'function') return '';
-  const frag = `${window.temaMandala === 'ceu' ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', 'spirit')}`;
+  const frag = `${Tema.ceu() ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', 'spirit')}`;
   return svgComoImagemLotes(frag, size, size, '0 0 100 100');
 }
 
@@ -677,8 +677,8 @@ async function capturarLotesSelecionadosParaRelatorio() {
     // Fallback só pra eventuais áreas transparentes — acompanha o modo
     // atual em vez de cravar sempre o creme do Tema Claro (mesmo padrão
     // de capturarTelaParaRelatorio em relatorio.js).
-    const modoEscuroCapturaLotes = document.documentElement.classList.contains('tema-escuro');
-    const fundoCapt = window.temaMandala === 'ceu' ? null : (modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5'); // Tema Céu: sem fundo
+    const modoEscuroCapturaLotes = Tema.modoEscuro();
+    const fundoCapt = Tema.ceu() ? null : (modoEscuroCapturaLotes ? '#1c1917' : '#fffdf5'); // Tema Céu: sem fundo
     const canvas = recortarCanvasAoConteudo(await html2canvas(temp, { backgroundColor: fundoCapt, scale: 2, useCORS: true }), fundoCapt);
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`${selecionados.length} lote(s) adicionado(s) ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
@@ -710,7 +710,7 @@ async function capturarLotesInteiraParaRelatorio() {
   const area = document.getElementById('lotesConteudoArea');
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   try {
-    const fundo = window.temaMandala === 'ceu' ? null : (document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5'); // Tema Céu: imagem sem fundo
+    const fundo = Tema.ceu() ? null : (Tema.fundoPainel()); // Tema Céu: imagem sem fundo
     const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('lotes_calculados', canvas.toDataURL('image/png'));
     alert(`"Calculadora de Lotes" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);

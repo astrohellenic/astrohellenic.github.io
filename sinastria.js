@@ -206,7 +206,7 @@
         }
 
         // TEMA CÉU — roda SECUNDÁRIA: "tinta sobre o papiro" (as cores vêm da roda central).
-        const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+        const papiro = typeof window !== 'undefined' && Tema.ceu();
         const sufixo = `sw${wheelInstanceCounter++}`;
 
         const roda = desenharRodaSVG({
@@ -214,7 +214,7 @@
             ferramenta: {
                 dados,
                 rCanvasMinimo: opcoes.rCanvasMinimo || 0,
-                fundoDisco: papiro ? 'none' : paletaEpoca(document.documentElement.classList.contains('tema-escuro')).fundoCreme, // o disco tem a cor do painel por baixo
+                fundoDisco: papiro ? 'none' : paletaEpoca(Tema.modoEscuro()).fundoCreme, // o disco tem a cor do painel por baixo
                 abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
             <defs>${construirDefsPlanetas(sufixo)}</defs>
             <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
@@ -606,7 +606,7 @@
             const { svgEsquerda, svgDireita } = gerarMandalasComEscalaIgual(sinastriaSegundoMapa.dados, currentCalculatedData);
 
             const LARGURA_CAB = 480;
-            const coresCab = coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+            const coresCab = coresCabecalhoMandala(Tema.modoEscuro(), null);
             const horasDe = (momento, geo) => (typeof window.calcularHorasPlanetariasProf === 'function')
                 ? window.calcularHorasPlanetariasProf(momento, geo.lat, geo.lon, geo.fuso !== undefined ? geo.fuso : -3) : null;
             const m2 = sinastriaSegundoMapa;
@@ -735,8 +735,8 @@
     function sinastriaFundoCaptura() {
         // Tema Céu: imagem salva sobre papiro (cor chapada pro recorte achar a borda), claro ou escuro.
         // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
-        if (window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
-        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+        if (Tema.ceu()) return window.__capturaSemFundo ? null : papiroCores().chapado;
+        return Tema.fundoPainel();
     }
 
     async function sinastriaMontarImagem(comTitulo) {
@@ -745,7 +745,7 @@
         if (!topo) return null;
         if (!comTitulo) return topo;
         const W = topo.width / 2;
-        const cores = (window.temaMandala === 'ceu') ? coresCabecalhoTinta() : coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
+        const cores = (Tema.ceu()) ? coresCabecalhoTinta() : coresCabecalhoMandala(Tema.modoEscuro(), null);
         const titulo = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">SINASTRIA</text></svg>`, W, 34, fundo, 2);
         const gap = 32;
         const saida = document.createElement('canvas');

@@ -76,7 +76,7 @@ function estiloMandalaAtual(naPinturaCeu) {
 /* COR DE CADA NÍVEL nas mandalas (destaque de signo): a mesma em toda ferramenta — Nível 1 verde (o do WhatsApp), Nível 2 ocre, Nível 3 azul egípcio
    claro, Nível 4 cinza (o do elemento ar). Sempre com transparência (alfa), pra a mandala aparecer por baixo. Versão do modo (claro/escuro) automática. */
 function corNivelMandala(nivel, alfa) {
-  const escuro = document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu';
+  const escuro = Tema.escuro();
   const pal = paletaEpoca(escuro);
   const hex = [null, pal.verde, pal.ocre, pal.azulClaro, pal.cinza][nivel] || pal.cinza;
   const n = parseInt(hex.slice(1), 16);
@@ -91,7 +91,7 @@ function combustaoStopsSVG(escuro, papiro) {
   const [a0, a1, l0] = [0.75, 0.42, 0.42]; // mesmos valores em TODOS os temas: no papiro ela só parece mais opaca porque a folha por baixo é opaca
   return `<stop offset="0%" stop-color="${pal.ocre}" stop-opacity="${a0}" /><stop offset="53%" stop-color="${pal.ocre}" stop-opacity="${a1}" /><stop offset="53%" stop-color="${pal.laranja}" stop-opacity="${l0}" /><stop offset="100%" stop-color="${pal.laranja}" stop-opacity="0" />`;
 }
-function combustaoStopsAuto() { return combustaoStopsSVG(document.documentElement.classList.contains('tema-escuro'), false); }
+function combustaoStopsAuto() { return combustaoStopsSVG(Tema.modoEscuro(), false); }
 
 let __combustaoPapiroN = 0; // contador pros ids do gradiente da mancha do Sol no papiro
 function desenharRodaSVG(o) {
@@ -150,11 +150,11 @@ function desenharRodaSVG(o) {
      disco (ver corCabecalho no bloco "__capa__", relatorio.js). A
      legibilidade do texto/borda dentro dela é decidida pela luminância
      DESSA cor específica, não pelo modoEscuro geral. */
-  const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : document.documentElement.classList.contains('tema-escuro');
+  const modoEscuro = estiloForcado ? (estiloForcado === 'escuro') : Tema.modoEscuro();
   /* "tintaPapiro" (opcional, só as PÁGINAS DO CORPO do Relatório com o Tema Céu): a roda sai "tinta sobre o
      papiro" — sem céu, sem fundo, azul-tinta + terracota + preto (a mesma pintura das rodas secundárias:
      Profecção/Liberação/Sinastria). O céu fica só na capa. Mesmo desenho e mesmos tamanhos da roda clássica. */
-  const temaEhCeu = typeof window.temaMandala !== 'undefined' && window.temaMandala === 'ceu';
+  const temaEhCeu = Tema.ceu();
   /* "papiroNaTela": a mandala AO VIVO (sem estiloForcado, ou seja, não é uma cópia pro Relatório) desenhada em
      tinta sobre uma folha de papiro, no lugar do céu — escolhido pelo botão da barra da Mandala
      (alternarMandalaPapiro), só no Tema Céu. É o mesmo desenho "tinta sobre papiro" das páginas do Relatório. */
@@ -257,7 +257,7 @@ function desenharRodaSVG(o) {
   /* Tema "Céu" (padrão "Claro" se ainda não carregado, ou se o usuário
      nunca escolheu) — controla só a decoração de céu/espaço sideral. O
      tamanho e o layout do desenho continuam iguais nos dois temas. */
-  const temaCeu = !papiro && (typeof window.temaMandala !== 'undefined' ? window.temaMandala : 'claro') === 'ceu';
+  const temaCeu = !papiro && Tema.ceu();
   /* ESTILO DA MANDALA (Configurações → Aparência): só o FORMATO do desenho — onde cada coisa fica. "astrohellenic" = o
      desenho que nasceu no Tema Céu (anéis maiores, faixa do zodíaco na eclíptica com os planetas dentro, divisas
      tracejadas, lotes por dentro); "frances" = o de sempre. Cores e ícones NÃO dependem disso: seguem o tema

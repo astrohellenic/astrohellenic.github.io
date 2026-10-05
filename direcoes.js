@@ -463,7 +463,7 @@ function fatorTelaPautasCircumambulacao() {
 /* Tema Céu: a imagem salva sai como a tela — papiro + tinta. As cores das pautas vêm de variáveis redefinidas só
    dentro da folha (#circumambulacao-container), então são resolvidas aqui a partir dela (o rasterizador só
    enxerga as variáveis globais). Fundo chapado (papiroCores().chapado) pro recorte automático achar a borda. */
-function circumambulacaoPapiroAtivo() { return window.temaMandala === 'ceu'; }
+function circumambulacaoPapiroAtivo() { return Tema.ceu(); }
 function resolverVarsDaFolhaCircumambulacao(svgStr) {
   const el = document.getElementById('circumambulacao-container');
   if (!el) return svgStr;
@@ -481,7 +481,7 @@ function salvarCircumambulacaoNaGaleria() {
   capturarESalvarNaGaleria(async () => {
     const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
     const papiro = circumambulacaoPapiroAtivo();
-    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const modoEscuro = !papiro && Tema.modoEscuro();
     const fundo = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
     const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
     const corTitulo = papiro ? '#a03e25' : cores.titulo;
@@ -512,7 +512,7 @@ window.salvarCircumambulacaoNaGaleria = salvarCircumambulacaoNaGaleria;
 async function capturarCircumambulacaoParaRelatorio() {
   if (!circumambulacaoMontador) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   const papiro = circumambulacaoPapiroAtivo();
-  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const modoEscuro = !papiro && Tema.modoEscuro();
   const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5');
   const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
   const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
