@@ -546,3 +546,10 @@
 .janela .titulo-secao { margin: 0 0 4px; }
 /* botão de texto em foco (ex.: o OK das caixas de aviso, que já abre focado): sem o quadrado do navegador — o botão já tem as linhas, não precisa de moldura de foco */
 .botao-texto:focus, .btn-submit:focus, .btn-primary:focus, .btn-secondary:focus { outline: none; }
+
+/* BARRA DE FORMATAÇÃO DO TEXTO (Quill) QUANDO FLUTUA: ao flutuar ela é movida pra fora do bloco de texto (relatorio.js, ativarBarraFlutuanteQuill),
+   então perde o fundo que tinha lá dentro e ficava transparente — com o texto passando por trás, parecia que a barra "não aparecia".
+   Aqui ela leva fundo próprio (o papel claro do editor), linhas do sistema e sombra, em qualquer tema. */
+body .ql-toolbar.ql-snow.rel-quill-toolbar-flutuante {
+    background: #fffdf5; border: var(--contorno-fino) solid var(--azul-egipcio-claro); box-shadow: var(--sombra-janela, 0 2px 8px rgba(0,0,0,.2));
+}
