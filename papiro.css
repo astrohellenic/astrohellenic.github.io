@@ -64,3 +64,5 @@ body.tema-ceu.mandala-papiro-tela #top-bar::before,
 body.tema-ceu.mandala-papiro-tela #mandala-actions-overlay::before,
 body.tema-ceu.mandala-papiro-tela #mandala-controls-overlay::before { display: none; }
 body.tema-ceu .painel .menu-flutuante { clip-path: none; }
+/* Ferramenta aberta DENTRO da mandala em papiro (ex.: Matriz de Visibilidade): o painel dela não leva papiro próprio — a folha da mandala já é o papel. */
+body.tema-ceu.mandala-papiro-tela #mandala-container .painel { background: transparent !important; clip-path: none; }
