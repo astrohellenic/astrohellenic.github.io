@@ -1520,7 +1520,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1531,6 +1531,7 @@ function montarBandaZodiacoCeuSVG(o) {
     const q1 = P(r2, a1), q2 = P(r2, a2), q3 = P(r1, a2), q4 = P(r1, a1);
     // sem o fecho de baixo (arco na borda de dentro da faixa): o signo fica aberto pra baixo e as
     // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
+    const tracosSigno = (cor) => { let svg = ''; // (no Céu: uma vez por metade do horizonte, cada uma na cor do elemento para aquele fundo)
     svg += `<path d="M${q4.x.toFixed(1)} ${q4.y.toFixed(1)} L${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6"${reto ? '' : ' stroke-dasharray="5 4"'} stroke-linejoin="round"/>`;
     // as divisas do signo seguem pra dentro: pausam nos anéis de termos/dodecatemória (de rAneis
     // pra fora) e continuam até encostar na Terra
@@ -1538,8 +1539,10 @@ function montarBandaZodiacoCeuSVG(o) {
       const i0 = P(rTerra, ang), i1 = P(rAneis, ang);
       svg += `<line x1="${i0.x.toFixed(1)}" y1="${i0.y.toFixed(1)}" x2="${i1.x.toFixed(1)}" y2="${i1.y.toFixed(1)}" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6"${reto ? '' : ' stroke-dasharray="5 4"'}/>`;
     });
+    return svg; };
+    svg += elemCeu ? elemCeu.duplo(signElem[i], tracosSigno) : tracosSigno(cor);
     const Am = A - 15, pG = P(rOut - 26, Am), pN = P(rIn + 20, Am);
-    svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${cor};">${glifos[i]}</svg>`;
+    svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${elemCeu ? elemCeu.pos(signElem[i], pG.x, pG.y) : cor};">${glifos[i]}</svg>`;
     svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
   }
   // linha da eclíptica + marcas de grau (1°, 5°, 10°), em duas tintas: azul-marinho de dia acima

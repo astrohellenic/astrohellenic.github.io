@@ -386,6 +386,23 @@ function desenharRodaSVG(o) {
     const yRot = dx * Math.sin(rad) + dy * Math.cos(rad);
     return misturarHexCeu('#dbe6ff', '#1d3a66', (yRot < 0) ? ceuParams.dia : 0);
   };
+  /* CORES DOS ELEMENTOS no Tema Céu: onde o fundo é escuro (abaixo do horizonte, ou acima dele à noite) vale a versão ESCURA da paleta
+     (laranja, marrom, cinza, azul egípcio claro do modo escuro); acima do horizonte de dia o céu clareia e a cor vai passando pra versão
+     CLARA conforme o dia (ceuParams.dia). Peças que cruzam o horizonte são desenhadas duas vezes, recortadas pelas metades (elemDuplo);
+     glifos usam a cor do lugar onde estão (corElemPos). */
+  const CHAVE_ELEM = { fire: 'laranja', earth: 'marrom', air: 'cinza', water: 'azulClaro' };
+  const corElemCeu = (elem, acima) => {
+    const k = CHAVE_ELEM[elem], esc = paletaEpoca(true)[k];
+    return (acima && ceuParams) ? misturarHexCeu(esc, paletaEpoca(false)[k], ceuParams.dia) : esc;
+  };
+  const elemDuplo = (elem, fn) => temaCeu
+    ? `<g clip-path="url(#ceuMeiaTela)">${fn(corElemCeu(elem, true))}</g><g clip-path="url(#ceuMeiaTelaBaixo)">${fn(corElemCeu(elem, false))}</g>`
+    : fn(ELEMENT_SIGN_COLORS[elem]);
+  const corElemPos = (elem, px, py) => {
+    if (!temaCeu) return ELEMENT_SIGN_COLORS[elem];
+    const rad = -skyRotation * Math.PI / 180, dx = px - cx, dy = py - cy;
+    return corElemCeu(elem, (dx * Math.sin(rad) + dy * Math.cos(rad)) < 0);
+  };
   const ceuMandala = temaCeu ? montarCeuMandalaSVG(Object.assign({}, ceuParams, { soHalo: !!espacoTransparente })) : { defs: '', corpo: '' };
   /* CAPA do Relatório (espacoTransparente + Tema Céu): além da roda "só com halo", guarda o MESMO céu da tela
      (mesmo Sol, mesma rotação do horizonte, mesmo brilho no lado do Sol), enorme, pra a capa usar de fundo,
@@ -495,7 +512,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     // Faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
     svg += montarBandaZodiacoCeuSVG({
       cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
-      elemCores: ELEMENT_SIGN_COLORS, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
+      elemCores: ELEMENT_SIGN_COLORS, elemCeu: temaCeu ? { duplo: elemDuplo, pos: corElemPos } : null, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
       rTerra: R.Aspects, rAneis: R.SignSector, corUnica: temaCeu ? null : goldColor,
       corNumero: temaCeu ? corCalculadoCeu : null, reto: !!estiloRoda.retas // números das casas: o mesmo branco/azul-escuro dos ícones calculados
     });
@@ -638,7 +655,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   if (porSigno) {
     const INS = 0.55;
     for (let i = 0; i < 12; i++) {
-      const cor = ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
+      const blocoSigno = (cor) => { let svg = ''; // (svg local: a peça do signo sai inteira, numa cor só, e no Céu é desenhada uma vez por metade)
       const A = eclToScreenAngle(i * 30, house1RefAbs), a1 = A - INS, a2 = A - 30 + INS;
       const P = (rr, a) => polarToCart(cx, cy, rr, a);
       // contorno do campo: três arcos (SignSector, Dodec, Termos) e as duas laterais
@@ -660,6 +677,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
         svg += `<line x1="${t1.x}" y1="${t1.y}" x2="${t2.x}" y2="${t2.y}" stroke="${cor}" stroke-width="${g % 10 === 0 ? 1.5 : 0.8}"/>`;
         svg += `<line x1="${s1.x}" y1="${s1.y}" x2="${s2.x}" y2="${s2.y}" stroke="${cor}" stroke-width="${g % 10 === 0 ? 1.2 : 0.6}"/>`;
       }
+      return svg; };
+      svg += elemDuplo(SIGN_ELEMENTS[i], blocoSigno);
     }
   }
 
@@ -730,14 +749,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
 
     const pSym = polarToCart(cx, cy, inv ? estiloRoda.signos.glifo : 166, aMid);
     const gT = inv ? estiloRoda.signos.glifoTam : 34;
-    svg += `<svg x="${pSym.x - gT / 2}" y="${pSym.y - gT / 2}" width="${gT}" height="${gT}" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]]};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
+    svg += `<svg x="${pSym.x - gT / 2}" y="${pSym.y - gT / 2}" width="${gT}" height="${gT}" viewBox="0 0 64 64" style="color: ${corElemPos(SIGN_ELEMENTS[i], pSym.x, pSym.y)};">${MONOLINE_ZODIAC_SVGS[i]}</svg>`;
   }
   }
 
   for (let i = 0; i < 12; i++) {
     for (let d = 0; d < 12; d++) {
       const pDod = polarToCart(cx, cy, (aDod[0] + aDod[1]) / 2, eclToScreenAngle((i * 30) + (d * 2.5) + 1.25, house1RefAbs));
-      svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[(i + d) % 12]]};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
+      svg += `<svg x="${pDod.x - 5.5}" y="${pDod.y - 5.5}" width="11" height="11" viewBox="0 0 64 64" style="color: ${corElemPos(SIGN_ELEMENTS[(i + d) % 12], pDod.x, pDod.y)};">${MONOLINE_ZODIAC_SVGS[(i + d) % 12]}</svg>`;
     }
   }
 
