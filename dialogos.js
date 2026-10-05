@@ -140,12 +140,16 @@ window.astroAbaPdf = {
     if (!aba || aba.closed) return false;
     try {
       var form = document.createElement('form');
+      var enviarForm = function (alvo) { form.action = alvo; form.submit(); setTimeout(function () { form.remove(); }, 2000); };
+      /* O iPad usa o fim do endereço como nome do arquivo: tenta .../api/pdf/<nome>.pdf; se esse endereço não responder, usa o de sempre (nunca dá 404). */
+      var comNome = (nome && /\/api\/gerar-pdf$/.test(url)) ? url.replace(/\/api\/gerar-pdf$/, '/api/pdf/' + encodeURIComponent(nome) + '.pdf') : null;
       form.method = 'POST'; form.action = url; form.target = aba.name; form.enctype = 'multipart/form-data'; form.style.display = 'none';
       var campo = function (n, v) { var t = document.createElement('textarea'); t.name = n; t.value = v; form.appendChild(t); };
       campo('html', html); campo('nome', nome || '');
       document.body.appendChild(form);
-      form.submit();
-      setTimeout(function () { form.remove(); }, 2000);
+      if (comNome) {
+        fetch(comNome, { method: 'OPTIONS' }).then(function (r) { enviarForm(r.ok ? comNome : url); }, function () { enviarForm(url); });
+      } else enviarForm(url);
       return true;
     } catch (e) { return false; }
   },

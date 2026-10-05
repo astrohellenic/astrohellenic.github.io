@@ -3,6 +3,10 @@
     "api/gerar-pdf.js": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "api/pdf/[nome].js": {
+      "memory": 1024,
+      "maxDuration": 60
     }
   }
 }
