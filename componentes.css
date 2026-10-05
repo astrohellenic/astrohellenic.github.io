@@ -347,3 +347,8 @@
 .iso-letra { display: flex; align-items: center; justify-content: space-between; }
 .iso-letra small { font-size: 10px; opacity: .75; }
 #isopsefia-container .rotulo { color: var(--preto-tinta); }
+/* ISOPSEFIA: a coluna do signo alinha pelo ÍCONE (um embaixo do outro); o nome vem depois */
+.tabela-epoca .iso-col-glifo { text-align: left; padding-left: 28px; }
+.tabela-epoca td.iso-col-glifo .com-nome { display: flex; justify-content: flex-start; }
+.iso-coluna-estreita .iso-passo { justify-content: flex-start; gap: 12px; }
+.iso-coluna-estreita .iso-passo > .rotulo { min-width: 120px; }

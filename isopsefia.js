@@ -267,7 +267,7 @@ function renderConteudoAbaAtual() {
               <th style="text-align: right;">Soma Bruta</th>
               <th class="centro">Fórmula do Resto</th>
               <th class="centro">Topos (Resto)</th>
-              <th class="centro">Signo Ativado</th>
+              <th class="iso-col-glifo">Signo Ativado</th>
               <th class="centro" data-html2canvas-ignore="true">Ações</th>
             </tr>
           </thead>
@@ -284,7 +284,7 @@ function renderConteudoAbaAtual() {
                   <td style="text-align: right; font-weight: 700;">${calc.bruto}</td>
                   <td class="centro iso-mono">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
                   <td class="centro">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</td>
-                  <td class="centro">${getSignSvgHtmlIso(ativ.signIdx, 22)}</td>
+                  <td class="iso-col-glifo">${signoComNome(getSignSvgHtmlIso(ativ.signIdx, 22), ativ.signIdx)}</td>
                   <td class="centro" data-html2canvas-ignore="true"><button type="button" class="botao-texto" onclick="removerTermoPlanilha(${idx})">Excluir</button></td>
                 </tr>
               `;
@@ -325,9 +325,9 @@ function renderConteudoAbaAtual() {
 
           <hr class="divisa">
 
-          <div class="iso-passo"><span class="rotulo">Ascendente</span>${getSignSvgHtmlIso(ascIdx, 20)}</div>
+          <div class="iso-passo"><span class="rotulo">Ascendente</span>${signoComNome(getSignSvgHtmlIso(ascIdx, 20), ascIdx)}</div>
           <div class="iso-passo"><span class="rotulo">Topos ativado</span><strong>${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</strong></div>
-          <div class="iso-passo"><span class="rotulo">Signo ativado</span>${getSignSvgHtmlIso(ativ.signIdx, 20)}</div>
+          <div class="iso-passo"><span class="rotulo">Signo ativado</span>${signoComNome(getSignSvgHtmlIso(ativ.signIdx, 20), ativ.signIdx)}</div>
         </div>
       </div>
     `;
