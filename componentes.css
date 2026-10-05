@@ -218,3 +218,14 @@
 .sidebar-header .botao-icone, .sidebar-header .botao-icone:hover { width: 32px; height: 32px; }
 .sidebar-header img { display: block; height: 38px; width: auto; }
 .sidebar-title { line-height: 38px; }
+
+/* Os botões de ação do topo (novo mapa, importar) são um bloco à parte: fechados por divisa dupla, não por linha simples */
+.menu-acoes { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 16px; border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro); }
+.menu-list { border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro); }
+.menu-list .menu-item:last-child { border-bottom: 0; }
+/* cores dos ícones de ação: editar = cinza (ar), WhatsApp = verde, e-mail = azul egípcio claro, apagar = terracota */
+.action-record-btn.edit-btn { color: var(--cinza); }
+.action-record-btn.edit-btn:hover { color: var(--terracota); }
+.action-record-btn.email-btn:hover { color: var(--terracota); }
+/* tabela que abre dentro de outra: mesma marca terracota na margem da tabela de fora */
+.tabela-epoca tr > td.encaixe:first-child { border-left-color: var(--terracota); }

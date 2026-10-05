@@ -89,7 +89,7 @@ function menuLinhaPasta(pasta, comAvancar) {
       <div class="menu-pasta" onclick="abrirConteudoPasta('${attr}')">
         <div class="nome-pasta">${menuIcone('pasta')}<span>${escapeHtml(pasta)}</span></div>
         <div class="acoes-pasta" onclick="event.stopPropagation()">
-          <button type="button" class="botao-icone" onclick="editarNomePasta(event, '${attr}')" title="Renomear pasta">${menuIcone('editar')}</button>
+          <button type="button" class="botao-icone" onclick="editarNomePasta(event, '${attr}')" title="Renomear pasta" style="color: var(--cinza);">${menuIcone('editar')}</button>
           <button type="button" class="botao-icone botao-apagar" onclick="apagarPasta(event, '${attr}')" title="Apagar pasta">${menuIcone('lixeira')}</button>
           ${comAvancar ? `<span class="botao-icone" style="width:20px">${menuIcone('avancar')}</span>` : ''}
         </div>
@@ -109,7 +109,7 @@ function renderMenuPrincipal() {
       ${menuLogoHtml()}
     </div>
     <div style="flex: 1; overflow-y: auto;">
-      <div class="menu-item" style="justify-content: center; gap: 12px; cursor: default;">
+      <div class="menu-acoes">
         <button type="button" class="botao-icone" onclick="abrirModalNovoMapa()" title="Novo Mapa Astral">${menuIcone('novoMapa')}</button>
         <button type="button" class="botao-icone" onclick="abrirModalImportacaoTexto()" title="Importar Lista em Massa">${menuIcone('importar')}</button>
       </div>
