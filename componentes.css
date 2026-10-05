@@ -65,3 +65,55 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+/* TÍTULOS E TEXTO — como se destacava no século II: tinta vermelha (terracota), letras maiúsculas espaçadas, nada de fundo pintado. */
+.titulo-ferramenta {
+    font-family: 'Cinzel', serif; font-weight: 800; font-size: 18px; letter-spacing: .2em;
+    text-transform: uppercase; text-align: center; color: var(--terracota); margin: 0 0 12px;
+}
+.titulo-secao {
+    font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--terracota); margin: 6px 0 12px;
+}
+.rotulo {
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--terracota);
+}
+.texto-apagado { color: var(--preto-tinta); opacity: .75; }
+
+/* SELO (ex.: "129 meses") — sem fundo e sem arredondar: texto com uma linha fina em cima e outra embaixo. */
+.selo {
+    display: inline-block; padding: 1px 8px; font-weight: 700; font-size: 11px; color: var(--azul-egipcio-escuro);
+    border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+}
+
+/* CARTÕES EM GRADE, CABEÇA E LINHA DE INFORMAÇÃO */
+.grade-cartoes { display: flex; flex-wrap: wrap; gap: 14px; }
+.grade-cartoes > .cartao { flex: 1; min-width: 260px; }
+.cabeca-cartao { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.linha-info { font-size: 11px; color: var(--preto-tinta); border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); padding-top: 8px; }
+.cartao.ativo { border-left: 3px solid var(--terracota); }   /* marca na margem do item ativo */
+.cartao.ativo .nome-nivel { color: var(--terracota); }
+.nome-nivel { font-family: 'Cinzel', serif; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--azul-egipcio-escuro); }
+
+/* TABELA — sem caixa em volta, sem faixa pintada: a barra de cima são só as palavras em maiúsculas espaçadas com uma linha
+   embaixo (como um título de coluna num papiro). As linhas têm a MESMA cor da divisa. Item ativo: marca na margem + letra em terracota. */
+.envolve-tabela { padding: 0; }
+.tabela-epoca { width: 100%; border-collapse: collapse; border: 0; background: transparent; font-size: 12.5px; }
+.tabela-epoca th {
+    padding: 10px 12px; text-align: left; font-family: 'Cinzel', serif; font-weight: 800; font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--azul-egipcio-escuro); background: transparent; border: 0;
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+}
+.tabela-epoca td {
+    padding: 10px 12px; color: var(--preto-tinta); background: transparent; border: 0;
+    border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
+}
+.tabela-epoca .centro { text-align: center; }
+.tabela-epoca td.encaixe { padding: 0; }
+.tabela-epoca tr.clicavel { cursor: pointer; }
+.tabela-epoca tr > :first-child { border-left: 3px solid transparent; }   /* reserva o espaço da marca na margem */
+.tabela-epoca tr.ativa > td { color: var(--terracota); }
+.tabela-epoca tr.ativa > :first-child { border-left-color: var(--terracota); }
+.tabela-epoca tr.aberta > td { font-weight: 700; }
+.tabela-epoca small { opacity: .75; }

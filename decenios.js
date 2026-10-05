@@ -18,7 +18,7 @@ const PLANETS_DECENIOS = [
 ];
 
 const SIGN_ELEMENTS_DEC = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"];
-const ELEMENT_SIGN_COLORS_DEC = { fire: "var(--element-fogo)", earth: "var(--element-terra)", air: "var(--element-ar)", water: "var(--element-agua)" };
+const ELEMENT_SIGN_COLORS_DEC = { fire: "var(--laranja)", earth: "var(--marrom)", air: "var(--cinza)", water: "var(--azul-egipcio-claro)" }; // paleta de época (temas.css): iguais em todos os temas
 
 const MONOLINE_ZODIAC_SVGS_DEC = [
   `<path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M6,25c0,0-5-5-5-11S3,1,13,1c13.25,0,19,22,19,63"></path><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M58,25c0,0,5-5,5-11S61,1,51,1C37.75,1,32,23,32,64"></path>`,
@@ -37,8 +37,7 @@ const MONOLINE_ZODIAC_SVGS_DEC = [
 
 function getSignSvgHtmlDec(signIdx, size = 18) {
   const elem = SIGN_ELEMENTS_DEC[signIdx];
-  // Tema Céu (papiro): glifo de signo em azul-tinta (sem cor por elemento) — direto, pra também sair certo nas imagens salvas.
-  const color = (typeof window !== 'undefined' && window.temaMandala === 'ceu') ? ({ fire: '#a62b1f', earth: '#6b4a2b', air: '#17707f', water: '#1f3a66' })[elem] : ELEMENT_SIGN_COLORS_DEC[elem];
+  const color = ELEMENT_SIGN_COLORS_DEC[elem];
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="color: ${color}; overflow: visible; display: inline-block; vertical-align: middle; flex-shrink: 0; margin: 0 2px;" title="${ZODIACO_DECENIOS[signIdx]}">${MONOLINE_ZODIAC_SVGS_DEC[signIdx]}</svg>`;
 }
 
@@ -129,11 +128,9 @@ function renderDeceniosUI(container) {
           <svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="var(--primary-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
         </button>
       </div>
-    <div id="decenios-container" style="width: 100%; flex: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-main); font-family: 'Montserrat', sans-serif;">
+    <div id="decenios-container" class="painel" style="width: 100%; flex: 1; overflow-y: auto; font-family: 'Montserrat', sans-serif;">
 
-      <h3 style="font-family: 'Cinzel', serif; font-weight: 800; color: var(--primary-blue); margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;">
-        Decênios Helenísticos
-      </h3>
+      <h3 class="titulo-ferramenta">Decênios Helenísticos</h3>
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
       ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
@@ -415,7 +412,7 @@ function alternarL3AccordionDec(l1Idx, l2Idx, event) {
     const prevSubRow = document.getElementById(`dec_l3_row_${previousKey}`);
     const prevMainRow = document.getElementById(`dec_l2_row_${previousKey}`);
     if (prevSubRow) prevSubRow.style.display = 'none';
-    if (prevMainRow) prevMainRow.style.backgroundColor = prevMainRow.dataset.bgDefault || '';
+    if (prevMainRow) prevMainRow.classList.remove('aberta');
     ajustarAlturaWrapperEscaladoDec(prevMainRow);
   }
 
@@ -427,7 +424,7 @@ function alternarL3AccordionDec(l1Idx, l2Idx, event) {
   expandedL3KeyDec = willOpen ? key : null;
 
   subRow.style.display = willOpen ? 'table-row' : 'none';
-  mainRow.style.backgroundColor = willOpen ? 'var(--bg-selected)' : (mainRow.dataset.bgDefault || '');
+  mainRow.classList.toggle('aberta', willOpen);
 
   if (willOpen) encolherTabelasDecVisiveis(subRow);
   ajustarAlturaWrapperEscaladoDec(mainRow);
@@ -442,187 +439,134 @@ function alternarDetalhesL1Dec(idx) {
   if (willOpen) encolherTabelasDecVisiveis(el);
 }
 
-// RENDERIZA A SUB-TABELA DO L3 (ABERTA DENTRO DA CÉLULA COLSPAN DA LINHA DE L2)
+// RENDERIZA A SUB-TABELA DO NÍVEL 3 (ABERTA DENTRO DA CÉLULA COLSPAN DA LINHA DO NÍVEL 2)
 function renderL3SubTableDec(l2Obj, sortedPlanets) {
   const subperiodosL3 = calcularSubperiodosL3Dec(l2Obj.planet, l2Obj.startDate, l2Obj.days, sortedPlanets);
 
   return `
-    <div style="padding: 8px 12px; background: var(--bg-hover);">
-      <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--primary-blue); border-radius: 6px; overflow: hidden; font-size: 11px; text-align: center; background: var(--bg-card);">
-        <thead>
-          <tr style="background-color: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">
-            <th style="padding: 6px;">L3 (Regência Diária)</th>
-            <th style="padding: 6px; text-align: left;">Duração</th>
-            <th style="padding: 6px; text-align: left;">Início</th>
-            <th style="padding: 6px; text-align: left;">Término</th>
+    <table class="tabela-epoca">
+      <thead>
+        <tr><th class="centro">Nível 3</th><th>Duração</th><th>Início</th><th>Término</th></tr>
+      </thead>
+      <tbody>
+        ${subperiodosL3.map(sub3 => `
+          <tr>
+            <td class="centro">${getPlanet3DSVG(sub3.planet.id, 26)}</td>
+            <td><strong>${formatDiasDec(sub3.days)}</strong> dias</td>
+            <td>${formatDateHoraDec(sub3.startDate)}</td>
+            <td>${formatDateHoraDec(sub3.endDate)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${subperiodosL3.map((sub3, i3) => {
-            const bgRow = i3 % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-main)';
-            return `
-              <tr style="border-bottom: 1px solid var(--table-border-soft); background-color: ${bgRow};">
-                <td style="padding: 6px; text-align: center;">${getPlanet3DSVG(sub3.planet.id, 26)}</td>
-                <td style="padding: 6px; text-align: left; font-weight: 600; color: var(--primary-blue);">${formatDiasDec(sub3.days)} Dias</td>
-                <td style="padding: 6px; text-align: left; color: var(--text-muted-3);">${formatDateHoraDec(sub3.startDate)}</td>
-                <td style="padding: 6px; text-align: left; color: var(--text-muted-3);">${formatDateHoraDec(sub3.endDate)}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
+        `).join('')}
+      </tbody>
+    </table>
   `;
+}
+
+// LINHAS DO NÍVEL 2 (cada uma com a linha escondida do Nível 3 logo abaixo). argsClique = argumentos de alternarL3AccordionDec.
+function linhasNivel2Dec(subperiodos, prefixoChave, argsClique, tamIcone, sortedPlanets) {
+  return subperiodos.map((sub, i) => {
+    const chave = `${prefixoChave}_${i}`;
+    return `
+      <tr id="dec_l2_row_${chave}" class="clicavel${sub.isActive ? ' ativa' : ''}" onclick="alternarL3AccordionDec(${argsClique(i)}, event)">
+        <td class="centro">${getPlanet3DSVG(sub.planet.id, tamIcone)}</td>
+        <td>${sub.months} meses (${sub.days} dias)</td>
+        <td>${formatDateDec(sub.startDate)}</td>
+        <td>${formatDateDec(sub.endDate)}</td>
+      </tr>
+      <tr id="dec_l3_row_${chave}" style="display: none;">
+        <td colspan="4" class="encaixe">
+          ${renderL3SubTableDec(sub, sortedPlanets)}
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderizarResultadosHTML(res) {
   const { activeL1, activeL2, timelineL1, sortedPlanets } = res;
   if (!activeL1 || !activeL2) {
-    return `<div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; text-align: center; color: var(--text-muted); font-size: 13px;">A idade atual do nativo está fora da janela dos 10 primeiros ciclos de Decênios.</div>`;
+    return `<div class="cartao texto-apagado" style="text-align: center; font-size: 13px;">A idade atual do nativo está fora da janela dos 10 primeiros ciclos de Decênios.</div>`;
   }
 
   const formatMin = m => String(m || 0).padStart(2, '0');
+  const cabecaNivel2 = `<tr><th class="centro">Nível 2</th><th>Duração</th><th>Início</th><th>Término</th></tr>`;
+
+  // Cartão pequeno do Nível 1 / Nível 2 do período ativo
+  const cartaoNivel = (rotulo, nomeCurto, item, meses) => `
+    <div class="cartao">
+      <span class="rotulo">${rotulo}</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${getPlanet3DSVG(item.planet.id, 42)}
+          <div class="texto-apagado" style="font-size: 11px;">em ${getSignSvgHtmlDec(item.planet.signIdx, 18)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
+        </div>
+        <span class="selo">${meses} meses</span>
+      </div>
+      <div class="linha-info">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Início do ${nomeCurto}:</span><strong>${formatDateDec(item.startDate)}</strong></div>
+        <div style="display: flex; justify-content: space-between;"><span>Término do ${nomeCurto}:</span><strong>${formatDateDec(item.endDate)}</strong></div>
+      </div>
+    </div>
+  `;
 
   return `
     <!-- PERÍODO ATIVO -->
-    <div style="background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-hover) 100%); border: 2px solid var(--table-border); border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(29, 95, 168, 0.08);">
-      <div style="border-bottom: 1px solid var(--info-border); padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-        <span style="width: 10px; height: 10px; background-color: var(--dec-ativo-dot, #10b981); border-radius: 50%; display: inline-block;"></span>
-        <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: var(--primary-blue); font-weight: 800; margin: 0; text-transform: uppercase;">Período Ativo</h3>
-      </div>
+    <div>
+      <h3 class="titulo-secao">Período ativo</h3>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 14px;">
-        <!-- L1 -->
-        <div style="flex: 1; min-width: 260px; background: var(--bg-card); border: 1px solid var(--badge-border); border-radius: 10px; padding: 14px;">
-          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: var(--badge-text); text-transform: uppercase;">L1 - Regente da Era</span>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              ${getPlanet3DSVG(activeL1.planet.id, 42)}
-              <div>
-                <div style="font-size: 11px; color: var(--text-muted); margin: 0;">em ${getSignSvgHtmlDec(activeL1.planet.signIdx, 18)} ${activeL1.planet.degree}°${formatMin(activeL1.planet.minute)}'</div>
-              </div>
-            </div>
-            <span style="background: var(--badge-bg); border: 1px solid var(--badge-border); border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: var(--badge-text);">129 Meses</span>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted-2); border-top: 1px solid var(--table-border-soft); padding-top: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Início do L1:</span><strong>${formatDateDec(activeL1.startDate)}</strong></div>
-            <div style="display: flex; justify-content: space-between;"><span>Término do L1:</span><strong>${formatDateDec(activeL1.endDate)}</strong></div>
-          </div>
-        </div>
-
-        <!-- L2 -->
-        <div style="flex: 1; min-width: 260px; background: var(--bg-card); border: 1px solid var(--info-border); border-radius: 10px; padding: 14px;">
-          <span style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: var(--table-border); text-transform: uppercase;">L2 - Executor do Momento</span>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              ${getPlanet3DSVG(activeL2.planet.id, 42)}
-              <div>
-                <div style="font-size: 11px; color: var(--text-muted); margin: 0;">em ${getSignSvgHtmlDec(activeL2.planet.signIdx, 18)} ${activeL2.planet.degree}°${formatMin(activeL2.planet.minute)}'</div>
-              </div>
-            </div>
-            <span style="background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: var(--info-text);">${activeL2.months} Meses</span>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted-2); border-top: 1px solid var(--table-border-soft); padding-top: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Início do L2:</span><strong>${formatDateDec(activeL2.startDate)}</strong></div>
-            <div style="display: flex; justify-content: space-between;"><span>Término do L2:</span><strong>${formatDateDec(activeL2.endDate)}</strong></div>
-          </div>
-        </div>
+      <div class="grade-cartoes">
+        ${cartaoNivel('Nível 1 - Regente da Era', 'Nível 1', activeL1, 129)}
+        ${cartaoNivel('Nível 2 - Executor do Momento', 'Nível 2', activeL2, activeL2.months)}
       </div>
 
       <!-- TABELA DA ERA ATIVA -->
-      <div style="background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 10px; overflow: hidden; margin-top: 14px;">
-        <div style="padding: 10px 14px; background: var(--bg-main); border-bottom: 1px solid var(--badge-border); display: flex; align-items: center; justify-content: space-between;">
+      <div class="cartao" style="margin-top: 14px;">
+        <div class="cabeca-cartao">
           <div style="display: flex; align-items: center; gap: 8px;">
             ${getPlanet3DSVG(activeL1.planet.id, 28)}
-            <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue);">L1 ATIVO</strong>
+            <span class="nome-nivel">Nível 1 ativo</span>
           </div>
-          <span style="font-size: 11px; color: var(--text-muted-2);"><strong>${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong></span>
+          <strong class="texto-apagado" style="font-size: 11px;">${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong>
         </div>
-        <div style="padding: 10px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
-            <thead>
-              <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                <th style="padding: 10px 12px; text-align: center;">L2 (Subperíodo)</th>
-                <th style="padding: 10px 12px; text-align: left;">Duração</th>
-                <th style="padding: 10px 12px; text-align: left;">Início</th>
-                <th style="padding: 10px 12px; text-align: left;">Término</th>
-              </tr>
-            </thead>
+        <div class="envolve-tabela">
+          <table class="tabela-epoca">
+            <thead>${cabecaNivel2}</thead>
             <tbody>
-              ${activeL1.subperiods.map((sub, sIdx) => {
-                const keyL3 = `active_${sIdx}`;
-                const defaultBg = sub.isActive ? 'var(--bg-selected)' : 'transparent';
-                const borderLeft = sub.isActive ? 'border-left: 4px solid var(--gold-primary);' : '';
-                return `
-                  <tr id="dec_l2_row_${keyL3}" data-bg-default="${defaultBg}" onclick="alternarL3AccordionDec('active', ${sIdx}, event)" style="border-bottom: 1px solid var(--table-border-soft); background-color: ${defaultBg}; ${borderLeft} cursor: pointer;">
-                    <td style="padding: 10px 12px; text-align: center;">${getPlanet3DSVG(sub.planet.id, 32)}</td>
-                    <td style="padding: 10px 12px;">${sub.months} Meses (${sub.days} dias)</td>
-                    <td style="padding: 10px 12px;">${formatDateDec(sub.startDate)}</td>
-                    <td style="padding: 10px 12px;">${formatDateDec(sub.endDate)}</td>
-                  </tr>
-                  <tr id="dec_l3_row_${keyL3}" style="display: none;">
-                    <td colspan="4" style="padding: 0; border-bottom: 1px solid var(--table-border-soft);">
-                      ${renderL3SubTableDec(sub, sortedPlanets)}
-                    </td>
-                  </tr>
-                `;
-              }).join('')}
+              ${linhasNivel2Dec(activeL1.subperiods, 'active', i => `'active', ${i}`, 32, sortedPlanets)}
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
+    <hr class="divisa">
+
     <!-- CRONOGRAMA DA LINHA DO TEMPO -->
-    <div style="background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-hover) 100%); border: 2px solid var(--gold-primary); border-radius: 14px; padding: 18px;">
-      <div style="border-bottom: 1px solid var(--badge-border); padding-bottom: 8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-        <h3 style="font-family: 'Cinzel', serif; font-size: 15px; color: var(--primary-blue); font-weight: 800; margin: 0; text-transform: uppercase;">Linha do Tempo dos Decênios</h3>
-        <span style="font-size: 11px; color: var(--text-muted);">Calendário Egípcio = 360 Dias/Ano</span>
+    <div>
+      <div class="cabeca-cartao">
+        <h3 class="titulo-secao" style="margin: 0;">Linha do tempo dos decênios</h3>
+        <span class="texto-apagado" style="font-size: 11px;">Calendário egípcio: 360 dias por ano</span>
       </div>
 
       <div>
         ${timelineL1.map((l1, idx) => `
-          <div style="background: var(--bg-card); border: 1px solid ${l1.isActive ? 'var(--gold-primary)' : 'var(--table-border-soft)'}; border-radius: 10px; margin-bottom: 8px; overflow: hidden;">
+          <div class="cartao${l1.isActive ? ' ativo' : ''}" style="margin-bottom: 8px; padding: 0;">
             <div style="padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="alternarDetalhesL1Dec(${idx})">
               <div style="display: flex; align-items: center; gap: 10px;">
                 ${getPlanet3DSVG(l1.planet.id, 32)}
                 <div>
-                  <strong style="font-family: 'Cinzel', serif; font-size: 13px; color: var(--primary-blue);">L1</strong>
-                  <div style="font-size: 11px; color: var(--text-muted);">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' • 129 Meses</div>
+                  <span class="nome-nivel">Nível 1</span>
+                  <div class="texto-apagado" style="font-size: 11px;">em ${getSignSvgHtmlDec(l1.planet.signIdx, 15)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' - 129 meses</div>
                 </div>
               </div>
-              <strong style="font-size: 11px; color: var(--text-muted-2);">${formatDateDec(l1.startDate)} a ${formatDateDec(l1.endDate)}</strong>
+              <strong class="texto-apagado" style="font-size: 11px;">${formatDateDec(l1.startDate)} a ${formatDateDec(l1.endDate)}</strong>
             </div>
 
-            <div id="dec_l1_details_${idx}" style="display: none; border-top: 1px solid var(--table-border-soft); padding: 10px; background: var(--bg-main);">
-              <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
-                <thead>
-                  <tr style="background: #103b70; color: #fcf6ba; font-family: 'Cinzel', serif;">
-                    <th style="padding: 8px 10px; text-align: center;">L2 (Subperíodo)</th>
-                    <th style="padding: 8px 10px; text-align: left;">Duração</th>
-                    <th style="padding: 8px 10px; text-align: left;">Início</th>
-                    <th style="padding: 8px 10px; text-align: left;">Término</th>
-                  </tr>
-                </thead>
+            <div id="dec_l1_details_${idx}" style="display: none; padding: 0 12px 10px;">
+              <table class="tabela-epoca">
+                <thead>${cabecaNivel2}</thead>
                 <tbody>
-                  ${l1.subperiods.map((l2, l2Idx) => {
-                    const keyL3 = `${idx}_${l2Idx}`;
-                    const defaultBg = l2.isActive ? 'var(--bg-selected)' : 'transparent';
-                    const borderLeft = l2.isActive ? 'border-left: 4px solid var(--gold-primary);' : '';
-                    return `
-                      <tr id="dec_l2_row_${keyL3}" data-bg-default="${defaultBg}" onclick="alternarL3AccordionDec(${idx}, ${l2Idx}, event)" style="border-bottom: 1px solid var(--table-border-soft); background-color: ${defaultBg}; ${borderLeft} cursor: pointer;">
-                        <td style="padding: 8px 10px; text-align: center;">${getPlanet3DSVG(l2.planet.id, 28)}</td>
-                        <td style="padding: 8px 10px;">${l2.months} Meses (${l2.days} dias)</td>
-                        <td style="padding: 8px 10px;">${formatDateDec(l2.startDate)}</td>
-                        <td style="padding: 8px 10px;">${formatDateDec(l2.endDate)}</td>
-                      </tr>
-                      <tr id="dec_l3_row_${keyL3}" style="display: none;">
-                        <td colspan="4" style="padding: 0; border-bottom: 1px solid var(--table-border-soft);">
-                          ${renderL3SubTableDec(l2, sortedPlanets)}
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
+                  ${linhasNivel2Dec(l1.subperiods, String(idx), i => `${idx}, ${i}`, 28, sortedPlanets)}
                 </tbody>
               </table>
             </div>
@@ -630,5 +574,7 @@ function renderizarResultadosHTML(res) {
         `).join('')}
       </div>
     </div>
+
+    <hr class="divisa">
   `;
 }
