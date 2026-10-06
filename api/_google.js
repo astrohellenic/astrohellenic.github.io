@@ -183,6 +183,14 @@ async function listarAgendas(userId, conexao) {
 }
 const esquecerAgendas = (userId) => listaEmMemoria.delete(userId);
 
+/* agendas que bloqueiam horário: todas da conta, menos as que o astrólogo desmarcou (a principal sempre bloqueia) */
+async function agendasQueBloqueiam(userId, conexao) {
+  const todas = await listarAgendas(userId, conexao);
+  const ignoradas = Array.isArray(conexao.ignoradas) ? conexao.ignoradas : [];
+  const principal = conexao.principal || (todas.find(a => a.principal) || {}).id;
+  return { todas, principal, ids: todas.filter(a => !ignoradas.includes(a.id) || a.id === principal).map(a => a.id) };
+}
+
 /* ---------- datas em horário de Brasília ---------- */
 
 function instanteLocal(dataISO, minutos) {
@@ -210,6 +218,6 @@ module.exports = {
   SITE, FUSO, REDIRECT_URI, ESCOPOS, SUPABASE_URL, SUPABASE_ANON, aplicarCors, env,
   cifrar, decifrar, criarEstado, lerEstado,
   supa, usuarioDoJwt, lerConexao, salvarConexao, atualizarConexao, apagarConexao,
-  trocarCodigo, tokenDeAcesso, chamarGoogle, listarAgendas, esquecerAgendas,
+  trocarCodigo, tokenDeAcesso, chamarGoogle, listarAgendas, esquecerAgendas, agendasQueBloqueiam,
   instanteLocal, paraLocal, minParaHHMM, hhmmParaMin, ehData, ehHora, somarDias
 };

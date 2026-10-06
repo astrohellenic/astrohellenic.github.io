@@ -57,6 +57,44 @@ async function salvar(userId, corpo) {
   return { ok: true };
 }
 
+/* compromissos das agendas que BLOQUEIAM (as marcadas em Configurações → Agenda), pra tela Agenda do software mostrar
+   "o que eu tenho". Só o astrólogo logado vê os dele; nada disso é guardado. Eventos "livres" (que não bloqueiam) ficam de fora. */
+async function eventos(userId, corpo) {
+  const conexao = await G.lerConexao(userId);
+  if (!conexao) return { ok: true, conectado: false, eventos: [] };
+  if (!G.ehData(corpo.de) || !G.ehData(corpo.ate)) return { ok: false, erro: 'Datas inválidas.' };
+  const dias = (Date.parse(corpo.ate) - Date.parse(corpo.de)) / 86400000;
+  if (dias < 0 || dias > 62) return { ok: false, erro: 'Período inválido.' };
+  const { todas, ids } = await G.agendasQueBloqueiam(userId, conexao);
+  const porId = new Map(todas.map(a => [a.id, a]));
+  const timeMin = G.instanteLocal(corpo.de, 0).toISOString();
+  const timeMax = G.instanteLocal(G.somarDias(corpo.ate, 1), 0).toISOString();
+  const saida = [];
+  const buscar = async (id) => {
+    const r = await G.chamarGoogle(userId, conexao, '/calendars/' + encodeURIComponent(id) + '/events?' + new URLSearchParams({
+      timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeZone: G.FUSO,
+      fields: 'items(id,summary,status,transparency,start,end,location)'
+    }).toString()).catch(() => ({ items: [] })); // uma agenda sem acesso não derruba as outras
+    (r.items || []).forEach(ev => {
+      if (ev.status === 'cancelled' || ev.transparency === 'transparent') return;
+      const diaInteiro = !!(ev.start && ev.start.date);
+      let data, hi = null, hf = null;
+      if (diaInteiro) { data = ev.start.date; }
+      else {
+        const ini = G.paraLocal(new Date(ev.start.dateTime)), fim = G.paraLocal(new Date(ev.end.dateTime));
+        data = ini.dataISO; hi = G.minParaHHMM(ini.minutos); hf = fim.dataISO === ini.dataISO ? G.minParaHHMM(fim.minutos) : null;
+      }
+      const ag = porId.get(id) || {};
+      saida.push({ id: id + '|' + ev.id, calendario: ag.nome || '', cor: ag.cor || null, titulo: ev.summary || '(sem título)', local: ev.location || null, diaInteiro, data, hora_inicio: hi, hora_fim: hf });
+    });
+  };
+  // algumas agendas por vez (o astrólogo pode ter dezenas, uma por aluno/cliente)
+  const fila = ids.slice();
+  await Promise.all(Array.from({ length: 8 }, async () => { while (fila.length) await buscar(fila.shift()); }));
+  saida.sort((a, b) => (a.data + (a.hora_inicio || '00:00')).localeCompare(b.data + (b.hora_inicio || '00:00')));
+  return { ok: true, conectado: true, eventos: saida.slice(0, 600) };
+}
+
 /* volta do Google: troca o código pelo token, guarda cifrado, e manda o navegador de volta pro site */
 async function voltaDoGoogle(req, res) {
   const { code, state, error } = req.query || {};
@@ -103,6 +141,7 @@ module.exports = async function handler(req, res) {
     if (corpo.acao === 'iniciar') return resposta(res, 200, await iniciar(userId));
     if (corpo.acao === 'status') return resposta(res, 200, await status(userId));
     if (corpo.acao === 'salvar') return resposta(res, 200, await salvar(userId, corpo));
+    if (corpo.acao === 'eventos') return resposta(res, 200, await eventos(userId, corpo));
     if (corpo.acao === 'desconectar') { await G.apagarConexao(userId); G.esquecerAgendas(userId); return resposta(res, 200, { ok: true }); }
     return resposta(res, 400, { ok: false, erro: 'Ação desconhecida.' });
   } catch (e) {

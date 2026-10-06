@@ -19,13 +19,7 @@ const TAMANHO_LOTE_FREEBUSY = 50; // limite do Google por consulta
 const ok = (json) => ({ status: 200, json });
 const erro = (status, texto, extra = {}) => ({ status, json: { ok: false, erro: texto, ...extra } });
 
-/* agendas que bloqueiam: todas da conta, menos as que o astrólogo desmarcou (a principal sempre bloqueia) */
-async function agendasQueBloqueiam(userId, conexao) {
-  const todas = await G.listarAgendas(userId, conexao);
-  const ignoradas = Array.isArray(conexao.ignoradas) ? conexao.ignoradas : [];
-  const principal = conexao.principal || (todas.find(a => a.principal) || {}).id;
-  return { ids: todas.filter(a => !ignoradas.includes(a.id) || a.id === principal).map(a => a.id), principal };
-}
+const agendasQueBloqueiam = G.agendasQueBloqueiam;
 
 /* intervalos ocupados dentro de [inicio, fim] (instantes), já divididos por dia de Brasília */
 async function buscarOcupados(userId, conexao, ids, inicio, fim) {

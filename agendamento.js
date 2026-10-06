@@ -66,7 +66,8 @@ async function iniciarModuloAgenda() {
     // faz tempo, então erro neles é tratado como caso raro (cai pro
     // padrão), não trava a tela inteira.
     if (dispRes.error || agsRes.error) {
-      renderAgendaSetup(container, { tabelasIndisponiveis: true });
+      console.error('Agenda: erro ao ler as tabelas:', dispRes.error || agsRes.error);
+      renderAgendaSetup(container, { tabelasIndisponiveis: true, detalhe: (dispRes.error || agsRes.error).message });
       return;
     }
 
@@ -115,7 +116,7 @@ async function iniciarModuloAgenda() {
     });
   } catch (e) {
     console.error('Erro ao carregar a agenda:', e);
-    renderAgendaSetup(container, { tabelasIndisponiveis: true });
+    renderAgendaSetup(container, { tabelasIndisponiveis: true, detalhe: e && e.message });
   }
 }
 
@@ -131,7 +132,8 @@ function renderAgendaSetup(container, ctx) {
       <div id="agenda-container" class="painel">
         <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Agenda</h3></div>
         <hr class="divisa">
-        <p class="ag-nota">As tabelas de agenda ainda não existem no Supabase deste projeto. Rode o SQL de configuração (o astrólogo já recebeu esse script) e recarregue a página.</p>
+        <p class="ag-nota">Não foi possível carregar a agenda agora. Recarregue a página; se continuar, pode faltar criar as tabelas de agenda no Supabase.</p>
+        ${ctx.detalhe ? `<p class="ag-nota" style="opacity:.6">Detalhe: ${escapeHtml(String(ctx.detalhe))}</p>` : ''}
       </div>
     `;
     return;
@@ -179,7 +181,7 @@ function renderAgendaSetup(container, ctx) {
       <div class="cabeca-ferramenta">
         <h3 class="titulo-ferramenta">Agenda</h3>
       </div>
-      <p class="ag-nota">Ainda sem sincronizar com a Google Agenda — por enquanto, tudo fica só aqui dentro.</p>
+      <div class="ag-bloco" id="agGoogleCompromissos"><div class="menu-vazio">Carregando compromissos...</div></div>
 
       <hr class="divisa">
 
@@ -215,6 +217,55 @@ function renderAgendaSetup(container, ctx) {
       <hr class="divisa">
     </div>
   `;
+  carregarCompromissosGoogleAgenda();
+}
+
+/* COMPROMISSOS DAS AGENDAS DO GOOGLE (as marcadas em Configurações → Agenda como "bloqueiam horário"), igual ao Google:
+   dia a dia, com horário, título e de qual agenda é. Só leitura; quem busca é o servidor (api/google.js, ação "eventos"). */
+let agendaDiasCompromissos = 14;
+const AGENDA_SEMANA_CURTA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+function agendaSomarDiasISO(iso, n) {
+  const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+async function carregarCompromissosGoogleAgenda() {
+  const caixa = document.getElementById('agGoogleCompromissos');
+  if (!caixa) return;
+  const seletor = `
+    <select class="modal-select" style="max-width: 190px" onchange="agendaDiasCompromissos = parseInt(this.value, 10); carregarCompromissosGoogleAgenda();">
+      ${[7, 14, 30].map(n => `<option value="${n}" ${n === agendaDiasCompromissos ? 'selected' : ''}>Próximos ${n} dias</option>`).join('')}
+    </select>`;
+  try {
+    // "hoje" no horário de Brasília (a agenda do astrólogo é de lá)
+    const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+    const r = await chamarApiGoogleConexao({ acao: 'eventos', de: hoje, ate: agendaSomarDiasISO(hoje, agendaDiasCompromissos - 1) });
+    if (!r.ok) throw new Error(r.erro || 'erro');
+    if (!r.conectado) {
+      caixa.innerHTML = `<div class="titulo-secao">Meus compromissos</div>
+        <div class="menu-vazio">Conecte a Google Agenda em <a href="#" onclick="abrirConfiguracoes('agenda'); return false;">Configurações → Agenda</a> para ver aqui os compromissos das suas agendas.</div>`;
+      return;
+    }
+    const porDia = new Map();
+    r.eventos.forEach(ev => { if (!porDia.has(ev.data)) porDia.set(ev.data, []); porDia.get(ev.data).push(ev); });
+    const dias = Array.from(porDia.keys()).sort();
+    const corpo = dias.length ? dias.map(dia => {
+      const d = new Date(dia + 'T12:00:00Z');
+      const titulo = `${AGENDA_SEMANA_CURTA[d.getUTCDay()]}, ${agendaFormatarDataBR(dia).slice(0, 5)}${dia === hoje ? ' — hoje' : ''}`;
+      return `<div class="ag-dia-titulo">${escapeHtml(titulo)}</div>` + porDia.get(dia).map(ev => `
+        <div class="ag-item">
+          <div class="ag-item-corpo">
+            <div class="ag-item-nome" style="white-space: normal">${escapeHtml(ev.titulo)}</div>
+            <div class="ag-item-det">${ev.diaInteiro ? 'Dia inteiro' : escapeHtml(ev.hora_inicio + (ev.hora_fim ? ' – ' + ev.hora_fim : ''))}${ev.calendario ? ' · ' + escapeHtml(ev.calendario) : ''}${ev.local ? ' · ' + escapeHtml(ev.local) : ''}</div>
+          </div>
+        </div>`).join('');
+    }).join('') : '<div class="menu-vazio">Nenhum compromisso nesse período.</div>';
+    caixa.innerHTML = `<div class="cabeca-ferramenta" style="justify-content: space-between"><div class="titulo-secao" style="margin:0">Meus compromissos</div>${seletor}</div>${corpo}`;
+  } catch (e) {
+    console.error('Agenda: compromissos do Google:', e);
+    caixa.innerHTML = `<div class="titulo-secao">Meus compromissos</div><div class="menu-vazio">Não foi possível carregar os compromissos agora. Recarregue em instantes.</div>`;
+  }
 }
 
 /* Duração do horário: a do serviço escolhido (Configurações → Serviços), ou a duração padrão da agenda se o serviço não tem */

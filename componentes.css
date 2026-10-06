@@ -380,6 +380,7 @@
 .ag-aviso a { color: var(--terracota); font-weight: 700; }
 .ag-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
 .ag-item-corpo { min-width: 0; }
+.ag-dia-titulo { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--terracota); margin: 14px 0 2px; }
 .ag-item-nome { font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ag-item-det { font-size: 11px; margin-top: 2px; opacity: .8; }
 
