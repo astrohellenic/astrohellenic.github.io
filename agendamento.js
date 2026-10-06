@@ -35,6 +35,7 @@ const AGENDA_DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 
 let agendaDisponibilidadeCache = [];
 let agendaAgendamentosCache = [];
 let agendaMapasCache = [];
+let agendaTodosMapasCache = []; // todos os clientes (pra achar o contato de um compromisso), sem o filtro de pastas
 let agendaServicosCache = [];
 let agendaConfigCache = { duracao: 60, intervalo: 0, pastasVisiveis: null };
 
@@ -56,7 +57,7 @@ async function iniciarModuloAgenda() {
     const [dispRes, agsRes, mapasRes, servicosRes, configRes] = await Promise.all([
       supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
       supabaseClient.from('agendamentos').select('*').eq('user_id', user.id).gte('data', hojeISO).order('data', { ascending: true }).order('hora_inicio', { ascending: true }),
-      supabaseClient.from('mapas').select('id, nome, codigo, pasta, cidade, tipo'),
+      supabaseClient.from('mapas').select('id, nome, codigo, pasta, cidade, tipo, whatsapp, email'),
       supabaseClient.from('relatorio_presets').select('id, nome, duracao_minutos').eq('user_id', user.id).order('nome', { ascending: true }),
       supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
     ]);
@@ -87,6 +88,7 @@ async function iniciarModuloAgenda() {
       ? configRes.data.agenda_pastas_visiveis
       : null;
 
+    agendaTodosMapasCache = todosOsMapas;
     agendaMapasCache = pastasVisiveis
       ? todosOsMapas.filter(m => pastasVisiveis.includes(m.pasta))
       : todosOsMapas;
@@ -230,6 +232,36 @@ function agendaSomarDiasISO(iso, n) {
   return d.toISOString().slice(0, 10);
 }
 
+/* contato (WhatsApp e e-mail) do cliente do compromisso: acha o cliente pelo código no começo do título/da agenda (ex.: "0157 - Nome")
+   ou, se não tiver código, pelo nome completo dentro do título (só quando der um cliente só) */
+function agendaClienteDoCompromisso(ev) {
+  const mapas = agendaTodosMapasCache || [];
+  const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  for (const texto of [ev.titulo, ev.calendario]) {
+    const cod = String(texto || '').match(/^\s*(\d{3,6})\b/);
+    if (cod) {
+      const achados = mapas.filter(m => m.codigo && String(m.codigo).replace(/^0+/, '') === cod[1].replace(/^0+/, ''));
+      if (achados.length === 1) return achados[0];
+    }
+  }
+  const t = norm(ev.titulo);
+  const porNome = mapas.filter(m => m.nome && norm(m.nome).length >= 6 && t.includes(norm(m.nome)));
+  return porNome.length === 1 ? porNome[0] : null;
+}
+
+function agendaContatoDoCompromisso(ev) {
+  const m = agendaClienteDoCompromisso(ev);
+  if (!m) return '';
+  const partes = [];
+  const zap = m.whatsapp ? String(m.whatsapp).trim() : '';
+  if (zap) {
+    const num = zap.replace(/\D/g, '');
+    partes.push(`WhatsApp: ${num ? `<a href="https://wa.me/${num}" target="_blank" rel="noopener">${escapeHtml(zap)}</a>` : escapeHtml(zap)}`);
+  }
+  if (m.email) partes.push(`E-mail: ${escapeHtml(String(m.email).trim())}`);
+  return partes.length ? `<div class="ag-item-det">${partes.join(' · ')}</div>` : '';
+}
+
 async function carregarCompromissosGoogleAgenda() {
   const caixa = document.getElementById('agGoogleCompromissos');
   if (!caixa) return;
@@ -253,15 +285,16 @@ async function carregarCompromissosGoogleAgenda() {
     const corpo = dias.length ? dias.map(dia => {
       const d = new Date(dia + 'T12:00:00Z');
       const titulo = `${AGENDA_SEMANA_CURTA[d.getUTCDay()]}, ${agendaFormatarDataBR(dia).slice(0, 5)}${dia === hoje ? ' — hoje' : ''}`;
-      return `<div class="ag-dia-titulo">${escapeHtml(titulo)}</div>` + porDia.get(dia).map(ev => `
+      return `<div class="ag-dia"><div class="ag-dia-titulo">${escapeHtml(titulo)}</div>` + porDia.get(dia).map(ev => `
         <div class="ag-item">
           <div class="ag-item-corpo">
             <div class="ag-item-nome" style="white-space: normal">${escapeHtml(ev.titulo)}</div>
             <div class="ag-item-det">${ev.diaInteiro ? 'Dia inteiro' : escapeHtml(ev.hora_inicio + (ev.hora_fim ? ' – ' + ev.hora_fim : ''))}${ev.calendario ? ' · ' + escapeHtml(ev.calendario) : ''}${ev.local ? ' · ' + escapeHtml(ev.local) : ''}</div>
+            ${agendaContatoDoCompromisso(ev)}
           </div>
-        </div>`).join('');
+        </div>`).join('') + '</div>';
     }).join('') : '<div class="menu-vazio">Nenhum compromisso nesse período.</div>';
-    caixa.innerHTML = `<div class="cabeca-ferramenta" style="justify-content: space-between"><div class="titulo-secao" style="margin:0">Meus compromissos</div>${seletor}</div>${corpo}`;
+    caixa.innerHTML = `<div class="cabeca-ferramenta" style="justify-content: space-between"><div class="titulo-secao" style="margin:0">Meus compromissos</div>${seletor}</div><hr class="divisa">${corpo}`;
   } catch (e) {
     console.error('Agenda: compromissos do Google:', e);
     caixa.innerHTML = `<div class="titulo-secao">Meus compromissos</div><div class="menu-vazio">Não foi possível carregar os compromissos agora. Recarregue em instantes.</div>`;
