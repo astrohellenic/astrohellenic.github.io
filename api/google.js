@@ -58,6 +58,14 @@ async function salvar(userId, corpo) {
   return { ok: true };
 }
 
+/* link da videochamada (Google Meet) do evento, se tiver; só aceita endereço https */
+function linkDaVideochamada(ev) {
+  const pontos = (ev.conferenceData && ev.conferenceData.entryPoints) || [];
+  const video = pontos.find(p => p.entryPointType === 'video');
+  const url = ev.hangoutLink || (video && video.uri) || null;
+  return url && /^https:\/\//.test(url) ? url : null;
+}
+
 /* compromissos das agendas que BLOQUEIAM (as marcadas em Configurações → Agenda), pra tela Agenda do software mostrar
    "o que eu tenho". Só o astrólogo logado vê os dele; nada disso é guardado. Eventos "livres" (que não bloqueiam) ficam de fora. */
 async function eventos(userId, corpo) {
@@ -75,7 +83,7 @@ async function eventos(userId, corpo) {
   const buscar = async (id) => {
     const r = await G.chamarGoogle(userId, conexao, '/calendars/' + encodeURIComponent(id) + '/events?' + new URLSearchParams({
       timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeZone: fuso,
-      fields: 'items(id,summary,status,transparency,start,end,location)'
+      fields: 'items(id,summary,status,transparency,start,end,location,hangoutLink,conferenceData/entryPoints(entryPointType,uri))'
     }).toString()).catch(() => ({ items: [] })); // uma agenda sem acesso não derruba as outras
     (r.items || []).forEach(ev => {
       if (ev.status === 'cancelled' || ev.transparency === 'transparent') return;
@@ -87,7 +95,7 @@ async function eventos(userId, corpo) {
         data = ini.dataISO; hi = G.minParaHHMM(ini.minutos); hf = fim.dataISO === ini.dataISO ? G.minParaHHMM(fim.minutos) : null;
       }
       const ag = porId.get(id) || {};
-      saida.push({ id: id + '|' + ev.id, calendario: ag.nome || '', cor: ag.cor || null, titulo: ev.summary || '(sem título)', local: ev.location || null, diaInteiro, data, hora_inicio: hi, hora_fim: hf });
+      saida.push({ id: id + '|' + ev.id, calendario: ag.nome || '', cor: ag.cor || null, titulo: ev.summary || '(sem título)', local: ev.location || null, meet: linkDaVideochamada(ev), diaInteiro, data, hora_inicio: hi, hora_fim: hf });
     });
   };
   // algumas agendas por vez (o astrólogo pode ter dezenas, uma por aluno/cliente)

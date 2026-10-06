@@ -203,6 +203,7 @@
 .action-record-btn { background: transparent; border: 0; cursor: pointer; padding: 6px; font-size: 12px; color: var(--azul-egipcio-escuro); }
 .action-record-btn:hover { color: var(--terracota); }
 .action-record-btn.whats-btn { color: var(--verde); }
+.action-record-btn.meet-btn { color: var(--azul-egipcio-escuro); }
 .action-record-btn.email-btn { color: var(--azul-egipcio-claro); }
 .action-record-btn.delete-btn { color: var(--terracota); }
 .map-select-cb { margin-right: 10px; cursor: pointer; width: 16px; height: 16px; accent-color: var(--terracota); }
