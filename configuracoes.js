@@ -504,6 +504,7 @@ async function carregarGoogleAgendaConfig() {
       <div class="cfg-dias">${linhas}</div>
       <div class="cfg-acoes">
         <button type="button" class="cfg-btn cfg-btn-primario" onclick="salvarGoogleAgenda()">Salvar agendas</button>
+        <button type="button" class="cfg-btn" onclick="conectarGoogleAgenda()">Reconectar</button>
         <button type="button" class="cfg-btn" onclick="desconectarGoogleAgenda()">Desconectar</button>
       </div>
       <p class="cfg-card-desc">O que o software acessa na sua conta Google: <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>`;
