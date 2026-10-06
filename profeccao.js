@@ -683,7 +683,7 @@
     <div id="profeccao-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
         <div class="cabeca-ferramenta">
-            <h2 class="titulo-ferramenta">Profecção Anual ${idade} - Anos</h2>
+            <h2 class="titulo-ferramenta">Profecção Anual <span style="display: block;">${idade} ${idade === 1 ? 'ano' : 'anos'}</span></h2>
             <div class="acoes-ferramenta">
                 <div style="position: relative; flex-shrink: 0;">
                     <button type="button" class="botao-icone" onclick="toggleJanelaAnoProfeccao(event)" title="Escolher o ano profectado">${svgCalendario}</button>
