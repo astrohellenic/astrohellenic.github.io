@@ -119,11 +119,22 @@ async function acaoCriar(corpo) {
   if ((await buscarOcupados(u, conexao, ids, inicio, fim)).length) return erro(409, 'Esse horário acabou de ser ocupado. Escolha outro.');
 
   const nome = (agenda.cliente_nome || 'Cliente').toString().slice(0, 120);
+  // contato que o próprio cliente já preencheu no formulário (cadastro/mapa): vai pra descrição do evento, pro astrólogo ver na hora
+  let contato = '';
+  try {
+    const m = await G.supa('/rest/v1/mapas?id=eq.' + encodeURIComponent(c) + '&select=whatsapp,email');
+    const dados = m && m[0];
+    if (dados) {
+      const limpa = (t) => String(t || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
+      if (limpa(dados.whatsapp)) contato += '\nWhatsApp: ' + limpa(dados.whatsapp);
+      if (limpa(dados.email)) contato += '\nE-mail: ' + limpa(dados.email);
+    }
+  } catch (e) { /* sem contato na descrição, o evento sai igual */ }
   const evento = await G.chamarGoogle(u, conexao, '/calendars/' + encodeURIComponent(principal) + '/events', {
     method: 'POST',
     body: JSON.stringify({
       summary: 'Atendimento - ' + nome,
-      description: 'Agendado pelo Astro Hellenic.',
+      description: 'Agendado pelo Astro Hellenic.' + contato,
       start: { dateTime: inicio.toISOString(), timeZone: G.FUSO },
       end: { dateTime: fim.toISOString(), timeZone: G.FUSO },
       extendedProperties: { private: { origem: 'astrohellenic', mapa: String(c) } }
