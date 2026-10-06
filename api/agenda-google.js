@@ -44,7 +44,14 @@ function lerChaveDaConta() {
     // colado com quebras de linha de verdade dentro do texto da chave: escapa e tenta de novo
     obj = JSON.parse(bruto.replace(/\r?\n/g, '\\n'));
   }
-  if (!obj.client_email || !obj.private_key) throw new Error('JSON da conta de serviço incompleto');
+  // Algumas vezes o valor vem embrulhado (texto dentro de aspas, ou o arquivo de outro tipo): tenta achar a conta dentro dele
+  if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch (e) { /* segue pro erro abaixo */ } }
+  if (obj && !obj.client_email && obj.service_account) obj = obj.service_account;
+  if (!obj || !obj.client_email || !obj.private_key) {
+    // só os NOMES dos campos (nunca os valores) pra dar pra ver nos Logs o que foi colado
+    const campos = obj && typeof obj === 'object' ? Object.keys(obj).join(', ') : typeof obj;
+    throw new Error('JSON da conta de serviço incompleto (campos encontrados: ' + campos + '; tamanho: ' + bruto.length + ')');
+  }
   return obj;
 }
 
