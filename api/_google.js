@@ -105,6 +105,15 @@ async function salvarConexao(userId, campos) {
     body: JSON.stringify({ user_id: userId, ...campos, atualizado_em: new Date().toISOString() })
   });
 }
+/* só ATUALIZA campos de uma conexão que já existe (PATCH). Não dá pra usar o "salvarConexao" (upsert) aqui: ele tenta inserir
+   uma linha nova sem o token, e o banco recusa antes de perceber que a linha já existe. */
+async function atualizarConexao(userId, campos) {
+  await supa('/rest/v1/google_conexoes?user_id=eq.' + encodeURIComponent(userId), {
+    method: 'PATCH',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({ ...campos, atualizado_em: new Date().toISOString() })
+  });
+}
 async function apagarConexao(userId) {
   await supa('/rest/v1/google_conexoes?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
 }
@@ -200,7 +209,7 @@ const somarDias = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTC
 module.exports = {
   SITE, FUSO, REDIRECT_URI, ESCOPOS, SUPABASE_URL, SUPABASE_ANON, aplicarCors, env,
   cifrar, decifrar, criarEstado, lerEstado,
-  supa, usuarioDoJwt, lerConexao, salvarConexao, apagarConexao,
+  supa, usuarioDoJwt, lerConexao, salvarConexao, atualizarConexao, apagarConexao,
   trocarCodigo, tokenDeAcesso, chamarGoogle, listarAgendas, esquecerAgendas,
   instanteLocal, paraLocal, minParaHHMM, hhmmParaMin, ehData, ehHora, somarDias
 };

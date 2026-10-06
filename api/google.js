@@ -53,7 +53,7 @@ async function salvar(userId, corpo) {
   const ids = agendas.map(a => a.id);
   const principal = ids.includes(corpo.principal) ? corpo.principal : (agendas.find(a => a.principal) || {}).id;
   const ignoradas = (Array.isArray(corpo.ignoradas) ? corpo.ignoradas : []).filter(id => ids.includes(id) && id !== principal);
-  await G.salvarConexao(userId, { principal, ignoradas });
+  await G.atualizarConexao(userId, { principal, ignoradas });
   return { ok: true };
 }
 
