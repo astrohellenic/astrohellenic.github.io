@@ -35,15 +35,35 @@ function aplicarCors(req, res) {
 
 /* ---------- Google: token da conta de serviço ---------- */
 
+/* Lê o JSON da conta de serviço mesmo quando o texto colado veio "estragado" do jeito mais comum: quebras de linha de verdade
+   DENTRO do texto da chave (o JSON exige "\\n"), ou aspas "curvas" trocadas pelo teclado/visualizador do aparelho.
+   Só mexe nas quebras de linha que estão dentro de aspas; as de fora (entre os campos) são válidas e ficam como estão. */
+function consertarJson(texto) {
+  let t = String(texto).replace(/[\u201C\u201D]/g, '"').replace(/^\uFEFF/, '').trim();
+  let saida = '', dentro = false, escapado = false;
+  for (const c of t) {
+    if (dentro) {
+      if (escapado) { saida += c; escapado = false; continue; }
+      if (c === '\\') { saida += c; escapado = true; continue; }
+      if (c === '"') { dentro = false; saida += c; continue; }
+      if (c === '\n') { saida += '\\n'; continue; }
+      if (c === '\r') { continue; }
+      if (c === '\t') { saida += '\\t'; continue; }
+      saida += c;
+    } else {
+      if (c === '"') dentro = true;
+      saida += c;
+    }
+  }
+  return saida;
+}
+
 function lerChaveDaConta() {
   const bruto = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!bruto) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON não configurada');
   let obj;
   try { obj = JSON.parse(bruto); }
-  catch (e) {
-    // colado com quebras de linha de verdade dentro do texto da chave: escapa e tenta de novo
-    obj = JSON.parse(bruto.replace(/\r?\n/g, '\\n'));
-  }
+  catch (e) { obj = JSON.parse(consertarJson(bruto)); }
   // Algumas vezes o valor vem embrulhado (texto dentro de aspas, ou o arquivo de outro tipo): tenta achar a conta dentro dele
   if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch (e) { /* segue pro erro abaixo */ } }
   if (obj && !obj.client_email && obj.service_account) obj = obj.service_account;
