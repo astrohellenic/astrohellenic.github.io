@@ -161,8 +161,10 @@ function renderAgendaSetup(container, ctx) {
     ? servicos.map(s => `<option value="${s.id}">${escapeHtml(s.nome)}</option>`).join('')
     : '<option value="">Nenhum serviço cadastrado ainda</option>';
 
-  const listaAgendamentosHTML = agendamentos.length
-    ? agendamentos.map(a => {
+  // o que já terminou (inclusive hoje de manhã) sai da lista
+  const agendamentosFuturos = agendamentos.filter(a => !agendaJaPassou(a.data, a.hora_fim || a.hora_inicio));
+  const listaAgendamentosHTML = agendamentosFuturos.length
+    ? agendamentosFuturos.map(a => {
         const servicoDataHora = `${escapeHtml(a.servico_nome || 'Serviço')} — ${agendaFormatarDataBR(a.data)} às ${a.hora_inicio.slice(0, 5)}`;
         const rotuloCancelar = escapeHtml((a.cliente_nome || 'Cliente') + ' — ' + (a.servico_nome || 'Serviço') + ' — ' + agendaFormatarDataBR(a.data) + ' ' + a.hora_inicio.slice(0, 5)).replace(/'/g, "\\'");
         return `
@@ -227,6 +229,19 @@ function renderAgendaSetup(container, ctx) {
 let agendaDiasCompromissos = 14;
 const AGENDA_SEMANA_CURTA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
+/* agora, no horário de Brasília (a agenda do astrólogo é de lá): { data:'YYYY-MM-DD', hhmm:'HH:MM' } */
+function agendaAgoraBrasilia() {
+  const p = {};
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+  return { data: `${p.year}-${p.month}-${p.day}`, hhmm: `${p.hour}:${p.minute}` };
+}
+/* já terminou? (data + hora de fim 'HH:MM'; sem hora de fim vale a de início) */
+function agendaJaPassou(data, horaFim) {
+  const agora = agendaAgoraBrasilia();
+  return data < agora.data || (data === agora.data && String(horaFim).slice(0, 5) <= agora.hhmm);
+}
+
 function agendaSomarDiasISO(iso, n) {
   const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
@@ -278,7 +293,7 @@ async function carregarCompromissosGoogleAgenda() {
       return;
     }
     const porDia = new Map();
-    r.eventos.forEach(ev => { if (!porDia.has(ev.data)) porDia.set(ev.data, []); porDia.get(ev.data).push(ev); });
+    r.eventos.filter(ev => ev.diaInteiro || !agendaJaPassou(ev.data, ev.hora_fim || ev.hora_inicio)).forEach(ev => { if (!porDia.has(ev.data)) porDia.set(ev.data, []); porDia.get(ev.data).push(ev); });
     const dias = Array.from(porDia.keys()).sort();
     const corpo = dias.length ? dias.map(dia => {
       const d = new Date(dia + 'T12:00:00Z');
