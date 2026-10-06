@@ -148,7 +148,7 @@
     // Se não der pra consultar, não mostra horário nenhum (melhor do que oferecer um horário que pode estar ocupado).
     try {
       const hoje = agoraBrasilia().dataISO;
-      const g = await chamarGoogleAgenda({ acao: 'ocupados', de: hoje, ate: somarDias(hoje, DIAS_A_FRENTE) });
+      const g = await chamarGoogleAgenda({ acao: 'ocupados', u: ownerId, de: hoje, ate: somarDias(hoje, DIAS_A_FRENTE) });
       if (!g.json || g.json.ok !== true) throw new Error('google');
       agenda.ocupados = (agenda.ocupados || []).concat(g.json.ocupados);
     } catch (e) {

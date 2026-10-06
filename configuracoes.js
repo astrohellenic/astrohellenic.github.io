@@ -374,6 +374,8 @@ async function carregarConfiguracoesAgenda() {
       : '<div class="cfg-card-desc">Nenhuma pasta encontrada.</div>';
 
     container.innerHTML = `
+      <div class="cfg-card cfg-card-largo" id="cfgGoogleAgenda"><div class="cfg-carregando">Carregando Google Agenda...</div></div>
+
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Sua disponibilidade</h4>
         <p class="cfg-card-desc">Marque os dias que você atende e o horário de cada um. Usado para calcular os horários livres na ferramenta Agenda.</p>
@@ -401,10 +403,112 @@ async function carregarConfiguracoesAgenda() {
           <button type="button" class="cfg-btn cfg-btn-primario" onclick="salvarPastasVisiveisAgenda()">Salvar pastas visíveis</button>
         </div>
       </div>`;
+    carregarGoogleAgendaConfig();
   } catch (e) {
     console.error('Erro ao carregar configurações de agenda:', e);
     container.innerHTML = `<div class="cfg-card cfg-card-largo">Erro de conexão ao carregar.</div>`;
   }
+}
+
+/* ==========================================
+   GOOGLE AGENDA (dentro de Configurações → Agenda)
+   O astrólogo conecta a conta Google dele (login normal do Google). O software lista TODAS as agendas da conta e ele
+   marca quais bloqueiam horário (a que recebe os agendamentos fica como "principal"). Agenda nova na conta dele já
+   entra bloqueando; se não quiser, é só desmarcar aqui. Quem faz o trabalho de verdade é o servidor (api/google.js):
+   o navegador nunca vê o token do Google. Ver CLAUDE.md ("Agenda ligada à Google Agenda").
+   ========================================== */
+const GOOGLE_CONEXAO_API = 'https://astrohellenicgithubio.vercel.app/api/google';
+
+/* volta do login do Google (o servidor manda o navegador pra "/?google=conectado"): reabre Configurações → Agenda */
+(function () {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const retorno = params.get('google');
+    if (!retorno) return;
+    window.googleRetorno = retorno;
+    window.configSecaoAtiva = 'agenda';
+    localStorage.setItem('astro_ultimo_modulo', 'configuracoes');
+    params.delete('google');
+    const resto = params.toString();
+    history.replaceState(null, '', window.location.pathname + (resto ? '?' + resto : '') + window.location.hash);
+  } catch (e) { /* sem isso só não reabre a tela sozinho */ }
+})();
+
+async function chamarApiGoogleConexao(corpo) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) throw new Error('sem sessão');
+  const r = await fetch(GOOGLE_CONEXAO_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...corpo, jwt: session.access_token }) });
+  let j = null; try { j = await r.json(); } catch (e) { /* sem JSON */ }
+  if (!j) throw new Error('resposta inválida');
+  return j;
+}
+
+async function carregarGoogleAgendaConfig() {
+  const card = document.getElementById('cfgGoogleAgenda');
+  if (!card) return;
+  let aviso = '';
+  if (window.googleRetorno === 'conectado') aviso = '<p class="cfg-card-desc"><strong>Conectado!</strong> Escolha abaixo quais agendas bloqueiam horário.</p>';
+  else if (window.googleRetorno === 'cancelado') aviso = '<p class="cfg-card-desc">Conexão cancelada.</p>';
+  else if (window.googleRetorno === 'erro') aviso = '<p class="cfg-card-desc">Não foi possível conectar. Tente de novo.</p>';
+  window.googleRetorno = null;
+  try {
+    const st = await chamarApiGoogleConexao({ acao: 'status' });
+    if (!st.ok) throw new Error(st.erro || 'erro');
+    if (!st.conectado) {
+      card.innerHTML = `
+        <h4 class="cfg-card-titulo">Google Agenda</h4>
+        ${aviso}
+        <p class="cfg-card-desc">${st.revogado ? 'A permissão foi removida ou expirou. Conecte de novo.' : 'Conecte a sua conta Google para que os horários já ocupados nas suas agendas não apareçam para o cliente, e para cada agendamento virar um evento na sua agenda.'}</p>
+        <div class="cfg-acoes"><button type="button" class="cfg-btn cfg-btn-primario" onclick="conectarGoogleAgenda()">Conectar Google Agenda</button></div>`;
+      return;
+    }
+    const linhas = st.agendas.map((a, i) => `
+      <div class="cfg-dia">
+        <input type="checkbox" class="gAgBloqueia" id="gAgB${i}" value="${escapeHtml(a.id)}" ${a.bloqueia ? 'checked' : ''} ${a.id === st.principal ? 'disabled' : ''}>
+        <label for="gAgB${i}" class="cfg-dia-nome" style="flex:1">${escapeHtml(a.nome)}</label>
+        <label class="cfg-checkbox"><input type="radio" name="gAgPrincipal" value="${escapeHtml(a.id)}" ${a.id === st.principal ? 'checked' : ''} onchange="document.querySelectorAll('.gAgBloqueia').forEach(c => { c.disabled = (c.value === this.value); if (c.value === this.value) c.checked = true; })"> recebe os agendamentos</label>
+      </div>`).join('');
+    card.innerHTML = `
+      <h4 class="cfg-card-titulo">Google Agenda</h4>
+      ${aviso}
+      <p class="cfg-card-desc">Conectado como <strong>${escapeHtml(st.email || 'sua conta Google')}</strong>. Marque as agendas que bloqueiam horário: se qualquer uma delas estiver ocupada, o horário não aparece para o cliente. Agenda nova que você criar no Google já aparece aqui bloqueando.</p>
+      <div class="cfg-dias">${linhas}</div>
+      <div class="cfg-acoes">
+        <button type="button" class="cfg-btn cfg-btn-primario" onclick="salvarGoogleAgenda()">Salvar agendas</button>
+        <button type="button" class="cfg-btn" onclick="desconectarGoogleAgenda()">Desconectar</button>
+      </div>`;
+  } catch (e) {
+    console.error('Google Agenda (config):', e);
+    card.innerHTML = `<h4 class="cfg-card-titulo">Google Agenda</h4><p class="cfg-card-desc">Não foi possível carregar agora. Recarregue a página em instantes.</p>`;
+  }
+}
+
+async function conectarGoogleAgenda() {
+  try {
+    const r = await chamarApiGoogleConexao({ acao: 'iniciar' });
+    if (!r.ok || !r.url) { alert(r.erro || 'Não foi possível iniciar a conexão.'); return; }
+    window.location.href = r.url;
+  } catch (e) { alert('Não foi possível iniciar a conexão.'); }
+}
+
+async function salvarGoogleAgenda() {
+  const principalEl = document.querySelector('input[name="gAgPrincipal"]:checked');
+  const ignoradas = Array.from(document.querySelectorAll('.gAgBloqueia')).filter(c => !c.checked).map(c => c.value);
+  try {
+    const r = await chamarApiGoogleConexao({ acao: 'salvar', principal: principalEl ? principalEl.value : null, ignoradas });
+    if (!r.ok) { alert(r.erro || 'Não foi possível salvar.'); return; }
+    alert('Agendas salvas.');
+    carregarGoogleAgendaConfig();
+  } catch (e) { alert('Não foi possível salvar.'); }
+}
+
+async function desconectarGoogleAgenda() {
+  if (!confirm('Desconectar a Google Agenda? Os horários ocupados nela deixam de bloquear os agendamentos.')) return;
+  try {
+    const r = await chamarApiGoogleConexao({ acao: 'desconectar' });
+    if (!r.ok) { alert(r.erro || 'Não foi possível desconectar.'); return; }
+    carregarGoogleAgendaConfig();
+  } catch (e) { alert('Não foi possível desconectar.'); }
 }
 
 /* ==========================================
