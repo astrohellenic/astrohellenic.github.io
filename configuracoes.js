@@ -486,7 +486,9 @@ async function carregarGoogleAgendaConfig() {
         <h4 class="cfg-card-titulo">Google Agenda</h4>
         ${aviso}
         <p class="cfg-card-desc">${st.revogado ? 'A permissão foi removida ou expirou. Conecte de novo.' : 'Conecte a sua conta Google para que os horários já ocupados nas suas agendas não apareçam para o cliente, e para cada agendamento virar um evento na sua agenda.'}</p>
-        <div class="cfg-acoes"><button type="button" class="cfg-btn cfg-btn-primario" onclick="conectarGoogleAgenda()">Conectar Google Agenda</button></div>`;
+        <p class="cfg-card-desc">Antes de conectar, leia o que o software acessa na sua conta Google: <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
+        <label class="cfg-checkbox"><input type="checkbox" id="gAgLiPolitica" onchange="document.getElementById('gAgBotaoConectar').disabled = !this.checked"> Li e concordo com a Política de Privacidade</label>
+        <div class="cfg-acoes"><button type="button" class="cfg-btn cfg-btn-primario" id="gAgBotaoConectar" disabled onclick="conectarGoogleAgenda()">Conectar Google Agenda</button></div>`;
       return;
     }
     const linhas = st.agendas.map((a, i) => `
@@ -503,7 +505,8 @@ async function carregarGoogleAgendaConfig() {
       <div class="cfg-acoes">
         <button type="button" class="cfg-btn cfg-btn-primario" onclick="salvarGoogleAgenda()">Salvar agendas</button>
         <button type="button" class="cfg-btn" onclick="desconectarGoogleAgenda()">Desconectar</button>
-      </div>`;
+      </div>
+      <p class="cfg-card-desc">O que o software acessa na sua conta Google: <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>`;
   } catch (e) {
     console.error('Google Agenda (config):', e);
     card.innerHTML = `<h4 class="cfg-card-titulo">Google Agenda</h4><p class="cfg-card-desc">Não foi possível carregar agora. Recarregue a página em instantes.</p>`;
@@ -511,6 +514,8 @@ async function carregarGoogleAgendaConfig() {
 }
 
 async function conectarGoogleAgenda() {
+  const li = document.getElementById('gAgLiPolitica');
+  if (li && !li.checked) { alert('Leia e aceite a Política de Privacidade para conectar.'); return; }
   try {
     const r = await chamarApiGoogleConexao({ acao: 'iniciar' });
     if (!r.ok || !r.url) { alert(r.erro || 'Não foi possível iniciar a conexão.'); return; }
