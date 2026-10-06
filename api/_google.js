@@ -144,6 +144,7 @@ async function tokenDeAcesso(userId, conexao) {
   if (!resp.ok || !dados.access_token) {
     const e = new Error('Google recusou o token: ' + (dados.error_description || dados.error || resp.status));
     e.revogado = dados.error === 'invalid_grant'; // o astrólogo tirou a permissão (ou ela expirou): precisa conectar de novo
+    if (e.revogado) { tokensEmMemoria.delete(userId); listaEmMemoria.delete(userId); }
     throw e;
   }
   tokensEmMemoria.set(userId, { valor: dados.access_token, expira: Date.now() + (dados.expires_in || 3600) * 1000 });
@@ -151,15 +152,20 @@ async function tokenDeAcesso(userId, conexao) {
 }
 
 async function chamarGoogle(userId, conexao, caminho, opcoes = {}) {
-  const token = await tokenDeAcesso(userId, conexao);
-  const resp = await fetch('https://www.googleapis.com/calendar/v3' + caminho, {
-    ...opcoes,
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
-  });
-  const texto = await resp.text();
-  const dados = texto ? JSON.parse(texto) : {};
-  if (!resp.ok) throw new Error('Google Agenda: ' + ((dados.error && dados.error.message) || resp.status));
-  return dados;
+  // se o Google recusar a chave guardada (o astrólogo removeu a permissão no Google), esquece a chave e tenta uma vez com uma nova:
+  // se a permissão sumiu de verdade, essa 2ª tentativa dá "revogado" e o site volta a oferecer "Conectar"
+  for (let tentativa = 0; tentativa < 2; tentativa++) {
+    const token = await tokenDeAcesso(userId, conexao);
+    const resp = await fetch('https://www.googleapis.com/calendar/v3' + caminho, {
+      ...opcoes,
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
+    });
+    if (resp.status === 401 && tentativa === 0) { tokensEmMemoria.delete(userId); continue; }
+    const texto = await resp.text();
+    const dados = texto ? JSON.parse(texto) : {};
+    if (!resp.ok) throw new Error('Google Agenda: ' + ((dados.error && dados.error.message) || resp.status));
+    return dados;
+  }
 }
 
 /* TODAS as agendas da conta (as próprias e as compartilhadas), sem as de feriados/aniversários, que não são compromissos */
