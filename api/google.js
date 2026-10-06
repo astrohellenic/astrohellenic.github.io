@@ -41,6 +41,7 @@ async function status(userId) {
     ok: true,
     conectado: true,
     email: conexao.email || null,
+    fuso: await G.fusoDoAstrologo(userId, conexao),
     principal,
     agendas: agendas.map(a => ({ ...a, bloqueia: !ignoradas.includes(a.id) || a.id === principal }))
   };
@@ -67,12 +68,13 @@ async function eventos(userId, corpo) {
   if (dias < 0 || dias > 62) return { ok: false, erro: 'Período inválido.' };
   const { todas, ids } = await G.agendasQueBloqueiam(userId, conexao);
   const porId = new Map(todas.map(a => [a.id, a]));
-  const timeMin = G.instanteLocal(corpo.de, 0).toISOString();
-  const timeMax = G.instanteLocal(G.somarDias(corpo.ate, 1), 0).toISOString();
+  const fuso = await G.fusoDoAstrologo(userId, conexao);
+  const timeMin = G.instanteLocal(corpo.de, 0, fuso).toISOString();
+  const timeMax = G.instanteLocal(G.somarDias(corpo.ate, 1), 0, fuso).toISOString();
   const saida = [];
   const buscar = async (id) => {
     const r = await G.chamarGoogle(userId, conexao, '/calendars/' + encodeURIComponent(id) + '/events?' + new URLSearchParams({
-      timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeZone: G.FUSO,
+      timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeZone: fuso,
       fields: 'items(id,summary,status,transparency,start,end,location)'
     }).toString()).catch(() => ({ items: [] })); // uma agenda sem acesso não derruba as outras
     (r.items || []).forEach(ev => {
@@ -81,7 +83,7 @@ async function eventos(userId, corpo) {
       let data, hi = null, hf = null;
       if (diaInteiro) { data = ev.start.date; }
       else {
-        const ini = G.paraLocal(new Date(ev.start.dateTime)), fim = G.paraLocal(new Date(ev.end.dateTime));
+        const ini = G.paraLocal(new Date(ev.start.dateTime), fuso), fim = G.paraLocal(new Date(ev.end.dateTime), fuso);
         data = ini.dataISO; hi = G.minParaHHMM(ini.minutos); hf = fim.dataISO === ini.dataISO ? G.minParaHHMM(fim.minutos) : null;
       }
       const ag = porId.get(id) || {};
@@ -92,7 +94,7 @@ async function eventos(userId, corpo) {
   const fila = ids.slice();
   await Promise.all(Array.from({ length: 8 }, async () => { while (fila.length) await buscar(fila.shift()); }));
   saida.sort((a, b) => (a.data + (a.hora_inicio || '00:00')).localeCompare(b.data + (b.hora_inicio || '00:00')));
-  return { ok: true, conectado: true, eventos: saida.slice(0, 600) };
+  return { ok: true, conectado: true, fuso, eventos: saida.slice(0, 600) };
 }
 
 /* volta do Google: troca o código pelo token, guarda cifrado, e manda o navegador de volta pro site */

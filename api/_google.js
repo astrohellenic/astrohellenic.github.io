@@ -173,7 +173,7 @@ async function listarAgendas(userId, conexao) {
     const r = await chamarGoogle(userId, conexao, '/users/me/calendarList?minAccessRole=freeBusyReader&maxResults=250' + (pagina ? '&pageToken=' + encodeURIComponent(pagina) : ''));
     (r.items || []).forEach(a => {
       if (String(a.id).includes('#')) return; // feriados, aniversários, etc.
-      itens.push({ id: a.id, nome: a.summaryOverride || a.summary || a.id, principal: !!a.primary, cor: a.backgroundColor || null });
+      itens.push({ id: a.id, nome: a.summaryOverride || a.summary || a.id, principal: !!a.primary, cor: a.backgroundColor || null, fuso: a.timeZone || null });
     });
     pagina = r.nextPageToken;
     if (!pagina) break;
@@ -191,20 +191,29 @@ async function agendasQueBloqueiam(userId, conexao) {
   return { todas, principal, ids: todas.filter(a => !ignoradas.includes(a.id) || a.id === principal).map(a => a.id) };
 }
 
-/* ---------- datas em horário de Brasília ---------- */
+/* fuso horário do astrólogo = o que ele já deixou configurado na Google Agenda (fuso da agenda principal). Sem isso, Brasília. */
+function fusoValido(f) { try { new Intl.DateTimeFormat('en-CA', { timeZone: f }); return true; } catch (e) { return false; } }
+async function fusoDoAstrologo(userId, conexao) {
+  const todas = await listarAgendas(userId, conexao);
+  const principal = conexao.principal || (todas.find(a => a.principal) || {}).id;
+  const ag = todas.find(a => a.id === principal) || todas.find(a => a.principal);
+  return (ag && ag.fuso && fusoValido(ag.fuso)) ? ag.fuso : FUSO;
+}
 
-function instanteLocal(dataISO, minutos) {
+/* ---------- datas no fuso do astrólogo (padrão: Brasília) ---------- */
+
+function instanteLocal(dataISO, minutos, fuso = FUSO) {
   const [a, m, d] = dataISO.split('-').map(Number);
   const chute = Date.UTC(a, m - 1, d, 0, minutos);
   const p = {};
-  new Intl.DateTimeFormat('en-CA', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+  new Intl.DateTimeFormat('en-CA', { timeZone: fuso, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
     .formatToParts(new Date(chute)).forEach(x => { p[x.type] = x.value; });
   const comoUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
   return new Date(chute - (comoUtc - chute));
 }
-function paraLocal(instante) {
+function paraLocal(instante, fuso = FUSO) {
   const p = {};
-  new Intl.DateTimeFormat('en-CA', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  new Intl.DateTimeFormat('en-CA', { timeZone: fuso, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
     .formatToParts(instante).forEach(x => { p[x.type] = x.value; });
   return { dataISO: `${p.year}-${p.month}-${p.day}`, minutos: parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10) };
 }
@@ -218,6 +227,6 @@ module.exports = {
   SITE, FUSO, REDIRECT_URI, ESCOPOS, SUPABASE_URL, SUPABASE_ANON, aplicarCors, env,
   cifrar, decifrar, criarEstado, lerEstado,
   supa, usuarioDoJwt, lerConexao, salvarConexao, atualizarConexao, apagarConexao,
-  trocarCodigo, tokenDeAcesso, chamarGoogle, listarAgendas, esquecerAgendas, agendasQueBloqueiam,
+  trocarCodigo, tokenDeAcesso, chamarGoogle, listarAgendas, esquecerAgendas, agendasQueBloqueiam, fusoDoAstrologo,
   instanteLocal, paraLocal, minParaHHMM, hhmmParaMin, ehData, ehHora, somarDias
 };

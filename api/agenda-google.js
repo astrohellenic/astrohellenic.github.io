@@ -22,20 +22,20 @@ const erro = (status, texto, extra = {}) => ({ status, json: { ok: false, erro: 
 const agendasQueBloqueiam = G.agendasQueBloqueiam;
 
 /* intervalos ocupados dentro de [inicio, fim] (instantes), já divididos por dia de Brasília */
-async function buscarOcupados(userId, conexao, ids, inicio, fim) {
+async function buscarOcupados(userId, conexao, ids, inicio, fim, fuso) {
   const fatias = [];
   for (let i = 0; i < ids.length; i += TAMANHO_LOTE_FREEBUSY) {
     const lote = ids.slice(i, i + TAMANHO_LOTE_FREEBUSY);
     const dados = await G.chamarGoogle(userId, conexao, '/freeBusy', {
       method: 'POST',
-      body: JSON.stringify({ timeMin: inicio.toISOString(), timeMax: fim.toISOString(), timeZone: G.FUSO, items: lote.map(id => ({ id })) })
+      body: JSON.stringify({ timeMin: inicio.toISOString(), timeMax: fim.toISOString(), timeZone: fuso, items: lote.map(id => ({ id })) })
     });
     lote.forEach(id => {
       const cal = dados.calendars && dados.calendars[id];
       if (!cal || (cal.errors && cal.errors.length)) return; // agenda sem acesso de ver ocupado/livre: não dá pra consultar, segue
       (cal.busy || []).forEach(b => {
-        let atual = G.paraLocal(new Date(b.start));
-        const final = G.paraLocal(new Date(b.end));
+        let atual = G.paraLocal(new Date(b.start), fuso);
+        const final = G.paraLocal(new Date(b.end), fuso);
         for (let seguranca = 0; seguranca < 400; seguranca++) {
           const ultimoDia = atual.dataISO === final.dataISO;
           fatias.push({ data: atual.dataISO, hora_inicio: G.minParaHHMM(atual.minutos), hora_fim: ultimoDia ? G.minParaHHMM(final.minutos) : '24:00' });
@@ -74,14 +74,15 @@ async function acaoOcupados(corpo) {
   if (dias < 0 || dias > MAX_DIAS_CONSULTA) return erro(400, 'Período inválido.');
   const regras = await lerRegras(corpo.u);
   // nunca consulta o Google além do que o astrólogo deixa marcar (menos dados e menos chance de passar do limite do Google)
-  const limite = G.somarDias(G.paraLocal(new Date()).dataISO, regras.dias_a_frente + 1);
+  const conexao = await G.lerConexao(corpo.u);
+  const fuso = conexao ? await G.fusoDoAstrologo(corpo.u, conexao) : G.FUSO;
+  const limite = G.somarDias(G.paraLocal(new Date(), fuso).dataISO, regras.dias_a_frente + 1);
   if (corpo.ate > limite) corpo.ate = limite;
   if (corpo.de > corpo.ate) corpo.de = corpo.ate;
-  const conexao = await G.lerConexao(corpo.u);
-  if (!conexao) return ok({ ok: true, conectado: false, ocupados: [], regras });
+  if (!conexao) return ok({ ok: true, conectado: false, ocupados: [], regras, fuso });
   const { ids } = await agendasQueBloqueiam(corpo.u, conexao);
-  const ocupados = await buscarOcupados(corpo.u, conexao, ids, G.instanteLocal(corpo.de, 0), G.instanteLocal(G.somarDias(corpo.ate, 1), 0));
-  return ok({ ok: true, conectado: true, ocupados, regras });
+  const ocupados = await buscarOcupados(corpo.u, conexao, ids, G.instanteLocal(corpo.de, 0, fuso), G.instanteLocal(G.somarDias(corpo.ate, 1), 0, fuso), fuso);
+  return ok({ ok: true, conectado: true, ocupados, regras, fuso });
 }
 
 async function agendaPublica(u, c) {
@@ -105,12 +106,13 @@ async function acaoCriar(corpo) {
 
   const duracao = Number(agenda.duracao) || 60;
   const ini = G.hhmmParaMin(hora);
-  const inicio = G.instanteLocal(data, ini);
-  const fim = G.instanteLocal(data, ini + duracao);
+  const fuso = await G.fusoDoAstrologo(u, conexao);
+  const inicio = G.instanteLocal(data, ini, fuso);
+  const fim = G.instanteLocal(data, ini + duracao, fuso);
   if (inicio.getTime() < Date.now()) return erro(409, 'Esse horário já passou.');
 
   const { ids, principal } = await agendasQueBloqueiam(u, conexao);
-  if ((await buscarOcupados(u, conexao, ids, inicio, fim)).length) return erro(409, 'Esse horário acabou de ser ocupado. Escolha outro.');
+  if ((await buscarOcupados(u, conexao, ids, inicio, fim, fuso)).length) return erro(409, 'Esse horário acabou de ser ocupado. Escolha outro.');
 
   const nome = (agenda.cliente_nome || 'Cliente').toString().slice(0, 120);
   // contato que o próprio cliente já preencheu no formulário (cadastro/mapa): vai pra descrição do evento, pro astrólogo ver na hora
@@ -129,8 +131,8 @@ async function acaoCriar(corpo) {
     body: JSON.stringify({
       summary: 'Atendimento - ' + nome,
       description: 'Agendado pelo Astro Hellenic.' + contato,
-      start: { dateTime: inicio.toISOString(), timeZone: G.FUSO },
-      end: { dateTime: fim.toISOString(), timeZone: G.FUSO },
+      start: { dateTime: inicio.toISOString(), timeZone: fuso },
+      end: { dateTime: fim.toISOString(), timeZone: fuso },
       extendedProperties: { private: { origem: 'astrohellenic', mapa: String(c) } }
     })
   });

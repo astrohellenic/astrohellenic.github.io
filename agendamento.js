@@ -52,7 +52,9 @@ async function iniciarModuloAgenda() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { renderAgendaSetup(container, { semSessao: true }); return; }
 
-    const hojeISO = new Date().toISOString().slice(0, 10);
+    // fuso da Google Agenda do astrólogo (se conectou); se falhar, fica o do aparelho
+    try { const st = await chamarApiGoogleConexao({ acao: 'status' }); if (st && st.fuso) agendaFuso = st.fuso; } catch (e) { /* segue */ }
+    const hojeISO = agendaAgoraBrasilia().data;
 
     const [dispRes, agsRes, mapasRes, servicosRes, configRes] = await Promise.all([
       supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
@@ -229,10 +231,12 @@ function renderAgendaSetup(container, ctx) {
 let agendaDiasCompromissos = 14;
 const AGENDA_SEMANA_CURTA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-/* agora, no horário de Brasília (a agenda do astrólogo é de lá): { data:'YYYY-MM-DD', hhmm:'HH:MM' } */
+/* fuso da agenda do astrólogo = o configurado na Google Agenda dele (vem de api/google.js, ação status/eventos); sem Google, o fuso do aparelho */
+let agendaFuso = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'; } catch (e) { return 'America/Sao_Paulo'; } })();
+/* agora no fuso da agenda: { data:'YYYY-MM-DD', hhmm:'HH:MM' } */
 function agendaAgoraBrasilia() {
   const p = {};
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  new Intl.DateTimeFormat('en-CA', { timeZone: agendaFuso, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
     .formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
   return { data: `${p.year}-${p.month}-${p.day}`, hhmm: `${p.hour}:${p.minute}` };
 }
@@ -283,10 +287,10 @@ async function carregarCompromissosGoogleAgenda() {
       ${[7, 14, 30].map(n => `<option value="${n}" ${n === agendaDiasCompromissos ? 'selected' : ''}>Próximos ${n} dias</option>`).join('')}
     </select>`;
   try {
-    // "hoje" no horário de Brasília (a agenda do astrólogo é de lá)
-    const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+    const hoje = agendaAgoraBrasilia().data;
     const r = await chamarApiGoogleConexao({ acao: 'eventos', de: hoje, ate: agendaSomarDiasISO(hoje, agendaDiasCompromissos - 1) });
     if (!r.ok) throw new Error(r.erro || 'erro');
+    if (r.fuso) agendaFuso = r.fuso;
     if (!r.conectado) {
       caixa.innerHTML = `<div class="titulo-secao">Meus compromissos</div>
         <div class="menu-vazio">Conecte a Google Agenda em <a href="#" onclick="abrirConfiguracoes('agenda'); return false;">Configurações → Agenda</a> para ver aqui os compromissos das suas agendas.</div>`;

@@ -52,10 +52,13 @@
   const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const dataBR = iso => iso.split('-').reverse().join('/');
 
-  /* "agora" no horário de Brasília, que é o fuso da agenda */
+  /* fuso da agenda do astrólogo: o que está configurado na Google Agenda dele (vem do servidor); Brasília enquanto não chega */
+  let FUSO = 'America/Sao_Paulo';
+  const rotuloFuso = () => 'horário de ' + FUSO.split('/').pop().replace(/_/g, ' ');
+  /* "agora" no fuso da agenda */
   function agoraBrasilia() {
     const p = {};
-    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    new Intl.DateTimeFormat('en-CA', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
       .formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
     return { dataISO: `${p.year}-${p.month}-${p.day}`, minutos: parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10) };
   }
@@ -101,7 +104,7 @@
     if (!dias.length) { el('conteudo').innerHTML = '<div class="vazio">Não há horários disponíveis no momento. Entre em contato para combinarmos.</div>'; return; }
     if (!diaEscolhido || !dias.includes(diaEscolhido)) { diaEscolhido = dias[0]; horaEscolhida = null; }
     const nome = agenda.cliente_nome ? esc(agenda.cliente_nome.split(' ')[0]) : '';
-    let h = (nome ? `<div class="sub">Olá, ${nome}! Escolha o dia e o horário do seu atendimento.<br>Horário de Brasília · duração de ${agenda.duracao} min</div>` : `<div class="sub">Horário de Brasília · duração de ${agenda.duracao} min</div>`);
+    let h = (nome ? `<div class="sub">Olá, ${nome}! Escolha o dia e o horário do seu atendimento.<br>${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>` : `<div class="sub">${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>`);
     h += '<div class="titulo-sec">Dia</div><div class="dias">' + dias.map(iso => {
       const d = new Date(iso + 'T12:00:00Z');
       return `<button type="button" class="dia-btn${iso === diaEscolhido ? ' sel' : ''}" data-dia="${iso}"><small>${SEMANA[d.getUTCDay()]}</small>${iso.slice(8)}/${iso.slice(5, 7)}</button>`;
@@ -138,7 +141,7 @@
       await carregar();
       return;
     }
-    el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (horário de Brasília).<br><br>Você pode fechar esta página.</div>`;
+    el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (${rotuloFuso()}).<br><br>Você pode fechar esta página.</div>`;
   }
 
   async function carregar() {
@@ -147,16 +150,18 @@
     if (error || !data) { el('conteudo').innerHTML = '<div class="vazio">Link inválido ou expirado. Volte ao formulário e envie seus dados novamente.</div>'; return; }
     agenda = data;
     if (agenda.ja_agendado) {
-      el('conteudo').innerHTML = `<div class="msg-ok"><strong>Você já tem um horário marcado.</strong><br>${dataBR(agenda.ja_agendado.data)} às ${agenda.ja_agendado.hora_inicio.slice(0, 5)} (horário de Brasília).</div>`;
+      try { const hoje = agoraBrasilia().dataISO; const g = await chamarGoogleAgenda({ acao: 'ocupados', u: ownerId, de: hoje, ate: hoje }); if (g.json && g.json.fuso) FUSO = g.json.fuso; } catch (e) { /* mantém o fuso padrão */ }
+      el('conteudo').innerHTML = `<div class="msg-ok"><strong>Você já tem um horário marcado.</strong><br>${dataBR(agenda.ja_agendado.data)} às ${agenda.ja_agendado.hora_inicio.slice(0, 5)} (${rotuloFuso()}).</div>`;
       return;
     }
     // Horários em que a Google Agenda do astrólogo já está ocupada entram na mesma lista de "ocupados".
     // Se não der pra consultar, não mostra horário nenhum (melhor do que oferecer um horário que pode estar ocupado).
     try {
-      const hoje = agoraBrasilia().dataISO;
+      const hoje = somarDias(agoraBrasilia().dataISO, -1); // um dia a menos: o fuso certo só chega na resposta
       const g = await chamarGoogleAgenda({ acao: 'ocupados', u: ownerId, de: hoje, ate: somarDias(hoje, 120) });
       if (!g.json || g.json.ok !== true) throw new Error('google');
       agenda.ocupados = (agenda.ocupados || []).concat(g.json.ocupados);
+      if (g.json.fuso) FUSO = g.json.fuso;
       const rg = g.json.regras || {};
       if (rg.antecedencia_min != null) ANTECEDENCIA_MIN = rg.antecedencia_min;
       if (rg.dias_a_frente != null) DIAS_A_FRENTE = rg.dias_a_frente;
