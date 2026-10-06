@@ -327,9 +327,10 @@ async function carregarConfiguracoesAgenda() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { container.innerHTML = `<div class="cfg-card cfg-card-largo">Sessão não identificada.</div>`; return; }
 
-    const [dispRes, configRes] = await Promise.all([
+    const [dispRes, configRes, regrasRes] = await Promise.all([
       supabaseClient.from('agenda_disponibilidade').select('*').eq('user_id', user.id).order('dia_semana', { ascending: true }),
-      supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
+      supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle(),
+      supabaseClient.from('configuracoes').select('agenda_antecedencia_min, agenda_dias_a_frente, agenda_passo_min').eq('user_id', user.id).maybeSingle()
     ]);
 
     if (dispRes.error) {
@@ -346,17 +347,30 @@ async function carregarConfiguracoesAgenda() {
     const pastasVisiveis = (!configRes.error && configRes.data && Array.isArray(configRes.data.agenda_pastas_visiveis))
       ? configRes.data.agenda_pastas_visiveis
       : null;
+    // regras novas (podem ainda não existir no banco: aí valem os padrões de sempre)
+    const rg = (!regrasRes.error && regrasRes.data) ? regrasRes.data : {};
+    const antecedenciaHoras = (rg.agenda_antecedencia_min != null ? rg.agenda_antecedencia_min : 120) / 60;
+    const diasAFrente = rg.agenda_dias_a_frente != null ? rg.agenda_dias_a_frente : 45;
+    const passoMin = rg.agenda_passo_min != null ? rg.agenda_passo_min : '';
 
+    const linhaJanela = (ini, fim) => `
+            <div class="cfg-janela">
+              <input type="time" class="modal-input agJanInicio" value="${ini}">
+              <span>até</span>
+              <input type="time" class="modal-input agJanFim" value="${fim}">
+              <button type="button" class="cfg-btn-mini" title="Tirar este horário" onclick="removerJanelaAgenda(this)">×</button>
+            </div>`;
     const blocoDias = AGENDA_DIAS_SEMANA.map((nomeDia, idx) => {
-      const regra = disponibilidade.find(r => r.dia_semana === idx);
+      const regrasDoDia = disponibilidade.filter(r => r.dia_semana === idx);
+      const janelas = (regrasDoDia.length ? regrasDoDia : [{ hora_inicio: '09:00', hora_fim: '18:00' }])
+        .map(r => linhaJanela(r.hora_inicio.slice(0, 5), r.hora_fim.slice(0, 5))).join('');
       return `
-        <div class="cfg-dia">
-          <input type="checkbox" id="agDia${idx}" ${regra ? 'checked' : ''} onchange="document.getElementById('agHoraBloco${idx}').style.display = this.checked ? 'flex' : 'none';">
+        <div class="cfg-dia cfg-dia-janelas" data-dia="${idx}">
+          <input type="checkbox" id="agDia${idx}" ${regrasDoDia.length ? 'checked' : ''} onchange="document.getElementById('agHoraBloco${idx}').style.display = this.checked ? 'flex' : 'none';">
           <label for="agDia${idx}" class="cfg-dia-nome">${nomeDia}</label>
-          <div id="agHoraBloco${idx}" class="cfg-dia-horas" style="display: ${regra ? 'flex' : 'none'};">
-            <input type="time" id="agInicio${idx}" class="modal-input" value="${regra ? regra.hora_inicio.slice(0, 5) : '09:00'}">
-            <span>até</span>
-            <input type="time" id="agFim${idx}" class="modal-input" value="${regra ? regra.hora_fim.slice(0, 5) : '18:00'}">
+          <div id="agHoraBloco${idx}" class="cfg-dia-horas" style="display: ${regrasDoDia.length ? 'flex' : 'none'}; flex-direction: column; align-items: flex-start;">
+            <div id="agJanelas${idx}">${janelas}</div>
+            <button type="button" class="cfg-btn-mini cfg-btn-mini-texto" onclick="adicionarJanelaAgenda(${idx})">+ outro horário</button>
           </div>
         </div>`;
     }).join('');
@@ -389,7 +403,20 @@ async function carregarConfiguracoesAgenda() {
             <label class="cfg-rotulo" for="agIntervaloPadrao">Intervalo entre atendimentos (min)</label>
             <input type="number" id="agIntervaloPadrao" class="modal-input" min="0" step="5" value="${intervaloPadrao}">
           </div>
+          <div>
+            <label class="cfg-rotulo" for="agAntecedencia">Antecedência mínima para marcar (horas)</label>
+            <input type="number" id="agAntecedencia" class="modal-input" min="0" step="0.5" value="${antecedenciaHoras}">
+          </div>
+          <div>
+            <label class="cfg-rotulo" for="agDiasAFrente">Pode marcar até quantos dias à frente</label>
+            <input type="number" id="agDiasAFrente" class="modal-input" min="1" max="120" step="1" value="${diasAFrente}">
+          </div>
+          <div>
+            <label class="cfg-rotulo" for="agPasso">Mostrar horários a cada (min)</label>
+            <input type="number" id="agPasso" class="modal-input" min="5" step="5" value="${passoMin}" placeholder="duração + intervalo">
+          </div>
         </div>
+        <p class="cfg-card-desc">Exemplo: atendimento de 60 min, mostrando horários a cada 30 min, aparece 9:00, 9:30, 10:00... Em branco, os horários seguem um depois do outro (duração + intervalo).</p>
         <div class="cfg-acoes">
           <button type="button" class="cfg-btn cfg-btn-primario" onclick="salvarDisponibilidadeAgenda()">Salvar disponibilidade</button>
         </div>
@@ -1029,20 +1056,56 @@ async function apagarServico(id, nome) {
 
 /* SALVA A DISPONIBILIDADE (substitui todas as regras do usuário pelas
    marcadas agora) + a duração/intervalo padrão (na tabela configuracoes) */
+/* mais um horário no mesmo dia (ex.: manhã e tarde, com pausa pro almoço) */
+function adicionarJanelaAgenda(dia) {
+  const caixa = document.getElementById('agJanelas' + dia);
+  if (!caixa) return;
+  caixa.insertAdjacentHTML('beforeend', `
+    <div class="cfg-janela">
+      <input type="time" class="modal-input agJanInicio" value="14:00">
+      <span>até</span>
+      <input type="time" class="modal-input agJanFim" value="18:00">
+      <button type="button" class="cfg-btn-mini" title="Tirar este horário" onclick="removerJanelaAgenda(this)">×</button>
+    </div>`);
+}
+function removerJanelaAgenda(botao) {
+  const linha = botao.closest('.cfg-janela');
+  const caixa = linha && linha.parentElement;
+  if (!caixa) return;
+  if (caixa.querySelectorAll('.cfg-janela').length <= 1) { alert('Deixe pelo menos um horário. Para não atender nesse dia, desmarque o dia.'); return; }
+  linha.remove();
+}
+
 async function salvarDisponibilidadeAgenda() {
   const novasRegras = [];
   for (let dia = 0; dia <= 6; dia++) {
     const checkbox = document.getElementById(`agDia${dia}`);
     if (!checkbox || !checkbox.checked) continue;
-    const inicio = document.getElementById(`agInicio${dia}`).value;
-    const fim = document.getElementById(`agFim${dia}`).value;
-    if (!inicio || !fim) continue;
-    if (inicio >= fim) { alert(`No dia ${AGENDA_DIAS_SEMANA[dia]}, o horário final precisa ser depois do inicial.`); return; }
-    novasRegras.push({ dia_semana: dia, hora_inicio: inicio, hora_fim: fim });
+    const janelas = Array.from(document.querySelectorAll(`#agJanelas${dia} .cfg-janela`)).map(l => ({
+      inicio: l.querySelector('.agJanInicio').value,
+      fim: l.querySelector('.agJanFim').value
+    })).filter(j => j.inicio && j.fim);
+    for (const j of janelas) {
+      if (j.inicio >= j.fim) { alert(`No dia ${AGENDA_DIAS_SEMANA[dia]}, o horário final precisa ser depois do inicial.`); return; }
+    }
+    // dois horários do mesmo dia não podem se misturar
+    janelas.sort((a, b) => a.inicio.localeCompare(b.inicio));
+    for (let k = 1; k < janelas.length; k++) {
+      if (janelas[k].inicio < janelas[k - 1].fim) { alert(`No dia ${AGENDA_DIAS_SEMANA[dia]}, dois horários estão se misturando.`); return; }
+    }
+    janelas.forEach(j => novasRegras.push({ dia_semana: dia, hora_inicio: j.inicio, hora_fim: j.fim }));
   }
 
   const duracaoPadrao = parseInt(document.getElementById('agDuracaoPadrao').value, 10) || 60;
   const intervaloPadrao = parseInt(document.getElementById('agIntervaloPadrao').value, 10) || 0;
+  const antecedenciaHoras = parseFloat(document.getElementById('agAntecedencia').value);
+  const diasAFrente = parseInt(document.getElementById('agDiasAFrente').value, 10);
+  const passo = parseInt(document.getElementById('agPasso').value, 10);
+  const regrasNovas = {
+    agenda_antecedencia_min: Number.isFinite(antecedenciaHoras) && antecedenciaHoras >= 0 ? Math.round(antecedenciaHoras * 60) : 120,
+    agenda_dias_a_frente: Number.isFinite(diasAFrente) && diasAFrente >= 1 ? Math.min(diasAFrente, 120) : 45,
+    agenda_passo_min: Number.isFinite(passo) && passo >= 5 ? passo : null
+  };
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -1062,6 +1125,12 @@ async function salvarDisponibilidadeAgenda() {
       .from('configuracoes')
       .upsert({ user_id: user.id, agenda_duracao_padrao_minutos: duracaoPadrao, agenda_intervalo_minutos: intervaloPadrao }, { onConflict: 'user_id' });
     if (erroConfig) { alert("Erro ao salvar duração/intervalo: " + erroConfig.message); return; }
+
+    // regras novas (antecedência, dias à frente, passo): coluna pode ainda não existir no banco
+    const { error: erroRegras } = await supabaseClient
+      .from('configuracoes')
+      .upsert({ user_id: user.id, ...regrasNovas }, { onConflict: 'user_id' });
+    if (erroRegras) { alert("Disponibilidade salva, mas antecedência, dias à frente e passo dos horários ainda não puderam ser salvos (falta atualizar o banco): " + erroRegras.message); await carregarConfiguracoesAgenda(); return; }
 
     alert("Disponibilidade salva com sucesso!");
     await carregarConfiguracoesAgenda();

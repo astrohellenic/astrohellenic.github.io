@@ -34,7 +34,7 @@
   const ownerId = params.get('u');
   const clienteId = params.get('c');
   const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
-  const DIAS_A_FRENTE = 45;
+  let DIAS_A_FRENTE = 45;           // vêm de Configurações → Agenda (ver 'regras' abaixo); estes são só os padrões
   // Serviço (Vercel) que fala com a Google Agenda do astrólogo — ver api/agenda-google.js
   const GOOGLE_AGENDA_API = 'https://astrohellenicgithubio.vercel.app/api/agenda-google';
   async function chamarGoogleAgenda(corpo) {
@@ -42,7 +42,8 @@
     let j = null; try { j = await r.json(); } catch (e) { /* resposta sem JSON */ }
     return { http: r.status, json: j };
   }
-  const ANTECEDENCIA_MIN = 120; // não oferece horário que começa em menos de 2h
+  let ANTECEDENCIA_MIN = 120;       // não oferece horário que começa em menos de X minutos
+  let PASSO_MIN = null;             // de quanto em quanto tempo começa um horário (vazio = duração + intervalo)
   const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   let agenda = null, diaEscolhido = null, horaEscolhida = null;
@@ -65,21 +66,26 @@
   const hhmmParaMin = h => { const [a, b] = h.slice(0, 5).split(':').map(Number); return a * 60 + b; };
   const minParaHHMM = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 
-  /* mesma regra da agenda do astrólogo: cada regra do dia da semana vira horários de duração + intervalo, sem colidir com os já marcados */
+  /* Horários livres do dia, com as regras que o astrólogo configurou (Configurações → Agenda):
+     - cada janela de atendimento do dia da semana vira horários que começam de PASSO em PASSO (padrão: duração + intervalo);
+     - o intervalo entre atendimentos também vale em volta de compromissos já ocupados (Google ou do software);
+     - nada que comece em menos de ANTECEDENCIA_MIN a partir de agora. */
   function horariosLivres(dataISO) {
     const diaSemana = new Date(dataISO + 'T12:00:00Z').getUTCDay();
     const regras = agenda.disponibilidade.filter(r => r.dia_semana === diaSemana);
     const ocupados = agenda.ocupados.filter(o => o.data === dataISO).map(o => [hhmmParaMin(o.hora_inicio), hhmmParaMin(o.hora_fim)]);
-    const dur = agenda.duracao, inter = agenda.intervalo;
+    const dur = agenda.duracao, inter = agenda.intervalo || 0;
+    const passo = PASSO_MIN || (dur + inter);
     const agora = agoraBrasilia();
-    const minimo = dataISO === agora.dataISO ? agora.minutos + ANTECEDENCIA_MIN : (dataISO < agora.dataISO ? 99999 : -1);
+    const diasAteLa = Math.round((Date.parse(dataISO) - Date.parse(agora.dataISO)) / 86400000);
+    const minimo = agora.minutos + ANTECEDENCIA_MIN - diasAteLa * 1440; // em minutos do dia de "dataISO"
     const out = [];
     regras.forEach(r => {
       let m = hhmmParaMin(r.hora_inicio); const fim = hhmmParaMin(r.hora_fim);
       while (m + dur <= fim) {
-        const sobrepoe = ocupados.some(([oi, of_]) => m < of_ && oi < m + dur);
-        if (!sobrepoe && m >= minimo) out.push(minParaHHMM(m));
-        m += dur + inter;
+        const sobrepoe = ocupados.some(([oi, of_]) => m < of_ + inter && oi < m + dur + inter);
+        if (!sobrepoe && m >= minimo && diasAteLa >= 0 && !out.includes(minParaHHMM(m))) out.push(minParaHHMM(m));
+        m += passo;
       }
     });
     return out.sort();
@@ -148,9 +154,13 @@
     // Se não der pra consultar, não mostra horário nenhum (melhor do que oferecer um horário que pode estar ocupado).
     try {
       const hoje = agoraBrasilia().dataISO;
-      const g = await chamarGoogleAgenda({ acao: 'ocupados', u: ownerId, de: hoje, ate: somarDias(hoje, DIAS_A_FRENTE) });
+      const g = await chamarGoogleAgenda({ acao: 'ocupados', u: ownerId, de: hoje, ate: somarDias(hoje, 120) });
       if (!g.json || g.json.ok !== true) throw new Error('google');
       agenda.ocupados = (agenda.ocupados || []).concat(g.json.ocupados);
+      const rg = g.json.regras || {};
+      if (rg.antecedencia_min != null) ANTECEDENCIA_MIN = rg.antecedencia_min;
+      if (rg.dias_a_frente != null) DIAS_A_FRENTE = rg.dias_a_frente;
+      PASSO_MIN = rg.passo_min || null;
     } catch (e) {
       el('conteudo').innerHTML = '<div class="vazio">Não foi possível carregar os horários agora. Tente de novo em instantes.</div>';
       return;

@@ -54,15 +54,40 @@ async function buscarOcupados(userId, conexao, ids, inicio, fim) {
   return fatias.filter(f => f.hora_inicio !== f.hora_fim);
 }
 
+/* regras de agendamento do astrólogo (Configurações → Agenda). Valem mesmo pra quem não conectou o Google. As colunas novas podem
+   ainda não existir no banco: nesse caso cai nos valores de sempre (antecedência 2h, 45 dias, horários encadeados). */
+async function lerRegras(userId) {
+  const padrao = { antecedencia_min: 120, dias_a_frente: 45, passo_min: null };
+  try {
+    let linhas;
+    try {
+      linhas = await G.supa('/rest/v1/configuracoes?user_id=eq.' + encodeURIComponent(userId) + '&select=agenda_antecedencia_min,agenda_dias_a_frente,agenda_passo_min');
+    } catch (e) { return padrao; } // colunas ainda não criadas
+    const c = linhas && linhas[0];
+    if (!c) return padrao;
+    const inteiro = (v, min, max) => (Number.isFinite(Number(v)) && v !== null && Number(v) >= min && Number(v) <= max) ? Math.round(Number(v)) : null;
+    return {
+      antecedencia_min: inteiro(c.agenda_antecedencia_min, 0, 60 * 24 * 30) ?? padrao.antecedencia_min,
+      dias_a_frente: inteiro(c.agenda_dias_a_frente, 1, 120) ?? padrao.dias_a_frente,
+      passo_min: inteiro(c.agenda_passo_min, 5, 24 * 60)
+    };
+  } catch (e) { return padrao; }
+}
+
 async function acaoOcupados(corpo) {
   if (!corpo.u || !G.ehData(corpo.de) || !G.ehData(corpo.ate)) return erro(400, 'Dados inválidos.');
   const dias = (Date.parse(corpo.ate) - Date.parse(corpo.de)) / 86400000;
   if (dias < 0 || dias > MAX_DIAS_CONSULTA) return erro(400, 'Período inválido.');
+  const regras = await lerRegras(corpo.u);
+  // nunca consulta o Google além do que o astrólogo deixa marcar (menos dados e menos chance de passar do limite do Google)
+  const limite = G.somarDias(G.paraLocal(new Date()).dataISO, regras.dias_a_frente + 1);
+  if (corpo.ate > limite) corpo.ate = limite;
+  if (corpo.de > corpo.ate) corpo.de = corpo.ate;
   const conexao = await G.lerConexao(corpo.u);
-  if (!conexao) return ok({ ok: true, conectado: false, ocupados: [] });
+  if (!conexao) return ok({ ok: true, conectado: false, ocupados: [], regras });
   const { ids } = await agendasQueBloqueiam(corpo.u, conexao);
   const ocupados = await buscarOcupados(corpo.u, conexao, ids, G.instanteLocal(corpo.de, 0), G.instanteLocal(G.somarDias(corpo.ate, 1), 0));
-  return ok({ ok: true, conectado: true, ocupados });
+  return ok({ ok: true, conectado: true, ocupados, regras });
 }
 
 async function agendaPublica(u, c) {
