@@ -249,17 +249,15 @@ function agendaClienteDoCompromisso(ev) {
   return porNome.length === 1 ? porNome[0] : null;
 }
 
+/* mesmos botõezinhos da lista de clientes: WhatsApp abre a conversa, e-mail copia o endereço (nada de número/e-mail visível na tela) */
 function agendaContatoDoCompromisso(ev) {
   const m = agendaClienteDoCompromisso(ev);
   if (!m) return '';
-  const partes = [];
-  const zap = m.whatsapp ? String(m.whatsapp).trim() : '';
-  if (zap) {
-    const num = zap.replace(/\D/g, '');
-    partes.push(`WhatsApp: ${num ? `<a href="https://wa.me/${num}" target="_blank" rel="noopener">${escapeHtml(zap)}</a>` : escapeHtml(zap)}`);
-  }
-  if (m.email) partes.push(`E-mail: ${escapeHtml(String(m.email).trim())}`);
-  return partes.length ? `<div class="ag-item-det">${partes.join(' · ')}</div>` : '';
+  const num = m.whatsapp ? String(m.whatsapp).replace(/\D/g, '') : '';
+  const link = num ? (num.length <= 11 ? '55' + num : num) : '';
+  const zap = link ? `<button type="button" class="action-record-btn whats-btn" onclick="window.open('https://wa.me/${link}', '_blank')" title="Abrir WhatsApp">${menuIcone('whatsapp', 18)}</button>` : '';
+  const mail = m.email ? `<button type="button" class="action-record-btn email-btn" data-email="${escapeHtml(String(m.email).trim())}" onclick="navigator.clipboard.writeText(this.dataset.email); alert('E-mail copiado!');" title="Copiar E-mail">${menuIcone('email', 18)}</button>` : '';
+  return (zap || mail) ? `<div class="card-actions">${zap}${mail}</div>` : '';
 }
 
 async function carregarCompromissosGoogleAgenda() {
@@ -290,8 +288,8 @@ async function carregarCompromissosGoogleAgenda() {
           <div class="ag-item-corpo">
             <div class="ag-item-nome" style="white-space: normal">${escapeHtml(ev.titulo)}</div>
             <div class="ag-item-det">${ev.diaInteiro ? 'Dia inteiro' : escapeHtml(ev.hora_inicio + (ev.hora_fim ? ' – ' + ev.hora_fim : ''))}${ev.calendario ? ' · ' + escapeHtml(ev.calendario) : ''}${ev.local ? ' · ' + escapeHtml(ev.local) : ''}</div>
-            ${agendaContatoDoCompromisso(ev)}
           </div>
+          ${agendaContatoDoCompromisso(ev)}
         </div>`).join('') + '</div>';
     }).join('') : '<div class="menu-vazio">Nenhum compromisso nesse período.</div>';
     caixa.innerHTML = `<div class="cabeca-ferramenta" style="justify-content: space-between"><div class="titulo-secao" style="margin:0">Meus compromissos</div>${seletor}</div><hr class="divisa">${corpo}`;
