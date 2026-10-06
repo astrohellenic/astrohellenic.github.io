@@ -55,7 +55,13 @@ function consertarJson(texto) {
       saida += c;
     }
   }
-  return saida;
+  // Texto colado sem o "}" do final (o último caractere costuma ficar de fora na hora de copiar): fecha o que ficou aberto
+  let abertas = 0; dentro = false; escapado = false;
+  for (const c of saida) {
+    if (dentro) { if (escapado) escapado = false; else if (c === '\\') escapado = true; else if (c === '"') dentro = false; continue; }
+    if (c === '"') dentro = true; else if (c === '{') abertas++; else if (c === '}') abertas--;
+  }
+  return saida + (dentro ? '"' : '') + '}'.repeat(Math.max(0, abertas));
 }
 
 function lerChaveDaConta() {
