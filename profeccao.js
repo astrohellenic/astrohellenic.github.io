@@ -95,6 +95,7 @@
 
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const MONTH_MS = (30 + (10.5 / 24)) * MS_PER_DAY;
+    const DAILY_STEP_MS = 2.5 * MS_PER_DAY; // passo diário = 60 horas (12 passos por mês, um por signo)
 
     function getSignSvgHtml(signIdx, size = 18) {
         // Cor do elemento do signo pela paleta de época (fogo laranja, terra marrom, ar cinza, água azul egípcio claro), na versão do modo.
@@ -758,13 +759,42 @@
             const isExpanded = (window.expandedProfeccaoMes === i);
 
             html += `
-                <tr class="clicavel${isExpanded ? ' ativa' : ''}" onclick="alternarMesProfeccao(${i})" ${isExpanded ? 'data-mes-ativo="1"' : ''} style="user-select: none;">
+                <tr class="clicavel${isExpanded ? ' ativa aberta' : ''}" onclick="alternarMesProfeccao(${i})" ${isExpanded ? 'data-mes-ativo="1"' : ''} style="user-select: none;">
                     <td class="centro"><strong>Mês ${m.monthNum}</strong></td>
                     <td class="centro">${signoComNome(getSignSvgHtml(m.signIdx, 20), m.signIdx)}</td>
                     <td class="centro">${planetaComNome(mSign.ruler, 30)}</td>
                     <td>${formatarData(m.start)}</td>
                 </tr>
             `;
+
+            // Mês aberto: os 12 passos de 60 horas (um por signo, a partir do signo do mês).
+            if (isExpanded) {
+                const agoraMs = hoje.getTime();
+                let passosHtml = '';
+                for (let d = 0; d < 12; d++) {
+                    const passoIni = m.start + d * DAILY_STEP_MS;
+                    const passoSignIdx = (m.signIdx + d) % 12;
+                    const passoAtivo = agoraMs >= passoIni && agoraMs < passoIni + DAILY_STEP_MS;
+                    passosHtml += `
+                        <tr${passoAtivo ? ' class="ativa"' : ''}>
+                            <td class="centro"><strong>Passo ${d + 1}</strong></td>
+                            <td class="centro">${signoComNome(getSignSvgHtml(passoSignIdx, 20), passoSignIdx)}</td>
+                            <td class="centro">${planetaComNome(SIGNS[passoSignIdx].ruler, 26)}</td>
+                            <td>${formatarData(passoIni)}</td>
+                        </tr>`;
+                }
+                html += `
+                <tr>
+                    <td colspan="4" class="encaixe">
+                        <table class="tabela-epoca">
+                            <thead>
+                                <tr><th class="centro">Passo (60h)</th><th class="centro">Signo</th><th class="centro">Regente</th><th>Início do Passo</th></tr>
+                            </thead>
+                            <tbody>${passosHtml}</tbody>
+                        </table>
+                    </td>
+                </tr>`;
+            }
         });
 
         html += `</tbody></table></div></div></div></div><hr class="divisa"></div></div>`;
