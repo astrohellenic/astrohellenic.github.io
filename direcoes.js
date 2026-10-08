@@ -235,7 +235,17 @@ function obterGrauEfetivoAfeta(key, data) {
     Saturn: data.Saturno ? data.Saturno.grau_absoluto : 0
   };
 
-    const lotesGlobais = (typeof window.currentLotes !== 'undefined' && window.currentLotes) ? window.currentLotes : [];
+  // Lotes calculados dos próprios dados do mapa (window.currentLotes só existe
+  // depois que a Mandala foi desenhada — sem ela todos caíam em 0° de Áries).
+  let lotesGlobais = [];
+  try {
+    const isDia = ((pObj.Sun - ascAbs + 360) % 360) >= 180;
+    const po = {};
+    Object.keys(pObj).forEach(k => { po[k] = { abs: pObj[k] }; });
+    lotesGlobais = calculateSevenLots(ascAbs, isDia, po);
+  } catch (e) {
+    lotesGlobais = (typeof window.currentLotes !== 'undefined' && window.currentLotes) ? window.currentLotes : [];
+  }
   const buscarLote = (chave) => {
     const l = lotesGlobais.find(item => item.key === chave);
     return l ? l.deg : 0;
