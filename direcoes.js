@@ -316,40 +316,6 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
       });
     });
   });
-   
-  // ALVOS CORPORAIS (Fortuna, Espírito e Sizígia) - Apenas por Conjunção (0°)
-  const lotesGlobaisRaios = (typeof window.currentLotes !== 'undefined' && window.currentLotes) ? window.currentLotes : [];
-  const buscarLoteRaio = (chave) => {
-    const l = lotesGlobaisRaios.find(item => item.key === chave);
-    return l ? l.deg : undefined;
-  };
-
-  const syzDeg = data.Sizigia ? data.Sizigia.grau_absoluto : undefined;
-
-  const alvosCorporais = [
-    { key: 'fortune', deg: buscarLoteRaio('fortune') },
-    { key: 'spirit', deg: buscarLoteRaio('spirit') },
-    { key: 'Syz', deg: syzDeg }
-  ];
-
-  alvosCorporais.forEach(alvo => {
-    if (alvo.deg === undefined) return;
-    const targetDeg = alvo.deg;
-
-    const accumulatedYears = tempoAscensionalEntreGraus(startAbsDeg, targetDeg, latAtual);
-
-    const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
-
-    raios.push({
-      rayAbsDeg: targetDeg,
-      signIdx: Math.floor(targetDeg / 30),
-      degInSign: targetDeg % 30,
-      planetId: alvo.key,
-      aspectType: 'conj',
-      yearsOld: accumulatedYears.toFixed(1),
-      exactDate: formatarDataBRDir(rayDate)
-    });
-  });
 
   return raios;
 }
