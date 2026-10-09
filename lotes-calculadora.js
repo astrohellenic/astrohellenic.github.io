@@ -99,9 +99,9 @@ function getLoteHermeticoIconSVG(loteKey, size = 22) {
    de fora, precisa vir com a cor já resolvida em hexadecimal dentro dela —
    mesma cor usada em todos os lugares que chamam esta função (ver
    renderLoteCardHTML/renderSeletorLotes). */
-function getLoteAbbrevIconSVG(abbrev, size = 22) { // Tema Céu (papiro): lotes sempre em preto de tinta (#1a1410)
+function getLoteAbbrevIconSVG(abbrev, size = 22) { // todos os temas: azul egípcio arroxeado da paleta (papiro e claro iguais; escuro e sulfite têm o seu)
   const sulfite = window.temaMandala === 'sulfite';
-  const cor = window.temaMandala === 'ceu' ? '#1a1410' : paletaEpoca(document.documentElement.classList.contains('tema-escuro')).azulEscuro;
+  const cor = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu').azulEscuro;
   const len = (abbrev || '').length;
   const fontSize = (len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6))) * (sulfite ? 1.2 : 1); // Caveat é miúda: um pouco maior pra ter o mesmo peso
   const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" ${sulfite ? `font-family="'Caveat', cursive" ` : ''}text-anchor="middle">${abbrev}</text>`;
