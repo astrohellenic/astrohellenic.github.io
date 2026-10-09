@@ -748,7 +748,7 @@
                             <th class="centro">Mês</th>
                             <th class="centro">Signo</th>
                             <th class="centro">Regente</th>
-                            <th>Início do Período</th>
+                            <th class="centro">Início do Período</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -763,7 +763,7 @@
                     <td class="centro"><strong>Mês ${m.monthNum}</strong></td>
                     <td class="centro">${signoComNome(getSignSvgHtml(m.signIdx, 20), m.signIdx)}</td>
                     <td class="centro">${planetaComNome(mSign.ruler, 30)}</td>
-                    <td>${formatarData(m.start)}</td>
+                    <td class="centro">${formatarData(m.start)}</td>
                 </tr>
             `;
 
@@ -780,7 +780,7 @@
                             <td class="centro"><strong>Passo ${d + 1}</strong></td>
                             <td class="centro">${signoComNome(getSignSvgHtml(passoSignIdx, 20), passoSignIdx)}</td>
                             <td class="centro">${planetaComNome(SIGNS[passoSignIdx].ruler, 26)}</td>
-                            <td>${formatarData(passoIni)}</td>
+                            <td class="centro">${formatarData(passoIni)}</td>
                         </tr>`;
                 }
                 html += `
@@ -788,7 +788,7 @@
                     <td colspan="4" class="encaixe">
                         <table class="tabela-epoca">
                             <thead>
-                                <tr><th class="centro">Passo (60h)</th><th class="centro">Signo</th><th class="centro">Regente</th><th>Início do Passo</th></tr>
+                                <tr><th class="centro">Passo (60h)</th><th class="centro">Signo</th><th class="centro">Regente</th><th class="centro">Início do Passo</th></tr>
                             </thead>
                             <tbody>${passosHtml}</tbody>
                         </table>
