@@ -7,6 +7,7 @@
 
 let anoAlvoRL = new Date().getFullYear();
 let retornoLuaSelecionadoJd = null;   // jd_ut do retorno que está na tela (destaca na lista)
+let chaveMarcadaRL = null;            // mapa para o qual o "próximo retorno" já foi pré-marcado
 const cacheRetornosLua = {};          // `${chaveNasc}|${ano}` → lista de retornos do ano
 
 const RL_API = 'https://motor-astrologia.vercel.app/api/revolucao_lunar';
@@ -65,9 +66,38 @@ window.toggleJanelaRL = function(event) {
 
   if (!estaAberto) {
     atualizarJanelaRL();
-    carregarRetornosAnoRL(anoAlvoRL);
+    prepararJanelaRL();
   }
 };
+
+/* Como na Revolução Solar, abre já com o próximo retorno (depois de agora) pré-marcado.
+   Só na primeira abertura de cada mapa: depois vale o que o astrólogo escolheu. */
+async function prepararJanelaRL() {
+  const nasc = obterNascimentoRL();
+  if (chaveMarcadaRL !== nasc.chave) {
+    const div = document.getElementById('rl-lista-retornos');
+    if (div) div.innerHTML = '<div class="item-menu cabeca-menu"><span class="rotulo">Buscando o próximo retorno...</span></div>';
+    try {
+      const agora = new Date();
+      const hoje = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      let r = await buscarRetornoLuaRL(nasc, hoje(agora));
+      if (dataHoraLocalRL(r.momento_exato) <= agora) {   // o de hoje já passou: pega o seguinte
+        const amanha = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1);
+        r = await buscarRetornoLuaRL(nasc, hoje(amanha));
+      }
+      retornoLuaSelecionadoJd = r.momento_exato.jd_ut;
+      anoAlvoRL = dataHoraLocalRL(r.momento_exato).getFullYear();
+      chaveMarcadaRL = nasc.chave;
+      atualizarJanelaRL();
+    } catch (err) {
+      // sem a marcação o resto funciona: cai no ano de hoje, como antes
+      chaveMarcadaRL = nasc.chave;
+    }
+  }
+  await carregarRetornosAnoRL(anoAlvoRL);
+  const marcado = document.querySelector('#rl-lista-retornos .item-menu.ativa');
+  if (marcado) marcado.scrollIntoView({ block: 'center' });
+}
 
 window.toggleListaAnosRL = function() {
   const lista = document.getElementById('rl-lista-anos');
