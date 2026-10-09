@@ -292,7 +292,8 @@
     background: none; border: 0; box-shadow: none; padding: 0; flex: 0 0 auto;
 }
 #cabecalho-barra-mandala { min-width: 0; overflow: hidden; margin: 0 8px; }
-@media (min-width: 1001px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } }
+/* tela larga não rola: a camada de dentro não pode cortar os menus que abrem pra cima dos botões */
+@media (min-width: 1001px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } #barra-inferior-rolagem { overflow: visible; } }
 @media (max-width: 1000px) {
     #barra-inferior-mandala #mandala-actions-overlay { margin-right: 16px; }
     #barra-inferior-mandala #mandala-controls-overlay { margin-left: 16px; }
