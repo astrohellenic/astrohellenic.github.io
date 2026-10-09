@@ -1298,6 +1298,7 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
           <option value="Eleição">Eleição</option>
           <option value="Natal">Natal</option>
           <option value="Revolução Solar">Revolução Solar</option>
+          <option value="Revolução Lunar">Revolução Lunar</option>
         </select>
       </div>
 
