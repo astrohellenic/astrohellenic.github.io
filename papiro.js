@@ -102,6 +102,9 @@ function paletaEpoca(escuro) {
   return r;
 }
 
+/* FUNDO DO PAPEL "CLARO" das imagens/capturas: creme no tema claro, branco puro no Sulfite (--fundo-creme, temas.css). */
+function fundoPainelClaro() { return paletaEpoca(false).fundoCreme; }
+
 /* COR DO ELEMENTO DE CADA SIGNO — a ÚNICA fonte: fogo = laranja, terra = marrom, ar = cinza, água = azul egípcio claro (temas.css), na versão do
    modo (claro/escuro). Toda ferramenta que desenha um signo colorido pede a cor AQUI; ninguém guarda lista própria de cores de signo. */
 function corElementoSigno(signIdx) {

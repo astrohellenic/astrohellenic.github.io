@@ -731,7 +731,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
       return;
     }
     const anguloFrag = getIconeFragmento('outro', 'angulo', undefined, papiro ? COR_TINTA_OCRE : undefined);
-    const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', '#fffdf5');
+    const anguloFundo = papiro ? '' : getIconeFundoSilhueta('outro', 'angulo', fundoPainelClaro());
 
     svg += `<g transform="translate(${pPos.x}, ${pPos.y})">${reticuloTinta(21, papiro ? COR_TINTA_OCRE : tinta.inkForte)}
       <g transform="scale(0.4) translate(-50, -50) rotate(${aScreen - 180} 50 50)">${anguloFundo}${anguloFrag}</g>
@@ -817,20 +817,20 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     if (item.type === "node") {
       const nodeKey = (item.label === '☊') ? 'northNode' : 'southNode';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="${fundoPainelClaro()}"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey, undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
         <text x="0" y="19" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="${fundoPainelClaro()}"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia', undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
         <text x="0" y="21" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
-        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="#fffdf5"/>'}
+        ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="${fundoPainelClaro()}"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey, undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
         <text x="0" y="17" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;

@@ -736,7 +736,7 @@
         // Tema Céu: imagem salva sobre papiro (cor chapada pro recorte achar a borda), claro ou escuro.
         // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
         if (window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
-        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : fundoPainelClaro();
     }
 
     async function sinastriaMontarImagem(comTitulo) {

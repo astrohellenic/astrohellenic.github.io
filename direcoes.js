@@ -458,7 +458,7 @@ function salvarCircumambulacaoNaGaleria() {
     const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
     const papiro = circumambulacaoPapiroAtivo();
     const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-    const fundo = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
+    const fundo = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : fundoPainelClaro());
     const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
     const corTitulo = papiro ? '#a03e25' : cores.titulo;
     const k = fatorTelaPautasCircumambulacao();
@@ -489,7 +489,7 @@ async function capturarCircumambulacaoParaRelatorio() {
   if (!circumambulacaoMontador) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
   const papiro = circumambulacaoPapiroAtivo();
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-  const fundo = papiro ? null : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro());
   const { montarSvgPautas, signPassages, rowHeight } = circumambulacaoMontador;
   const indices = Array.from(circumambulacaoLinhasSelecionadas).sort((a, b) => a - b);
   try {

@@ -66,7 +66,7 @@ function getLotIconSVG(lotKey) {
   // na mandala principal.
   // Tema Céu (papiro): sem o círculo creme — o fundo é a própria folha de papiro.
   const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
-  const frag = `${papiro ? '' : '<circle cx="50" cy="50" r="48" fill="#fffdf5"/>'}${getIconeFragmento('lote', loteKey)}`;
+  const frag = `${papiro ? '' : '<circle cx="50" cy="50" r="48" fill="' + fundoPainelClaro() + '"/>'}${getIconeFragmento('lote', loteKey)}`;
   return svgComoImagemZR(frag, 22, 22, '0 0 100 100');
 }
 
@@ -839,7 +839,7 @@ function renderLiberacaoUI() {
 function fundoCapturaLiberacao() {
   // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
   if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
-  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : fundoPainelClaro();
 }
 
 async function montarImagemLiberacao(opc) {

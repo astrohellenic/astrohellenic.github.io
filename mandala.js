@@ -1000,7 +1000,7 @@ function coresCabecalhoMandala(modoEscuro, corCabecalhoForcada) {
   const pal = paletaEpoca(cabecalhoEscuro);
   return {
     escuro: cabecalhoEscuro, // qual paleta de época o filete duplo usa (paletaEpoca, papiro.js)
-    fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : '#fffdf5'),
+    fundo: cabecalhoValido || (modoEscuro ? '#1c1917' : fundoPainelClaro()),
     borda: cabecalhoEscuro ? '#d9ae3f' : '#c59b27', // sem uso hoje (o contorno virou o filete duplo)
     titulo: pal.terracota,
     nome: pal.terracota,
@@ -2042,7 +2042,7 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
      (cor chapada do papiro) pro recorte automático achar a borda. */
   const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-  const fundoChapado = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundoChapado = papiro ? papiroCores().chapado : (modoEscuro ? '#1c1917' : fundoPainelClaro());
   const comTopo = !!(opcoes.titulo || opcoes.comCabecalho);
   const papelDegrade = papiro && comTopo;
   const fundo = (papelDegrade || papiro) ? null : fundoChapado; // null = transparente (com título/cabeçalho o degradê vai por baixo no fim; sem eles, fica sem fundo nenhum — imagem pro Relatório)
@@ -2094,7 +2094,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const papiro = !!(opcoes && opcoes.papiro) && window.temaMandala === 'ceu';
   const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
   // Tema Céu, imagem pro Relatório (sem cabeçalho): SEM fundo — só as linhas em tinta, pra encaixar no papiro da folha.
-  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? papiroCores().chapado : null) : (modoEscuro ? '#1c1917' : '#fffdf5');
+  const fundo = papiro ? ((opcoes && opcoes.comCabecalho) ? papiroCores().chapado : null) : (modoEscuro ? '#1c1917' : fundoPainelClaro());
   const w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
   const cs = getComputedStyle(svgEl);
   const borda = parseFloat(cs.borderTopWidth) || 0;

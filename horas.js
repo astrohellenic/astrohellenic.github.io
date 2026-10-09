@@ -281,7 +281,7 @@ function iconeSolLuaHoras(periodo, tam) {
    galeria o papiro (degradê) é pintado por baixo no fim (ver montarImagemHoras). */
 function fundoCapturaHoras() {
   if (window.temaMandala === 'ceu') return null;
-  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : fundoPainelClaro();
 }
 
 async function montarImagemHoras(comCabecalho) {

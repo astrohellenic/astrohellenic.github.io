@@ -874,7 +874,7 @@
         // Tema Céu: a tela é papiro (claro e escuro) — a imagem salva sai sobre papiro, cor chapada pro recorte achar a borda.
         // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
         if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
-        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : '#fffdf5';
+        return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : fundoPainelClaro();
     }
 
     /* Cabeçalhos + cartões das mandalas, na mesma posição em que estão na tela

@@ -157,6 +157,13 @@ function temaCeuAtivoNosIcones() {
   return typeof window !== 'undefined' && window.temaMandala === 'ceu';
 }
 
+/* SULFITE: usa os MESMOS ícones de tinta do papiro (recolorirIconePapiro), só com as cores das canetas (temas.css):
+   seita = terracota, fora da seita = azul egípcio claro, lotes/nodos/sizígia = preto de tinta, ângulos = ocre.
+   Os ícones 3D esféricos só existem no claro e no escuro. */
+function temaSulfiteAtivoNosIcones() {
+  return typeof window !== 'undefined' && window.temaMandala === 'sulfite';
+}
+
 /* Seita do mapa aberto, a partir de currentCalculatedData (posições em graus absolutos).
    Devolve { diurno, mercurioOriental } ou null se não houver mapa carregado. */
 function seitaDoMapaAtual(dados) {
@@ -181,6 +188,12 @@ function planetaEstaNaSeita(planetId, dados) {
 /* Regra geral do papiro: lotes, nodos e lunação pré-natal (sizígia) são sempre em preto de tinta (não o preto puro). */
 const COR_TINTA_PRETO = '#1a1410';
 function corIconePapiro(categoria, chave, dados) {
+  if (temaSulfiteAtivoNosIcones() && typeof paletaEpoca === 'function') {
+    const pal = paletaEpoca(false);
+    if (categoria === 'lote' || (categoria === 'outro' && ['northNode', 'southNode', 'sizigia'].includes(chave))) return pal.pretoTinta;
+    if (categoria === 'outro' && chave === 'angulo') return pal.ocre;
+    return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? pal.terracota : pal.azulClaro;
+  }
   if (categoria === 'lote' || (categoria === 'outro' && ['northNode', 'southNode', 'sizigia'].includes(chave))) return COR_TINTA_PRETO;
   return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? COR_TINTA_TERRACOTA : corAzulEgipcioClaro();
 }
@@ -206,7 +219,7 @@ function recolorirIconePapiro(bruto, cor) {
 
 /* SVG bruto do ícone: o de sempre, ou o de papiro no Tema Céu. */
 function brutoDoIcone(categoria, chave, dados, corForcada) {
-  if (temaCeuAtivoNosIcones()) {
+  if (temaCeuAtivoNosIcones() || temaSulfiteAtivoNosIcones()) {
     const base = (ICONES_SIMPLES_NOVO[categoria] || {})[chave] || '';
     return base ? recolorirIconePapiro(base, corForcada || corIconePapiro(categoria, chave, dados)) : '';
   }
