@@ -115,7 +115,7 @@ function menuIcone(nome, tam = 22) {
   return `<svg class="icone" viewBox="0 0 64 64" width="${tam}" height="${tam}" aria-hidden="true">${MENU_ICONES[nome]}</svg>`;
 }
 function menuLogoHtml() {
-  return `<img class="logo-claro" src="astrohellenic.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;"><img class="logo-escuro" src="astrohellenic-escuro.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;">`;
+  return `<img class="logo-claro" src="astrohellenic.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;"><img class="logo-escuro" src="astrohellenic-escuro.svg?v=20261008" alt="AstroHellenic" style="max-height: 38px; width: auto;"><img class="logo-sulfite" src="astrohellenic-sulfite.svg?v=20261010" alt="AstroHellenic" style="max-height: 38px; width: auto;">`;
 }
 function menuLinhaPasta(pasta, comAvancar) {
   const attr = escapeHtml(pasta).replace(/'/g, "&#39;");
