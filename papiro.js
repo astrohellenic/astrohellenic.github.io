@@ -102,6 +102,15 @@ function paletaEpoca(escuro) {
   return r;
 }
 
+/* SULFITE — FONTE DENTRO DE UM SVG ISOLADO (imagem): troca Cinzel/Montserrat por Caveat e embute a fonte no próprio SVG (a página não
+   empresta fontes pra uma imagem SVG). Fora do Sulfite devolve o SVG igual. Quem desenha o SVG como imagem passa por aqui antes. */
+function aplicarFonteSulfiteSVG(svg) {
+  if (window.temaMandala !== 'sulfite' || !window.FONTE_CAVEAT_BASE64 || typeof svg !== 'string') return svg;
+  const trocado = svg.replace(/font-family="'(?:Cinzel|Montserrat)', (?:serif|sans-serif)"/g, `font-family="'Caveat', cursive"`);
+  const estilo = `<defs><style>@font-face{font-family:'Caveat';font-weight:400 700;src:url(data:font/woff2;base64,${window.FONTE_CAVEAT_BASE64}) format('woff2');}</style></defs>`;
+  return trocado.replace(/<svg\b[^>]*>/, m => m + estilo);
+}
+
 /* FUNDO DO PAPEL "CLARO" das imagens/capturas: creme no tema claro, branco puro no Sulfite (--fundo-creme, temas.css). */
 function fundoPainelClaro() { return paletaEpoca(false).fundoCreme; }
 

@@ -902,5 +902,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   });
 
   svg += `</svg>`;
+  svg = aplicarFonteSulfiteSVG(svg); // Sulfite: a roda é uma imagem isolada, a fonte Caveat tem que ir dentro dela
   return { svg, width, height, papiroNaTela, ceuParams, rCanvasNatural: R_canvasFerrNatural };
 }
