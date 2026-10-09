@@ -521,6 +521,8 @@ function abrirModuloTecnica(modulo, forcar) {
   if (cRev) cRev.style.display = 'none';
   if (cOverlay) cOverlay.style.display = 'none';
   if (cActionsOverlay) cActionsOverlay.style.display = 'none';
+  const cBarraInferior = document.getElementById('barra-inferior-mandala');
+  if (cBarraInferior) cBarraInferior.style.display = 'none';
 
   // #mandala-container está prestes a ser reconstruído do zero pro módulo
   // "modulo" (seja qual for), então a Matriz de Visibilidade nunca
@@ -608,6 +610,7 @@ if (telaRestaurada) {
   if (cRadix) cRadix.style.display = 'block';
   if (cOverlay) cOverlay.style.display = 'flex';
   if (cActionsOverlay) cActionsOverlay.style.display = 'flex';
+  if (cBarraInferior) cBarraInferior.style.display = 'flex';
   if (typeof renderMandala === 'function') renderMandala();
   }
   // 2. TABELA TÉCNICA

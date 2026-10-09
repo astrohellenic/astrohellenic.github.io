@@ -890,6 +890,7 @@ function ajustarZoomMandala(delta) {
   mandalaZoomPercent = Math.max(MANDALA_ZOOM_MIN, Math.min(MANDALA_ZOOM_MAX, mandalaZoomPercent + delta));
   const img = document.getElementById('mandalaImg');
   if (img) img.style.transform = `scale(${(mandalaZoomPercent / 100).toFixed(2)})`;
+  setTimeout(atualizarBarraInferiorMandala, 160); // depois da animação do zoom (120ms)
   const label = document.getElementById('mandalaZoomLabel');
   if (label) label.textContent = `${mandalaZoomPercent}%`;
   // O fundo do Tema Céu acompanha o zoom (a imagem anima por ~120ms).
@@ -936,33 +937,64 @@ function injetarControleZoomMandala() {
   }
 }
 
-/* #mandala-actions-overlay (canto esquerdo: salvar, atualizar momento,
-   Revolução Solar) precisa ficar abaixo de #mandala-controls-overlay
-   (canto direito: seletor de Casa 1, Adicionar ao Relatório, zoom,
-   stepper de tempo) só quando a tela é estreita demais pra caberem os
-   dois lado a lado na mesma linha (ver @media max-width:600px em
-   index.html, onde #mandala-controls-overlay ganha flex-wrap e pode
-   virar 1 ou 2 linhas dependendo da largura). Um valor fixo de "top"
-   pro empurrão (como um antigo top:56px chutado) só acerta pra UM dos
-   dois casos (1 linha OU 2 linhas) — por isso mede a altura de verdade
-   do outro container em JS, mesmo padrão já usado no espaçador da
-   barra fixa do editor de Relatório (ajustarEspacadorBarraFixaEditor,
-   relatorio.js). Chamada de novo em "resize" porque virar o celular
-   (ou redimensionar a janela) pode mudar se cabe numa linha só ou não. */
-function ajustarPosicaoMandalaActionsOverlay() {
-  const controls = document.getElementById('mandala-controls-overlay');
-  const actions = document.getElementById('mandala-actions-overlay');
-  if (!controls || !actions) return;
-
-  if (window.innerWidth > 600) {
-    actions.style.top = '';
-    return;
-  }
-
-  const gap = 10;
-  const alturaControls = controls.offsetHeight;
-  actions.style.top = (10 + alturaControls + gap) + 'px';
+/* BARRA INFERIOR DA MANDALA (#barra-inferior-mandala, index.html): UMA barra só, igual à barra superior — papiro único e linhas duplas
+   contínuas — com o grupo de botões da esquerda, o CABEÇALHO no meio (que estica/encolhe com a largura) e o grupo da direita. No celular
+   (≤ 600px) ela se divide em três faixas empilhadas: cabeçalho, grupo da direita e grupo da esquerda (CSS em componentes.css/papiro.css).
+   O cabeçalho é o desenho global de sempre (montarCabecalhoMandalaLayout), só que sem fundo/linhas próprios (semMoldura) e com layout
+   flexível (flexivel) pra ocupar exatamente a largura do espaço entre os grupos. A imagem da mandala ganha um recuo embaixo (a altura
+   medida da barra) pra nunca ficar escondida atrás dela. */
+function atualizarCabecalhoBarraMandala() {
+  const slot = document.getElementById('cabecalho-barra-mandala');
+  if (!slot) return;
+  if (!currentCalculatedData || !document.getElementById('mandalaImg')) { slot.style.display = 'none'; slot.innerHTML = ''; return; }
+  slot.style.display = '';
+  const modoEscuro = document.documentElement.classList.contains('tema-escuro');
+  const cores = coresCabecalhoMandala(modoEscuro, null);
+  // tela estreita: a barra rola e o cabeçalho tem largura própria (fixa); tela larga: estica entre os grupos
+  const estreita = window.innerWidth <= 1000;
+  slot.style.width = estreita ? '520px' : '';
+  slot.style.flex = estreita ? '0 0 auto' : '';
+  const largura = Math.max(200, Math.floor(slot.clientWidth));
+  const lote = (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null;
+  const layout = montarCabecalhoMandalaLayout(currentCalculatedData, 0, cores, lote, { largura: largura + 30, flexivel: true, semMoldura: true });
+  const altura = layout.altura;
+  slot.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="15 0 ${largura} ${altura}" style="display: block; overflow: visible;">${layout.svg}</svg>`;
 }
+
+function atualizarSetasBarraMandala() {
+  const rol = document.getElementById('barra-inferior-rolagem');
+  const esq = document.getElementById('barra-seta-esq'), dir = document.getElementById('barra-seta-dir');
+  if (!rol || !esq || !dir) return;
+  esq.classList.toggle('visivel', rol.scrollLeft > 4);
+  dir.classList.toggle('visivel', rol.scrollLeft + rol.clientWidth < rol.scrollWidth - 4);
+}
+function rolarBarraInferiorMandala(sentido) {
+  const rol = document.getElementById('barra-inferior-rolagem');
+  if (rol) rol.scrollBy({ left: sentido * Math.max(160, rol.clientWidth * 0.6), behavior: 'smooth' });
+}
+window.rolarBarraInferiorMandala = rolarBarraInferiorMandala;
+document.addEventListener('DOMContentLoaded', () => {
+  const rol = document.getElementById('barra-inferior-rolagem');
+  if (rol) rol.addEventListener('scroll', atualizarSetasBarraMandala, { passive: true });
+});
+
+function atualizarBarraInferiorMandala() {
+  const barra = document.getElementById('barra-inferior-mandala');
+  if (!barra) return;
+  const visivel = barra.style.display !== 'none' && (document.getElementById('mandala-controls-overlay') || {}).style.display !== 'none';
+  const img = document.getElementById('mandalaImg');
+  const embrulho = img && img.parentElement;
+  if (!visivel) { if (embrulho) embrulho.style.paddingBottom = ''; return; }
+  atualizarCabecalhoBarraMandala();
+  barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
+  atualizarSetasBarraMandala();
+  if (embrulho) {
+    embrulho.style.boxSizing = 'border-box';
+    embrulho.style.paddingBottom = (barra.offsetHeight + 10) + 'px';
+  }
+}
+window.atualizarBarraInferiorMandala = atualizarBarraInferiorMandala;
+function ajustarPosicaoMandalaActionsOverlay() { atualizarBarraInferiorMandala(); }
 
 /* Reavalia os dois ajustes de #mandala-controls-overlay que dependem da
    largura da tela (esconder o zoom por botão no celular, empurrar
@@ -1197,7 +1229,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   const temHora = !!(horasInfo && horasInfo.hourRulerId && PLANETS_DEF.some(p => p.id === horasInfo.hourRulerId));
 
   let svg, altura;
-  if (largura >= 900) {
+  if (largura >= 900 && !opcoes.flexivel) {
     /* LAYOUT LARGO (960) — o de sempre, byte a byte. */
     altura = 75;
     svg = `<g id="png-discreet-header">
@@ -1250,7 +1282,8 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
   });
   altura = Math.max(75, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
-  svg = `<g id="png-discreet-header"><rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="${cantoCabecalho(cores)}" ry="${cantoCabecalho(cores)}" fill="${cores.fundo}" stroke="none" />${filetesCabecalhoSVG(15, headerY, largura - 30, altura, cores)}${textos}`;
+  /* semMoldura: o cabeçalho da barra inferior da tela não leva fundo nem linhas próprias — quem desenha papel e linhas duplas é a barra toda. */
+  svg = `<g id="png-discreet-header">${opcoes.semMoldura ? '' : `<rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="${cantoCabecalho(cores)}" ry="${cantoCabecalho(cores)}" fill="${cores.fundo}" stroke="none" />${filetesCabecalhoSVG(15, headerY, largura - 30, altura, cores)}`}${textos}`;
   if (temDia) {
     svg += `<text x="${largura - 100}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${largura - 100}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
   }
@@ -1734,7 +1767,8 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
   injetarControleZoomMandala();
   ajustarPosicaoMandalaActionsOverlay();
   const roda = desenharRodaSVG({ estiloForcado, fundoTransparente, corCabecalhoForcada, corCirculoForcada, papiroCabecalho, espacoTransparente, tintaPapiro });
-  const { svg, width, height, papiroNaTela, ceuParams } = roda;
+  const { svg, width, height, headerY, headerH, papiroNaTela, ceuParams } = roda;
+  
 
   const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   const blobURL = URL.createObjectURL(svgBlob);
@@ -1746,7 +1780,12 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
      mantêm o mesmo tamanho natural que o PNG (exportScale 2) tinha antes,
      já que o SVG cru só traz viewBox (sem tamanho próprio, um <img>
      dele não tem dimensão definida). */
-  const svgTela = svg.replace('<svg viewBox', `<svg width="${width * 2}" height="${height * 2}" viewBox`);
+  /* Na tela o cabeçalho NÃO fica na imagem: vive na barra inferior (atualizarCabecalhoBarraMandala), que estica com a tela. Só as cópias
+     do Relatório (estiloForcado) e o PNG guardam o cabeçalho dentro da imagem. */
+  const semCab = true; // a tela nunca mostra o cabeçalho dentro da imagem (nem depois de uma captura que força o estilo): ele é da barra
+  const alturaTela = semCab ? headerY : height;
+  const svgTelaBase = semCab ? svg.replace(/<!--CAB-->[\s\S]*?<!--\/CAB-->/, '').replace(`viewBox="0 0 ${width} ${height}"`, `viewBox="0 0 ${width} ${alturaTela}"`) : svg;
+  const svgTela = svgTelaBase.replace('<svg viewBox', `<svg width="${width * 2}" height="${alturaTela * 2}" viewBox`);
   const svgTelaUrl = URL.createObjectURL(new Blob([svgTela], { type: 'image/svg+xml;charset=utf-8' }));
   if (window.mandalaSvgTelaUrlAtual) URL.revokeObjectURL(window.mandalaSvgTelaUrlAtual);
   window.mandalaSvgTelaUrlAtual = svgTelaUrl;
@@ -1774,6 +1813,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     // Só a mandala ao vivo (não as cópias do Relatório, que passam estiloForcado):
     // com o Tema Céu, o céu continua pra fora da imagem; senão limpa o fundo.
     if (!estiloForcado) {
+      atualizarBarraInferiorMandala();
       configurarFundoCeuDaTela(container, ceuParams);
       // Modo papiro: a folha de papiro cobre o palco inteiro por uma classe no body (index.html, "mandala-papiro-tela").
       // O céu continua pintado por baixo (inline) — assim as outras ferramentas e a volta pro céu não perdem nada.

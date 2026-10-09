@@ -43,11 +43,11 @@ body.tema-ceu .menu-flutuante::after {
 
 /* TEMA CÉU — barras de botões (superior e os dois grupos flutuantes da mandala): o papiro é UMA folha por barra, MAIOR que ela, e passa POR FORA
    das linhas duplas — a borda quebrada fica sempre por fora. O papel vai no ::before; as linhas duplas no ::after (por cima do papel). */
-body.tema-ceu #top-bar, body.tema-ceu #mandala-actions-overlay, body.tema-ceu #mandala-controls-overlay, body.tema-ceu .rel-editor-tabs, body.tema-ceu .rel-toolbar {
+body.tema-ceu #top-bar, body.tema-ceu #mandala-actions-overlay, body.tema-ceu #mandala-controls-overlay, body.tema-ceu #cabecalho-barra-mandala, body.tema-ceu #barra-inferior-mandala, body.tema-ceu .rel-editor-tabs, body.tema-ceu .rel-toolbar {
     background: transparent; overflow: visible; border-top-color: transparent; border-bottom-color: transparent;
 }
 body.tema-ceu:not(.topbar-fixo) #top-bar { position: relative; }
-body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, body.tema-ceu #mandala-controls-overlay::before, body.tema-ceu .rel-editor-tabs::before, body.tema-ceu .rel-toolbar::before {
+body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, body.tema-ceu #mandala-controls-overlay::before, body.tema-ceu #cabecalho-barra-mandala::before, body.tema-ceu #barra-inferior-mandala::before, body.tema-ceu .rel-editor-tabs::before, body.tema-ceu .rel-toolbar::before {
     content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none;
     background: var(--papiro-fundo);
     clip-path: polygon(
@@ -56,7 +56,7 @@ body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, 
                 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px),
                 4px 70%, 0 45%, 3px 22%);
 }
-body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, body.tema-ceu #mandala-controls-overlay::after, body.tema-ceu .rel-editor-tabs::after, body.tema-ceu .rel-toolbar::after {
+body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, body.tema-ceu #mandala-controls-overlay::after, body.tema-ceu #cabecalho-barra-mandala::after, body.tema-ceu #barra-inferior-mandala::after, body.tema-ceu .rel-editor-tabs::after, body.tema-ceu .rel-toolbar::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
     border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
@@ -67,7 +67,13 @@ body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, bo
    - Menus flutuantes abertos dentro de um painel (já papiro): continuam com o fundo (precisa cobrir o texto de trás), mas sem a borda quebrada. */
 body.tema-ceu.mandala-papiro-tela #top-bar::before,
 body.tema-ceu.mandala-papiro-tela #mandala-actions-overlay::before,
-body.tema-ceu.mandala-papiro-tela #mandala-controls-overlay::before { display: none; }
+body.tema-ceu.mandala-papiro-tela #mandala-controls-overlay::before,
+body.tema-ceu.mandala-papiro-tela #cabecalho-barra-mandala::before,
+body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala::before { display: none; }
+/* BARRA INFERIOR DA MANDALA: o papiro e as linhas duplas são UM só, da barra inteira (em qualquer largura) — os três pedaços de dentro não têm papiro próprio. */
+body.tema-ceu #barra-inferior-mandala #mandala-actions-overlay::before, body.tema-ceu #barra-inferior-mandala #mandala-actions-overlay::after,
+body.tema-ceu #barra-inferior-mandala #mandala-controls-overlay::before, body.tema-ceu #barra-inferior-mandala #mandala-controls-overlay::after,
+body.tema-ceu #barra-inferior-mandala #cabecalho-barra-mandala::before, body.tema-ceu #barra-inferior-mandala #cabecalho-barra-mandala::after { display: none; }
 /* Menu aberto DENTRO de um painel (já é papiro): sem borda quebrada, então não precisa do recorte — o papel é o próprio fundo e a sombra é um box-shadow comum
    (mais firme que o drop-shadow nos navegadores do iPad). */
 body.tema-ceu .painel .menu-flutuante { background: var(--papiro-fundo-simples) !important; filter: none; box-shadow: 0 6px 16px rgba(30, 20, 5, .6); }

@@ -458,7 +458,8 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
 
   /* CABEÇALHO (nome, data, local, zodíaco, natividade, Dia/Hora) — o mesmo
      desenho usado por TODAS as ferramentas (ver montarCabecalhoMandalaGrupoSVG). */
-  if (!ferr) svg += montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null);
+  // marcadores: na TELA o cabeçalho não fica na imagem (vive na barra inferior, ver atualizarCabecalhoBarraMandala); no PNG do Relatório continua
+  if (!ferr) svg += '<!--CAB-->' + montarCabecalhoMandalaGrupoSVG(data, headerY, corCabecalhoPng, (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null) + '<!--/CAB-->';
 
   /* DESTAQUES DE SIGNO das ferramentas (Profecção, Sinastria): fatia inteira, do centro até raioDestaque do estilo, por baixo de tudo;
      etiquetas em faixa e coroa mais adiante. A ferramenta decide signos e cores; a posição é do estilo. */
@@ -903,5 +904,5 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
 
   svg += `</svg>`;
   svg = aplicarFonteSulfiteSVG(svg); // Sulfite: a roda é uma imagem isolada, a fonte Caveat tem que ir dentro dela
-  return { svg, width, height, papiroNaTela, ceuParams, rCanvasNatural: R_canvasFerrNatural };
+  return { svg, width, height, headerY, headerH, papiroNaTela, ceuParams, rCanvasNatural: R_canvasFerrNatural };
 }

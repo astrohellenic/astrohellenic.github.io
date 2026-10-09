@@ -337,17 +337,18 @@ async function capturarMatrizVisibilidadeMandalaParaRelatorio() {
 }
 window.capturarMatrizVisibilidadeMandalaParaRelatorio = capturarMatrizVisibilidadeMandalaParaRelatorio;
 
-/* A Matriz fica abaixo dos dois grupos de botões flutuantes da mandala (que no celular se empilham em duas linhas): o recuo de cima é medido
-   pela parte de baixo do último grupo, e não chutado — senão o título ficava escondido atrás das barras. */
+/* Os dois grupos de botões da mandala agora ficam na barra INFERIOR da tela (ver atualizarBarraInferiorMandala, mandala.js): a Matriz
+   não precisa mais de recuo em cima, e sim de espaço embaixo pra o fim dela não ficar escondido atrás dos grupos — medido pela altura de
+   verdade deles, não chutado. */
 function ajustarRecuoMatrizVisibilidade() {
   const recuo = document.getElementById('matrizVisibilidadeRecuo');
   const container = document.getElementById('mandala-container');
   if (!recuo || !container) return;
+  if (typeof atualizarBarraInferiorMandala === 'function') atualizarBarraInferiorMandala(); // sem a imagem da mandala, o cabeçalho da barra some (a Matriz tem o dela)
   let base = 0;
-  ['mandala-actions-overlay', 'mandala-controls-overlay'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) base = Math.max(base, el.getBoundingClientRect().bottom - container.getBoundingClientRect().top);
-  });
-  recuo.style.paddingTop = Math.max(70, Math.ceil(base + 14)) + 'px';
+  const barra = document.getElementById('barra-inferior-mandala');
+  if (barra) base = container.getBoundingClientRect().bottom - barra.getBoundingClientRect().top;
+  recuo.style.paddingTop = '16px';
+  recuo.style.paddingBottom = Math.max(24, Math.ceil(base + 14)) + 'px';
 }
 window.addEventListener('resize', () => setTimeout(ajustarRecuoMatrizVisibilidade, 60));

@@ -252,7 +252,8 @@
 
 /* GRUPOS DE BOTÕES FLUTUANTES DA MANDALA — cada grupo é UMA barra, igual à barra superior: fundo creme, linhas duplas em cima e embaixo,
    botões sem moldura nem cor própria. (No Céu o papiro é da barra, ver papiro.css.) */
-#mandala-actions-overlay, #mandala-controls-overlay {
+#mandala-actions-overlay, #mandala-controls-overlay, #cabecalho-barra-mandala {
+    position: relative; z-index: 0;
     background: var(--fundo-creme);
     border: 0;
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
@@ -270,6 +271,41 @@
 #mandala-controls-overlay .time-select { background: transparent; border: 0; color: var(--azul-egipcio-escuro); }
 #mandala-controls-overlay .icone { fill: none; stroke: currentColor; }
 #mandala-actions-overlay .icon-btn svg, #mandala-controls-overlay .icon-btn svg { flex-shrink: 0; }
+/* Os dois grupos ficam na BARRA INFERIOR (junto do cabeçalho, ver posicionarBarrasInferioresMandala em mandala.js): os menus que abrem deles abrem pra CIMA. */
+#mandala-actions-overlay .menu-flutuante, #mandala-controls-overlay .menu-flutuante { top: auto !important; bottom: calc(100% + 10px) !important; }
+
+/* BARRA INFERIOR DA MANDALA — UMA barra só (esquerda | cabeçalho | direita), igual à barra superior: fundo e linhas duplas são DA BARRA, contínuos de ponta a ponta;
+   os três pedaços não têm fundo/linha próprios. Na tela estreita (≤ 1000px: celular, iPad em pé) as três peças não cabem, então a barra ROLA para os
+   lados, cabeçalho junto, como a de cima, e setinhas nas pontas avisam que tem mais (rolarBarraInferiorMandala/atualizarSetasBarraMandala, mandala.js).
+   O cabeçalho é desenhado em JS (atualizarBarraInferiorMandala). A rolagem fica numa camada de dentro pra o papiro e as linhas não rolarem. */
+#barra-inferior-mandala {
+    position: absolute; left: 0; right: 0; bottom: 12px; z-index: 20; box-sizing: border-box;
+    background: var(--fundo-creme);
+    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    box-shadow: var(--sombra, none);
+    padding: 2px 12px;
+}
+#barra-inferior-rolagem { display: flex; align-items: center; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#barra-inferior-rolagem::-webkit-scrollbar { display: none; }
+#barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay, #barra-inferior-mandala #cabecalho-barra-mandala {
+    background: none; border: 0; box-shadow: none; padding: 0; flex: 0 0 auto;
+}
+#cabecalho-barra-mandala { min-width: 0; overflow: hidden; margin: 0 8px; }
+@media (min-width: 1001px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } }
+@media (max-width: 1000px) {
+    #barra-inferior-mandala #mandala-actions-overlay { margin-right: 16px; }
+    #barra-inferior-mandala #mandala-controls-overlay { margin-left: 16px; }
+    /* o container de rolagem cortaria os menus: aqui eles abrem soltos na tela, logo acima da barra */
+    #barra-inferior-mandala .menu-flutuante { position: fixed !important; left: 10px !important; top: auto !important; bottom: var(--altura-barra-inferior, 100px) !important; max-width: calc(100vw - 20px); }
+}
+.barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
+.barra-seta.visivel { display: flex; }
+#barra-seta-esq { left: 0; justify-content: flex-start; padding-left: 4px; background: linear-gradient(to right, var(--fundo-creme) 40%, transparent); }
+#barra-seta-dir { right: 0; justify-content: flex-end; padding-right: 4px; background: linear-gradient(to left, var(--fundo-creme) 40%, transparent); }
+body.tema-ceu .barra-seta { background: transparent !important; }
+body.tema-ceu #barra-seta-esq { background: linear-gradient(to right, rgba(242, 228, 184, .95) 35%, transparent) !important; }
+body.tema-ceu #barra-seta-dir { background: linear-gradient(to left, rgba(242, 228, 184, .95) 35%, transparent) !important; }
 
 /* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
    enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */
