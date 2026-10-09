@@ -812,6 +812,24 @@ body {
                   </div>
                   <div id="rs-lista-anos" style="display: none; max-height: 250px; overflow-y: auto;"></div>
                 </div>
+
+                <button class="icon-btn" onclick="toggleJanelaRL(event)" title="Revolução Lunar"><svg width="22" height="22" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M40,8 A24,24 0 1 0 56,38 A20,20 0 0 1 40,8 Z"/></svg></button>
+
+                <div id="dropdown-rl-container" class="menu-flutuante" style="display: none; position: absolute; top: 45px; left: 0; z-index: 9999; width: 280px; font-family: inherit;">
+                  <div class="item-menu cabeca-menu">
+                    <span class="rotulo">Mapa Selecionado</span>
+                    <div id="rl-nome-cliente" class="nome-nivel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nenhum cliente</div>
+                  </div>
+                  <div class="item-menu" onclick="toggleListaAnosRL()" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <span class="rotulo" style="display: block;">Retorno Lunar</span>
+                      <span id="rl-ano-atual-label" style="font-weight: 700; font-size: 14px;">Selecione...</span>
+                    </div>
+                    <svg id="rl-chevron-icon" class="icone" viewBox="0 0 64 64" width="14" height="14" style="transition: transform .15s;"><polyline points="24,12 44,32 24,52"/></svg>
+                  </div>
+                  <div id="rl-lista-anos" style="display: none; max-height: 250px; overflow-y: auto;"></div>
+                  <div id="rl-lista-retornos" style="max-height: 250px; overflow-y: auto;"></div>
+                </div>
             </div>
 
             <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
@@ -1023,6 +1041,7 @@ body {
 <script src="profeccao.js?v=20261010c"></script>
 <script src="sinastria.js?v=20261010a"></script>
 <script src="revolucao.js?v=20261009b"></script>
+<script src="revolucaoLunar.js?v=20261009a"></script>
 <script src="decenios.js?v=20261009c"></script>
 <script src="direcoes.js?v=20261010c"></script>
 <script src="liberacao.js?v=20261010a"></script>
