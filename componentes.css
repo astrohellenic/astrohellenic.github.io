@@ -286,7 +286,7 @@
     box-shadow: var(--sombra, none);
     padding: 2px 12px;
 }
-#barra-inferior-rolagem { display: flex; align-items: center; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#barra-inferior-rolagem { display: flex; align-items: center; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 #barra-inferior-rolagem::-webkit-scrollbar { display: none; }
 #barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay, #barra-inferior-mandala #cabecalho-barra-mandala {
     background: none; border: 0; box-shadow: none; padding: 0; flex: 0 0 auto;
@@ -297,8 +297,6 @@
 @media (max-width: 1000px) {
     #barra-inferior-mandala #mandala-actions-overlay { margin-right: 16px; }
     #barra-inferior-mandala #mandala-controls-overlay { margin-left: 16px; }
-    /* o container de rolagem cortaria os menus: aqui eles abrem soltos na tela, logo acima da barra */
-    #barra-inferior-mandala .menu-flutuante { position: fixed !important; left: 10px !important; top: auto !important; bottom: var(--altura-barra-inferior, 100px) !important; max-width: calc(100vw - 20px); }
 }
 .barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
 .barra-seta.visivel { display: flex; }

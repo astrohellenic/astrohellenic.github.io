@@ -961,6 +961,34 @@ function atualizarCabecalhoBarraMandala() {
   slot.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="15 0 ${largura} ${altura}" style="display: block; overflow: visible;">${layout.svg}</svg>`;
 }
 
+/* Tela estreita: a barra rola, e uma área que rola CORTA o que abre de dentro dela (e no Safari do iPhone até prende "position: fixed" nela). Então os menus
+   que abrem dos botões (Revolução Solar/Lunar, Casa 1) são tirados da barra e postos direto no <body>, soltos, logo acima da barra e na altura do botão
+   que foi tocado. Roda depois do clique (os botões abrem/fecham o menu por conta própria, pelo id — mudar o menu de lugar não atrapalha). Tela larga:
+   a barra não rola e os menus abrem normalmente de dentro dela. */
+function soltarMenusDaBarraMandala(botao) {
+  const barra = document.getElementById('barra-inferior-mandala');
+  if (!barra) return;
+  const base = window.innerHeight - barra.getBoundingClientRect().top + 8;
+  const rb = botao ? botao.getBoundingClientRect() : null;
+  document.querySelectorAll('#barra-inferior-mandala .menu-flutuante, body > .menu-flutuante[data-da-barra]').forEach(menu => {
+    if (menu.style.display === 'none' || !menu.style.display) return;
+    if (menu.parentElement !== document.body) {
+      document.querySelectorAll('body > .menu-flutuante[data-da-barra]').forEach(velho => { if (velho !== menu && velho.id === menu.id) velho.remove(); });
+      menu.setAttribute('data-da-barra', '1');
+      document.body.appendChild(menu);
+    }
+    const larg = menu.offsetWidth || 280;
+    const esq = Math.max(10, Math.min(rb ? rb.left : 10, window.innerWidth - larg - 10));
+    menu.style.position = 'fixed'; menu.style.top = 'auto'; menu.style.right = 'auto';
+    menu.style.left = esq + 'px'; menu.style.bottom = base + 'px';
+    menu.style.maxWidth = 'calc(100vw - 20px)'; menu.style.zIndex = '10000';
+  });
+}
+document.addEventListener('click', (e) => {
+  const botao = e.target.closest && e.target.closest('#barra-inferior-mandala button');
+  if (botao) setTimeout(() => soltarMenusDaBarraMandala(botao), 0);
+}, true);
+
 function atualizarSetasBarraMandala() {
   const rol = document.getElementById('barra-inferior-rolagem');
   const esq = document.getElementById('barra-seta-esq'), dir = document.getElementById('barra-seta-dir');
