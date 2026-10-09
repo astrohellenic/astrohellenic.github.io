@@ -754,6 +754,7 @@ function injetarBotaoRotacaoNaBarraSuperior() {
   const parentContainer = document.getElementById('mandala-controls-overlay');
   if (!parentContainer) return;
 
+  document.querySelectorAll('body > #lotMenuList').forEach(m => m.remove()); // cópia solta de antes (a barra é refeita a cada desenho)
   let btnContainer = document.getElementById('lotRotationBtnContainer');
   if (!btnContainer) {
     btnContainer = document.createElement('div');
@@ -785,8 +786,13 @@ function injetarBotaoRotacaoNaBarraSuperior() {
   `;
 }
 
+function fecharMenuCasa1() {
+  // o menu pode estar solto no <body> (ver soltarMenusDaBarraMandala): esconde todas as cópias, senão ficava aberto no meio da tela pra sempre (a cópia solta é descartada no próximo desenho da barra)
+  document.querySelectorAll('#lotMenuList').forEach(m => { m.style.display = 'none'; });
+}
 function alternarRotacaoCasa1(val) {
   selectedHouse1Lot = val;
+  fecharMenuCasa1();
   renderMandala();
 }
 
@@ -985,6 +991,11 @@ function soltarMenusDaBarraMandala(botao) {
   });
 }
 document.addEventListener('click', (e) => {
+  // tocar fora do menu da Casa 1 (e fora do botão dele) fecha o menu
+  if (e.target.closest && !e.target.closest('#lotMenuList') && !e.target.closest('#lotRotationBtnContainer')) {
+    const m = document.getElementById('lotMenuList');
+    if (m && m.style.display === 'block') fecharMenuCasa1();
+  }
   const botao = e.target.closest && e.target.closest('#barra-inferior-mandala button');
   if (botao) setTimeout(() => soltarMenusDaBarraMandala(botao), 0);
 }, true);
