@@ -74,7 +74,7 @@ function getASCIconSVGLotes(size = 22) {
   // Tema Céu: mesmo triângulo só de contorno ocre (sem preenchimento) com letras em terracota de getAnguloCirculoSVG.
   const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', fundoPainelClaro());
   const sulfite = window.temaMandala === 'sulfite';
-  const corTxt = ceu ? '#a03e25' : (sulfite ? paletaEpoca(false).terracota : '#000000');
+  const corTxt = ceu ? '#a03e25' : (sulfite ? paletaEpoca(false).pretoTinta : '#000000');
   const interno = `<g transform="translate(50,50) scale(0.9) translate(-50,-50)">${fundo}${frag}</g><text x="50" y="58" font-size="${sulfite ? 19 : 16}" font-weight="900" fill="${corTxt}" ${sulfite ? `font-family="'Caveat', cursive" ` : ''}text-anchor="middle">ASC</text>`;
   return svgComoImagemLotes(interno, size, size, '0 0 100 100');
 }
@@ -101,7 +101,8 @@ function getLoteHermeticoIconSVG(loteKey, size = 22) {
    renderLoteCardHTML/renderSeletorLotes). */
 function getLoteAbbrevIconSVG(abbrev, size = 22) { // Tema Céu (papiro): lotes sempre em preto de tinta (#1a1410)
   const sulfite = window.temaMandala === 'sulfite';
-  const cor = sulfite ? paletaEpoca(false).pretoTinta : window.temaMandala === 'ceu' ? '#1a1410' : (document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70');
+  const cor = sulfite ? paletaEpoca(false).azulEscuro : // Sulfite: o azul egípcio arroxeado (no claro é o #103b70, o azul de sempre)
+     window.temaMandala === 'ceu' ? '#1a1410' : (document.documentElement.classList.contains('tema-escuro') ? '#8ab4e8' : '#103b70');
   const len = (abbrev || '').length;
   const fontSize = (len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6))) * (sulfite ? 1.2 : 1); // Caveat é miúda: um pouco maior pra ter o mesmo peso
   const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" ${sulfite ? `font-family="'Caveat', cursive" ` : ''}text-anchor="middle">${abbrev}</text>`;
