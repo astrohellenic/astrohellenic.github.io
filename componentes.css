@@ -361,6 +361,8 @@
 /* TABELAS (Profecção, Liberação, Decênios): a coluna centraliza pelo ÍCONE (planeta ou signo); o nome fica ao lado, fora do cálculo do centro */
 .tabela-epoca td.centro .com-nome { position: relative; display: inline-flex; justify-content: center; gap: 0; }
 .tabela-epoca td.centro .com-nome .nome-glifo { position: absolute; left: 100%; margin-left: 8px; }
+/* Profecção Mensal: o ícone do planeta sem nome também é inline-block (como o do signo), pra imagem salva (html2canvas) centralizar igual à tela */
+#profMensalTable td.centro > svg { display: inline-block; vertical-align: middle; }
 
 /* AGENDA (agendamento.js): só forma; cores das variáveis do tema */
 .ag-nota { font-size: 12px; text-align: center; margin: 0 0 4px; opacity: .85; }
