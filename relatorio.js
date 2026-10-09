@@ -893,6 +893,54 @@ async function iniciarModuloRelatorio() {
   renderRelatorioSetup(container, presets, rascunhos);
 }
 
+/* Agrupa os rascunhos por cliente (nome) — o mesmo cliente pode ter mais
+   de um em andamento (ex.: Retificação e, separado, Mapa Natal) — filtra
+   pelo termo buscado e aplica a ordem (normal/contrária). */
+function montarGruposRascunhosRelatorioHTML(termo) {
+  const q = (termo || '').toLowerCase().trim();
+  const lista = (window.relatorioRascunhosLista || []).filter(r =>
+    !q || (r.nome || '').toLowerCase().includes(q) || (r.titulo || '').toLowerCase().includes(q));
+  const grupos = [];
+  lista.forEach(r => {
+    let grupo = grupos.find(g => g.nome === r.nome);
+    if (!grupo) { grupo = { nome: r.nome, itens: [] }; grupos.push(grupo); }
+    grupo.itens.push(r);
+  });
+  if (currentSortDirection === 'desc') grupos.reverse();
+  if (!grupos.length) return '<div class="menu-vazio">Nenhum relatório encontrado.</div>';
+  return grupos.map(g => `
+        <div class="re-grupo">
+          <div class="re-cliente rel-setup-cliente">${escapeHtml(g.nome)}</div>
+          ${g.itens.map(r => `
+            <div class="re-item rel-setup-rascunho${r.id === currentRascunhoId ? ' atual' : ''}" onclick="abrirRascunhoRelatorio('${r.id}')">
+              <span class="re-item-nome">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
+              <div class="re-item-acoes">
+                <button type="button" class="botao-icone botao-apagar" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)">${menuIcone('lixeira', 18)}</button>
+                <span class="botao-icone" style="width: 20px;">${menuIcone('avancar', 18)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('<hr class="divisa">');
+}
+
+function atualizarListaRascunhosRelatorio() {
+  const alvo = document.getElementById('relListaRascunhos');
+  const input = document.getElementById('relFiltroRascunhos');
+  if (alvo) alvo.innerHTML = montarGruposRascunhosRelatorioHTML(input ? input.value : '');
+}
+
+function alternarOrdemRascunhosRelatorio() {
+  currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+  const btn = document.getElementById('relOrdemRascunhosBtn');
+  if (btn) {
+    btn.title = currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente';
+    btn.innerHTML = menuIcone(currentSortDirection === 'asc' ? 'ordemAsc' : 'ordemDesc', 20);
+  }
+  atualizarListaRascunhosRelatorio();
+  if (typeof salvarOrdenacaoClientes === 'function') salvarOrdenacaoClientes();
+}
+
 function renderRelatorioSetup(container, presets, rascunhos) {
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
@@ -909,33 +957,21 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   const opcoesPreset = !presets.length ? '<option value="">Nenhum modelo — toque em + Novo</option>' : presets.map((p, idx) => `<option value="${idx}" ${idx === indicePresetPadrao ? 'selected' : ''}>${escapeHtml(p.nome)}</option>`).join('');
   const listaModelosHTML = renderizarListaModelosRelatorioHTML(presets);
 
-  // Agrupa os rascunhos por cliente (nome) — o mesmo cliente pode ter
-  // mais de um em andamento (ex.: Retificação e, separado, Mapa Natal).
-  const gruposRascunhos = [];
-  (rascunhos || []).forEach(r => {
-    let grupo = gruposRascunhos.find(g => g.nome === r.nome);
-    if (!grupo) { grupo = { nome: r.nome, itens: [] }; gruposRascunhos.push(grupo); }
-    grupo.itens.push(r);
-  });
-
-  const listaRascunhosHTML = gruposRascunhos.length ? `
+  // Lista de "Relatórios em Andamento": busca (por código/nome/título) e
+  // ordem normal/contrária — a direção é a mesma das pastas de mapas
+  // (currentSortDirection, salva no Supabase).
+  window.relatorioRascunhosLista = rascunhos || [];
+  const listaRascunhosHTML = (rascunhos && rascunhos.length) ? `
     <div class="re-bloco">
       <div class="titulo-secao">Relatórios em Andamento</div>
       <hr class="divisa">
-      ${gruposRascunhos.map(g => `
-        <div class="re-grupo">
-          <div class="re-cliente rel-setup-cliente">${escapeHtml(g.nome)}</div>
-          ${g.itens.map(r => `
-            <div class="re-item rel-setup-rascunho${r.id === currentRascunhoId ? ' atual' : ''}" onclick="abrirRascunhoRelatorio('${r.id}')">
-              <span class="re-item-nome">${escapeHtml(r.titulo || 'Rascunho sem título')}</span>
-              <div class="re-item-acoes">
-                <button type="button" class="botao-icone botao-apagar" data-rascunho-id="${r.id}" data-rascunho-rotulo="${escapeHtml(g.nome + ' — ' + (r.titulo || 'Rascunho sem título'))}" title="Excluir este relatório" onclick="event.stopPropagation(); excluirRascunhoRelatorio(this.dataset.rascunhoId, this.dataset.rascunhoRotulo)">${menuIcone('lixeira', 18)}</button>
-                <span class="botao-icone" style="width: 20px;">${menuIcone('avancar', 18)}</span>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `).join('<hr class="divisa">')}
+      <div class="search-box-container">
+        <input type="text" id="relFiltroRascunhos" class="client-search-input" placeholder="Buscar por código ou nome..." oninput="atualizarListaRascunhosRelatorio()">
+        <button type="button" id="relOrdemRascunhosBtn" class="botao-icone" onclick="alternarOrdemRascunhosRelatorio()" title="${currentSortDirection === 'asc' ? 'Ordem crescente' : 'Ordem decrescente'}" style="width: 32px; flex: 0 0 auto;">
+          ${menuIcone(currentSortDirection === 'asc' ? 'ordemAsc' : 'ordemDesc', 20)}
+        </button>
+      </div>
+      <div id="relListaRascunhos">${montarGruposRascunhosRelatorioHTML('')}</div>
     </div>
     <hr class="divisa">
   ` : '';
