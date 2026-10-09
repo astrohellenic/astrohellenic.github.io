@@ -24,6 +24,21 @@
     --fundo-creme: #FFFDF5;           /* painel por baixo no modo claro (o papiro tem o dele em papiro.css) */
 }
 
+/* SULFITE — folha branca escrita à mão, com caneta. Mesmas cores de época, trocadas pelas cores das canetas.
+   (.paleta-sulfite: a sonda do JS, ver paletaEpoca em papiro.js) */
+:root.tema-sulfite, .paleta-sulfite {
+    --azul-egipcio-escuro: #0C34B1;   /* azul egípcio arroxeado */
+    --azul-egipcio-claro: #01C7FC;    /* azul egípcio claro */
+    --preto-tinta: #1C1C1C;           /* preto de tinta */
+    --ocre: #F5EC00;                  /* ocre (caneta amarela) */
+    --terracota: #BB0C34;             /* terracota (caneta vermelha) */
+    --laranja: #FC8520;               /* fogo */
+    --marrom: #734028;                /* terra */
+    --cinza: #808A91;                 /* ar */
+    --verde: #004E38;                 /* WhatsApp */
+    --fundo-creme: #FFFFFF;           /* fundo sulfite */
+}
+
 /* MODO ESCURO — as mesmas cores, adaptadas  (.paleta-escura: a sonda do JS) */
 :root.tema-escuro, .paleta-escura {
     --azul-egipcio-escuro: #5F80E7;
@@ -55,7 +70,7 @@
    signos pelas cores dos elementos (laranja, marrom, cinza, azul egípcio claro) e ícones dos termos em ocre. */
 
 /* ASPECTOS — as mesmas cores em TODAS as telas e temas (cada uma já tem a versão do modo escuro pela variável da paleta) */
-:root, .paleta-clara, :root.tema-escuro, .paleta-escura {
+:root, .paleta-clara, :root.tema-escuro, .paleta-escura, :root.tema-sulfite, .paleta-sulfite {
     --aspect-conjuncao: var(--preto-tinta);
     --aspect-sextil: var(--azul-egipcio-claro);
     --aspect-trigono: var(--azul-egipcio-escuro);
@@ -64,7 +79,7 @@
 }
 
 /* ELEMENTOS DOS SIGNOS — fogo = laranja, terra = marrom, ar = cinza, água = azul egípcio claro (cada um na versão do modo). Fonte única para CSS; para JS: corElementoSigno (papiro.js). */
-:root, .paleta-clara, :root.tema-escuro, .paleta-escura {
+:root, .paleta-clara, :root.tema-escuro, .paleta-escura, :root.tema-sulfite, .paleta-sulfite {
     --element-fogo: var(--laranja);
     --element-terra: var(--marrom);
     --element-ar: var(--cinza);
@@ -72,5 +87,14 @@
 }
 
 /* SOMBRA DAS JANELAS QUE FLUTUAM (menus flutuantes): só estas têm sombra, pra ficar claro que estão por cima. No Céu a sombra é do papiro (papiro.css). */
-:root, .paleta-clara { --sombra-janela: 0 4px 14px rgba(26, 20, 16, .30); }
+:root, .paleta-clara, :root.tema-sulfite, .paleta-sulfite { --sombra-janela: 0 4px 14px rgba(26, 20, 16, .30); }
 :root.tema-escuro, .paleta-escura { --sombra-janela: 0 4px 16px rgba(0, 0, 0, .70); }
+
+/* SULFITE — FONTE: letra de caneta (Caveat) no lugar de Montserrat e Cinzel, em tudo menos nos ícones (Font Awesome).
+   !important porque várias telas guardam a fonte no style inline. */
+:root.tema-sulfite {
+    --fonte-sulfite: 'Caveat', cursive;
+}
+html.tema-sulfite body, html.tema-sulfite body *:not(i):not([class*="fa-"]):not(.fa):not(.fas):not(.far):not(.fab) {
+    font-family: var(--fonte-sulfite) !important;
+}

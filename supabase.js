@@ -163,7 +163,7 @@ function renderMenuPrincipal() {
 function lerTemaMandalaLocal() {
   try {
     const t = localStorage.getItem('astro_tema_mandala');
-    return (t === 'ceu' || t === 'claro') ? t : null;
+    return (t === 'ceu' || t === 'claro' || t === 'sulfite') ? t : null;
   } catch (e) { return null; }
 }
 
@@ -174,6 +174,7 @@ function aplicarTemaMandala(tema) {
     window.aplicarModoCor(modo);
   }
   document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  document.documentElement.classList.toggle('tema-sulfite', tema === 'sulfite');
   // Se a mandala já tinha sido desenhada com outro tema, refaz o desenho já com o tema certo.
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
     if (mandalaEstaNaTela()) renderMandala();
@@ -209,14 +210,15 @@ async function carregarTemaMandala(userId) {
    - 'claro' / 'escuro' / 'auto': desliga o Céu e aplica o modo — o automático só escolhe entre claro e escuro, nunca Céu.
    window.aplicarModoCor vem do script inline em index.html (roda antes de supabase.js). */
 function salvarAparencia(escolha) {
-  const tema = escolha === 'ceu' ? 'ceu' : 'claro';
+  const tema = (escolha === 'ceu' || escolha === 'sulfite') ? escolha : 'claro';
   try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
   window.temaMandala = tema; // antes do aplicarModoCor: ele consulta se o Céu está ligado
   let modo = escolha;
-  if (tema === 'ceu') { modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {} }
+  if (tema === 'ceu' || tema === 'sulfite') { modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {} }
   else { try { localStorage.setItem('astro_modo_cor', escolha); } catch (e) {} }
   if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(modo);
   document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  document.documentElement.classList.toggle('tema-sulfite', tema === 'sulfite');
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
     if (mandalaEstaNaTela()) renderMandala();
   }
