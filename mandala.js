@@ -996,6 +996,26 @@ function atualizarSetasBarraMandala() {
   esq.classList.toggle('visivel', rol.scrollLeft > 4);
   dir.classList.toggle('visivel', rol.scrollLeft + rol.clientWidth < rol.scrollWidth - 4);
 }
+/* Setinhas de aviso (esquerda/direita) numa barra que rola: só aparecem quando tem coisa escondida daquele lado — no computador, onde a barra cabe, nunca. */
+function ligarSetasDeRolagem(rolagem, esq, dir) {
+  if (!rolagem || !esq || !dir) return;
+  const atualiza = () => {
+    esq.classList.toggle('visivel', rolagem.scrollLeft > 4);
+    dir.classList.toggle('visivel', rolagem.scrollLeft + rolagem.clientWidth < rolagem.scrollWidth - 4);
+  };
+  const passo = (sentido) => rolagem.scrollBy({ left: sentido * Math.max(160, rolagem.clientWidth * 0.6), behavior: 'smooth' });
+  esq.addEventListener('click', () => passo(-1));
+  dir.addEventListener('click', () => passo(1));
+  rolagem.addEventListener('scroll', atualiza, { passive: true });
+  window.addEventListener('resize', atualiza);
+  if (window.ResizeObserver) new ResizeObserver(atualiza).observe(rolagem);
+  new MutationObserver(atualiza).observe(rolagem, { childList: true, subtree: true });
+  atualiza();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  ligarSetasDeRolagem(document.querySelector('#top-bar .top-bar-controls'), document.querySelector('[data-seta-topo="esq"]'), document.querySelector('[data-seta-topo="dir"]'));
+});
+
 function rolarBarraInferiorMandala(sentido) {
   const rol = document.getElementById('barra-inferior-rolagem');
   if (rol) rol.scrollBy({ left: sentido * Math.max(160, rol.clientWidth * 0.6), behavior: 'smooth' });

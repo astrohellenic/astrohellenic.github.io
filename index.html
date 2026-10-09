@@ -5,7 +5,7 @@
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
     <link rel="stylesheet" href="papiro.css?v=20261011a">
     <link rel="stylesheet" href="temas.css?v=20261010t">
-    <link rel="stylesheet" href="componentes.css?v=20261011c">
+    <link rel="stylesheet" href="componentes.css?v=20261011d">
     <link rel="stylesheet" href="configuracoes.css?v=20261010c">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -378,6 +378,8 @@ body {
         #top-bar-espacador { display: none; }
         body.topbar-fixo #top-bar-espacador { display: block; margin-bottom: 10px; }
 
+        /* envelope da rolagem da barra superior: as setinhas de aviso (celular) ficam presas nele, por cima da área que rola */
+        .top-bar-rolagem-wrap { position: relative; flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; }
         .top-bar-controls {
             display: flex;
             align-items: center;
@@ -650,6 +652,9 @@ body {
             <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Abrir Menu Lateral">
                 <svg class="icone" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true"><path d="M10 18 H54 M10 32 H54 M10 46 H54"/></svg>
             </button>
+            <div class="top-bar-rolagem-wrap">
+            <button type="button" class="barra-seta barra-seta-esq" data-seta-topo="esq" aria-label="Mais ferramentas à esquerda"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="40,12 20,32 40,52"/></svg></button>
+            <button type="button" class="barra-seta barra-seta-dir" data-seta-topo="dir" aria-label="Mais ferramentas à direita"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="24,12 44,32 24,52"/></svg></button>
             <div class="top-bar-controls">
                 <!-- BOTÕES DE MÓDULOS NA BARRA (APENAS ÍCONES) -->
                 <button class="icon-btn" data-modulo-key="relatorio" onclick="abrirModuloTecnica('relatorio')" title="Relatório"><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -766,6 +771,7 @@ body {
   <line x1="32" y1="16" x2="32" y2="48"/>
 </svg></button>
 
+            </div>
             </div>
         </div>
         <!-- fecha o #top-bar -->
@@ -1045,7 +1051,7 @@ body {
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261010v"></script>
 <script src="tabelaTecnica.js?v=20261010t"></script>
-<script src="mandala.js?v=20261011d"></script>
+<script src="mandala.js?v=20261011e"></script>
 <script src="roda.js?v=20261010x"></script>
 <script src="isopsefia.js?v=20261010t"></script>
 <script src="profeccao.js?v=20261010t"></script>

@@ -300,11 +300,11 @@
 }
 .barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
 .barra-seta.visivel { display: flex; }
-#barra-seta-esq { left: 0; justify-content: flex-start; padding-left: 4px; background: linear-gradient(to right, var(--fundo-creme) 40%, transparent); }
-#barra-seta-dir { right: 0; justify-content: flex-end; padding-right: 4px; background: linear-gradient(to left, var(--fundo-creme) 40%, transparent); }
+#barra-seta-esq, .barra-seta-esq { left: 0; justify-content: flex-start; padding-left: 4px; background: linear-gradient(to right, var(--fundo-creme) 40%, transparent); }
+#barra-seta-dir, .barra-seta-dir { right: 0; justify-content: flex-end; padding-right: 4px; background: linear-gradient(to left, var(--fundo-creme) 40%, transparent); }
 body.tema-ceu .barra-seta { background: transparent !important; }
-body.tema-ceu #barra-seta-esq { background: linear-gradient(to right, rgba(242, 228, 184, .95) 35%, transparent) !important; }
-body.tema-ceu #barra-seta-dir { background: linear-gradient(to left, rgba(242, 228, 184, .95) 35%, transparent) !important; }
+body.tema-ceu #barra-seta-esq, .barra-seta-esq { background: linear-gradient(to right, rgba(242, 228, 184, .95) 35%, transparent) !important; }
+body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to left, rgba(242, 228, 184, .95) 35%, transparent) !important; }
 
 /* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
    enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */
