@@ -216,6 +216,10 @@
 .cfg-pasta { margin: 0; font-weight: 700; }
 .cfg-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 0 12px; }
 
+/* envelope da navegação de seções: as setinhas de aviso (celular) ficam presas nele */
+.cfg-nav-wrap { position: relative; min-width: 0; }
+.cfg-nav-wrap .barra-seta { bottom: 12px; }
+
 /* ---- celular e telas estreitas ---- */
 @media (max-width: 899px) {
   .cfg-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }

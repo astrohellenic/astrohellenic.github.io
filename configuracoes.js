@@ -64,12 +64,18 @@ function iniciarModuloConfiguracoes() {
       </div>
       <hr class="divisa">
       <div class="cfg-layout">
-        <nav id="cfgNav" class="cfg-nav" aria-label="Seções das configurações">${navHtml}</nav>
+        <div class="cfg-nav-wrap">
+          <button type="button" class="barra-seta barra-seta-esq" id="cfgSetaEsq" aria-label="Mais seções à esquerda"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="40,12 20,32 40,52"/></svg></button>
+          <button type="button" class="barra-seta barra-seta-dir" id="cfgSetaDir" aria-label="Mais seções à direita"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="24,12 44,32 24,52"/></svg></button>
+          <nav id="cfgNav" class="cfg-nav" aria-label="Seções das configurações">${navHtml}</nav>
+        </div>
         <section id="cfgConteudo" class="cfg-conteudo"></section>
       </div>
     </div>
   `;
   mostrarSecaoConfiguracoes(window.configSecaoAtiva);
+  // celular: a fileira de seções rola — setinhas avisam que tem mais (as mesmas das barras da mandala; só aparecem quando transborda)
+  if (typeof ligarSetasDeRolagem === 'function') ligarSetasDeRolagem(document.getElementById('cfgNav'), document.getElementById('cfgSetaEsq'), document.getElementById('cfgSetaDir'));
 }
 
 /* Mostra uma seção (só o conteúdo é refeito — a navegação fica como está) */
