@@ -348,7 +348,8 @@
         /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
         /* link com &agenda=1 (caixinha em Configurações → Captação): depois do envio abre a agenda do astrólogo, no lugar do redirecionamento */
         const abrirAgenda = (abrirAgendaConfig || new URLSearchParams(window.location.search).get('agenda') === '1') && ownerId && novoClienteId;
-        const destinoForm = abrirAgenda ? 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}' : redirectUrlForm; /* o redirecionamento do astrólogo é aberto pela própria agenda, depois da escolha do horário */
+        const servicoLink = (new URLSearchParams(window.location.search).get('servico') || '').slice(0, 120); /* nome do serviço (&servico=...) segue até a agenda, que o entrega como {SERVICO} */
+        const destinoForm = abrirAgenda ? 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}' + (servicoLink ? '&s=' + encodeURIComponent(servicoLink) : '') : redirectUrlForm; /* o redirecionamento do astrólogo é aberto pela própria agenda, depois da escolha do horário */
         const cfgData = { redirect_url: destinoForm ? destinoForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
         /* agenda em seguida: vai direto, sem a caixa de "redirecionando" */

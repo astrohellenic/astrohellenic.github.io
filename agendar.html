@@ -34,6 +34,7 @@
   const params = new URLSearchParams(window.location.search);
   const ownerId = params.get('u');
   const clienteId = params.get('c');
+  const servicoNome = (params.get('s') || '').slice(0, 120);
   const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
   let DIAS_A_FRENTE = 45;           // vêm de Configurações → Agenda (ver 'regras' abaixo); estes são só os padrões
   // Serviço (Vercel) que fala com a Google Agenda do astrólogo — ver api/agenda-google.js
@@ -119,15 +120,15 @@
     const btn = el('btnConfirmar'); if (btn && horaEscolhida) btn.onclick = confirmar;
   }
 
-  /* Variáveis aceitas no link de redirecionamento do astrólogo (cada um monta a própria página de agradecimento): {USER} {CLIENTE} {NOME} (primeiro nome) {DATA} (dd/mm/aaaa) {DATA_ISO} (aaaa-mm-dd) {HORA} (hh:mm) {FUSO} (ex.: America/Sao_Paulo) {DURACAO} (min) */
+  /* Variáveis aceitas no link de redirecionamento do astrólogo (cada um monta a própria página de agradecimento): {USER} {CLIENTE} {NOME} (primeiro nome) {DATA} (dd/mm/aaaa) {DATA_ISO} (aaaa-mm-dd) {HORA} (hh:mm) {FUSO} (ex.: America/Sao_Paulo) {DURACAO} (min) {SERVICO} (o que veio em &servico=... no link do formulário) */
   function preencherVariaveisRedirect(url) {
     const valores = {
       USER: ownerId, CLIENTE: clienteId,
       NOME: agenda && agenda.cliente_nome ? agenda.cliente_nome.split(' ')[0] : '',
       DATA: dataBR(diaEscolhido), DATA_ISO: diaEscolhido, HORA: horaEscolhida, FUSO: FUSO,
-      DURACAO: agenda && agenda.duracao ? agenda.duracao : ''
+      DURACAO: agenda && agenda.duracao ? agenda.duracao : '', SERVICO: servicoNome
     };
-    return url.replace(/\{(USER|CLIENTE|NOME|DATA_ISO|DATA|HORA|FUSO|DURACAO)\}/g, (_, k) => encodeURIComponent(valores[k] || ''));
+    return url.replace(/\{(USER|CLIENTE|NOME|DATA_ISO|DATA|HORA|FUSO|DURACAO|SERVICO)\}/g, (_, k) => encodeURIComponent(valores[k] || ''));
   }
 
   async function confirmar() {
