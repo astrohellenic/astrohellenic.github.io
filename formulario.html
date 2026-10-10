@@ -207,7 +207,7 @@
 
   /* SINASTRIA (link com &servico=sinastria): duas etapas — A (quem paga) e B (pessoa analisada junto).
      Os dois mapas só são gravados juntos, no fim. */
-  const modoSinastria = new URLSearchParams(window.location.search).get('servico') === 'sinastria';
+  const modoSinastria = /sinastria/i.test(new URLSearchParams(window.location.search).get('servico') || ''); /* qualquer serviço com "sinastria" no nome abre o formulário duplo */
   let etapaSinastria = 'A';
   let dadosA = null, dadosB = null;
 

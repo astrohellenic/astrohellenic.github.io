@@ -262,18 +262,17 @@ function htmlCfgCaptacao() {
 
         <div class="cfg-campos cfg-campos-topo">
           <div class="cfg-campo-largo">
-            <label class="cfg-rotulo" for="cfgPublicFormUrl">Seu link exclusivo do formulário</label>
+            <label class="cfg-rotulo" for="cfgPublicFormUrl">Link geral do formulário (sem serviço)</label>
             <div class="cfg-linha-campo">
               <input type="text" id="cfgPublicFormUrl" class="modal-input" readonly>
               <button type="button" class="cfg-btn" onclick="copiarLinkFormulario()">Copiar</button>
             </div>
           </div>
           <div class="cfg-campo-largo">
-            <label class="cfg-rotulo" for="cfgPublicFormSinastriaUrl">Link do formulário da Sinastria (capta os dois mapas)</label>
-            <div class="cfg-linha-campo">
-              <input type="text" id="cfgPublicFormSinastriaUrl" class="modal-input" readonly>
-              <button type="button" class="cfg-btn" onclick="copiarLinkFormulario('cfgPublicFormSinastriaUrl')">Copiar</button>
-            </div>
+            <label class="cfg-rotulo">Links por serviço (um para cada serviço cadastrado — use no redirecionamento do pagamento)</label>
+            <div id="cfgLinksServicos" class="cfg-lista"><div class="cfg-carregando">Carregando serviços...</div></div>
+            <p class="cfg-card-desc">Cada link já leva o nome do serviço, que chega ao webhook e ao link de redirecionamento como <code>{SERVICO}</code>. Serviço com "sinastria" no nome abre o formulário duplo.</p>
+          </div>
           </div>
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgWebhookUrl">URL do webhook (integração)</label>
@@ -735,7 +734,7 @@ async function carregarConfiguracoesCaptacao() {
 document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
 const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
 if (document.getElementById('cfgPublicFormUrl')) document.getElementById('cfgPublicFormUrl').value = publicLink;
-if (document.getElementById('cfgPublicFormSinastriaUrl')) document.getElementById('cfgPublicFormSinastriaUrl').value = publicLink + '&servico=sinastria';
+renderLinksServicosFormulario(publicLink, user.id);
 if (document.getElementById('cfgFormAbrirAgenda')) document.getElementById('cfgFormAbrirAgenda').checked = data.formulario_abrir_agenda === true;
 mostrarAvisoAgendaRedirect();
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
@@ -820,6 +819,22 @@ async function fazerUploadLogo(inputElement) {
     alert("Erro ao processar arquivo de imagem.");
     if (btnText) btnText.innerText = "Selecionar Imagem do Logo";
   }
+}
+
+/* UM LINK DE FORMULÁRIO PARA CADA SERVIÇO CADASTRADO (o nome vai em &servico=...) */
+async function renderLinksServicosFormulario(publicLink, userId) {
+  const el = document.getElementById('cfgLinksServicos');
+  if (!el) return;
+  const { data, error } = await supabaseClient.from('relatorio_presets').select('nome').eq('user_id', userId).order('nome', { ascending: true });
+  if (error || !data || !data.length) { el.innerHTML = '<div class="menu-vazio">Nenhum serviço cadastrado ainda (Configurações → Serviços).</div>'; return; }
+  el.innerHTML = data.map((sv, i) => `
+    <div class="cfg-servico-link">
+      <div class="cfg-servico-nome">${escapeHtml(sv.nome)}</div>
+      <div class="cfg-linha-campo">
+        <input type="text" id="cfgLinkServ${i}" class="modal-input" readonly value="${escapeHtml(publicLink + '&servico=' + encodeURIComponent(sv.nome))}">
+        <button type="button" class="cfg-btn" onclick="copiarLinkFormulario('cfgLinkServ${i}')">Copiar</button>
+      </div>
+    </div>`).join('');
 }
 
 /* COPIA O LINK DO FORMULÁRIO PARA A ÁREA DE TRANSFERÊNCIA */
