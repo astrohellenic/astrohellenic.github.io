@@ -295,6 +295,7 @@ function htmlCfgCaptacao() {
         <select id="cfgFormTema" class="modal-input">
           <option value="ceu">Céu</option>
           <option value="claro">Claro</option>
+          <option value="sulfite">Sulfite</option>
           <option value="escuro">Escuro</option>
           <option value="auto">Automático (segue o aparelho do cliente)</option>
         </select>
@@ -749,7 +750,7 @@ mostrarAvisoAgendaRedirect();
       }
       if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
       if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
-      if (document.getElementById('cfgFormTema')) document.getElementById('cfgFormTema').value = ['ceu', 'escuro', 'auto'].includes(data.formulario_tema) ? data.formulario_tema : 'claro';
+      if (document.getElementById('cfgFormTema')) document.getElementById('cfgFormTema').value = ['ceu', 'sulfite', 'escuro', 'auto'].includes(data.formulario_tema) ? data.formulario_tema : 'claro';
     }
   } catch (e) {
     console.error("Erro ao carregar configurações de captação:", e);
