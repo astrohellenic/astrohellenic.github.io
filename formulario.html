@@ -342,6 +342,9 @@
       const { data: novoClienteId, error } = resposta;
       if (!error) {
         /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
+        /* link com &agenda=1 (caixinha em Configurações → Captação): depois do envio abre a agenda do astrólogo, no lugar do redirecionamento */
+        const abrirAgenda = new URLSearchParams(window.location.search).get('agenda') === '1' && ownerId && novoClienteId;
+        if (abrirAgenda) redirectUrlForm = 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}';
         const cfgData = { redirect_url: redirectUrlForm ? redirectUrlForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
         document.getElementById('clientForm').reset();

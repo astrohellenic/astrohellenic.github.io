@@ -286,6 +286,11 @@ function htmlCfgCaptacao() {
         </div>
 
         <label class="cfg-checkbox">
+          <input type="checkbox" id="cfgFormAbrirAgenda" onchange="atualizarLinksFormulario()"> Depois do envio, abrir a minha agenda em seguida
+        </label>
+        <p class="cfg-card-desc">Marcado, os links do formulário acima passam a levar o cliente direto para a sua agenda assim que ele enviar os dados (no lugar do link de redirecionamento). Desmarcado, o formulário termina como sempre.</p>
+
+        <label class="cfg-checkbox">
           <input type="checkbox" id="cfgFormTemaCeu"> Aplicar o Tema Céu no formulário
         </label>
         <p class="cfg-card-desc">Ao aplicar o Tema Céu, o formulário que o cliente vê fica com papiro e céu estrelado ao fundo. Desmarcado, ele continua claro, como hoje.</p>
@@ -720,13 +725,8 @@ async function carregarConfiguracoesCaptacao() {
       if (document.getElementById('cfgLogoUrl')) {
         const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
 document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
-const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
-if (document.getElementById('cfgPublicFormUrl')) {
-  document.getElementById('cfgPublicFormUrl').value = publicLink;
-}
-if (document.getElementById('cfgPublicFormSinastriaUrl')) {
-  document.getElementById('cfgPublicFormSinastriaUrl').value = publicLink + '&servico=sinastria';
-}        
+window.cfgUserIdCaptacao = user.id;
+atualizarLinksFormulario();
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
@@ -746,6 +746,17 @@ if (document.getElementById('cfgPublicFormSinastriaUrl')) {
   } catch (e) {
     console.error("Erro ao carregar configurações de captação:", e);
   }
+}
+
+/* MONTA OS LINKS DO FORMULÁRIO (com ou sem "abrir a agenda em seguida") */
+function atualizarLinksFormulario() {
+  if (!window.cfgUserIdCaptacao) return;
+  const caixa = document.getElementById('cfgFormAbrirAgenda');
+  const publicLink = `https://astrohellenic.github.io/formulario.html?u=${window.cfgUserIdCaptacao}` + (caixa && caixa.checked ? '&agenda=1' : '');
+  const a = document.getElementById('cfgPublicFormUrl');
+  if (a) a.value = publicLink;
+  const b = document.getElementById('cfgPublicFormSinastriaUrl');
+  if (b) b.value = publicLink + '&servico=sinastria';
 }
 
 /* PROCESSA O UPLOAD DIRETO DA IMAGEM PARA O BUCKET 'LOGOS' */
