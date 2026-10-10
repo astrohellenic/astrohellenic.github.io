@@ -119,6 +119,17 @@
     const btn = el('btnConfirmar'); if (btn && horaEscolhida) btn.onclick = confirmar;
   }
 
+  /* Variáveis aceitas no link de redirecionamento do astrólogo (cada um monta a própria página de agradecimento): {USER} {CLIENTE} {NOME} (primeiro nome) {DATA} (dd/mm/aaaa) {DATA_ISO} (aaaa-mm-dd) {HORA} (hh:mm) {FUSO} (ex.: America/Sao_Paulo) {DURACAO} (min) */
+  function preencherVariaveisRedirect(url) {
+    const valores = {
+      USER: ownerId, CLIENTE: clienteId,
+      NOME: agenda && agenda.cliente_nome ? agenda.cliente_nome.split(' ')[0] : '',
+      DATA: dataBR(diaEscolhido), DATA_ISO: diaEscolhido, HORA: horaEscolhida, FUSO: FUSO,
+      DURACAO: agenda && agenda.duracao ? agenda.duracao : ''
+    };
+    return url.replace(/\{(USER|CLIENTE|NOME|DATA_ISO|DATA|HORA|FUSO|DURACAO)\}/g, (_, k) => encodeURIComponent(valores[k] || ''));
+  }
+
   async function confirmar() {
     const btn = el('btnConfirmar'); btn.disabled = true; btn.innerText = 'Confirmando...';
     if (modoTeste) {
@@ -144,7 +155,7 @@
     }
     /* link de redirecionamento do astrólogo (Configurações → Captação): abre depois do horário confirmado. Ignora se for o da própria agenda (evita laço). */
     const destino = redirectAposAgenda && !/agendar\.html/i.test(redirectAposAgenda)
-      ? redirectAposAgenda.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(clienteId || '')) : null;
+      ? preencherVariaveisRedirect(redirectAposAgenda) : null;
     if (destino) { window.location.replace(destino); return; }
     el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (${rotuloFuso()}).<br><br>Você pode fechar esta página.</div>`;
   }

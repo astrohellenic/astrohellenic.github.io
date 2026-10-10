@@ -282,6 +282,7 @@ function htmlCfgCaptacao() {
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgRedirectUrl">Link de redirecionamento</label>
             <input type="url" id="cfgRedirectUrl" class="modal-input" placeholder="https://wa.me/55...">
+            <p class="cfg-card-desc">Quer uma página de agradecimento no seu site? Escreva no link as variáveis abaixo e o Astro Hellenic troca pelos dados do cliente quando ele confirma o horário. Ex.: <code>https://seusite.com/obrigado?nome={NOME}&amp;data={DATA}&amp;hora={HORA}</code><br>Variáveis: <code>{NOME}</code> (primeiro nome), <code>{DATA}</code> (13/10/2026), <code>{DATA_ISO}</code> (2026-10-13), <code>{HORA}</code> (11:00), <code>{FUSO}</code> (America/Sao_Paulo), <code>{DURACAO}</code> (minutos).</p>
           </div>
         </div>
 
