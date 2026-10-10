@@ -278,6 +278,7 @@ function htmlCfgCaptacao() {
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgWebhookUrl">URL do webhook (integração)</label>
             <input type="url" id="cfgWebhookUrl" class="modal-input" placeholder="https://hook.make.com/...">
+            <p class="cfg-card-desc">Avisado quando o cliente confirma o horário na agenda, com os dados do formulário (nome, WhatsApp, e-mail, nascimento, cidade), o horário e o serviço (<code>&amp;servico=...</code> no link do formulário).</p>
           </div>
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgRedirectUrl">Link de redirecionamento</label>

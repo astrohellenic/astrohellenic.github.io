@@ -154,6 +154,8 @@
       await carregar();
       return;
     }
+    /* avisa o webhook do astrólogo (se houver) já com o horário confirmado; espera no máximo 4s e nunca atrapalha o cliente */
+    try { await Promise.race([chamarGoogleAgenda({ acao: 'avisar', u: ownerId, c: clienteId, servico: servicoNome }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o agendamento já está salvo */ }
     /* link de redirecionamento do astrólogo (Configurações → Captação): abre depois do horário confirmado. Ignora se for o da própria agenda (evita laço). */
     const destino = redirectAposAgenda && !/agendar\.html/i.test(redirectAposAgenda)
       ? preencherVariaveisRedirect(redirectAposAgenda) : null;

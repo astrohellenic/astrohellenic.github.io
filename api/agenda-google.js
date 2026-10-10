@@ -2,12 +2,14 @@
    Funciona pra QUALQUER astrólogo que tenha conectado a Google Agenda (Configurações → Agenda → Conectar Google Agenda,
    ver api/google.js). Quem não conectou continua usando só a agenda do próprio software (nada aqui bloqueia nem cria).
 
-   Três ações (POST, corpo JSON, campo "acao"; "u" = id do astrólogo, vem do link de agendar):
+   Quatro ações (POST, corpo JSON, campo "acao"; "u" = id do astrólogo, vem do link de agendar):
      ocupados  { u, de:'YYYY-MM-DD', ate:'YYYY-MM-DD' }  -> { ok, conectado, ocupados:[{ data, hora_inicio, hora_fim }] }
                 horários em que QUALQUER agenda marcada como "bloqueia" está ocupada (já em horário de Brasília, cortados por dia)
      criar     { u, c, data, hora }                       -> { ok, eventId } | { ok:false, erro }
                 confere o link (u, c) no Supabase e se o horário continua livre em todas as agendas, e cria o evento na agenda
                 principal escolhida. Nome do cliente e duração vêm do Supabase, nunca do navegador.
+     avisar    { u, c, servico } -> { ok, enviado }
+                dispara o webhook do astrólogo (se tiver) com os dados do formulário + do horário confirmado
      apagar    { u, c, eventId }                          -> { ok }
                 só apaga evento criado por esta função pra esse cliente (usado se a reserva no Supabase falhar) */
 
@@ -139,6 +141,40 @@ async function acaoCriar(corpo) {
   return ok({ ok: true, eventId: evento.id });
 }
 
+/* Webhook do astrólogo (Configurações → Captação): avisado DEPOIS que o cliente confirma o horário, com os dados do formulário e do agendamento.
+   O endereço do webhook fica só no servidor e os dados vêm do Supabase (nunca do navegador, salvo o nome do serviço, só texto). Nunca falha o agendamento. */
+async function acaoAvisar(corpo) {
+  const { u, c } = corpo;
+  if (!u || !c) return erro(400, 'Dados inválidos.');
+  const agenda = await agendaPublica(u, c);
+  if (!agenda || !agenda.ja_agendado) return erro(409, 'Nenhum horário confirmado para esse cliente.');
+  const cfg = await G.supa('/rest/v1/configuracoes?user_id=eq.' + encodeURIComponent(u) + '&select=webhook_url');
+  const url = cfg && cfg[0] && String(cfg[0].webhook_url || '').trim();
+  if (!url || !/^https:\/\//i.test(url)) return ok({ ok: true, enviado: false });
+  const m = await G.supa('/rest/v1/mapas?id=eq.' + encodeURIComponent(c) + '&user_id=eq.' + encodeURIComponent(u) + '&select=nome,data_nascimento,hora_nascimento,cidade,latitude,longitude,whatsapp,email');
+  const cliente = (m && m[0]) || {};
+  const conexao = await G.lerConexao(u);
+  const fuso = conexao ? await G.fusoDoAstrologo(u, conexao) : G.FUSO;
+  const ag = agenda.ja_agendado;
+  const carga = {
+    evento: 'agendamento_confirmado',
+    astrologo_id: u,
+    cliente_id: c,
+    servico: String(corpo.servico || '').slice(0, 120),
+    cliente: { nome: cliente.nome || agenda.cliente_nome || '', whatsapp: cliente.whatsapp || '', email: cliente.email || '', data_nascimento: cliente.data_nascimento || '', hora_nascimento: cliente.hora_nascimento || '', cidade: cliente.cidade || '', latitude: cliente.latitude ?? null, longitude: cliente.longitude ?? null },
+    agendamento: { data: ag.data, hora: String(ag.hora_inicio || '').slice(0, 5), fuso, duracao_min: Number(agenda.duracao) || null }
+  };
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(carga), signal: ctrl.signal });
+    return ok({ ok: true, enviado: resp.ok });
+  } catch (e) {
+    console.error('agenda-google webhook:', e && e.message);
+    return ok({ ok: true, enviado: false });
+  } finally { clearTimeout(timer); }
+}
+
 async function acaoApagar(corpo) {
   const { u, c, eventId } = corpo;
   if (!u || !c || !eventId) return erro(400, 'Dados inválidos.');
@@ -163,7 +199,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const corpo = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const acoes = { ocupados: acaoOcupados, criar: acaoCriar, apagar: acaoApagar };
+    const acoes = { ocupados: acaoOcupados, criar: acaoCriar, apagar: acaoApagar, avisar: acaoAvisar };
     const fn = acoes[corpo.acao];
     if (!fn) { res.status(400).json({ ok: false, erro: 'Ação desconhecida.' }); return; }
     const r = await fn(corpo);
