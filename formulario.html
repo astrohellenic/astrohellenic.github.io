@@ -352,6 +352,11 @@
         const destinoForm = abrirAgenda ? 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}' + (servicoLink ? '&s=' + encodeURIComponent(servicoLink) : '') : redirectUrlForm; /* o redirecionamento do astrólogo é aberto pela própria agenda, depois da escolha do horário */
         const cfgData = { redirect_url: destinoForm ? destinoForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
+        /* sem agenda: o webhook do astrólogo (se houver) é avisado agora, com os dados do formulário (com agenda, quem avisa é a agenda, depois do horário) */
+        if (!abrirAgenda && ownerId && novoClienteId) {
+          try { await Promise.race([fetch('https://astrohellenicgithubio.vercel.app/api/agenda-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'avisar', u: ownerId, c: novoClienteId, semAgenda: true, servico: servicoLink }) }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o cadastro já está salvo */ }
+        }
+
         /* agenda em seguida: vai direto, sem a caixa de "redirecionando" */
         if (abrirAgenda && cfgData.redirect_url) { window.location.replace(cfgData.redirect_url); return; }
 

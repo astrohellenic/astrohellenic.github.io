@@ -147,7 +147,8 @@ async function acaoAvisar(corpo) {
   const { u, c } = corpo;
   if (!u || !c) return erro(400, 'Dados inválidos.');
   const agenda = await agendaPublica(u, c);
-  if (!agenda || !agenda.ja_agendado) return erro(409, 'Nenhum horário confirmado para esse cliente.');
+  const semAgenda = corpo.semAgenda === true; // cliente que só preencheu o formulário (o astrólogo não usa a agenda): avisa sem horário
+  if (!agenda || (semAgenda ? agenda.ja_agendado : !agenda.ja_agendado)) return erro(409, semAgenda ? 'Esse cliente já tem horário; o aviso sai pela agenda.' : 'Nenhum horário confirmado para esse cliente.');
   const cfg = await G.supa('/rest/v1/configuracoes?user_id=eq.' + encodeURIComponent(u) + '&select=webhook_url');
   const url = cfg && cfg[0] && String(cfg[0].webhook_url || '').trim();
   if (!url || !/^https:\/\//i.test(url)) return ok({ ok: true, enviado: false });
@@ -157,12 +158,12 @@ async function acaoAvisar(corpo) {
   const fuso = conexao ? await G.fusoDoAstrologo(u, conexao) : G.FUSO;
   const ag = agenda.ja_agendado;
   const carga = {
-    evento: 'agendamento_confirmado',
+    evento: semAgenda ? 'formulario_enviado' : 'agendamento_confirmado',
     astrologo_id: u,
     cliente_id: c,
     servico: String(corpo.servico || '').slice(0, 120),
     cliente: { nome: cliente.nome || agenda.cliente_nome || '', whatsapp: cliente.whatsapp || '', email: cliente.email || '', data_nascimento: cliente.data_nascimento || '', hora_nascimento: cliente.hora_nascimento || '', cidade: cliente.cidade || '', latitude: cliente.latitude ?? null, longitude: cliente.longitude ?? null },
-    agendamento: { data: ag.data, hora: String(ag.hora_inicio || '').slice(0, 5), fuso, duracao_min: Number(agenda.duracao) || null }
+    agendamento: semAgenda ? null : { data: ag.data, hora: String(ag.hora_inicio || '').slice(0, 5), fuso, duracao_min: Number(agenda.duracao) || null }
   };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 6000);
