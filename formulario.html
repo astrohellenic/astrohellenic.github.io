@@ -347,6 +347,9 @@
         if (abrirAgenda) redirectUrlForm = 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}';
         const cfgData = { redirect_url: redirectUrlForm ? redirectUrlForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
+        /* agenda em seguida: vai direto, sem a caixa de "redirecionando" */
+        if (abrirAgenda && cfgData.redirect_url) { window.location.replace(cfgData.redirect_url); return; }
+
         document.getElementById('clientForm').reset();
         selectedGeo = { lat: null, lon: null, name: '' };
         if (modoSinastria) { dadosA = null; dadosB = null; aplicarEtapa('A'); }
