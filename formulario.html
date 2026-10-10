@@ -106,6 +106,7 @@
   const SUPABASE_KEY = "sb_publishable_VTjldgs8Hv1RODaMg7T57Q_ISzbnm5C";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let redirectUrlForm = null;
+  let abrirAgendaConfig = false;
 
   /* CARREGA O LOGO PERSONALIZADO AO ABRIR A PÁGINA */
   document.addEventListener('DOMContentLoaded', async () => {
@@ -116,6 +117,8 @@
       /* Só logo e redirecionamento — o webhook e o resto das configurações nunca saem do servidor. */
       const { data: cfgPublica } = await supabaseClient.rpc('config_publica_formulario', { p_user: userId });
       const data = Array.isArray(cfgPublica) ? cfgPublica[0] : cfgPublica;
+      /* "abrir a agenda em seguida" (Configurações → Captação): vale pro link sem nada a mais; o &agenda=1 dos links antigos continua valendo */
+      try { const { data: abre } = await supabaseClient.rpc('formulario_abre_agenda', { p_user: userId }); abrirAgendaConfig = abre === true; } catch (e) { /* sem a função, só vale o link */ }
       redirectUrlForm = data && data.redirect_url ? data.redirect_url : null;
       aplicarTemaPublico(data ? data.formulario_tema : null);
 
@@ -344,7 +347,7 @@
       if (!error) {
         /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
         /* link com &agenda=1 (caixinha em Configurações → Captação): depois do envio abre a agenda do astrólogo, no lugar do redirecionamento */
-        const abrirAgenda = new URLSearchParams(window.location.search).get('agenda') === '1' && ownerId && novoClienteId;
+        const abrirAgenda = (abrirAgendaConfig || new URLSearchParams(window.location.search).get('agenda') === '1') && ownerId && novoClienteId;
         const destinoForm = abrirAgenda ? 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}' : redirectUrlForm; /* o redirecionamento do astrólogo é aberto pela própria agenda, depois da escolha do horário */
         const cfgData = { redirect_url: destinoForm ? destinoForm.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(novoClienteId || '')) : null };
 
@@ -359,10 +362,8 @@
         document.getElementById('confirmStepSucesso').style.display = 'block';
 
         if (cfgData && cfgData.redirect_url) {
-          document.getElementById('sucessoMensagem').innerText = 'Recebemos suas informações. Redirecionando...';
-          setTimeout(() => {
-            window.location.href = cfgData.redirect_url;
-          }, 1800);
+          window.location.replace(cfgData.redirect_url);
+          return;
         } else {
           document.getElementById('sucessoMensagem').innerText = 'Recebemos suas informações. Em breve entraremos em contato.';
           setTimeout(() => {

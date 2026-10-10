@@ -286,9 +286,9 @@ function htmlCfgCaptacao() {
         </div>
 
         <label class="cfg-checkbox">
-          <input type="checkbox" id="cfgFormAbrirAgenda" onchange="atualizarLinksFormulario()"> Depois do envio, abrir a minha agenda em seguida
+          <input type="checkbox" id="cfgFormAbrirAgenda" onchange="mostrarAvisoAgendaRedirect()"> Depois do envio, abrir a minha agenda em seguida
         </label>
-        <p class="cfg-card-desc">Marcado, os links do formulário acima passam a levar o cliente direto para a sua agenda assim que ele enviar os dados. O link de redirecionamento, se houver, abre depois da escolha do horário. Desmarcado, o formulário termina como sempre.</p>
+        <p class="cfg-card-desc">Marcado, o cliente vai direto para a sua agenda assim que enviar os dados — vale para os links que você já copiou, sem trocar nada. É só salvar. O link de redirecionamento, se houver, abre depois da escolha do horário. Desmarcado, o formulário termina como sempre.</p>
         <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima não abre depois do formulário: ele abre depois que o cliente escolher o horário na agenda.</p>
 
         <label class="cfg-rotulo" for="cfgFormTema">Tema do formulário e da agenda</label>
@@ -730,8 +730,11 @@ async function carregarConfiguracoesCaptacao() {
       if (document.getElementById('cfgLogoUrl')) {
         const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
 document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
-window.cfgUserIdCaptacao = user.id;
-atualizarLinksFormulario();
+const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
+if (document.getElementById('cfgPublicFormUrl')) document.getElementById('cfgPublicFormUrl').value = publicLink;
+if (document.getElementById('cfgPublicFormSinastriaUrl')) document.getElementById('cfgPublicFormSinastriaUrl').value = publicLink + '&servico=sinastria';
+if (document.getElementById('cfgFormAbrirAgenda')) document.getElementById('cfgFormAbrirAgenda').checked = data.formulario_abrir_agenda === true;
+mostrarAvisoAgendaRedirect();
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
@@ -753,17 +756,11 @@ atualizarLinksFormulario();
   }
 }
 
-/* MONTA OS LINKS DO FORMULÁRIO (com ou sem "abrir a agenda em seguida") */
-function atualizarLinksFormulario() {
-  if (!window.cfgUserIdCaptacao) return;
+/* AVISO: com "abrir a agenda em seguida" marcado, o link de redirecionamento abre depois do horário escolhido */
+function mostrarAvisoAgendaRedirect() {
   const caixa = document.getElementById('cfgFormAbrirAgenda');
-  const publicLink = `https://astrohellenic.github.io/formulario.html?u=${window.cfgUserIdCaptacao}` + (caixa && caixa.checked ? '&agenda=1' : '');
   const aviso = document.getElementById('cfgAvisoAgendaRedirect');
   if (aviso) aviso.style.display = caixa && caixa.checked ? 'block' : 'none';
-  const a = document.getElementById('cfgPublicFormUrl');
-  if (a) a.value = publicLink;
-  const b = document.getElementById('cfgPublicFormSinastriaUrl');
-  if (b) b.value = publicLink + '&servico=sinastria';
 }
 
 /* PROCESSA O UPLOAD DIRETO DA IMAGEM PARA O BUCKET 'LOGOS' */
@@ -867,7 +864,8 @@ async function salvarConfiguracoesCaptacao() {
         logo_url: logoUrl,
         webhook_url: webhookUrl,
         redirect_url: redirectUrl,
-        formulario_tema: formularioTema
+        formulario_tema: formularioTema,
+        formulario_abrir_agenda: !!(document.getElementById('cfgFormAbrirAgenda') && document.getElementById('cfgFormAbrirAgenda').checked)
       }, { onConflict: 'user_id' });
 
     if (!error) {
