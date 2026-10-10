@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="publico-tema.js?v=20261011a"></script>
   
   <link rel="stylesheet" href="publico.css?v=20261010c">
 </head>
@@ -116,7 +117,7 @@
       const { data: cfgPublica } = await supabaseClient.rpc('config_publica_formulario', { p_user: userId });
       const data = Array.isArray(cfgPublica) ? cfgPublica[0] : cfgPublica;
       redirectUrlForm = data && data.redirect_url ? data.redirect_url : null;
-      if (data && data.formulario_tema === 'ceu') document.body.classList.add('tema-ceu');
+      aplicarTemaPublico(data ? data.formulario_tema : null);
 
       if (data && data.logo_url) {
         const logoImg = document.getElementById('formLogoImg');

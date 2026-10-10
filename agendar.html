@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="publico-tema.js?v=20261011a"></script>
   <link rel="stylesheet" href="publico.css?v=20261010c">
 </head>
 <body>
@@ -179,7 +180,7 @@
       const { data: cfg } = await supabaseClient.rpc('config_publica_formulario', { p_user: ownerId });
       const c = Array.isArray(cfg) ? cfg[0] : cfg;
       if (c && c.logo_url) { const i = el('formLogoImg'); i.src = c.logo_url.split('?')[0] + '?t=' + Date.now(); i.style.display = 'block'; }
-      if (c && c.formulario_tema === 'ceu') document.body.classList.add('tema-ceu');
+      aplicarTemaPublico(c ? c.formulario_tema : null);
     } catch (e) { /* sem logo/tema, segue */ }
     if (modoTeste) el('avisoTeste').style.display = 'block';
     carregar();

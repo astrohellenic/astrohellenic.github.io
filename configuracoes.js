@@ -291,10 +291,14 @@ function htmlCfgCaptacao() {
         <p class="cfg-card-desc">Marcado, os links do formulário acima passam a levar o cliente direto para a sua agenda assim que ele enviar os dados (no lugar do link de redirecionamento). Desmarcado, o formulário termina como sempre.</p>
         <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima fica de lado — o cliente vai para a agenda. Ele continua salvo e vale para o link copiado com a caixinha desmarcada.</p>
 
-        <label class="cfg-checkbox">
-          <input type="checkbox" id="cfgFormTemaCeu"> Aplicar o Tema Céu no formulário
-        </label>
-        <p class="cfg-card-desc">Ao aplicar o Tema Céu, o formulário que o cliente vê fica com papiro e céu estrelado ao fundo. Desmarcado, ele continua claro, como hoje.</p>
+        <label class="cfg-rotulo" for="cfgFormTema">Tema do formulário e da agenda</label>
+        <select id="cfgFormTema" class="modal-input">
+          <option value="ceu">Céu</option>
+          <option value="claro">Claro</option>
+          <option value="escuro">Escuro</option>
+          <option value="auto">Automático (segue o aparelho do cliente)</option>
+        </select>
+        <p class="cfg-card-desc">É o que o cliente vê no formulário e, em seguida, na agenda.</p>
 
         <div class="cfg-acoes">
           <button type="button" class="cfg-btn" onclick="testarPaginaAgendar()">Testar a página de agendar (sem gravar nada)</button>
@@ -742,7 +746,7 @@ atualizarLinksFormulario();
       }
       if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
       if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
-      if (document.getElementById('cfgFormTemaCeu')) document.getElementById('cfgFormTemaCeu').checked = data.formulario_tema === 'ceu';
+      if (document.getElementById('cfgFormTema')) document.getElementById('cfgFormTema').value = ['ceu', 'escuro', 'auto'].includes(data.formulario_tema) ? data.formulario_tema : 'claro';
     }
   } catch (e) {
     console.error("Erro ao carregar configurações de captação:", e);
@@ -850,7 +854,7 @@ async function salvarConfiguracoesCaptacao() {
   const logoUrl = document.getElementById('cfgLogoUrl').value.trim();
   const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
   const redirectUrl = document.getElementById('cfgRedirectUrl').value.trim();
-  const formularioTema = document.getElementById('cfgFormTemaCeu') && document.getElementById('cfgFormTemaCeu').checked ? 'ceu' : 'claro';
+  const formularioTema = document.getElementById('cfgFormTema') ? document.getElementById('cfgFormTema').value : 'claro';
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
