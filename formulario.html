@@ -249,6 +249,15 @@
 
   document.addEventListener('DOMContentLoaded', () => { if (modoSinastria) aplicarEtapa('A'); });
 
+  /* PREENCHE nome, WhatsApp e e-mail se vierem no link (&nome=...&whatsapp=...&email=...), pra quem já digitou isso antes (ex.: no checkout do site do astrólogo) não digitar de novo */
+  document.addEventListener('DOMContentLoaded', () => {
+    ['nome', 'whatsapp', 'email'].forEach(campo => {
+      const v = (urlParams.get(campo) || '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, 200);
+      const el = document.getElementById(campo);
+      if (v && el) el.value = v;
+    });
+  });
+
   /* Valida os campos da etapa atual; devolve os dados já normalizados, ou null se algo estiver errado. */
   function lerEtapaAtual() {
     const precisaContato = !(modoSinastria && etapaSinastria === 'B');
