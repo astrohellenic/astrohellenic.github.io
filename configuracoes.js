@@ -289,6 +289,7 @@ function htmlCfgCaptacao() {
           <input type="checkbox" id="cfgFormAbrirAgenda" onchange="atualizarLinksFormulario()"> Depois do envio, abrir a minha agenda em seguida
         </label>
         <p class="cfg-card-desc">Marcado, os links do formulário acima passam a levar o cliente direto para a sua agenda assim que ele enviar os dados (no lugar do link de redirecionamento). Desmarcado, o formulário termina como sempre.</p>
+        <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima fica de lado — o cliente vai para a agenda. Ele continua salvo e vale para o link copiado com a caixinha desmarcada.</p>
 
         <label class="cfg-checkbox">
           <input type="checkbox" id="cfgFormTemaCeu"> Aplicar o Tema Céu no formulário
@@ -753,6 +754,8 @@ function atualizarLinksFormulario() {
   if (!window.cfgUserIdCaptacao) return;
   const caixa = document.getElementById('cfgFormAbrirAgenda');
   const publicLink = `https://astrohellenic.github.io/formulario.html?u=${window.cfgUserIdCaptacao}` + (caixa && caixa.checked ? '&agenda=1' : '');
+  const aviso = document.getElementById('cfgAvisoAgendaRedirect');
+  if (aviso) aviso.style.display = caixa && caixa.checked ? 'block' : 'none';
   const a = document.getElementById('cfgPublicFormUrl');
   if (a) a.value = publicLink;
   const b = document.getElementById('cfgPublicFormSinastriaUrl');
