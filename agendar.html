@@ -47,7 +47,7 @@
   let PASSO_MIN = null;             // de quanto em quanto tempo começa um horário (vazio = duração + intervalo)
   const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  let agenda = null, diaEscolhido = null, horaEscolhida = null;
+  let agenda = null, diaEscolhido = null, horaEscolhida = null, redirectAposAgenda = null;
 
   const el = id => document.getElementById(id);
   const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -142,7 +142,11 @@
       await carregar();
       return;
     }
-    el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (${rotuloFuso()}).<br><br>Você pode fechar esta página.</div>`;
+    /* link de redirecionamento do astrólogo (Configurações → Captação): abre depois do horário confirmado. Ignora se for o da própria agenda (evita laço). */
+    const destino = redirectAposAgenda && !/agendar\.html/i.test(redirectAposAgenda)
+      ? redirectAposAgenda.replace(/\{USER\}/g, encodeURIComponent(ownerId || '')).replace(/\{CLIENTE\}/g, encodeURIComponent(clienteId || '')) : null;
+    el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (${rotuloFuso()}).<br><br>${destino ? 'Redirecionando...' : 'Você pode fechar esta página.'}</div>`;
+    if (destino) setTimeout(() => { window.location.href = destino; }, 1800);
   }
 
   async function carregar() {
@@ -179,6 +183,7 @@
     try {
       const { data: cfg } = await supabaseClient.rpc('config_publica_formulario', { p_user: ownerId });
       const c = Array.isArray(cfg) ? cfg[0] : cfg;
+      redirectAposAgenda = c && c.redirect_url ? c.redirect_url : null;
       if (c && c.logo_url) { const i = el('formLogoImg'); i.src = c.logo_url.split('?')[0] + '?t=' + Date.now(); i.style.display = 'block'; }
       aplicarTemaPublico(c ? c.formulario_tema : null);
     } catch (e) { /* sem logo/tema, segue */ }

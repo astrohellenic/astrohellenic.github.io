@@ -288,8 +288,8 @@ function htmlCfgCaptacao() {
         <label class="cfg-checkbox">
           <input type="checkbox" id="cfgFormAbrirAgenda" onchange="atualizarLinksFormulario()"> Depois do envio, abrir a minha agenda em seguida
         </label>
-        <p class="cfg-card-desc">Marcado, os links do formulário acima passam a levar o cliente direto para a sua agenda assim que ele enviar os dados (no lugar do link de redirecionamento). Desmarcado, o formulário termina como sempre.</p>
-        <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima fica de lado — o cliente vai para a agenda. Ele continua salvo e vale para o link copiado com a caixinha desmarcada.</p>
+        <p class="cfg-card-desc">Marcado, os links do formulário acima passam a levar o cliente direto para a sua agenda assim que ele enviar os dados. O link de redirecionamento, se houver, abre depois da escolha do horário. Desmarcado, o formulário termina como sempre.</p>
+        <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima não abre depois do formulário: ele abre depois que o cliente escolher o horário na agenda.</p>
 
         <label class="cfg-rotulo" for="cfgFormTema">Tema do formulário e da agenda</label>
         <select id="cfgFormTema" class="modal-input">
