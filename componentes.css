@@ -509,13 +509,14 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
 
 /* barras fixas do módulo (editor: Voltar/Editar/Prévia/Salvar; relatório pronto: Voltar/Editar/Baixar PDF): entre duas linhas duplas, como a barra superior */
 .rel-editor-tabs, .rel-toolbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 10px;
+    position: fixed; top: calc(var(--topbar-topo) + var(--topbar-altura) + 10px); left: 0; right: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 0; row-gap: 0;
     background: var(--fundo-creme); padding: 8px 14px; border: 0;
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
 }
 .rel-toolbar { justify-content: center; gap: 18px; }
 .rel-toolbar .botao-texto, .rel-editor-btn-salvar { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.rel-editor-tabs-conteudo { flex: 1; min-width: 0; max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* tudo junto, num grupo só: Voltar, Editar, Prévia, Salvar — e ao lado, o grupo da formatação; os dois centralizados na barra */
+.rel-editor-tabs-conteudo { flex: 0 0 auto; display: flex; align-items: center; gap: 18px; }
 .rel-editor-tabs-grupo { display: flex; gap: 18px; }
 .rel-editor-tab.ativa { color: var(--terracota); border-bottom-color: var(--terracota); }
 .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; padding: 8px 0; font-size: 12px; font-weight: 700; color: var(--terracota); border-top: var(--contorno-fino) solid var(--ocre); border-bottom: var(--contorno-fino) solid var(--ocre); }
@@ -600,10 +601,17 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
 /* botão de texto em foco (ex.: o OK das caixas de aviso, que já abre focado): sem o quadrado do navegador — o botão já tem as linhas, não precisa de moldura de foco */
 .botao-texto:focus, .btn-submit:focus, .btn-primary:focus, .btn-secondary:focus { outline: none; }
 
-/* BARRA DE FORMATAÇÃO DO TEXTO (Quill) QUANDO FLUTUA: ao flutuar ela é movida pra fora do bloco de texto (relatorio.js, ativarBarraFlutuanteQuill),
-   então perde o fundo que tinha lá dentro e ficava transparente — com o texto passando por trás, parecia que a barra "não aparecia".
-   Aqui ela leva fundo próprio (o papel claro do editor), linhas do sistema e sombra, em qualquer tema. */
-body .ql-toolbar.ql-snow.rel-quill-toolbar-flutuante {
-    z-index: 1500; /* acima das barras da tela, MAS abaixo das janelas (seletor de imagem, avisos): senão ela passava por cima delas */
-    background: #fffdf5; border: var(--contorno-fino) solid var(--azul-egipcio-claro); box-shadow: var(--sombra-janela, 0 2px 8px rgba(0,0,0,.2));
-}
+/* BARRA DE FORMATAÇÃO DO TEXTO (Quill): segunda linha da barra fixa Editar/Prévia/Salvar (relatorio.js, ativarBarraFlutuanteQuill).
+   Mesmo papel da barra de cima: sem fundo próprio, só tinta (azul-noite) e terracota no que está ativo. */
+.rel-barra-formatacao { flex: 0 1 auto; display: flex; align-items: center; min-width: 0; padding-left: 18px; }
+.rel-barra-formatacao .ql-toolbar.ql-snow { border: 0; background: transparent; padding: 0; width: auto; text-align: left; font-family: inherit; }
+.rel-barra-formatacao .ql-snow .ql-stroke { stroke: var(--preto-tinta); }
+.rel-barra-formatacao .ql-snow .ql-fill, .rel-barra-formatacao .ql-snow .ql-stroke.ql-fill { fill: var(--preto-tinta); }
+.rel-barra-formatacao .ql-snow .ql-picker { color: var(--preto-tinta); }
+.rel-barra-formatacao .ql-snow button:hover .ql-stroke, .rel-barra-formatacao .ql-snow button.ql-active .ql-stroke,
+.rel-barra-formatacao .ql-snow .ql-picker-label:hover .ql-stroke, .rel-barra-formatacao .ql-snow .ql-picker-label.ql-active .ql-stroke { stroke: var(--terracota); }
+.rel-barra-formatacao .ql-snow button:hover .ql-fill, .rel-barra-formatacao .ql-snow button.ql-active .ql-fill { fill: var(--terracota); }
+.rel-barra-formatacao .ql-snow .ql-picker-label:hover, .rel-barra-formatacao .ql-snow .ql-picker-label.ql-active,
+.rel-barra-formatacao .ql-snow .ql-picker-item:hover, .rel-barra-formatacao .ql-snow .ql-picker-item.ql-selected { color: var(--terracota); }
+.rel-barra-formatacao .ql-snow .ql-picker-options { background: var(--fundo-creme); border: var(--contorno-fino) solid var(--azul-egipcio-claro); box-shadow: none; }
+.rel-barra-formatacao .ql-snow .ql-picker-label { border-color: transparent; }

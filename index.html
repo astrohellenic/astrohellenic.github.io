@@ -338,9 +338,12 @@ body {
 */
         
         /* BARRA SUPERIOR FIXA — posição e tamanho aqui; aparência (linhas duplas, cores) em componentes.css */
+        /* Medidas da barra do sistema, escritas UMA vez: a barra do relatório (componentes.css, .rel-editor-tabs) usa as mesmas
+           variáveis pra ficar logo abaixo dela — nada é medido em JS. */
+        :root { --topbar-topo: 10px; --topbar-altura: 52px; }
         #top-bar {
-            height: 52px;
-            min-height: 52px;
+            height: var(--topbar-altura);
+            min-height: var(--topbar-altura);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -363,7 +366,7 @@ body {
            CLAUDE.md), e mexer nisso lá arriscaria quebrar esse cálculo. */
         body.topbar-fixo #top-bar {
             position: fixed;
-            top: 10px;
+            top: var(--topbar-topo);
             left: 10px;
             right: 10px;
             width: auto; /* #top-bar tem width:100% na regra base — sem isso, com left+right também setados, o width:100% "vence" e a barra transborda 10px pra fora da tela */
@@ -1047,7 +1050,7 @@ body {
 <script src="papiro.js?v=20261010v"></script>
 <script src="fonte-caveat.js?v=20261010v"></script>
 <script src="dialogos.js?v=20261010f"></script>
-<script src="supabase.js?v=20261011a"></script>
+<script src="supabase.js?v=20261011b"></script>
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261010v"></script>
 <script src="tabelaTecnica.js?v=20261010t"></script>
@@ -1064,7 +1067,7 @@ body {
 <script src="lotes-calculadora.js?v=20261011a"></script>
 <script src="horas.js?v=20261010t"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
-<script src="relatorio.js?v=20261010t"></script>
+<script src="relatorio.js?v=20261011m"></script>
 <script src="agendamento.js?v=20261010g"></script>
 <script src="configuracoes.js?v=20261011o"></script>
 <script src="financeiro.js?v=20261010d"></script>

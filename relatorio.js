@@ -1479,164 +1479,70 @@ function criarOverlayQuebraPaginaQuill(id, quill) {
   recalcular();
 }
 
-/* Barra de formatação do Quill "flutua" (fixa, logo abaixo da barra
-   Editar/Prévia/Salvar) enquanto o astrólogo está digitando NESTE bloco
-   — sem isso, num bloco de texto comprido, rolar até o meio do texto
-   escondia a barra de formatação lá em cima, obrigando a rolar tudo de
-   volta só pra negritar uma palavra.
-
-   TENTATIVA ANTERIOR (revertida): só position:fixed, sem tirar a barra
-   do lugar onde nasceu — parecia certa, mas o clique nela ia parar no
-   texto por trás. Causa: #mandala-container (onde a tela do relatório
-   inteira é montada) tem "position:relative; z-index:1" — isso cria um
-   CONTEXTO DE EMPILHAMENTO. position:fixed escapa do FLUXO/rolagem de
-   qualquer ancestral, mas NÃO escapa do empilhamento: um z-index alto
-   (mesmo 999999) só vale DENTRO do contexto do ancestral mais próximo
-   que criou um — se outro elemento da página, fora de
-   #mandala-container, tiver um z-index maior que o de
-   #mandala-container (bem comum: menu, sidebar, algum overlay), esse
-   elemento pinta por cima da barra inteira, e o clique vai pra ele (ou
-   pro que estiver visualmente por baixo dele), nunca pro botão da
-   barra — sem erro nenhum, sem aviso, só "não clica".
-
-   CORREÇÃO: enquanto flutua, a barra é MOVIDA DE VERDADE pra
-   document.body (document.body.appendChild) — sai fisicamente de
-   dentro de #mandala-container, então nenhum z-index/contexto de
-   empilhamento dele (ou de qualquer ancestral) consegue mais prender
-   ela atrás de nada. Ao perder o foco, volta pro lugar exato de onde
-   saiu (logo antes do espaçador). NUNCA usa position:sticky — ver a
-   nota no CLAUDE.md deste repositório sobre sticky não ser confiável
-   nesse layout.
-
-   Só a barra do bloco com FOCO flutua (Quill dispara 'selection-change'
-   com range=null ao perder o foco, e com um range de verdade ao
-   ganhar) — clicar nos próprios botões da barra não conta como perder
-   o foco, o Quill já trata isso sozinho. */
-/* BARRA DE FORMATAÇÃO DO TEXTO (Quill) — FIXA EMBAIXO DAS ABAS, SEM "TRAVAR".
-   Ao tocar num bloco de texto, a barra daquele bloco sai de dentro dele e fica presa logo abaixo da barra Editar/Prévia/Salvar,
-   sempre à vista. Regras (o jeito antigo travava de três maneiras):
-   1) Ela NÃO volta pro lugar de origem quando o cursor sai do texto (tocar na própria barra, no iPad, tira o foco do texto e ela
-      voltava pro meio do bloco — longe da tela, escondida). Agora só sai de cena quando outro bloco de texto ganha o foco, quando
-      se vai pra Prévia, ou quando o bloco deixa de existir.
-   2) A posição é recalculada o tempo todo (a cada quadro), seguindo a barra das abas — antes era calculada uma vez só e, se as
-      barras de cima mudassem de lugar (rolagem, teclado, barra do navegador), ela ficava escondida embaixo delas.
-   3) Só há UMA barra solta por vez. */
+/* BARRA DE FORMATAÇÃO DO TEXTO (Quill) — UMA SÓ, FIXA, DENTRO DA BARRA Editar/Prévia/Salvar.
+   Não existe mais barra "flutuante", vigia, observador nem loop de posição (era isso que fazia a barra sumir e voltar).
+   A barra de formatação mora num espaço fixo (#relBarraFormatacaoSlot, segunda linha da barra de cima) e SEMPRE está lá
+   na aba Editar. Cada bloco de texto (Quill) tem a sua própria barra; só uma fica nesse espaço por vez — a do último
+   bloco em que se tocou (ao abrir, a do primeiro). As dos outros blocos ficam escondidas no próprio bloco.
+   Como o espaço faz parte da tela do editor, ele é guardado/restaurado junto com ela ao trocar de ferramenta. */
 function ativarBarraFlutuanteQuill(id, quill) {
   const toolbarModule = quill.getModule('toolbar');
   const toolbar = toolbarModule ? toolbarModule.container : null;
   if (!toolbar) return;
-  const container = quill.container; // só pra medir a largura/posição horizontal certa
+  if (!quill.container.closest('.rel-editor-tela')) return; // editor avulso (janela da biblioteca): fica com a barra dele mesmo
 
-  const espacador = document.createElement('div');
-  espacador.className = 'rel-quill-toolbar-espacador';
-  toolbar.after(espacador);
+  // Marca o lugar de origem no bloco, pra devolver a barra ali quando outro bloco assume o espaço.
+  const marcador = document.createElement('span');
+  marcador.hidden = true;
+  toolbar.after(marcador);
 
-  // Onde a barra nasceu de verdade — pra devolver EXATAMENTE ali (logo antes do espaçador) quando ela sair de cena.
-  const paiOriginal = toolbar.parentElement;
-
-  function flutuar() {
-    if (toolbar.classList.contains('rel-quill-toolbar-flutuante')) return;
-    pousarBarrasFlutuantes(toolbar); // só uma solta por vez
-    espacador.style.height = toolbar.offsetHeight + 'px';
-    espacador.style.display = 'block';
-    document.body.appendChild(toolbar); // escapa de vez do empilhamento de #mandala-container
-    toolbar.classList.add('rel-quill-toolbar-flutuante');
-    toolbar._containerQuill = container;
-    registrarBarraFlutuanteAtiva(toolbar, paiOriginal, espacador, pousar);
-    seguirBarrasFlutuantes();
-  }
-
-  function pousar() {
-    if (!toolbar.classList.contains('rel-quill-toolbar-flutuante')) return;
-    toolbar.classList.remove('rel-quill-toolbar-flutuante');
-    toolbar.style.top = '';
-    toolbar.style.left = '';
-    toolbar.style.width = '';
-    espacador.style.display = 'none';
-    paiOriginal.insertBefore(toolbar, espacador);
-    desregistrarBarraFlutuanteAtiva(toolbar);
-  }
-
-  // Ganhou o foco/seleção: a barra sobe. Perder a seleção NÃO faz nada (ver a regra 1 acima).
-  quill.on('selection-change', range => { if (range) flutuar(); });
-}
-
-/* Sai de cena toda barra solta (menos "exceto"): volta cada uma pro bloco de onde veio. */
-function pousarBarrasFlutuantes(exceto) {
-  (window.relatorioBarrasFlutuantesAtivas || []).slice().forEach(item => { if (item.toolbar !== exceto && item.pousar) item.pousar(); });
-}
-window.pousarBarrasFlutuantes = pousarBarrasFlutuantes;
-
-/* Mantém cada barra solta colada embaixo da barra das abas, a cada quadro, enquanto houver alguma. */
-let __seguindoBarras = false;
-function seguirBarrasFlutuantes() {
-  if (__seguindoBarras) return;
-  __seguindoBarras = true;
-  const passo = () => {
-    const lista = window.relatorioBarrasFlutuantesAtivas || [];
-    if (!lista.length) { __seguindoBarras = false; return; }
-    const tabs = document.getElementById('relEditorTabsFixa');
-    const topo = tabs ? tabs.getBoundingClientRect().bottom : 0;
-    lista.forEach(item => {
-      const c = item.toolbar._containerQuill;
-      if (!c) return;
-      const r = c.getBoundingClientRect();
-      item.toolbar.style.top = topo + 'px';
-      item.toolbar.style.left = r.left + 'px';
-      item.toolbar.style.width = r.width + 'px';
-    });
-    requestAnimationFrame(passo);
+  quill._barraNaBarra = {
+    toolbar,
+    sobe() {
+      const slot = document.getElementById('relBarraFormatacaoSlot');
+      if (!slot || toolbar.parentElement === slot) return;
+      const atual = slot.firstElementChild;
+      if (atual && atual._devolver) atual._devolver();
+      toolbar._devolver = () => {
+        toolbar.classList.remove('rel-quill-toolbar-na-barra');
+        if (marcador.parentNode) marcador.parentNode.insertBefore(toolbar, marcador);
+        else toolbar.remove(); // o bloco foi apagado
+        toolbar._devolver = null;
+      };
+      toolbar.classList.add('rel-quill-toolbar-na-barra');
+      slot.appendChild(toolbar);
+      ajustarEspacadoresBarraFixaRelatorio(); // a altura da barra de cima pode ter mudado
+    }
   };
-  requestAnimationFrame(passo);
+
+  const subir = () => quill._barraNaBarra.sobe();
+  quill.root.addEventListener('focus', subir);
+  quill.on('selection-change', range => { if (range) subir(); });
+  garantirBarraDeFormatacaoNaBarra();
 }
 
-/* Registro de toda barra do Quill atualmente flutuando (movida pra
-   document.body, ver flutuar() acima) — existe só pra
-   observadorDeTrocaDeModulo (logo abaixo) saber quais barras existem e
-   limpar as que ficaram órfãs. */
-window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas || [];
-function registrarBarraFlutuanteAtiva(toolbar, paiOriginal, espacador, pousar) {
-  window.relatorioBarrasFlutuantesAtivas.push({ toolbar, paiOriginal, espacador, pousar });
+/* Garante que há uma barra de formatação no espaço fixo: se está vazio (primeira abertura) ou a que está lá é de um bloco
+   que já foi apagado, põe a do primeiro bloco de texto que existe na tela. */
+function garantirBarraDeFormatacaoNaBarra() {
+  const slot = document.getElementById('relBarraFormatacaoSlot');
+  if (!slot) return;
+  const atual = slot.firstElementChild;
+  const instancias = Object.values(window.relatorioQuillInstancias || {}).filter(q => q && q._barraNaBarra && document.body.contains(q.root));
+  if (atual) {
+    const dona = instancias.find(q => q._barraNaBarra.toolbar === atual);
+    if (dona) return; // a barra que está lá tem dono vivo
+    atual.remove(); // dono apagado
+  }
+  if (instancias.length) instancias[0]._barraNaBarra.sobe();
+  else ajustarEspacadoresBarraFixaRelatorio();
 }
-function desregistrarBarraFlutuanteAtiva(toolbar) {
-  window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas.filter(item => item.toolbar !== toolbar);
-}
+window.garantirBarraDeFormatacaoNaBarra = garantirBarraDeFormatacaoNaBarra;
 
-/* BUG REAL: a barra flutuante escapa DE PROPÓSITO de #mandala-container
-   (document.body.appendChild em flutuar(), acima) — pra nunca mais
-   ficar presa atrás de nada por causa do z-index dele (ver o comentário
-   bem maior em ativarBarraFlutuanteQuill). Só que, exatamente por
-   morar fora dali, ela também escapa do "apagão": trocar de ferramenta
-   (abrirModuloTecnica) substitui o conteúdo INTEIRO de
-   #mandala-container de uma vez (container.innerHTML = ...), sem passar
-   por nenhum evento de blur/seleção do Quill — o bloco de texto (e o
-   "pai de origem" da barra) são destruídos, mas a barra em si, já fora
-   dali, sobrevive: fica presa na tela pra sempre, "fantasma", porque
-   nunca mais existe um clique fora que dispare pousar().
-
-   Correção: um ÚNICO observador (nunca um por bloco — encolheria a
-   lista de novo a cada Quill criado) vigia #mandala-container inteiro;
-   toda vez que o conteúdo dele muda, confere cada barra registrada
-   (registrarBarraFlutuanteAtiva) — se o "pai de origem" dela não está
-   mais no documento (foi apagado numa troca de módulo), a barra é
-   removida de vez da tela, em vez de tentar devolver ela pra um lugar
-   que não existe mais. */
-if (!window.relatorioObservadorTrocaModuloAtivo) {
-  window.relatorioObservadorTrocaModuloAtivo = true;
-  const observador = new MutationObserver(() => {
-    window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas.filter(item => {
-      if (document.body.contains(item.paiOriginal)) return true; // ainda tem pra onde voltar, mantém
-      item.toolbar.remove();
-      item.espacador.remove();
-      return false;
-    });
-  });
-  const iniciarObservador = () => {
-    const alvo = document.getElementById('mandala-container');
-    if (alvo) observador.observe(alvo, { childList: true, subtree: true });
-  };
-  if (document.getElementById('mandala-container')) iniciarObservador();
-  else document.addEventListener('DOMContentLoaded', iniciarObservador);
+/* A barra de formatação só aparece na aba Editar (na Prévia não há texto pra formatar). */
+function mostrarBarraDeFormatacao(visivel) {
+  const slot = document.getElementById('relBarraFormatacaoSlot');
+  if (slot) slot.style.display = visivel ? '' : 'none';
+  ajustarEspacadoresBarraFixaRelatorio();
 }
 
 /* Botão "imagem" da barra do Quill: em vez de pedir upload de arquivo,
@@ -1741,6 +1647,7 @@ function removerBlocoEditor(iconEl, id) {
 
   linha.remove();
   if (window.relatorioQuillInstancias) delete window.relatorioQuillInstancias[id];
+  garantirBarraDeFormatacaoNaBarra();
   agendarAutoSalvarRelatorio();
 
   if (ehCustom) return; // bloco personalizado não pertence a nenhum catálogo pra voltar
@@ -2105,13 +2012,13 @@ function injetarEstilosEditorRelatorio() {
          — o Quill só sabe rotular em inglês ("Heading 2"/"Normal") sozinho;
          a troca de texto é feita via ::before, técnica padrão dele (o
          <span> real fica vazio, só o CSS desenha o texto). */
-      .rel-quill-mount .ql-picker.ql-header .ql-picker-label::before,
-      .rel-quill-mount .ql-picker.ql-header .ql-picker-item::before { content: 'Normal'; }
-      .rel-quill-mount .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
-      .rel-quill-mount .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: 'Título'; }
-      .rel-quill-mount .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
-      .rel-quill-mount .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: 'Subtítulo'; }
-      .rel-quill-mount .ql-picker.ql-header { width: 110px; }
+      .rel-editor-tela .ql-picker.ql-header .ql-picker-label::before,
+      .rel-editor-tela .ql-picker.ql-header .ql-picker-item::before { content: 'Normal'; }
+      .rel-editor-tela .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
+      .rel-editor-tela .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: 'Título'; }
+      .rel-editor-tela .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
+      .rel-editor-tela .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: 'Subtítulo'; }
+      .rel-editor-tela .ql-picker.ql-header { width: 110px; }
 
       .rel-quill-mount .ql-toolbar.ql-snow { border-radius: 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: 'Montserrat', sans-serif; }
@@ -2132,16 +2039,8 @@ function injetarEstilosEditorRelatorio() {
       .rel-quebra-pagina-linha { position: absolute; left: 8px; right: 8px; border-top: 2px dashed #c59b27; }
       .rel-quebra-pagina-linha span { position: absolute; top: -9px; right: 0; background: #fffdf5; border: 1px solid #c59b27; border-radius: 4px; padding: 1px 6px; font-size: 9.5px; font-weight: 700; color: #9a6d18; white-space: nowrap; }
 
-      /* Barra do Quill flutuante (ver ativarBarraFlutuanteQuill) — enquanto
-         flutua, ela é MOVIDA pra document.body (não só position:fixed),
-         pra escapar do contexto de empilhamento de #mandala-container
-         (z-index próprio) — por isso o seletor aqui não precisa (e não
-         pode) depender de nenhum ancestral: quando a classe está
-         presente, o elemento já não mora mais dentro de nenhum deles.
-         .rel-quill-toolbar-espacador reserva, no lugar de origem, o
-         espaço que ela deixa vazio ao sair do fluxo. */
-      .rel-quill-toolbar-espacador { display: none; }
-      .ql-toolbar.rel-quill-toolbar-flutuante { position: fixed; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+      /* As barras dos blocos que NÃO estão no espaço fixo da barra de cima ficam escondidas (ver ativarBarraFlutuanteQuill). */
+      .rel-editor-tela .ql-toolbar.ql-snow:not(.rel-quill-toolbar-na-barra) { display: none; }
 
   `;
   document.head.appendChild(style);
@@ -2158,18 +2057,14 @@ function injetarEstilosEditorRelatorio() {
    estreitos). Só uma das duas existe por vez (telas diferentes), então
    é seguro chamar sempre pelas duas — a que não existe agora é ignorada.
 
-   Também empurra as duas pra baixo do #top-bar (agora fixo também fora
-   do modo Mandala — ver body.topbar-fixo no index.html), com 10px de
-   respiro, pra nunca cobrir os ícones das ferramentas. */
+   NÃO mexe na posição das barras: elas ficam logo abaixo do #top-bar só
+   por CSS (variáveis --topbar-topo/--topbar-altura, ver index.html e
+   componentes.css) — nada de medir a barra do sistema em JS. */
 function ajustarEspacadoresBarraFixaRelatorio() {
-  const topBar = document.getElementById('top-bar');
-  const offsetTopoBarra = topBar ? Math.max(0, topBar.getBoundingClientRect().bottom) + 10 : 0;
-
   [['relEditorTabsFixa', 'relEditorEspacadorBarra'], ['relToolbarFixa', 'relToolbarEspacador']].forEach(([idBarra, idEspacador]) => {
     const barra = document.getElementById(idBarra);
     const espacador = document.getElementById(idEspacador);
     if (!barra || !espacador) return;
-    barra.style.top = offsetTopoBarra + 'px';
     espacador.style.height = barra.offsetHeight + 'px';
   });
 }
@@ -2363,14 +2258,15 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     <div class="rel-editor-tela painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
       <div class="rel-editor-tabs" id="relEditorTabsFixa">
-        <button type="button" class="botao-icone rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">${menuIcone('voltar', 22)}</button>
         <div class="rel-editor-tabs-conteudo">
+          <button type="button" class="botao-icone rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">${menuIcone('voltar', 22)}</button>
           <div class="rel-editor-tabs-grupo">
             <button type="button" id="relAbaEditarBtn" class="folder-tab-btn rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
             <button type="button" id="relAbaPreviaBtn" class="folder-tab-btn rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">${menuIcone('olho', 16)} Prévia</button>
           </div>
           <button type="button" class="botao-texto rel-editor-btn-salvar" onclick="salvarEdicaoRelatorioAtual()">${menuIcone('salvar', 16)} ${escapeHtml(config.rotuloSalvar)}</button>
         </div>
+        <div id="relBarraFormatacaoSlot" class="rel-barra-formatacao"></div>
       </div>
       <!-- Como a barra acima é position:fixed (fora do fluxo normal), este
            espaçador reserva o mesmo espaço que ela ocupa, senão o início do
@@ -2457,6 +2353,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   // mandala apagar a tela) — só exibe, direto na aba Prévia, sem gerar de
   // novo (senão a mandala apagaria a tela outra vez, num ciclo sem fim).
   if (opcoes.previaProntaHtml) {
+    mostrarBarraDeFormatacao(false);
     const painelEditar = document.getElementById('relEditorFormPane');
     const painelPrevia = document.getElementById('relEditorPreviaPane');
     const abaEditarBtn = document.getElementById('relAbaEditarBtn');
@@ -3084,10 +2981,14 @@ async function salvarEdicaoRelatorioAtual() {
       // que ele foi semeado): tenta criar de verdade agora que está salvando.
       const { data: { user } } = await client.auth.getUser();
       if (user) {
-        await client.from('relatorio_presets').insert({ user_id: user.id, nome, blocos: novosBlocos });
+        const { data: criado } = await client.from('relatorio_presets').insert({ user_id: user.id, nome, blocos: novosBlocos }).select('id').single();
+        if (criado && criado.id) preset.id = criado.id; // o próximo "Salvar" atualiza este mesmo modelo, não cria outro
       }
     }
-    iniciarModuloRelatorio();
+    // Salvar NÃO fecha o modelo (antes voltava pra lista): só guarda e avisa, e a lista em memória fica em dia.
+    preset.nome = nome;
+    preset.blocos = novosBlocos;
+    mostrarIndicadorSalvoRelatorio();
   } catch (e) {
     alert("Erro de conexão ao salvar modelo.");
   }
@@ -3210,7 +3111,7 @@ window.atualizarPreviaEditorModelo = atualizarPreviaEditorModelo;
    simples: o painel do formulário já está montado no DOM. */
 function mudarAbaEditorModelo(aba) {
   window.relatorioAbaEditorAtiva = aba; // lembrada pra retomar na mesma aba (ver iniciarModuloRelatorio)
-  pousarBarrasFlutuantes(); // a barra de formatação só existe na aba Editar
+  mostrarBarraDeFormatacao(aba !== 'previa'); // a barra de formatação só aparece na aba Editar
   if (aba === 'previa') {
     atualizarPreviaEditorModelo();
     return;
