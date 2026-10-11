@@ -1624,11 +1624,15 @@ function desregistrarBarraFlutuanteAtiva(toolbar) {
 if (!window.relatorioObservadorTrocaModuloAtivo) {
   window.relatorioObservadorTrocaModuloAtivo = true;
   const observador = new MutationObserver(() => {
-    window.relatorioBarrasFlutuantesAtivas = window.relatorioBarrasFlutuantesAtivas.filter(item => {
-      if (document.body.contains(item.paiOriginal)) return true; // ainda tem pra onde voltar, mantém
-      item.toolbar.remove();
-      item.espacador.remove();
-      return false;
+    // BUG REAL (11/10/2026): "paiOriginal fora do documento" NÃO quer dizer "bloco destruído". Ao sair do
+    // Relatório pra outra ferramenta (capturar uma imagem, por ex.), abrirModuloTecnica GUARDA a tela inteira
+    // num fragmento (MODULOS_GUARDAVEIS) e recoloca na volta — os blocos e os Quills continuam vivos. Antes a
+    // barra solta era APAGADA aqui; na volta o Quill seguia vivo mas sem barra (e ainda marcado como "flutuando",
+    // então nunca mais subia). Agora ela só é DEVOLVIDA ao lugar de origem (que existe, dentro do fragmento),
+    // pronta pra subir de novo no próximo toque no texto. Se o bloco foi mesmo destruído, ela vai junto pro lixo.
+    (window.relatorioBarrasFlutuantesAtivas || []).slice().forEach(item => {
+      if (document.body.contains(item.paiOriginal)) return; // ainda na tela, mantém solta
+      item.pousar();
     });
   });
   const iniciarObservador = () => {
