@@ -275,7 +275,7 @@
 #mandala-actions-overlay .menu-flutuante, #mandala-controls-overlay .menu-flutuante { top: auto !important; bottom: calc(100% + 10px) !important; }
 
 /* BARRA INFERIOR DA MANDALA — UMA barra só (esquerda | cabeçalho | direita), igual à barra superior: fundo e linhas duplas são DA BARRA, contínuos de ponta a ponta;
-   os três pedaços não têm fundo/linha próprios. Na tela estreita (≤ 1000px: celular, iPad em pé) as três peças não cabem, então a barra ROLA para os
+   os três pedaços não têm fundo/linha próprios. Na tela estreita (≤ 1190px: celular, iPad em pé) as três peças não cabem, então a barra ROLA para os
    lados, cabeçalho junto, como a de cima, e setinhas nas pontas avisam que tem mais (rolarBarraInferiorMandala/atualizarSetasBarraMandala, mandala.js).
    O cabeçalho é desenhado em JS (atualizarBarraInferiorMandala). A rolagem fica numa camada de dentro pra o papiro e as linhas não rolarem. */
 #barra-inferior-mandala {
@@ -291,10 +291,18 @@
 #barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay, #barra-inferior-mandala #cabecalho-barra-mandala {
     background: none; border: 0; box-shadow: none; padding: 0; flex: 0 0 auto;
 }
-#cabecalho-barra-mandala { min-width: 0; overflow: hidden; margin: 0 8px; }
+/* Botões da barra inferior mais juntos (sobra mais espaço pro cabeçalho): sem vão entre eles e com pouca folga em volta de cada ícone. */
+#barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay { gap: 0 !important; }
+#barra-inferior-mandala #mandala-actions-overlay .icon-btn { padding: 6px 5px; }
+#barra-inferior-mandala #mandala-controls-overlay .time-stepper, #barra-inferior-mandala #mandalaZoomContainer { gap: 0 !important; }
+#barra-inferior-mandala #mandala-controls-overlay .icon-btn:not(.botao-icone) { width: 30px !important; }
+#barra-inferior-mandala #lotRotationBtnContainer { margin-right: 0 !important; }
+#barra-inferior-mandala #lotRotationBtnContainer > div > .icon-btn { width: 38px !important; }
+#barra-inferior-mandala #mandala-controls-overlay .time-select { padding: 2px 2px; }
+#cabecalho-barra-mandala { min-width: 0; overflow: hidden; margin: 0 6px; }
 /* tela larga não rola: a camada de dentro não pode cortar os menus que abrem pra cima dos botões */
-@media (min-width: 1001px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } #barra-inferior-rolagem { overflow: visible; } }
-@media (max-width: 1000px) {
+@media (min-width: 1191px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } #barra-inferior-rolagem { overflow: visible; } }
+@media (max-width: 1190px) {
     #barra-inferior-mandala #mandala-actions-overlay { margin-right: 16px; }
     #barra-inferior-mandala #mandala-controls-overlay { margin-left: 16px; }
 }
