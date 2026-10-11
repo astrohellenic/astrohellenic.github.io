@@ -696,6 +696,10 @@ Exceção: o CSS do Relatório (`relatorio.js`) também vai pro PDF, que não te
 `--papiro-fundo`: se as cores mudarem, regerar** (794x1123 px a 1,5x, JPEG
 q80, via Chromium headless).
 
+**Nunca uma área mais clara ou mais escura sobre o papiro (11/10/2026, regra do astrólogo):** caixas, cartões, campos e opções em papiro (e no site
+Falando de Astrologia) NÃO levam fundo próprio — só `background: transparent` e um contorno de 1px em azul egípcio (`--azul-egipcio-claro`, `#1F5FA3`).
+Seleção = contorno mais grosso. O papiro já tem claro e escuro por natureza; uma caixa mais clara em cima "não parece mais papiro".
+
 ## Página de Configurações (04/10/2026)
 
 As configurações **não ficam mais no menu lateral** (estreito, uma tela por
