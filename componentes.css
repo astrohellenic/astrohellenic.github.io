@@ -595,7 +595,7 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
 
 /* BARRA DE FORMATAÇÃO DO TEXTO (Quill): segunda linha da barra fixa Editar/Prévia/Salvar (relatorio.js, ativarBarraFlutuanteQuill).
    Mesmo papel da barra de cima: sem fundo próprio, só tinta (azul-noite) e terracota no que está ativo. */
-.rel-barra-formatacao { flex: 0 1 auto; display: flex; align-items: center; min-width: 0; padding-left: 18px; border-left: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.rel-barra-formatacao { flex: 0 1 auto; display: flex; align-items: center; min-width: 0; padding-left: 18px; }
 .rel-barra-formatacao .ql-toolbar.ql-snow { border: 0; background: transparent; padding: 0; width: auto; text-align: left; font-family: inherit; }
 .rel-barra-formatacao .ql-snow .ql-stroke { stroke: var(--preto-tinta); }
 .rel-barra-formatacao .ql-snow .ql-fill, .rel-barra-formatacao .ql-snow .ql-stroke.ql-fill { fill: var(--preto-tinta); }
