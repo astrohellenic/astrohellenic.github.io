@@ -2062,7 +2062,11 @@ function injetarEstilosEditorRelatorio() {
    respiro, pra nunca cobrir os ícones das ferramentas. */
 function ajustarEspacadoresBarraFixaRelatorio() {
   const topBar = document.getElementById('top-bar');
-  const offsetTopoBarra = topBar ? Math.max(0, topBar.getBoundingClientRect().bottom) + 10 : 0;
+  // NUNCA medir a posição na tela (getBoundingClientRect) da barra do sistema: no iPad, ao rolar, o Safari dispara
+  // "resize" com a barra deslocada, a conta saía errada e esta barra ia parar ESCONDIDA embaixo dela (bug de 11/10/2026).
+  // Usa só números que não dependem de onde a barra está agora: o "top" fixo do CSS + a altura dela + 10px de respiro.
+  const topoCssBarraSistema = topBar ? (parseFloat(getComputedStyle(topBar).top) || 0) : 0;
+  const offsetTopoBarra = topBar ? topoCssBarraSistema + topBar.offsetHeight + 10 : 0;
 
   [['relEditorTabsFixa', 'relEditorEspacadorBarra'], ['relToolbarFixa', 'relToolbarEspacador']].forEach(([idBarra, idEspacador]) => {
     const barra = document.getElementById(idBarra);
