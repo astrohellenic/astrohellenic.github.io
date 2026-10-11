@@ -501,13 +501,14 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
 
 /* barras fixas do módulo (editor: Voltar/Editar/Prévia/Salvar; relatório pronto: Voltar/Editar/Baixar PDF): entre duas linhas duplas, como a barra superior */
 .rel-editor-tabs, .rel-toolbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; row-gap: 0;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 0; row-gap: 0;
     background: var(--fundo-creme); padding: 8px 14px; border: 0;
     border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
 }
 .rel-toolbar { justify-content: center; gap: 18px; }
 .rel-toolbar .botao-texto, .rel-editor-btn-salvar { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.rel-editor-tabs-conteudo { flex: 1; min-width: 0; max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* tudo junto, num grupo só: Voltar, Editar, Prévia, Salvar — e ao lado, o grupo da formatação; os dois centralizados na barra */
+.rel-editor-tabs-conteudo { flex: 0 0 auto; display: flex; align-items: center; gap: 18px; }
 .rel-editor-tabs-grupo { display: flex; gap: 18px; }
 .rel-editor-tab.ativa { color: var(--terracota); border-bottom-color: var(--terracota); }
 .rel-previa-aviso { max-width: 720px; margin: 0 auto 16px auto; padding: 8px 0; font-size: 12px; font-weight: 700; color: var(--terracota); border-top: var(--contorno-fino) solid var(--ocre); border-bottom: var(--contorno-fino) solid var(--ocre); }
@@ -594,8 +595,8 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
 
 /* BARRA DE FORMATAÇÃO DO TEXTO (Quill): segunda linha da barra fixa Editar/Prévia/Salvar (relatorio.js, ativarBarraFlutuanteQuill).
    Mesmo papel da barra de cima: sem fundo próprio, só tinta (azul-noite) e terracota no que está ativo. */
-.rel-barra-formatacao { flex: 0 0 100%; display: flex; justify-content: center; min-width: 0; }
-.rel-barra-formatacao .ql-toolbar.ql-snow { border: 0; background: transparent; padding: 2px 0 0; width: 100%; max-width: 720px; text-align: center; font-family: inherit; }
+.rel-barra-formatacao { flex: 0 1 auto; display: flex; align-items: center; min-width: 0; padding-left: 18px; border-left: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.rel-barra-formatacao .ql-toolbar.ql-snow { border: 0; background: transparent; padding: 0; width: auto; text-align: left; font-family: inherit; }
 .rel-barra-formatacao .ql-snow .ql-stroke { stroke: var(--preto-tinta); }
 .rel-barra-formatacao .ql-snow .ql-fill, .rel-barra-formatacao .ql-snow .ql-stroke.ql-fill { fill: var(--preto-tinta); }
 .rel-barra-formatacao .ql-snow .ql-picker { color: var(--preto-tinta); }

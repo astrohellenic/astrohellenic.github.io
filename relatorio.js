@@ -2262,8 +2262,8 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
     <div class="rel-editor-tela painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
 
       <div class="rel-editor-tabs" id="relEditorTabsFixa">
-        <button type="button" class="botao-icone rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">${menuIcone('voltar', 22)}</button>
         <div class="rel-editor-tabs-conteudo">
+          <button type="button" class="botao-icone rel-editor-btn-voltar-fixo" onclick="${config.aoVoltarJs}" title="Voltar">${menuIcone('voltar', 22)}</button>
           <div class="rel-editor-tabs-grupo">
             <button type="button" id="relAbaEditarBtn" class="folder-tab-btn rel-editor-tab ativa" onclick="mudarAbaEditorModelo('editar')">Editar</button>
             <button type="button" id="relAbaPreviaBtn" class="folder-tab-btn rel-editor-tab" onclick="mudarAbaEditorModelo('previa')">${menuIcone('olho', 16)} Prévia</button>
