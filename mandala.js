@@ -960,6 +960,8 @@ function atualizarCabecalhoBarraMandala() {
   const estreita = window.innerWidth <= 1000;
   slot.style.width = estreita ? '520px' : '';
   slot.style.flex = estreita ? '0 0 auto' : '';
+  // ainda sem layout (largura ~0, ex.: a barra acabou de aparecer): espera o próximo quadro em vez de desenhar o cabeçalho espremido
+  if (!estreita && slot.clientWidth < 120) { requestAnimationFrame(atualizarCabecalhoBarraMandala); return; }
   const largura = Math.max(200, Math.floor(slot.clientWidth));
   const lote = (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null;
   const layout = montarCabecalhoMandalaLayout(currentCalculatedData, 0, cores, lote, { largura: largura + 30, flexivel: true, semMoldura: true });
@@ -1033,6 +1035,12 @@ function rolarBarraInferiorMandala(sentido) {
 }
 window.rolarBarraInferiorMandala = rolarBarraInferiorMandala;
 document.addEventListener('DOMContentLoaded', () => {
+  // o cabeçalho acompanha a largura do espaço dele (tela redimensionada, barra que aparece depois, etc.)
+  const slotCab = document.getElementById('cabecalho-barra-mandala');
+  if (slotCab && window.ResizeObserver) {
+    let ultima = 0;
+    new ResizeObserver(() => { const w = slotCab.clientWidth; if (Math.abs(w - ultima) > 2 && w > 0) { ultima = w; atualizarCabecalhoBarraMandala(); } }).observe(slotCab);
+  }
   const rol = document.getElementById('barra-inferior-rolagem');
   if (rol) rol.addEventListener('scroll', atualizarSetasBarraMandala, { passive: true });
 });

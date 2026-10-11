@@ -610,7 +610,7 @@ if (telaRestaurada) {
   if (cRadix) cRadix.style.display = 'block';
   if (cOverlay) cOverlay.style.display = 'flex';
   if (cActionsOverlay) cActionsOverlay.style.display = 'flex';
-  if (cBarraInferior) cBarraInferior.style.display = 'flex';
+  if (cBarraInferior) cBarraInferior.style.display = ''; // bloco (o CSS decide); nunca 'flex': a barra tem a camada de rolagem dentro
   if (typeof renderMandala === 'function') renderMandala();
   }
   // 2. TABELA TÉCNICA

@@ -286,7 +286,7 @@
     box-shadow: var(--sombra, none);
     padding: 2px 12px;
 }
-#barra-inferior-rolagem { display: flex; align-items: center; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+#barra-inferior-rolagem { display: flex; align-items: center; width: 100%; box-sizing: border-box; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 #barra-inferior-rolagem::-webkit-scrollbar { display: none; }
 #barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay, #barra-inferior-mandala #cabecalho-barra-mandala {
     background: none; border: 0; box-shadow: none; padding: 0; flex: 0 0 auto;
