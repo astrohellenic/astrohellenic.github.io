@@ -262,33 +262,45 @@ function htmlCfgCaptacao() {
 
         <div class="cfg-campos cfg-campos-topo">
           <div class="cfg-campo-largo">
-            <label class="cfg-rotulo" for="cfgPublicFormUrl">Seu link exclusivo do formulário</label>
+            <label class="cfg-rotulo" for="cfgPublicFormUrl">Link geral do formulário (sem serviço)</label>
             <div class="cfg-linha-campo">
               <input type="text" id="cfgPublicFormUrl" class="modal-input" readonly>
               <button type="button" class="cfg-btn" onclick="copiarLinkFormulario()">Copiar</button>
             </div>
           </div>
           <div class="cfg-campo-largo">
-            <label class="cfg-rotulo" for="cfgPublicFormSinastriaUrl">Link do formulário da Sinastria (capta os dois mapas)</label>
-            <div class="cfg-linha-campo">
-              <input type="text" id="cfgPublicFormSinastriaUrl" class="modal-input" readonly>
-              <button type="button" class="cfg-btn" onclick="copiarLinkFormulario('cfgPublicFormSinastriaUrl')">Copiar</button>
-            </div>
+            <label class="cfg-rotulo">Links por serviço (um para cada serviço cadastrado — use no redirecionamento do pagamento)</label>
+            <div id="cfgLinksServicos" class="cfg-lista"><div class="cfg-carregando">Carregando serviços...</div></div>
+            <p class="cfg-card-desc">Cada link já leva o nome do serviço, que chega ao webhook e ao link de redirecionamento como <code>{SERVICO}</code>. Serviço com "sinastria" no nome abre o formulário duplo.</p>
+          </div>
           </div>
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgWebhookUrl">URL do webhook (integração)</label>
             <input type="url" id="cfgWebhookUrl" class="modal-input" placeholder="https://hook.make.com/...">
+            <p class="cfg-card-desc">Avisado quando o cliente confirma o horário na agenda, com os dados do formulário (nome, WhatsApp, e-mail, nascimento, cidade), o horário e o serviço (<code>&amp;servico=...</code> no link do formulário).</p>
           </div>
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgRedirectUrl">Link de redirecionamento</label>
             <input type="url" id="cfgRedirectUrl" class="modal-input" placeholder="https://wa.me/55...">
+            <p class="cfg-card-desc">Quer uma página de agradecimento no seu site? Escreva no link as variáveis abaixo e o Astro Hellenic troca pelos dados do cliente quando ele confirma o horário. Ex.: <code>https://seusite.com/obrigado?nome={NOME}&amp;data={DATA}&amp;hora={HORA}</code><br>Variáveis: <code>{NOME}</code> (primeiro nome), <code>{DATA}</code> (13/10/2026), <code>{DATA_ISO}</code> (2026-10-13), <code>{HORA}</code> (11:00), <code>{FUSO}</code> (America/Sao_Paulo), <code>{DURACAO}</code> (minutos), <code>{SERVICO}</code> (o nome que você puser em <code>&amp;servico=...</code> no link do formulário).</p>
           </div>
         </div>
 
         <label class="cfg-checkbox">
-          <input type="checkbox" id="cfgFormTemaCeu"> Aplicar o Tema Céu no formulário
+          <input type="checkbox" id="cfgFormAbrirAgenda" onchange="mostrarAvisoAgendaRedirect()"> Depois do envio, abrir a minha agenda em seguida
         </label>
-        <p class="cfg-card-desc">Ao aplicar o Tema Céu, o formulário que o cliente vê fica com papiro e céu estrelado ao fundo. Desmarcado, ele continua claro, como hoje.</p>
+        <p class="cfg-card-desc">Marcado, o cliente vai direto para a sua agenda assim que enviar os dados — vale para os links que você já copiou, sem trocar nada. É só salvar. O link de redirecionamento, se houver, abre depois da escolha do horário. Desmarcado, o formulário termina como sempre.</p>
+        <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima não abre depois do formulário: ele abre depois que o cliente escolher o horário na agenda.</p>
+
+        <label class="cfg-rotulo" for="cfgFormTema">Tema do formulário e da agenda</label>
+        <select id="cfgFormTema" class="modal-input">
+          <option value="ceu">Céu</option>
+          <option value="claro">Claro</option>
+          <option value="sulfite">Sulfite</option>
+          <option value="escuro">Escuro</option>
+          <option value="auto">Automático (segue o aparelho do cliente)</option>
+        </select>
+        <p class="cfg-card-desc">É o que o cliente vê no formulário e, em seguida, na agenda.</p>
 
         <div class="cfg-acoes">
           <button type="button" class="cfg-btn" onclick="testarPaginaAgendar()">Testar a página de agendar (sem gravar nada)</button>
@@ -397,6 +409,20 @@ async function carregarConfiguracoesAgenda() {
     container.innerHTML = `
       <div class="cfg-card cfg-card-largo" id="cfgGoogleAgenda"><div class="cfg-carregando">Carregando Google Agenda...</div></div>
 
+      <div class="cfg-card cfg-card-largo" id="cfgServicosFechaDia">
+        <h4 class="cfg-card-titulo">Limites por dia</h4>
+        <p class="cfg-card-desc">Dois jeitos de limitar os agendamentos de cada dia (vale pra página de agendar), e você pode usar os dois juntos:</p>
+        <p class="cfg-card-desc"><strong>Serviços que contam juntos:</strong> marque os serviços (a caixinha) e diga quantos deles podem ser agendados no mesmo dia. Quando o dia chega no limite, ele fecha pra todos os marcados.</p>
+        <p class="cfg-card-desc"><strong>Máximo de um serviço:</strong> no campo ao lado do serviço, diga quantos deles podem ser agendados por dia. Passou disso, fecha só aquele serviço, e os outros continuam abertos. Em branco = sem limite.</p>
+        <div class="cfg-campos cfg-campos-topo">
+          <div>
+            <label class="cfg-rotulo" for="cfgLimiteDia">Quantos dos serviços marcados por dia</label>
+            <input type="number" id="cfgLimiteDia" class="modal-input" min="1" max="20" step="1" value="1" style="max-width: 120px" onchange="salvarLimiteDiaServicos(this)">
+          </div>
+        </div>
+        <div id="cfgServicosFechaDiaLista" class="cfg-lista"><div class="cfg-carregando">Carregando serviços...</div></div>
+      </div>
+
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Sua disponibilidade</h4>
         <p class="cfg-card-desc">Marque os dias que você atende e o horário de cada um. Usado para calcular os horários livres na ferramenta Agenda.</p>
@@ -438,6 +464,7 @@ async function carregarConfiguracoesAgenda() {
         </div>
       </div>`;
     carregarGoogleAgendaConfig();
+    carregarServicosFechaDia();
   } catch (e) {
     console.error('Erro ao carregar configurações de agenda:', e);
     container.innerHTML = `<div class="cfg-card cfg-card-largo">Erro de conexão ao carregar.</div>`;
@@ -475,6 +502,61 @@ async function chamarApiGoogleConexao(corpo) {
   let j = null; try { j = await r.json(); } catch (e) { /* sem JSON */ }
   if (!j) throw new Error('resposta inválida');
   return j;
+}
+
+/* SERVIÇOS QUE FECHAM O DIA (Configurações → Agenda): marca/desmarca relatorio_presets.agenda_fecha_dia na hora, sem botão de salvar */
+async function carregarServicosFechaDia() {
+  const caixa = document.getElementById('cfgServicosFechaDiaLista');
+  if (!caixa) return;
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { caixa.innerHTML = '<div class="menu-vazio">Sessão não identificada.</div>'; return; }
+    const { data, error } = await supabaseClient.from('relatorio_presets').select('id, nome, agenda_fecha_dia, agenda_max_dia').eq('user_id', user.id).order('nome', { ascending: true });
+    try {
+      const { data: cfg } = await supabaseClient.from('configuracoes').select('agenda_limite_dia').eq('user_id', user.id).maybeSingle();
+      const campoLimite = document.getElementById('cfgLimiteDia');
+      if (campoLimite && cfg && cfg.agenda_limite_dia >= 1) campoLimite.value = cfg.agenda_limite_dia;
+    } catch (e) { /* coluna ainda não criada: vale 1 */ }
+    if (error) { caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar os serviços (a coluna "agenda_fecha_dia" ainda não existe no Supabase).</div>'; return; }
+    if (!data || !data.length) { caixa.innerHTML = '<div class="menu-vazio">Nenhum serviço cadastrado ainda (Configurações → Serviços).</div>'; return; }
+    caixa.innerHTML = data.map(sv => `
+      <div class="cfg-linha-campo" style="align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
+        <label class="cfg-checkbox cfg-pasta" style="margin: 0;">
+          <input type="checkbox" ${sv.agenda_fecha_dia ? 'checked' : ''} onchange="salvarServicoFechaDia('${sv.id}', this)">
+          ${escapeHtml(sv.nome)}
+        </label>
+        <span style="white-space: nowrap; font-size: 13px;">máx. por dia:
+          <input type="number" class="modal-input" min="1" max="20" step="1" placeholder="sem limite" value="${sv.agenda_max_dia ? sv.agenda_max_dia : ''}" style="width: 90px; display: inline-block;" onchange="salvarMaxDiaServico('${sv.id}', this)">
+        </span>
+      </div>`).join('');
+  } catch (e) {
+    caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar os serviços.</div>';
+  }
+}
+
+async function salvarLimiteDiaServicos(campo) {
+  let n = parseInt(campo.value, 10);
+  if (!(n >= 1)) n = 1;
+  if (n > 20) n = 20;
+  campo.value = n;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+  const { error } = await supabaseClient.from('configuracoes').upsert({ user_id: user.id, agenda_limite_dia: n }, { onConflict: 'user_id' });
+  if (error) alert('Não foi possível salvar o limite: ' + error.message);
+}
+
+async function salvarMaxDiaServico(id, campo) {
+  let n = parseInt(campo.value, 10);
+  const valor = (n >= 1) ? Math.min(n, 20) : null;
+  campo.value = valor === null ? '' : valor;
+  const { error } = await supabaseClient.from('relatorio_presets').update({ agenda_max_dia: valor }).eq('id', id);
+  if (error) alert('Não foi possível salvar: ' + error.message);
+}
+
+async function salvarServicoFechaDia(id, caixinha) {
+  const marcado = caixinha.checked;
+  const { error } = await supabaseClient.from('relatorio_presets').update({ agenda_fecha_dia: marcado }).eq('id', id);
+  if (error) { caixinha.checked = !marcado; alert('Não foi possível salvar: ' + error.message); }
 }
 
 async function carregarGoogleAgendaConfig() {
@@ -721,12 +803,10 @@ async function carregarConfiguracoesCaptacao() {
         const logoUrlAntiCache = data.logo_url ? `${data.logo_url.split('?')[0]}?t=${Date.now()}` : '';
 document.getElementById('cfgLogoUrl').value = logoUrlAntiCache;
 const publicLink = `https://astrohellenic.github.io/formulario.html?u=${user.id}`;
-if (document.getElementById('cfgPublicFormUrl')) {
-  document.getElementById('cfgPublicFormUrl').value = publicLink;
-}
-if (document.getElementById('cfgPublicFormSinastriaUrl')) {
-  document.getElementById('cfgPublicFormSinastriaUrl').value = publicLink + '&servico=sinastria';
-}        
+if (document.getElementById('cfgPublicFormUrl')) document.getElementById('cfgPublicFormUrl').value = publicLink;
+renderLinksServicosFormulario(publicLink, user.id);
+if (document.getElementById('cfgFormAbrirAgenda')) document.getElementById('cfgFormAbrirAgenda').checked = data.formulario_abrir_agenda === true;
+mostrarAvisoAgendaRedirect();
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
@@ -741,11 +821,18 @@ if (document.getElementById('cfgPublicFormSinastriaUrl')) {
       }
       if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
       if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
-      if (document.getElementById('cfgFormTemaCeu')) document.getElementById('cfgFormTemaCeu').checked = data.formulario_tema === 'ceu';
+      if (document.getElementById('cfgFormTema')) document.getElementById('cfgFormTema').value = ['ceu', 'sulfite', 'escuro', 'auto'].includes(data.formulario_tema) ? data.formulario_tema : 'claro';
     }
   } catch (e) {
     console.error("Erro ao carregar configurações de captação:", e);
   }
+}
+
+/* AVISO: com "abrir a agenda em seguida" marcado, o link de redirecionamento abre depois do horário escolhido */
+function mostrarAvisoAgendaRedirect() {
+  const caixa = document.getElementById('cfgFormAbrirAgenda');
+  const aviso = document.getElementById('cfgAvisoAgendaRedirect');
+  if (aviso) aviso.style.display = caixa && caixa.checked ? 'block' : 'none';
 }
 
 /* PROCESSA O UPLOAD DIRETO DA IMAGEM PARA O BUCKET 'LOGOS' */
@@ -804,6 +891,22 @@ async function fazerUploadLogo(inputElement) {
   }
 }
 
+/* UM LINK DE FORMULÁRIO PARA CADA SERVIÇO CADASTRADO (o nome vai em &servico=...) */
+async function renderLinksServicosFormulario(publicLink, userId) {
+  const el = document.getElementById('cfgLinksServicos');
+  if (!el) return;
+  const { data, error } = await supabaseClient.from('relatorio_presets').select('nome').eq('user_id', userId).order('nome', { ascending: true });
+  if (error || !data || !data.length) { el.innerHTML = '<div class="menu-vazio">Nenhum serviço cadastrado ainda (Configurações → Serviços).</div>'; return; }
+  el.innerHTML = data.map((sv, i) => `
+    <div class="cfg-servico-link">
+      <div class="cfg-servico-nome">${escapeHtml(sv.nome)}</div>
+      <div class="cfg-linha-campo">
+        <input type="text" id="cfgLinkServ${i}" class="modal-input" readonly value="${escapeHtml(publicLink + '&servico=' + encodeURIComponent(sv.nome))}">
+        <button type="button" class="cfg-btn" onclick="copiarLinkFormulario('cfgLinkServ${i}')">Copiar</button>
+      </div>
+    </div>`).join('');
+}
+
 /* COPIA O LINK DO FORMULÁRIO PARA A ÁREA DE TRANSFERÊNCIA */
 function copiarLinkFormulario(idCampo) {
   const input = document.getElementById(idCampo || 'cfgPublicFormUrl');
@@ -836,7 +939,7 @@ async function salvarConfiguracoesCaptacao() {
   const logoUrl = document.getElementById('cfgLogoUrl').value.trim();
   const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
   const redirectUrl = document.getElementById('cfgRedirectUrl').value.trim();
-  const formularioTema = document.getElementById('cfgFormTemaCeu') && document.getElementById('cfgFormTemaCeu').checked ? 'ceu' : 'claro';
+  const formularioTema = document.getElementById('cfgFormTema') ? document.getElementById('cfgFormTema').value : 'claro';
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -849,7 +952,8 @@ async function salvarConfiguracoesCaptacao() {
         logo_url: logoUrl,
         webhook_url: webhookUrl,
         redirect_url: redirectUrl,
-        formulario_tema: formularioTema
+        formulario_tema: formularioTema,
+        formulario_abrir_agenda: !!(document.getElementById('cfgFormAbrirAgenda') && document.getElementById('cfgFormAbrirAgenda').checked)
       }, { onConflict: 'user_id' });
 
     if (!error) {

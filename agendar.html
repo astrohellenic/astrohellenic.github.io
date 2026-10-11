@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="temas.css?v=20261009c">
+    <link rel="stylesheet" href="temas.css?v=20261010t">
     <link rel="stylesheet" href="papiro.css?v=20261010c">
     <link rel="stylesheet" href="componentes.css?v=20261010h">
   <meta charset="UTF-8">
@@ -10,8 +10,9 @@
   <title>Agendar Atendimento</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="publico-tema.js?v=20261011b"></script>
   <link rel="stylesheet" href="publico.css?v=20261010c">
 </head>
 <body>
@@ -33,6 +34,7 @@
   const params = new URLSearchParams(window.location.search);
   const ownerId = params.get('u');
   const clienteId = params.get('c');
+  const servicoNome = (params.get('s') || '').slice(0, 120);
   const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
   let DIAS_A_FRENTE = 45;           // vêm de Configurações → Agenda (ver 'regras' abaixo); estes são só os padrões
   // Serviço (Vercel) que fala com a Google Agenda do astrólogo — ver api/agenda-google.js
@@ -46,7 +48,7 @@
   let PASSO_MIN = null;             // de quanto em quanto tempo começa um horário (vazio = duração + intervalo)
   const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  let agenda = null, diaEscolhido = null, horaEscolhida = null;
+  let agenda = null, diaEscolhido = null, horaEscolhida = null, redirectAposAgenda = null;
 
   const el = id => document.getElementById(id);
   const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -99,7 +101,7 @@
     const dias = [];
     for (let i = 0; i < DIAS_A_FRENTE; i++) {
       const iso = somarDias(agora.dataISO, i);
-      if (horariosLivres(iso).length) dias.push(iso);
+      if (!(agenda.dias_fechados || []).includes(iso) && horariosLivres(iso).length) dias.push(iso); /* dia fechado por outro serviço que fecha o dia (Configurações → Agenda) */
     }
     if (!dias.length) { el('conteudo').innerHTML = '<div class="vazio">Não há horários disponíveis no momento. Entre em contato para combinarmos.</div>'; return; }
     if (!diaEscolhido || !dias.includes(diaEscolhido)) { diaEscolhido = dias[0]; horaEscolhida = null; }
@@ -118,6 +120,17 @@
     const btn = el('btnConfirmar'); if (btn && horaEscolhida) btn.onclick = confirmar;
   }
 
+  /* Variáveis aceitas no link de redirecionamento do astrólogo (cada um monta a própria página de agradecimento): {USER} {CLIENTE} {NOME} (primeiro nome) {DATA} (dd/mm/aaaa) {DATA_ISO} (aaaa-mm-dd) {HORA} (hh:mm) {FUSO} (ex.: America/Sao_Paulo) {DURACAO} (min) {SERVICO} (o que veio em &servico=... no link do formulário) */
+  function preencherVariaveisRedirect(url) {
+    const valores = {
+      USER: ownerId, CLIENTE: clienteId,
+      NOME: agenda && agenda.cliente_nome ? agenda.cliente_nome.split(' ')[0] : '',
+      DATA: dataBR(diaEscolhido), DATA_ISO: diaEscolhido, HORA: horaEscolhida, FUSO: FUSO,
+      DURACAO: agenda && agenda.duracao ? agenda.duracao : '', SERVICO: servicoNome
+    };
+    return url.replace(/\{(USER|CLIENTE|NOME|DATA_ISO|DATA|HORA|FUSO|DURACAO|SERVICO)\}/g, (_, k) => encodeURIComponent(valores[k] || ''));
+  }
+
   async function confirmar() {
     const btn = el('btnConfirmar'); btn.disabled = true; btn.innerText = 'Confirmando...';
     if (modoTeste) {
@@ -126,14 +139,15 @@
     }
     // 1) confere na Google Agenda e já reserva o horário lá; 2) grava no sistema; se o 2º falhar, desfaz o 1º
     let evento;
-    try { evento = await chamarGoogleAgenda({ acao: 'criar', u: ownerId, c: clienteId, data: diaEscolhido, hora: horaEscolhida }); }
+    try { evento = await chamarGoogleAgenda({ acao: 'criar', u: ownerId, c: clienteId, data: diaEscolhido, hora: horaEscolhida, servico: servicoNome }); }
     catch (e) { evento = null; }
     if (!evento || !evento.json || evento.json.ok !== true) {
       alert(evento && evento.json && evento.json.erro ? evento.json.erro : 'Não foi possível confirmar agora. Tente de novo em instantes.');
       await carregar();
       return;
     }
-    const { data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida });
+    let { data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida, p_servico: servicoNome || null });
+    if (error) { ({ data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida })); } /* banco ainda sem o parâmetro do serviço */
     if (error || !data || data.ok !== true) {
       try { await chamarGoogleAgenda({ acao: 'apagar', c: clienteId, eventId: evento.json.eventId }); } catch (e) { /* o astrólogo vê na agenda */ }
       const motivo = data && data.erro ? data.erro : 'Não foi possível confirmar. Tente outro horário.';
@@ -141,12 +155,19 @@
       await carregar();
       return;
     }
+    /* avisa o webhook do astrólogo (se houver) já com o horário confirmado; espera no máximo 4s e nunca atrapalha o cliente */
+    try { await Promise.race([chamarGoogleAgenda({ acao: 'avisar', u: ownerId, c: clienteId, servico: servicoNome }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o agendamento já está salvo */ }
+    /* link de redirecionamento do astrólogo (Configurações → Captação): abre depois do horário confirmado. Ignora se for o da própria agenda (evita laço). */
+    const destino = redirectAposAgenda && !/agendar\.html/i.test(redirectAposAgenda)
+      ? preencherVariaveisRedirect(redirectAposAgenda) : null;
+    if (destino) { window.location.replace(destino); return; }
     el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (${rotuloFuso()}).<br><br>Você pode fechar esta página.</div>`;
   }
 
   async function carregar() {
     if (!ownerId || !clienteId) { el('conteudo').innerHTML = '<div class="vazio">Link inválido. Volte ao formulário e envie seus dados novamente.</div>'; return; }
-    const { data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId });
+    let { data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId, p_servico: servicoNome || null });
+    if (error) { ({ data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId })); } /* banco ainda sem o parâmetro do serviço */
     if (error || !data) { el('conteudo').innerHTML = '<div class="vazio">Link inválido ou expirado. Volte ao formulário e envie seus dados novamente.</div>'; return; }
     agenda = data;
     if (agenda.ja_agendado) {
@@ -178,8 +199,9 @@
     try {
       const { data: cfg } = await supabaseClient.rpc('config_publica_formulario', { p_user: ownerId });
       const c = Array.isArray(cfg) ? cfg[0] : cfg;
+      redirectAposAgenda = c && c.redirect_url ? c.redirect_url : null;
       if (c && c.logo_url) { const i = el('formLogoImg'); i.src = c.logo_url.split('?')[0] + '?t=' + Date.now(); i.style.display = 'block'; }
-      if (c && c.formulario_tema === 'ceu') document.body.classList.add('tema-ceu');
+      aplicarTemaPublico(c ? c.formulario_tema : null);
     } catch (e) { /* sem logo/tema, segue */ }
     if (modoTeste) el('avisoTeste').style.display = 'block';
     carregar();

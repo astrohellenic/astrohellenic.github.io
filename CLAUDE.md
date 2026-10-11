@@ -696,6 +696,18 @@ Exceção: o CSS do Relatório (`relatorio.js`) também vai pro PDF, que não te
 `--papiro-fundo`: se as cores mudarem, regerar** (794x1123 px a 1,5x, JPEG
 q80, via Chromium headless).
 
+**Nunca uma área mais clara ou mais escura sobre o papiro (11/10/2026, regra do astrólogo):** caixas, cartões, campos e opções em papiro (e no site
+Falando de Astrologia) NÃO levam fundo próprio — só `background: transparent` e um contorno de 1px em azul egípcio (`--azul-egipcio-claro`, `#1F5FA3`).
+Seleção = contorno mais grosso. O papiro já tem claro e escuro por natureza; uma caixa mais clara em cima "não parece mais papiro".
+
+## Cliente que volta é reconhecido pelo e-mail (11/10/2026)
+
+O formulário público (`formulario.html`), quando o link traz `&email=...` (o checkout do site do astrólogo manda), pergunta ao Supabase (`cliente_conhecido(p_user, p_email)`,
+SQL rodado pelo astrólogo) se esse e-mail já é de um cliente dele **sem horário futuro** (a agenda só deixa 1 horário futuro por cadastro: `agenda_publica`/`reservar_horario_agenda`).
+Se for, pula os dados de nascimento ("Já temos os seus dados de nascimento." + Continuar / "Meus dados mudaram") e segue com o cadastro que já existe (`concluirEnvio`).
+Os dados do cliente nunca vão pra tela, só o código do cadastro. Qualquer erro (função ausente, sem rede) = formulário normal. Sinastria não usa isso (precisa dos dados da pessoa B).
+Quem tem horário futuro cai no formulário normal e ganha um cadastro novo, como sempre.
+
 ## Página de Configurações (04/10/2026)
 
 As configurações **não ficam mais no menu lateral** (estreito, uma tela por
@@ -893,3 +905,9 @@ Tela nova com esses ícones: usar essas funções, nunca cor fixa azul.
 **Regras de agendamento (o astrólogo configura em Configurações → Agenda → "Sua disponibilidade", como no Google):** dias da semana, **vários horários no mesmo dia** (+ outro horário), duração, intervalo entre atendimentos (vale também em volta de compromissos ocupados), **antecedência mínima**, **até quantos dias à frente** e **"mostrar horários a cada X min"** (vazio = duração + intervalo). Colunas novas em `configuracoes`: `agenda_antecedencia_min`, `agenda_dias_a_frente`, `agenda_passo_min` (SQL: `alter table configuracoes add column if not exists ...`; sem elas valem os padrões 2h/45 dias/encadeado). A página pública recebe essas regras do `api/agenda-google.js` (ação `ocupados` devolve `regras`, também pra quem não conectou o Google). Não achei nada que confirme que a API do Google deixa ler as regras da "página de agendamento" do Google. **Ainda não feito:** a ferramenta Agenda do astrólogo (`agendamento.js`) usa só duração/intervalo, não consulta nem cria evento no Google (só `agendar.html` usa o Google e as regras novas).
 **Tela Agenda do software (`agendamento.js`):** bloco "Meus compromissos" no topo, igual ao Google (dia a dia, horário, título, de qual agenda), só das agendas marcadas como "bloqueiam" (7/14/30 dias). Quem busca é `api/google.js` (ação `eventos`, só do astrólogo logado, nada é guardado; eventos "livres"/cancelados ficam de fora). Isso é **leitura de título e horário**, então a `privacidade.html` diz isso (mantê-la fiel ao que o código faz: o Google confere na verificação do app). Cada compromisso de cliente ganha botões como os da lista de clientes (Meet em ocre, WhatsApp, copiar e-mail; o cliente é achado pelo código no título, `agendaClienteDoCompromisso`); compromissos que já terminaram saem da lista; **o fuso é o da agenda principal do Google do astrólogo** (`fusoDoAstrologo` em `_google.js`, nunca fixo em Brasília; a página pública mostra os horários no fuso do astrólogo, de propósito). Em Configurações → Agenda, o cartão do Google tem o link da `privacidade.html` e **só deixa conectar depois de marcar "Li e concordo"** (exigência pensada pra verificação do Google). Se a leitura das tabelas da Agenda falha, a tela mostra o erro de verdade (não mais "as tabelas não existem").
 **Histórico (não repetir):** a 1ª versão (05/10) foi um atalho de UMA conta (conta de serviço + variáveis `GOOGLE_SERVICE_ACCOUNT_JSON`/`GOOGLE_CALENDAR_ID`, uma agenda só) e foi descartada: não servia pra vários astrólogos nem bloqueava as agendas de alunos. **Regra: quando o pedido é "pra qualquer astrólogo", não entregar versão de uma conta só como se fosse a solução.** Aprendizados da colagem de JSON pelo iPad: o texto vem sem o `}` final ou com quebras de linha dentro da chave; essas variáveis antigas podem ser apagadas da Vercel.
+
+## SQL e links do Supabase: SEMPRE colados na conversa (10/10/2026)
+
+O astrólogo **não tem acesso a branches** — só enxerga o que já está na `main`. Todo SQL pra rodar no Supabase (e todo link/painel dele) tem que ser
+**escrito direto na conversa**, pra ele copiar e rodar; só depois que ele disser que rodou, publicar na `main`. **Nunca** deixar SQL em arquivo da branch
+(`docs/*.sql` só como registro depois de rodado) e **nunca** criar campo/tela dentro do software só pra ele copiar um código e depois apagar.

@@ -234,3 +234,5 @@
   .cfg-duas-colunas { grid-template-columns: minmax(0, 1fr); }
 }
 .cfg-btn .icone, .cfg-seta .icone { flex: 0 0 auto; }
+.cfg-servico-link { padding: 8px 0; }
+.cfg-servico-link .cfg-servico-nome { margin-bottom: 4px; }
