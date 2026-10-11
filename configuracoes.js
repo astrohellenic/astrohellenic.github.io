@@ -413,7 +413,7 @@ async function carregarConfiguracoesAgenda() {
         <h4 class="cfg-card-titulo">Limites por dia</h4>
         <p class="cfg-card-desc">Dois jeitos de limitar os agendamentos de cada dia (vale pra página de agendar), e você pode usar os dois juntos:</p>
         <p class="cfg-card-desc"><strong>Serviços que contam juntos:</strong> marque os serviços (a caixinha) e diga quantos deles podem ser agendados no mesmo dia. Quando o dia chega no limite, ele fecha pra todos os marcados.</p>
-        <p class="cfg-card-desc"><strong>Máximo de um serviço:</strong> no campo ao lado do serviço, diga quantos dele podem ser agendados por dia. Passou disso, fecha só aquele serviço, e os outros continuam abertos. Em branco = sem limite.</p>
+        <p class="cfg-card-desc"><strong>Máximo de um serviço:</strong> no campo ao lado do serviço, diga quantos deles podem ser agendados por dia. Passou disso, fecha só aquele serviço, e os outros continuam abertos. Em branco = sem limite.</p>
         <div class="cfg-campos cfg-campos-topo">
           <div>
             <label class="cfg-rotulo" for="cfgLimiteDia">Quantos dos serviços marcados por dia</label>
