@@ -1265,6 +1265,15 @@ function filetesCabecalhoSVG(x, y, w, h, cores) {
 // canto do retângulo do cabeçalho: reto (a época não tinha canto arredondado); o recorte do papiro precisa do rx="10" original
 function cantoCabecalho(cores) { return cores.papiro ? 10 : 0; }
 
+/* Local do cabeçalho: o endereço que o buscador de cidades devolve vem longo ("Belo Horizonte, Minas Gerais, Região Sudeste, Brasil" ou pior).
+   No cabeçalho só interessa cidade, estado e país: tira as "Região ..." e, se ainda sobrar mais de 3 partes, fica com a primeira (cidade), a
+   penúltima (estado) e a última (país). Só muda o que o cabeçalho MOSTRA — o local guardado no mapa continua inteiro. */
+function resumirLocalCabecalho(local) {
+  const partes = String(local || '').split(',').map(p => p.trim()).filter(Boolean).filter(p => !/^(micro|meso)?regi[aã]o\b/i.test(p));
+  if (partes.length > 3) return [partes[0], partes[partes.length - 2], partes[partes.length - 1]].join(', ');
+  return partes.join(', ');
+}
+
 function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   opcoes = opcoes || {};
   const largura = opcoes.largura || 960;
@@ -1305,7 +1314,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
     <text x="30" y="${headerY + 23}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(geoCab.city)}</text>
+    <text x="30" y="${headerY + 41}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(resumirLocalCabecalho(geoCab.city))}</text>
         <text x="30" y="${headerY + 57}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${loteTexto ? `  ${loteTexto}` : ''}</tspan></text>
   </g>`;
     if (horasInfo) {
@@ -1328,7 +1337,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   const reservaHoras = (temDia || temHora) ? 105 : 0;
   const maxW = largura - 60 - reservaHoras;
   const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20);
-  const linhasData = quebrarTrechosCabecalho([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${geoCab.city}`, cor: cores.dataCidade, peso: 500 }], maxW, 12);
+  const linhasData = quebrarTrechosCabecalho([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${resumirLocalCabecalho(geoCab.city)}`, cor: cores.dataCidade, peso: 500 }], maxW, 12);
   const trechosZod = [{ t: `Zodíaco Tropical • Signos Inteiros • ${tipoFormatado}`, cor: cores.zodiaco, peso: 600 }, { t: sectText, cor: cores.sect, peso: 700 }];
   if (loteTexto) trechosZod.push({ t: loteTexto, cor: cores.sect, peso: 700 });
   const linhasZod = quebrarTrechosCabecalho(trechosZod, maxW, 11);
