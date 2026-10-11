@@ -957,8 +957,8 @@ function atualizarCabecalhoBarraMandala() {
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = coresCabecalhoMandala(modoEscuro, null);
   // tela estreita: a barra rola e o cabeçalho tem largura própria (fixa); tela larga: estica entre os grupos
-  const estreita = window.innerWidth <= 1000;
-  slot.style.width = estreita ? '520px' : '';
+  const estreita = window.innerWidth <= 1190;
+  slot.style.width = estreita ? '640px' : '';
   slot.style.flex = estreita ? '0 0 auto' : '';
   // ainda sem layout (largura ~0, ex.: a barra acabou de aparecer): espera o próximo quadro em vez de desenhar o cabeçalho espremido
   if (!estreita && slot.clientWidth < 120) { requestAnimationFrame(atualizarCabecalhoBarraMandala); return; }
@@ -1215,10 +1215,10 @@ const ROTULOS_LOTE_CASA1 = {
    cabeçalhos lado a lado ficarem com a mesma altura), geo ({city, fuso, lon};
    padrão = local atual) }.
    Devolve { svg, altura } — o layout LARGO (960) é exatamente o de sempre. */
-function medirTextoCabecalho(texto, px, peso) {
+function medirTextoCabecalho(texto, px, peso, familia) {
   try {
     const ctx = medirTextoCabecalho._ctx || (medirTextoCabecalho._ctx = document.createElement('canvas').getContext('2d'));
-    ctx.font = `${peso} ${px}px sans-serif`;
+    ctx.font = `${peso} ${px}px ${familia || 'sans-serif'}`;
     return ctx.measureText(texto).width;
   } catch (e) {
     return texto.length * px * 0.58;
@@ -1227,14 +1227,14 @@ function medirTextoCabecalho(texto, px, peso) {
 
 /* Quebra uma sequência de trechos coloridos ({t, cor, peso}) em linhas que caibam
    em maxW, sem cortar palavra. Cada linha é uma lista de trechos. */
-function quebrarTrechosCabecalho(trechos, maxW, px) {
+function quebrarTrechosCabecalho(trechos, maxW, px, familia) {
   const linhas = [[]];
   let usado = 0;
-  const espaco = medirTextoCabecalho(' ', px, 600);
+  const espaco = medirTextoCabecalho(' ', px, 600, familia);
   trechos.forEach(tr => {
     const palavras = tr.t.split(' ').filter(Boolean);
     palavras.forEach(pal => {
-      const w = medirTextoCabecalho(pal, px, tr.peso || 600);
+      const w = medirTextoCabecalho(pal, px, tr.peso || 600, familia);
       const atual = linhas[linhas.length - 1];
       const precisa = atual.length ? usado + espaco + w : w;
       if (atual.length && precisa > maxW) {
@@ -1266,11 +1266,39 @@ function filetesCabecalhoSVG(x, y, w, h, cores) {
 function cantoCabecalho(cores) { return cores.papiro ? 10 : 0; }
 
 /* Local do cabeçalho: o endereço que o buscador de cidades devolve vem longo ("Belo Horizonte, Minas Gerais, Região Sudeste, Brasil" ou pior).
-   No cabeçalho só interessa cidade, estado e país: tira as "Região ..." e, se ainda sobrar mais de 3 partes, fica com a primeira (cidade), a
-   penúltima (estado) e a última (país). Só muda o que o cabeçalho MOSTRA — o local guardado no mapa continua inteiro. */
+   No cabeçalho só interessa cidade, estado e país: tira as "Região ..." e, havendo 3 ou mais partes, fica com a primeira (cidade), a
+   penúltima (estado, em SIGLA: MG, SP, TX...) e a última (país). Só muda o que o cabeçalho MOSTRA — o local guardado no mapa continua inteiro. */
+const SIGLAS_ESTADO = (function () {
+  const m = {};
+  const add = (sigla, ...nomes) => nomes.forEach(n => { m[n] = sigla; });
+  // Brasil
+  add('AC','acre'); add('AL','alagoas'); add('AP','amapa'); add('AM','amazonas'); add('BA','bahia'); add('CE','ceara'); add('DF','distrito federal');
+  add('ES','espirito santo'); add('GO','goias'); add('MA','maranhao'); add('MT','mato grosso'); add('MS','mato grosso do sul'); add('MG','minas gerais');
+  add('PA','para'); add('PB','paraiba'); add('PR','parana'); add('PE','pernambuco'); add('PI','piaui'); add('RJ','rio de janeiro'); add('RN','rio grande do norte');
+  add('RS','rio grande do sul'); add('RO','rondonia'); add('RR','roraima'); add('SC','santa catarina'); add('SP','sao paulo'); add('SE','sergipe'); add('TO','tocantins');
+  // Estados Unidos (inglês e português)
+  add('AL','alabama'); add('AK','alaska','alasca'); add('AZ','arizona'); add('AR','arkansas'); add('CA','california','califórnia'); add('CO','colorado'); add('CT','connecticut');
+  add('DE','delaware'); add('FL','florida'); add('GA','georgia','geórgia'); add('HI','hawaii','havai'); add('ID','idaho'); add('IL','illinois'); add('IN','indiana');
+  add('IA','iowa'); add('KS','kansas'); add('KY','kentucky'); add('LA','louisiana'); add('ME','maine'); add('MD','maryland'); add('MA','massachusetts'); add('MI','michigan');
+  add('MN','minnesota'); add('MS','mississippi'); add('MO','missouri'); add('MT','montana'); add('NE','nebraska'); add('NV','nevada'); add('NH','new hampshire');
+  add('NJ','new jersey','nova jersey'); add('NM','new mexico','novo mexico'); add('NY','new york','nova york'); add('NC','north carolina','carolina do norte');
+  add('ND','north dakota','dakota do norte'); add('OH','ohio'); add('OK','oklahoma'); add('OR','oregon'); add('PA','pennsylvania','pensilvania'); add('RI','rhode island');
+  add('SC','south carolina','carolina do sul'); add('SD','south dakota','dakota do sul'); add('TN','tennessee'); add('TX','texas'); add('UT','utah'); add('VT','vermont');
+  add('VA','virginia'); add('WA','washington'); add('WV','west virginia','virginia ocidental'); add('WI','wisconsin'); add('WY','wyoming');
+  // Canadá
+  add('ON','ontario'); add('QC','quebec','québec'); add('BC','british columbia','colombia britanica'); add('AB','alberta'); add('MB','manitoba'); add('SK','saskatchewan');
+  add('NS','nova scotia','nova escocia'); add('NB','new brunswick','novo brunswick'); add('NL','newfoundland and labrador'); add('PE','prince edward island');
+  return m;
+})();
+function siglaDoEstado(nome) {
+  const chave = String(nome || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return SIGLAS_ESTADO[chave] || nome;
+}
+
 function resumirLocalCabecalho(local) {
   const partes = String(local || '').split(',').map(p => p.trim()).filter(Boolean).filter(p => !/^(micro|meso)?regi[aã]o\b/i.test(p));
-  if (partes.length > 3) return [partes[0], partes[partes.length - 2], partes[partes.length - 1]].join(', ');
+  // cidade, ESTADO (sigla), país
+  if (partes.length >= 3) return [partes[0], siglaDoEstado(partes[partes.length - 2]), partes[partes.length - 1]].join(', ');
   return partes.join(', ');
 }
 
@@ -1334,13 +1362,21 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
 
   /* LAYOUT ESTREITO (ex.: um cabeçalho por mandala, lado a lado): mesmas fontes,
      mesmas cores e mesmos textos — só quebra em mais linhas o que não cabe. */
-  const reservaHoras = (temDia || temHora) ? 105 : 0;
+  const reservaHoras = (temDia || temHora) ? (opcoes.flexivel ? 95 : 105) : 0;
   const maxW = largura - 60 - reservaHoras;
-  const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20);
-  const linhasData = quebrarTrechosCabecalho([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${resumirLocalCabecalho(geoCab.city)}`, cor: cores.dataCidade, peso: 500 }], maxW, 12);
+  // flexível (barra da tela): mede com as fontes de verdade (Cinzel/Montserrat), que são mais largas que a genérica — senão o texto passa da conta
+  const famTitulo = opcoes.flexivel ? "Cinzel, serif" : undefined, famTexto = opcoes.flexivel ? "Montserrat, sans-serif" : undefined;
+  const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20, famTitulo);
+  /* Cabeçalho flexível (barra inferior): cada informação cabe numa linha só — se não cabe no tamanho normal, a letra diminui um pouco
+     (até um mínimo legível) antes de quebrar em duas linhas. */
+  const cabeNumaLinha = (trechos, tamanhos) => {
+    if (opcoes.flexivel) for (const px of tamanhos) { const l = quebrarTrechosCabecalho(trechos, maxW, px, famTexto); if (l.length === 1) return { linhas: l, px }; }
+    return { linhas: quebrarTrechosCabecalho(trechos, maxW, tamanhos[0], famTexto), px: tamanhos[0] };
+  };
+  const { linhas: linhasData, px: pxData } = cabeNumaLinha([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${resumirLocalCabecalho(geoCab.city)}`, cor: cores.dataCidade, peso: 500 }], [12, 11, 10.5]);
   const trechosZod = [{ t: `Zodíaco Tropical • Signos Inteiros • ${tipoFormatado}`, cor: cores.zodiaco, peso: 600 }, { t: sectText, cor: cores.sect, peso: 700 }];
   if (loteTexto) trechosZod.push({ t: loteTexto, cor: cores.sect, peso: 700 });
-  const linhasZod = quebrarTrechosCabecalho(trechosZod, maxW, 11);
+  const { linhas: linhasZod, px: pxZod } = cabeNumaLinha(trechosZod, [11, 10, 9.5]);
 
   let y = headerY + 23, textos = '';
   linhasTitulo.forEach((ln, i) => {
@@ -1350,22 +1386,36 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   y += 18;
   linhasData.forEach((ln, i) => {
     if (i > 0) y += 16;
-    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="${pxData}" font-weight="500" fill="${cores.dataCidade}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
   });
   y += 17;
   linhasZod.forEach((ln, i) => {
     if (i > 0) y += 15;
-    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="${pxZod}" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
   });
-  altura = Math.max(75, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
+  altura = Math.max(opcoes.flexivel ? 70 : 75, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
   /* semMoldura: o cabeçalho da barra inferior da tela não leva fundo nem linhas próprias — quem desenha papel e linhas duplas é a barra toda. */
   svg = `<g id="png-discreet-header">${opcoes.semMoldura ? '' : `<rect x="15" y="${headerY}" width="${largura - 30}" height="${altura}" rx="${cantoCabecalho(cores)}" ry="${cantoCabecalho(cores)}" fill="${cores.fundo}" stroke="none" />${filetesCabecalhoSVG(15, headerY, largura - 30, altura, cores)}`}${textos}`;
+  /* Flexível (barra da tela): DIA/HORA ficam logo depois do texto (não lá na ponta do espaço), e o conjunto texto + DIA/HORA é centralizado
+     no espaço entre os dois grupos de botões. Nos outros usos continuam nas colunas fixas da direita. */
+  let xDia = largura - 100, xHora = largura - 45, dx = 0;
+  if (opcoes.flexivel) {
+    const larguraLinha = (ln, px, peso, fam) => ln.reduce((a, tr) => a + medirTextoCabecalho(tr.t, px, tr.peso || peso, fam), 0);
+    const maiorTexto = Math.max(
+      ...linhasTitulo.map(ln => larguraLinha(ln, 20, 800, famTitulo)),
+      ...linhasData.map(ln => larguraLinha(ln, pxData, 500, famTexto)),
+      ...linhasZod.map(ln => larguraLinha(ln, pxZod, 600, famTexto)));
+    xDia = 30 + maiorTexto + 50; xHora = xDia + 56;
+    const conteudo = (xHora + 25) - 30, espaco = largura - 30;
+    dx = Math.max(0, (espaco - conteudo) / 2 - 15);
+  }
   if (temDia) {
-    svg += `<text x="${largura - 100}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${largura - 100}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+    svg += `<text x="${xDia}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${xDia}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
   }
   if (temHora) {
-    svg += `<text x="${largura - 45}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${largura - 45}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+    svg += `<text x="${xHora}" y="${headerY + 22}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${xHora}, ${headerY + 49})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
   }
+  if (dx > 0) svg = `<g transform="translate(${dx.toFixed(1)}, 0)">${svg}</g>`;
   svg += '</g>';
   return { svg, altura };
 }
