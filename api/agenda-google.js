@@ -5,7 +5,7 @@
    Quatro ações (POST, corpo JSON, campo "acao"; "u" = id do astrólogo, vem do link de agendar):
      ocupados  { u, de:'YYYY-MM-DD', ate:'YYYY-MM-DD' }  -> { ok, conectado, ocupados:[{ data, hora_inicio, hora_fim }] }
                 horários em que QUALQUER agenda marcada como "bloqueia" está ocupada (já em horário de Brasília, cortados por dia)
-     criar     { u, c, data, hora }                       -> { ok, eventId } | { ok:false, erro }
+     criar     { u, c, data, hora, servico? }                     -> { ok, eventId } | { ok:false, erro }
                 confere o link (u, c) no Supabase e se o horário continua livre em todas as agendas, e cria o evento na agenda
                 principal escolhida. Nome do cliente e duração vêm do Supabase, nunca do navegador.
      avisar    { u, c, servico } -> { ok, enviado }
@@ -117,6 +117,8 @@ async function acaoCriar(corpo) {
   if ((await buscarOcupados(u, conexao, ids, inicio, fim, fuso)).length) return erro(409, 'Esse horário acabou de ser ocupado. Escolha outro.');
 
   const nome = (agenda.cliente_nome || 'Cliente').toString().slice(0, 120);
+  // serviço contratado (vem do link do formulário, só texto): o evento fica "Fulano - Serviço"; sem serviço, "Atendimento - Fulano" como sempre
+  const servico = String(corpo.servico || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
   // contato que o próprio cliente já preencheu no formulário (cadastro/mapa): vai pra descrição do evento, pro astrólogo ver na hora
   let contato = '';
   try {
@@ -131,8 +133,8 @@ async function acaoCriar(corpo) {
   const evento = await G.chamarGoogle(u, conexao, '/calendars/' + encodeURIComponent(principal) + '/events', {
     method: 'POST',
     body: JSON.stringify({
-      summary: 'Atendimento - ' + nome,
-      description: 'Agendado pelo Astro Hellenic.' + contato,
+      summary: servico ? nome + ' - ' + servico : 'Atendimento - ' + nome,
+      description: 'Agendado pelo Astro Hellenic.' + (servico ? '\nServiço: ' + servico : '') + contato,
       start: { dateTime: inicio.toISOString(), timeZone: fuso },
       end: { dateTime: fim.toISOString(), timeZone: fuso },
       extendedProperties: { private: { origem: 'astrohellenic', mapa: String(c) } }

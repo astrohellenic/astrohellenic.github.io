@@ -139,7 +139,7 @@
     }
     // 1) confere na Google Agenda e já reserva o horário lá; 2) grava no sistema; se o 2º falhar, desfaz o 1º
     let evento;
-    try { evento = await chamarGoogleAgenda({ acao: 'criar', u: ownerId, c: clienteId, data: diaEscolhido, hora: horaEscolhida }); }
+    try { evento = await chamarGoogleAgenda({ acao: 'criar', u: ownerId, c: clienteId, data: diaEscolhido, hora: horaEscolhida, servico: servicoNome }); }
     catch (e) { evento = null; }
     if (!evento || !evento.json || evento.json.ok !== true) {
       alert(evento && evento.json && evento.json.erro ? evento.json.erro : 'Não foi possível confirmar agora. Tente de novo em instantes.');
