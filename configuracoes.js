@@ -410,8 +410,14 @@ async function carregarConfiguracoesAgenda() {
       <div class="cfg-card cfg-card-largo" id="cfgGoogleAgenda"><div class="cfg-carregando">Carregando Google Agenda...</div></div>
 
       <div class="cfg-card cfg-card-largo" id="cfgServicosFechaDia">
-        <h4 class="cfg-card-titulo">Serviços que fecham o dia</h4>
-        <p class="cfg-card-desc">Marque os serviços que você não quer fazer mais de um no mesmo dia. Quando um cliente agenda um deles, o dia fica fechado pra todos os outros serviços marcados aqui. Os que não estiverem marcados continuam abertos. Vale pros agendamentos feitos pela página de agendar.</p>
+        <h4 class="cfg-card-titulo">Limite por dia de serviços do mesmo tipo</h4>
+        <p class="cfg-card-desc">Marque os serviços que você quer limitar e diga quantos deles podem ser agendados no mesmo dia. Quando o dia chega no limite, ele fecha pra esses serviços. Os que não estiverem marcados continuam abertos. Vale pros agendamentos feitos pela página de agendar.</p>
+        <div class="cfg-campos cfg-campos-topo">
+          <div>
+            <label class="cfg-rotulo" for="cfgLimiteDia">Quantos desses serviços por dia</label>
+            <input type="number" id="cfgLimiteDia" class="modal-input" min="1" max="20" step="1" value="1" style="max-width: 120px" onchange="salvarLimiteDiaServicos(this)">
+          </div>
+        </div>
         <div id="cfgServicosFechaDiaLista" class="cfg-lista"><div class="cfg-carregando">Carregando serviços...</div></div>
       </div>
 
@@ -504,6 +510,11 @@ async function carregarServicosFechaDia() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { caixa.innerHTML = '<div class="menu-vazio">Sessão não identificada.</div>'; return; }
     const { data, error } = await supabaseClient.from('relatorio_presets').select('id, nome, agenda_fecha_dia').eq('user_id', user.id).order('nome', { ascending: true });
+    try {
+      const { data: cfg } = await supabaseClient.from('configuracoes').select('agenda_limite_dia').eq('user_id', user.id).maybeSingle();
+      const campoLimite = document.getElementById('cfgLimiteDia');
+      if (campoLimite && cfg && cfg.agenda_limite_dia >= 1) campoLimite.value = cfg.agenda_limite_dia;
+    } catch (e) { /* coluna ainda não criada: vale 1 */ }
     if (error) { caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar os serviços (a coluna "agenda_fecha_dia" ainda não existe no Supabase).</div>'; return; }
     if (!data || !data.length) { caixa.innerHTML = '<div class="menu-vazio">Nenhum serviço cadastrado ainda (Configurações → Serviços).</div>'; return; }
     caixa.innerHTML = data.map(sv => `
@@ -514,6 +525,17 @@ async function carregarServicosFechaDia() {
   } catch (e) {
     caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar os serviços.</div>';
   }
+}
+
+async function salvarLimiteDiaServicos(campo) {
+  let n = parseInt(campo.value, 10);
+  if (!(n >= 1)) n = 1;
+  if (n > 20) n = 20;
+  campo.value = n;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+  const { error } = await supabaseClient.from('configuracoes').upsert({ user_id: user.id, agenda_limite_dia: n }, { onConflict: 'user_id' });
+  if (error) alert('Não foi possível salvar o limite: ' + error.message);
 }
 
 async function salvarServicoFechaDia(id, caixinha) {
