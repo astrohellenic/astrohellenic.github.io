@@ -409,6 +409,12 @@ async function carregarConfiguracoesAgenda() {
     container.innerHTML = `
       <div class="cfg-card cfg-card-largo" id="cfgGoogleAgenda"><div class="cfg-carregando">Carregando Google Agenda...</div></div>
 
+      <div class="cfg-card cfg-card-largo" id="cfgServicosFechaDia">
+        <h4 class="cfg-card-titulo">Serviços que fecham o dia</h4>
+        <p class="cfg-card-desc">Marque os serviços que você não quer fazer mais de um no mesmo dia. Quando um cliente agenda um deles, o dia fica fechado pra todos os outros serviços marcados aqui. Os que não estiverem marcados continuam abertos. Vale pros agendamentos feitos pela página de agendar.</p>
+        <div id="cfgServicosFechaDiaLista" class="cfg-lista"><div class="cfg-carregando">Carregando serviços...</div></div>
+      </div>
+
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Sua disponibilidade</h4>
         <p class="cfg-card-desc">Marque os dias que você atende e o horário de cada um. Usado para calcular os horários livres na ferramenta Agenda.</p>
@@ -450,6 +456,7 @@ async function carregarConfiguracoesAgenda() {
         </div>
       </div>`;
     carregarGoogleAgendaConfig();
+    carregarServicosFechaDia();
   } catch (e) {
     console.error('Erro ao carregar configurações de agenda:', e);
     container.innerHTML = `<div class="cfg-card cfg-card-largo">Erro de conexão ao carregar.</div>`;
@@ -487,6 +494,32 @@ async function chamarApiGoogleConexao(corpo) {
   let j = null; try { j = await r.json(); } catch (e) { /* sem JSON */ }
   if (!j) throw new Error('resposta inválida');
   return j;
+}
+
+/* SERVIÇOS QUE FECHAM O DIA (Configurações → Agenda): marca/desmarca relatorio_presets.agenda_fecha_dia na hora, sem botão de salvar */
+async function carregarServicosFechaDia() {
+  const caixa = document.getElementById('cfgServicosFechaDiaLista');
+  if (!caixa) return;
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { caixa.innerHTML = '<div class="menu-vazio">Sessão não identificada.</div>'; return; }
+    const { data, error } = await supabaseClient.from('relatorio_presets').select('id, nome, agenda_fecha_dia').eq('user_id', user.id).order('nome', { ascending: true });
+    if (error) { caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar os serviços (a coluna "agenda_fecha_dia" ainda não existe no Supabase).</div>'; return; }
+    if (!data || !data.length) { caixa.innerHTML = '<div class="menu-vazio">Nenhum serviço cadastrado ainda (Configurações → Serviços).</div>'; return; }
+    caixa.innerHTML = data.map(sv => `
+      <label class="cfg-checkbox cfg-pasta">
+        <input type="checkbox" ${sv.agenda_fecha_dia ? 'checked' : ''} onchange="salvarServicoFechaDia('${sv.id}', this)">
+        ${escapeHtml(sv.nome)}
+      </label>`).join('');
+  } catch (e) {
+    caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar os serviços.</div>';
+  }
+}
+
+async function salvarServicoFechaDia(id, caixinha) {
+  const marcado = caixinha.checked;
+  const { error } = await supabaseClient.from('relatorio_presets').update({ agenda_fecha_dia: marcado }).eq('id', id);
+  if (error) { caixinha.checked = !marcado; alert('Não foi possível salvar: ' + error.message); }
 }
 
 async function carregarGoogleAgendaConfig() {

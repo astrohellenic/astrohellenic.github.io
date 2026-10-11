@@ -101,7 +101,7 @@
     const dias = [];
     for (let i = 0; i < DIAS_A_FRENTE; i++) {
       const iso = somarDias(agora.dataISO, i);
-      if (horariosLivres(iso).length) dias.push(iso);
+      if (!(agenda.dias_fechados || []).includes(iso) && horariosLivres(iso).length) dias.push(iso); /* dia fechado por outro serviço que fecha o dia (Configurações → Agenda) */
     }
     if (!dias.length) { el('conteudo').innerHTML = '<div class="vazio">Não há horários disponíveis no momento. Entre em contato para combinarmos.</div>'; return; }
     if (!diaEscolhido || !dias.includes(diaEscolhido)) { diaEscolhido = dias[0]; horaEscolhida = null; }
@@ -146,7 +146,8 @@
       await carregar();
       return;
     }
-    const { data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida });
+    let { data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida, p_servico: servicoNome || null });
+    if (error) { ({ data, error } = await supabaseClient.rpc('reservar_horario_agenda', { p_user: ownerId, p_mapa: clienteId, p_data: diaEscolhido, p_hora: horaEscolhida })); } /* banco ainda sem o parâmetro do serviço */
     if (error || !data || data.ok !== true) {
       try { await chamarGoogleAgenda({ acao: 'apagar', c: clienteId, eventId: evento.json.eventId }); } catch (e) { /* o astrólogo vê na agenda */ }
       const motivo = data && data.erro ? data.erro : 'Não foi possível confirmar. Tente outro horário.';
@@ -165,7 +166,8 @@
 
   async function carregar() {
     if (!ownerId || !clienteId) { el('conteudo').innerHTML = '<div class="vazio">Link inválido. Volte ao formulário e envie seus dados novamente.</div>'; return; }
-    const { data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId });
+    let { data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId, p_servico: servicoNome || null });
+    if (error) { ({ data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId })); } /* banco ainda sem o parâmetro do serviço */
     if (error || !data) { el('conteudo').innerHTML = '<div class="vazio">Link inválido ou expirado. Volte ao formulário e envie seus dados novamente.</div>'; return; }
     agenda = data;
     if (agenda.ja_agendado) {
