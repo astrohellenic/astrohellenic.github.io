@@ -27,6 +27,11 @@
   </div>
   <h2 id="formTitulo">Dados para Atendimento</h2>
   <p id="formAviso" style="display:none; text-align:center; font-size:13px; margin:-8px 0 16px 0;"></p>
+  <div id="clienteConhecido" style="display:none; text-align:center;">
+    <p id="conhecidoTexto" style="margin:0 0 16px 0;"></p>
+    <button type="button" class="btn-submit" id="btnConhecidoContinuar">Continuar</button>
+    <p style="margin:14px 0 0 0;"><a href="#" id="btnConhecidoMudou" style="font-size:13px;">Meus dados mudaram</a></p>
+  </div>
   <form id="clientForm" onsubmit="event.preventDefault(); abrirConfirmacao();">
     <div class="form-group">
       <label for="nome">Nome Completo</label>
@@ -250,6 +255,34 @@
 
   document.addEventListener('DOMContentLoaded', () => { if (modoSinastria) aplicarEtapa('A'); });
 
+  /* CLIENTE QUE JÁ TEM CADASTRO: se o e-mail do link (&email=...) já é de um cliente desse astrólogo (e ele não tem horário futuro), o formulário pula os dados de nascimento.
+     Os dados do cliente nunca aparecem na tela: o servidor só devolve o código do cadastro. Qualquer erro = formulário normal. */
+  document.addEventListener('DOMContentLoaded', async () => {
+    const email = (urlParams.get('email') || '').trim();
+    if (modoSinastria || !ownerId || !/^[^\s@]+@[^\s@]+$/.test(email)) return;
+    let idConhecido = null;
+    try {
+      const { data, error } = await supabaseClient.rpc('cliente_conhecido', { p_user: ownerId, p_email: email });
+      if (!error && data) idConhecido = String(data);
+    } catch (e) { /* sem a função ou sem rede: formulário normal */ }
+    if (!idConhecido) return;
+    const primeiroNome = (urlParams.get('nome') || '').trim().split(' ')[0];
+    document.getElementById('conhecidoTexto').textContent = (primeiroNome ? 'Olá, ' + primeiroNome + '! ' : '') + 'Já temos os seus dados de nascimento.';
+    document.getElementById('clientForm').style.display = 'none';
+    document.getElementById('clienteConhecido').style.display = 'block';
+    document.getElementById('btnConhecidoMudou').onclick = (ev) => {
+      ev.preventDefault();
+      document.getElementById('clienteConhecido').style.display = 'none';
+      document.getElementById('clientForm').style.display = '';
+    };
+    document.getElementById('btnConhecidoContinuar').onclick = async function () {
+      this.disabled = true; this.innerText = 'Continuando...';
+      try { await concluirEnvio(idConhecido, (urlParams.get('nome') || '').trim()); }
+      catch (e) { alert('Erro de conexão. Tente de novo.'); }
+      finally { this.disabled = false; this.innerText = 'Continuar'; }
+    };
+  });
+
   /* PREENCHE nome, WhatsApp e e-mail se vierem no link (&nome=...&whatsapp=...&email=...), pra quem já digitou isso antes (ex.: no checkout do site do astrólogo) não digitar de novo */
   document.addEventListener('DOMContentLoaded', () => {
     ['nome', 'whatsapp', 'email'].forEach(campo => {
@@ -319,6 +352,45 @@
     document.getElementById('confirmStepSucesso').style.display = 'none';
   }
 
+  /* DEPOIS DE TER O CADASTRO DO CLIENTE (recém-criado ou reconhecido pelo e-mail): avisa o webhook (sem agenda) e vai pra agenda ou pro redirecionamento */
+  async function concluirEnvio(novoClienteId, nomeCompleto) {
+    /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
+    /* link com &agenda=1 (caixinha em Configurações → Captação): depois do envio abre a agenda do astrólogo, no lugar do redirecionamento */
+    const agendaParam = new URLSearchParams(window.location.search).get('agenda'); /* &agenda=0 no link: este serviço não usa agenda (vale mesmo com a caixinha marcada em Configurações → Captação) */
+    const abrirAgenda = (agendaParam !== '0') && (abrirAgendaConfig || agendaParam === '1') && ownerId && novoClienteId;
+    const servicoLink = (new URLSearchParams(window.location.search).get('servico') || '').slice(0, 120); /* nome do serviço (&servico=...) segue até a agenda, que o entrega como {SERVICO} */
+    const destinoForm = abrirAgenda ? 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}' + (servicoLink ? '&s=' + encodeURIComponent(servicoLink) : '') : redirectUrlForm; /* o redirecionamento do astrólogo é aberto pela própria agenda, depois da escolha do horário */
+    /* variáveis do link de redirecionamento: as que o formulário conhece vão preenchidas; as do horário (sem agenda não existe horário) vão vazias */
+    const variaveisForm = { USER: ownerId, CLIENTE: novoClienteId, NOME: (nomeCompleto || '').split(' ')[0], SERVICO: servicoLink, DATA: '', DATA_ISO: '', HORA: '', FUSO: '', DURACAO: '' };
+    const cfgData = { redirect_url: destinoForm ? destinoForm.replace(/\{(USER|CLIENTE|NOME|SERVICO|DATA_ISO|DATA|HORA|FUSO|DURACAO)\}/g, (_, k) => encodeURIComponent(variaveisForm[k] || '')) : null };
+
+    /* sem agenda: o webhook do astrólogo (se houver) é avisado agora, com os dados do formulário (com agenda, quem avisa é a agenda, depois do horário) */
+    if (!abrirAgenda && ownerId && novoClienteId) {
+      try { await Promise.race([fetch('https://astrohellenicgithubio.vercel.app/api/agenda-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'avisar', u: ownerId, c: novoClienteId, semAgenda: true, servico: servicoLink }) }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o cadastro já está salvo */ }
+    }
+
+    /* agenda em seguida: vai direto, sem a caixa de "redirecionando" */
+    if (abrirAgenda && cfgData.redirect_url) { window.location.replace(cfgData.redirect_url); return; }
+
+    document.getElementById('clientForm').reset();
+    selectedGeo = { lat: null, lon: null, name: '' };
+    if (modoSinastria) { dadosA = null; dadosB = null; aplicarEtapa('A'); }
+
+    document.getElementById('confirmModal').style.display = 'flex'; /* (cliente reconhecido: a janela ainda não estava aberta) */
+    document.getElementById('confirmStepDados').style.display = 'none';
+    document.getElementById('confirmStepSucesso').style.display = 'block';
+
+    if (cfgData && cfgData.redirect_url) {
+      window.location.replace(cfgData.redirect_url);
+      return;
+    } else {
+      document.getElementById('sucessoMensagem').innerText = 'Recebemos suas informações. Em breve entraremos em contato.';
+      setTimeout(() => {
+        fecharConfirmacao();
+      }, 2500);
+    }
+  }
+
   async function enviarParaSupabase() {
     const btn = document.getElementById('btnFinalSubmit');
     btn.disabled = true;
@@ -355,41 +427,7 @@
           });
       const { data: novoClienteId, error } = resposta;
       if (!error) {
-        /* {USER} e {CLIENTE} no link de redirecionamento viram o id do astrólogo e do cliente recém-cadastrado (página de agendar) */
-        /* link com &agenda=1 (caixinha em Configurações → Captação): depois do envio abre a agenda do astrólogo, no lugar do redirecionamento */
-        const agendaParam = new URLSearchParams(window.location.search).get('agenda'); /* &agenda=0 no link: este serviço não usa agenda (vale mesmo com a caixinha marcada em Configurações → Captação) */
-        const abrirAgenda = (agendaParam !== '0') && (abrirAgendaConfig || agendaParam === '1') && ownerId && novoClienteId;
-        const servicoLink = (new URLSearchParams(window.location.search).get('servico') || '').slice(0, 120); /* nome do serviço (&servico=...) segue até a agenda, que o entrega como {SERVICO} */
-        const destinoForm = abrirAgenda ? 'https://astrohellenic.com/agendar.html?u={USER}&c={CLIENTE}' + (servicoLink ? '&s=' + encodeURIComponent(servicoLink) : '') : redirectUrlForm; /* o redirecionamento do astrólogo é aberto pela própria agenda, depois da escolha do horário */
-        /* variáveis do link de redirecionamento: as que o formulário conhece vão preenchidas; as do horário (sem agenda não existe horário) vão vazias */
-        const variaveisForm = { USER: ownerId, CLIENTE: novoClienteId, NOME: (payload.nome || '').split(' ')[0], SERVICO: servicoLink, DATA: '', DATA_ISO: '', HORA: '', FUSO: '', DURACAO: '' };
-        const cfgData = { redirect_url: destinoForm ? destinoForm.replace(/\{(USER|CLIENTE|NOME|SERVICO|DATA_ISO|DATA|HORA|FUSO|DURACAO)\}/g, (_, k) => encodeURIComponent(variaveisForm[k] || '')) : null };
-
-        /* sem agenda: o webhook do astrólogo (se houver) é avisado agora, com os dados do formulário (com agenda, quem avisa é a agenda, depois do horário) */
-        if (!abrirAgenda && ownerId && novoClienteId) {
-          try { await Promise.race([fetch('https://astrohellenicgithubio.vercel.app/api/agenda-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'avisar', u: ownerId, c: novoClienteId, semAgenda: true, servico: servicoLink }) }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o cadastro já está salvo */ }
-        }
-
-        /* agenda em seguida: vai direto, sem a caixa de "redirecionando" */
-        if (abrirAgenda && cfgData.redirect_url) { window.location.replace(cfgData.redirect_url); return; }
-
-        document.getElementById('clientForm').reset();
-        selectedGeo = { lat: null, lon: null, name: '' };
-        if (modoSinastria) { dadosA = null; dadosB = null; aplicarEtapa('A'); }
-
-        document.getElementById('confirmStepDados').style.display = 'none';
-        document.getElementById('confirmStepSucesso').style.display = 'block';
-
-        if (cfgData && cfgData.redirect_url) {
-          window.location.replace(cfgData.redirect_url);
-          return;
-        } else {
-          document.getElementById('sucessoMensagem').innerText = 'Recebemos suas informações. Em breve entraremos em contato.';
-          setTimeout(() => {
-            fecharConfirmacao();
-          }, 2500);
-        }
-
+        await concluirEnvio(novoClienteId, payload.nome);
       } else {
         alert('Erro ao enviar dados: ' + error.message);
       }

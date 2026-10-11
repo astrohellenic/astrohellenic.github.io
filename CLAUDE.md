@@ -700,6 +700,14 @@ q80, via Chromium headless).
 Falando de Astrologia) NÃO levam fundo próprio — só `background: transparent` e um contorno de 1px em azul egípcio (`--azul-egipcio-claro`, `#1F5FA3`).
 Seleção = contorno mais grosso. O papiro já tem claro e escuro por natureza; uma caixa mais clara em cima "não parece mais papiro".
 
+## Cliente que volta é reconhecido pelo e-mail (11/10/2026)
+
+O formulário público (`formulario.html`), quando o link traz `&email=...` (o checkout do site do astrólogo manda), pergunta ao Supabase (`cliente_conhecido(p_user, p_email)`,
+SQL rodado pelo astrólogo) se esse e-mail já é de um cliente dele **sem horário futuro** (a agenda só deixa 1 horário futuro por cadastro: `agenda_publica`/`reservar_horario_agenda`).
+Se for, pula os dados de nascimento ("Já temos os seus dados de nascimento." + Continuar / "Meus dados mudaram") e segue com o cadastro que já existe (`concluirEnvio`).
+Os dados do cliente nunca vão pra tela, só o código do cadastro. Qualquer erro (função ausente, sem rede) = formulário normal. Sinastria não usa isso (precisa dos dados da pessoa B).
+Quem tem horário futuro cai no formulário normal e ganha um cadastro novo, como sempre.
+
 ## Página de Configurações (04/10/2026)
 
 As configurações **não ficam mais no menu lateral** (estreito, uma tela por
