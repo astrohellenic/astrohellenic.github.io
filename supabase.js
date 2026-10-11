@@ -596,7 +596,10 @@ function abrirModuloTecnica(modulo, forcar) {
   // sair da tela atual só pra enxergar os ícones. No modo Mandala ele
   // continua no fluxo normal, de propósito (ver o comentário da regra
   // CSS "body.topbar-fixo #top-bar").
-  document.body.classList.toggle('topbar-fixo', !(modulo === 'mandala' || modulo === 'radix'));
+  // DECISÃO DO ASTRÓLOGO (11/10/2026): a barra do sistema NUNCA acompanha a rolagem — fica presa no topo da PÁGINA, no fluxo
+  // normal, em qualquer ferramenta (fixa na tela ela ficava na frente ao dar zoom). Só a barra do Relatório é fixa na tela.
+  // (topbar-fixo não é mais ligada em lugar nenhum; o CSS dela continua no index.html, desligado.)
+  document.body.classList.remove('topbar-fixo');
   if (typeof ajustarEspacadorTopBar === 'function') ajustarEspacadorTopBar();
 
 // 1. MANDALA / MAPA NATAL (Globinho)
