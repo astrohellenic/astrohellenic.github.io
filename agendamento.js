@@ -33,6 +33,7 @@
 const AGENDA_DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 let agendaDisponibilidadeCache = [];
+let agendaExcecoesCache = []; // dias específicos (feriado, horário diferente): agenda_excecoes
 let agendaAgendamentosCache = [];
 let agendaMapasCache = [];
 let agendaTodosMapasCache = []; // todos os clientes (pra achar o contato de um compromisso), sem o filtro de pastas
@@ -63,6 +64,12 @@ async function iniciarModuloAgenda() {
       supabaseClient.from('relatorio_presets').select('id, nome, duracao_minutos').eq('user_id', user.id).order('nome', { ascending: true }),
       supabaseClient.from('configuracoes').select('agenda_duracao_padrao_minutos, agenda_intervalo_minutos, agenda_pastas_visiveis').eq('user_id', user.id).maybeSingle()
     ]);
+
+    // dias específicos (tabela pode ainda não existir: aí valem só as regras da semana)
+    try {
+      const { data: exc, error: excErro } = await supabaseClient.from('agenda_excecoes').select('data, fechado, hora_inicio, hora_fim').eq('user_id', user.id).gte('data', hojeISO);
+      agendaExcecoesCache = (!excErro && Array.isArray(exc)) ? exc : [];
+    } catch (e) { agendaExcecoesCache = []; }
 
     // As duas tabelas novas são essenciais — sem elas não tem como mostrar
     // nada de verdade. mapas/relatorio_presets/configuracoes já existem
@@ -439,7 +446,9 @@ function agendaSomarMinutosAoHorario(horaHHMM, minutos) {
    agendamentos que já existem nesse dia. */
 function agendaGerarHorariosDisponiveis(dataISO, regrasDisponibilidade, agendamentosDoDia, duracaoMin, intervaloMin) {
   const diaSemana = new Date(dataISO + 'T00:00:00').getDay();
-  const regrasDoDia = (regrasDisponibilidade || []).filter(r => r.dia_semana === diaSemana);
+  /* dia específico (Configurações → Agenda → Dias específicos): se a data tem linhas, valem só elas (fechado = nenhum horário) */
+  const excDoDia = (typeof agendaExcecoesCache !== 'undefined' ? agendaExcecoesCache : []).filter(e => e.data === dataISO);
+  const regrasDoDia = excDoDia.length ? excDoDia.filter(e => !e.fechado && e.hora_inicio) : (regrasDisponibilidade || []).filter(r => r.dia_semana === diaSemana);
   const ocupados = (agendamentosDoDia || []).map(a => [a.hora_inicio.slice(0, 5), a.hora_fim.slice(0, 5)]);
   const horarios = [];
 

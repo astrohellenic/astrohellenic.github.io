@@ -77,7 +77,9 @@
      - nada que comece em menos de ANTECEDENCIA_MIN a partir de agora. */
   function horariosLivres(dataISO) {
     const diaSemana = new Date(dataISO + 'T12:00:00Z').getUTCDay();
-    const regras = agenda.disponibilidade.filter(r => r.dia_semana === diaSemana);
+    /* dia específico (Configurações → Agenda → Dias específicos): se a data tem linhas, valem só elas (fechado = nenhum horário) */
+    const exc = (agenda.excecoes || []).filter(e => e.data === dataISO);
+    const regras = exc.length ? exc.filter(e => !e.fechado && e.hora_inicio) : agenda.disponibilidade.filter(r => r.dia_semana === diaSemana);
     const ocupados = agenda.ocupados.filter(o => o.data === dataISO).map(o => [hhmmParaMin(o.hora_inicio), hhmmParaMin(o.hora_fim)]);
     const dur = agenda.duracao, inter = agenda.intervalo || 0;
     const passo = PASSO_MIN || (dur + inter);

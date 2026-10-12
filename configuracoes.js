@@ -423,6 +423,26 @@ async function carregarConfiguracoesAgenda() {
         <div id="cfgServicosFechaDiaLista" class="cfg-lista"><div class="cfg-carregando">Carregando serviços...</div></div>
       </div>
 
+      <div class="cfg-card cfg-card-largo" id="cfgExcecoesAgenda">
+        <h4 class="cfg-card-titulo">Dias específicos</h4>
+        <p class="cfg-card-desc">Feche um dia (feriado, folga) ou use um horário diferente só nesse dia. Vale pra página de agendar e pra ferramenta Agenda. Horários que já estão marcados não são cancelados. Pra dois horários no mesmo dia, adicione o dia duas vezes.</p>
+        <div class="cfg-campos cfg-campos-topo">
+          <div>
+            <label class="cfg-rotulo" for="excData">Data</label>
+            <input type="date" id="excData" class="modal-input">
+          </div>
+        </div>
+        <label class="cfg-checkbox"><input type="radio" name="excTipo" id="excFechado" value="fechado" checked onchange="document.getElementById('excHorarios').style.display='none'"> Não atendo neste dia</label>
+        <label class="cfg-checkbox"><input type="radio" name="excTipo" id="excOutro" value="outro" onchange="document.getElementById('excHorarios').style.display='flex'"> Atendo em outro horário</label>
+        <div id="excHorarios" class="cfg-janela" style="display: none; margin: 6px 0 10px 0;">
+          <input type="time" id="excInicio" class="modal-input" value="09:00">
+          <span>até</span>
+          <input type="time" id="excFim" class="modal-input" value="12:00">
+        </div>
+        <div class="cfg-acoes"><button type="button" class="cfg-btn cfg-btn-primario" onclick="adicionarExcecaoAgenda()">Adicionar</button></div>
+        <div id="cfgExcecoesLista" class="cfg-lista"><div class="cfg-carregando">Carregando...</div></div>
+      </div>
+
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Sua disponibilidade</h4>
         <p class="cfg-card-desc">Marque os dias que você atende e o horário de cada um. Usado para calcular os horários livres na ferramenta Agenda.</p>
@@ -465,6 +485,7 @@ async function carregarConfiguracoesAgenda() {
       </div>`;
     carregarGoogleAgendaConfig();
     carregarServicosFechaDia();
+    carregarExcecoesAgenda();
   } catch (e) {
     console.error('Erro ao carregar configurações de agenda:', e);
     container.innerHTML = `<div class="cfg-card cfg-card-largo">Erro de conexão ao carregar.</div>`;
@@ -502,6 +523,70 @@ async function chamarApiGoogleConexao(corpo) {
   let j = null; try { j = await r.json(); } catch (e) { /* sem JSON */ }
   if (!j) throw new Error('resposta inválida');
   return j;
+}
+
+/* DIAS ESPECÍFICOS (feriado, folga ou horário diferente numa data): tabela agenda_excecoes.
+   Uma data com linhas aqui NÃO usa a regra do dia da semana: vale só o que está nessas linhas (fechado, ou as janelas). */
+function excecaoDataBR(iso) {
+  const [a, m, d] = iso.split('-');
+  const dia = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][new Date(iso + 'T12:00:00Z').getUTCDay()];
+  return `${dia} ${d}/${m}/${a}`;
+}
+
+async function carregarExcecoesAgenda() {
+  const caixa = document.getElementById('cfgExcecoesLista');
+  if (!caixa) return;
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { caixa.innerHTML = '<div class="menu-vazio">Sessão não identificada.</div>'; return; }
+    const hoje = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10); /* "hoje" no Brasil, sem horário de verão */
+    const { data, error } = await supabaseClient.from('agenda_excecoes').select('id, data, fechado, hora_inicio, hora_fim').eq('user_id', user.id).gte('data', hoje).order('data', { ascending: true }).order('hora_inicio', { ascending: true });
+    if (error) { caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar (a tabela "agenda_excecoes" ainda não existe no Supabase).</div>'; return; }
+    if (!data || !data.length) { caixa.innerHTML = '<div class="menu-vazio">Nenhum dia específico.</div>'; return; }
+    caixa.innerHTML = data.map(e => `
+      <div class="cfg-servico">
+        <div class="cfg-servico-corpo">
+          <div class="cfg-servico-nome">${excecaoDataBR(e.data)}</div>
+          <div class="cfg-servico-det">${e.fechado ? 'Não atendo' : (e.hora_inicio.slice(0, 5) + ' às ' + e.hora_fim.slice(0, 5))}</div>
+        </div>
+        <div class="card-actions">
+          <button type="button" class="action-record-btn delete-btn" onclick="removerExcecaoAgenda('${e.id}')" title="Tirar este dia específico">${menuIcone('lixeira', 18)}</button>
+        </div>
+      </div>`).join('');
+  } catch (err) {
+    caixa.innerHTML = '<div class="menu-vazio">Não foi possível carregar.</div>';
+  }
+}
+
+async function adicionarExcecaoAgenda() {
+  const data = document.getElementById('excData').value;
+  if (!data) { alert('Escolha a data.'); return; }
+  const fechado = document.getElementById('excFechado').checked;
+  let ini = null, fim = null;
+  if (!fechado) {
+    ini = document.getElementById('excInicio').value; fim = document.getElementById('excFim').value;
+    if (!ini || !fim || ini >= fim) { alert('Informe o horário: o início tem que ser antes do fim.'); return; }
+  }
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { alert('Sessão não identificada.'); return; }
+  /* "não atendo" substitui tudo da data; um horário novo só tira o "não atendo" (se houver) e soma às outras janelas */
+  const apagar = supabaseClient.from('agenda_excecoes').delete().eq('user_id', user.id).eq('data', data);
+  const { error: erroApagar } = await (fechado ? apagar : apagar.eq('fechado', true));
+  if (erroApagar) { alert('Não foi possível salvar: ' + erroApagar.message); return; }
+  if (!fechado) {
+    const { data: existentes } = await supabaseClient.from('agenda_excecoes').select('hora_inicio, hora_fim').eq('user_id', user.id).eq('data', data);
+    const bate = (existentes || []).some(x => ini < x.hora_fim.slice(0, 5) && x.hora_inicio.slice(0, 5) < fim);
+    if (bate) { alert('Esse horário se mistura com outro já cadastrado nesse dia.'); return; }
+  }
+  const { error } = await supabaseClient.from('agenda_excecoes').insert({ user_id: user.id, data, fechado, hora_inicio: ini, hora_fim: fim });
+  if (error) { alert('Não foi possível salvar: ' + error.message); return; }
+  await carregarExcecoesAgenda();
+}
+
+async function removerExcecaoAgenda(id) {
+  const { error } = await supabaseClient.from('agenda_excecoes').delete().eq('id', id);
+  if (error) { alert('Não foi possível tirar: ' + error.message); return; }
+  await carregarExcecoesAgenda();
 }
 
 /* SERVIÇOS QUE FECHAM O DIA (Configurações → Agenda): marca/desmarca relatorio_presets.agenda_fecha_dia na hora, sem botão de salvar */
