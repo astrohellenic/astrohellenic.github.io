@@ -699,6 +699,7 @@ q80, via Chromium headless).
 **Nunca uma área mais clara ou mais escura sobre o papiro (11/10/2026, regra do astrólogo):** caixas, cartões, campos e opções em papiro (e no site
 Falando de Astrologia) NÃO levam fundo próprio — só `background: transparent` e um contorno de 1px em azul egípcio (`--azul-egipcio-claro`, `#1F5FA3`).
 Seleção = contorno mais grosso. O papiro já tem claro e escuro por natureza; uma caixa mais clara em cima "não parece mais papiro".
+**Isso vale pra TODO controle nativo do navegador no papiro** (caixinha, bolinha/radio, campo, lista): nunca deixar o visual padrão (fundo branco). Controle novo = `appearance: none`, `background: transparent`, contorno azul egípcio (ver `componentes.css`: caixinha e `input[type="radio"]`) — **antes de entregar qualquer tela nova, olhar todo `<input>`/`<select>` dela**.
 
 ## Cliente que volta é reconhecido pelo e-mail (11/10/2026)
 
