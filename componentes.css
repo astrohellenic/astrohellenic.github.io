@@ -348,6 +348,15 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
     content: ''; position: absolute; left: 4px; top: 0; width: 4px; height: 9px;
     border: solid var(--terracota); border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
+/* BOLINHA DE ESCOLHER (radio) — a mesma regra da caixinha: sem preenchimento nenhum (nada de "buraquinho branco" do navegador), só o contorno em azul egípcio escuro e, escolhida, um ponto em terracota. */
+input[type="radio"] {
+    -webkit-appearance: none; appearance: none; background: transparent; width: 16px; height: 16px; margin: 0; cursor: pointer; flex: 0 0 auto;
+    border: 1.5px solid var(--azul-egipcio-escuro); border-radius: 50%; position: relative;
+}
+input[type="radio"]:checked::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--terracota); transform: translate(-50%, -50%);
+}
 /* Cabeça dos menus flutuantes: o rótulo ("Mapa Selecionado", "Retorno Solar"...) é só texto, em preto de tinta, sem destaque; o NOME do cliente é nome, não item de lista: terracota. */
 .item-menu .rotulo { color: var(--preto-tinta); }
 .item-menu.cabeca-menu .nome-nivel { color: var(--terracota); }
