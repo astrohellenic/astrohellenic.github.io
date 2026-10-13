@@ -42,6 +42,7 @@
   let idxServico = 0;
   let servicoNome = listaServicos[0].slice(0, 120); /* o serviço que está sendo agendado agora */
   let avisoEtapa = '';
+  const agendados = []; /* horários já marcados dos serviços do carrinho: { servico, data (aaaa-mm-dd), hora (hh:mm) } — a tela final mostra todos */
   const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
   let DIAS_A_FRENTE = 45;           // vêm de Configurações → Agenda (ver 'regras' abaixo); estes são só os padrões
   // Serviço (Vercel) que fala com a Google Agenda do astrólogo — ver api/agenda-google.js
@@ -169,6 +170,7 @@
     }
     /* avisa o webhook do astrólogo (se houver) já com o horário confirmado; espera no máximo 4s e nunca atrapalha o cliente */
     try { await Promise.race([chamarGoogleAgenda({ acao: 'avisar', u: ownerId, c: clienteId, servico: servicoNome }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o agendamento já está salvo */ }
+    agendados.push({ servico: servicoNome, data: diaEscolhido, hora: horaEscolhida });
     /* tem outro serviço do carrinho sem horário: segue pro próximo (o redirecionamento só abre depois do último) */
     if (idxServico < listaServicos.length - 1) {
       avisoEtapa = 'Horário de ' + servicoNome + ' confirmado: ' + dataBR(diaEscolhido) + ' às ' + horaEscolhida + '. Agora escolha o do próximo atendimento.';
@@ -180,8 +182,13 @@
     /* link de redirecionamento do astrólogo (Configurações → Captação): abre depois do horário confirmado. Ignora se for o da própria agenda (evita laço). */
     const destino = redirectAposAgenda && !/agendar\.html/i.test(redirectAposAgenda)
       ? preencherVariaveisRedirect(redirectAposAgenda) : null;
-    if (destino) { window.location.replace(destino); return; }
-    el('conteudo').innerHTML = `<div class="msg-ok"><strong>Horário confirmado!</strong><br>${dataBR(diaEscolhido)} às ${horaEscolhida} (${rotuloFuso()}).<br><br>Você pode fechar esta página.</div>`;
+    if (destino) {
+      /* vários serviços: manda todos os horários pra tela final (&horarios=serviço~dd/mm/aaaa~hh:mm|...) além das variáveis de sempre */
+      const extra = agendados.length > 1 ? (destino.includes('?') ? '&' : '?') + 'horarios=' + encodeURIComponent(agendados.map(a => [a.servico, dataBR(a.data), a.hora].join('~')).join('|')) : '';
+      window.location.replace(destino + extra); return;
+    }
+    const lista = agendados.length > 1 ? agendados.map(a => `${esc(a.servico)}: ${dataBR(a.data)} às ${a.hora}`).join('<br>') : `${dataBR(diaEscolhido)} às ${horaEscolhida}`;
+    el('conteudo').innerHTML = `<div class="msg-ok"><strong>${agendados.length > 1 ? 'Horários confirmados!' : 'Horário confirmado!'}</strong><br>${lista} (${rotuloFuso()}).<br><br>Você pode fechar esta página.</div>`;
   }
 
   async function carregar() {
@@ -192,7 +199,7 @@
       if (error) { ({ data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId })); } /* banco ainda sem o parâmetro do serviço */
       if (error || !data) { el('conteudo').innerHTML = '<div class="vazio">Link inválido ou expirado. Volte ao formulário e envie seus dados novamente.</div>'; return; }
       /* este serviço já tem horário (cliente voltou ao link): vai pro próximo da lista */
-      if (data.ja_agendado && idxServico < listaServicos.length - 1) { idxServico++; servicoNome = listaServicos[idxServico].slice(0, 120); continue; }
+      if (data.ja_agendado && idxServico < listaServicos.length - 1) { agendados.push({ servico: servicoNome, data: data.ja_agendado.data, hora: String(data.ja_agendado.hora_inicio).slice(0, 5) }); idxServico++; servicoNome = listaServicos[idxServico].slice(0, 120); continue; }
       break;
     }
     agenda = data;
