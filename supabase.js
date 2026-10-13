@@ -209,6 +209,17 @@ function temaLiberadoNoPlano(tema) {
   if (tema !== 'ceu' && tema !== 'sulfite') return true;
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
+/* Ícones esféricos dos planetas: também do Essencial pra cima (os simples são pra todos). A escolha guardada na conta NÃO é apagada —
+   só deixa de valer enquanto o plano não libera, e volta sozinha se o plano subir. */
+function estiloPlanetasLiberadoNoPlano(estilo) {
+  if (estilo !== 'esferico') return true;
+  return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
+}
+function aplicarLimiteEstiloPlanetas() {
+  if (estiloPlanetasLiberadoNoPlano(window.estiloPlanetas)) return;
+  window.estiloPlanetas = 'simples';
+  reRenderizarModuloAtivo();
+}
 async function carregarNivelPlano(userId) {
   try {
     const { data, error } = await supabaseClient.from('perfis').select('nivel').eq('user_id', userId).maybeSingle();
@@ -216,6 +227,7 @@ async function carregarNivelPlano(userId) {
     window.nivelPlano = (data && data.nivel) || 'basico';
   } catch (e) { return; }
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
+  aplicarLimiteEstiloPlanetas();
   if (!temaLiberadoNoPlano(window.temaMandala)) salvarAparencia('claro');
   else if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
@@ -258,11 +270,13 @@ async function carregarEstiloPlanetas(userId) {
     console.error("Erro ao carregar estilo dos planetas:", e);
   }
   window.estiloPlanetas = estilo;
+  aplicarLimiteEstiloPlanetas();
   reRenderizarModuloAtivo();
 }
 
 /* SALVA O ESTILO DOS ÍCONES DOS PLANETAS ESCOLHIDO E ATUALIZA A TELA NA HORA */
 async function salvarEstiloPlanetas(estilo) {
+  if (!estiloPlanetasLiberadoNoPlano(estilo)) { alert('Os ícones esféricos são do plano Essencial ou Pro. No plano Básico você usa os ícones simples.'); return; }
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Sessão não identificada."); return; }

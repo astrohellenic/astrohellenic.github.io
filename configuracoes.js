@@ -158,7 +158,7 @@ function htmlCfgAparencia() {
         <p class="cfg-card-desc">Como os 7 planetas clássicos aparecem em toda a ferramenta (mandala, horas planetárias, tabela técnica, decênios, profecção e direções). <strong>Vale só para os temas Claro, Escuro e Automático.</strong> No tema Céu essa escolha não se aplica: o Céu tem os seus próprios ícones, que só existem nele. Sua escolha fica guardada e volta quando você sair do Céu.</p>
         <div class="cfg-opcoes">
           ${opcao("salvarEstiloPlanetas('simples')", estiloAtual === 'simples', fa('planetaSimples'), 'Planetas ícones simples', 'Glifos planetários, iguais aos usados nos termos egípcios')}
-          ${opcao("salvarEstiloPlanetas('esferico')", estiloAtual === 'esferico', fa('planetaEsferico'), 'Planetas ícones esféricos', 'Ilustrações 3D com gradiente para cada planeta')}
+          ${opcao("salvarEstiloPlanetas('esferico')", estiloAtual === 'esferico', fa('planetaEsferico'), 'Planetas ícones esféricos', 'Ilustrações 3D com gradiente para cada planeta' + (estiloPlanetasLiberadoNoPlano('esferico') ? '' : ' — plano Essencial ou Pro'))}
         </div>
       </div>
 
