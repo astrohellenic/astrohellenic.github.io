@@ -973,7 +973,12 @@
             const bruto = await montarImagemProfeccao(opc);
             if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
             const canvas = recortarCanvasAoConteudo(bruto, fundo);
-            const total = adicionarCapturaRelatorio('profeccao', canvas.toDataURL('image/png'));
+            const legenda = modo === 'tabela' ? null : [
+                { cor: corNivelMandala(1), texto: 'Verde: signo profectado do ano' },
+                { cor: corNivelMandala(2), texto: 'Amarelo: ascendente da Revolução Solar' },
+                { cor: corNivelMandala(3), texto: 'Azul: mês selecionado' }
+            ];
+            const total = adicionarCapturaRelatorio('profeccao', canvas.toDataURL('image/png'), legenda);
             const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandalas' ? 'Mandalas' : 'Ferramenta inteira';
             alert(`"Profecção Anual" (${oQue}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
         } catch (err) {

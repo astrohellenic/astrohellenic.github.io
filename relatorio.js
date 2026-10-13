@@ -211,10 +211,13 @@ window.capturasDaFerramenta = capturasDaFerramenta;
 /* Acrescenta uma nova captura à lista da ferramenta (nunca substitui as
    que já estavam lá) — usada tanto pelo fluxo genérico abaixo quanto
    pelos botões próprios da Mandala e da Calculadora de Lotes. */
-function adicionarCapturaRelatorio(toolId, dataUrl) {
+function adicionarCapturaRelatorio(toolId, dataUrl, legenda) {
   window.relatorioCapturas = window.relatorioCapturas || {};
   const atuais = capturasDaFerramenta(toolId);
-  atuais.push({ dataUrl, capturadoEm: Date.now() });
+  // legenda (opcional): [{ cor: '#rrggbb', texto }] — as cores EXATAS da mandala, escritas como texto embaixo da imagem na página do relatório.
+  const nova = { dataUrl, capturadoEm: Date.now() };
+  if (Array.isArray(legenda) && legenda.length) nova.legenda = legenda;
+  atuais.push(nova);
   window.relatorioCapturas[toolId] = atuais;
   // GRAVA de verdade a captura recém-tirada (sobe pro Storage e atualiza
   // a coluna `capturas` do rascunho) — sem isso ela ficava só como
@@ -653,7 +656,7 @@ async function persistirCapturasRelatorio(client, userId, mapaId) {
         const { error } = await client.storage.from('relatorio-capturas').upload(caminho, blob, { upsert: true, contentType: 'image/png' });
         if (error) { listaPersistida.push(captura); continue; }
         const { data: pub } = client.storage.from('relatorio-capturas').getPublicUrl(caminho);
-        listaPersistida.push({ dataUrl: pub.publicUrl, capturadoEm: captura.capturadoEm });
+        listaPersistida.push(captura.legenda ? { dataUrl: pub.publicUrl, capturadoEm: captura.capturadoEm, legenda: captura.legenda } : { dataUrl: pub.publicUrl, capturadoEm: captura.capturadoEm });
       } catch (e) {
         listaPersistida.push(captura);
       }
@@ -3798,13 +3801,17 @@ function renderBlocoRelatorio(bloco, opts) {
           </section>
         `;
       }
+      const legendaHtml = Array.isArray(captura.legenda) && captura.legenda.length
+        ? `<div class="rel-legenda-captura">${captura.legenda.filter(l => /^#[0-9a-fA-F]{6}$/.test(l.cor)).map(l => `<div style="color:${l.cor}">${escapeHtml(l.texto)}</div>`).join('')}</div>`
+        : '';
       const tituloNaPaginaHtml = info.ocultarTituloNaPagina ? '' : `<div class="rel-titulo-captura">${escapeHtml(titulo)}</div>`;
       return `
-        <section class="rel-page rel-page-captura" data-pg="${escapeHtml(bloco.id)}">
+        <section class="rel-page rel-page-captura${legendaHtml ? ' rel-captura-com-legenda' : ''}" data-pg="${escapeHtml(bloco.id)}">
           ${tituloNaPaginaHtml}
           <div class="rel-captura-corpo">
             <img class="rel-img-captura" src="${captura.dataUrl}" alt="${escapeHtml(titulo)}">
           </div>
+          ${legendaHtml}
         </section>
       `;
     }
@@ -4277,6 +4284,7 @@ function injetarEstilosRelatorio() {
          mesmo — sem a caixa com fundo creme e contorno do ".rel-h1" dos
          blocos de texto — pra identificar a imagem sem competir com ela. */
       .rel-page-captura { display: flex; flex-direction: column; padding: 14mm 10mm; }
+      .rel-legenda-captura { flex-shrink: 0; padding-top: 8px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.6; }
       .rel-titulo-captura {
         font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
@@ -4354,6 +4362,9 @@ function injetarEstilosRelatorio() {
          + object-fit: contain, qualquer proporção é encolhida pra caber, igual
          em qualquer navegador (o Chromium já se comportava assim). */
       .rel-img-captura { flex: none; width: 100%; height: 230mm; object-fit: contain; display: block; }
+      /* Página com legenda embaixo: a imagem encolhe um pouco (200mm em vez de 230mm) pra legenda caber inteira na folha. */
+      .rel-captura-com-legenda .rel-captura-corpo { max-height: 200mm; }
+      .rel-captura-com-legenda .rel-img-captura { height: 200mm; }
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */

@@ -931,7 +931,8 @@ async function capturarLiberacaoParaRelatorio(modo) {
     const canvas = recortarCanvasAoConteudo(bruto, fundo);
     const rotuloLote = (typeof RELATORIO_LOT_NOMES !== 'undefined' && RELATORIO_LOT_NOMES[selectedZRPhase]) || selectedZRPhase;
     const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandala' ? 'Mandala' : 'Mandala + Tabela';
-    const total = adicionarCapturaRelatorio('liberacao_' + selectedZRPhase, canvas.toDataURL('image/png'));
+    const legenda = modo === 'tabela' ? null : [1, 2, 3, 4].map(n => ({ cor: corNivelMandala(n), texto: `${['', 'Verde', 'Amarelo', 'Azul', 'Cinza'][n]}: nível ${n}` }));
+    const total = adicionarCapturaRelatorio('liberacao_' + selectedZRPhase, canvas.toDataURL('image/png'), legenda);
     alert(`Liberação Zodiacal — ${rotuloLote} (${oQue}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar a Liberação Zodiacal ao relatório:', err);
