@@ -2305,6 +2305,18 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
 
           <hr class="divisa">
 
+          <div class="re-bloco">
+            <div class="re-bloco-topo">
+              <div class="titulo-secao" style="margin: 0;">Bloco Personalizado Novo</div>
+              <button type="button" class="botao-texto" onclick="adicionarBlocoCustomizadoEditor()">+ Adicionar</button>
+            </div>
+            <div class="re-ajuda">
+              Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
+            </div>
+          </div>
+
+          <hr class="divisa">
+
           <div id="relAdicionarSecao" class="re-bloco" style="${linhasParaAdicionar ? '' : 'display: none;'}">
             <div class="titulo-secao">${escapeHtml(config.labelAdicionar)}</div>
             <div class="re-ajuda">
@@ -2320,18 +2332,6 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
               Blocos de texto que você guardou (pelo marcador em cada bloco de texto). Clique pra colocar uma cópia no relatório; eles continuam aqui pra usar em outros.
             </div>
             <div id="relBibliotecaLista"><div class="menu-vazio" style="text-align: left; padding: 8px 0;">Carregando...</div></div>
-          </div>
-
-          <hr class="divisa">
-
-          <div class="re-bloco">
-            <div class="re-bloco-topo">
-              <div class="titulo-secao" style="margin: 0;">Bloco Personalizado Novo</div>
-              <button type="button" class="botao-texto" onclick="adicionarBlocoCustomizadoEditor()">+ Adicionar</button>
-            </div>
-            <div class="re-ajuda">
-              Cria um texto novo já no fim da lista de cima — dá pra mover ele com as setas assim que criar.
-            </div>
           </div>
 
           <hr class="divisa">
