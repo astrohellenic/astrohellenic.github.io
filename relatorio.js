@@ -1576,7 +1576,7 @@ function abrirSeletorImagemCapturaQuill(quill) {
     const info = RELATORIO_FERRAMENTAS_DISPONIVEIS[toolId];
     const rotulo = (info && (info.tituloIndice || info.label)) || toolId;
     const itensHtml = capturasDaFerramenta(toolId).map((captura, idx) => `
-      <div class="rel-seletor-imagem-item" data-url="${escapeHtml(captura.dataUrl)}" title="${escapeHtml(rotulo)} — imagem ${idx + 1}">
+      <div class="rel-seletor-imagem-item" data-url="${escapeHtml(captura.dataUrl)}" data-tool="${escapeHtml(toolId)}" data-idx="${idx}" title="${escapeHtml(rotulo)} — imagem ${idx + 1}">
         <img src="${captura.dataUrl}" alt="">
       </div>
     `).join('');
@@ -1609,7 +1609,17 @@ function abrirSeletorImagemCapturaQuill(quill) {
     item.addEventListener('click', () => {
       const range = quill.getSelection(true) || { index: quill.getLength() };
       quill.insertEmbed(range.index, 'image', item.dataset.url, 'user');
-      quill.setSelection(range.index + 1, 0, 'user');
+      // Capturas com legenda (Liberação, Profecção): a legenda entra como texto logo abaixo da imagem, cada linha na cor exata da mandala.
+      const cap = capturasDaFerramenta(item.dataset.tool)[parseInt(item.dataset.idx, 10)];
+      let pos = range.index + 1;
+      if (cap && Array.isArray(cap.legenda) && cap.legenda.length) {
+        quill.insertText(pos, '\n', 'user'); pos += 1;
+        cap.legenda.filter(l => /^#[0-9a-fA-F]{6}$/.test(l.cor)).forEach(l => {
+          quill.insertText(pos, l.texto, { color: l.cor }, 'user'); pos += l.texto.length;
+          quill.insertText(pos, '\n', { color: false }, 'user'); pos += 1;
+        });
+      }
+      quill.setSelection(pos, 0, 'user');
       fechar();
       agendarAutoSalvarRelatorio();
     });
