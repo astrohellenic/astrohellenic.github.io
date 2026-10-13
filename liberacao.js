@@ -867,13 +867,14 @@ async function montarImagemLiberacao(opc) {
   if (opc.mandala && roda) {
     const cs = getComputedStyle(cardEl);
     const borda = parseFloat(cs.borderTopWidth) || 0, raio = parseFloat(cs.borderTopLeftRadius) || 0;
-    const roda_s = Math.min(480, W - 24);
-    const alturaCartao = roda_s + 24;
+    const grande = !!opc.grande;
+    const roda_s = grande ? Math.min(900, W - 24) : Math.min(480, W - 24);
+    const alturaCartao = grande ? roda_s : roda_s + 24;
     const svgRoda = new XMLSerializer().serializeToString(roda)
       .replace(/ style="[^"]*"/, '')
-      .replace('<svg ', `<svg x="${(W - roda_s) / 2}" y="${y + 12}" width="${roda_s}" height="${roda_s}" `);
+      .replace('<svg ', `<svg x="${(W - roda_s) / 2}" y="${y + (grande ? 0 : 12)}" width="${roda_s}" height="${roda_s}" `);
     const bordaEsq = parseFloat(cs.borderLeftWidth) || 0;
-    const moldura = bordaEsq > 0
+    const moldura = grande ? '' : bordaEsq > 0
       ? `<rect x="${borda / 2}" y="${y + borda / 2}" width="${W - borda}" height="${alturaCartao - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`
       : (borda > 0 ? `<line x1="0" y1="${y + borda / 2}" x2="${W}" y2="${y + borda / 2}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/><line x1="0" y1="${y + alturaCartao - borda / 2}" x2="${W}" y2="${y + alturaCartao - borda / 2}" stroke="${cs.borderBottomColor}" stroke-width="${borda}"/>` : '');
     partes += `${moldura}${svgRoda}`;
@@ -920,7 +921,7 @@ async function capturarLiberacaoParaRelatorio(modo) {
   const menu = document.getElementById('liberacaoMenuRelatorio');
   if (menu) menu.style.display = 'none';
   const opc = modo === 'tabela' ? { tabela: true }
-    : modo === 'mandala' ? { cabecalho: true, mandala: true }
+    : modo === 'mandala' ? { cabecalho: true, mandala: true, grande: true }
     : { cabecalho: true, mandala: true, tabela: true };
   window.__capturaSemFundo = true;
   const fundo = fundoCapturaLiberacao();
