@@ -2317,15 +2317,6 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
 
           <hr class="divisa">
 
-          <div id="relAdicionarSecao" class="re-bloco" style="${linhasParaAdicionar ? '' : 'display: none;'}">
-            <div class="titulo-secao">${escapeHtml(config.labelAdicionar)}</div>
-            <div class="re-ajuda">
-              Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
-            </div>
-            <div id="relAdicionarLista">${linhasParaAdicionar}</div>
-            <hr class="divisa">
-          </div>
-
           <div id="relBibliotecaSecao" class="re-bloco">
             <div class="titulo-secao">Meus blocos</div>
             <div class="re-ajuda">
@@ -2335,6 +2326,15 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           </div>
 
           <hr class="divisa">
+
+          <div id="relAdicionarSecao" class="re-bloco" style="${linhasParaAdicionar ? '' : 'display: none;'}">
+            <div class="titulo-secao">${escapeHtml(config.labelAdicionar)}</div>
+            <div class="re-ajuda">
+              Clique pra incluir — entra na hora no fim da lista de cima, já pronto pra editar, aí é só usar as setas pra colocar no lugar certo.
+            </div>
+            <div id="relAdicionarLista">${linhasParaAdicionar}</div>
+            <hr class="divisa">
+          </div>
 
           ${relatorioEncerramentoHtml(encerramentoAtual)}
 
