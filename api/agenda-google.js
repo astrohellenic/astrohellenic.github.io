@@ -87,11 +87,11 @@ async function acaoOcupados(corpo) {
   return ok({ ok: true, conectado: true, ocupados, regras, fuso });
 }
 
-async function agendaPublica(u, c) {
+async function agendaPublica(u, c, servico) { // servico: confere o horário SÓ desse serviço (carrinho com vários serviços)
   const resp = await fetch(G.SUPABASE_URL + '/rest/v1/rpc/agenda_publica', {
     method: 'POST',
     headers: { apikey: G.SUPABASE_ANON, Authorization: 'Bearer ' + G.SUPABASE_ANON, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p_user: u, p_mapa: c })
+    body: JSON.stringify(servico ? { p_user: u, p_mapa: c, p_servico: servico } : { p_user: u, p_mapa: c })
   });
   if (!resp.ok) return null;
   return resp.json();
@@ -100,7 +100,8 @@ async function agendaPublica(u, c) {
 async function acaoCriar(corpo) {
   const { u, c, data, hora } = corpo;
   if (!u || !c || !G.ehData(data) || !G.ehHora(hora)) return erro(400, 'Dados inválidos.');
-  const agenda = await agendaPublica(u, c);
+  const servicoCriar = String(corpo.servico || '').trim().slice(0, 120);
+  const agenda = await agendaPublica(u, c, servicoCriar);
   if (!agenda) return erro(403, 'Link inválido ou expirado.');
   if (agenda.ja_agendado) return erro(409, 'Você já tem um horário marcado.');
   const conexao = await G.lerConexao(u);
@@ -148,7 +149,7 @@ async function acaoCriar(corpo) {
 async function acaoAvisar(corpo) {
   const { u, c } = corpo;
   if (!u || !c) return erro(400, 'Dados inválidos.');
-  const agenda = await agendaPublica(u, c);
+  const agenda = await agendaPublica(u, c, corpo.semAgenda === true ? '' : String(corpo.servico || '').trim().slice(0, 120));
   const semAgenda = corpo.semAgenda === true; // cliente que só preencheu o formulário (o astrólogo não usa a agenda): avisa sem horário
   if (!agenda || (semAgenda ? agenda.ja_agendado : !agenda.ja_agendado)) return erro(409, semAgenda ? 'Esse cliente já tem horário; o aviso sai pela agenda.' : 'Nenhum horário confirmado para esse cliente.');
   const cfg = await G.supa('/rest/v1/configuracoes?user_id=eq.' + encodeURIComponent(u) + '&select=webhook_url');
@@ -163,7 +164,7 @@ async function acaoAvisar(corpo) {
     evento: semAgenda ? 'formulario_enviado' : 'agendamento_confirmado',
     astrologo_id: u,
     cliente_id: c,
-    servico: String(corpo.servico || '').slice(0, 120),
+    servico: String(corpo.servico || '').slice(0, 400),
     cliente: { nome: cliente.nome || agenda.cliente_nome || '', whatsapp: cliente.whatsapp || '', email: cliente.email || '', data_nascimento: cliente.data_nascimento || '', hora_nascimento: cliente.hora_nascimento || '', cidade: cliente.cidade || '', latitude: cliente.latitude ?? null, longitude: cliente.longitude ?? null },
     agendamento: semAgenda ? null : { data: ag.data, hora: String(ag.hora_inicio || '').slice(0, 5), fuso, duracao_min: Number(agenda.duracao) || null }
   };

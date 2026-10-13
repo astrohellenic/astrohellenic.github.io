@@ -34,7 +34,14 @@
   const params = new URLSearchParams(window.location.search);
   const ownerId = params.get('u');
   const clienteId = params.get('c');
-  const servicoNome = (params.get('s') || '').slice(0, 120);
+  /* &s= traz um serviço ou vários separados por | (carrinho do site): cada um tem o seu horário, um de cada vez. &sa= lista os que NÃO usam agenda (ex.: retificação avulsa). */
+  const servicoTodos = (params.get('s') || '').slice(0, 400);
+  const nomesSemAgenda = (params.get('sa') || '').split('|').map(n => n.trim().toLowerCase()).filter(Boolean);
+  const listaServicos = servicoTodos.split('|').map(n => n.trim()).filter(n => n && !nomesSemAgenda.includes(n.toLowerCase()));
+  if (!listaServicos.length) listaServicos.push(servicoTodos.split('|')[0].trim()); /* sem serviço no link: agenda como sempre */
+  let idxServico = 0;
+  let servicoNome = listaServicos[0].slice(0, 120); /* o serviço que está sendo agendado agora */
+  let avisoEtapa = '';
   const modoTeste = params.get('teste') === '1'; // abre tudo igual, mas NÃO grava nada
   let DIAS_A_FRENTE = 45;           // vêm de Configurações → Agenda (ver 'regras' abaixo); estes são só os padrões
   // Serviço (Vercel) que fala com a Google Agenda do astrólogo — ver api/agenda-google.js
@@ -108,7 +115,10 @@
     if (!dias.length) { el('conteudo').innerHTML = '<div class="vazio">Não há horários disponíveis no momento. Entre em contato para combinarmos.</div>'; return; }
     if (!diaEscolhido || !dias.includes(diaEscolhido)) { diaEscolhido = dias[0]; horaEscolhida = null; }
     const nome = agenda.cliente_nome ? esc(agenda.cliente_nome.split(' ')[0]) : '';
-    let h = (nome ? `<div class="sub">Olá, ${nome}! Escolha o dia e o horário do seu atendimento.<br>${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>` : `<div class="sub">${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>`);
+    let h = '';
+    if (avisoEtapa) h += `<div class="msg-ok" style="margin-bottom:12px">${esc(avisoEtapa)}</div>`;
+    if (listaServicos.length > 1) h += `<div class="sub"><strong>${esc(servicoNome)}</strong> (atendimento ${idxServico + 1} de ${listaServicos.length})</div>`;
+    h += (nome ? `<div class="sub">Olá, ${nome}! Escolha o dia e o horário do seu atendimento.<br>${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>` : `<div class="sub">${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>`);
     h += '<div class="titulo-sec">Dia</div><div class="dias">' + dias.map(iso => {
       const d = new Date(iso + 'T12:00:00Z');
       return `<button type="button" class="dia-btn${iso === diaEscolhido ? ' sel' : ''}" data-dia="${iso}"><small>${SEMANA[d.getUTCDay()]}</small>${iso.slice(8)}/${iso.slice(5, 7)}</button>`;
@@ -128,7 +138,7 @@
       USER: ownerId, CLIENTE: clienteId,
       NOME: agenda && agenda.cliente_nome ? agenda.cliente_nome.split(' ')[0] : '',
       DATA: dataBR(diaEscolhido), DATA_ISO: diaEscolhido, HORA: horaEscolhida, FUSO: FUSO,
-      DURACAO: agenda && agenda.duracao ? agenda.duracao : '', SERVICO: servicoNome
+      DURACAO: agenda && agenda.duracao ? agenda.duracao : '', SERVICO: servicoTodos.split('|').map(n => n.trim()).filter(Boolean).join(' + ')
     };
     return url.replace(/\{(USER|CLIENTE|NOME|DATA_ISO|DATA|HORA|FUSO|DURACAO|SERVICO)\}/g, (_, k) => encodeURIComponent(valores[k] || ''));
   }
@@ -159,6 +169,14 @@
     }
     /* avisa o webhook do astrólogo (se houver) já com o horário confirmado; espera no máximo 4s e nunca atrapalha o cliente */
     try { await Promise.race([chamarGoogleAgenda({ acao: 'avisar', u: ownerId, c: clienteId, servico: servicoNome }), new Promise(r => setTimeout(r, 4000))]); } catch (e) { /* o agendamento já está salvo */ }
+    /* tem outro serviço do carrinho sem horário: segue pro próximo (o redirecionamento só abre depois do último) */
+    if (idxServico < listaServicos.length - 1) {
+      avisoEtapa = 'Horário de ' + servicoNome + ' confirmado: ' + dataBR(diaEscolhido) + ' às ' + horaEscolhida + '. Agora escolha o do próximo atendimento.';
+      idxServico++; servicoNome = listaServicos[idxServico].slice(0, 120);
+      diaEscolhido = null; horaEscolhida = null;
+      await carregar();
+      return;
+    }
     /* link de redirecionamento do astrólogo (Configurações → Captação): abre depois do horário confirmado. Ignora se for o da própria agenda (evita laço). */
     const destino = redirectAposAgenda && !/agendar\.html/i.test(redirectAposAgenda)
       ? preencherVariaveisRedirect(redirectAposAgenda) : null;
@@ -168,9 +186,15 @@
 
   async function carregar() {
     if (!ownerId || !clienteId) { el('conteudo').innerHTML = '<div class="vazio">Link inválido. Volte ao formulário e envie seus dados novamente.</div>'; return; }
-    let { data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId, p_servico: servicoNome || null });
-    if (error) { ({ data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId })); } /* banco ainda sem o parâmetro do serviço */
-    if (error || !data) { el('conteudo').innerHTML = '<div class="vazio">Link inválido ou expirado. Volte ao formulário e envie seus dados novamente.</div>'; return; }
+    let data, error;
+    for (;;) {
+      ({ data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId, p_servico: servicoNome || null }));
+      if (error) { ({ data, error } = await supabaseClient.rpc('agenda_publica', { p_user: ownerId, p_mapa: clienteId })); } /* banco ainda sem o parâmetro do serviço */
+      if (error || !data) { el('conteudo').innerHTML = '<div class="vazio">Link inválido ou expirado. Volte ao formulário e envie seus dados novamente.</div>'; return; }
+      /* este serviço já tem horário (cliente voltou ao link): vai pro próximo da lista */
+      if (data.ja_agendado && idxServico < listaServicos.length - 1) { idxServico++; servicoNome = listaServicos[idxServico].slice(0, 120); continue; }
+      break;
+    }
     agenda = data;
     if (agenda.ja_agendado) {
       try { const hoje = agoraBrasilia().dataISO; const g = await chamarGoogleAgenda({ acao: 'ocupados', u: ownerId, de: hoje, ate: hoje }); if (g.json && g.json.fuso) FUSO = g.json.fuso; } catch (e) { /* mantém o fuso padrão */ }
