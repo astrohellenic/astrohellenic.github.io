@@ -1274,6 +1274,14 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
     optionsPastas += `<option value="${escapeHtml(p)}" ${p === activeFolder ? 'selected' : ''}>${escapeHtml(p)}</option>`;
   });
 
+  // Revolução Solar/Lunar só se salvam como o que são (tipo fixo); os demais mapas nunca viram revolução.
+  const tipoMapaAtual = window.currentMapType;
+  const tipoFixo = (tipoMapaAtual === 'Revolução Solar' || tipoMapaAtual === 'Revolução Lunar') ? tipoMapaAtual : null;
+  const opcoesTipo = tipoFixo
+    ? `<option value="${tipoFixo}" selected>${tipoFixo}</option>`
+    : ['Trânsito', 'Pergunta', 'Evento', 'Eleição', 'Natal']
+        .map(t => `<option value="${t}" ${t === 'Trânsito' ? 'selected' : ''}>${t}</option>`).join('');
+
   let modal = document.getElementById('modalSaveCurrentMap');
   if (!modal) {
     modal = document.createElement('div');
@@ -1299,15 +1307,14 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
 
       <div>
         <label>Tipo de Mapa</label>
-        <select id="saveMapTipoSelect" class="modal-select">
-          <option value="Trânsito" selected>Trânsito</option>
-          <option value="Pergunta">Pergunta</option>
-          <option value="Evento">Evento</option>
-          <option value="Eleição">Eleição</option>
-          <option value="Natal">Natal</option>
-          <option value="Revolução Solar">Revolução Solar</option>
-          <option value="Revolução Lunar">Revolução Lunar</option>
+        <select id="saveMapTipoSelect" class="modal-select" ${tipoFixo ? 'disabled' : ''}>
+          ${opcoesTipo}
         </select>
+      </div>
+
+      <div>
+        <label>Código (Opcional)</label>
+        <input type="text" id="saveMapCodigoInput" class="modal-input" value="${escapeHtml(currentCustomCode || '')}">
       </div>
 
       <div>
@@ -1363,8 +1370,11 @@ async function criarPastaDiretoNoModalSalvamento() {
         const hora = String(currentMoment.getHours()).padStart(2, '0');
         const min = String(currentMoment.getMinutes()).padStart(2, '0');
         const nomeAtual = document.getElementById('saveMapNameInput')?.value || "Céu do Momento";
+        const codigoAtual = document.getElementById('saveMapCodigoInput')?.value;
         
         renderizarModalSalvamentoComOpcaoPasta(nomeAtual, dia, mes, ano, hora, min);
+        const campoCodigo = document.getElementById('saveMapCodigoInput');
+        if (campoCodigo && codigoAtual !== undefined) campoCodigo.value = codigoAtual;
       } else {
         alert("Erro ao criar pasta: " + error.message);
       }
@@ -1379,6 +1389,7 @@ async function criarPastaDiretoNoModalSalvamento() {
 async function executarSalvarMapaAtual() {
   const pastaAlvo = document.getElementById('saveMapFolderSelect').value;
   const tipo = document.getElementById('saveMapTipoSelect').value;
+  const codigoDigitado = document.getElementById('saveMapCodigoInput').value.trim();
   const nome = document.getElementById('saveMapNameInput').value.trim();
   const dataStr = document.getElementById('saveMapDataInput').value.trim();
   const horaStr = document.getElementById('saveMapHoraInput').value.trim();
@@ -1396,7 +1407,7 @@ async function executarSalvarMapaAtual() {
       .insert([{
         pasta: pastaAlvo,
         tipo: tipo,
-        codigo: currentCustomCode || null,
+        codigo: codigoDigitado || null,
         nome: nome,
         data_nascimento: dataStr,
         hora_nascimento: horaStr,
