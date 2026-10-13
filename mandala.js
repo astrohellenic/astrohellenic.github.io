@@ -911,6 +911,20 @@ function ajustarZoomMandala(delta) {
 }
 window.ajustarZoomMandala = ajustarZoomMandala;
 
+// Zoom com a rodinha do mouse, só com o ponteiro em cima da imagem (fora dela a rodinha rola a tela normalmente).
+// Só no computador (mesma regra dos botões); acumula o giro pra o touchpad não disparar dezenas de passos de uma vez.
+let mandalaWheelAcc = 0;
+document.addEventListener('wheel', (e) => {
+  if (window.innerWidth <= 600 || e.ctrlKey) return;
+  const img = document.getElementById('mandalaImg');
+  if (!img || e.target !== img) return;
+  e.preventDefault();
+  mandalaWheelAcc += e.deltaY;
+  if (Math.abs(mandalaWheelAcc) < 40) return;
+  ajustarZoomMandala(mandalaWheelAcc < 0 ? MANDALA_ZOOM_PASSO : -MANDALA_ZOOM_PASSO);
+  mandalaWheelAcc = 0;
+}, { passive: false });
+
 function injetarControleZoomMandala() {
   const overlay = document.getElementById('mandala-controls-overlay');
   if (!overlay) return;
