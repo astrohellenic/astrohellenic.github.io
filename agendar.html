@@ -14,6 +14,25 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="publico-tema.js?v=20261011b"></script>
   <link rel="stylesheet" href="publico.css?v=20261010c">
+  <style>
+    /* layout estilo Google Agenda: calendário + horários lado a lado (no celular, um embaixo do outro) */
+    .form-card { max-width: 860px; }
+    .ag-grade { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(260px, 1fr); gap: 32px; align-items: start; }
+    .ag-cal { min-width: 0; }
+    .cal-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .cal-mes { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--preto-tinta); }
+    .cal-seta { background: transparent; border: 0; cursor: pointer; font-size: 26px; line-height: 1; padding: 0 8px; color: var(--azul-egipcio-escuro); }
+    .cal-seta:disabled { opacity: .25; cursor: default; }
+    .cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; justify-items: center; }
+    .cal-semana { margin-bottom: 4px; font-size: 11px; font-weight: 700; opacity: .7; }
+    .cal-dia, .cal-vazio { width: 100%; max-width: 42px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; }
+    .cal-dia.off { opacity: .3; font-weight: 500; }
+    button.cal-dia { cursor: pointer; background: transparent; color: var(--azul-egipcio-escuro); border: var(--contorno-fino) solid var(--azul-egipcio-claro); padding: 0; }
+    button.cal-dia.sel { color: var(--terracota); border-color: var(--terracota); box-shadow: inset 0 0 0 2px var(--terracota); }
+    .ag-dia-titulo { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .06em; color: var(--terracota); margin-bottom: 12px; }
+    .ag-horas .horas { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+    @media (max-width: 759px) { .ag-grade { grid-template-columns: 1fr; gap: 22px; } .form-card { max-width: 440px; } }
+  </style>
 </head>
 <body>
 <div class="form-card painel">
@@ -55,6 +74,9 @@
   let ANTECEDENCIA_MIN = 120;       // não oferece horário que começa em menos de X minutos
   let PASSO_MIN = null;             // de quanto em quanto tempo começa um horário (vazio = duração + intervalo)
   const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const SEMANA_LONGA = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  let mesVisivel = null; /* mês (aaaa-mm) mostrado no calendário */
 
   let agenda = null, diaEscolhido = null, horaEscolhida = null, redirectAposAgenda = null;
 
@@ -120,15 +142,49 @@
     if (avisoEtapa) h += `<div class="msg-ok" style="margin-bottom:12px">${esc(avisoEtapa)}</div>`;
     if (listaServicos.length > 1) h += `<div class="sub"><strong>${esc(servicoNome)}</strong> (atendimento ${idxServico + 1} de ${listaServicos.length})</div>`;
     h += (nome ? `<div class="sub">Olá, ${nome}! Escolha o dia e o horário do seu atendimento.<br>${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>` : `<div class="sub">${rotuloFuso().replace(/^h/, 'H')} · duração de ${agenda.duracao} min</div>`);
-    h += '<div class="titulo-sec">Dia</div><div class="dias">' + dias.map(iso => {
-      const d = new Date(iso + 'T12:00:00Z');
-      return `<button type="button" class="dia-btn${iso === diaEscolhido ? ' sel' : ''}" data-dia="${iso}"><small>${SEMANA[d.getUTCDay()]}</small>${iso.slice(8)}/${iso.slice(5, 7)}</button>`;
-    }).join('') + '</div>';
-    h += '<div class="titulo-sec">Horário</div><div class="horas">' + horariosLivres(diaEscolhido).map(hr =>
-      `<button type="button" class="hora-btn${hr === horaEscolhida ? ' sel' : ''}" data-hora="${hr}">${hr}</button>`).join('') + '</div>';
-    h += `<button type="button" class="btn-submit" id="btnConfirmar" ${horaEscolhida ? '' : 'disabled style="opacity:.5;cursor:default"'}>Confirmar horário</button>`;
+    /* layout estilo Google Agenda: calendário do mês de um lado, horários do dia escolhido do outro (no celular, um embaixo do outro) */
+    if (!mesVisivel || !dias.some(d => d.slice(0, 7) === mesVisivel)) mesVisivel = diaEscolhido.slice(0, 7);
+    const primeiroMes = dias[0].slice(0, 7), ultimoMes = dias[dias.length - 1].slice(0, 7);
+    const [anoV, mesV] = mesVisivel.split('-').map(Number);
+    const offset = new Date(Date.UTC(anoV, mesV - 1, 1)).getUTCDay();
+    const diasNoMes = new Date(Date.UTC(anoV, mesV, 0)).getUTCDate();
+    const livres = new Set(dias);
+    let cel = '';
+    for (let k = 0; k < offset; k++) cel += '<span class="cal-vazio"></span>';
+    for (let n = 1; n <= diasNoMes; n++) {
+      const iso = `${anoV}-${String(mesV).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
+      cel += livres.has(iso)
+        ? `<button type="button" class="cal-dia${iso === diaEscolhido ? ' sel' : ''}" data-dia="${iso}">${n}</button>`
+        : `<span class="cal-dia off">${n}</span>`;
+    }
+    const dSel = new Date(diaEscolhido + 'T12:00:00Z');
+    h += `<div class="ag-grade">
+      <div class="ag-cal">
+        <div class="cal-topo">
+          <span class="cal-mes">${MESES[mesV - 1]} de ${anoV}</span>
+          <span class="cal-nav">
+            <button type="button" class="cal-seta" data-mes="-1" aria-label="Mês anterior" ${mesVisivel <= primeiroMes ? 'disabled' : ''}>‹</button>
+            <button type="button" class="cal-seta" data-mes="1" aria-label="Próximo mês" ${mesVisivel >= ultimoMes ? 'disabled' : ''}>›</button>
+          </span>
+        </div>
+        <div class="cal-grade cal-semana">${SEMANA.map(x => `<span>${x.charAt(0)}</span>`).join('')}</div>
+        <div class="cal-grade">${cel}</div>
+      </div>
+      <div class="ag-horas" id="agHoras">
+        <div class="ag-dia-titulo">${SEMANA_LONGA[dSel.getUTCDay()].charAt(0).toUpperCase() + SEMANA_LONGA[dSel.getUTCDay()].slice(1)}, ${dSel.getUTCDate()} de ${MESES[dSel.getUTCMonth()].toLowerCase()}</div>
+        <div class="horas">${horariosLivres(diaEscolhido).map(hr => `<button type="button" class="hora-btn${hr === horaEscolhida ? ' sel' : ''}" data-hora="${hr}">${hr}</button>`).join('')}</div>
+        <button type="button" class="btn-submit" id="btnConfirmar" ${horaEscolhida ? '' : 'disabled style="opacity:.5;cursor:default"'}>Confirmar horário</button>
+      </div>
+    </div>`;
     el('conteudo').innerHTML = h;
-    el('conteudo').querySelectorAll('.dia-btn').forEach(b => b.onclick = () => { diaEscolhido = b.dataset.dia; horaEscolhida = null; desenhar(); });
+    el('conteudo').querySelectorAll('.cal-dia[data-dia]').forEach(b => b.onclick = () => {
+      diaEscolhido = b.dataset.dia; horaEscolhida = null; desenhar();
+      if (window.innerWidth < 760) { const a = el('agHoras'); if (a) a.scrollIntoView({ behavior: 'smooth', block: 'start' }); } /* celular: os horários ficam embaixo do calendário, leva até eles */
+    });
+    el('conteudo').querySelectorAll('.cal-seta').forEach(b => b.onclick = () => {
+      const d = new Date(Date.UTC(anoV, mesV - 1 + Number(b.dataset.mes), 1));
+      mesVisivel = d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'); desenhar();
+    });
     el('conteudo').querySelectorAll('.hora-btn').forEach(b => b.onclick = () => { horaEscolhida = b.dataset.hora; desenhar(); });
     const btn = el('btnConfirmar'); if (btn && horaEscolhida) btn.onclick = confirmar;
   }
