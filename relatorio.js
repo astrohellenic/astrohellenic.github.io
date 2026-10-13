@@ -1169,6 +1169,19 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
     const tituloIndicePadrao = (info && (info.tituloIndice || info.label)) || rotulo;
     const rotuloIndiceAtual = rotuloIndice || tituloIndicePadrao;
 
+    // ESCOLHA DA IMAGEM desta posição: todas as capturas da ferramenta aparecem em miniatura, e o toque numa delas decide qual vai pro relatório.
+    let miniaturasCapturasHtml = '';
+    if (info && info.capturada) {
+      const lista = capturasDaFerramenta(idFerramenta);
+      if (lista.length) {
+        miniaturasCapturasHtml = `
+          <div class="re-linha-indice" data-capturas-escolha>
+            <label class="rotulo re-rotulo">Imagem desta página (toque pra escolher)</label>
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">${lista.map((c, i) => `<img src="${c.dataUrl}" class="re-miniatura" data-miniatura-idx="${i}" onclick="escolherCapturaDaLinhaEditor(this, ${i})" style="cursor:pointer; ${i === idx ? 'outline: 3px solid #1F5FA3; outline-offset: 2px;' : ''}">`).join('')}</div>
+          </div>`;
+      }
+    }
+
     return `
       <div class="rel-editor-linha re-linha" data-bloco-id="${id}" data-bloco-tipo="ferramenta" data-ferramenta-id="${idFerramenta}" data-captura-index="${idx}">
         <div class="re-linha-topo">
@@ -1182,6 +1195,7 @@ function relatorioLinhaEditorHtml({ id, tipo, custom, rotulo, titulo, corpo, for
           <label class="rotulo re-rotulo">Nome no Índice</label>
           <input type="text" data-bloco-titulo-indice="${id}" class="modal-input" value="${escapeHtml(rotuloIndiceAtual)}">
         </div>
+        ${miniaturasCapturasHtml}
       </div>
     `;
   }
@@ -1724,6 +1738,19 @@ function moverBlocoEditor(btn, direcao) {
   agendarAutoSalvarRelatorio();
 }
 window.moverBlocoEditor = moverBlocoEditor;
+
+/* Toque numa miniatura da linha de ferramenta: essa passa a ser a imagem usada por ESSA posição (o resto do relatório não muda). */
+function escolherCapturaDaLinhaEditor(imgEl, i) {
+  const linha = imgEl.closest('.rel-editor-linha');
+  if (!linha) return;
+  linha.dataset.capturaIndex = String(i);
+  linha.querySelectorAll('[data-miniatura-idx]').forEach(m => { m.style.outline = (m === imgEl) ? '3px solid #1F5FA3' : ''; m.style.outlineOffset = (m === imgEl) ? '2px' : ''; });
+  const total = capturasDaFerramenta(linha.dataset.ferramentaId).length;
+  const badge = linha.querySelector('.re-etiqueta');
+  if (badge) { badge.classList.remove('falta'); badge.textContent = `usa a imagem ${i + 1}${total > 1 ? ' de ' + total : ''}`; }
+  agendarAutoSalvarRelatorio();
+}
+window.escolherCapturaDaLinhaEditor = escolherCapturaDaLinhaEditor;
 
 /* Apaga de uma vez todas as imagens já acumuladas de uma ferramenta
    "capturada" (ex.: se o astrólogo clicou "Adicionar ao Relatório" por
