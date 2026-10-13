@@ -644,7 +644,7 @@ function renderLiberacaoUI() {
       <div id="liberacaoMandalaCapture" class="cartao" style="width: 100%; margin: 0 0 20px; padding: 12px 10px; box-sizing: border-box;">
         <!-- A mandala fica como SVG (vetorial); as imagens pra galeria/relatório saem dela direto (ver montarImagemLiberacao). -->
         <div id="liberacaoMandalaImgHost">
-          <div style="max-width: 480px; margin: 0 auto;">
+          <div style="max-width: max(480px, min(100%, calc(100vh - 260px))); margin: 0 auto;">
             ${gerarMandalaNatalZR(currentCalculatedData, {
               loteCasa1: selectedZRPhase,
               l1SignIdx: l1HighlightSignIdx,
