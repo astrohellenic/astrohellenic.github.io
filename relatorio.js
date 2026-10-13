@@ -446,7 +446,7 @@ function obterEncerramento(blocos) {
    aqui quando existe, porque é a que combina com o fundo escolhido no
    modelo; png1/png2 (sempre "claro") continuam sendo as mesmas usadas
    nas páginas do corpo, que nunca mudam de estilo. */
-function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa) {
+function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa, capturaIndex) {
   if (capaFonte === 'mandala_fortuna') return png2Capa || png2 || null;
   // Mandala Personalizada, Profecção, Sinastria e cada Lote da
   // Liberação Zodiacal: nenhuma delas é calculada na hora (como
@@ -456,7 +456,9 @@ function imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa) {
   // com cabeçalho/legenda prontos de lá — nada a desenhar de novo aqui.
   if (capaFonte === 'mandala_personalizada' || capaFonte === 'profeccao' || capaFonte === 'sinastria' || (capaFonte || '').indexOf('liberacao_') === 0) {
     const capturas = capturasDaFerramenta(capaFonte);
-    return capturas.length ? capturas[capturas.length - 1].dataUrl : null;
+    // capturaIndex = a captura que o astrólogo escolheu pra capa; sem escolha (ou se ela não existe mais), vale a última.
+    const escolhida = typeof capturaIndex === 'number' ? capturas[capturaIndex] : null;
+    return escolhida ? escolhida.dataUrl : (capturas.length ? capturas[capturas.length - 1].dataUrl : null);
   }
   if (capaFonte === 'nenhuma') return null;
   return png1Capa || png1 || null; // 'mandala_natal', o padrão
@@ -2288,7 +2290,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
 
           <hr class="divisa">
 
-          ${relatorioCapaSeletorHtml(capaFonteAtual)}
+          ${relatorioCapaSeletorHtml(capaFonteAtual, blocoCapaAtual.capturaIndex)}
           ${relatorioCapaEstiloHtml(estiloPdfAtual, capaEstiloAtual)}
           ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual, corCirculoCapaAtual, temCirculoCapaAtual, tamanhoTituloCapaAtual, capaEstiloAtual)}
           
@@ -2418,7 +2420,7 @@ function restaurarScrollPreviaQuandoImagensCarregarem(painel, targetY) {
    imagem (calculada na hora ou capturada) entra na capa. Independente
    de a mandala escolhida também estar marcada como página própria mais
    abaixo — dá pra usar a Fortuna só na capa, por exemplo. */
-function relatorioCapaSeletorHtml(capaFonteAtual) {
+function relatorioCapaSeletorHtml(capaFonteAtual, capturaIndexAtual) {
   const opcoes = [
     { valor: 'mandala_natal', label: 'Mandala Natal (casas do Ascendente)' },
     { valor: 'mandala_fortuna', label: 'Mandala com a Fortuna na Casa 1' },
@@ -2442,7 +2444,8 @@ function relatorioCapaSeletorHtml(capaFonteAtual) {
       <div class="re-ajuda">
         Escolhe qual imagem aparece na capa deste modelo — pra você nunca ficar no escuro sobre o que vai ser gerado.
       </div>
-      <select id="relCapaFonte" class="modal-select" onchange="atualizarPreviewCapaEditor()">${opcoesHtml}</select>
+      <select id="relCapaFonte" class="modal-select" onchange="document.getElementById('relCapaCapturaIdx').value = ''; atualizarPreviewCapaEditor()">${opcoesHtml}</select>
+      <input type="hidden" id="relCapaCapturaIdx" value="${typeof capturaIndexAtual === 'number' ? capturaIndexAtual : ''}">
       <div id="relCapaPreviewWrap" class="re-previa-capa"></div>
     </div>
     <hr class="divisa">
@@ -2713,11 +2716,13 @@ function atualizarPreviewCapaEditor() {
   if (dicaOndeCapturar[valor]) {
     const capturas = capturasDaFerramenta(valor);
     if (capturas.length) {
-      const ultima = capturas[capturas.length - 1];
-      wrap.innerHTML = `
-        <div class="re-ajuda">${capturas.length > 1 ? `Vai a mais recente das ${capturas.length} capturadas:` : 'Prévia da captura:'}</div>
-        <img src="${ultima.dataUrl}" class="re-miniatura">
-      `;
+      const idxInput = document.getElementById('relCapaCapturaIdx');
+      const idxSalvo = idxInput && idxInput.value !== '' ? parseInt(idxInput.value, 10) : NaN;
+      const idxAtual = capturas[idxSalvo] ? idxSalvo : capturas.length - 1;
+      wrap.innerHTML = capturas.length > 1
+        ? `<div class="re-ajuda">Toque na imagem que vai na capa (${capturas.length} capturadas). A escolhida fica fixa, mesmo se você mandar mais imagens pro relatório:</div>
+           <div style="display:flex; flex-wrap:wrap; gap:10px;">${capturas.map((c, i) => `<img src="${c.dataUrl}" class="re-miniatura" onclick="escolherCapturaCapaEditor(${i})" style="cursor:pointer; ${i === idxAtual ? 'outline: 3px solid #1F5FA3; outline-offset: 2px;' : ''}">`).join('')}</div>`
+        : `<div class="re-ajuda">Prévia da captura:</div><img src="${capturas[0].dataUrl}" class="re-miniatura">`;
     } else {
       wrap.innerHTML = `<div class="re-nota">Nenhuma imagem capturada ainda pra essa opção. ${dicaOndeCapturar[valor]} — depois volte aqui.</div>`;
     }
@@ -2733,6 +2738,13 @@ function atualizarPreviewCapaEditor() {
   wrap.innerHTML = `<div class="re-ajuda">Calculada na hora, a partir dos dados do cliente carregado — sai igual à própria página "${nomePagina}" deste relatório (se ela estiver marcada como página aqui embaixo).</div>`;
 }
 window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
+
+function escolherCapturaCapaEditor(i) {
+  const input = document.getElementById('relCapaCapturaIdx');
+  if (input) input.value = String(i);
+  atualizarPreviewCapaEditor();
+}
+window.escolherCapturaCapaEditor = escolherCapturaCapaEditor;
 
 /* Lê o estado ATUAL do formulário do editor (linhas reordenáveis, cada
    Quill, e o catálogo marcado pra adicionar) e devolve a lista de blocos
@@ -2794,6 +2806,8 @@ function lerBlocosComCapaDoEditor() {
   if (!blocos.length) return blocos;
   const capaFonteSelect = document.getElementById('relCapaFonte');
   const blocoCapa = { id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' };
+  const capaIdxInput = document.getElementById('relCapaCapturaIdx');
+  if (capaIdxInput && capaIdxInput.value !== '') blocoCapa.capturaIndex = parseInt(capaIdxInput.value, 10);
   const paletaIdSelect = document.getElementById('relCapaPaletaId');
   blocoCapa.paletaId = paletaIdSelect ? paletaIdSelect.value : RELATORIO_PALETA_CAPA_PADRAO;
   if (blocoCapa.paletaId === 'custom') {
@@ -3055,7 +3069,8 @@ async function atualizarPreviaEditorModelo() {
     pane.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">Marque ou crie pelo menos um item na aba "Editar" pra ver a prévia.</div>`;
     return;
   }
-  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, paletaId: paletaCapa, temBorda: temBordaCapa, estiloPdf: estiloPdfCapa, capaEstilo: capaEstiloCapa, capaPapiro: capaEstiloCapa === 'papiro', temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
+  const capaIdxPreview = document.getElementById('relCapaCapturaIdx');
+  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, capturaIndex: (capaIdxPreview && capaIdxPreview.value !== '') ? parseInt(capaIdxPreview.value, 10) : undefined, paletaId: paletaCapa, temBorda: temBordaCapa, estiloPdf: estiloPdfCapa, capaEstilo: capaEstiloCapa, capaPapiro: capaEstiloCapa === 'papiro', temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
   if (paletaCapa === 'custom') {
     blocoCapaPreview.corFundo = corFundoCapa;
     blocoCapaPreview.corTitulo = corTituloCapa;
@@ -3379,7 +3394,7 @@ function montarConteudoRelatorioHtml(preset, perfil, png1, png2, lotesNatal, asc
      Natal/Fortuna na capa, a imagem é a roda em tinta (a mesma das páginas do corpo, png1/png2) e não a roda com céu. */
   const blocoCapaModelo = (preset.blocos || []).find(b => b.type === 'capa') || {};
   const capaPapiroEscolhida = estiloDaCapa === 'papiro';
-  let imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa);
+  let imgCapa = imagemCapaRelatorio(capaFonte, png1, png2, png1Capa, png2Capa, blocoCapaModelo.capturaIndex);
   /* Tema Céu + capa com a roda da própria mandala: o céu de fundo é o da mandala (ver relatorioCeuFundoCapa).
      A imagem da roda vai dentro de um invólucro do tamanho exato dela; o céu enorme é posicionado em
      porcentagens desse invólucro (alinhado ao centro da roda) e recortado pela folha da capa. */
