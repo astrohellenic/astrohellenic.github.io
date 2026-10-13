@@ -888,14 +888,21 @@ window.capturarMandalaAtualParaRelatorio = capturarMandalaAtualParaRelatorio;
    Fica no #mandala-controls-overlay entre o botão "Adicionar ao
    Relatório" e o stepper de tempo (ver injetarControleZoomMandala). */
 const MANDALA_ZOOM_MIN = 50;
-const MANDALA_ZOOM_MAX = 200;
+const MANDALA_ZOOM_MAX = 500;
 const MANDALA_ZOOM_PASSO = 10;
 let mandalaZoomPercent = 100;
 
 function ajustarZoomMandala(delta) {
-  mandalaZoomPercent = Math.max(MANDALA_ZOOM_MIN, Math.min(MANDALA_ZOOM_MAX, mandalaZoomPercent + delta));
+  // Acima de 200% o passo é maior (senão são dezenas de cliques até 500%).
+  const sentido = delta < 0 ? -1 : 1;
+  const passo = (sentido > 0 ? mandalaZoomPercent >= 200 : mandalaZoomPercent > 200) ? 50 : Math.abs(delta);
+  mandalaZoomPercent = Math.max(MANDALA_ZOOM_MIN, Math.min(MANDALA_ZOOM_MAX, mandalaZoomPercent + sentido * passo));
   const img = document.getElementById('mandalaImg');
-  if (img) img.style.transform = `scale(${(mandalaZoomPercent / 100).toFixed(2)})`;
+  if (img) {
+    img.style.transform = `scale(${(mandalaZoomPercent / 100).toFixed(2)})`;
+    // Ampliada, a imagem cresce pra direita/baixo (rolável); do centro, a borda esquerda ficaria cortada e inalcançável.
+    img.style.transformOrigin = mandalaZoomPercent > 100 ? 'top left' : 'top center';
+  }
   setTimeout(atualizarBarraInferiorMandala, 160); // depois da animação do zoom (120ms)
   const label = document.getElementById('mandalaZoomLabel');
   if (label) label.textContent = `${mandalaZoomPercent}%`;
@@ -1932,7 +1939,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
-    <img id="mandalaImg" src="${svgTelaUrl}" alt="Mandala Astrológica" draggable="false" style="-webkit-touch-callout: none; max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: top center; transition: transform 120ms ease-out;">
+    <img id="mandalaImg" src="${svgTelaUrl}" alt="Mandala Astrológica" draggable="false" style="-webkit-touch-callout: none; max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: ${mandalaZoomPercent > 100 ? 'top left' : 'top center'}; transition: transform 120ms ease-out;">
   </div>
 `;
      
