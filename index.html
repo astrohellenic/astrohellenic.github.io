@@ -241,6 +241,21 @@ body.modo-mandala, html.modo-mandala {
    position:sticky nesses módulos. */
 body.modo-mandala #mandala-container {
   overflow-x: auto;
+  /* só com mouse: termina logo acima da barra inferior fixa (mandala.js, atualizarBarraInferiorMandala), senão ela cobre a barra de rolagem de baixo */
+  margin-bottom: var(--margem-rolagem-mandala, 0px);
+}
+
+/* BARRAS DE ROLAGEM da mandala ampliada — SÓ pra quem usa mouse/touchpad (computador). No iPad/celular (toque) não existem:
+   continua o arrasto com o dedo, sem barra atrapalhando. Barra explícita (e não a do sistema) porque no Mac a padrão some
+   até a pessoa rolar, e quem está ampliando não sabe que dá pra mover. */
+@media (hover: hover) and (pointer: fine) {
+  body.modo-mandala #mandala-container::-webkit-scrollbar { width: 14px; height: 14px; }
+  body.modo-mandala #mandala-container::-webkit-scrollbar-track { background: transparent; }
+  body.modo-mandala #mandala-container::-webkit-scrollbar-thumb { background: #1F5FA3; border-radius: 7px; border: 3px solid transparent; background-clip: padding-box; }
+  body.modo-mandala #mandala-container::-webkit-scrollbar-corner { background: transparent; }
+  @supports not selector(::-webkit-scrollbar) {
+    body.modo-mandala #mandala-container { scrollbar-width: auto; scrollbar-color: #1F5FA3 transparent; }
+  }
 }
 
 body {
@@ -1054,7 +1069,7 @@ body {
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261010v"></script>
 <script src="tabelaTecnica.js?v=20261010t"></script>
-<script src="mandala.js?v=20261013b"></script>
+<script src="mandala.js?v=20261013c"></script>
 <script src="roda.js?v=20261010x"></script>
 <script src="isopsefia.js?v=20261010t"></script>
 <script src="profeccao.js?v=20261013a"></script>

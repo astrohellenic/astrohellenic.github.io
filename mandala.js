@@ -1072,13 +1072,17 @@ function atualizarBarraInferiorMandala() {
   const visivel = barra.style.display !== 'none' && (document.getElementById('mandala-controls-overlay') || {}).style.display !== 'none';
   const img = document.getElementById('mandalaImg');
   const embrulho = img && img.parentElement;
-  if (!visivel) { if (embrulho) embrulho.style.paddingBottom = ''; return; }
+  const comMouse = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (!visivel) { if (embrulho) embrulho.style.paddingBottom = ''; document.documentElement.style.removeProperty('--margem-rolagem-mandala'); return; }
   atualizarCabecalhoBarraMandala();
   barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
   atualizarSetasBarraMandala();
+  // Com mouse: a área da mandala termina acima da barra (a barra de rolagem de baixo fica visível); com toque: a barra cobre e a imagem ganha recuo.
+  if (comMouse) document.documentElement.style.setProperty('--margem-rolagem-mandala', (barra.offsetHeight + 10) + 'px');
+  else document.documentElement.style.removeProperty('--margem-rolagem-mandala');
   if (embrulho) {
     embrulho.style.boxSizing = 'border-box';
-    embrulho.style.paddingBottom = (barra.offsetHeight + 10) + 'px';
+    embrulho.style.paddingBottom = comMouse ? '' : (barra.offsetHeight + 10) + 'px';
   }
 }
 window.atualizarBarraInferiorMandala = atualizarBarraInferiorMandala;
