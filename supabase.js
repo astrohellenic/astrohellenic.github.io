@@ -202,6 +202,24 @@ async function carregarTemaMandala(userId) {
   aplicarTemaMandala(tema);
 }
 
+/* PLANO DO USUÁRIO (perfis.nivel: basico | essencial | pro | admin). window.nivelPlano fica null até a resposta chegar (ou se a leitura falhar) —
+   nesse caso NADA é bloqueado, pra um erro de rede nunca trancar quem paga. Os temas Céu e Sulfite são do Essencial pra cima. */
+const NIVEIS_COM_TEMAS = ['essencial', 'pro', 'admin'];
+function temaLiberadoNoPlano(tema) {
+  if (tema !== 'ceu' && tema !== 'sulfite') return true;
+  return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
+}
+async function carregarNivelPlano(userId) {
+  try {
+    const { data, error } = await supabaseClient.from('perfis').select('nivel').eq('user_id', userId).maybeSingle();
+    if (error) return;
+    window.nivelPlano = (data && data.nivel) || 'basico';
+  } catch (e) { return; }
+  // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
+  if (!temaLiberadoNoPlano(window.temaMandala)) salvarAparencia('claro');
+  else if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+}
+
 /* SALVA A APARÊNCIA ESCOLHIDA NA TELA APARÊNCIA: 'ceu' | 'claro' | 'escuro' | 'auto'. Uma escolha só, tudo no
    APARELHO (localStorage), não na conta: o modo de cor (astro_modo_cor: claro/escuro/auto — "seguir o tema do
    aparelho" só faz sentido por aparelho) e o Tema Céu (astro_tema_mandala: ceu/claro).
@@ -210,6 +228,7 @@ async function carregarTemaMandala(userId) {
    - 'claro' / 'escuro' / 'auto': desliga o Céu e aplica o modo — o automático só escolhe entre claro e escuro, nunca Céu.
    window.aplicarModoCor vem do script inline em index.html (roda antes de supabase.js). */
 function salvarAparencia(escolha) {
+  if (!temaLiberadoNoPlano(escolha)) { alert('Este tema é do plano Essencial ou Pro. No plano Básico você usa os temas Claro e Escuro.'); return; }
   const tema = (escolha === 'ceu' || escolha === 'sulfite') ? escolha : 'claro';
   try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
   window.temaMandala = tema; // antes do aplicarModoCor: ele consulta se o Céu está ligado

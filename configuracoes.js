@@ -145,8 +145,8 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Tema</h4>
         <p class="cfg-card-desc">Uma escolha só: ao escolher uma opção, as outras ficam desmarcadas. O <strong>Automático</strong> acompanha o aparelho (claro quando o aparelho está claro, escuro quando está escuro) e nunca escolhe o Céu. Fica salvo neste aparelho — cada aparelho ou navegador tem o seu.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu')}
-          ${opcao("salvarAparencia('sulfite')", escolha === 'sulfite', fa('sol'), 'Sulfite', 'Folha branca, escrito à mão com caneta')}
+          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu' + (temaLiberadoNoPlano('ceu') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('sulfite')", escolha === 'sulfite', fa('sol'), 'Sulfite', 'Folha branca, escrito à mão com caneta' + (temaLiberadoNoPlano('sulfite') ? '' : ' — plano Essencial ou Pro'))}
           ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho')}
           ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho')}
           ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('automatico'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho')}
