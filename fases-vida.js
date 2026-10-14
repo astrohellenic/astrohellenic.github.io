@@ -158,14 +158,13 @@ function fvFmtAnos(n) { return n.toFixed(1).replace('.', ',') + ' anos'; }
 
 function fvLinhaPlaneta(papel, p) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('planeta', p.id, 26) : '';
-  const dig = p.dignidades.length ? p.dignidades.join(', ') : 'peregrino';
   return `
     <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
       <span style="display:inline-flex; width:28px; justify-content:center;">${ico}</span>
       <div style="font-size:12.5px; line-height:1.4;">
         <span class="rotulo">${papel}</span><br>
         <strong>${p.nome}</strong> em ${p.signoNome} ${p.grau}°${String(p.minuto).padStart(2, '0')}' — casa ${p.casa}<br>
-        <span class="texto-apagado" style="font-size:11.5px;">${dig}</span>
+        ${p.dignidades.length ? `<span class="texto-apagado" style="font-size:11.5px;">${p.dignidades.join(', ')}</span>` : ''}
       </div>
     </div>`;
 }
