@@ -70,7 +70,7 @@ function fvDignidades(idPlaneta, absGraus, isDia, sunAbs) {
   if (FV_EXALTACAO[idPlaneta] === s) lista.push('exaltação');
   const trip = FV_TRIPLICIDADE[FV_ELEMENTOS[s % 4]][isDia ? 'dia' : 'noite'];
   const posTrip = trip.indexOf(idPlaneta);
-  if (posTrip >= 0) lista.push(`triplicidade (${['primeiro', 'segundo', 'participante'][posTrip]})`);
+  if (posTrip >= 0) lista.push('triplicidade');
   if (fvDoDia(idPlaneta, absGraus, sunAbs) === isDia) lista.push('seita');
   if (typeof EGYPTIAN_TERMS !== 'undefined' && EGYPTIAN_TERMS[s]) {
     const faixa = EGYPTIAN_TERMS[s].find(t => g < t.deg);
@@ -105,6 +105,7 @@ function fvCalcularFases(entrada) {
       id, nome: FV_PLANETAS[id].nome, abs, signo, signoNome: FV_SIGNOS[signo],
       grau: Math.floor(abs % 30), minuto: Math.floor(((abs % 30) % 1) * 60),
       casa: ((signo - signoAsc + 12) % 12) + 1,
+      condicaoCasa: ['angular', 'sucedente', 'cadente'][((signo - signoAsc + 12) % 12) % 3],   // casas 1,4,7,10 angulares; 2,5,8,11 sucedentes; 3,6,9,12 cadentes
       regidoPor: FV_PLANETAS[FV_DOMICILIO[signo]].nome,
       dignidades: fvDignidades(id, abs, isDia, sunAbs)
     };
@@ -116,18 +117,19 @@ function fvCalcularFases(entrada) {
 
   const regenteDoSigno = FV_PLANETAS[FV_DOMICILIO[reg1.signo]];
   const calculos = [
-    { chave: 'A', titulo: 'A — Tempo de ascensão do signo do 1º regente',
+    { chave: 'A', titulo: 'A — Ascensão do signo do 1º regente',
       fonte: 'Ao completar o tempo de ascensão do signo onde está o primeiro regente.',
       idade: tempos[reg1.signo],
-      conta: `${reg1.signoNome}: ${tempos[reg1.signo].toFixed(1)}` },
-    { chave: 'B', titulo: 'B — Tempo de ascensão do signo do 2º regente (Valens II.1, literal)',
+      conta: `${reg1.signoNome}: ${tempos[reg1.signo].toFixed(1)}`, signoConta: reg1.signo },
+    { chave: 'B', titulo: 'B — Ascensão do signo do 2º regente, Valens II.1',
       fonte: 'No tempo de ascensão do signo onde está o segundo regente.',
       idade: tempos[reg2.signo],
-      conta: `${reg2.signoNome}: ${tempos[reg2.signo].toFixed(1)}` },
-    { chave: 'C', titulo: 'C — Maior entre ascensão e anos menores (Valens VII.2)',
+      conta: `${reg2.signoNome}: ${tempos[reg2.signo].toFixed(1)}`, signoConta: reg2.signo },
+    { chave: 'C', titulo: 'C — Maior entre ascensão e anos menores, Valens VII.2',
       fonte: 'O maior valor entre o tempo de ascensão do signo do primeiro regente e os anos menores do regente desse signo.',
       idade: Math.max(tempos[reg1.signo], regenteDoSigno.anosMenores),
-      conta: `maior entre ${tempos[reg1.signo].toFixed(1)} (${reg1.signoNome}) e ${regenteDoSigno.anosMenores} (anos menores de ${regenteDoSigno.nome}, regente de ${reg1.signoNome})` }
+      conta: `maior entre ${tempos[reg1.signo].toFixed(1)} (${reg1.signoNome}) e ${regenteDoSigno.anosMenores} (anos menores de ${regenteDoSigno.nome}, regente de ${reg1.signoNome})`,
+      signoConta: reg1.signo, anosMenores: regenteDoSigno.anosMenores, regenteId: FV_DOMICILIO[reg1.signo] }
   ];
   calculos.forEach(c => { c.data = maisDias(c.idade); c.fase = idadeHoje < c.idade ? 1 : 2; });
 
@@ -164,19 +166,34 @@ function fvFmtData(d) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 function fvFmtAnos(n) { return n.toFixed(1).replace('.', ',') + ' anos'; }
+function fvNum(n, casas) { return n.toFixed(casas).replace('.', ','); }
+
+/* Ícone do planeta / do signo no padrão do software: só o ícone; o nome ao lado só com os rótulos ligados (planetaComNome / signoComNome). */
+function fvPlaneta(id, tam) {
+  return (typeof planetaComNome === 'function') ? planetaComNome(id, tam || 24) : FV_PLANETAS[id].nome;
+}
+function fvSigno(idx, tam) {
+  if (typeof signoComNome === 'function' && typeof getSignSvgHtmlDec === 'function') return signoComNome(getSignSvgHtmlDec(idx, tam || 20), idx);
+  return FV_SIGNOS[idx];
+}
+const FV_LINHA = 'display:inline-flex; align-items:center; gap:6px; vertical-align:middle;';
 
 function fvLinhaPlaneta(papel, p) {
-  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('planeta', p.id, 26) : '';
+  const partes = [];
+  if (!p.dignidades.includes('domicílio')) partes.push(`regido por <span style="${FV_LINHA}">${fvPlaneta(FV_PLANETAS_ID[p.regidoPor], 20)}</span>`);
+  p.dignidades.forEach(d => partes.push(d));
   return `
-    <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
-      <span style="display:inline-flex; width:28px; justify-content:center;">${ico}</span>
-      <div style="font-size:12.5px; line-height:1.4;">
-        <span class="rotulo">${papel}</span><br>
-        <strong>${p.nome}</strong> em ${p.signoNome} ${p.grau}°${String(p.minuto).padStart(2, '0')}' — casa ${p.casa}<br>
-        <span class="texto-apagado" style="font-size:11.5px;">${[p.dignidades.includes('domicílio') ? '' : `regido por ${p.regidoPor}`, ...p.dignidades].filter(Boolean).join(' · ')}</span>
+    <div style="padding:8px 0;">
+      <span class="rotulo">${papel}</span>
+      <div style="${FV_LINHA} font-size:13px; margin-top:3px; flex-wrap:wrap;">
+        ${fvPlaneta(p.id, 26)} <span>em</span> ${fvSigno(p.signo, 22)} <span>${p.grau}°${String(p.minuto).padStart(2, '0')}'</span>
+        <span>· casa ${p.casa} · ${p.condicaoCasa}</span>
       </div>
+      ${partes.length ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:3px;">${partes.join(' · ')}</div>` : ''}
     </div>`;
 }
+const FV_PLANETAS_ID = {};
+Object.keys(FV_PLANETAS).forEach(id => { FV_PLANETAS_ID[FV_PLANETAS[id].nome] = id; });
 
 function fvLinhaDoTempo(c, r) {
   const MAX = 90;
@@ -193,8 +210,15 @@ function fvLinhaDoTempo(c, r) {
     </div>`;
 }
 
+function fvConta(c, r) {
+  const t = fvNum(r.tempos[c.signoConta], 1);
+  if (c.chave !== 'C') return `<span style="${FV_LINHA}">${fvSigno(c.signoConta, 20)} <span>${t} anos de ascensão</span></span>`;
+  return `<span style="${FV_LINHA} flex-wrap:wrap;">maior entre ${t} anos de ascensão de ${fvSigno(c.signoConta, 20)} e ${c.anosMenores} anos menores de ${fvPlaneta(c.regenteId, 20)}, que rege ${fvSigno(c.signoConta, 20)}</span>`;
+}
+
 function fvCartaoCalculo(c, r) {
   const ativoF1 = c.fase === 1;
+  const quem = (reg) => `<span style="${FV_LINHA}">${fvPlaneta(reg.id, 22)} <span>com</span> ${fvPlaneta(r.part.id, 22)}</span>`;
   return `
     <div class="cartao">
       <div class="cabeca-cartao">
@@ -202,11 +226,12 @@ function fvCartaoCalculo(c, r) {
         <span class="selo">${fvFmtAnos(c.idade)}</span>
       </div>
       <div class="texto-apagado" style="font-size:11.5px; margin-bottom:8px;">${c.fonte}</div>
-      <div style="font-size:12.5px; margin-bottom:4px;">Conta: ${c.conta}</div>
-      <div style="font-size:13px; margin-bottom:6px;"><strong>Troca em ${fvFmtData(c.data)}</strong> (nascimento + ${c.idade.toFixed(2).replace('.', ',')} × 365,25 dias)</div>
-      <div class="linha-info" style="line-height:1.6;">
-        <div><strong>Fase 1</strong>${ativoF1 ? ' <span class="selo">hoje</span>' : ''} — ${r.reg1.nome} (com ${r.part.nome}): do nascimento (${fvFmtData(r.nascimento)}) até ${fvFmtData(c.data)}.</div>
-        <div><strong>Fase 2</strong>${!ativoF1 ? ' <span class="selo">hoje</span>' : ''} — ${r.reg2.nome} (com ${r.part.nome}): de ${fvFmtData(c.data)} até o fim da vida.</div>
+      <div style="font-size:12.5px; margin-bottom:4px;">Conta: ${fvConta(c, r)}</div>
+      <div style="font-size:13px; margin-bottom:2px;"><strong>Troca em ${fvFmtData(c.data)}</strong></div>
+      <div class="texto-apagado" style="font-size:11px; margin-bottom:6px;">Nascimento + ${fvNum(c.idade, 2)} anos × 365,25 dias.</div>
+      <div class="linha-info" style="line-height:1.9;">
+        <div><strong>Fase 1</strong>${ativoF1 ? ' <span class="selo">hoje</span>' : ''} ${quem(r.reg1)}: de ${fvFmtData(r.nascimento)} até ${fvFmtData(c.data)}.</div>
+        <div><strong>Fase 2</strong>${!ativoF1 ? ' <span class="selo">hoje</span>' : ''} ${quem(r.reg2)}: de ${fvFmtData(c.data)} até o fim da vida.</div>
       </div>
       ${fvLinhaDoTempo(c, r)}
     </div>`;
@@ -222,16 +247,16 @@ function renderFasesVidaUI(container) {
     return;
   }
 
-  const rotuloFonte = r.fonte === 'sizigia'
-    ? `Signo da sizígia pré-natal (Doroteu I.10): ${FV_SIGNOS[r.signoRef]} (${FV_ELEMENTO_ROTULO[r.elemento]})`
-    : `Luminar da seita (${r.isDia ? 'Sol' : 'Lua'}): ${FV_SIGNOS[r.signoRef]} (${FV_ELEMENTO_ROTULO[r.elemento]})`;
+  const fonteUsada = r.fonte === 'sizigia'
+    ? `Sizígia pré-natal: <span style="${FV_LINHA}">${fvSigno(r.signoRef, 22)}</span>`
+    : `Luminar da seita: <span style="${FV_LINHA}">${fvPlaneta(r.luminarId, 24)} ${fvSigno(r.signoRef, 22)}</span>`;
   const temSizigia = !!(currentCalculatedData.Sizigia);
 
   const tabelaAscensao = `
     <table class="tabela-epoca">
       <tr><th>Signo</th><th class="centro">Tempo de ascensão</th></tr>
-      ${r.tempos.map((t, i) => `<tr><td>${FV_SIGNOS[i]}</td><td class="centro">${t.toFixed(1).replace('.', ',')}</td></tr>`).join('')}
-      <tr><td><strong>Soma</strong></td><td class="centro"><strong>${r.tempos.reduce((a, b) => a + b, 0).toFixed(1).replace('.', ',')}</strong></td></tr>
+      ${r.tempos.map((t, i) => `<tr><td>${fvSigno(i, 20)}</td><td class="centro">${fvNum(t, 1)}</td></tr>`).join('')}
+      <tr><td><strong>Soma</strong></td><td class="centro"><strong>${fvNum(r.tempos.reduce((a, b) => a + b, 0), 1)}</strong></td></tr>
     </table>`;
 
   container.innerHTML = `
@@ -245,44 +270,44 @@ function renderFasesVidaUI(container) {
         <h3 class="titulo-secao">Fonte e seita</h3>
         <div style="display:flex; flex-wrap:wrap; gap:18px; font-size:13px; margin-bottom:10px;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="radio" name="fvFonte" value="luminar" ${r.fonte === 'luminar' ? 'checked' : ''} onchange="fvEscolherFonte('luminar')"> Luminar da seita (padrão)
+            <input type="radio" name="fvFonte" value="luminar" ${r.fonte === 'luminar' ? 'checked' : ''} onchange="fvEscolherFonte('luminar')"> Luminar da seita
           </label>
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="radio" name="fvFonte" value="sizigia" ${r.fonte === 'sizigia' ? 'checked' : ''} ${temSizigia ? '' : 'disabled'} onchange="fvEscolherFonte('sizigia')"> Signo da sizígia pré-natal (Doroteu I.10)
+            <input type="radio" name="fvFonte" value="sizigia" ${r.fonte === 'sizigia' ? 'checked' : ''} ${temSizigia ? '' : 'disabled'} onchange="fvEscolherFonte('sizigia')"> Signo da sizígia pré-natal
           </label>
         </div>
-        <div style="font-size:13px; line-height:1.6;">
-          <div>Seita: <strong>${r.isDia ? 'diurna' : 'noturna'}</strong> (luminar da seita: ${r.isDia ? 'Sol' : 'Lua'}).</div>
-          <div>Fonte usada: <strong>${rotuloFonte}</strong>.</div>
-          <div class="texto-apagado" style="font-size:11.5px;">Latitude usada nos tempos de ascensão: ${lat.toFixed(2).replace('.', ',')}°${r.polar ? ' — latitude polar: algum signo não nasce/se põe, resultado aproximado.' : ''}</div>
+        <div style="font-size:13px; line-height:2;">
+          <div>Seita: <strong>${r.isDia ? 'diurna' : 'noturna'}</strong></div>
+          <div>Fonte usada: ${fonteUsada}</div>
+          <div class="texto-apagado" style="font-size:11.5px;">Latitude usada nos tempos de ascensão: ${fvNum(lat, 2)}°${r.polar ? ' — latitude polar: algum signo não nasce/se põe, resultado aproximado.' : ''}</div>
         </div>
 
         <hr class="divisa">
-        <h3 class="titulo-secao">Regentes (tabela de Doroteu, ${r.isDia ? 'dia' : 'noite'}, ${FV_ELEMENTO_ROTULO[r.elemento]})</h3>
+        <h3 class="titulo-secao">Regentes (tabela de Doroteu)</h3>
         <div class="grade-cartoes">
           <div class="cartao">
-            ${fvLinhaPlaneta('Primeiro regente — fase 1', r.reg1)}
-            ${fvLinhaPlaneta('Segundo regente — fase 2', r.reg2)}
-            ${fvLinhaPlaneta('Participante — ajuda nas duas fases', r.part)}
+            ${fvLinhaPlaneta('Primeiro regente, fase 1', r.reg1)}
+            ${fvLinhaPlaneta('Segundo regente, fase 2', r.reg2)}
+            ${fvLinhaPlaneta('Participante, ajuda nas duas fases', r.part)}
           </div>
         </div>
 
         <hr class="divisa">
-        <h3 class="titulo-secao">Idade da troca — três cálculos</h3>
+        <h3 class="titulo-secao">Idade da troca, três cálculos</h3>
         <div class="grade-cartoes">
           ${r.calculos.map(c => fvCartaoCalculo(c, r)).join('')}
         </div>
-        <div class="texto-apagado" style="font-size:11.5px; margin-top:10px;">Hoje: ${fvFmtData(r.hoje)} — idade ${fvFmtAnos(r.idadeHoje)}. A vida tem duas fases; não existe terceira. Escala das barras: 0 a 90 anos.</div>
+        <div class="texto-apagado" style="font-size:11.5px; margin-top:10px;">Hoje: ${fvFmtData(r.hoje)}, idade ${fvFmtAnos(r.idadeHoje)}. A vida tem duas fases; não existe terceira. Escala das barras: 0 a 90 anos.</div>
 
         <hr class="divisa">
-        <h3 class="titulo-secao">Tempos de ascensão (anos)</h3>
+        <h3 class="titulo-secao">Tempos de ascensão em anos</h3>
         <div class="envolve-tabela">${tabelaAscensao}</div>
 
         <hr class="divisa">
         <div class="texto-apagado" style="font-size:11.5px; line-height:1.55;">
           <strong>Fontes.</strong> A estrutura de início e fim da vida vem de Doroteu I.22 e I.10. O instrumento de tempo vem de Valens II.1 e VII.2.
-          A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua (obliquidade 23,44°,
-          1 grau de ascensão = 1 ano); as tabelas antigas (ex.: Valens: Áries 20, Câncer 33, Capricórnio 27) são aproximações e ficam 1 a 3 anos abaixo.
+          A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
+          As tabelas antigas, como a de Valens com Áries 20, Câncer 33 e Capricórnio 27, são aproximações e ficam de 1 a 3 anos abaixo.
         </div>
         <hr class="divisa-fim">
       </div>
