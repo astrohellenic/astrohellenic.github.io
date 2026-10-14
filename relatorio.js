@@ -76,6 +76,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     capturada: true,
     telaOrigem: 'Ferramentas > Isopsefia'
   },
+  fasesVida: {
+    label: 'Fases da Vida pelos regentes da triplicidade (a tela que você deixou pronta na ferramenta)',
+    tituloIndice: 'Fases da Vida',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Fases da Vida'
+  },
   lotes_calculados: {
     label: 'Lotes Selecionados (os quadrinhos que você marcar na Calculadora de Lotes — pré-calculados e os que você salvar)',
     tituloIndice: 'Lotes Selecionados',
@@ -180,6 +186,7 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   ...RELATORIO_LOTES_ORDEM.map(loteKey => ({ id: 'liberacao_' + loteKey, type: 'ferramenta' })),
   { id: 'horas', type: 'ferramenta' },
   { id: 'isopsefia', type: 'ferramenta' },
+  { id: 'fasesVida', type: 'ferramenta' },
   { id: 'lotes_calculados', type: 'ferramenta' },
   { id: 'sinastria', type: 'ferramenta' }
 ]);

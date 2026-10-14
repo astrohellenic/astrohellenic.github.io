@@ -262,10 +262,18 @@ function renderFasesVidaUI(container) {
   container.innerHTML = `
     <div style="width: 100%; display: flex; flex-direction: column;">
       <div id="fases-vida-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
-        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Fases da Vida — Regentes da Triplicidade</h3></div>
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Fases da Vida — Regentes da Triplicidade</h3><div class="acoes-ferramenta">
+          <button type="button" onclick="salvarFasesVidaNaGaleria()" title="Salvar as Fases da Vida como imagem na galeria (com título e cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+          </button>
+          <button type="button" onclick="capturarFasesVidaParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+        </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
         ${(typeof montarCabecalhoMandalaImagemHTML === 'function') ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true }) : ''}
 
+        <div id="fasesVidaResultsArea">
         <hr class="divisa">
         <h3 class="titulo-secao">Fonte e seita</h3>
         <div style="display:flex; flex-wrap:wrap; gap:18px; font-size:13px; margin-bottom:10px;">
@@ -309,7 +317,37 @@ function renderFasesVidaUI(container) {
           A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
           As tabelas antigas, como a de Valens com Áries 20, Câncer 33 e Capricórnio 27, são aproximações e ficam de 1 a 3 anos abaixo.
         </div>
+        </div>
         <hr class="divisa-fim">
       </div>
     </div>`;
 }
+
+/* Botão de galeria: título + cabeçalho padrão + resultados, SÓ AO TOCAR (mesmo padrão dos Decênios). */
+function salvarFasesVidaNaGaleria() {
+  const area = document.getElementById('fasesVidaResultsArea');
+  if (!area) return;
+  capturarESalvarNaGaleria(
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'FASES DA VIDA', comCabecalho: true, papiro: true }),
+    `Astro_Hellenic_Fases_da_Vida_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+if (typeof window !== "undefined") window.salvarFasesVidaNaGaleria = salvarFasesVidaNaGaleria;
+
+/* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho). */
+async function capturarFasesVidaParaRelatorio() {
+  const area = document.getElementById('fasesVidaResultsArea');
+  if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  try {
+    const papiro = window.temaMandala === 'ceu';
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro()); // Tema Céu: imagem sem fundo
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
+    const total = adicionarCapturaRelatorio('fasesVida', canvas.toDataURL('image/png'));
+    alert(`"Fases da Vida" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar as Fases da Vida ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+if (typeof window !== "undefined") window.capturarFasesVidaParaRelatorio = capturarFasesVidaParaRelatorio;
