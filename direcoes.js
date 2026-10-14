@@ -268,14 +268,13 @@ function obterGrauEfetivoAfeta(key, data) {
 }
 
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
-/* Idade em ANOS e MESES de calendário entre o nascimento e uma data, no formato curto dos rótulos: "33,10" = 33 anos e 10 meses
-   (meses sempre com 2 dígitos, "33,05", pra não parecer decimal; a legenda da ferramenta explica). Nunca "33a 10m": sigla colada não se entende. */
+/* Idade em ANOS e MESES de calendário entre o nascimento e uma data, por extenso: "33 anos e 10 meses" (nunca "33,9" nem sigla "33a 10m"). */
 function idadeCompactaDir(de, ate) {
   let anos = ate.getFullYear() - de.getFullYear();
   let meses = ate.getMonth() - de.getMonth();
   if (ate.getDate() < de.getDate()) meses -= 1;
   if (meses < 0) { anos -= 1; meses += 12; }
-  return `${anos},${String(meses).padStart(2, '0')}`;
+  return `${anos} ${anos === 1 ? 'ano' : 'anos'}` + (meses ? ` e ${meses} ${meses === 1 ? 'mês' : 'meses'}` : '');
 }
 
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
@@ -674,7 +673,7 @@ function renderCircumambulaçõesUI() {
        que o desnível e ainda sai da moldura da pauta). Quando dois ficariam colados, o de trás ganha um DESVIO
        LATERAL — anda pro lado até caber, com um fiozinho ligando ao grau verdadeiro. O raio em si (a linha
        vertical) fica sempre no grau exato. */
-    const LARG_ROTULO = 42;
+    const LARG_ROTULO = 80;
     const xMinRotulo = 56, xMaxRotulo = 888;
     const posRotulos = raiosDoSigno.map(r => ({ xRay: x0 + (r.degInSign * scale), cx: x0 + (r.degInSign * scale) }));
     // ida (esquerda -> direita): cada rótulo no mínimo LARG_ROTULO depois do anterior
@@ -730,10 +729,10 @@ function renderCircumambulaçõesUI() {
       if (termoDaMarca) {
         const xIcone = x0 + ((termoDaMarca.termStartDeg + termoDaMarca.termEndDeg) / 2) * scale;
         const meiaIcone = Math.max(10, termHeight - 6) / 2 + 2;
-        if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 40 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
+        if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 50 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
       }
-      ocupadoNatal = ancoraNatal === 'start' ? [xTextoNatal, xTextoNatal + 40] : [xTextoNatal - 40, xTextoNatal];
-      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0,00</text>`;
+      ocupadoNatal = ancoraNatal === 'start' ? [xTextoNatal, xTextoNatal + 50] : [xTextoNatal - 50, xTextoNatal];
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0 anos</text>`;
       rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--terracota)" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
     }
 
@@ -752,11 +751,11 @@ function renderCircumambulaçõesUI() {
         rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
 
-        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "33,10" + dd/mm/aaaa.
+        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "33 anos e 10 meses" + dd/mm/aaaa.
            O texto vai pro lado direito do cursor; se ali bater no ícone de um termo, no texto da marca do
            nascimento ou passar da moldura, vai pro lado esquerdo. */
         const idadeHoje = idadeCompactaDir(birthDate, hoje);
-        const LARG_TEXTO_HOJE = 40;
+        const LARG_TEXTO_HOJE = 80;
         const meiaIconeTermo = Math.max(10, termHeight - 6) / 2 + 2;
         const ocupados = passage.terms.map(t => { const xc = x0 + ((t.termStartDeg + t.termEndDeg) / 2) * scale; return [xc - meiaIconeTermo, xc + meiaIconeTermo]; });
         if (ocupadoNatal) ocupados.push(ocupadoNatal);
@@ -853,7 +852,6 @@ function renderCircumambulaçõesUI() {
             <span data-html2canvas-ignore="true">${caixasLinhasHTML}</span>
             ${svgTela}
           </div>
-          <div class="texto-apagado" style="font-size: 11px; margin: 6px 24px 0;">Idades em anos e meses: 33,10 quer dizer 33 anos e 10 meses.</div>
         </div>
         <hr class="divisa">
 

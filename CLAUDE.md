@@ -919,9 +919,10 @@ Em qualquer tela do software que mostre idade ou tempo em anos, o astrólogo que
 quer ter que multiplicar o que vem depois da vírgula por 12 pra descobrir o mês. A ferramenta calcula e entrega a resposta pronta.
 
 - Texto normal: "33 anos e 10 meses" (com dias, quando a data exata importa: "33 anos, 10 meses e 12 dias").
-- **NUNCA sigla colada ("33a 10m", "33A10M")**: ninguém adivinha que "a" é anos e "m" é meses (o astrólogo detesta). Escrever "33 anos e 10 meses".
-  Só onde NÃO cabe mesmo (rótulo minúsculo de SVG, como na Circunambulação): "33,10" (anos,meses, meses sempre com 2 dígitos: "33,05", "33,00") **e uma legenda
-  visível na tela explicando** ("33,10 quer dizer 33 anos e 10 meses").
+- **Sempre POR EXTENSO: "33 anos e 10 meses". NUNCA sigla colada ("33a 10m", "33A10M") nem "33,10"**: ninguém adivinha o que é "a" e "m", e o astrólogo detesta.
+  Não encurtar o que já estava escrito por extenso: ele pediu pra trocar o número fracionado por meses, não pra mudar o texto. Se o espaço for pequeno, adaptar o
+  layout (largura dos rótulos, tamanho da fonte), não abreviar o texto. (Na Circunambulação os rótulos foram alargados: `LARG_ROTULO = 80`, `LARG_TEXTO_HOJE = 80`.)
+- O nome da ferramenta é **Circumambulação** (com M duplo), não "Circunambulação".
 - Os meses são de **calendário**, entre o nascimento e a data mostrada (assim a idade bate com o dd/mm/aaaa que aparece junto), não "fração × 12".
   Só quando não há data (ex.: tempo de ascensão de um signo) converte-se o decimal em anos e meses arredondando os meses.
 - Distâncias: "10 meses antes", "1 ano e 2 meses depois" (nunca "262 meses").
