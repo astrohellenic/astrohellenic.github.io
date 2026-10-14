@@ -577,7 +577,7 @@ function rzMontarResultado(r) {
   const dataLeitura = r.entrada.leitura === 'centro' ? 'no centro da janela' : 'ao meio-dia local do dia';
   const tabela = `
     <div class="rz-rolagem"><table class="tabela-epoca">
-      <tr><th>Planeta</th><th>Posição (${dataLeitura})</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th>Aspecto</th><th class="centro">Vias</th></tr>
+      <tr><th>Planeta</th><th>Posição (${dataLeitura})</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th>Aspecto</th><th class="centro">Votos</th></tr>
       ${r.contagem.linhas.map(l => {
         const venc = r.contagem.vencedores.includes(l.id);
         const x = (b) => b ? '✓' : '·';
@@ -588,9 +588,9 @@ function rzMontarResultado(r) {
   const blocoPtolomeu = `
     <hr class="divisa">
     <h3 class="titulo-secao">2 · Regra de Ptolomeu e Hefestião</h3>
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. Cada planeta ganha um ponto por via de relação com o ponto da sizígia (${rzPosHtml(s.lon, 16)}): triplicidade (qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar), domicílio, exaltação, termo egípcio e aspecto por signos. Ganha quem tem mais vias; no empate valem todos os empatados.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. Cada planeta recebe um voto por dignidade que tem no ponto da sizígia e um se o aspecta (${rzPosHtml(s.lon, 16)}): triplicidade (qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar), domicílio, exaltação, termo egípcio e aspecto por signos. Ganha quem tem mais vias; no empate valem todos os empatados.</div>
     ${tabela}
-    <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${rzListaPlanetas(r.contagem.vencedores)} (${r.contagem.max} vias).</div>
+    <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${rzListaPlanetas(r.contagem.vencedores)} (${r.contagem.max} votos).</div>
     ${r.candidatos.filter(c => c.regra === 'ptolomeu').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
 
   const blocoValens = `
@@ -603,7 +603,7 @@ function rzMontarResultado(r) {
     <hr class="divisa">
     <div class="texto-apagado rz-fonte">
       <strong>Margem.</strong> Cerca de 4 minutos de tempo por grau: um erro de 1° na posição do astro muda o horário em torno de 4 minutos. O horário vale para o grau e os minutos do planeta, calculado ao segundo; a precisão real do método é a do texto antigo, não a do cálculo.<br>
-      <strong>Fontes.</strong> Ptolomeu, <em>Tetrabiblos</em> III.2 (candidatos pelas cinco vias; grau do planeta como grau do Ascendente; regra do Meio do Céu). Hefestião, <em>Apotelesmatika</em> II.2 (repete Ptolomeu; as frações do grau marcam a hora, iguais à posição do astro). Valens, <em>Antologias</em> I.5 (senhores do termo e do signo) e I.9 (exemplos; lua cheia no lugar da Lua).<br>
+      <strong>Fontes.</strong> Ptolomeu, <em>Tetrabiblos</em> III.2 (candidatos pelos votos das dignidades e do aspecto; grau do planeta como grau do Ascendente; regra do Meio do Céu). Hefestião, <em>Apotelesmatika</em> II.2 (repete Ptolomeu; as frações do grau marcam a hora, iguais à posição do astro). Valens, <em>Antologias</em> I.5 (senhores do termo e do signo) e I.9 (exemplos; lua cheia no lugar da Lua).<br>
       <strong>Como foi calculado.</strong> Swiss Ephemeris (motor do site), zodíaco tropical, signos inteiros, termos egípcios. Ascendente e Meio do Céu por tempo sideral aparente e obliquidade verdadeira, conferidos contra o Swiss Ephemeris. Fortuna: Asc + Lua − Sol de dia, Asc + Sol − Lua de noite (dia = Sol acima do horizonte pelo grau). Posições do motor com 0,01° (cerca de 1 segundo no horário). Fuso: ${rzFmtFuso(fuso)}${r.entrada.fusoAuto ? ' com horário de verão histórico' : ''}, o mesmo na janela inteira.<br>
       <strong>Fora do escopo, de propósito.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio — o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente) e o cálculo da concepção (quase circular, não distingue horários).
     </div>`;
