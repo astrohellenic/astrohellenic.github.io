@@ -323,12 +323,35 @@ function renderFasesVidaUI(container) {
     </div>`;
 }
 
+/* O html2canvas desenha a bolinha (radio) do navegador, com fundo branco, ignorando o estilo do papiro (transparente, contorno azul egípcio,
+   miolo terracota). Durante a captura as bolinhas são trocadas por um desenho igual ao da tela; no fim voltam as originais. */
+function fvTrocarRadiosParaCaptura(area) {
+  const trocas = [];
+  area.querySelectorAll('input[type="radio"]').forEach(inp => {
+    const cs = getComputedStyle(inp);
+    const bolinha = document.createElement('span');
+    bolinha.style.cssText = `display:inline-block; position:relative; flex:0 0 auto; box-sizing:border-box; width:${inp.offsetWidth || 16}px; height:${inp.offsetHeight || 16}px; border-radius:50%; background:transparent; border:1.5px solid ${cs.borderTopColor};`;
+    if (inp.checked) {
+      const miolo = document.createElement('span');
+      miolo.style.cssText = 'position:absolute; left:3px; top:3px; width:7px; height:7px; border-radius:50%; background:var(--terracota, #A03E25);';
+      bolinha.appendChild(miolo);
+    }
+    inp.replaceWith(bolinha);
+    trocas.push({ inp, bolinha });
+  });
+  return () => trocas.forEach(t => { if (t.bolinha.parentNode) t.bolinha.replaceWith(t.inp); });
+}
+
 /* Botão de galeria: título + cabeçalho padrão + resultados, SÓ AO TOCAR (mesmo padrão dos Decênios). */
 function salvarFasesVidaNaGaleria() {
   const area = document.getElementById('fasesVidaResultsArea');
   if (!area) return;
   capturarESalvarNaGaleria(
-    () => gerarImagemHtmlComCabecalho(area, { titulo: 'FASES DA VIDA', comCabecalho: true, papiro: true }),
+    async () => {
+      const voltar = fvTrocarRadiosParaCaptura(area);
+      try { return await gerarImagemHtmlComCabecalho(area, { titulo: 'FASES DA VIDA', comCabecalho: true, papiro: true }); }
+      finally { voltar(); }
+    },
     `Astro_Hellenic_Fases_da_Vida_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
   );
 }
@@ -338,6 +361,7 @@ if (typeof window !== "undefined") window.salvarFasesVidaNaGaleria = salvarFases
 async function capturarFasesVidaParaRelatorio() {
   const area = document.getElementById('fasesVidaResultsArea');
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+  const voltarRadios = fvTrocarRadiosParaCaptura(area);
   try {
     const papiro = window.temaMandala === 'ceu';
     const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
@@ -348,6 +372,8 @@ async function capturarFasesVidaParaRelatorio() {
   } catch (err) {
     console.error('Erro ao adicionar as Fases da Vida ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    voltarRadios();
   }
 }
 if (typeof window !== "undefined") window.capturarFasesVidaParaRelatorio = capturarFasesVidaParaRelatorio;
