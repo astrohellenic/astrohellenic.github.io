@@ -384,11 +384,11 @@ function rzFortunaHtml(tam) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'fortune', tam || 22) : '';
   return ico || 'Fortuna';
 }
-/* Lunação pré-natal: ícone próprio; o nome ao lado só com os rótulos ligados (mesmo padrão das outras ferramentas) */
+/* Sizígia (lunação pré-natal): ícone próprio; o nome ao lado só com os rótulos ligados (mesmo padrão das outras ferramentas) */
 function rzSizigiaHtml(tam) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'sizigia', tam || 22) : '';
-  if (!ico) return 'Lunação pré-natal';
-  return (window.mostrarRotulosGlifos === false) ? ico : `<span class="com-nome">${ico}<span class="nome-glifo">Lunação pré-natal</span></span>`;
+  if (!ico) return 'Sizígia';
+  return (window.mostrarRotulosGlifos === false) ? ico : `<span class="com-nome">${ico}<span class="nome-glifo">Sizígia</span></span>`;
 }
 /* Ícone do aspecto (o mesmo da Matriz de Visibilidade, por signos inteiros); o nome só com os rótulos ligados */
 function rzAspectoHtml(nome, lonA, lonB) {
@@ -567,6 +567,7 @@ function rzMontarResultado(r) {
   const blocoSizigia = `
     <h3 class="titulo-secao">1 · Última sizígia antes do nascimento</h3>
     <div class="cartao" style="font-size:13px; line-height:1.9;">
+      <div class="texto-apagado" style="font-size:11.5px;">Sizígia é a última Lua Nova ou Lua Cheia antes do nascimento.</div>
       <div>${rzSizigiaHtml(24)} · <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
       <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? '(a Lua estava acima do horizonte do local)' : '(a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
       <div>Ponto da sizígia: <strong>${rzPosHtml(s.lon)}</strong></div>
@@ -612,12 +613,13 @@ function rzMontarResultado(r) {
 }
 
 function rzMontarCandidato(r, c, hora) {
+  const valens = c.regra === 'valens';
   const escolhida = c.maisPerto;
   const linhasDe = (tipo) => c.horarios[tipo].map(h => {
     const f = h.fortunaTroca;
     const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, r.entrada.fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, r.entrada.fuso)}` : 'não muda em 6 h');
-    return `<tr class="${tipo === escolhida ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}">
-      <td>${rzAnguloHtml(tipo, 26)}${tipo === escolhida ? ' ' + '<span title="A regra escolhe esta via">★</span>' : ''}</td>
+    return `<tr class="${(!valens && tipo === escolhida) ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}">
+      <td>${rzAnguloHtml(tipo, 26)}${(!valens && tipo === escolhida) ? ' <span title="A regra escolhe esta via">★</span>' : ''}</td>
       <td>${hora(h.ms)}${h.dentro ? '' : '<br><small>fora da janela</small>'}${h.faixaGrauInteiro ? `<br><small>grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, r.entrada.fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, r.entrada.fuso)}</small>` : ''}</td>
       <td>${rzPosHtml(h.asc, 18)}</td><td>${rzPosHtml(h.mc, 18)}</td>
       <td>${rzPosHtml(h.fortuna, 18)}<br><small>${h.diurno ? 'de dia' : 'de noite'}</small></td>
@@ -633,10 +635,10 @@ function rzMontarCandidato(r, c, hora) {
         <span style="font-size:15px;">${rzPlanetaHtml(c.id, 22)}</span>
         <span><strong>${rzPosHtml(c.lon, 20)}</strong>${c.retro ? ' ℞' : ''}${motivo}</span>
       </div>
-      <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
+      ${valens ? `<div class="texto-apagado" style="font-size:12px; margin:6px 0;">Valens: o grau e os minutos do planeta valem como grau e minutos do Ascendente <strong>do signo que está subindo naquele horário</strong> (não no signo do planeta).</div>` : `      <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
         Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela: ${rzAnguloHtml('asc', 24)} ${rzPosHtml(r.angulosCentro.asc, 16)} e ${rzAnguloHtml('mc', 24)} ${rzPosHtml(r.angulosCentro.mc, 16)}).
         A regra escolheria o ${rzAnguloHtml(escolhida, 24)}.
-      </div>
+      </div>`}
       <div class="rz-rolagem"><table class="tabela-epoca">
         <tr><th>Via</th><th>Horário (hora local)</th><th>${rzAnguloHtml('asc', 26)}</th><th>${rzAnguloHtml('mc', 26)}</th><th>${rzFortunaHtml(20)}</th><th>${rzFortunaHtml(20)} muda de signo</th></tr>
         ${asc}${mc}
