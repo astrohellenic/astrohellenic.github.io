@@ -912,3 +912,19 @@ Tela nova com esses ícones: usar essas funções, nunca cor fixa azul.
 O astrólogo **não tem acesso a branches** — só enxerga o que já está na `main`. Todo SQL pra rodar no Supabase (e todo link/painel dele) tem que ser
 **escrito direto na conversa**, pra ele copiar e rodar; só depois que ele disser que rodou, publicar na `main`. **Nunca** deixar SQL em arquivo da branch
 (`docs/*.sql` só como registro depois de rodado) e **nunca** criar campo/tela dentro do software só pra ele copiar um código e depois apagar.
+
+## Idades e prazos: SEMPRE em anos e meses, nunca fracionado (14/10/2026)
+
+Em qualquer tela do software que mostre idade ou tempo em anos, o astrólogo quer **anos e meses**, nunca número fracionado ("33,86 anos", "36.1"): ele não
+quer ter que multiplicar o que vem depois da vírgula por 12 pra descobrir o mês. A ferramenta calcula e entrega a resposta pronta.
+
+- Texto normal: "33 anos e 10 meses" (com dias, quando a data exata importa: "33 anos, 10 meses e 12 dias").
+- Rótulo pequeno (SVG, legenda de barra): formato curto "33a 10m"; zero meses = "33a"; nascimento = "0a".
+- Os meses são de **calendário**, entre o nascimento e a data mostrada (assim a idade bate com o dd/mm/aaaa que aparece junto), não "fração × 12".
+  Só quando não há data (ex.: tempo de ascensão de um signo) converte-se o decimal em anos e meses arredondando os meses.
+- Distâncias: "10 meses antes", "1 ano e 2 meses depois" (nunca "262 meses").
+- Campo de digitar idade = dois campos, "anos" e "meses" (0 a 11). Guardar o decimal por dentro é ok; **mostrar** é que nunca.
+- Decimal por dentro do cálculo continua (ex.: 1 grau de ascensão = 1 ano, data = nascimento + anos × 365,25); só a exibição muda.
+- Já feito em `fases-vida.js` (funções `fvFmtAnos`, `fvAnosMeses`, `fvAnosMesesDias`, `fvAnosMesesCurto`) e na Circunambulação (`idadeCompactaDir`, `direcoes.js`).
+  **Outras ferramentas que ainda mostram idade decimal** (Profecção, Liberação, Decênios, Direções etc.) não foram mexidas por não terem sido pedidas: ao mexer
+  nelas, aplicar esta regra; fora disso, avisar o astrólogo em vez de corrigir de bandeja.
