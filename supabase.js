@@ -222,11 +222,15 @@ function aplicarLimiteEstiloPlanetas() {
 }
 /* FERRAMENTAS DE TESTE: só a conta admin (perfis.nivel = 'admin') vê e abre. Aqui a regra é OPOSTA à dos temas: enquanto o plano não
    chegou (ou a leitura falhou) a ferramenta fica ESCONDIDA — erro de rede nunca abre ferramenta de teste pra quem não é admin. */
+const FERRAMENTAS_SO_ADMIN = ['fasesVida', 'isopsefia'];
 function usuarioEhAdmin() { return window.nivelPlano === 'admin'; }
+function ferramentaLiberada(modulo) { return !FERRAMENTAS_SO_ADMIN.includes(modulo) || usuarioEhAdmin(); }
 function aplicarVisibilidadeFerramentasAdmin() {
-  const btn = document.querySelector('#top-bar [data-modulo-key="fasesVida"]');
-  if (btn) btn.style.display = usuarioEhAdmin() ? '' : 'none';
-  if (window.moduloTecnicoAtivo === 'fasesVida') abrirModuloTecnica(usuarioEhAdmin() ? 'fasesVida' : 'mandala', true);
+  FERRAMENTAS_SO_ADMIN.forEach(chave => {
+    const btn = document.querySelector(`#top-bar [data-modulo-key="${chave}"]`);
+    if (btn) btn.style.display = usuarioEhAdmin() ? '' : 'none';
+  });
+  if (FERRAMENTAS_SO_ADMIN.includes(window.moduloTecnicoAtivo)) abrirModuloTecnica(usuarioEhAdmin() ? window.moduloTecnicoAtivo : 'mandala', true);
 }
 async function carregarNivelPlano(userId) {
   try {
@@ -682,7 +686,9 @@ if (telaRestaurada) {
   // 6. ISOPSEFIA (Calculadora)
   else if (modulo === 'isopsefia') {
     if (cRadix) cRadix.style.display = 'block';
-    if (typeof iniciarModuloIsopsefia === 'function') iniciarModuloIsopsefia();
+    if (!ferramentaLiberada(modulo)) { // em teste: só admin (mesma regra da Fases da Vida)
+      if (cRadix) cRadix.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;font-weight:600;">Esta ferramenta está disponível só para a conta admin.</div>';
+    } else if (typeof iniciarModuloIsopsefia === 'function') iniciarModuloIsopsefia();
   }
   // 7. LIBERAÇÃO ZODIACAL
   else if (modulo === 'liberacao') {
@@ -707,7 +713,7 @@ if (telaRestaurada) {
   // 9B. FASES DA VIDA (regentes da triplicidade — ferramenta de teste)
   else if (modulo === 'fasesVida') {
     if (cRadix) cRadix.style.display = 'block';
-    if (!usuarioEhAdmin()) { // ferramenta de teste: só admin (a leitura do plano pode ainda estar a caminho; aplicarVisibilidadeFerramentasAdmin reabre se for admin)
+    if (!ferramentaLiberada(modulo)) { // ferramenta de teste: só admin (a leitura do plano pode ainda estar a caminho; aplicarVisibilidadeFerramentasAdmin reabre se for admin)
       if (cRadix) cRadix.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;font-weight:600;">Esta ferramenta está disponível só para a conta admin.</div>';
     } else if (typeof iniciarModuloFasesVida === 'function') iniciarModuloFasesVida();
   }
