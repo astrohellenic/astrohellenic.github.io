@@ -239,105 +239,86 @@ function rzMotorHttp(lat, lon, base, fetchFn) {
 }
 
 /* ---------- Cálculo completo ----------
-   entrada: { ano, mes, dia (data LOCAL do nascimento), ini: {h, m}, fim: {h, m} (janela, hora local; fim ≤ início = passa da meia-noite),
-              lat, lon (lon leste +), fuso (horas, ex.: -3), leitura: 'meiodia' | 'centro' }
+   Parte SEMPRE de um mapa salvo, com o horário dele (aproximado): a sizígia, a posição dos planetas, o Ascendente e o Meio do Céu
+   aproximados e o signo que sobe saem desse horário. O resultado é o horário em que o Ascendente (ou o Meio do Céu, pela regra de
+   Ptolomeu e Hefestião) chega ao grau do planeta, buscado no signo que sobe no horário do mapa.
+   entrada: { ano, mes, dia, hora, min (data e hora LOCAIS do mapa), lat, lon (lon leste +), fuso (horas, ex.: -3) }
    motor: async (ms UT) → JSON do motor (rzMotorHttp). Devolve o resultado com tudo que a tela mostra. */
 async function rzCalcular(entrada, motor) {
-  const { ano, mes, dia, lat, lon, fuso } = entrada;
-  const localParaMs = (d0, h, m) => Date.UTC(ano, mes - 1, dia + d0, h, m, 0) - fuso * 3600000;
-  const iniMs = localParaMs(0, entrada.ini.h, entrada.ini.m);
-  let fimMs = localParaMs(0, entrada.fim.h, entrada.fim.m);
-  if (fimMs <= iniMs) fimMs = localParaMs(1, entrada.fim.h, entrada.fim.m);
-  const centroMs = (iniMs + fimMs) / 2;
+  const { ano, mes, dia, hora, min, lat, lon, fuso } = entrada;
+  const tMs = Date.UTC(ano, mes - 1, dia, hora, min, 0) - fuso * 3600000;
   const avisos = [];
   if (Math.abs(lat) > 66) avisos.push('Latitude acima do círculo polar: o Ascendente pode não subir em ordem; confira os horários.');
 
-  // 1) última sizígia antes do nascimento (antes do início da janela)
-  const jIni = await motor(iniMs), jFim = await motor(fimMs);
-  const sIni = jIni.sizigia, sFim = jFim.sizigia;
-  if (!sIni || sIni.jd_ut === undefined) throw new Error('O motor não devolveu a sizígia');
-  const jdParaMs = (jd) => (jd - 2440587.5) * 86400000;
-  const sizMs = jdParaMs(sIni.jd_ut);
-  if (sFim && Math.abs(sFim.jd_ut - sIni.jd_ut) > 1e-4) avisos.push(`Uma sizígia (${sFim.tipo}) acontece dentro da janela, em ${rzFmtHora(jdParaMs(sFim.jd_ut), fuso, true)}. O cálculo usa a anterior; se o nascimento foi depois dela, a sizígia certa é a outra.`);
+  // 1) última sizígia antes do nascimento, e o céu no horário do mapa
+  const jT = await motor(tMs);
+  const sT = jT.sizigia;
+  if (!sT || sT.jd_ut === undefined) throw new Error('O motor não devolveu a sizígia');
+  const sizMs = (sT.jd_ut - 2440587.5) * 86400000;
 
   // 2) ponto da sizígia
   const sizAng = rzAngulos(sizMs, lat, lon);
-  const luaNaSizigia = rzNorm360(sIni.grau_absoluto);
-  const nova = sIni.tipo === 'Lua Nova';
+  const luaNaSizigia = rzNorm360(sT.grau_absoluto);
+  const nova = sT.tipo === 'Lua Nova';
   let luminar = 'Lua', pontoLon = luaNaSizigia;
   if (!nova) {
     const luaAcima = rzNorm360(luaNaSizigia - sizAng.asc) >= 180;
     luminar = luaAcima ? 'Lua' : 'Sol';
     pontoLon = luaAcima ? luaNaSizigia : rzNorm360(luaNaSizigia + 180);
   }
-  const sizigia = { tipo: sIni.tipo, ms: sizMs, luminar, lon: pontoLon, luaLon: luaNaSizigia, asc: sizAng.asc, valensNoLugarDaLua: !nova ? luaNaSizigia : null };
+  const sizigia = { tipo: sT.tipo, ms: sizMs, luminar, lon: pontoLon, luaLon: luaNaSizigia, asc: sizAng.asc, valensNoLugarDaLua: !nova ? luaNaSizigia : null };
 
-  // 3) posição dos planetas no dia do nascimento (meio-dia local, ou o centro da janela)
-  const leituraMs = entrada.leitura === 'centro' ? centroMs : localParaMs(0, 12, 0);
-  const jLeit = await motor(leituraMs);
+  // 3) posição dos planetas no horário do mapa
   const posicoes = {}, retro = {};
-  RZ_ORDEM.forEach(id => { const o = jLeit.planetas[RZ_PLANETAS[id].motor]; posicoes[id] = rzNorm360(o.grau_absoluto); retro[id] = !!o.retrogrado; });
+  RZ_ORDEM.forEach(id => { const o = jT.planetas[RZ_PLANETAS[id].motor]; posicoes[id] = rzNorm360(o.grau_absoluto); retro[id] = !!o.retrogrado; });
 
   // 4) candidatos pelas duas regras
   const contagem = rzContagem(posicoes, pontoLon);
   const valens = rzValens(pontoLon);
 
-  // 5) e 6) horários de cada candidato
-  const angC = rzAngulos(centroMs, lat, lon);
-  const margem = 13 * 3600000;
+  // 5) horário em que o Ascendente (ou o Meio do Céu) chega ao grau do planeta, no signo que sobe (ou culmina) no horário do mapa
+  const angT = rzAngulos(tMs, lat, lon);
+  const quando = (tipo, grau) => {
+    const signoT = rzSignoDe(angT[tipo]);
+    const todos = rzCruzamentos(tipo, grau, tMs - 13 * 3600000, tMs + 13 * 3600000, lat, lon).filter(c => c.signo === signoT);
+    return todos.sort((x, y) => Math.abs(x.ms - tMs) - Math.abs(y.ms - tMs))[0] || null;
+  };
   const candidatos = [];
-  const quemEntra = [
-    { regra: 'ptolomeu', ids: contagem.vencedores },
-    { regra: 'valens', ids: [valens.termo, valens.signo] }
-  ];
-  quemEntra.forEach(q => {
+  const regras = [{ regra: 'ptolomeu', ids: contagem.vencedores }, { regra: 'valens', ids: [valens.termo, valens.signo] }];
+  regras.forEach(q => {
     const vistos = new Set();
     q.ids.forEach(id => {
       if (vistos.has(id)) return; vistos.add(id);
-      const motivo = q.regra === 'valens' ? [valens.termo === id ? 'senhor do termo' : null, valens.signo === id ? 'senhor do signo' : null].filter(Boolean).join(' e ') : null;
-      const lonPl = posicoes[id], grau = lonPl % 30, grauInt = Math.floor(grau);
-      const dAsc = rzDistAng(lonPl, angC.asc), dMc = rzDistAng(lonPl, angC.mc);
-      const maisPerto = dMc < dAsc ? 'mc' : 'asc';
-      const horarios = {};
-      ['asc', 'mc'].forEach(tipo => {
-        const todos = rzCruzamentos(tipo, grau, iniMs - margem, fimMs + margem, lat, lon);
-        const dentro = todos.filter(c => c.ms >= iniMs && c.ms <= fimMs);
-        let lista = dentro.map(c => Object.assign({ dentro: true }, c));
-        if (!lista.length) {                                     // nenhum na janela: o do signo do ponto aproximado, fora dela
-          const sc = rzSignoDe(angC[tipo]);
-          const doSigno = todos.filter(c => c.signo === sc).sort((a, b) => Math.abs(a.ms - centroMs) - Math.abs(b.ms - centroMs))[0];
-          if (doSigno) lista = [Object.assign({ dentro: false }, doSigno)];
-        }
-        // faixa do grau inteiro (grau 0′ a 59′): mesmo signo, ao redor do horário
-        lista.forEach(c => {
-          const cercaDe = (g) => rzCruzamentos(tipo, g % 30, c.ms - 40 * 60000, c.ms + 40 * 60000, lat, lon).filter(x => x.signo === c.signo || g === 30)[0];
-          const ini0 = cercaDe(grauInt), fim0 = cercaDe(grauInt + 1);
-          c.faixaGrauInteiro = (ini0 && fim0) ? { de: ini0.ms, ate: fim0.ms } : null;
-        });
-        horarios[tipo] = lista;
-      });
-      candidatos.push({ regra: q.regra, id, motivo, lon: lonPl, retro: retro[id], grau, distAsc: dAsc, distMc: dMc, maisPerto, horarios });
+      const lonPl = posicoes[id], grau = lonPl % 30;
+      // Ptolomeu/Hefestião: o número de graus do planeta (0 a 30) comparado ao do Ascendente e ao do Meio do Céu aproximados; Valens: só o Ascendente
+      const numAsc = angT.asc % 30, numMc = angT.mc % 30;
+      const tipo = (q.regra === 'ptolomeu' && Math.abs(grau - numMc) < Math.abs(grau - numAsc)) ? 'mc' : 'asc';
+      const c = quando(tipo, grau);
+      candidatos.push({ regra: q.regra, id, lon: lonPl, retro: retro[id], grau, numAsc, numMc, tipo, horario: c ? { ms: c.ms, signo: c.signo } : null });
     });
   });
 
-  // saída em cada horário: Asc, MC, Fortuna e quando a Fortuna muda de signo (Sol e Lua ajustados às amostras do motor)
-  const todosOsMs = [];
-  candidatos.forEach(c => ['asc', 'mc'].forEach(t => c.horarios[t].forEach(h => todosOsMs.push(h.ms))));
-  if (todosOsMs.length) {
-    const de = Math.min(iniMs, Math.min.apply(null, todosOsMs)) - 7 * 3600000, ate = Math.max(fimMs, Math.max.apply(null, todosOsMs)) + 7 * 3600000;
+  // detalhes de cada horário: Asc, MC, Fortuna e quando a Fortuna muda de signo (Sol e Lua ajustados às amostras do motor)
+  const lista = candidatos.filter(c => c.horario);
+  if (lista.length) {
+    const todosMs = lista.map(c => c.horario.ms);
+    const de = Math.min.apply(null, todosMs) - 7 * 3600000, ate = Math.max.apply(null, todosMs) + 7 * 3600000;
     const passo = Math.max(90 * 60000, (ate - de) / 24);
     const tempos = []; for (let t = de; t <= ate + 1; t += passo) tempos.push(Math.round(t / 60000) * 60000);
     const js = await Promise.all(tempos.map(t => motor(t)));
     const serie = (chave) => rzAjustePoli(tempos.map((t, i) => ({ t, lon: js[i].planetas[chave].grau_absoluto })), 3);
     const sol = serie('Sol'), lua = serie('Lua');
-    candidatos.forEach(c => ['asc', 'mc'].forEach(tipo => c.horarios[tipo].forEach(h => {
-      const a = rzAngulos(h.ms, lat, lon), f = rzFortunaEm(h.ms, lat, lon, sol, lua);
+    lista.forEach(c => {
+      const h = c.horario, a = rzAngulos(h.ms, lat, lon), f = rzFortunaEm(h.ms, lat, lon, sol, lua);
       h.asc = a.asc; h.mc = a.mc; h.fortuna = f.lon; h.diurno = f.diurno;
       h.fortunaTroca = rzFortunaTroca(h.ms, lat, lon, sol, lua);
-    })));
+      const cerca = (g) => rzCruzamentos(c.tipo, g % 30, h.ms - 40 * 60000, h.ms + 40 * 60000, lat, lon).filter(x => x.signo === h.signo || g === Math.floor(c.grau) + 1)[0];
+      const i0 = cerca(Math.floor(c.grau)), i1 = cerca(Math.floor(c.grau) + 1);
+      h.faixaGrauInteiro = (i0 && i1) ? { de: i0.ms, ate: i1.ms } : null;
+    });
   }
 
-  return { entrada, iniMs, fimMs, centroMs, leituraMs, avisos, sizigia, posicoes, retro, contagem, valens, angulosCentro: angC, candidatos };
+  return { entrada, tMs, avisos, sizigia, posicoes, retro, contagem, valens, angulosT: angT, candidatos };
 }
 
 /* "10:45:14" no fuso dado (comSegundos) a partir de ms UT; com data se comData */
@@ -353,14 +334,14 @@ if (typeof module !== 'undefined' && module.exports) {
     rzCalcular, rzMotorHttp, rzFmtPos, rzFmtHora, rzSignoDe, RZ_SIGNOS };
 }
 
-/* ==========================================
-   TELA
-   ========================================== */
-let rzUltimo = null;              // último resultado calculado (a tela guardada ao trocar de ferramenta já o carrega no HTML)
-let rzTimerCidade = null;
 
-function rzNum(s) { return parseFloat(String(s).trim().replace(',', '.')); }
+/* ==========================================
+   TELA — sem formulário: calcula sozinha a partir do mapa que está em tela (a Mandala)
+   ========================================== */
+let rzUltimo = null;              // último resultado calculado
+
 function rzP2(n) { return String(n).padStart(2, '0'); }
+
 /* Ícone do planeta / do signo no padrão do software: sempre o ícone; o nome ao lado só com os rótulos ligados. */
 function rzPlanetaHtml(id, tam) {
   return (typeof planetaComNome === 'function') ? planetaComNome(id, tam || 20) : RZ_PLANETAS[id].nome;
@@ -384,7 +365,7 @@ function rzFortunaHtml(tam) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('lote', 'fortune', tam || 22) : '';
   return ico || 'Fortuna';
 }
-/* Sizígia (lunação pré-natal): ícone próprio; o nome ao lado só com os rótulos ligados (mesmo padrão das outras ferramentas) */
+/* Sizígia (lunação pré-natal): ícone próprio; o nome ao lado só com os rótulos ligados */
 function rzSizigiaHtml(tam) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'sizigia', tam || 22) : '';
   if (!ico) return 'Sizígia';
@@ -397,45 +378,21 @@ function rzAspectoHtml(nome, lonA, lonB) {
   if (!ico) return nome;
   return (window.mostrarRotulosGlifos === false) ? ico : `<span class="com-nome">${ico}<span class="nome-glifo">${nome}</span></span>`;
 }
-function rzListaPlanetas(ids) { return ids.map(id => `<span style="display:inline-block; margin-right:8px;">${rzPlanetaHtml(id, 20)}</span>`).join(''); }
-
-/* data/lugar/janela iniciais: o mapa em tela, se houver (tudo editável) */
-function rzValoresIniciais() {
-  const v = { data: '', ini: '', fim: '', cidade: '', lat: '', lon: '' };
-  try {
-    if (typeof currentMoment !== 'undefined' && currentMoment instanceof Date && !isNaN(currentMoment)) {
-      v.data = `${currentMoment.getFullYear()}-${rzP2(currentMoment.getMonth() + 1)}-${rzP2(currentMoment.getDate())}`;
-      const min = currentMoment.getHours() * 60 + currentMoment.getMinutes();
-      const f = (m) => `${rzP2(Math.floor(m / 60))}:${rzP2(m % 60)}`;
-      v.ini = f(Math.max(0, min - 60)); v.fim = f(Math.min(23 * 60 + 59, min + 60));
-    }
-    if (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat !== undefined) {
-      v.lat = String(currentGeo.lat); v.lon = String(currentGeo.lon); v.cidade = currentGeo.city || currentGeo.name || '';
-    }
-  } catch (e) {}
-  return v;
-}
+/* ℞ de retrógrado: vermelho, na frente do PLANETA (quem fica retrógrado é o planeta) */
+function rzRetroHtml(r, id) { return r.retro[id] ? '<span title="Retrógrado" style="color:var(--terracota); font-weight:700; margin-right:4px;">℞</span>' : ''; }
+function rzPlanetaRetroHtml(r, id, tam) { return `<span style="display:inline-flex; align-items:center;">${rzRetroHtml(r, id)}${rzPlanetaHtml(id, tam)}</span>`; }
 
 function iniciarModuloRetificacaoSizigia() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
   rzUltimo = null;
-  const v = rzValoresIniciais();
-  const campo = (rot, html) => `<div><label class="rotulo" style="display:block; margin-bottom:2px;">${rot}</label>${html}</div>`;
   container.innerHTML = `
     <style>
-      #rz-container input, #rz-container select { box-sizing: border-box; width: 100%; padding: 6px 0; font-family: inherit; font-size: 13px; outline: none; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; min-height: 34px; }
-      #rz-container input[type="date"], #rz-container input[type="time"] { -webkit-appearance: none; appearance: none; }
-      #rz-container input:focus, #rz-container select:focus { border-bottom-color: var(--terracota); }
-      #rz-container .rz-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px 24px; }
-      #rz-container .rz-cidades { display: none; margin-top: 2px; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
-      #rz-container .rz-cidades div { padding: 6px 2px; font-size: 12px; cursor: pointer; }
-      #rz-container .rz-cidades div:hover { color: var(--terracota); }
-      #rz-container table { width: 100%; }
       #rz-container .rz-rolagem { overflow-x: auto; }
-      #rz-container .rz-escolhido td { color: var(--terracota); font-weight: 700; }
-      #rz-container .rz-fora { opacity: .85; }
+      #rz-container table { width: 100%; }
+      #rz-container .rz-escolhido { color: var(--terracota); font-weight: 700; }
       #rz-container .rz-fonte { font-size: 11.5px; line-height: 1.55; }
+      #rz-container details > summary { cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
     </style>
     <div style="width: 100%; display: flex; flex-direction: column;">
       <div id="rz-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
@@ -448,102 +405,34 @@ function iniciarModuloRetificacaoSizigia() {
           </button>
         </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
-        <div class="texto-apagado" style="font-size:12px; text-align:center; line-height:1.55;">Retificação pelos antigos: Ptolomeu, Tetrabiblos III.2 · Hefestião, Apotelesmatika II.2 · Valens, Antologias I.5 e I.9.</div>
         <hr class="divisa">
-        <div class="rz-campos">
-          ${campo('Data do nascimento', `<input type="date" id="rzData" value="${v.data}">`)}
-          ${campo('Janela: início (hora local)', `<input type="time" id="rzIni" value="${v.ini}">`)}
-          ${campo('Janela: fim (hora local)', `<input type="time" id="rzFim" value="${v.fim}">`)}
-          ${campo('Posição dos planetas lida', `<select id="rzLeitura"><option value="centro">no centro da janela</option><option value="meiodia">ao meio-dia local do dia</option></select>`)}
-        </div>
-        <div class="rz-campos" style="margin-top:12px;">
-          <div style="grid-column: 1 / -1; position:relative;">
-            <label class="rotulo" style="display:block; margin-bottom:2px;">Local (busque a cidade ou digite as coordenadas)</label>
-            <input type="text" id="rzCidade" value="${escapeHtml(v.cidade)}" placeholder="Digite a cidade..." autocomplete="off" oninput="rzBuscarCidade(this.value)">
-            <div id="rzCidades" class="rz-cidades"></div>
-          </div>
-          ${campo('Latitude (sul negativa)', `<input type="text" id="rzLat" inputmode="decimal" value="${v.lat}" placeholder="-23,46" onchange="rzAtualizarFuso()">`)}
-          ${campo('Longitude (oeste negativa)', `<input type="text" id="rzLon" inputmode="decimal" value="${v.lon}" placeholder="-46,53" onchange="rzAtualizarFuso()">`)}
-          ${campo('Fuso (horas) — vazio = automático', `<input type="text" id="rzFusoManual" inputmode="decimal" placeholder="automático" onchange="rzAtualizarFuso()">`)}
-        </div>
-        <div id="rzFusoInfo" class="texto-apagado" style="font-size:11.5px; margin-top:8px;"></div>
-        <div style="margin-top:14px;"><button type="button" class="botao-texto" style="font-size:12px; padding:5px 14px;" onclick="rzExecutar()">Calcular</button></div>
-        <hr class="divisa">
-        <div id="rzResultado"><div class="texto-apagado" style="font-size:12.5px;">Preencha e aperte Calcular.</div></div>
+        <div id="rzResultado"></div>
         <hr class="divisa-fim">
       </div>
     </div>`;
-  ['rzData', 'rzIni'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', rzAtualizarFuso); });
-  rzAtualizarFuso();
+  rzExecutar();
 }
 if (typeof window !== 'undefined') window.iniciarModuloRetificacaoSizigia = iniciarModuloRetificacaoSizigia;
 
-/* busca de cidade (Nominatim, como o resto do software) */
-function rzBuscarCidade(q) {
-  const lista = document.getElementById('rzCidades');
-  if (!lista) return;
-  clearTimeout(rzTimerCidade);
-  if (!q || q.length < 3) { lista.style.display = 'none'; return; }
-  rzTimerCidade = setTimeout(async () => {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
-      const dados = await res.json();
-      if (!dados || !dados.length) { lista.style.display = 'none'; return; }
-      lista.innerHTML = dados.map(it => `<div data-lat="${it.lat}" data-lon="${it.lon}" data-nome="${escapeHtml(it.display_name)}">${escapeHtml(it.display_name)}</div>`).join('');
-      lista.querySelectorAll('div').forEach(d => d.addEventListener('click', () => {
-        document.getElementById('rzCidade').value = d.dataset.nome;
-        document.getElementById('rzLat').value = parseFloat(d.dataset.lat).toFixed(4);
-        document.getElementById('rzLon').value = parseFloat(d.dataset.lon).toFixed(4);
-        lista.style.display = 'none';
-        rzAtualizarFuso();
-      }));
-      lista.style.display = 'block';
-    } catch (e) { lista.style.display = 'none'; }
-  }, 300);
-}
-if (typeof window !== 'undefined') window.rzBuscarCidade = rzBuscarCidade;
+function rzMensagem(texto) { return `<div style="font-size:13px; font-weight:600; text-align:center; padding:16px 0;">${escapeHtml(texto)}</div>`; }
 
-/* lê o formulário → entrada do cálculo (ou { erro }) */
-function rzLerFormulario() {
-  const g = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
-  const dt = /^(\d{4})-(\d{2})-(\d{2})$/.exec(g('rzData'));
-  const hm = (s) => { const m = /^(\d{1,2}):(\d{2})/.exec(s); return m ? { h: +m[1], m: +m[2] } : null; };
-  const ini = hm(g('rzIni')), fim = hm(g('rzFim'));
-  const lat = rzNum(g('rzLat')), lon = rzNum(g('rzLon'));
-  if (!dt) return { erro: 'Informe a data do nascimento.' };
-  if (!ini || !fim) return { erro: 'Informe o início e o fim da janela de horário.' };
-  if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return { erro: 'Informe a latitude e a longitude (ou escolha a cidade).' };
-  const ano = +dt[1], mes = +dt[2], dia = +dt[3];
-  const manual = g('rzFusoManual').trim();
-  let fuso, fusoAuto = true;
-  if (manual !== '') { fuso = rzNum(manual); fusoAuto = false; if (isNaN(fuso) || Math.abs(fuso) > 14) return { erro: 'Fuso inválido (use horas, por exemplo -3).' }; }
-  else if (typeof calcularFusoPreciso === 'function') fuso = calcularFusoPreciso(lat, lon, ano, mes, dia, ini.h, ini.m);
-  else fuso = Math.round(lon / 15);
-  return { ano, mes, dia, ini, fim, lat, lon, fuso, fusoAuto, leitura: g('rzLeitura') || 'centro', cidade: g('rzCidade') };
+/* lê o mapa em tela → entrada do cálculo (ou { erro }) */
+function rzLerMapa() {
+  if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || typeof currentMapaId === 'undefined' || !currentMapaId) return { erro: 'Abra um mapa salvo no menu lateral.' };
+  if (window.mapaTemHorario === false) return { erro: 'O método precisa de um horário aproximado.' };
+  const m = currentMoment, g = currentGeo;
+  const fuso = (g.fuso !== undefined) ? g.fuso : (typeof calcularFusoPreciso === 'function' ? calcularFusoPreciso(g.lat, g.lon, m.getFullYear(), m.getMonth() + 1, m.getDate(), m.getHours(), m.getMinutes()) : Math.round(g.lon / 15));
+  return { ano: m.getFullYear(), mes: m.getMonth() + 1, dia: m.getDate(), hora: m.getHours(), min: m.getMinutes(), lat: g.lat, lon: g.lon, fuso, cidade: g.city || '' };
 }
-
-function rzFmtFuso(f) { const s = f < 0 ? '−' : '+'; const a = Math.abs(f); const h = Math.floor(a), m = Math.round((a - h) * 60); return `UTC${s}${h}${m ? ':' + rzP2(m) : ''}`; }
-
-function rzAtualizarFuso() {
-  const el = document.getElementById('rzFusoInfo');
-  if (!el) return;
-  const e = rzLerFormulario();
-  if (e.erro) { el.textContent = ''; return; }
-  el.textContent = e.fusoAuto
-    ? `Fuso usado: ${rzFmtFuso(e.fuso)} (automático, com o horário de verão que valia nesse lugar e nessa data).`
-    : `Fuso usado: ${rzFmtFuso(e.fuso)} (digitado).`;
-}
-if (typeof window !== 'undefined') window.rzAtualizarFuso = rzAtualizarFuso;
 
 async function rzExecutar() {
   const area = document.getElementById('rzResultado');
   if (!area) return;
-  const e = rzLerFormulario();
-  if (e.erro) { area.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">${escapeHtml(e.erro)}</div>`; return; }
+  const e = rzLerMapa();
+  if (e.erro) { area.innerHTML = rzMensagem(e.erro); return; }
   area.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Calculando...</div>`;
   try {
-    const motor = rzMotorHttp(e.lat, e.lon);
-    const r = await rzCalcular(e, motor);
+    const r = await rzCalcular(e, rzMotorHttp(e.lat, e.lon));
     rzUltimo = r;
     area.innerHTML = rzMontarResultado(r);
   } catch (err) {
@@ -553,121 +442,96 @@ async function rzExecutar() {
 }
 if (typeof window !== 'undefined') window.rzExecutar = rzExecutar;
 
+function rzFmtFuso(f) { const sn = f < 0 ? '−' : '+'; const a = Math.abs(f); const h = Math.floor(a), m = Math.round((a - h) * 60); return `UTC${sn}${h}${m ? ':' + rzP2(m) : ''}`; }
+
 /* ---------- montagem do resultado ---------- */
 function rzMontarResultado(r) {
   const fuso = r.entrada.fuso;
-  const diaNasc = Date.UTC(r.entrada.ano, r.entrada.mes - 1, r.entrada.dia) / 86400000;
-  const hora = (ms) => {
-    const delta = Math.floor((ms + fuso * 3600000) / 86400000) - diaNasc;
-    return `<strong>${rzFmtHora(ms, fuso)}</strong>` + (delta ? ` <small>(${delta > 0 ? '+' : '−'}${Math.abs(delta)} dia)</small>` : '');
-  };
+  const hora = (ms) => `<strong>${rzFmtHora(ms, fuso)}</strong>`;
   const s = r.sizigia;
   const aviso = r.avisos.map(a => `<div style="color:var(--terracota); font-weight:700; font-size:12.5px; margin-bottom:8px;">${escapeHtml(a)}</div>`).join('');
+  const nasc = `${rzP2(r.entrada.dia)}/${rzP2(r.entrada.mes)}/${r.entrada.ano} ${rzP2(r.entrada.hora)}:${rzP2(r.entrada.min)}`;
+  const mapa = `<div class="texto-apagado" style="font-size:12px; text-align:center; margin-bottom:10px;">${escapeHtml(currentSubjectName || '')} · ${nasc} · ${escapeHtml(r.entrada.cidade)}</div>`;
 
-  const blocoSizigia = `
-    <h3 class="titulo-secao">1 · Última sizígia antes do nascimento</h3>
-    <div class="cartao" style="font-size:13px; line-height:1.9;">
-      <div>${rzSizigiaHtml(24)} · <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
-      <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? '(a Lua estava acima do horizonte do local)' : '(a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
-      <div>Ponto da sizígia: <strong>${rzPosHtml(s.lon)}</strong></div>
-      ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzPosHtml(s.valensNoLugarDaLua, 16)}. ${s.luminar === 'Sol' ? 'Aqui o luminar acima do horizonte foi o Sol, então o ponto difere do de Valens.' : 'Aqui coincide com a regra do luminar acima do horizonte.'}</div>` : ''}
-      <div class="texto-apagado rz-fonte">Fonte: Ptolomeu, Tetrabiblos III.2 (luminar acima do horizonte na lua cheia); Valens, Antologias I.9.</div>
+  // uma linha por candidato: planeta, grau e horário; os detalhes ficam recolhidos
+  const linha = (c) => {
+    const h = c.horario;
+    const cabeca = `<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:14px;">
+        ${rzPlanetaRetroHtml(r, c.id, 22)} ${rzPosHtml(c.lon, 18)} <span>→</span> ${h ? `${rzAnguloHtml(c.tipo, 26)} ${hora(h.ms)}` : '<span>sem horário nesse signo</span>'}
+      </div>`;
+    if (!h) return `<div style="padding:8px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);">${cabeca}</div>`;
+    const item = (ico, html) => `<span style="display:inline-flex; align-items:center; gap:6px;">${ico}${html}</span>`;
+    const f = h.fortunaTroca;
+    const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, fuso)}` : 'não muda em 6 h');
+    const regraMc = c.regra === 'ptolomeu' ? `<div class="texto-apagado" style="font-size:12px; margin-bottom:6px;">Regra do Meio do Céu: grau do planeta ${rzFmtGrau(c.grau)}, ${rzAnguloHtml('asc', 22)} aproximado ${rzFmtGrau(c.numAsc)}, ${rzAnguloHtml('mc', 22)} aproximado ${rzFmtGrau(c.numMc)}. Está mais perto do ${rzAnguloHtml(c.tipo, 22)}.</div>` : '';
+    return `<div style="padding:8px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);">
+      ${cabeca}
+      <details style="margin-top:2px;"><summary>ver detalhes</summary>
+        ${regraMc}
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; font-size:13px;">
+          ${item(rzAnguloHtml('asc', 24), rzPosHtml(h.asc, 18))}
+          ${item(rzAnguloHtml('mc', 24), rzPosHtml(h.mc, 18))}
+          ${item(rzFortunaHtml(22), rzPosHtml(h.fortuna, 18) + ` <small>${h.diurno ? 'de dia' : 'de noite'}</small>`)}
+        </div>
+        ${h.faixaGrauInteiro ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, fuso)}</div>` : ''}
+        <div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">${rzFortunaHtml(16)} ${troca}</div>
+      </details>
+    </div>`;
+  };
+  const doRegra = (regra) => r.candidatos.filter(c => c.regra === regra).map(linha).join('');
+
+  const blocoHorarios = `
+    <h3 class="titulo-secao">Horários encontrados</h3>
+    <div class="cartao" style="margin-bottom:14px;">
+      <div class="rotulo">Ptolomeu e Hefestião</div>
+      <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2.</div>
+      ${doRegra('ptolomeu')}
+    </div>
+    <div class="cartao">
+      <div class="rotulo">Valens</div>
+      <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Fonte: Valens, Antologias I.5. Valem o senhor do termo e o senhor do signo do ponto da sizígia.</div>
+      ${doRegra('valens')}
     </div>`;
 
-  const dataLeitura = r.entrada.leitura === 'centro' ? 'no centro da janela' : 'ao meio-dia local do dia';
+  const blocoSizigia = `
+    <hr class="divisa">
+    <h3 class="titulo-secao">Última sizígia antes do nascimento</h3>
+    <div class="cartao" style="font-size:13px; line-height:1.9;">
+      <div>${rzSizigiaHtml(24)} · <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)}</div>
+      <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? '(a Lua estava acima do horizonte do local)' : '(a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
+      <div>Ponto da sizígia: <strong>${rzPosHtml(s.lon)}</strong></div>
+      ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzPosHtml(s.valensNoLugarDaLua, 16)}.</div>` : ''}
+      <div class="texto-apagado rz-fonte">Fonte: Ptolomeu, Tetrabiblos III.2; Valens, Antologias I.9.</div>
+    </div>`;
+
   const tabela = `
     <div class="rz-rolagem"><table class="tabela-epoca">
-      <tr><th>Planeta</th><th>Posição (${dataLeitura})</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th>Aspecto</th><th class="centro">Votos</th></tr>
+      <tr><th>Planeta</th><th>Posição</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th>Aspecto</th><th class="centro">Votos</th></tr>
       ${r.contagem.linhas.map(l => {
         const venc = r.contagem.vencedores.includes(l.id);
         const x = (b) => b ? '✓' : '·';
-        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id)}</td><td>${rzPosHtml(l.lon, 18)}${r.retro[l.id] ? ' ℞' : ''}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td>${rzAspectoHtml(l.vias.aspecto, l.lon, s.lon)}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
+        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaRetroHtml(r, l.id)}</td><td>${rzPosHtml(l.lon, 18)}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td>${rzAspectoHtml(l.vias.aspecto, l.lon, s.lon)}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
       }).join('')}
     </table></div>`;
-
-  const blocoPtolomeu = `
+  const blocoVotos = `
     <hr class="divisa">
-    <h3 class="titulo-secao">2 · Regra de Ptolomeu e Hefestião</h3>
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. O ponto da sizígia está em ${rzPosHtml(s.lon, 16)}. Cada planeta recebe um voto por dignidade que tem nesse ponto (triplicidade, qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar; domicílio; exaltação; termo egípcio) e um voto se o aspecta por signos. Ganha quem tem mais votos; no empate valem todos os empatados.</div>
-    ${tabela}
-    <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${rzListaPlanetas(r.contagem.vencedores)} (${r.contagem.max} votos).</div>
-    ${r.candidatos.filter(c => c.regra === 'ptolomeu').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
-
-  const blocoValens = `
-    <hr class="divisa">
-    <h3 class="titulo-secao">3 · Regra de Valens (Antologias I.5)</h3>
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Valens, Antologias I.5. Em separado da regra anterior: valem o senhor do termo (${rzPlanetaHtml(r.valens.termo, 18)}) e o senhor do signo (${rzPlanetaHtml(r.valens.signo, 18)}) do ponto da sizígia.</div>
-    ${r.candidatos.filter(c => c.regra === 'valens').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
+    <details>
+      <summary>Contagem de votos</summary>
+      <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. O ponto da sizígia está em ${rzPosHtml(s.lon, 16)}. Cada planeta recebe um voto por dignidade que tem nesse ponto: triplicidade, domicílio, exaltação e termo. Na triplicidade vale qualquer dos três senhores, pela tabela de Doroteu. Recebe mais um voto se aspecta o ponto. Ganha quem tem mais votos. No empate valem todos os empatados.</div>
+      ${tabela}
+      <div style="font-size:13px; margin:8px 0;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${r.contagem.vencedores.map(id => `<span style="display:inline-block; margin-right:8px;">${rzPlanetaRetroHtml(r, id, 20)}</span>`).join('')} (${r.contagem.max} votos).</div>
+    </details>`;
 
   const rodape = `
     <hr class="divisa">
     <div class="texto-apagado rz-fonte">
       <strong>Margem.</strong> Cerca de 4 minutos de tempo por grau: um erro de 1° na posição do astro muda o horário em torno de 4 minutos. O horário vale para o grau e os minutos do planeta, calculado ao segundo; a precisão real do método é a do texto antigo, não a do cálculo.<br>
-      <strong>Fontes.</strong> Ptolomeu, <em>Tetrabiblos</em> III.2 (candidatos pelos votos das dignidades e do aspecto; grau do planeta como grau do Ascendente; regra do Meio do Céu). Hefestião, <em>Apotelesmatika</em> II.2 (repete Ptolomeu; as frações do grau marcam a hora, iguais à posição do astro). Valens, <em>Antologias</em> I.5 (senhores do termo e do signo) e I.9 (exemplos; lua cheia no lugar da Lua).<br>
-      <strong>Como foi calculado.</strong> Swiss Ephemeris (motor do site), zodíaco tropical, signos inteiros, termos egípcios. Ascendente e Meio do Céu por tempo sideral aparente e obliquidade verdadeira, conferidos contra o Swiss Ephemeris. Fortuna: Asc + Lua − Sol de dia, Asc + Sol − Lua de noite (dia = Sol acima do horizonte pelo grau). Posições do motor com 0,01° (cerca de 1 segundo no horário). Fuso: ${rzFmtFuso(fuso)}${r.entrada.fusoAuto ? ' com horário de verão histórico' : ''}, o mesmo na janela inteira.<br>
-      <strong>Fora do escopo, de propósito.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio — o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente) e o cálculo da concepção (quase circular, não distingue horários).
+      <strong>Fontes.</strong> Ptolomeu, <em>Tetrabiblos</em> III.2: candidatos pelos votos das dignidades e do aspecto, grau do planeta como grau do Ascendente, regra do Meio do Céu. Hefestião, <em>Apotelesmatika</em> II.2: repete Ptolomeu, e as frações do grau marcam a hora. Valens, <em>Antologias</em> I.5: senhores do termo e do signo; I.9: exemplos, com a lua cheia no lugar da Lua.<br>
+      <strong>Como foi calculado.</strong> Swiss Ephemeris (motor do site), zodíaco tropical, signos inteiros, termos egípcios, a partir do horário do mapa. Ascendente e Meio do Céu por tempo sideral aparente e obliquidade verdadeira, conferidos contra o Swiss Ephemeris. Fortuna: Asc + Lua − Sol de dia, Asc + Sol − Lua de noite, com dia quando o Sol está acima do horizonte pelo grau. Posições do motor com 0,01°, cerca de 1 segundo no horário. Fuso: ${rzFmtFuso(fuso)}.<br>
+      <strong>Fora do escopo.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio), porque o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente, e o cálculo da concepção, que é quase circular e não distingue horários.
     </div>`;
 
-  return aviso + rzMontarConclusao(r, hora) + blocoSizigia + blocoPtolomeu + blocoValens + rodape;
-}
-
-/* Um horário encontrado: ícone do ângulo + horário, depois Ascendente, Meio do Céu e Fortuna nesse horário (cada um com o ícone). Empilhado, pra caber no celular. */
-function rzBlocoHorario(r, c, tipo, h, hora) {
-  const f = h.fortunaTroca;
-  const fuso = r.entrada.fuso;
-  const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, fuso)}` : 'não muda em 6 h');
-  const item = (ico, html) => `<span style="display:inline-flex; align-items:center; gap:6px;">${ico}${html}</span>`;
-  return `
-    <div class="${tipo === c.maisPerto ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}" style="padding:10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);">
-      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; font-size:15px;">
-        ${rzAnguloHtml(tipo, 28)} ${hora(h.ms)}${h.dentro ? '' : ' <small>fora da janela</small>'}
-      </div>
-      ${h.faixaGrauInteiro ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:2px;">grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, fuso)}</div>` : ''}
-      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; font-size:13px; margin-top:6px;">
-        ${item(rzAnguloHtml('asc', 24), rzPosHtml(h.asc, 18))}
-        ${item(rzAnguloHtml('mc', 24), rzPosHtml(h.mc, 18))}
-        ${item(rzFortunaHtml(22), rzPosHtml(h.fortuna, 18) + ` <small>${h.diurno ? 'de dia' : 'de noite'}</small>`)}
-      </div>
-      <div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">${rzFortunaHtml(16)} ${troca}</div>
-    </div>`;
-}
-
-function rzMontarCandidato(r, c, hora) {
-  const escolhida = c.maisPerto;
-  const blocos = ['asc', 'mc'].map(tipo => c.horarios[tipo].map(h => rzBlocoHorario(r, c, tipo, h, hora)).join('')).join('');
-  const dentro = c.horarios[escolhida].some(h => h.dentro);
-  const motivo = c.motivo ? ` · ${c.motivo}` : '';
-  return `
-    <div class="cartao" style="margin-bottom:14px;">
-      <div style="font-size:14px; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;">
-        <span style="font-size:15px;">${rzPlanetaHtml(c.id, 22)}</span>
-        <span><strong>${rzPosHtml(c.lon, 20)}</strong>${c.retro ? ' ℞' : ''}${motivo}</span>
-      </div>
-      <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
-        Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela: ${rzAnguloHtml('asc', 24)} ${rzPosHtml(r.angulosCentro.asc, 16)} e ${rzAnguloHtml('mc', 24)} ${rzPosHtml(r.angulosCentro.mc, 16)}).
-        A regra escolhe o ${rzAnguloHtml(escolhida, 24)} (em vermelho abaixo).
-      </div>
-      ${blocos}
-      ${(!dentro) ? '<div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">No ângulo escolhido, nenhum horário cai dentro da janela; o mostrado é o do signo que sobe no centro dela.</div>' : ''}
-    </div>`;
-}
-
-/* Resposta no topo: pra cada candidato, o horário do ângulo que a regra escolhe */
-function rzMontarConclusao(r, hora) {
-  const linhas = r.candidatos.map(c => {
-    const hs = c.horarios[c.maisPerto];
-    if (!hs.length) return '';
-    const horas = hs.map(h => hora(h.ms) + (h.dentro ? '' : ' <small>(fora da janela)</small>')).join(' · ');
-    const regra = c.regra === 'valens' ? 'Valens' : 'Ptolomeu e Hefestião';
-    return `<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding:8px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); font-size:14px;">
-      <span class="texto-apagado" style="font-size:11.5px; min-width:120px;">${regra}</span>
-      ${rzPlanetaHtml(c.id, 22)} ${rzPosHtml(c.lon, 18)} <span>→</span> ${rzAnguloHtml(c.maisPerto, 26)} ${horas}
-    </div>`;
-  }).join('');
-  return `
-    <h3 class="titulo-secao">Horários encontrados</h3>
-    <div class="cartao">${linhas}</div>
-    <hr class="divisa">`;
+  return aviso + mapa + blocoHorarios + blocoSizigia + blocoVotos + rodape;
 }
 
 /* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */

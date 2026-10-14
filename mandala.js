@@ -367,6 +367,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
     }
   }
   currentMoment = new Date(ano, mes - 1, dia, hora, min);
+  window.mapaTemHorario = !!(c.horaNascimento && c.horaNascimento.includes(':')); // o Achador de horário (retificação) só calcula com horário aproximado
 
   const lat = parseFloat(c.latitude) || -23.5505;
   const lon = parseFloat(c.longitude) || -46.6333;
