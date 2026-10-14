@@ -259,6 +259,12 @@ function fvLinhaPlaneta(papel, p) {
   return `<div style="padding:8px 0;"><span class="rotulo">${papel}</span><div style="margin-top:3px;">${fvSituacao(p)}</div></div>`;
 }
 
+/* Rótulo da troca: centrado na marca; se "hoje" está perto, vai pro lado oposto a ele pra a linha preta não passar por cima do texto. */
+function fvAncoraRotulo(idadeTroca, hojeIdade) {
+  if (Math.abs(idadeTroca - hojeIdade) >= 12) return '-50%';
+  return idadeTroca >= hojeIdade ? '0' : '-100%';
+}
+
 /* Barra de 0 a 90 anos: uma faixa por leitura (fase 1 | fase 2, dividida na troca dela, com legenda), "hoje" e os eventos (número do evento embaixo).
    leituras: [{ rotulo, r }]. Se as duas coincidem vem uma faixa só, com as duas legendas. */
 function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
@@ -273,7 +279,7 @@ function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
       <div style="position:absolute; left:${pc(l.r.troca.idade)}%; right:0; top:${topoFaixa(i)}px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
       <span style="position:absolute; left:${pc(l.r.troca.idade / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
       <span style="position:absolute; left:${pc((l.r.troca.idade + MAX) / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
-      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(-50%); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap;" title="Troca, ${fvFmtAnos(l.r.troca.idade)}">troca ${l.rotulo}</span>`).join('');
+      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvFmtAnos(l.r.troca.idade)}">troca ${l.rotulo}: ${fvNum(l.r.troca.idade, 2)} anos</span>`).join('');
   const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(a =>
     `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:${ticksTop + 14}px;">${a}</span>`).join('');
   const marcas = eventos.map((e, i) => `
