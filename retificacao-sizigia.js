@@ -256,16 +256,17 @@ async function rzCalcular(entrada, motor) {
   if (!sT || sT.jd_ut === undefined) throw new Error('O motor não devolveu a sizígia');
   const sizMs = (sT.jd_ut - 2440587.5) * 86400000;
 
-  // 2) ponto da sizígia. Lua nova: a conjunção. Lua cheia: o luminar que está acima do horizonte no MAPA NATAL (no horário do nascimento, não no da
-  //    sizígia): nascimento de dia = Sol (grau oposto ao da Lua na sizígia); de noite = Lua. Sempre o grau do luminar NO INSTANTE DA SIZÍGIA.
+  // 2) ponto da sizígia. Lua nova: a conjunção, sem escolha. Lua cheia: o luminar que está ACIMA do horizonte no instante da sizígia, no local de
+  //    nascimento (Ptolomeu III.2: "a das duas que está acima da Terra"); há sempre um só, porque estão opostos. Lua acima = lugar da Lua;
+  //    Lua abaixo = lugar do Sol (grau oposto). O horizonte do mapa natal não entra nessa escolha.
   const angT = rzAngulos(tMs, lat, lon);
+  const sizAng = rzAngulos(sizMs, lat, lon);
   const luaNaSizigia = rzNorm360(sT.grau_absoluto);
   const nova = sT.tipo === 'Lua Nova';
-  const solNoNasc = rzNorm360(jT.planetas.Sol.grau_absoluto);
-  const nascDeDia = rzNorm360(solNoNasc - angT.asc) >= 180;      // Sol acima do horizonte no nascimento
   let luminar = 'Lua', pontoLon = luaNaSizigia;
-  if (!nova && nascDeDia) { luminar = 'Sol'; pontoLon = rzNorm360(luaNaSizigia + 180); }
-  const sizigia = { tipo: sT.tipo, ms: sizMs, luminar, lon: pontoLon, luaLon: luaNaSizigia, nascDeDia, valensNoLugarDaLua: !nova ? luaNaSizigia : null };
+  const luaAcima = rzNorm360(luaNaSizigia - sizAng.asc) >= 180;
+  if (!nova && !luaAcima) { luminar = 'Sol'; pontoLon = rzNorm360(luaNaSizigia + 180); }
+  const sizigia = { tipo: sT.tipo, ms: sizMs, luminar, lon: pontoLon, luaLon: luaNaSizigia, luaAcima, valensNoLugarDaLua: !nova ? luaNaSizigia : null };
 
   // 3) posição dos planetas no horário do mapa
   const posicoes = {}, retro = {};
@@ -494,7 +495,7 @@ function rzMontarResultado(r) {
     <h3 class="titulo-secao">Última sizígia antes do nascimento</h3>
     <div class="cartao" style="font-size:13px; line-height:1.9;">
       <div>${rzSizigiaHtml(24)} · <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)}</div>
-      <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.nascDeDia ? '(nascimento de dia: vale o Sol, no grau dele na sizígia)' : '(nascimento de noite: vale a Lua, no grau dela na sizígia)')}</div>
+      <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.luaAcima ? '(a Lua estava acima do horizonte na sizígia)' : '(a Lua estava abaixo do horizonte na sizígia, então vale o Sol, no grau oposto ao da Lua)')}</div>
       <div>Ponto da sizígia: <strong>${rzPosHtml(s.lon)}</strong></div>
       ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzPosHtml(s.valensNoLugarDaLua, 16)}.</div>` : ''}
       <div class="texto-apagado rz-fonte">Fonte: Ptolomeu, Tetrabiblos III.2; Valens, Antologias I.9.</div>
