@@ -378,9 +378,9 @@ function rzAspectoHtml(nome, lonA, lonB) {
   if (!ico) return nome;
   return (window.mostrarRotulosGlifos === false) ? ico : `<span class="com-nome">${ico}<span class="nome-glifo">${nome}</span></span>`;
 }
-/* ℞ de retrógrado: vermelho, na frente do PLANETA (quem fica retrógrado é o planeta) */
-function rzRetroHtml(r, id) { return r.retro[id] ? '<span title="Retrógrado" style="color:var(--terracota); font-weight:700; margin-right:4px;">℞</span>' : ''; }
-function rzPlanetaRetroHtml(r, id, tam) { return `<span style="display:inline-flex; align-items:center;">${rzRetroHtml(r, id)}${rzPlanetaHtml(id, tam)}</span>`; }
+/* ℞ de retrógrado: vermelho, junto do PLANETA (logo depois do ícone) (quem fica retrógrado é o planeta) */
+function rzRetroHtml(r, id) { return r.retro[id] ? '<span title="Retrógrado" style="color:var(--terracota); font-weight:700; margin-left:4px;">℞</span>' : ''; }
+function rzPlanetaRetroHtml(r, id, tam) { return `<span style="display:inline-flex; align-items:center;">${rzPlanetaHtml(id, tam)}${rzRetroHtml(r, id)}</span>`; }
 
 function iniciarModuloRetificacaoSizigia() {
   const container = document.getElementById('mandala-container');
