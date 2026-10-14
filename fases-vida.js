@@ -31,7 +31,6 @@ const FV_TRIPLICIDADE = {
 const FV_DOMICILIO = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
 const FV_EXALTACAO = { Sun: 0, Moon: 1, Mercury: 5, Venus: 11, Mars: 9, Jupiter: 3, Saturn: 6 };   // signo de exaltação
 const FV_SIMBOLO_ID = { '☉': 'Sun', '☽': 'Moon', '☿': 'Mercury', '♀': 'Venus', '♂': 'Mars', '♃': 'Jupiter', '♄': 'Saturn' };
-const FV_ORDEM_CALDEIA = ['Mars', 'Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter'];          // faces: começa em Marte, 0° de Áries
 
 /* Tempo de ascensão de cada signo (em anos = graus de ascensão) na latitude dada, por ascensão oblíqua:
    OA(λ) = RA(λ) − AD, AD = asin(tan δ · tan φ). Latitude com sinal (sul = negativa). Devolve { tempos[12], polar }. */
@@ -69,7 +68,6 @@ function fvDignidades(idPlaneta, absGraus, isDia) {
     const faixa = EGYPTIAN_TERMS[s].find(t => g < t.deg);
     if (faixa && FV_SIMBOLO_ID[faixa.p] === idPlaneta) lista.push('termo');
   }
-  if (FV_ORDEM_CALDEIA[Math.floor(absGraus / 10) % 7] === idPlaneta) lista.push('face');
   const opostoExaltacao = FV_EXALTACAO[idPlaneta] !== undefined && (FV_EXALTACAO[idPlaneta] + 6) % 12 === s;
   if (opostoExaltacao) lista.push('queda (debilidade)');
   return lista;
