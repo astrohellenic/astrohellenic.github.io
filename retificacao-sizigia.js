@@ -384,9 +384,18 @@ function rzFortunaHtml(tam) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'fortune', tam || 22) : '';
   return ico || 'Fortuna';
 }
+/* Lunação pré-natal: ícone próprio; o nome ao lado só com os rótulos ligados (mesmo padrão das outras ferramentas) */
 function rzSizigiaHtml(tam) {
   const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'sizigia', tam || 22) : '';
-  return ico || 'Sizígia';
+  if (!ico) return 'Lunação pré-natal';
+  return (window.mostrarRotulosGlifos === false) ? ico : `<span class="com-nome">${ico}<span class="nome-glifo">Lunação pré-natal</span></span>`;
+}
+/* Ícone do aspecto (o mesmo da Matriz de Visibilidade, por signos inteiros); o nome só com os rótulos ligados */
+function rzAspectoHtml(nome, lonA, lonB) {
+  if (!nome) return '·';
+  const ico = (typeof getAspectoMatrizSVG === 'function') ? getAspectoMatrizSVG(rzNorm360(lonA), rzNorm360(lonB)).replace(/width="\d+" height="\d+"/, 'width="20" height="20"') : '';
+  if (!ico) return nome;
+  return (window.mostrarRotulosGlifos === false) ? ico : `<span class="com-nome">${ico}<span class="nome-glifo">${nome}</span></span>`;
 }
 function rzListaPlanetas(ids) { return ids.map(id => `<span style="display:inline-block; margin-right:8px;">${rzPlanetaHtml(id, 20)}</span>`).join(''); }
 
@@ -558,7 +567,7 @@ function rzMontarResultado(r) {
   const blocoSizigia = `
     <h3 class="titulo-secao">1 · Última sizígia antes do nascimento</h3>
     <div class="cartao" style="font-size:13px; line-height:1.9;">
-      <div>${rzSizigiaHtml(22)} <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
+      <div>${rzSizigiaHtml(24)} · <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
       <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? '(a Lua estava acima do horizonte do local)' : '(a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
       <div>Ponto da sizígia: <strong>${rzPosHtml(s.lon)}</strong></div>
       ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzPosHtml(s.valensNoLugarDaLua, 16)}. ${s.luminar === 'Sol' ? 'Aqui o luminar acima do horizonte foi o Sol, então o ponto difere do de Valens.' : 'Aqui coincide com a regra do luminar acima do horizonte.'}</div>` : ''}
@@ -568,11 +577,11 @@ function rzMontarResultado(r) {
   const dataLeitura = r.entrada.leitura === 'centro' ? 'no centro da janela' : 'ao meio-dia local do dia';
   const tabela = `
     <div class="rz-rolagem"><table class="tabela-epoca">
-      <tr><th>Planeta</th><th>Posição (${dataLeitura})</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th class="centro">Aspecto</th><th class="centro">Vias</th></tr>
+      <tr><th>Planeta</th><th>Posição (${dataLeitura})</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th>Aspecto</th><th class="centro">Vias</th></tr>
       ${r.contagem.linhas.map(l => {
         const venc = r.contagem.vencedores.includes(l.id);
         const x = (b) => b ? '✓' : '·';
-        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id)}</td><td>${rzPosHtml(l.lon, 18)}${r.retro[l.id] ? ' ℞' : ''}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td class="centro">${l.vias.aspecto ? l.vias.aspecto : '·'}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
+        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id)}</td><td>${rzPosHtml(l.lon, 18)}${r.retro[l.id] ? ' ℞' : ''}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td>${rzAspectoHtml(l.vias.aspecto, l.lon, s.lon)}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
       }).join('')}
     </table></div>`;
 
