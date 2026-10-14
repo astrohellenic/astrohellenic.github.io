@@ -70,9 +70,7 @@ function fvDignidades(idPlaneta, absGraus, isDia) {
     if (faixa && FV_SIMBOLO_ID[faixa.p] === idPlaneta) lista.push('termo');
   }
   if (FV_ORDEM_CALDEIA[Math.floor(absGraus / 10) % 7] === idPlaneta) lista.push('face');
-  const opostoDomicilio = FV_DOMICILIO[(s + 6) % 12] === idPlaneta;
   const opostoExaltacao = FV_EXALTACAO[idPlaneta] !== undefined && (FV_EXALTACAO[idPlaneta] + 6) % 12 === s;
-  if (opostoDomicilio) lista.push('detrimento');
   if (opostoExaltacao) lista.push('queda');
   return lista;
 }
