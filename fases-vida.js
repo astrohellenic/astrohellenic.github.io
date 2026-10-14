@@ -156,8 +156,17 @@ function fvIdadeDoEvento(ev, nascimento) {
 }
 function fvFaseDoEvento(idade, idadeTroca) { return idade < idadeTroca ? 1 : 2; }
 
+/* Distância do evento até a data da troca, em meses (mês médio de 30,4375 dias): "X meses antes" / "X meses depois". */
+function fvDistanciaTroca(dataEvento, dataTroca) {
+  const dias = (dataEvento.getTime() - dataTroca.getTime()) / 86400000;
+  const meses = Math.round(Math.abs(dias) / 30.4375);
+  if (meses === 0) return 'menos de 1 mês' + (dias < 0 ? ' antes' : ' depois') + ' da troca';
+  return `${meses} ${meses === 1 ? 'mês' : 'meses'} ${dias < 0 ? 'antes' : 'depois'} da troca`;
+}
+const FV_MARCACOES = { novo: 'começo de algo novo', fim: 'fim de algo antigo' };   // etiqueta do usuário: a ferramenta não interpreta
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fvTemposAscensao, fvDignidades, fvCalcularFases, fvIdadeDoEvento, fvFaseDoEvento, FV_SIGNOS };
+  module.exports = { fvTemposAscensao, fvDignidades, fvCalcularFases, fvIdadeDoEvento, fvFaseDoEvento, fvDistanciaTroca, FV_SIGNOS };
 }
 
 /* ==========================================
@@ -268,17 +277,16 @@ function fvLinhaDoTempo(r, eventos) {
       <div style="position:absolute; left:${pc(e.idade)}%; top:4px; height:36px; width:0; border-left:2px solid var(--terracota);" title="${escapeHtml(e.titulo)}, ${fvFmtAnos(e.idade)}, fase ${e.fase}"></div>
       <span style="position:absolute; left:${pc(e.idade)}%; top:${i % 2 ? 76 : 60}px; transform:translateX(-50%); font-size:10px; font-weight:700; color:var(--terracota); min-width:16px; text-align:center; border:1px solid var(--terracota); box-sizing:border-box; line-height:14px;">${i + 1}</span>`).join('');
   return `
-    <div style="position:relative; height:96px; margin:22px 6px 0;">
-      <div style="position:absolute; left:0; width:${pc(r.troca.idade)}%; top:14px; height:14px; border:1px solid var(--azul-egipcio-claro); box-sizing:border-box;" title="Fase 1"></div>
-      <div style="position:absolute; left:${pc(r.troca.idade)}%; right:0; top:14px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
-      <span style="position:absolute; left:${pc(r.troca.idade / 2)}%; top:-4px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
-      <span style="position:absolute; left:${pc((r.troca.idade + MAX) / 2)}%; top:-4px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
+    <div style="position:relative; height:96px; margin:36px 6px 0;">
+      <div style="position:absolute; left:0; right:0; top:21px; height:0; border-top:1px solid var(--azul-egipcio-claro);"></div>
+      <div style="position:absolute; left:${pc(r.troca.idade)}%; top:4px; height:36px; width:0; border-left:3px solid var(--azul-egipcio-claro);" title="Troca, ${fvFmtAnos(r.troca.idade)}"></div>
+      <span style="position:absolute; left:${pc(r.troca.idade)}%; top:-14px; transform:translateX(-50%); font-size:9.5px; font-weight:700; color:var(--azul-egipcio-escuro);">troca</span>
       <div style="position:absolute; left:${pc(r.idadeHoje)}%; top:4px; height:36px; width:0; border-left:2px solid var(--preto-tinta);" title="Hoje"></div>
-      <span style="position:absolute; left:${pc(r.idadeHoje)}%; top:-18px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">hoje</span>
+      <span style="position:absolute; left:${pc(r.idadeHoje)}%; top:${Math.abs(r.idadeHoje - r.troca.idade) < 6 ? -28 : -14}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">hoje</span>
       ${marcas}
       ${ticks}
     </div>
-    <div class="texto-apagado" style="font-size:11px; margin:2px 6px 0;">Linha preta: hoje. Linhas terracota numeradas: eventos.</div>`;
+    <div class="texto-apagado" style="font-size:11px; margin:2px 6px 0;">Linha azul: troca. Linha preta: hoje. Linhas terracota numeradas: eventos.</div>`;
 }
 
 function fvCartaoTroca(r) {
@@ -362,12 +370,13 @@ function fvEventosOrdenados(r) {
 
 function fvBlocoEventos(r, lista) {
   if (!currentMapaId) return `<div class="texto-apagado" style="font-size:12px;">Salve o mapa para registrar eventos: eles ficam guardados no mapa do cliente.</div>`;
-  const dataDe = (e) => fvFmtData(new Date(r.nascimento.getTime() + e.idade * 365.25 * 86400000));
+  const dataObj = (e) => new Date(r.nascimento.getTime() + e.idade * 365.25 * 86400000);
   const linhas = lista.map((e, i) => `
     <div class="janela-linha" style="align-items:flex-start;">
       <div style="min-width:0;">
         <div class="janela-linha-nome"><span style="color:var(--terracota);">${i + 1}.</span> ${escapeHtml(e.titulo)}</div>
-        <div class="janela-linha-det">${fvFmtAnos(e.idade)}, ${dataDe(e)} · <strong>fase ${e.fase}</strong></div>
+        <div class="janela-linha-det">${fvFmtAnos(e.idade)}, ${fvFmtData(dataObj(e))} · <strong>fase ${e.fase}</strong> · ${fvDistanciaTroca(dataObj(e), r.troca.data)}</div>
+        ${FV_MARCACOES[e.marcacao] ? `<div class="janela-linha-det">Marcação: ${FV_MARCACOES[e.marcacao]}</div>` : ''}
         ${e.nota ? `<div class="janela-linha-det">${escapeHtml(e.nota)}</div>` : ''}
       </div>
       <span class="janela-linha-acoes fv-nao-captura">
@@ -404,6 +413,12 @@ function fvAbrirFormEvento(id) {
       <input type="date" id="fvEvData" class="modal-input" value="${dataInicial}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
       <label>Título</label>
       <input type="text" id="fvEvTitulo" class="modal-input" maxlength="80" value="${e ? escapeHtml(e.titulo) : ''}" autocomplete="off">
+      <label>Marcação (opcional)</label>
+      <select id="fvEvMarcacao" class="modal-select">
+        <option value="">sem marcação</option>
+        <option value="novo" ${e && e.marcacao === 'novo' ? 'selected' : ''}>começo de algo novo</option>
+        <option value="fim" ${e && e.marcacao === 'fim' ? 'selected' : ''}>fim de algo antigo</option>
+      </select>
       <label>Nota curta</label>
       <input type="text" id="fvEvNota" class="modal-input" maxlength="200" value="${e ? escapeHtml(e.nota || '') : ''}" autocomplete="off">
       <div class="janela-acoes">
@@ -423,12 +438,14 @@ async function fvSalvarFormEvento(id) {
   const data = document.getElementById('fvEvData').value;
   const titulo = document.getElementById('fvEvTitulo').value.trim();
   const nota = document.getElementById('fvEvNota').value.trim();
+  const marcacao = document.getElementById('fvEvMarcacao').value;
   if (!titulo) { alert('Dê um título ao evento.'); return; }
   let idade = parseFloat(txtIdade);
   if (!data && !(idade >= 0)) { alert('Informe a idade em anos ou a data do evento.'); return; }
   const nascimento = new Date(currentMoment);
   if (data) idade = fvIdadeDoEvento({ data }, nascimento);
   const novo = { id: id || String(Date.now()), idade: Math.round(idade * 100) / 100, titulo, nota };
+  if (marcacao) novo.marcacao = marcacao;
   if (data) novo.data = data;                                       // data digitada manda: a idade é sempre recalculada dela
   const lista = id ? fvEventos.map(x => x.id === id ? novo : x) : [...fvEventos, novo];
   if (await fvSalvarEventos(lista)) { fvFecharJanelaEvento(); fvReRenderizar(); }
@@ -531,7 +548,9 @@ function renderFasesVidaUI(container) {
         <hr class="divisa">
         <div class="texto-apagado" style="font-size:11.5px; line-height:1.55;">
           <strong>Fontes.</strong> A estrutura de início e fim da vida vem de Doroteu I.22 e I.10. O instrumento de tempo vem de Valens II.1 e VII.2.
-          A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
+          A regra exata de qual signo conta é hipótese em teste.
+          Valens VII.2: os efeitos se realizam ao completar os tempos. Valens VII.3: o regente que está terminando pode se combinar com outro e continuar. Valens não define a largura da transição.
+          Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
           As tabelas antigas, como a de Valens com Áries 20, Câncer 33 e Capricórnio 27, são aproximações e ficam de 1 a 3 anos abaixo.
         </div>
         </div>
