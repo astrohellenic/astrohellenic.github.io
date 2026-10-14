@@ -268,6 +268,15 @@ function obterGrauEfetivoAfeta(key, data) {
 }
 
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
+/* Idade em ANOS e MESES de calendário entre o nascimento e uma data, no formato curto dos rótulos: "33a 10m" (nunca "33,9"). */
+function idadeCompactaDir(de, ate) {
+  let anos = ate.getFullYear() - de.getFullYear();
+  let meses = ate.getMonth() - de.getMonth();
+  if (ate.getDate() < de.getDate()) meses -= 1;
+  if (meses < 0) { anos -= 1; meses += 12; }
+  return meses ? `${anos}a ${meses}m` : `${anos}a`;
+}
+
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
   const latAtual = (typeof currentGeo !== 'undefined' && currentGeo) ? currentGeo.lat : 0;
 
@@ -322,6 +331,7 @@ function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
         planetId: pId,
         aspectType: asp.type,
         yearsOld: accumulatedYears.toFixed(1),
+        idadeTxt: idadeCompactaDir(birthDate, rayDate),
         exactDate: formatarDataBRDir(rayDate)
       });
     });
@@ -644,7 +654,7 @@ function renderCircumambulaçõesUI() {
       }
 
       if (term.startYearsOld !== null && term.startDate !== null) {
-        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="start">${term.startYearsOld} anos</text>`;
+        rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel1Offset}" font-size="8.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="start">${idadeCompactaDir(birthDate, term.startDate)}</text>`;
         rowHtml += `<text x="${xStart + 3}" y="${yBaseline + termLabel2Offset}" font-size="7.5" font-weight="500" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="start">${formatarDataBRDir(term.startDate)}</text>`;
       }
     });
@@ -690,7 +700,7 @@ function renderCircumambulaçõesUI() {
       }
 
       // RENDERIZAÇÃO DA IDADE (ANOS) E DA DATA EXATA (DD/MM/AAAA)
-      rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="middle">${r.yearsOld} anos</text>`;
+      rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="middle">${r.idadeTxt}</text>`;
       rowHtml += `<text x="${cx}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle">${r.exactDate}</text>`;
 
       const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
@@ -722,7 +732,7 @@ function renderCircumambulaçõesUI() {
         if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 40 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
       }
       ocupadoNatal = ancoraNatal === 'start' ? [xTextoNatal, xTextoNatal + 40] : [xTextoNatal - 40, xTextoNatal];
-      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0.0 anos</text>`;
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0a</text>`;
       rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--terracota)" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
     }
 
@@ -741,10 +751,10 @@ function renderCircumambulaçõesUI() {
         rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
 
-        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "N.N anos" + dd/mm/aaaa.
+        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "33a 10m" + dd/mm/aaaa.
            O texto vai pro lado direito do cursor; se ali bater no ícone de um termo, no texto da marca do
            nascimento ou passar da moldura, vai pro lado esquerdo. */
-        const idadeHoje = ((hoje.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)).toFixed(1);
+        const idadeHoje = idadeCompactaDir(birthDate, hoje);
         const LARG_TEXTO_HOJE = 40;
         const meiaIconeTermo = Math.max(10, termHeight - 6) / 2 + 2;
         const ocupados = passage.terms.map(t => { const xc = x0 + ((t.termStartDeg + t.termEndDeg) / 2) * scale; return [xc - meiaIconeTermo, xc + meiaIconeTermo]; });
@@ -756,7 +766,7 @@ function renderCircumambulaçõesUI() {
         const ladoDir = dirLivre || !esqLivre; // se nenhum lado está livre, mantém o direito
         const xTextoHoje = ladoDir ? iniDir : iniEsq + LARG_TEXTO_HOJE;
         const ancoraHoje = ladoDir ? 'start' : 'end';
-        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--azul-egipcio-escuro)" text-anchor="${ancoraHoje}">${idadeHoje} anos</text>`;
+        rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--azul-egipcio-escuro)" text-anchor="${ancoraHoje}">${idadeHoje}</text>`;
         rowHtml += `<text x="${xTextoHoje}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--azul-egipcio-escuro)" text-anchor="${ancoraHoje}">${formatarDataBRDir(hoje)}</text>`;
       }
     });

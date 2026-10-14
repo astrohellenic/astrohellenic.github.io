@@ -159,9 +159,14 @@ function fvFaseDoEvento(idade, idadeTroca) { return idade < idadeTroca ? 1 : 2; 
 /* Distância do evento até a data da troca, em meses (mês médio de 30,4375 dias): "X meses antes" / "X meses depois". */
 function fvDistanciaTroca(dataEvento, dataTroca) {
   const dias = (dataEvento.getTime() - dataTroca.getTime()) / 86400000;
-  const meses = Math.round(Math.abs(dias) / 30.4375);
-  if (meses === 0) return 'menos de 1 mês' + (dias < 0 ? ' antes' : ' depois') + ' da troca';
-  return `${meses} ${meses === 1 ? 'mês' : 'meses'} ${dias < 0 ? 'antes' : 'depois'} da troca`;
+  const total = Math.round(Math.abs(dias) / 30.4375);
+  const sentido = dias < 0 ? 'antes' : 'depois';
+  if (total === 0) return `menos de 1 mês ${sentido} da troca`;
+  const anos = Math.floor(total / 12), meses = total % 12;
+  const partes = [];
+  if (anos) partes.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
+  if (meses) partes.push(`${meses} ${meses === 1 ? 'mês' : 'meses'}`);
+  return `${partes.join(' e ')} ${sentido} da troca`;
 }
 const FV_MARCACOES = { novo: 'começo de algo novo', fim: 'fim de algo antigo' };   // etiqueta do usuário: a ferramenta não interpreta
 
@@ -223,7 +228,28 @@ async function fvSalvarEventos(novaLista) {
 function fvFmtData(d) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
-function fvFmtAnos(n) { return n.toFixed(1).replace('.', ',') + ' anos'; }
+/* Idade decimal (33,86) dita em anos e meses ("33 anos e 10 meses"): o que vem depois da vírgula é fração de ano, então vira meses. */
+function fvFmtAnos(n) {
+  let total = Math.round(n * 12);
+  const anos = Math.floor(total / 12), meses = total % 12;
+  return `${anos} ${anos === 1 ? 'ano' : 'anos'}` + (meses ? ` e ${meses} ${meses === 1 ? 'mês' : 'meses'}` : '');
+}
+/* Idade entre o nascimento e uma data, em anos e meses de calendário. */
+function fvAnosMeses(de, ate) {
+  let anos = ate.getFullYear() - de.getFullYear();
+  let meses = ate.getMonth() - de.getMonth();
+  if (ate.getDate() < de.getDate()) meses -= 1;
+  if (meses < 0) { anos -= 1; meses += 12; }
+  return `${anos} ${anos === 1 ? 'ano' : 'anos'}` + (meses ? ` e ${meses} ${meses === 1 ? 'mês' : 'meses'}` : '');
+}
+/* Mesma idade no formato curto da legenda da barra: "33a 10m". */
+function fvAnosMesesCurto(de, ate) {
+  let anos = ate.getFullYear() - de.getFullYear();
+  let meses = ate.getMonth() - de.getMonth();
+  if (ate.getDate() < de.getDate()) meses -= 1;
+  if (meses < 0) { anos -= 1; meses += 12; }
+  return meses ? `${anos}a ${meses}m` : `${anos}a`;
+}
 /* 33,86 anos NÃO é 33 anos e 86 meses: o que vem depois da vírgula é fração de ano (0,86 × 12 = 10,3 meses).
    Aqui a idade é dita em anos, meses e dias de calendário entre o nascimento e a data da troca ("33 anos, 10 meses e 12 dias"). */
 function fvAnosMesesDias(de, ate) {
@@ -292,7 +318,7 @@ function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
       <div style="position:absolute; left:${pc(l.r.troca.idade)}%; right:0; top:${topoFaixa(i)}px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
       <span style="position:absolute; left:${pc(l.r.troca.idade / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
       <span style="position:absolute; left:${pc((l.r.troca.idade + MAX) / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
-      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvNum(l.r.troca.idade, 2)} anos">troca ${l.rotulo}: ${fvAnosMesesDias(l.r.nascimento, l.r.troca.data)}</span>`).join('');
+      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvAnosMeses(l.r.nascimento, l.r.troca.data)}">troca ${l.rotulo}: ${fvAnosMesesCurto(l.r.nascimento, l.r.troca.data)}</span>`).join('');
   const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(a =>
     `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:${ticksTop + 14}px;">${a}</span>`).join('');
   const marcas = eventos.map((e, i) => `
@@ -315,7 +341,7 @@ function fvCartaoTroca(r) {
   const regente = fvPlaneta(t.regenteDoSigno, 20);
   const comparacao = `
     <div style="font-size:13px; line-height:2;">
-      <div>Tempo de ascensão de <span style="${FV_LINHA}">${ascensaoSigno}</span>: <strong>${fvNum(t.ascensao, 1)} anos</strong></div>
+      <div>Tempo de ascensão de <span style="${FV_LINHA}">${ascensaoSigno}</span>: <strong>${fvFmtAnos(t.ascensao)}</strong></div>
       <div>Anos menores de <span style="${FV_LINHA}">${regente}</span>, regente de <span style="${FV_LINHA}">${ascensaoSigno}</span>: <strong>${t.anosMenores} anos</strong></div>
     </div>`;
   const regra = t.signoApropriado
@@ -328,12 +354,12 @@ function fvCartaoTroca(r) {
     <div class="cartao">
       <div class="cabeca-cartao">
         <span class="nome-nivel">Troca, Valens VII.2</span>
-        <span class="selo">${fvNum(t.idade, 2)} anos</span>
+        <span class="selo">${fvAnosMeses(r.nascimento, t.data)}</span>
       </div>
       ${comparacao}
       ${regra}
       <div style="font-size:14px; margin-top:6px;"><strong>Troca em ${fvFmtData(t.data)}</strong>, aos ${fvAnosMesesDias(r.nascimento, t.data)}</div>
-      <div class="texto-apagado" style="font-size:11px; margin-bottom:4px;">${fvNum(t.idade, 2)} anos: o que vem depois da vírgula é fração de ano, não meses (0,${fvNum(t.idade, 2).split(',')[1]} × 12 = ${fvNum((t.idade % 1) * 12, 1)} meses). Data = nascimento + ${fvNum(t.idade, 2)} anos × 365,25 dias. O segundo regente não entra no cálculo da data.</div>
+      <div class="texto-apagado" style="font-size:11px; margin-bottom:4px;">O segundo regente não entra no cálculo da data.</div>
       ${aviso}
     </div>`;
 }
@@ -402,7 +428,7 @@ function fvBlocoEventos(leituras, lista) {
     <div class="janela-linha" style="align-items:flex-start;">
       <div style="min-width:0;">
         <div class="janela-linha-nome"><span style="color:var(--terracota);">${i + 1}.</span> ${escapeHtml(e.titulo)}</div>
-        <div class="janela-linha-det">${fvFmtAnos(e.idade)}, ${fvFmtData(d)}</div>
+        <div class="janela-linha-det">${fvAnosMeses(nascimento, d)}, ${fvFmtData(d)}</div>
         ${distancias}
         ${FV_MARCACOES[e.marcacao] ? `<div class="janela-linha-det">Marcação: ${FV_MARCACOES[e.marcacao]}</div>` : ''}
         ${e.nota ? `<div class="janela-linha-det">${escapeHtml(e.nota)}</div>` : ''}
@@ -427,8 +453,11 @@ function fvFecharJanelaEvento() {
 function fvAbrirFormEvento(id) {
   const e = id ? fvEventos.find(x => x.id === id) : null;
   if (id && !e) return;
-  let idadeInicial = '', dataInicial = '';
-  if (e) { if (e.data) dataInicial = e.data; else idadeInicial = String(e.idade).replace('.', ','); }
+  let anosInicial = '', mesesInicial = '', dataInicial = '';
+  if (e) {
+    if (e.data) dataInicial = e.data;
+    else { const total = Math.round(e.idade * 12); anosInicial = String(Math.floor(total / 12)); mesesInicial = String(total % 12); }
+  }
   fvFecharJanelaEvento();
   const overlay = document.createElement('div');
   overlay.id = 'fvEventoOverlay';
@@ -436,8 +465,10 @@ function fvAbrirFormEvento(id) {
   overlay.innerHTML = `
     <div class="janela" style="width: 400px;" role="dialog" aria-modal="true"><div class="janela-corpo">
       <div class="titulo-secao">${e ? 'Editar evento' : 'Novo evento'}</div>
-      <label>Idade em anos</label>
-      <input type="text" id="fvEvIdade" class="modal-input" inputmode="decimal" placeholder="Ex.: 33 ou 33,5" value="${idadeInicial}" autocomplete="off">
+      <label>Idade: anos</label>
+      <input type="text" id="fvEvAnos" class="modal-input" inputmode="numeric" placeholder="Ex.: 33" value="${anosInicial}" autocomplete="off">
+      <label>Idade: meses</label>
+      <input type="text" id="fvEvMeses" class="modal-input" inputmode="numeric" placeholder="Ex.: 10" value="${mesesInicial}" autocomplete="off">
       <label>Ou a data</label>
       <input type="date" id="fvEvData" class="modal-input" value="${dataInicial}" style="width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none; min-height: 36px;">
       <label>Título</label>
@@ -458,22 +489,24 @@ function fvAbrirFormEvento(id) {
   document.body.appendChild(overlay);
   overlay.querySelector('#fvEvCancelar').onclick = fvFecharJanelaEvento;
   overlay.querySelector('#fvEvSalvar').onclick = () => fvSalvarFormEvento(id || null);
-  setTimeout(() => { try { overlay.querySelector(e ? '#fvEvTitulo' : '#fvEvIdade').focus(); } catch (x) {} }, 30);
+  setTimeout(() => { try { overlay.querySelector(e ? '#fvEvTitulo' : '#fvEvAnos').focus(); } catch (x) {} }, 30);
 }
 if (typeof window !== "undefined") window.fvAbrirFormEvento = fvAbrirFormEvento;
 
 async function fvSalvarFormEvento(id) {
-  const txtIdade = document.getElementById('fvEvIdade').value.trim().replace(',', '.');
+  const txtAnos = document.getElementById('fvEvAnos').value.trim();
+  const txtMeses = document.getElementById('fvEvMeses').value.trim();
   const data = document.getElementById('fvEvData').value;
   const titulo = document.getElementById('fvEvTitulo').value.trim();
   const nota = document.getElementById('fvEvNota').value.trim();
   const marcacao = document.getElementById('fvEvMarcacao').value;
   if (!titulo) { alert('Dê um título ao evento.'); return; }
-  let idade = parseFloat(txtIdade);
-  if (!data && !(idade >= 0)) { alert('Informe a idade em anos ou a data do evento.'); return; }
+  const anos = parseInt(txtAnos || '0', 10), meses = parseInt(txtMeses || '0', 10);
+  let idade = anos + meses / 12;
+  if (!data && (!(txtAnos || txtMeses) || !(anos >= 0) || !(meses >= 0 && meses <= 11))) { alert('Informe a idade em anos e meses (meses de 0 a 11) ou a data do evento.'); return; }
   const nascimento = new Date(currentMoment);
   if (data) idade = fvIdadeDoEvento({ data }, nascimento);
-  const novo = { id: id || String(Date.now()), idade: Math.round(idade * 100) / 100, titulo, nota };
+  const novo = { id: id || String(Date.now()), idade: Math.round(idade * 10000) / 10000, titulo, nota };
   if (marcacao) novo.marcacao = marcacao;
   if (data) novo.data = data;                                       // data digitada manda: a idade é sempre recalculada dela
   const lista = id ? fvEventos.map(x => x.id === id ? novo : x) : [...fvEventos, novo];
@@ -536,8 +569,8 @@ function renderFasesVidaUI(container) {
   const tabelaAscensao = `
     <table class="tabela-epoca">
       <tr><th>Signo</th><th class="centro">Tempo de ascensão</th></tr>
-      ${rMat.tempos.map((t, i) => `<tr><td>${fvSigno(i, 20)}</td><td class="centro">${fvNum(t, 1)}</td></tr>`).join('')}
-      <tr><td><strong>Soma</strong></td><td class="centro"><strong>${fvNum(rMat.tempos.reduce((a, b) => a + b, 0), 1)}</strong></td></tr>
+      ${rMat.tempos.map((t, i) => `<tr><td>${fvSigno(i, 20)}</td><td class="centro">${fvFmtAnos(t)}</td></tr>`).join('')}
+      <tr><td><strong>Soma</strong></td><td class="centro"><strong>${fvFmtAnos(rMat.tempos.reduce((a, b) => a + b, 0))}</strong></td></tr>
     </table>`;
 
   const blocoMat = fvBlocoLeitura('Luminar da seita', 'condição material', 'quanto tem', 'Doroteu I.22. Regentes da triplicidade do signo do luminar da seita, Sol de dia e Lua de noite.',
@@ -576,7 +609,7 @@ function renderFasesVidaUI(container) {
 
         <hr class="divisa">
         <h3 class="titulo-secao">Trocas na barra</h3>
-        <div class="texto-apagado" style="font-size:11.5px;">Hoje: ${fvFmtData(rMat.hoje)}, idade ${fvFmtAnos(rMat.idadeHoje)}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a 90 anos.</div>
+        <div class="texto-apagado" style="font-size:11.5px;">Hoje: ${fvFmtData(rMat.hoje)}, idade ${fvAnosMeses(rMat.nascimento, rMat.hoje)}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a 90 anos.</div>
         ${fvLinhaDoTempo(leituras, lista, rMat.idadeHoje)}
 
         <hr class="divisa">
@@ -584,7 +617,7 @@ function renderFasesVidaUI(container) {
         ${fvBlocoEventos(leituras, lista)}
 
         <hr class="divisa">
-        <h3 class="titulo-secao">Tempos de ascensão em anos</h3>
+        <h3 class="titulo-secao">Tempos de ascensão</h3>
         <div class="envolve-tabela">${tabelaAscensao}</div>
 
         <hr class="divisa">
