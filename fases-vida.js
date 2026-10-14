@@ -166,7 +166,7 @@ function fvDistanciaTroca(dataEvento, dataTroca) {
 const FV_MARCACOES = { novo: 'começo de algo novo', fim: 'fim de algo antigo' };   // etiqueta do usuário: a ferramenta não interpreta
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fvTemposAscensao, fvDignidades, fvCalcularFases, fvIdadeDoEvento, fvFaseDoEvento, fvDistanciaTroca, FV_SIGNOS };
+  module.exports = { fvTemposAscensao, fvDignidades, fvCalcularFases, fvIdadeDoEvento, fvFaseDoEvento, fvDistanciaTroca, fvAnosMesesDias, FV_SIGNOS };
 }
 
 /* ==========================================
@@ -224,6 +224,19 @@ function fvFmtData(d) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 function fvFmtAnos(n) { return n.toFixed(1).replace('.', ',') + ' anos'; }
+/* 33,86 anos NÃO é 33 anos e 86 meses: o que vem depois da vírgula é fração de ano (0,86 × 12 = 10,3 meses).
+   Aqui a idade é dita em anos, meses e dias de calendário entre o nascimento e a data da troca ("33 anos, 10 meses e 12 dias"). */
+function fvAnosMesesDias(de, ate) {
+  let anos = ate.getFullYear() - de.getFullYear();
+  let meses = ate.getMonth() - de.getMonth();
+  let dias = ate.getDate() - de.getDate();
+  if (dias < 0) { meses -= 1; dias += new Date(ate.getFullYear(), ate.getMonth(), 0).getDate(); }
+  if (meses < 0) { anos -= 1; meses += 12; }
+  const partes = [`${anos} ${anos === 1 ? 'ano' : 'anos'}`];
+  if (meses) partes.push(`${meses} ${meses === 1 ? 'mês' : 'meses'}`);
+  if (dias) partes.push(`${dias} ${dias === 1 ? 'dia' : 'dias'}`);
+  return partes.length === 1 ? partes[0] : partes.slice(0, -1).join(', ') + ' e ' + partes[partes.length - 1];
+}
 function fvNum(n, casas) { return n.toFixed(casas).replace('.', ','); }
 
 /* Ícone do planeta / do signo no padrão do software: só o ícone; o nome ao lado só com os rótulos ligados (planetaComNome / signoComNome). */
@@ -279,7 +292,7 @@ function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
       <div style="position:absolute; left:${pc(l.r.troca.idade)}%; right:0; top:${topoFaixa(i)}px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
       <span style="position:absolute; left:${pc(l.r.troca.idade / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
       <span style="position:absolute; left:${pc((l.r.troca.idade + MAX) / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
-      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvFmtAnos(l.r.troca.idade)}">troca ${l.rotulo}: ${fvNum(l.r.troca.idade, 2)} anos</span>`).join('');
+      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvNum(l.r.troca.idade, 2)} anos">troca ${l.rotulo}: ${fvAnosMesesDias(l.r.nascimento, l.r.troca.data)}</span>`).join('');
   const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(a =>
     `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:${ticksTop + 14}px;">${a}</span>`).join('');
   const marcas = eventos.map((e, i) => `
@@ -315,12 +328,12 @@ function fvCartaoTroca(r) {
     <div class="cartao">
       <div class="cabeca-cartao">
         <span class="nome-nivel">Troca, Valens VII.2</span>
-        <span class="selo">${fvFmtAnos(t.idade)}</span>
+        <span class="selo">${fvNum(t.idade, 2)} anos</span>
       </div>
       ${comparacao}
       ${regra}
-      <div style="font-size:14px; margin-top:6px;"><strong>Troca em ${fvFmtData(t.data)}</strong></div>
-      <div class="texto-apagado" style="font-size:11px; margin-bottom:4px;">Nascimento + ${fvNum(t.idade, 2)} anos × 365,25 dias. O segundo regente não entra no cálculo da data.</div>
+      <div style="font-size:14px; margin-top:6px;"><strong>Troca em ${fvFmtData(t.data)}</strong>, aos ${fvAnosMesesDias(r.nascimento, t.data)}</div>
+      <div class="texto-apagado" style="font-size:11px; margin-bottom:4px;">${fvNum(t.idade, 2)} anos: o que vem depois da vírgula é fração de ano, não meses (0,${fvNum(t.idade, 2).split(',')[1]} × 12 = ${fvNum((t.idade % 1) * 12, 1)} meses). Data = nascimento + ${fvNum(t.idade, 2)} anos × 365,25 dias. O segundo regente não entra no cálculo da data.</div>
       ${aviso}
     </div>`;
 }
@@ -478,10 +491,10 @@ if (typeof window !== "undefined") window.fvApagarEvento = fvApagarEvento;
 /* ---------- tela ---------- */
 
 /* Bloco completo de uma leitura: regentes, troca, as duas fases e a qualidade (Valens II.1). */
-function fvBlocoLeitura(titulo, condicao, fonte, origemHtml, aviso, r) {
+function fvBlocoLeitura(titulo, condicao, explica, fonte, origemHtml, aviso, r) {
   return `
     <hr class="divisa">
-    <h3 class="titulo-secao">${titulo} (${condicao})</h3>
+    <h3 class="titulo-secao">${titulo} — ${condicao} (${explica})</h3>
     <div class="texto-apagado" style="font-size:11.5px; margin-bottom:6px;">${fonte}</div>
     <div style="font-size:13px; line-height:2;">${origemHtml}</div>
     ${aviso ? `<div style="font-size:12px; margin:6px 0; color:var(--terracota); font-weight:700;">${aviso}</div>` : ''}
@@ -527,9 +540,9 @@ function renderFasesVidaUI(container) {
       <tr><td><strong>Soma</strong></td><td class="centro"><strong>${fvNum(rMat.tempos.reduce((a, b) => a + b, 0), 1)}</strong></td></tr>
     </table>`;
 
-  const blocoMat = fvBlocoLeitura('Luminar da seita', 'condição material: quanto tem', 'Doroteu I.22. Regentes da triplicidade do signo do luminar da seita, Sol de dia e Lua de noite.',
+  const blocoMat = fvBlocoLeitura('Luminar da seita', 'condição material', 'quanto tem', 'Doroteu I.22. Regentes da triplicidade do signo do luminar da seita, Sol de dia e Lua de noite.',
     `Luminar da seita: <span style="${FV_LINHA}">${fvPlaneta(rMat.luminarId, 24)} ${fvSigno(rMat.signoRef, 22)}</span>`, '', rMat);
-  const blocoSoc = rSoc ? fvBlocoLeitura('Sizígia pré-natal', 'condição social: quão livre é', 'Doroteu I.10. Regentes da triplicidade do signo da última lua nova ou cheia antes do nascimento, na tabela de dia ou de noite conforme a seita do nascimento.',
+  const blocoSoc = rSoc ? fvBlocoLeitura('Sizígia pré-natal', 'condição social', 'quão livre é', 'Doroteu I.10. Regentes da triplicidade do signo da última lua nova ou cheia antes do nascimento, na tabela de dia ou de noite conforme a seita do nascimento.',
     `Sizígia pré-natal: <span style="${FV_LINHA}">${fvSigno(rSoc.signoRef, 22)}</span>`,
     'Aplicação da regra de troca de Valens à sizígia é uma extensão: Doroteu I.10 fala em começo e fim da vida e não dá a data da troca.', rSoc)
     : '<hr class="divisa"><div class="texto-apagado" style="font-size:12px;">Sem a sizígia pré-natal neste mapa: só a leitura do luminar da seita.</div>';
