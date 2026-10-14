@@ -454,7 +454,7 @@ function iniciarModuloRetificacaoSizigia() {
           ${campo('Data do nascimento', `<input type="date" id="rzData" value="${v.data}">`)}
           ${campo('Janela: início (hora local)', `<input type="time" id="rzIni" value="${v.ini}">`)}
           ${campo('Janela: fim (hora local)', `<input type="time" id="rzFim" value="${v.fim}">`)}
-          ${campo('Posição dos planetas lida', `<select id="rzLeitura"><option value="meiodia">ao meio-dia local do dia</option><option value="centro">no centro da janela</option></select>`)}
+          ${campo('Posição dos planetas lida', `<select id="rzLeitura"><option value="centro">no centro da janela</option><option value="meiodia">ao meio-dia local do dia</option></select>`)}
         </div>
         <div class="rz-campos" style="margin-top:12px;">
           <div style="grid-column: 1 / -1; position:relative;">
@@ -519,7 +519,7 @@ function rzLerFormulario() {
   if (manual !== '') { fuso = rzNum(manual); fusoAuto = false; if (isNaN(fuso) || Math.abs(fuso) > 14) return { erro: 'Fuso inválido (use horas, por exemplo -3).' }; }
   else if (typeof calcularFusoPreciso === 'function') fuso = calcularFusoPreciso(lat, lon, ano, mes, dia, ini.h, ini.m);
   else fuso = Math.round(lon / 15);
-  return { ano, mes, dia, ini, fim, lat, lon, fuso, fusoAuto, leitura: g('rzLeitura') || 'meiodia', cidade: g('rzCidade') };
+  return { ano, mes, dia, ini, fim, lat, lon, fuso, fusoAuto, leitura: g('rzLeitura') || 'centro', cidade: g('rzCidade') };
 }
 
 function rzFmtFuso(f) { const s = f < 0 ? '−' : '+'; const a = Math.abs(f); const h = Math.floor(a), m = Math.round((a - h) * 60); return `UTC${s}${h}${m ? ':' + rzP2(m) : ''}`; }
@@ -645,7 +645,7 @@ function rzMontarCandidato(r, c, hora) {
       </div>
       <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
         Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela: ${rzAnguloHtml('asc', 24)} ${rzPosHtml(r.angulosCentro.asc, 16)} e ${rzAnguloHtml('mc', 24)} ${rzPosHtml(r.angulosCentro.mc, 16)}).
-        A regra escolhe o ${rzAnguloHtml(escolhida, 24)} (em terracota abaixo).
+        A regra escolhe o ${rzAnguloHtml(escolhida, 24)} (em vermelho abaixo).
       </div>
       ${blocos}
       ${(!dentro) ? '<div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">No ângulo escolhido, nenhum horário cai dentro da janela; o mostrado é o do signo que sobe no centro dela.</div>' : ''}
