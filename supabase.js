@@ -400,7 +400,7 @@ function reRenderizarModuloAtivo() {
 /* ORDEM DOS BOTÕES DA BARRA SUPERIOR (Configurações > Aparência)
    As chaves abaixo são as mesmas do atributo data-modulo-key de cada botão
    dentro de #top-bar .top-bar-controls, em index.html. */
-const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'isopsefia', 'agenda', 'configuracoes', 'financeiro'];
+const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'fasesVida', 'isopsefia', 'agenda', 'configuracoes', 'financeiro'];
 
 const ROTULOS_BOTOES_TOPO = {
   relatorio: 'Relatório',
@@ -413,6 +413,7 @@ const ROTULOS_BOTOES_TOPO = {
   profeccao: 'Profecção',
   lotes: 'Calculadora de Lotes',
   horas: 'Horas Planetárias',
+  fasesVida: 'Fases da Vida (teste)',
   isopsefia: 'Isopsefia',
   agenda: 'Agenda',
   configuracoes: 'Configurações',
@@ -500,7 +501,7 @@ function moverBotaoTopo(chave, direcao) {
    é só tirada do #mandala-container e recolocada na volta, em vez de ser reconstruída do zero). Ficam de fora a
    Mandala/Radix (estado global, redesenhada de qualquer jeito), as Horas (dependem do relógio) e a Agenda
    (dados podem mudar por fora, ex.: novos agendamentos). */
-const MODULOS_GUARDAVEIS = ['relatorio', 'tabelaTecnica', 'profeccao', 'decenios', 'isopsefia', 'liberacao', 'direcoes', 'lotes', 'sinastria'];
+const MODULOS_GUARDAVEIS = ['relatorio', 'tabelaTecnica', 'profeccao', 'decenios', 'isopsefia', 'liberacao', 'direcoes', 'lotes', 'sinastria', 'fasesVida'];
 window.modulosGuardados = window.modulosGuardados || {};
 
 /* Esquece as telas guardadas — chamada sempre que o que elas mostram deixa de valer (outro mapa/momento
@@ -693,6 +694,11 @@ if (telaRestaurada) {
   else if (modulo === 'horas') {
     if (cRadix) cRadix.style.display = 'block';
     if (typeof iniciarModuloHoras === 'function') iniciarModuloHoras();
+  }
+  // 9B. FASES DA VIDA (regentes da triplicidade — ferramenta de teste)
+  else if (modulo === 'fasesVida') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (typeof iniciarModuloFasesVida === 'function') iniciarModuloFasesVida();
   }
   // 10. RELATÓRIO (Mapa Natal Clássico em PDF)
   else if (modulo === 'relatorio') {
