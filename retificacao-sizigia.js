@@ -588,7 +588,7 @@ function rzMontarResultado(r) {
   const blocoPtolomeu = `
     <hr class="divisa">
     <h3 class="titulo-secao">2 · Regra de Ptolomeu e Hefestião</h3>
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. Cada planeta recebe um voto por dignidade que tem no ponto da sizígia e um se o aspecta (${rzPosHtml(s.lon, 16)}): triplicidade (qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar), domicílio, exaltação, termo egípcio e aspecto por signos. Ganha quem tem mais vias; no empate valem todos os empatados.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. O ponto da sizígia está em ${rzPosHtml(s.lon, 16)}. Cada planeta recebe um voto por dignidade que tem nesse ponto (triplicidade, qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar; domicílio; exaltação; termo egípcio) e um voto se o aspecta por signos. Ganha quem tem mais votos; no empate valem todos os empatados.</div>
     ${tabela}
     <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${rzListaPlanetas(r.contagem.vencedores)} (${r.contagem.max} votos).</div>
     ${r.candidatos.filter(c => c.regra === 'ptolomeu').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
