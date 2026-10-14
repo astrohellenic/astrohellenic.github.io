@@ -54,8 +54,15 @@ function fvTemposAscensao(latGraus) {
   return { tempos, polar };
 }
 
+/* Seita do planeta: Sol, Júpiter e Saturno são diurnos; Lua, Vênus e Marte, noturnos; Mercúrio é diurno quando oriental
+   (nasce antes do Sol, ou seja, está antes dele no zodíaco) e noturno quando ocidental. */
+function fvDoDia(idPlaneta, absGraus, sunAbs) {
+  if (idPlaneta === 'Mercury') return ((sunAbs - absGraus + 360) % 360) < 180;
+  return ['Sun', 'Jupiter', 'Saturn'].includes(idPlaneta);
+}
+
 /* Dignidades de um planeta numa posição absoluta (0–360). isDia: seita do mapa (pra triplicidade). */
-function fvDignidades(idPlaneta, absGraus, isDia) {
+function fvDignidades(idPlaneta, absGraus, isDia, sunAbs) {
   const s = Math.floor(absGraus / 30) % 12;
   const g = absGraus - s * 30;
   const lista = [];
@@ -64,6 +71,7 @@ function fvDignidades(idPlaneta, absGraus, isDia) {
   const trip = FV_TRIPLICIDADE[FV_ELEMENTOS[s % 4]][isDia ? 'dia' : 'noite'];
   const posTrip = trip.indexOf(idPlaneta);
   if (posTrip >= 0) lista.push(`triplicidade (${['primeiro', 'segundo', 'participante'][posTrip]})`);
+  if (fvDoDia(idPlaneta, absGraus, sunAbs) === isDia) lista.push('seita');
   if (typeof EGYPTIAN_TERMS !== 'undefined' && EGYPTIAN_TERMS[s]) {
     const faixa = EGYPTIAN_TERMS[s].find(t => g < t.deg);
     if (faixa && FV_SIMBOLO_ID[faixa.p] === idPlaneta) lista.push('termo');
@@ -97,7 +105,8 @@ function fvCalcularFases(entrada) {
       id, nome: FV_PLANETAS[id].nome, abs, signo, signoNome: FV_SIGNOS[signo],
       grau: Math.floor(abs % 30), minuto: Math.floor(((abs % 30) % 1) * 60),
       casa: ((signo - signoAsc + 12) % 12) + 1,
-      dignidades: fvDignidades(id, abs, isDia)
+      regidoPor: FV_PLANETAS[FV_DOMICILIO[signo]].nome,
+      dignidades: fvDignidades(id, abs, isDia, sunAbs)
     };
   };
   const reg1 = descrever(id1), reg2 = descrever(id2), part = descrever(idPart);
@@ -164,7 +173,7 @@ function fvLinhaPlaneta(papel, p) {
       <div style="font-size:12.5px; line-height:1.4;">
         <span class="rotulo">${papel}</span><br>
         <strong>${p.nome}</strong> em ${p.signoNome} ${p.grau}°${String(p.minuto).padStart(2, '0')}' — casa ${p.casa}<br>
-        ${p.dignidades.length ? `<span class="texto-apagado" style="font-size:11.5px;">${p.dignidades.join(', ')}</span>` : ''}
+        <span class="texto-apagado" style="font-size:11.5px;">${[p.dignidades.includes('domicílio') ? '' : `regido por ${p.regidoPor}`, ...p.dignidades].filter(Boolean).join(' · ')}</span>
       </div>
     </div>`;
 }
