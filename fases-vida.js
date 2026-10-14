@@ -242,14 +242,6 @@ function fvAnosMeses(de, ate) {
   if (meses < 0) { anos -= 1; meses += 12; }
   return `${anos} ${anos === 1 ? 'ano' : 'anos'}` + (meses ? ` e ${meses} ${meses === 1 ? 'mês' : 'meses'}` : '');
 }
-/* Mesma idade no formato curto da legenda da barra: "33a 10m". */
-function fvAnosMesesCurto(de, ate) {
-  let anos = ate.getFullYear() - de.getFullYear();
-  let meses = ate.getMonth() - de.getMonth();
-  if (ate.getDate() < de.getDate()) meses -= 1;
-  if (meses < 0) { anos -= 1; meses += 12; }
-  return meses ? `${anos}a ${meses}m` : `${anos}a`;
-}
 /* 33,86 anos NÃO é 33 anos e 86 meses: o que vem depois da vírgula é fração de ano (0,86 × 12 = 10,3 meses).
    Aqui a idade é dita em anos, meses e dias de calendário entre o nascimento e a data da troca ("33 anos, 10 meses e 12 dias"). */
 function fvAnosMesesDias(de, ate) {
@@ -318,7 +310,7 @@ function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
       <div style="position:absolute; left:${pc(l.r.troca.idade)}%; right:0; top:${topoFaixa(i)}px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
       <span style="position:absolute; left:${pc(l.r.troca.idade / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
       <span style="position:absolute; left:${pc((l.r.troca.idade + MAX) / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
-      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvAnosMeses(l.r.nascimento, l.r.troca.data)}">troca ${l.rotulo}: ${fvAnosMesesCurto(l.r.nascimento, l.r.troca.data)}</span>`).join('');
+      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvAnosMeses(l.r.nascimento, l.r.troca.data)}">troca ${l.rotulo}: ${fvAnosMeses(l.r.nascimento, l.r.troca.data)}</span>`).join('');
   const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(a =>
     `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:${ticksTop + 14}px;">${a}</span>`).join('');
   const marcas = eventos.map((e, i) => `

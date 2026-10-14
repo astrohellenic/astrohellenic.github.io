@@ -268,13 +268,14 @@ function obterGrauEfetivoAfeta(key, data) {
 }
 
 /* CÁLCULO DOS RAIOS DOS ASPECTOS (AKTINOBOLIA) MAPEANDO OS NOMES REALMENTE PRESENTES NA API */
-/* Idade em ANOS e MESES de calendário entre o nascimento e uma data, no formato curto dos rótulos: "33a 10m" (nunca "33,9"). */
+/* Idade em ANOS e MESES de calendário entre o nascimento e uma data, no formato curto dos rótulos: "33,10" = 33 anos e 10 meses
+   (meses sempre com 2 dígitos, "33,05", pra não parecer decimal; a legenda da ferramenta explica). Nunca "33a 10m": sigla colada não se entende. */
 function idadeCompactaDir(de, ate) {
   let anos = ate.getFullYear() - de.getFullYear();
   let meses = ate.getMonth() - de.getMonth();
   if (ate.getDate() < de.getDate()) meses -= 1;
   if (meses < 0) { anos -= 1; meses += 12; }
-  return meses ? `${anos}a ${meses}m` : `${anos}a`;
+  return `${anos},${String(meses).padStart(2, '0')}`;
 }
 
 function calcularRaiosAspectos(data, startAbsDeg, birthDate) {
@@ -732,7 +733,7 @@ function renderCircumambulaçõesUI() {
         if (xTextoNatal < xIcone + meiaIcone && xTextoNatal + 40 > xIcone - meiaIcone) { ancoraNatal = 'end'; xTextoNatal = xNatal - 3; }
       }
       ocupadoNatal = ancoraNatal === 'start' ? [xTextoNatal, xTextoNatal + 40] : [xTextoNatal - 40, xTextoNatal];
-      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0a</text>`;
+      rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(11 * k)}" font-size="8" font-weight="900" fill="var(--terracota)" text-anchor="${ancoraNatal}">0,00</text>`;
       rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--terracota)" text-anchor="${ancoraNatal}">${formatarDataBRDir(birthDate)}</text>`;
     }
 
@@ -751,7 +752,7 @@ function renderCircumambulaçõesUI() {
         rowHtml += `<line x1="${xHoje}" y1="${hojeTop}" x2="${xHoje}" y2="${hojeBottom}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
         rowHtml += `<g transform="translate(${xHoje - 12}, ${yBaseline - Math.round(12 * k)})">${afetaCursorSvgHTML}</g>`;
 
-        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "33a 10m" + dd/mm/aaaa.
+        /* IDADE E DATA DE HOJE junto ao cursor (como a marca do nascimento e os raios): "33,10" + dd/mm/aaaa.
            O texto vai pro lado direito do cursor; se ali bater no ícone de um termo, no texto da marca do
            nascimento ou passar da moldura, vai pro lado esquerdo. */
         const idadeHoje = idadeCompactaDir(birthDate, hoje);
@@ -852,6 +853,7 @@ function renderCircumambulaçõesUI() {
             <span data-html2canvas-ignore="true">${caixasLinhasHTML}</span>
             ${svgTela}
           </div>
+          <div class="texto-apagado" style="font-size: 11px; margin: 6px 24px 0;">Idades em anos e meses: 33,10 quer dizer 33 anos e 10 meses.</div>
         </div>
         <hr class="divisa">
 

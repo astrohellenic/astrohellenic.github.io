@@ -919,13 +919,15 @@ Em qualquer tela do software que mostre idade ou tempo em anos, o astrólogo que
 quer ter que multiplicar o que vem depois da vírgula por 12 pra descobrir o mês. A ferramenta calcula e entrega a resposta pronta.
 
 - Texto normal: "33 anos e 10 meses" (com dias, quando a data exata importa: "33 anos, 10 meses e 12 dias").
-- Rótulo pequeno (SVG, legenda de barra): formato curto "33a 10m"; zero meses = "33a"; nascimento = "0a".
+- **NUNCA sigla colada ("33a 10m", "33A10M")**: ninguém adivinha que "a" é anos e "m" é meses (o astrólogo detesta). Escrever "33 anos e 10 meses".
+  Só onde NÃO cabe mesmo (rótulo minúsculo de SVG, como na Circunambulação): "33,10" (anos,meses, meses sempre com 2 dígitos: "33,05", "33,00") **e uma legenda
+  visível na tela explicando** ("33,10 quer dizer 33 anos e 10 meses").
 - Os meses são de **calendário**, entre o nascimento e a data mostrada (assim a idade bate com o dd/mm/aaaa que aparece junto), não "fração × 12".
   Só quando não há data (ex.: tempo de ascensão de um signo) converte-se o decimal em anos e meses arredondando os meses.
 - Distâncias: "10 meses antes", "1 ano e 2 meses depois" (nunca "262 meses").
 - Campo de digitar idade = dois campos, "anos" e "meses" (0 a 11). Guardar o decimal por dentro é ok; **mostrar** é que nunca.
 - Decimal por dentro do cálculo continua (ex.: 1 grau de ascensão = 1 ano, data = nascimento + anos × 365,25); só a exibição muda.
-- Já feito em `fases-vida.js` (funções `fvFmtAnos`, `fvAnosMeses`, `fvAnosMesesDias`, `fvAnosMesesCurto`) e na Circunambulação (`idadeCompactaDir`, `direcoes.js`).
+- Já feito em `fases-vida.js` (funções `fvFmtAnos`, `fvAnosMeses`, `fvAnosMesesDias`) e na Circunambulação (`idadeCompactaDir`, `direcoes.js`).
   Varredura de 14/10/2026 nas demais ferramentas: **nenhuma outra mostra idade fracionada**. Profecção e Revoluções mostram a idade em anos inteiros (ano alvo
   menos ano de nascimento); Decênios e Liberação mostram durações em meses/dias/horas inteiros ("129 meses", "30 Meses (900 Dias)") e Anos Helenísticos inteiros.
   Se uma ferramenta nova mostrar idade ou tempo, aplicar esta regra desde o início.
