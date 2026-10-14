@@ -117,17 +117,18 @@ function fvCalcularFases(entrada) {
   const reg1 = descrever(id1), reg2 = descrever(id2), part = descrever(idPart);
 
   // Idade da troca (Valens VII.2): o maior entre o tempo de ascensão do signo do 1º regente e os anos menores do regente desse signo.
-  // Exceção: 1º regente em signo próprio (domicílio, exaltação ou triplicidade) vale só o tempo de ascensão.
+  // Exceção: 1º regente em signo apropriado (tem ali domicílio, exaltação ou triplicidade) vale só o tempo de ascensão.
   const ascensao = tempos[reg1.signo];
   const regenteDoSigno = FV_DOMICILIO[reg1.signo];
   const anosMenores = FV_PLANETAS[regenteDoSigno].anosMenores;
-  const motivosProprio = reg1.dignidades.filter(x => x === 'domicílio' || x === 'exaltação' || x === 'triplicidade');
-  const signoProprio = motivosProprio.length > 0;
-  const idadeTroca = signoProprio ? ascensao : Math.max(ascensao, anosMenores);
+  const dignidadesNoSigno = reg1.dignidades.filter(x => x === 'domicílio' || x === 'exaltação' || x === 'triplicidade');
+  const signoApropriado = dignidadesNoSigno.length > 0;
+  const idadeTroca = signoApropriado ? ascensao : Math.max(ascensao, anosMenores);
   const maisDias = (anos) => new Date(entrada.nascimento.getTime() + anos * 365.25 * 86400000);
   const idadeHoje = (entrada.hoje.getTime() - entrada.nascimento.getTime()) / (365.25 * 86400000);
   const troca = {
-    idade: idadeTroca, data: maisDias(idadeTroca), ascensao, anosMenores, regenteDoSigno, signoProprio, motivosProprio,
+    idade: idadeTroca, data: maisDias(idadeTroca), ascensao, anosMenores, regenteDoSigno, signoApropriado, dignidadesNoSigno,
+    soTriplicidade: signoApropriado && dignidadesNoSigno.length === 1 && dignidadesNoSigno[0] === 'triplicidade',
     precedeAngulo: reg1.condicaoCasa === 'cadente'
   };
 
@@ -285,9 +286,10 @@ function fvCartaoTroca(r) {
       <div>Tempo de ascensão de <span style="${FV_LINHA}">${ascensaoSigno}</span>: <strong>${fvNum(t.ascensao, 1)} anos</strong></div>
       <div>Anos menores de <span style="${FV_LINHA}">${regente}</span>, regente de <span style="${FV_LINHA}">${ascensaoSigno}</span>: <strong>${t.anosMenores} anos</strong></div>
     </div>`;
-  const regra = t.signoProprio
-    ? `<div class="texto-apagado" style="font-size:11.5px; margin:6px 0;">O primeiro regente está em signo próprio (${t.motivosProprio.join(', ')}): vale só o tempo de ascensão do signo.</div>`
-    : `<div class="texto-apagado" style="font-size:11.5px; margin:6px 0;">A troca ocorre no maior dos dois valores, contado do nascimento.</div>`;
+  const regra = t.signoApropriado
+    ? `<div style="font-size:12px; margin:6px 0;">O primeiro regente está em signo apropriado. Dignidades dele ali, cada uma separada: ${t.dignidadesNoSigno.map(d => `<strong>${d}</strong>`).join(' · ')}.<br>A troca ocorre só no tempo de ascensão do signo.</div>
+       ${t.soTriplicidade ? '<div style="font-size:12px; margin:6px 0; color:var(--terracota); font-weight:700;">Só triplicidade: leitura de Schmidt, a confirmar.</div>' : ''}`
+    : `<div class="texto-apagado" style="font-size:11.5px; margin:6px 0;">O primeiro regente não está em signo apropriado: a troca ocorre no maior dos dois valores, contado do nascimento.</div>`;
   const aviso = t.precedeAngulo
     ? `<div style="font-size:12px; margin:8px 0; color:var(--terracota); font-weight:700;">Aviso: o primeiro regente precede um ângulo (casa ${r.reg1.casa}, cadente). O texto dá só uma parte desse tempo.</div>` : '';
   return `
