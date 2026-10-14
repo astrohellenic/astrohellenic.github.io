@@ -926,5 +926,6 @@ quer ter que multiplicar o que vem depois da vírgula por 12 pra descobrir o mê
 - Campo de digitar idade = dois campos, "anos" e "meses" (0 a 11). Guardar o decimal por dentro é ok; **mostrar** é que nunca.
 - Decimal por dentro do cálculo continua (ex.: 1 grau de ascensão = 1 ano, data = nascimento + anos × 365,25); só a exibição muda.
 - Já feito em `fases-vida.js` (funções `fvFmtAnos`, `fvAnosMeses`, `fvAnosMesesDias`, `fvAnosMesesCurto`) e na Circunambulação (`idadeCompactaDir`, `direcoes.js`).
-  **Outras ferramentas que ainda mostram idade decimal** (Profecção, Liberação, Decênios, Direções etc.) não foram mexidas por não terem sido pedidas: ao mexer
-  nelas, aplicar esta regra; fora disso, avisar o astrólogo em vez de corrigir de bandeja.
+  Varredura de 14/10/2026 nas demais ferramentas: **nenhuma outra mostra idade fracionada**. Profecção e Revoluções mostram a idade em anos inteiros (ano alvo
+  menos ano de nascimento); Decênios e Liberação mostram durações em meses/dias/horas inteiros ("129 meses", "30 Meses (900 Dias)") e Anos Helenísticos inteiros.
+  Se uma ferramenta nova mostrar idade ou tempo, aplicar esta regra desde o início.
