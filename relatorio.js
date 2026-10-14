@@ -2287,6 +2287,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   const linhasParaAdicionar = RELATORIO_CATALOGO_BLOCOS
     .filter(padrao => {
       if (padrao.type === 'capa' || padrao.type === 'encerramento') return false;
+      if (typeof ferramentaLiberada === 'function' && !ferramentaLiberada(padrao.id)) return false; // ferramenta em teste (só admin): o bloco também
       const info = padrao.type === 'ferramenta' ? RELATORIO_FERRAMENTAS_DISPONIVEIS[padrao.id] : null;
       const repetivel = info && info.capturada;
       return repetivel || !mapaBlocosAtuais[padrao.id];
