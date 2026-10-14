@@ -172,8 +172,6 @@ if (typeof module !== 'undefined' && module.exports) {
 /* ==========================================
    TELA
    ========================================== */
-let fvFonteEscolhida = 'luminar';
-
 /* Eventos de vida do mapa em tela: guardados na coluna mapas.eventos_vida (jsonb) do Supabase, um registro por mapa. */
 let fvEventos = [];
 let fvEventosMapaId = null;     // mapa a que fvEventos pertence (null = nenhum mapa salvo em tela)
@@ -193,12 +191,6 @@ function fvReRenderizar() {
   const container = document.getElementById('mandala-container');
   if (container && window.moduloTecnicoAtivo === 'fasesVida') renderFasesVidaUI(container);
 }
-
-function fvEscolherFonte(valor) {
-  fvFonteEscolhida = valor === 'sizigia' ? 'sizigia' : 'luminar';
-  fvReRenderizar();
-}
-if (typeof window !== "undefined") window.fvEscolherFonte = fvEscolherFonte;
 
 /* Busca os eventos do mapa em tela (uma vez por mapa) e redesenha quando chegam. */
 async function fvCarregarEventos() {
@@ -267,23 +259,31 @@ function fvLinhaPlaneta(papel, p) {
   return `<div style="padding:8px 0;"><span class="rotulo">${papel}</span><div style="margin-top:3px;">${fvSituacao(p)}</div></div>`;
 }
 
-/* Barra de 0 a 90 anos: fase 1, fase 2, "hoje" e os eventos (número do evento embaixo, alternando duas alturas). */
-function fvLinhaDoTempo(r, eventos) {
+/* Barra de 0 a 90 anos: uma faixa por leitura (fase 1 | fase 2, dividida na troca dela, com legenda), "hoje" e os eventos (número do evento embaixo).
+   leituras: [{ rotulo, r }]. Se as duas coincidem vem uma faixa só, com as duas legendas. */
+function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
   const MAX = 90;
   const pc = (anos) => Math.max(0, Math.min(100, (anos / MAX) * 100));
+  const nFaixas = leituras.length;
+  const topoFaixa = (i) => 14 + i * 34;
+  const fimFaixas = topoFaixa(nFaixas - 1) + 14;
+  const ticksTop = fimFaixas + 8;
+  const faixas = leituras.map((l, i) => `
+      <div style="position:absolute; left:0; width:${pc(l.r.troca.idade)}%; top:${topoFaixa(i)}px; height:14px; border:1px solid var(--azul-egipcio-claro); box-sizing:border-box;" title="Fase 1"></div>
+      <div style="position:absolute; left:${pc(l.r.troca.idade)}%; right:0; top:${topoFaixa(i)}px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
+      <span style="position:absolute; left:${pc(l.r.troca.idade / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
+      <span style="position:absolute; left:${pc((l.r.troca.idade + MAX) / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
+      <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(-50%); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap;" title="Troca, ${fvFmtAnos(l.r.troca.idade)}">troca ${l.rotulo}</span>`).join('');
   const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(a =>
-    `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:44px;">${a}</span>`).join('');
+    `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:${ticksTop + 14}px;">${a}</span>`).join('');
   const marcas = eventos.map((e, i) => `
-      <div style="position:absolute; left:${pc(e.idade)}%; top:4px; height:36px; width:0; border-left:2px solid var(--terracota);" title="${escapeHtml(e.titulo)}, ${fvFmtAnos(e.idade)}, fase ${e.fase}"></div>
-      <span style="position:absolute; left:${pc(e.idade)}%; top:${i % 2 ? 76 : 60}px; transform:translateX(-50%); font-size:10px; font-weight:700; color:var(--terracota); min-width:16px; text-align:center; border:1px solid var(--terracota); box-sizing:border-box; line-height:14px;">${i + 1}</span>`).join('');
+      <div style="position:absolute; left:${pc(e.idade)}%; top:4px; height:${fimFaixas + 4}px; width:0; border-left:2px solid var(--terracota);" title="${escapeHtml(e.titulo)}, ${fvFmtAnos(e.idade)}"></div>
+      <span style="position:absolute; left:${pc(e.idade)}%; top:${ticksTop + (i % 2 ? 44 : 30)}px; transform:translateX(-50%); font-size:10px; font-weight:700; color:var(--terracota); min-width:16px; text-align:center; border:1px solid var(--terracota); box-sizing:border-box; line-height:14px;">${i + 1}</span>`).join('');
   return `
-    <div style="position:relative; height:96px; margin:22px 6px 0;">
-      <div style="position:absolute; left:0; width:${pc(r.troca.idade)}%; top:14px; height:14px; border:1px solid var(--azul-egipcio-claro); box-sizing:border-box;" title="Fase 1"></div>
-      <div style="position:absolute; left:${pc(r.troca.idade)}%; right:0; top:14px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
-      <span style="position:absolute; left:${pc(r.troca.idade / 2)}%; top:-4px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
-      <span style="position:absolute; left:${pc((r.troca.idade + MAX) / 2)}%; top:-4px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
-      <div style="position:absolute; left:${pc(r.idadeHoje)}%; top:4px; height:36px; width:0; border-left:2px solid var(--preto-tinta);" title="Hoje"></div>
-      <span style="position:absolute; left:${pc(r.idadeHoje)}%; top:-18px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">hoje</span>
+    <div style="position:relative; height:${ticksTop + 66}px; margin:36px 6px 0;">
+      ${faixas}
+      <div style="position:absolute; left:${pc(hojeIdade)}%; top:4px; height:${fimFaixas + 4}px; width:0; border-left:2px solid var(--preto-tinta);" title="Hoje"></div>
+      <span style="position:absolute; left:${pc(hojeIdade)}%; top:-18px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">hoje</span>
       ${marcas}
       ${ticks}
     </div>
@@ -363,20 +363,28 @@ function fvQualidade(r) {
 
 /* ---------- eventos de vida ---------- */
 
-function fvEventosOrdenados(r) {
+/* leituras: [{ rotulo, r }] — uma por leitura distinta (se as duas coincidem vem só uma). */
+function fvEventosOrdenados(nascimento) {
   return fvEventos
-    .map(e => { const idade = fvIdadeDoEvento(e, r.nascimento); return Object.assign({}, e, { idade, fase: fvFaseDoEvento(idade, r.troca.idade) }); })
+    .map(e => Object.assign({}, e, { idade: fvIdadeDoEvento(e, nascimento) }))
     .sort((a, b) => a.idade - b.idade);
 }
 
-function fvBlocoEventos(r, lista) {
+function fvBlocoEventos(leituras, lista) {
   if (!currentMapaId) return `<div class="texto-apagado" style="font-size:12px;">Salve o mapa para registrar eventos: eles ficam guardados no mapa do cliente.</div>`;
-  const dataObj = (e) => new Date(r.nascimento.getTime() + e.idade * 365.25 * 86400000);
-  const linhas = lista.map((e, i) => `
+  const nascimento = leituras[0].r.nascimento;
+  const dataObj = (e) => new Date(nascimento.getTime() + e.idade * 365.25 * 86400000);
+  const linhas = lista.map((e, i) => {
+    const d = dataObj(e);
+    const distancias = leituras.length === 1
+      ? `<div class="janela-linha-det"><strong>fase ${fvFaseDoEvento(e.idade, leituras[0].r.troca.idade)}</strong> · ${fvDistanciaTroca(d, leituras[0].r.troca.data)}</div>`
+      : leituras.map(l => `<div class="janela-linha-det">${l.rotulo}: <strong>fase ${fvFaseDoEvento(e.idade, l.r.troca.idade)}</strong> · ${fvDistanciaTroca(d, l.r.troca.data)}</div>`).join('');
+    return `
     <div class="janela-linha" style="align-items:flex-start;">
       <div style="min-width:0;">
         <div class="janela-linha-nome"><span style="color:var(--terracota);">${i + 1}.</span> ${escapeHtml(e.titulo)}</div>
-        <div class="janela-linha-det">${fvFmtAnos(e.idade)}, ${fvFmtData(dataObj(e))} · <strong>fase ${e.fase}</strong> · ${fvDistanciaTroca(dataObj(e), r.troca.data)}</div>
+        <div class="janela-linha-det">${fvFmtAnos(e.idade)}, ${fvFmtData(d)}</div>
+        ${distancias}
         ${FV_MARCACOES[e.marcacao] ? `<div class="janela-linha-det">Marcação: ${FV_MARCACOES[e.marcacao]}</div>` : ''}
         ${e.nota ? `<div class="janela-linha-det">${escapeHtml(e.nota)}</div>` : ''}
       </div>
@@ -384,7 +392,8 @@ function fvBlocoEventos(r, lista) {
         <button type="button" class="botao-icone" onclick="fvAbrirFormEvento('${e.id}')" title="Editar">${menuIcone('editar', 18)}</button>
         <button type="button" class="botao-icone botao-apagar" onclick="fvApagarEvento('${e.id}')" title="Apagar">${menuIcone('lixeira', 18)}</button>
       </span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `
     ${fvEventosErro ? `<div style="font-size:12px; color:var(--terracota); font-weight:700; margin-bottom:6px;">${fvEventosErro}</div>` : ''}
     ${linhas || '<div class="texto-apagado" style="font-size:12px;">Nenhum evento registrado.</div>'}
@@ -462,29 +471,64 @@ if (typeof window !== "undefined") window.fvApagarEvento = fvApagarEvento;
 
 /* ---------- tela ---------- */
 
+/* Bloco completo de uma leitura: regentes, troca, as duas fases e a qualidade (Valens II.1). */
+function fvBlocoLeitura(titulo, condicao, fonte, origemHtml, aviso, r) {
+  return `
+    <hr class="divisa">
+    <h3 class="titulo-secao">${titulo} (${condicao})</h3>
+    <div class="texto-apagado" style="font-size:11.5px; margin-bottom:6px;">${fonte}</div>
+    <div style="font-size:13px; line-height:2;">${origemHtml}</div>
+    ${aviso ? `<div style="font-size:12px; margin:6px 0; color:var(--terracota); font-weight:700;">${aviso}</div>` : ''}
+    <div class="grade-cartoes" style="margin-top:8px;">
+      <div class="cartao">
+        <span class="rotulo">Regentes da triplicidade de ${FV_ELEMENTO_ROTULO[r.elemento]}, tabela de Doroteu, ${r.isDia ? 'dia' : 'noite'}</span>
+        ${fvLinhaPlaneta('Primeiro regente, fase 1', r.reg1)}
+        ${fvLinhaPlaneta('Segundo regente, fase 2', r.reg2)}
+        ${fvLinhaPlaneta('Participante, ajuda nas duas fases', r.part)}
+      </div>
+    </div>
+    <h3 class="titulo-secao" style="margin-top:14px;">Idade da troca</h3>
+    <div class="grade-cartoes">${fvCartaoTroca(r)}</div>
+    <h3 class="titulo-secao" style="margin-top:14px;">As duas fases</h3>
+    <div class="grade-cartoes">${fvCartaoFase(1, r)}${fvCartaoFase(2, r)}</div>
+    <div class="grade-cartoes" style="margin-top:14px;">${fvQualidade(r)}</div>`;
+}
+
 function renderFasesVidaUI(container) {
   fvCarregarEventos();                                              // assíncrono: redesenha quando os eventos chegam
   const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
-  const r = fvCalcularFases({
-    dados: currentCalculatedData, lat, nascimento: new Date(currentMoment), fonte: fvFonteEscolhida, hoje: new Date()
-  });
-  if (!r) {
+  const base = { dados: currentCalculatedData, lat, nascimento: new Date(currentMoment), hoje: new Date() };
+  const rMat = fvCalcularFases(Object.assign({ fonte: 'luminar' }, base));
+  if (!rMat) {
     container.innerHTML = `<div style="padding: 24px; text-align: center;">Não foi possível calcular: dados do mapa incompletos.</div>`;
     return;
   }
-  const lista = fvEventosOrdenados(r);
-
-  const fonteUsada = r.fonte === 'sizigia'
-    ? `Sizígia pré-natal: <span style="${FV_LINHA}">${fvSigno(r.signoRef, 22)}</span>`
-    : `Luminar da seita: <span style="${FV_LINHA}">${fvPlaneta(r.luminarId, 24)} ${fvSigno(r.signoRef, 22)}</span>`;
   const temSizigia = !!(currentCalculatedData.Sizigia);
+  const rSoc = temSizigia ? fvCalcularFases(Object.assign({ fonte: 'sizigia' }, base)) : null;
+  const mesmos = (a, b) => a.reg1.id === b.reg1.id && a.reg2.id === b.reg2.id && a.part.id === b.part.id;
+  const coincidem = !!rSoc && mesmos(rMat, rSoc) && Math.abs(rMat.troca.idade - rSoc.troca.idade) < 1e-9;
+
+  // leituras da barra e dos eventos: se coincidem, uma só com as duas legendas
+  const leituras = coincidem
+    ? [{ rotulo: 'material · social', r: rMat }]
+    : [{ rotulo: 'material', r: rMat }].concat(rSoc ? [{ rotulo: 'social', r: rSoc }] : []);
+  const lista = fvEventosOrdenados(rMat.nascimento);
 
   const tabelaAscensao = `
     <table class="tabela-epoca">
       <tr><th>Signo</th><th class="centro">Tempo de ascensão</th></tr>
-      ${r.tempos.map((t, i) => `<tr><td>${fvSigno(i, 20)}</td><td class="centro">${fvNum(t, 1)}</td></tr>`).join('')}
-      <tr><td><strong>Soma</strong></td><td class="centro"><strong>${fvNum(r.tempos.reduce((a, b) => a + b, 0), 1)}</strong></td></tr>
+      ${rMat.tempos.map((t, i) => `<tr><td>${fvSigno(i, 20)}</td><td class="centro">${fvNum(t, 1)}</td></tr>`).join('')}
+      <tr><td><strong>Soma</strong></td><td class="centro"><strong>${fvNum(rMat.tempos.reduce((a, b) => a + b, 0), 1)}</strong></td></tr>
     </table>`;
+
+  const blocoMat = fvBlocoLeitura('Luminar da seita', 'condição material: quanto tem', 'Doroteu I.22. Regentes da triplicidade do signo do luminar da seita, Sol de dia e Lua de noite.',
+    `Luminar da seita: <span style="${FV_LINHA}">${fvPlaneta(rMat.luminarId, 24)} ${fvSigno(rMat.signoRef, 22)}</span>`, '', rMat);
+  const blocoSoc = rSoc ? fvBlocoLeitura('Sizígia pré-natal', 'condição social: quão livre é', 'Doroteu I.10. Regentes da triplicidade do signo da última lua nova ou cheia antes do nascimento, na tabela de dia ou de noite conforme a seita do nascimento.',
+    `Sizígia pré-natal: <span style="${FV_LINHA}">${fvSigno(rSoc.signoRef, 22)}</span>`,
+    'Aplicação da regra de troca de Valens à sizígia é uma extensão: Doroteu I.10 fala em começo e fim da vida e não dá a data da troca.', rSoc)
+    : '<hr class="divisa"><div class="texto-apagado" style="font-size:12px;">Sem a sizígia pré-natal neste mapa: só a leitura do luminar da seita.</div>';
+  const faixaCoincide = coincidem
+    ? `<div class="cartao" style="margin-top:10px; font-size:13px; font-weight:700; color:var(--terracota);">As duas leituras coincidem: mesmos regentes, mesma data de troca.</div>` : '';
 
   container.innerHTML = `
     <div style="width: 100%; display: flex; flex-direction: column;">
@@ -502,45 +546,23 @@ function renderFasesVidaUI(container) {
 
         <div id="fasesVidaResultsArea">
         <hr class="divisa">
-        <h3 class="titulo-secao">Fonte e seita</h3>
-        <div style="display:flex; flex-wrap:wrap; gap:18px; font-size:13px; margin-bottom:10px;">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="radio" name="fvFonte" value="luminar" ${r.fonte === 'luminar' ? 'checked' : ''} onchange="fvEscolherFonte('luminar')"> Luminar da seita
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="radio" name="fvFonte" value="sizigia" ${r.fonte === 'sizigia' ? 'checked' : ''} ${temSizigia ? '' : 'disabled'} onchange="fvEscolherFonte('sizigia')"> Signo da sizígia pré-natal
-          </label>
-        </div>
         <div style="font-size:13px; line-height:2;">
-          <div>Seita: <strong>${r.isDia ? 'diurna' : 'noturna'}</strong></div>
-          <div>Fonte usada: ${fonteUsada}</div>
-          <div class="texto-apagado" style="font-size:11.5px;">Latitude usada nos tempos de ascensão: ${fvNum(lat, 2)}°${r.polar ? ' — latitude polar: algum signo não nasce/se põe, resultado aproximado.' : ''}</div>
+          <div>Seita: <strong>${rMat.isDia ? 'diurna' : 'noturna'}</strong></div>
+          <div class="texto-apagado" style="font-size:11.5px;">Latitude usada nos tempos de ascensão: ${fvNum(lat, 2)}°${rMat.polar ? ' — latitude polar: algum signo não nasce/se põe, resultado aproximado.' : ''}</div>
         </div>
+        ${faixaCoincide}
+
+        ${blocoMat}
+        ${blocoSoc}
 
         <hr class="divisa">
-        <h3 class="titulo-secao">Regentes (tabela de Doroteu)</h3>
-        <div class="grade-cartoes">
-          <div class="cartao">
-            ${fvLinhaPlaneta('Primeiro regente, fase 1', r.reg1)}
-            ${fvLinhaPlaneta('Segundo regente, fase 2', r.reg2)}
-            ${fvLinhaPlaneta('Participante, ajuda nas duas fases', r.part)}
-          </div>
-        </div>
-
-        <hr class="divisa">
-        <h3 class="titulo-secao">Idade da troca</h3>
-        <div class="grade-cartoes">${fvCartaoTroca(r)}</div>
-        <div class="texto-apagado" style="font-size:11.5px; margin-top:10px;">Hoje: ${fvFmtData(r.hoje)}, idade ${fvFmtAnos(r.idadeHoje)}, fase ${r.fase}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a 90 anos.</div>
-        ${fvLinhaDoTempo(r, lista)}
-
-        <hr class="divisa">
-        <h3 class="titulo-secao">As duas fases</h3>
-        <div class="grade-cartoes">${fvCartaoFase(1, r)}${fvCartaoFase(2, r)}</div>
-        <div class="grade-cartoes" style="margin-top:14px;">${fvQualidade(r)}</div>
+        <h3 class="titulo-secao">Trocas na barra</h3>
+        <div class="texto-apagado" style="font-size:11.5px;">Hoje: ${fvFmtData(rMat.hoje)}, idade ${fvFmtAnos(rMat.idadeHoje)}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a 90 anos.</div>
+        ${fvLinhaDoTempo(leituras, lista, rMat.idadeHoje)}
 
         <hr class="divisa">
         <h3 class="titulo-secao">Eventos de vida</h3>
-        ${fvBlocoEventos(r, lista)}
+        ${fvBlocoEventos(leituras, lista)}
 
         <hr class="divisa">
         <h3 class="titulo-secao">Tempos de ascensão em anos</h3>
