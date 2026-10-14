@@ -277,16 +277,17 @@ function fvLinhaDoTempo(r, eventos) {
       <div style="position:absolute; left:${pc(e.idade)}%; top:4px; height:36px; width:0; border-left:2px solid var(--terracota);" title="${escapeHtml(e.titulo)}, ${fvFmtAnos(e.idade)}, fase ${e.fase}"></div>
       <span style="position:absolute; left:${pc(e.idade)}%; top:${i % 2 ? 76 : 60}px; transform:translateX(-50%); font-size:10px; font-weight:700; color:var(--terracota); min-width:16px; text-align:center; border:1px solid var(--terracota); box-sizing:border-box; line-height:14px;">${i + 1}</span>`).join('');
   return `
-    <div style="position:relative; height:96px; margin:36px 6px 0;">
-      <div style="position:absolute; left:0; right:0; top:21px; height:0; border-top:1px solid var(--azul-egipcio-claro);"></div>
-      <div style="position:absolute; left:${pc(r.troca.idade)}%; top:4px; height:36px; width:0; border-left:3px solid var(--azul-egipcio-claro);" title="Troca, ${fvFmtAnos(r.troca.idade)}"></div>
-      <span style="position:absolute; left:${pc(r.troca.idade)}%; top:-14px; transform:translateX(-50%); font-size:9.5px; font-weight:700; color:var(--azul-egipcio-escuro);">troca</span>
+    <div style="position:relative; height:96px; margin:22px 6px 0;">
+      <div style="position:absolute; left:0; width:${pc(r.troca.idade)}%; top:14px; height:14px; border:1px solid var(--azul-egipcio-claro); box-sizing:border-box;" title="Fase 1"></div>
+      <div style="position:absolute; left:${pc(r.troca.idade)}%; right:0; top:14px; height:14px; border:1px solid var(--azul-egipcio-claro); border-left:3px solid var(--terracota); box-sizing:border-box;" title="Fase 2"></div>
+      <span style="position:absolute; left:${pc(r.troca.idade / 2)}%; top:-4px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
+      <span style="position:absolute; left:${pc((r.troca.idade + MAX) / 2)}%; top:-4px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
       <div style="position:absolute; left:${pc(r.idadeHoje)}%; top:4px; height:36px; width:0; border-left:2px solid var(--preto-tinta);" title="Hoje"></div>
-      <span style="position:absolute; left:${pc(r.idadeHoje)}%; top:${Math.abs(r.idadeHoje - r.troca.idade) < 6 ? -28 : -14}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">hoje</span>
+      <span style="position:absolute; left:${pc(r.idadeHoje)}%; top:-18px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">hoje</span>
       ${marcas}
       ${ticks}
     </div>
-    <div class="texto-apagado" style="font-size:11px; margin:2px 6px 0;">Linha azul: troca. Linha preta: hoje. Linhas terracota numeradas: eventos.</div>`;
+    <div class="texto-apagado" style="font-size:11px; margin:2px 6px 0;">Linha preta: hoje. Linhas terracota numeradas: eventos.</div>`;
 }
 
 function fvCartaoTroca(r) {
@@ -547,10 +548,9 @@ function renderFasesVidaUI(container) {
 
         <hr class="divisa">
         <div class="texto-apagado" style="font-size:11.5px; line-height:1.55;">
-          <strong>Fontes.</strong> A estrutura de início e fim da vida vem de Doroteu I.22 e I.10. O instrumento de tempo vem de Valens II.1 e VII.2.
-          A regra exata de qual signo conta é hipótese em teste.
-          Valens VII.2: os efeitos se realizam ao completar os tempos. Valens VII.3: o regente que está terminando pode se combinar com outro e continuar. Valens não define a largura da transição.
-          Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
+          <strong>Fontes.</strong> Doroteu I.22: fortuna do nativo, pelo luminar da seita. Doroteu I.10: livre ou escravo, pela sizígia. Valens II.1 e VII.2: instrumento de tempo.
+          Valens VII.2 e VII.3: os efeitos se realizam ao completar os tempos e o regente que sai pode se combinar com o que entra. Valens não define a largura da transição.
+          A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
           As tabelas antigas, como a de Valens com Áries 20, Câncer 33 e Capricórnio 27, são aproximações e ficam de 1 a 3 anos abaixo.
         </div>
         </div>
