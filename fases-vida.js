@@ -77,7 +77,7 @@ function fvDignidades(idPlaneta, absGraus, isDia, sunAbs) {
     if (faixa && FV_SIMBOLO_ID[faixa.p] === idPlaneta) lista.push('termo');
   }
   const opostoExaltacao = FV_EXALTACAO[idPlaneta] !== undefined && (FV_EXALTACAO[idPlaneta] + 6) % 12 === s;
-  if (opostoExaltacao) lista.push('queda (debilidade)');
+  if (opostoExaltacao) lista.push('queda');
   return lista;
 }
 
@@ -239,15 +239,19 @@ Object.keys(FV_PLANETAS).forEach(id => { FV_PLANETAS_ID[FV_PLANETAS[id].nome] = 
 
 /* Situação do planeta: signo, casa, angular/sucedente/cadente e dignidades. */
 function fvSituacao(p, tam) {
-  const partes = [];
-  if (!p.dignidades.includes('domicílio')) partes.push(`regido por <span style="${FV_LINHA}">${fvPlaneta(FV_PLANETAS_ID[p.regidoPor], 20)}</span>`);
-  p.dignidades.forEach(d => partes.push(d));
+  const dignidades = p.dignidades.filter(d => d !== 'queda');
+  const debilidades = p.dignidades.filter(d => d === 'queda');          // queda é debilidade, nunca dignidade
+  const regidoPor = p.dignidades.includes('domicílio') ? '' : `regido por <span style="${FV_LINHA}">${fvPlaneta(FV_PLANETAS_ID[p.regidoPor], 20)}</span>`;
+  const linhas = [];
+  if (regidoPor) linhas.push(regidoPor);
+  if (dignidades.length) linhas.push(`Dignidades: ${dignidades.join(' · ')}`);
+  if (debilidades.length) linhas.push(`Debilidade: ${debilidades.join(' · ')}`);
   return `
     <div style="${FV_LINHA} font-size:13px; flex-wrap:wrap;">
       ${fvPlaneta(p.id, tam || 26)} <span>em</span> ${fvSigno(p.signo, 22)} <span>${p.grau}°${String(p.minuto).padStart(2, '0')}'</span>
       <span>· casa ${p.casa} · <strong>${p.condicaoCasa}</strong></span>
     </div>
-    ${partes.length ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:3px;">${partes.join(' · ')}</div>` : ''}`;
+    ${linhas.length ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:3px; line-height:1.6;">${linhas.join('<br>')}</div>` : ''}`;
 }
 
 function fvLinhaPlaneta(papel, p) {
