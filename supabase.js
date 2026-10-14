@@ -222,7 +222,7 @@ function aplicarLimiteEstiloPlanetas() {
 }
 /* FERRAMENTAS DE TESTE: só a conta admin (perfis.nivel = 'admin') vê e abre. Aqui a regra é OPOSTA à dos temas: enquanto o plano não
    chegou (ou a leitura falhou) a ferramenta fica ESCONDIDA — erro de rede nunca abre ferramenta de teste pra quem não é admin. */
-const FERRAMENTAS_SO_ADMIN = ['fasesVida', 'isopsefia'];
+const FERRAMENTAS_SO_ADMIN = ['fasesVida', 'isopsefia', 'retificacaoSizigia'];
 function usuarioEhAdmin() { return window.nivelPlano === 'admin'; }
 function ferramentaLiberada(modulo) { return !FERRAMENTAS_SO_ADMIN.includes(modulo) || usuarioEhAdmin(); }
 function aplicarVisibilidadeFerramentasAdmin() {
@@ -413,7 +413,7 @@ function reRenderizarModuloAtivo() {
 /* ORDEM DOS BOTÕES DA BARRA SUPERIOR (Configurações > Aparência)
    As chaves abaixo são as mesmas do atributo data-modulo-key de cada botão
    dentro de #top-bar .top-bar-controls, em index.html. */
-const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'fasesVida', 'isopsefia', 'agenda', 'configuracoes', 'financeiro'];
+const ORDEM_BOTOES_TOPO_PADRAO = ['relatorio', 'tabelaTecnica', 'mandala', 'sinastria', 'direcoes', 'liberacao', 'decenios', 'profeccao', 'lotes', 'horas', 'fasesVida', 'retificacaoSizigia', 'isopsefia', 'agenda', 'configuracoes', 'financeiro'];
 
 const ROTULOS_BOTOES_TOPO = {
   relatorio: 'Relatório',
@@ -427,6 +427,7 @@ const ROTULOS_BOTOES_TOPO = {
   lotes: 'Calculadora de Lotes',
   horas: 'Horas Planetárias',
   fasesVida: 'Fases da Vida (teste)',
+  retificacaoSizigia: 'Achador de horário pela sizígia (teste)',
   isopsefia: 'Isopsefia',
   agenda: 'Agenda',
   configuracoes: 'Configurações',
@@ -514,7 +515,7 @@ function moverBotaoTopo(chave, direcao) {
    é só tirada do #mandala-container e recolocada na volta, em vez de ser reconstruída do zero). Ficam de fora a
    Mandala/Radix (estado global, redesenhada de qualquer jeito), as Horas (dependem do relógio) e a Agenda
    (dados podem mudar por fora, ex.: novos agendamentos). */
-const MODULOS_GUARDAVEIS = ['relatorio', 'tabelaTecnica', 'profeccao', 'decenios', 'isopsefia', 'liberacao', 'direcoes', 'lotes', 'sinastria', 'fasesVida'];
+const MODULOS_GUARDAVEIS = ['relatorio', 'tabelaTecnica', 'profeccao', 'decenios', 'isopsefia', 'liberacao', 'direcoes', 'lotes', 'sinastria', 'fasesVida', 'retificacaoSizigia'];
 window.modulosGuardados = window.modulosGuardados || {};
 
 /* Esquece as telas guardadas — chamada sempre que o que elas mostram deixa de valer (outro mapa/momento
@@ -716,6 +717,13 @@ if (telaRestaurada) {
     if (!ferramentaLiberada(modulo)) { // ferramenta de teste: só admin (a leitura do plano pode ainda estar a caminho; aplicarVisibilidadeFerramentasAdmin reabre se for admin)
       if (cRadix) cRadix.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;font-weight:600;">Esta ferramenta está disponível só para a conta admin.</div>';
     } else if (typeof iniciarModuloFasesVida === 'function') iniciarModuloFasesVida();
+  }
+  // 9C. ACHADOR DE HORÁRIO PELA SIZÍGIA (retificação pelos antigos — ferramenta de teste; não depende do mapa em tela)
+  else if (modulo === 'retificacaoSizigia') {
+    if (cRadix) cRadix.style.display = 'block';
+    if (!ferramentaLiberada(modulo)) {
+      if (cRadix) cRadix.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;font-weight:600;">Esta ferramenta está disponível só para a conta admin.</div>';
+    } else if (typeof iniciarModuloRetificacaoSizigia === 'function') iniciarModuloRetificacaoSizigia();
   }
   // 10. RELATÓRIO (Mapa Natal Clássico em PDF)
   else if (modulo === 'relatorio') {

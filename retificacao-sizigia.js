@@ -1,0 +1,607 @@
+/* ==========================================
+   ACHADOR DE HORÁRIO PELA SIZÍGIA PRÉ-NATAL (retificação pelos antigos)
+   Fontes: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2; Valens, Antologias I.5 e I.9.
+   Zodíaco tropical, signos inteiros, termos egípcios (sem termos medievais).
+
+   Não entram, de propósito: os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio — o tradutor avisa que o
+   texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente) e o cálculo da concepção (quase circular,
+   não distingue horários).
+
+   Divisão do arquivo:
+   1) cálculo (sem tela, roda em Node: ver module.exports no fim)
+        - dignidades e contagem das vias (Ptolomeu/Hefestião) e regra de Valens I.5;
+        - Ascendente e Meio do Céu em qualquer instante (fórmula própria: tempo sideral + nutação), busca do instante em que cada um
+          chega a um grau, Fortuna e a hora em que ela muda de signo;
+        - rzCalcular(): junta tudo; as posições dos planetas vêm do motor (Swiss Ephemeris, motor-astrologia.vercel.app), injetado.
+   2) tela (iniciarModuloRetificacaoSizigia)
+   ========================================== */
+
+const RZ_SIGNOS = ['Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem', 'Libra', 'Escorpião', 'Sagitário', 'Capricórnio', 'Aquário', 'Peixes'];
+
+/* chave do motor (planetas.<chave>) de cada planeta */
+const RZ_PLANETAS = {
+  Sun:     { nome: 'Sol',      motor: 'Sol' },
+  Moon:    { nome: 'Lua',      motor: 'Lua' },
+  Mercury: { nome: 'Mercúrio', motor: 'Mercurio' },
+  Venus:   { nome: 'Vênus',    motor: 'Venus' },
+  Mars:    { nome: 'Marte',    motor: 'Marte' },
+  Jupiter: { nome: 'Júpiter',  motor: 'Jupiter' },
+  Saturn:  { nome: 'Saturno',  motor: 'Saturno' }
+};
+const RZ_ORDEM = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+
+/* Senhor do signo (domicílio) */
+const RZ_DOMICILIO = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
+/* Signo de exaltação de cada planeta */
+const RZ_EXALTACAO = { Sun: 0, Moon: 1, Mercury: 5, Venus: 11, Mars: 9, Jupiter: 3, Saturn: 6 };
+/* Os três senhores de cada trígono (tabela de Doroteu — A CONFIRMAR). Índice = signo % 4: fogo, terra, ar, água. Qualquer dos três conta. */
+const RZ_TRIPLICIDADE = [
+  ['Sun', 'Jupiter', 'Saturn'],
+  ['Venus', 'Moon', 'Mars'],
+  ['Saturn', 'Mercury', 'Jupiter'],
+  ['Venus', 'Mars', 'Moon']
+];
+const RZ_ELEMENTO = ['fogo', 'terra', 'ar', 'água'];
+/* Aspectos por signos inteiros: distância em signos → nome */
+const RZ_ASPECTOS = { 0: 'conjunção', 2: 'sextil', 3: 'quadratura', 4: 'trígono', 6: 'oposição' };
+const RZ_SIMBOLO_TERMO = { '♃': 'Jupiter', '♀': 'Venus', '☿': 'Mercury', '♂': 'Mars', '♄': 'Saturn' };
+
+/* ---------- posições na eclíptica ---------- */
+function rzNorm360(x) { return ((x % 360) + 360) % 360; }
+function rzSignoDe(lon) { return Math.floor(rzNorm360(lon) / 30) % 12; }
+function rzDistAng(a, b) { const d = Math.abs(rzNorm360(a) - rzNorm360(b)); return d > 180 ? 360 - d : d; }
+
+/* "7°57′ Capricórnio" a partir de uma longitude. Os minutos são arredondados; 59,6′ vira o grau seguinte (e 29°59,6′ vira o signo seguinte). */
+function rzFmtPos(lon, comSigno) {
+  let total = Math.round(rzNorm360(lon) * 60);        // arco-minutos
+  if (total >= 21600) total -= 21600;
+  const signo = Math.floor(total / 1800);
+  const resto = total - signo * 1800;
+  const g = Math.floor(resto / 60), m = resto % 60;
+  return `${g}°${String(m).padStart(2, '0')}′` + (comSigno === false ? '' : ' ' + RZ_SIGNOS[signo]);
+}
+/* grau do signo e minutos, sem signo ("7°57′") */
+function rzFmtGrau(grauNoSigno) { return rzFmtPos(grauNoSigno, false); }
+
+/* ---------- termos egípcios (lidos da tabela do site, mandala.js: uma só definição) ---------- */
+function rzTermoSenhor(lon) {
+  const s = rzSignoDe(lon);
+  const g = rzNorm360(lon) - s * 30;
+  const tab = (typeof EGYPTIAN_TERMS !== 'undefined') ? EGYPTIAN_TERMS : null;
+  if (!tab || !tab[s]) throw new Error('Tabela de termos egípcios não carregada');
+  const faixa = tab[s].find(t => g < t.deg) || tab[s][tab[s].length - 1];
+  return RZ_SIMBOLO_TERMO[faixa.p];
+}
+
+/* ---------- Ptolomeu/Hefestião: contagem das cinco vias ----------
+   Cada planeta ganha 1 ponto por via que o liga ao ponto: triplicidade (qualquer dos 3 senhores do trígono), domicílio, exaltação,
+   termo egípcio e aspecto por signos (conjunção, sextil, quadratura, trígono, oposição). */
+function rzVias(id, lonPlaneta, lonPonto) {
+  const sPonto = rzSignoDe(lonPonto), sPlan = rzSignoDe(lonPlaneta);
+  const aspecto = RZ_ASPECTOS[Math.min((sPlan - sPonto + 12) % 12, (sPonto - sPlan + 12) % 12)] || null;
+  const vias = {
+    triplicidade: RZ_TRIPLICIDADE[sPonto % 4].includes(id),
+    domicilio: RZ_DOMICILIO[sPonto] === id,
+    exaltacao: RZ_EXALTACAO[id] === sPonto,
+    termo: rzTermoSenhor(lonPonto) === id,
+    aspecto
+  };
+  vias.total = (vias.triplicidade ? 1 : 0) + (vias.domicilio ? 1 : 0) + (vias.exaltacao ? 1 : 0) + (vias.termo ? 1 : 0) + (aspecto ? 1 : 0);
+  return vias;
+}
+
+/* posicoes: { Sun: lon, Moon: lon, ... } → { linhas: [{id, lon, vias}], vencedores: [ids] } (empate: todos os empatados) */
+function rzContagem(posicoes, lonPonto) {
+  const linhas = RZ_ORDEM.filter(id => posicoes[id] !== undefined).map(id => ({ id, lon: posicoes[id], vias: rzVias(id, posicoes[id], lonPonto) }));
+  const max = Math.max.apply(null, linhas.map(l => l.vias.total));
+  return { linhas, max, vencedores: linhas.filter(l => l.vias.total === max).map(l => l.id) };
+}
+
+/* Valens I.5: o senhor do termo e o senhor do signo do ponto */
+function rzValens(lonPonto) {
+  return { termo: rzTermoSenhor(lonPonto), signo: RZ_DOMICILIO[rzSignoDe(lonPonto)] };
+}
+
+/* ---------- Ascendente e Meio do Céu em qualquer instante ----------
+   Tempo sideral aparente (média + nutação) e obliquidade verdadeira; nutação em longitude e obliquidade pela série IAU 1980
+   (20 maiores termos, erro abaixo de 0,05″). Conferido contra o Swiss Ephemeris (swe.houses) em centenas de casos. */
+const RZ_NUTACAO = [ // D, M, M', F, Ω,  Δψ (0,0001″), Δψ·T, Δε (0,0001″), Δε·T
+  [0, 0, 0, 0, 1, -171996, -174.2, 92025, 8.9], [-2, 0, 0, 2, 2, -13187, -1.6, 5736, -3.1], [0, 0, 0, 2, 2, -2274, -0.2, 977, -0.5],
+  [0, 0, 0, 0, 2, 2062, 0.2, -895, 0.5], [0, 1, 0, 0, 0, 1426, -3.4, 54, -0.1], [0, 0, 1, 0, 0, 712, 0.1, -7, 0],
+  [-2, 1, 0, 2, 2, -517, 1.2, 224, -0.6], [0, 0, 0, 2, 1, -386, -0.4, 200, 0], [0, 0, 1, 2, 2, -301, 0, 129, -0.1],
+  [-2, -1, 0, 2, 2, 217, -0.5, -95, 0.3], [-2, 0, 1, 0, 0, -158, 0, 0, 0], [-2, 0, 0, 2, 1, 129, 0.1, -70, 0],
+  [0, 0, -1, 2, 2, 123, 0, -53, 0], [2, 0, 0, 0, 0, 63, 0, 0, 0], [0, 0, 1, 0, 1, 63, 0.1, -33, 0],
+  [2, 0, -1, 2, 2, -59, 0, 26, 0], [0, 0, -1, 0, 1, -58, -0.1, 32, 0], [0, 0, 1, 2, 1, -51, 0, 27, 0],
+  [-2, 0, 2, 0, 0, 48, 0, 0, 0], [0, 0, -2, 2, 1, 46, 0, -24, 0]
+];
+function rzJD(ms) { return ms / 86400000 + 2440587.5; }
+
+function rzNutacao(jd) {
+  const T = (jd - 2451545.0) / 36525, rad = Math.PI / 180;
+  const D = 297.85036 + 445267.111480 * T - 0.0019142 * T * T + T * T * T / 189474;
+  const M = 357.52772 + 35999.050340 * T - 0.0001603 * T * T - T * T * T / 300000;
+  const Mp = 134.96298 + 477198.867398 * T + 0.0086972 * T * T + T * T * T / 56250;
+  const F = 93.27191 + 483202.017538 * T - 0.0036825 * T * T + T * T * T / 327270;
+  const Om = 125.04452 - 1934.136261 * T + 0.0020708 * T * T + T * T * T / 450000;
+  let dpsi = 0, deps = 0;
+  for (const t of RZ_NUTACAO) {
+    const arg = (t[0] * D + t[1] * M + t[2] * Mp + t[3] * F + t[4] * Om) * rad;
+    dpsi += (t[5] + t[6] * T) * Math.sin(arg);
+    deps += (t[7] + t[8] * T) * Math.cos(arg);
+  }
+  const epsMedia = 23 + 26 / 60 + 21.448 / 3600 - (46.8150 * T + 0.00059 * T * T - 0.001813 * T * T * T) / 3600;
+  return { dpsi: dpsi * 0.0001 / 3600, eps: epsMedia + deps * 0.0001 / 3600 };   // graus; eps = obliquidade verdadeira
+}
+
+/* { asc, mc } em graus (0–360) no instante ms (UT, ms desde 1970), latitude e longitude LESTE em graus */
+function rzAngulos(ms, lat, lon) {
+  const jd = rzJD(ms), T = (jd - 2451545.0) / 36525, rad = Math.PI / 180;
+  const nut = rzNutacao(jd);
+  const gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000;
+  const ramc = rzNorm360(gmst + nut.dpsi * Math.cos(nut.eps * rad) + lon) * rad;
+  const eps = nut.eps * rad;
+  const mc = rzNorm360(Math.atan2(Math.sin(ramc), Math.cos(ramc) * Math.cos(eps)) / rad);
+  let asc = rzNorm360(Math.atan2(-Math.cos(ramc), Math.sin(eps) * Math.tan(lat * rad) + Math.cos(eps) * Math.sin(ramc)) / rad);
+  if (rzNorm360(asc - mc) > 180) asc = rzNorm360(asc + 180);      // o Ascendente fica de 0° a 180° à frente do Meio do Céu
+  return { asc, mc };
+}
+
+/* Instantes em [deMs, ateMs] em que o Ascendente ('asc') ou o Meio do Céu ('mc') chega ao GRAU `grau` (0 ≤ grau < 30) de QUALQUER signo.
+   Devolve [{ ms, signo }] em ordem. Os dois sobem sempre no mesmo sentido, então basta ver o "grau no signo" passar de baixo pra cima. */
+function rzCruzamentos(tipo, grau, deMs, ateMs, lat, lon, passoMs) {
+  const passo = passoMs || 30000;
+  const f = (ms) => { const a = rzAngulos(ms, lat, lon)[tipo]; return { a, d: (((a % 30) - grau + 15) % 30 + 30) % 30 - 15 }; };
+  const saida = [];
+  let t0 = deMs, p = f(t0);
+  for (let t1 = deMs + passo; t1 <= ateMs + passo; t1 += passo) {
+    const c = f(t1);
+    if (p.d < 0 && c.d >= 0 && c.d - p.d < 15) {
+      let a = t0, b = t1;
+      for (let i = 0; i < 40; i++) { const m = (a + b) / 2; const fm = f(m); if (fm.d < 0 && fm.d - p.d < 15) a = m; else b = m; }
+      const ms = (a + b) / 2;
+      if (ms >= deMs && ms <= ateMs) saida.push({ ms, signo: rzSignoDe(f(ms).a) });
+    }
+    t0 = t1; p = c;
+  }
+  return saida;
+}
+
+/* ---------- Sol e Lua entre as amostras do motor (para a Fortuna) ----------
+   O motor devolve 0,01° por consulta: ajusta-se um polinômio (mínimos quadrados) às amostras em vez de ligá-las ponto a ponto. */
+function rzAjustePoli(amostras, grau) {
+  const xs = amostras.map(a => a.t), t0 = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+  const h = (Math.max.apply(null, xs) - Math.min.apply(null, xs)) / 2 || 1;
+  const ys = []; let ant = amostras[0].lon, off = 0;
+  amostras.forEach(a => { let d = a.lon - ant; if (d > 180) off -= 360; else if (d < -180) off += 360; ys.push(a.lon + off); ant = a.lon; });
+  const n = grau + 1, A = [];
+  for (let i = 0; i < n; i++) A.push(new Array(n + 1).fill(0));
+  amostras.forEach((a, k) => {
+    const x = (a.t - t0) / h;
+    for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) A[i][j] += Math.pow(x, i + j); A[i][n] += Math.pow(x, i) * ys[k]; }
+  });
+  for (let i = 0; i < n; i++) {                               // eliminação de Gauss com pivô
+    let mx = i; for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[mx][i])) mx = r;
+    [A[i], A[mx]] = [A[mx], A[i]];
+    for (let r = i + 1; r < n; r++) { const k = A[r][i] / A[i][i]; for (let c = i; c <= n; c++) A[r][c] -= k * A[i][c]; }
+  }
+  const c = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) { let s = A[i][n]; for (let j = i + 1; j < n; j++) s -= A[i][j] * c[j]; c[i] = s / A[i][i]; }
+  return (ms) => { const x = (ms - t0) / h; let y = 0; for (let i = n - 1; i >= 0; i--) y = y * x + c[i]; return rzNorm360(y); };
+}
+
+/* ---------- Fortuna ---------- */
+/* Fortuna num instante: dia (Sol acima do horizonte) = Asc + Lua − Sol; noite = Asc + Sol − Lua. sol/lua: funções ms → longitude. */
+function rzFortunaEm(ms, lat, lon, sol, lua) {
+  const { asc } = rzAngulos(ms, lat, lon);
+  const s = sol(ms), l = lua(ms);
+  const diurno = rzNorm360(s - asc) >= 180;                 // Sol entre o Descendente e o Ascendente, passando pelo Meio do Céu = acima do horizonte
+  return { lon: rzNorm360(diurno ? asc + l - s : asc + s - l), diurno };
+}
+
+/* Quando a Fortuna entrou no signo em que está em ms e quando sai dele (procura até `maxMs` pra cada lado; null se não achar) */
+function rzFortunaTroca(ms, lat, lon, sol, lua, maxMs) {
+  const limite = maxMs || 6 * 3600000, passo = 20000;
+  const signo0 = rzSignoDe(rzFortunaEm(ms, lat, lon, sol, lua).lon);
+  const ache = (dir) => {
+    for (let dt = passo; dt <= limite; dt += passo) {
+      const t = ms + dir * dt;
+      if (rzSignoDe(rzFortunaEm(t, lat, lon, sol, lua).lon) !== signo0) {
+        let a = ms + dir * (dt - passo), b = t;                // a: ainda no signo; b: já fora
+        for (let i = 0; i < 40; i++) { const m = (a + b) / 2; if (rzSignoDe(rzFortunaEm(m, lat, lon, sol, lua).lon) === signo0) a = m; else b = m; }
+        return (a + b) / 2;
+      }
+    }
+    return null;
+  };
+  return { entra: ache(-1), sai: ache(1) };
+}
+
+/* ---------- Motor (Swiss Ephemeris, motor-astrologia) ---------- */
+const RZ_MOTOR_URL = 'https://motor-astrologia.vercel.app';
+
+/* Pergunta ao motor o céu num instante UT (ms). A API recebe data e HH:MM com fuso 0, então a consulta é sempre em UT, arredondada ao minuto.
+   Devolve uma função async (ms) → JSON do motor (com cache por minuto). fetchFn: padrão `fetch`. */
+function rzMotorHttp(lat, lon, base, fetchFn) {
+  const cache = new Map();
+  const f = fetchFn || ((typeof fetch === 'function') ? fetch.bind(globalThis) : null);
+  return function consultar(ms) {
+    const min = Math.round(ms / 60000);
+    if (cache.has(min)) return cache.get(min);
+    const d = new Date(min * 60000);
+    const p2 = (n) => String(n).padStart(2, '0');
+    const url = `${base || RZ_MOTOR_URL}/api/index?data=${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())}&hora=${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}&fuso=0&lat=${lat}&lon=${lon}`;
+    const prom = f(url).then(r => { if (!r.ok) throw new Error('Motor de astrologia indisponível (' + r.status + ')'); return r.json(); })
+      .then(j => { if (!j || j.sucesso === false) throw new Error((j && j.erro) || 'Erro no motor de astrologia'); return j; });
+    prom.catch(() => cache.delete(min));
+    cache.set(min, prom);
+    return prom;
+  };
+}
+
+/* ---------- Cálculo completo ----------
+   entrada: { ano, mes, dia (data LOCAL do nascimento), ini: {h, m}, fim: {h, m} (janela, hora local; fim ≤ início = passa da meia-noite),
+              lat, lon (lon leste +), fuso (horas, ex.: -3), leitura: 'meiodia' | 'centro' }
+   motor: async (ms UT) → JSON do motor (rzMotorHttp). Devolve o resultado com tudo que a tela mostra. */
+async function rzCalcular(entrada, motor) {
+  const { ano, mes, dia, lat, lon, fuso } = entrada;
+  const localParaMs = (d0, h, m) => Date.UTC(ano, mes - 1, dia + d0, h, m, 0) - fuso * 3600000;
+  const iniMs = localParaMs(0, entrada.ini.h, entrada.ini.m);
+  let fimMs = localParaMs(0, entrada.fim.h, entrada.fim.m);
+  if (fimMs <= iniMs) fimMs = localParaMs(1, entrada.fim.h, entrada.fim.m);
+  const centroMs = (iniMs + fimMs) / 2;
+  const avisos = [];
+  if (Math.abs(lat) > 66) avisos.push('Latitude acima do círculo polar: o Ascendente pode não subir em ordem; confira os horários.');
+
+  // 1) última sizígia antes do nascimento (antes do início da janela)
+  const jIni = await motor(iniMs), jFim = await motor(fimMs);
+  const sIni = jIni.sizigia, sFim = jFim.sizigia;
+  if (!sIni || sIni.jd_ut === undefined) throw new Error('O motor não devolveu a sizígia');
+  const jdParaMs = (jd) => (jd - 2440587.5) * 86400000;
+  const sizMs = jdParaMs(sIni.jd_ut);
+  if (sFim && Math.abs(sFim.jd_ut - sIni.jd_ut) > 1e-4) avisos.push(`Uma sizígia (${sFim.tipo}) acontece dentro da janela, em ${rzFmtHora(jdParaMs(sFim.jd_ut), fuso, true)}. O cálculo usa a anterior; se o nascimento foi depois dela, a sizígia certa é a outra.`);
+
+  // 2) ponto da sizígia
+  const sizAng = rzAngulos(sizMs, lat, lon);
+  const luaNaSizigia = rzNorm360(sIni.grau_absoluto);
+  const nova = sIni.tipo === 'Lua Nova';
+  let luminar = 'Lua', pontoLon = luaNaSizigia;
+  if (!nova) {
+    const luaAcima = rzNorm360(luaNaSizigia - sizAng.asc) >= 180;
+    luminar = luaAcima ? 'Lua' : 'Sol';
+    pontoLon = luaAcima ? luaNaSizigia : rzNorm360(luaNaSizigia + 180);
+  }
+  const sizigia = { tipo: sIni.tipo, ms: sizMs, luminar, lon: pontoLon, luaLon: luaNaSizigia, asc: sizAng.asc, valensNoLugarDaLua: !nova ? luaNaSizigia : null };
+
+  // 3) posição dos planetas no dia do nascimento (meio-dia local, ou o centro da janela)
+  const leituraMs = entrada.leitura === 'centro' ? centroMs : localParaMs(0, 12, 0);
+  const jLeit = await motor(leituraMs);
+  const posicoes = {}, retro = {};
+  RZ_ORDEM.forEach(id => { const o = jLeit.planetas[RZ_PLANETAS[id].motor]; posicoes[id] = rzNorm360(o.grau_absoluto); retro[id] = !!o.retrogrado; });
+
+  // 4) candidatos pelas duas regras
+  const contagem = rzContagem(posicoes, pontoLon);
+  const valens = rzValens(pontoLon);
+
+  // 5) e 6) horários de cada candidato
+  const angC = rzAngulos(centroMs, lat, lon);
+  const margem = 13 * 3600000;
+  const candidatos = [];
+  const quemEntra = [
+    { regra: 'ptolomeu', ids: contagem.vencedores },
+    { regra: 'valens', ids: [valens.termo, valens.signo] }
+  ];
+  quemEntra.forEach(q => {
+    const vistos = new Set();
+    q.ids.forEach(id => {
+      if (vistos.has(id)) return; vistos.add(id);
+      const motivo = q.regra === 'valens' ? [valens.termo === id ? 'senhor do termo' : null, valens.signo === id ? 'senhor do signo' : null].filter(Boolean).join(' e ') : null;
+      const lonPl = posicoes[id], grau = lonPl % 30, grauInt = Math.floor(grau);
+      const dAsc = rzDistAng(lonPl, angC.asc), dMc = rzDistAng(lonPl, angC.mc);
+      const maisPerto = dMc < dAsc ? 'mc' : 'asc';
+      const horarios = {};
+      ['asc', 'mc'].forEach(tipo => {
+        const todos = rzCruzamentos(tipo, grau, iniMs - margem, fimMs + margem, lat, lon);
+        const dentro = todos.filter(c => c.ms >= iniMs && c.ms <= fimMs);
+        let lista = dentro.map(c => Object.assign({ dentro: true }, c));
+        if (!lista.length) {                                     // nenhum na janela: o do signo do ponto aproximado, fora dela
+          const sc = rzSignoDe(angC[tipo]);
+          const doSigno = todos.filter(c => c.signo === sc).sort((a, b) => Math.abs(a.ms - centroMs) - Math.abs(b.ms - centroMs))[0];
+          if (doSigno) lista = [Object.assign({ dentro: false }, doSigno)];
+        }
+        // faixa do grau inteiro (grau 0′ a 59′): mesmo signo, ao redor do horário
+        lista.forEach(c => {
+          const cercaDe = (g) => rzCruzamentos(tipo, g % 30, c.ms - 40 * 60000, c.ms + 40 * 60000, lat, lon).filter(x => x.signo === c.signo || g === 30)[0];
+          const ini0 = cercaDe(grauInt), fim0 = cercaDe(grauInt + 1);
+          c.faixaGrauInteiro = (ini0 && fim0) ? { de: ini0.ms, ate: fim0.ms } : null;
+        });
+        horarios[tipo] = lista;
+      });
+      candidatos.push({ regra: q.regra, id, motivo, lon: lonPl, retro: retro[id], grau, distAsc: dAsc, distMc: dMc, maisPerto, horarios });
+    });
+  });
+
+  // saída em cada horário: Asc, MC, Fortuna e quando a Fortuna muda de signo (Sol e Lua ajustados às amostras do motor)
+  const todosOsMs = [];
+  candidatos.forEach(c => ['asc', 'mc'].forEach(t => c.horarios[t].forEach(h => todosOsMs.push(h.ms))));
+  if (todosOsMs.length) {
+    const de = Math.min(iniMs, Math.min.apply(null, todosOsMs)) - 7 * 3600000, ate = Math.max(fimMs, Math.max.apply(null, todosOsMs)) + 7 * 3600000;
+    const passo = Math.max(90 * 60000, (ate - de) / 24);
+    const tempos = []; for (let t = de; t <= ate + 1; t += passo) tempos.push(Math.round(t / 60000) * 60000);
+    const js = await Promise.all(tempos.map(t => motor(t)));
+    const serie = (chave) => rzAjustePoli(tempos.map((t, i) => ({ t, lon: js[i].planetas[chave].grau_absoluto })), 3);
+    const sol = serie('Sol'), lua = serie('Lua');
+    candidatos.forEach(c => ['asc', 'mc'].forEach(tipo => c.horarios[tipo].forEach(h => {
+      const a = rzAngulos(h.ms, lat, lon), f = rzFortunaEm(h.ms, lat, lon, sol, lua);
+      h.asc = a.asc; h.mc = a.mc; h.fortuna = f.lon; h.diurno = f.diurno;
+      h.fortunaTroca = rzFortunaTroca(h.ms, lat, lon, sol, lua);
+    })));
+  }
+
+  return { entrada, iniMs, fimMs, centroMs, leituraMs, avisos, sizigia, posicoes, retro, contagem, valens, angulosCentro: angC, candidatos };
+}
+
+/* "10:45:14" no fuso dado (comSegundos) a partir de ms UT; com data se comData */
+function rzFmtHora(ms, fuso, comData) {
+  const d = new Date(Math.round(ms / 1000) * 1000 + fuso * 3600000);
+  const p2 = (n) => String(n).padStart(2, '0');
+  const h = `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`;
+  return comData ? `${p2(d.getUTCDate())}/${p2(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${h}` : h;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { rzAngulos, rzNutacao, rzCruzamentos, rzAjustePoli, rzFortunaEm, rzFortunaTroca, rzVias, rzContagem, rzValens, rzTermoSenhor,
+    rzCalcular, rzMotorHttp, rzFmtPos, rzFmtHora, rzSignoDe, RZ_SIGNOS };
+}
+
+/* ==========================================
+   TELA
+   ========================================== */
+let rzUltimo = null;              // último resultado calculado (a tela guardada ao trocar de ferramenta já o carrega no HTML)
+let rzTimerCidade = null;
+
+function rzNum(s) { return parseFloat(String(s).trim().replace(',', '.')); }
+function rzP2(n) { return String(n).padStart(2, '0'); }
+function rzPlanetaHtml(id, tam) {
+  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('planeta', id, tam || 18) : '';
+  return `<span style="display:inline-flex; align-items:center; gap:5px; vertical-align:middle;">${ico}<span>${RZ_PLANETAS[id].nome}</span></span>`;
+}
+
+/* data/lugar/janela iniciais: o mapa em tela, se houver (tudo editável) */
+function rzValoresIniciais() {
+  const v = { data: '', ini: '', fim: '', cidade: '', lat: '', lon: '' };
+  try {
+    if (typeof currentMoment !== 'undefined' && currentMoment instanceof Date && !isNaN(currentMoment)) {
+      v.data = `${currentMoment.getFullYear()}-${rzP2(currentMoment.getMonth() + 1)}-${rzP2(currentMoment.getDate())}`;
+      const min = currentMoment.getHours() * 60 + currentMoment.getMinutes();
+      const f = (m) => `${rzP2(Math.floor(m / 60))}:${rzP2(m % 60)}`;
+      v.ini = f(Math.max(0, min - 60)); v.fim = f(Math.min(23 * 60 + 59, min + 60));
+    }
+    if (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat !== undefined) {
+      v.lat = String(currentGeo.lat); v.lon = String(currentGeo.lon); v.cidade = currentGeo.city || currentGeo.name || '';
+    }
+  } catch (e) {}
+  return v;
+}
+
+function iniciarModuloRetificacaoSizigia() {
+  const container = document.getElementById('mandala-container');
+  if (!container) return;
+  rzUltimo = null;
+  const v = rzValoresIniciais();
+  const campo = (rot, html) => `<div><label class="rotulo" style="display:block; margin-bottom:2px;">${rot}</label>${html}</div>`;
+  container.innerHTML = `
+    <style>
+      #rz-container input, #rz-container select { box-sizing: border-box; width: 100%; padding: 6px 0; font-family: inherit; font-size: 13px; outline: none; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; min-height: 34px; }
+      #rz-container input[type="date"], #rz-container input[type="time"] { -webkit-appearance: none; appearance: none; }
+      #rz-container input:focus, #rz-container select:focus { border-bottom-color: var(--terracota); }
+      #rz-container .rz-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px 24px; }
+      #rz-container .rz-cidades { display: none; margin-top: 2px; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+      #rz-container .rz-cidades div { padding: 6px 2px; font-size: 12px; cursor: pointer; }
+      #rz-container .rz-cidades div:hover { color: var(--terracota); }
+      #rz-container table { width: 100%; }
+      #rz-container .rz-rolagem { overflow-x: auto; }
+      #rz-container .rz-escolhido td { color: var(--terracota); font-weight: 700; }
+      #rz-container .rz-fora { opacity: .85; }
+      #rz-container .rz-fonte { font-size: 11.5px; line-height: 1.55; }
+    </style>
+    <div style="width: 100%; display: flex; flex-direction: column;">
+      <div id="rz-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Achador de horário pela sizígia</h3></div>
+        <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
+        <div class="texto-apagado" style="font-size:12px; text-align:center; line-height:1.55;">Retificação pelos antigos: Ptolomeu, Tetrabiblos III.2 · Hefestião, Apotelesmatika II.2 · Valens, Antologias I.5 e I.9.</div>
+        <hr class="divisa">
+        <div class="rz-campos">
+          ${campo('Data do nascimento', `<input type="date" id="rzData" value="${v.data}">`)}
+          ${campo('Janela: início (hora local)', `<input type="time" id="rzIni" value="${v.ini}">`)}
+          ${campo('Janela: fim (hora local)', `<input type="time" id="rzFim" value="${v.fim}">`)}
+          ${campo('Posição dos planetas lida', `<select id="rzLeitura"><option value="meiodia">ao meio-dia local do dia</option><option value="centro">no centro da janela</option></select>`)}
+        </div>
+        <div class="rz-campos" style="margin-top:12px;">
+          <div style="grid-column: 1 / -1; position:relative;">
+            <label class="rotulo" style="display:block; margin-bottom:2px;">Local (busque a cidade ou digite as coordenadas)</label>
+            <input type="text" id="rzCidade" value="${escapeHtml(v.cidade)}" placeholder="Digite a cidade..." autocomplete="off" oninput="rzBuscarCidade(this.value)">
+            <div id="rzCidades" class="rz-cidades"></div>
+          </div>
+          ${campo('Latitude (sul negativa)', `<input type="text" id="rzLat" inputmode="decimal" value="${v.lat}" placeholder="-23,46" onchange="rzAtualizarFuso()">`)}
+          ${campo('Longitude (oeste negativa)', `<input type="text" id="rzLon" inputmode="decimal" value="${v.lon}" placeholder="-46,53" onchange="rzAtualizarFuso()">`)}
+          ${campo('Fuso (horas) — vazio = automático', `<input type="text" id="rzFusoManual" inputmode="decimal" placeholder="automático" onchange="rzAtualizarFuso()">`)}
+        </div>
+        <div id="rzFusoInfo" class="texto-apagado" style="font-size:11.5px; margin-top:8px;"></div>
+        <div style="margin-top:14px;"><button type="button" class="botao-texto" style="font-size:12px; padding:5px 14px;" onclick="rzExecutar()">Calcular</button></div>
+        <hr class="divisa">
+        <div id="rzResultado"><div class="texto-apagado" style="font-size:12.5px;">Preencha e aperte Calcular.</div></div>
+        <hr class="divisa-fim">
+      </div>
+    </div>`;
+  ['rzData', 'rzIni'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', rzAtualizarFuso); });
+  rzAtualizarFuso();
+}
+if (typeof window !== 'undefined') window.iniciarModuloRetificacaoSizigia = iniciarModuloRetificacaoSizigia;
+
+/* busca de cidade (Nominatim, como o resto do software) */
+function rzBuscarCidade(q) {
+  const lista = document.getElementById('rzCidades');
+  if (!lista) return;
+  clearTimeout(rzTimerCidade);
+  if (!q || q.length < 3) { lista.style.display = 'none'; return; }
+  rzTimerCidade = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
+      const dados = await res.json();
+      if (!dados || !dados.length) { lista.style.display = 'none'; return; }
+      lista.innerHTML = dados.map(it => `<div data-lat="${it.lat}" data-lon="${it.lon}" data-nome="${escapeHtml(it.display_name)}">${escapeHtml(it.display_name)}</div>`).join('');
+      lista.querySelectorAll('div').forEach(d => d.addEventListener('click', () => {
+        document.getElementById('rzCidade').value = d.dataset.nome;
+        document.getElementById('rzLat').value = parseFloat(d.dataset.lat).toFixed(4);
+        document.getElementById('rzLon').value = parseFloat(d.dataset.lon).toFixed(4);
+        lista.style.display = 'none';
+        rzAtualizarFuso();
+      }));
+      lista.style.display = 'block';
+    } catch (e) { lista.style.display = 'none'; }
+  }, 300);
+}
+if (typeof window !== 'undefined') window.rzBuscarCidade = rzBuscarCidade;
+
+/* lê o formulário → entrada do cálculo (ou { erro }) */
+function rzLerFormulario() {
+  const g = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const dt = /^(\d{4})-(\d{2})-(\d{2})$/.exec(g('rzData'));
+  const hm = (s) => { const m = /^(\d{1,2}):(\d{2})/.exec(s); return m ? { h: +m[1], m: +m[2] } : null; };
+  const ini = hm(g('rzIni')), fim = hm(g('rzFim'));
+  const lat = rzNum(g('rzLat')), lon = rzNum(g('rzLon'));
+  if (!dt) return { erro: 'Informe a data do nascimento.' };
+  if (!ini || !fim) return { erro: 'Informe o início e o fim da janela de horário.' };
+  if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return { erro: 'Informe a latitude e a longitude (ou escolha a cidade).' };
+  const ano = +dt[1], mes = +dt[2], dia = +dt[3];
+  const manual = g('rzFusoManual').trim();
+  let fuso, fusoAuto = true;
+  if (manual !== '') { fuso = rzNum(manual); fusoAuto = false; if (isNaN(fuso) || Math.abs(fuso) > 14) return { erro: 'Fuso inválido (use horas, por exemplo -3).' }; }
+  else if (typeof calcularFusoPreciso === 'function') fuso = calcularFusoPreciso(lat, lon, ano, mes, dia, ini.h, ini.m);
+  else fuso = Math.round(lon / 15);
+  return { ano, mes, dia, ini, fim, lat, lon, fuso, fusoAuto, leitura: g('rzLeitura') || 'meiodia', cidade: g('rzCidade') };
+}
+
+function rzFmtFuso(f) { const s = f < 0 ? '−' : '+'; const a = Math.abs(f); const h = Math.floor(a), m = Math.round((a - h) * 60); return `UTC${s}${h}${m ? ':' + rzP2(m) : ''}`; }
+
+function rzAtualizarFuso() {
+  const el = document.getElementById('rzFusoInfo');
+  if (!el) return;
+  const e = rzLerFormulario();
+  if (e.erro) { el.textContent = ''; return; }
+  el.textContent = e.fusoAuto
+    ? `Fuso usado: ${rzFmtFuso(e.fuso)} (automático, com o horário de verão que valia nesse lugar e nessa data).`
+    : `Fuso usado: ${rzFmtFuso(e.fuso)} (digitado).`;
+}
+if (typeof window !== 'undefined') window.rzAtualizarFuso = rzAtualizarFuso;
+
+async function rzExecutar() {
+  const area = document.getElementById('rzResultado');
+  if (!area) return;
+  const e = rzLerFormulario();
+  if (e.erro) { area.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">${escapeHtml(e.erro)}</div>`; return; }
+  area.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Calculando...</div>`;
+  try {
+    const motor = rzMotorHttp(e.lat, e.lon);
+    const r = await rzCalcular(e, motor);
+    rzUltimo = r;
+    area.innerHTML = rzMontarResultado(r);
+  } catch (err) {
+    console.error(err);
+    area.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">Não foi possível calcular: ${escapeHtml(err.message || String(err))}</div>`;
+  }
+}
+if (typeof window !== 'undefined') window.rzExecutar = rzExecutar;
+
+/* ---------- montagem do resultado ---------- */
+function rzMontarResultado(r) {
+  const fuso = r.entrada.fuso;
+  const diaNasc = Date.UTC(r.entrada.ano, r.entrada.mes - 1, r.entrada.dia) / 86400000;
+  const hora = (ms) => {
+    const delta = Math.floor((ms + fuso * 3600000) / 86400000) - diaNasc;
+    return `<strong>${rzFmtHora(ms, fuso)}</strong>` + (delta ? ` <small>(${delta > 0 ? '+' : '−'}${Math.abs(delta)} dia)</small>` : '');
+  };
+  const s = r.sizigia;
+  const aviso = r.avisos.map(a => `<div style="color:var(--terracota); font-weight:700; font-size:12.5px; margin-bottom:8px;">${escapeHtml(a)}</div>`).join('');
+
+  const blocoSizigia = `
+    <h3 class="titulo-secao">1 · Última sizígia antes do nascimento</h3>
+    <div class="cartao" style="font-size:13px; line-height:1.9;">
+      <div><strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
+      <div>Luminar usado: <strong>${s.luminar}</strong>${s.tipo === 'Lua Nova' ? ' (conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? ' (a Lua estava acima do horizonte do local)' : ' (a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
+      <div>Ponto da sizígia: <strong>${rzFmtPos(s.lon)}</strong></div>
+      ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzFmtPos(s.valensNoLugarDaLua)}. ${s.luminar === 'Sol' ? 'Aqui o luminar acima do horizonte foi o Sol, então o ponto difere do de Valens.' : 'Aqui coincide com a regra do luminar acima do horizonte.'}</div>` : ''}
+      <div class="texto-apagado rz-fonte">Fonte: Ptolomeu, Tetrabiblos III.2 (luminar acima do horizonte na lua cheia); Valens, Antologias I.9.</div>
+    </div>`;
+
+  const dataLeitura = r.entrada.leitura === 'centro' ? 'no centro da janela' : 'ao meio-dia local do dia';
+  const tabela = `
+    <div class="rz-rolagem"><table class="tabela-epoca">
+      <tr><th>Planeta</th><th>Posição (${dataLeitura})</th><th class="centro">Triplicidade</th><th class="centro">Domicílio</th><th class="centro">Exaltação</th><th class="centro">Termo</th><th class="centro">Aspecto</th><th class="centro">Vias</th></tr>
+      ${r.contagem.linhas.map(l => {
+        const venc = r.contagem.vencedores.includes(l.id);
+        const x = (b) => b ? '✓' : '·';
+        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id)}</td><td>${rzFmtPos(l.lon)}${r.retro[l.id] ? ' ℞' : ''}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td class="centro">${l.vias.aspecto ? l.vias.aspecto : '·'}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
+      }).join('')}
+    </table></div>`;
+
+  const blocoPtolomeu = `
+    <hr class="divisa">
+    <h3 class="titulo-secao">2 · Regra de Ptolomeu e Hefestião</h3>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. Cada planeta ganha um ponto por via de relação com o ponto da sizígia (${rzFmtPos(s.lon)}): triplicidade (qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar), domicílio, exaltação, termo egípcio e aspecto por signos. Ganha quem tem mais vias; no empate valem todos os empatados.</div>
+    ${tabela}
+    <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} <strong>${r.contagem.vencedores.map(id => RZ_PLANETAS[id].nome).join(', ')}</strong> (${r.contagem.max} vias).</div>
+    ${r.candidatos.filter(c => c.regra === 'ptolomeu').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
+
+  const blocoValens = `
+    <hr class="divisa">
+    <h3 class="titulo-secao">3 · Regra de Valens (Antologias I.5)</h3>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Valens, Antologias I.5. Em separado da regra anterior: valem o senhor do termo (<strong>${RZ_PLANETAS[r.valens.termo].nome}</strong>) e o senhor do signo (<strong>${RZ_PLANETAS[r.valens.signo].nome}</strong>) do ponto da sizígia.</div>
+    ${r.candidatos.filter(c => c.regra === 'valens').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
+
+  const rodape = `
+    <hr class="divisa">
+    <div class="texto-apagado rz-fonte">
+      <strong>Margem.</strong> Cerca de 4 minutos de tempo por grau: um erro de 1° na posição do astro muda o horário em torno de 4 minutos. O horário vale para o grau e os minutos do planeta, calculado ao segundo; a precisão real do método é a do texto antigo, não a do cálculo.<br>
+      <strong>Fontes.</strong> Ptolomeu, <em>Tetrabiblos</em> III.2 (candidatos pelas cinco vias; grau do planeta como grau do Ascendente; regra do Meio do Céu). Hefestião, <em>Apotelesmatika</em> II.2 (repete Ptolomeu; as frações do grau marcam a hora, iguais à posição do astro). Valens, <em>Antologias</em> I.5 (senhores do termo e do signo) e I.9 (exemplos; lua cheia no lugar da Lua).<br>
+      <strong>Como foi calculado.</strong> Swiss Ephemeris (motor do site), zodíaco tropical, signos inteiros, termos egípcios. Ascendente e Meio do Céu por tempo sideral aparente e obliquidade verdadeira, conferidos contra o Swiss Ephemeris. Fortuna: Asc + Lua − Sol de dia, Asc + Sol − Lua de noite (dia = Sol acima do horizonte pelo grau). Posições do motor com 0,01° (cerca de 1 segundo no horário). Fuso: ${rzFmtFuso(fuso)}${r.entrada.fusoAuto ? ' com horário de verão histórico' : ''}, o mesmo na janela inteira.<br>
+      <strong>Fora do escopo, de propósito.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio — o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente) e o cálculo da concepção (quase circular, não distingue horários).
+    </div>`;
+
+  return aviso + blocoSizigia + blocoPtolomeu + blocoValens + rodape;
+}
+
+function rzMontarCandidato(r, c, hora) {
+  const nomeVia = { asc: 'Ascendente', mc: 'Meio do Céu' };
+  const escolhida = c.maisPerto;
+  const linhasDe = (tipo) => c.horarios[tipo].map(h => {
+    const f = h.fortunaTroca;
+    const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, r.entrada.fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, r.entrada.fuso)}` : 'não muda em 6 h');
+    return `<tr class="${tipo === escolhida ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}">
+      <td>${nomeVia[tipo]}${tipo === escolhida ? ' ' + '<span title="A regra escolhe esta via">★</span>' : ''}</td>
+      <td>${hora(h.ms)}${h.dentro ? '' : '<br><small>fora da janela</small>'}${h.faixaGrauInteiro ? `<br><small>grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, r.entrada.fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, r.entrada.fuso)}</small>` : ''}</td>
+      <td>${rzFmtPos(h.asc)}</td><td>${rzFmtPos(h.mc)}</td>
+      <td>${rzFmtPos(h.fortuna)}<br><small>${h.diurno ? 'de dia' : 'de noite'}</small></td>
+      <td><small>${troca}</small></td></tr>`;
+  }).join('');
+  // as duas vias lado a lado (a escolhida pela regra leva ★); horário fora da janela vem marcado
+  const asc = linhasDe('asc'), mc = linhasDe('mc');
+  const dentro = c.horarios[escolhida].some(h => h.dentro);
+  const motivo = c.motivo ? ` · ${c.motivo}` : '';
+  return `
+    <div class="cartao" style="margin-bottom:14px;">
+      <div style="font-size:14px; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;">
+        <span style="font-size:15px;">${rzPlanetaHtml(c.id, 22)}</span>
+        <span><strong>${rzFmtPos(c.lon)}</strong>${c.retro ? ' ℞' : ''}${motivo}</span>
+      </div>
+      <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
+        Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela, ${rzFmtPos(r.angulosCentro.asc)} e ${rzFmtPos(r.angulosCentro.mc)}).
+        A regra escolheria o <strong>${nomeVia[escolhida]}</strong>.
+      </div>
+      <div class="rz-rolagem"><table class="tabela-epoca">
+        <tr><th>Via</th><th>Horário (hora local)</th><th>Ascendente</th><th>Meio do Céu</th><th>Fortuna</th><th>Fortuna muda de signo</th></tr>
+        ${asc}${mc}
+      </table></div>
+      ${(!dentro) ? '<div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">Na via escolhida, nenhum horário cai dentro da janela; o mostrado é o do signo que sobe no centro dela.</div>' : ''}
+    </div>`;
+}
