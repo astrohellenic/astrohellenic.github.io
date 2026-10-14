@@ -892,6 +892,13 @@ const MANDALA_ZOOM_MAX = 500;
 const MANDALA_ZOOM_PASSO = 10;
 let mandalaZoomPercent = 100;
 
+/* "Só computador": sem NENHUM toque no aparelho. O iPad com Magic Keyboard tem trackpad (hover/pointer fino), mas é touchscreen
+   (maxTouchPoints > 0) — lá o zoom é com os dedos, então botões, rodinha e barras de rolagem não existem. */
+function mandalaSoMouse() {
+  return (navigator.maxTouchPoints || 0) === 0 && !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+}
+document.documentElement.classList.toggle('so-mouse', mandalaSoMouse());
+
 function ajustarZoomMandala(delta) {
   // Acima de 200% o passo é maior (senão são dezenas de cliques até 500%).
   const sentido = delta < 0 ? -1 : 1;
@@ -915,7 +922,7 @@ window.ajustarZoomMandala = ajustarZoomMandala;
 // Só no computador (mesma regra dos botões); acumula o giro pra o touchpad não disparar dezenas de passos de uma vez.
 let mandalaWheelAcc = 0;
 document.addEventListener('wheel', (e) => {
-  if (window.innerWidth <= 600 || e.ctrlKey) return;
+  if (window.innerWidth <= 600 || e.ctrlKey || !mandalaSoMouse()) return;
   const img = document.getElementById('mandalaImg');
   if (!img || e.target !== img) return;
   e.preventDefault();
@@ -938,7 +945,7 @@ function injetarControleZoomMandala() {
      #mandala-controls-overlay quebrar em duas linhas à toa (pedido do
      astrólogo, 29/09/2026). Remove se já tinha sido injetado antes de a
      tela ficar estreita (ex.: redimensionar a janela). */
-  if (window.innerWidth <= 600) {
+  if (window.innerWidth <= 600 || !mandalaSoMouse()) {
     if (existente) existente.remove();
     return;
   }
@@ -1072,7 +1079,7 @@ function atualizarBarraInferiorMandala() {
   const visivel = barra.style.display !== 'none' && (document.getElementById('mandala-controls-overlay') || {}).style.display !== 'none';
   const img = document.getElementById('mandalaImg');
   const embrulho = img && img.parentElement;
-  const comMouse = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const comMouse = mandalaSoMouse();
   if (!visivel) { if (embrulho) embrulho.style.paddingBottom = ''; document.documentElement.style.removeProperty('--margem-rolagem-mandala'); return; }
   atualizarCabecalhoBarraMandala();
   barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
