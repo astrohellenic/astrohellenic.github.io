@@ -361,10 +361,34 @@ let rzTimerCidade = null;
 
 function rzNum(s) { return parseFloat(String(s).trim().replace(',', '.')); }
 function rzP2(n) { return String(n).padStart(2, '0'); }
+/* Ícone do planeta / do signo no padrão do software: sempre o ícone; o nome ao lado só com os rótulos ligados. */
 function rzPlanetaHtml(id, tam) {
-  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('planeta', id, tam || 18) : '';
-  return `<span style="display:inline-flex; align-items:center; gap:5px; vertical-align:middle;">${ico}<span>${RZ_PLANETAS[id].nome}</span></span>`;
+  return (typeof planetaComNome === 'function') ? planetaComNome(id, tam || 20) : RZ_PLANETAS[id].nome;
 }
+function rzSignoHtml(idx, tam) {
+  if (typeof signoComNome === 'function' && typeof getSignSvgHtmlDec === 'function') return signoComNome(getSignSvgHtmlDec(idx, tam || 20), idx);
+  return RZ_SIGNOS[idx];
+}
+/* "7°57′" + ícone do signo, a partir de uma longitude */
+function rzPosHtml(lon, tam) {
+  const txt = rzFmtPos(lon);
+  const grau = txt.slice(0, txt.indexOf('′') + 1);
+  const signo = RZ_SIGNOS.indexOf(txt.slice(grau.length + 1));
+  return `<span style="display:inline-flex; align-items:center; gap:4px; vertical-align:middle; white-space:nowrap;">${grau}${rzSignoHtml(signo, tam)}</span>`;
+}
+function rzAnguloHtml(tipo, tam) {
+  const chave = tipo === 'asc' ? 'ASC' : 'MC';
+  return (typeof getAnguloCirculoSVG === 'function') ? `<span title="${tipo === 'asc' ? 'Ascendente' : 'Meio do Céu'}" style="display:inline-flex; vertical-align:middle;">${getAnguloCirculoSVG(chave, tam || 24)}</span>` : (tipo === 'asc' ? 'Asc' : 'MC');
+}
+function rzFortunaHtml(tam) {
+  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'fortune', tam || 22) : '';
+  return ico || 'Fortuna';
+}
+function rzSizigiaHtml(tam) {
+  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'sizigia', tam || 22) : '';
+  return ico || 'Sizígia';
+}
+function rzListaPlanetas(ids) { return ids.map(id => `<span style="display:inline-block; margin-right:8px;">${rzPlanetaHtml(id, 20)}</span>`).join(''); }
 
 /* data/lugar/janela iniciais: o mapa em tela, se houver (tudo editável) */
 function rzValoresIniciais() {
@@ -406,7 +430,14 @@ function iniciarModuloRetificacaoSizigia() {
     </style>
     <div style="width: 100%; display: flex; flex-direction: column;">
       <div id="rz-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
-        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Achador de horário pela sizígia</h3></div>
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Achador de horário pela sizígia</h3><div class="acoes-ferramenta">
+          <button type="button" onclick="salvarRetificacaoSizigiaNaGaleria()" title="Salvar o resultado como imagem na galeria (com título e cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+          </button>
+          <button type="button" onclick="capturarRetificacaoSizigiaParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+        </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
         <div class="texto-apagado" style="font-size:12px; text-align:center; line-height:1.55;">Retificação pelos antigos: Ptolomeu, Tetrabiblos III.2 · Hefestião, Apotelesmatika II.2 · Valens, Antologias I.5 e I.9.</div>
         <hr class="divisa">
@@ -527,10 +558,10 @@ function rzMontarResultado(r) {
   const blocoSizigia = `
     <h3 class="titulo-secao">1 · Última sizígia antes do nascimento</h3>
     <div class="cartao" style="font-size:13px; line-height:1.9;">
-      <div><strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
-      <div>Luminar usado: <strong>${s.luminar}</strong>${s.tipo === 'Lua Nova' ? ' (conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? ' (a Lua estava acima do horizonte do local)' : ' (a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
-      <div>Ponto da sizígia: <strong>${rzFmtPos(s.lon)}</strong></div>
-      ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzFmtPos(s.valensNoLugarDaLua)}. ${s.luminar === 'Sol' ? 'Aqui o luminar acima do horizonte foi o Sol, então o ponto difere do de Valens.' : 'Aqui coincide com a regra do luminar acima do horizonte.'}</div>` : ''}
+      <div>${rzSizigiaHtml(22)} <strong>${s.tipo}</strong> em ${rzFmtHora(s.ms, fuso, true)} (hora local)</div>
+      <div>Luminar usado: ${rzPlanetaHtml(s.luminar === 'Lua' ? 'Moon' : 'Sun', 22)} ${s.tipo === 'Lua Nova' ? '(conjunção: Sol e Lua no mesmo grau)' : (s.luminar === 'Lua' ? '(a Lua estava acima do horizonte do local)' : '(a Lua estava abaixo do horizonte do local, então vale o Sol, no grau oposto ao da Lua)')}</div>
+      <div>Ponto da sizígia: <strong>${rzPosHtml(s.lon)}</strong></div>
+      ${s.valensNoLugarDaLua !== null ? `<div class="texto-apagado" style="font-size:11.5px;">Nos exemplos de Valens (Antologias I.9) a lua cheia é sempre marcada no lugar da Lua: ${rzPosHtml(s.valensNoLugarDaLua, 16)}. ${s.luminar === 'Sol' ? 'Aqui o luminar acima do horizonte foi o Sol, então o ponto difere do de Valens.' : 'Aqui coincide com a regra do luminar acima do horizonte.'}</div>` : ''}
       <div class="texto-apagado rz-fonte">Fonte: Ptolomeu, Tetrabiblos III.2 (luminar acima do horizonte na lua cheia); Valens, Antologias I.9.</div>
     </div>`;
 
@@ -541,22 +572,22 @@ function rzMontarResultado(r) {
       ${r.contagem.linhas.map(l => {
         const venc = r.contagem.vencedores.includes(l.id);
         const x = (b) => b ? '✓' : '·';
-        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id)}</td><td>${rzFmtPos(l.lon)}${r.retro[l.id] ? ' ℞' : ''}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td class="centro">${l.vias.aspecto ? l.vias.aspecto : '·'}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
+        return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id)}</td><td>${rzPosHtml(l.lon, 18)}${r.retro[l.id] ? ' ℞' : ''}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td class="centro">${l.vias.aspecto ? l.vias.aspecto : '·'}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
       }).join('')}
     </table></div>`;
 
   const blocoPtolomeu = `
     <hr class="divisa">
     <h3 class="titulo-secao">2 · Regra de Ptolomeu e Hefestião</h3>
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. Cada planeta ganha um ponto por via de relação com o ponto da sizígia (${rzFmtPos(s.lon)}): triplicidade (qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar), domicílio, exaltação, termo egípcio e aspecto por signos. Ganha quem tem mais vias; no empate valem todos os empatados.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. Cada planeta ganha um ponto por via de relação com o ponto da sizígia (${rzPosHtml(s.lon, 16)}): triplicidade (qualquer dos três senhores do trígono, tabela de Doroteu, a confirmar), domicílio, exaltação, termo egípcio e aspecto por signos. Ganha quem tem mais vias; no empate valem todos os empatados.</div>
     ${tabela}
-    <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} <strong>${r.contagem.vencedores.map(id => RZ_PLANETAS[id].nome).join(', ')}</strong> (${r.contagem.max} vias).</div>
+    <div style="font-size:13px; margin:8px 0 14px;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${rzListaPlanetas(r.contagem.vencedores)} (${r.contagem.max} vias).</div>
     ${r.candidatos.filter(c => c.regra === 'ptolomeu').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
 
   const blocoValens = `
     <hr class="divisa">
     <h3 class="titulo-secao">3 · Regra de Valens (Antologias I.5)</h3>
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Valens, Antologias I.5. Em separado da regra anterior: valem o senhor do termo (<strong>${RZ_PLANETAS[r.valens.termo].nome}</strong>) e o senhor do signo (<strong>${RZ_PLANETAS[r.valens.signo].nome}</strong>) do ponto da sizígia.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Valens, Antologias I.5. Em separado da regra anterior: valem o senhor do termo (${rzPlanetaHtml(r.valens.termo, 18)}) e o senhor do signo (${rzPlanetaHtml(r.valens.signo, 18)}) do ponto da sizígia.</div>
     ${r.candidatos.filter(c => c.regra === 'valens').map(c => rzMontarCandidato(r, c, hora)).join('')}`;
 
   const rodape = `
@@ -572,16 +603,15 @@ function rzMontarResultado(r) {
 }
 
 function rzMontarCandidato(r, c, hora) {
-  const nomeVia = { asc: 'Ascendente', mc: 'Meio do Céu' };
   const escolhida = c.maisPerto;
   const linhasDe = (tipo) => c.horarios[tipo].map(h => {
     const f = h.fortunaTroca;
     const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, r.entrada.fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, r.entrada.fuso)}` : 'não muda em 6 h');
     return `<tr class="${tipo === escolhida ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}">
-      <td>${nomeVia[tipo]}${tipo === escolhida ? ' ' + '<span title="A regra escolhe esta via">★</span>' : ''}</td>
+      <td>${rzAnguloHtml(tipo, 26)}${tipo === escolhida ? ' ' + '<span title="A regra escolhe esta via">★</span>' : ''}</td>
       <td>${hora(h.ms)}${h.dentro ? '' : '<br><small>fora da janela</small>'}${h.faixaGrauInteiro ? `<br><small>grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, r.entrada.fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, r.entrada.fuso)}</small>` : ''}</td>
-      <td>${rzFmtPos(h.asc)}</td><td>${rzFmtPos(h.mc)}</td>
-      <td>${rzFmtPos(h.fortuna)}<br><small>${h.diurno ? 'de dia' : 'de noite'}</small></td>
+      <td>${rzPosHtml(h.asc, 18)}</td><td>${rzPosHtml(h.mc, 18)}</td>
+      <td>${rzPosHtml(h.fortuna, 18)}<br><small>${h.diurno ? 'de dia' : 'de noite'}</small></td>
       <td><small>${troca}</small></td></tr>`;
   }).join('');
   // as duas vias lado a lado (a escolhida pela regra leva ★); horário fora da janela vem marcado
@@ -592,16 +622,44 @@ function rzMontarCandidato(r, c, hora) {
     <div class="cartao" style="margin-bottom:14px;">
       <div style="font-size:14px; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;">
         <span style="font-size:15px;">${rzPlanetaHtml(c.id, 22)}</span>
-        <span><strong>${rzFmtPos(c.lon)}</strong>${c.retro ? ' ℞' : ''}${motivo}</span>
+        <span><strong>${rzPosHtml(c.lon, 20)}</strong>${c.retro ? ' ℞' : ''}${motivo}</span>
       </div>
       <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
-        Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela, ${rzFmtPos(r.angulosCentro.asc)} e ${rzFmtPos(r.angulosCentro.mc)}).
-        A regra escolheria o <strong>${nomeVia[escolhida]}</strong>.
+        Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela: ${rzAnguloHtml('asc', 24)} ${rzPosHtml(r.angulosCentro.asc, 16)} e ${rzAnguloHtml('mc', 24)} ${rzPosHtml(r.angulosCentro.mc, 16)}).
+        A regra escolheria o ${rzAnguloHtml(escolhida, 24)}.
       </div>
       <div class="rz-rolagem"><table class="tabela-epoca">
-        <tr><th>Via</th><th>Horário (hora local)</th><th>Ascendente</th><th>Meio do Céu</th><th>Fortuna</th><th>Fortuna muda de signo</th></tr>
+        <tr><th>Via</th><th>Horário (hora local)</th><th>${rzAnguloHtml('asc', 26)}</th><th>${rzAnguloHtml('mc', 26)}</th><th>${rzFortunaHtml(20)}</th><th>${rzFortunaHtml(20)} muda de signo</th></tr>
         ${asc}${mc}
       </table></div>
       ${(!dentro) ? '<div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">Na via escolhida, nenhum horário cai dentro da janela; o mostrado é o do signo que sobe no centro dela.</div>' : ''}
     </div>`;
 }
+
+/* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
+function salvarRetificacaoSizigiaNaGaleria() {
+  const area = document.getElementById('rzResultado');
+  if (!area || !rzUltimo) { alert('Calcule primeiro.'); return; }
+  capturarESalvarNaGaleria(
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'ACHADOR DE HORÁRIO PELA SIZÍGIA', comCabecalho: true, papiro: true }),
+    `Astro_Hellenic_Achador_de_Horario_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+if (typeof window !== 'undefined') window.salvarRetificacaoSizigiaNaGaleria = salvarRetificacaoSizigiaNaGaleria;
+
+async function capturarRetificacaoSizigiaParaRelatorio() {
+  const area = document.getElementById('rzResultado');
+  if (!area || !rzUltimo) { alert('Calcule primeiro.'); return; }
+  try {
+    const papiro = window.temaMandala === 'ceu';
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro()); // Tema Céu: imagem sem fundo
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
+    const total = adicionarCapturaRelatorio('retificacaoSizigia', canvas.toDataURL('image/png'));
+    alert(`"Achador de horário pela sizígia" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar o Achador de horário ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+if (typeof window !== 'undefined') window.capturarRetificacaoSizigiaParaRelatorio = capturarRetificacaoSizigiaParaRelatorio;

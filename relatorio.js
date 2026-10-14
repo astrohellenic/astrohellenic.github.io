@@ -82,6 +82,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     capturada: true,
     telaOrigem: 'Ferramentas > Fases da Vida'
   },
+  retificacaoSizigia: {
+    label: 'Achador de horário pela sizígia (o resultado que você deixou pronto na ferramenta)',
+    tituloIndice: 'Achador de horário pela sizígia',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Achador de horário pela sizígia'
+  },
   lotes_calculados: {
     label: 'Lotes Selecionados (os quadrinhos que você marcar na Calculadora de Lotes — pré-calculados e os que você salvar)',
     tituloIndice: 'Lotes Selecionados',
@@ -187,6 +193,7 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'horas', type: 'ferramenta' },
   { id: 'isopsefia', type: 'ferramenta' },
   { id: 'fasesVida', type: 'ferramenta' },
+  { id: 'retificacaoSizigia', type: 'ferramenta' },
   { id: 'lotes_calculados', type: 'ferramenta' },
   { id: 'sinastria', type: 'ferramenta' }
 ]);
