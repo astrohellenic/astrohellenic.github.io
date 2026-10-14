@@ -220,12 +220,21 @@ function aplicarLimiteEstiloPlanetas() {
   window.estiloPlanetas = 'simples';
   reRenderizarModuloAtivo();
 }
+/* FERRAMENTAS DE TESTE: só a conta admin (perfis.nivel = 'admin') vê e abre. Aqui a regra é OPOSTA à dos temas: enquanto o plano não
+   chegou (ou a leitura falhou) a ferramenta fica ESCONDIDA — erro de rede nunca abre ferramenta de teste pra quem não é admin. */
+function usuarioEhAdmin() { return window.nivelPlano === 'admin'; }
+function aplicarVisibilidadeFerramentasAdmin() {
+  const btn = document.querySelector('#top-bar [data-modulo-key="fasesVida"]');
+  if (btn) btn.style.display = usuarioEhAdmin() ? '' : 'none';
+  if (window.moduloTecnicoAtivo === 'fasesVida') abrirModuloTecnica(usuarioEhAdmin() ? 'fasesVida' : 'mandala', true);
+}
 async function carregarNivelPlano(userId) {
   try {
     const { data, error } = await supabaseClient.from('perfis').select('nivel').eq('user_id', userId).maybeSingle();
     if (error) return;
     window.nivelPlano = (data && data.nivel) || 'basico';
   } catch (e) { return; }
+  aplicarVisibilidadeFerramentasAdmin();
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
   aplicarLimiteEstiloPlanetas();
   if (!temaLiberadoNoPlano(window.temaMandala)) salvarAparencia('claro');
@@ -698,7 +707,9 @@ if (telaRestaurada) {
   // 9B. FASES DA VIDA (regentes da triplicidade — ferramenta de teste)
   else if (modulo === 'fasesVida') {
     if (cRadix) cRadix.style.display = 'block';
-    if (typeof iniciarModuloFasesVida === 'function') iniciarModuloFasesVida();
+    if (!usuarioEhAdmin()) { // ferramenta de teste: só admin (a leitura do plano pode ainda estar a caminho; aplicarVisibilidadeFerramentasAdmin reabre se for admin)
+      if (cRadix) cRadix.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;font-weight:600;">Esta ferramenta está disponível só para a conta admin.</div>';
+    } else if (typeof iniciarModuloFasesVida === 'function') iniciarModuloFasesVida();
   }
   // 10. RELATÓRIO (Mapa Natal Clássico em PDF)
   else if (modulo === 'relatorio') {

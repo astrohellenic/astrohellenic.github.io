@@ -71,7 +71,7 @@ function fvDignidades(idPlaneta, absGraus, isDia) {
   }
   if (FV_ORDEM_CALDEIA[Math.floor(absGraus / 10) % 7] === idPlaneta) lista.push('face');
   const opostoExaltacao = FV_EXALTACAO[idPlaneta] !== undefined && (FV_EXALTACAO[idPlaneta] + 6) % 12 === s;
-  if (opostoExaltacao) lista.push('queda');
+  if (opostoExaltacao) lista.push('queda (debilidade)');
   return lista;
 }
 

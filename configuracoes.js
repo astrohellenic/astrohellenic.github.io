@@ -130,7 +130,7 @@ function htmlCfgAparencia() {
   const fa = (nome) => `<span class="cfg-opcao-icone">${menuIcone(nome, 22)}</span>`;
 
   const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo);
-  const itensOrdem = ordem.map((chave, idx) => `
+  const itensOrdem = ordem.map((chave, idx) => (chave === 'fasesVida' && !usuarioEhAdmin()) ? '' : `
     <div class="cfg-ordem-item">
       <span class="cfg-ordem-nome"><span class="cfg-ordem-pos">${idx + 1}</span>${escapeHtml(ROTULOS_BOTOES_TOPO[chave] || chave)}</span>
       <span class="cfg-ordem-setas">
