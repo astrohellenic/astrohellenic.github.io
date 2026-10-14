@@ -381,7 +381,7 @@ function rzAnguloHtml(tipo, tam) {
   return (typeof getAnguloCirculoSVG === 'function') ? `<span title="${tipo === 'asc' ? 'Ascendente' : 'Meio do Céu'}" style="display:inline-flex; vertical-align:middle;">${getAnguloCirculoSVG(chave, tam || 24)}</span>` : (tipo === 'asc' ? 'Asc' : 'MC');
 }
 function rzFortunaHtml(tam) {
-  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'fortune', tam || 22) : '';
+  const ico = (typeof getIconeSVG === 'function') ? getIconeSVG('lote', 'fortune', tam || 22) : '';
   return ico || 'Fortuna';
 }
 /* Sizígia (lunação pré-natal): ícone próprio; o nome ao lado só com os rótulos ligados (mesmo padrão das outras ferramentas) */
@@ -608,23 +608,33 @@ function rzMontarResultado(r) {
       <strong>Fora do escopo, de propósito.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio — o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente) e o cálculo da concepção (quase circular, não distingue horários).
     </div>`;
 
-  return aviso + blocoSizigia + blocoPtolomeu + blocoValens + rodape;
+  return aviso + rzMontarConclusao(r, hora) + blocoSizigia + blocoPtolomeu + blocoValens + rodape;
+}
+
+/* Um horário encontrado: ícone do ângulo + horário, depois Ascendente, Meio do Céu e Fortuna nesse horário (cada um com o ícone). Empilhado, pra caber no celular. */
+function rzBlocoHorario(r, c, tipo, h, hora) {
+  const f = h.fortunaTroca;
+  const fuso = r.entrada.fuso;
+  const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, fuso)}` : 'não muda em 6 h');
+  const item = (ico, html) => `<span style="display:inline-flex; align-items:center; gap:6px;">${ico}${html}</span>`;
+  return `
+    <div class="${tipo === c.maisPerto ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}" style="padding:10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);">
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; font-size:15px;">
+        ${rzAnguloHtml(tipo, 28)} ${hora(h.ms)}${h.dentro ? '' : ' <small>fora da janela</small>'}
+      </div>
+      ${h.faixaGrauInteiro ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:2px;">grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, fuso)}</div>` : ''}
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; font-size:13px; margin-top:6px;">
+        ${item(rzAnguloHtml('asc', 24), rzPosHtml(h.asc, 18))}
+        ${item(rzAnguloHtml('mc', 24), rzPosHtml(h.mc, 18))}
+        ${item(rzFortunaHtml(22), rzPosHtml(h.fortuna, 18) + ` <small>${h.diurno ? 'de dia' : 'de noite'}</small>`)}
+      </div>
+      <div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">${rzFortunaHtml(16)} ${troca}</div>
+    </div>`;
 }
 
 function rzMontarCandidato(r, c, hora) {
   const escolhida = c.maisPerto;
-  const linhasDe = (tipo) => c.horarios[tipo].map(h => {
-    const f = h.fortunaTroca;
-    const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, r.entrada.fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, r.entrada.fuso)}` : 'não muda em 6 h');
-    return `<tr class="${tipo === escolhida ? 'rz-escolhido' : ''} ${h.dentro ? '' : 'rz-fora'}">
-      <td>${rzAnguloHtml(tipo, 26)}${tipo === escolhida ? ' ' + '<span title="A regra escolhe esta via">★</span>' : ''}</td>
-      <td>${hora(h.ms)}${h.dentro ? '' : '<br><small>fora da janela</small>'}${h.faixaGrauInteiro ? `<br><small>grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, r.entrada.fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, r.entrada.fuso)}</small>` : ''}</td>
-      <td>${rzPosHtml(h.asc, 18)}</td><td>${rzPosHtml(h.mc, 18)}</td>
-      <td>${rzPosHtml(h.fortuna, 18)}<br><small>${h.diurno ? 'de dia' : 'de noite'}</small></td>
-      <td><small>${troca}</small></td></tr>`;
-  }).join('');
-  // as duas vias lado a lado (a escolhida pela regra leva ★); horário fora da janela vem marcado
-  const asc = linhasDe('asc'), mc = linhasDe('mc');
+  const blocos = ['asc', 'mc'].map(tipo => c.horarios[tipo].map(h => rzBlocoHorario(r, c, tipo, h, hora)).join('')).join('');
   const dentro = c.horarios[escolhida].some(h => h.dentro);
   const motivo = c.motivo ? ` · ${c.motivo}` : '';
   return `
@@ -635,14 +645,29 @@ function rzMontarCandidato(r, c, hora) {
       </div>
       <div class="texto-apagado" style="font-size:12px; margin:6px 0;">
         Regra do Meio do Céu (Ptolomeu, repetida por Hefestião): distância do planeta ao Ascendente aproximado ${c.distAsc.toFixed(1).replace('.', ',')}° · ao Meio do Céu aproximado ${c.distMc.toFixed(1).replace('.', ',')}° (ambos no centro da janela: ${rzAnguloHtml('asc', 24)} ${rzPosHtml(r.angulosCentro.asc, 16)} e ${rzAnguloHtml('mc', 24)} ${rzPosHtml(r.angulosCentro.mc, 16)}).
-        A regra escolheria o ${rzAnguloHtml(escolhida, 24)}.
+        A regra escolhe o ${rzAnguloHtml(escolhida, 24)} (em terracota abaixo).
       </div>
-      <div class="rz-rolagem"><table class="tabela-epoca">
-        <tr><th>Via</th><th>Horário (hora local)</th><th>${rzAnguloHtml('asc', 26)}</th><th>${rzAnguloHtml('mc', 26)}</th><th>${rzFortunaHtml(20)}</th><th>${rzFortunaHtml(20)} muda de signo</th></tr>
-        ${asc}${mc}
-      </table></div>
-      ${(!dentro) ? '<div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">Na via escolhida, nenhum horário cai dentro da janela; o mostrado é o do signo que sobe no centro dela.</div>' : ''}
+      ${blocos}
+      ${(!dentro) ? '<div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">No ângulo escolhido, nenhum horário cai dentro da janela; o mostrado é o do signo que sobe no centro dela.</div>' : ''}
     </div>`;
+}
+
+/* Resposta no topo: pra cada candidato, o horário do ângulo que a regra escolhe */
+function rzMontarConclusao(r, hora) {
+  const linhas = r.candidatos.map(c => {
+    const hs = c.horarios[c.maisPerto];
+    if (!hs.length) return '';
+    const horas = hs.map(h => hora(h.ms) + (h.dentro ? '' : ' <small>(fora da janela)</small>')).join(' · ');
+    const regra = c.regra === 'valens' ? 'Valens' : 'Ptolomeu e Hefestião';
+    return `<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding:8px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); font-size:14px;">
+      <span class="texto-apagado" style="font-size:11.5px; min-width:120px;">${regra}</span>
+      ${rzPlanetaHtml(c.id, 22)} ${rzPosHtml(c.lon, 18)} <span>→</span> ${rzAnguloHtml(c.maisPerto, 26)} ${horas}
+    </div>`;
+  }).join('');
+  return `
+    <h3 class="titulo-secao">Horários encontrados</h3>
+    <div class="cartao">${linhas}</div>
+    <hr class="divisa">`;
 }
 
 /* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
