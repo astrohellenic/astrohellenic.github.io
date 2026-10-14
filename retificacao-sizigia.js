@@ -405,6 +405,7 @@ function iniciarModuloRetificacaoSizigia() {
           </button>
         </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
+        ${(typeof montarCabecalhoMandalaImagemHTML === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true }) : ''}
         <hr class="divisa">
         <div id="rzResultado"></div>
         <hr class="divisa-fim">
@@ -450,9 +451,6 @@ function rzMontarResultado(r) {
   const hora = (ms) => `<strong>${rzFmtHora(ms, fuso)}</strong>`;
   const s = r.sizigia;
   const aviso = r.avisos.map(a => `<div style="color:var(--terracota); font-weight:700; font-size:12.5px; margin-bottom:8px;">${escapeHtml(a)}</div>`).join('');
-  const nasc = `${rzP2(r.entrada.dia)}/${rzP2(r.entrada.mes)}/${r.entrada.ano} ${rzP2(r.entrada.hora)}:${rzP2(r.entrada.min)}`;
-  const mapa = `<div class="texto-apagado" style="font-size:12px; text-align:center; margin-bottom:10px;">${escapeHtml(currentSubjectName || '')} · ${nasc} · ${escapeHtml(r.entrada.cidade)}</div>`;
-
   // uma linha por candidato: planeta, grau e horário; os detalhes ficam recolhidos
   const linha = (c) => {
     const h = c.horario;
@@ -531,7 +529,7 @@ function rzMontarResultado(r) {
       <strong>Fora do escopo.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio), porque o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente, e o cálculo da concepção, que é quase circular e não distingue horários.
     </div>`;
 
-  return aviso + mapa + blocoHorarios + blocoSizigia + blocoVotos + rodape;
+  return aviso + blocoHorarios + blocoSizigia + blocoVotos + rodape;
 }
 
 /* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
