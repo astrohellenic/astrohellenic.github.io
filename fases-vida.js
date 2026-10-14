@@ -252,7 +252,7 @@ function renderFasesVidaUI(container) {
           </label>
         </div>
         <div style="font-size:13px; line-height:1.6;">
-          <div>Seita: <strong>${r.isDia ? 'diurno' : 'noturno'}</strong> (luminar da seita: ${r.isDia ? 'Sol' : 'Lua'}).</div>
+          <div>Seita: <strong>${r.isDia ? 'diurna' : 'noturna'}</strong> (luminar da seita: ${r.isDia ? 'Sol' : 'Lua'}).</div>
           <div>Fonte usada: <strong>${rotuloFonte}</strong>.</div>
           <div class="texto-apagado" style="font-size:11.5px;">Latitude usada nos tempos de ascensão: ${lat.toFixed(2).replace('.', ',')}°${r.polar ? ' — latitude polar: algum signo não nasce/se põe, resultado aproximado.' : ''}</div>
         </div>
