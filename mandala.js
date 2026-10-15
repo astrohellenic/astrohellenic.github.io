@@ -347,6 +347,11 @@ function aplicarDadosDoPerfilNoMapa(c) {
   }
 
   const mapaAnteriorId = currentMapaId;
+  // Assinatura do mapa: só quando ela muda (outro cliente, ou dados de nascimento/local editados) as telas guardadas das
+  // ferramentas valem de outro mapa e são descartadas. Reabrir o MESMO mapa (ex.: Relatório reabrindo rascunho) não reseta nada.
+  const assinaturaMapa = [c.id || '', c.dataNascimento, c.horaNascimento, c.latitude, c.longitude, c.fuso, c.tipo].join('|');
+  const mapaIgual = window.__assinaturaMapaAtual === assinaturaMapa;
+  window.__assinaturaMapaAtual = assinaturaMapa;
 
   currentSubjectName = c.nome || "Nativo";
   currentCustomCode = c.codigo || null;
@@ -381,7 +386,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
   // dados do mapa novo estiverem prontos, senão corre o risco de gerar
   // com dados do cliente anterior ainda na tela.
   // c.manterModulo: quem chama (ex.: o Relatório reabrindo um rascunho) quer ficar na ferramenta onde está.
-  return executarCalculo(c.manterModulo ? { manterModulo: true } : undefined);
+  return executarCalculo(Object.assign({}, c.manterModulo ? { manterModulo: true } : {}, mapaIgual ? { mapaIgual: true } : {}));
 }
 
 function abrirModalNovoMapa() {
@@ -660,8 +665,10 @@ async function executarCalculoInterno(opcoes) {
       };
 
     if (opcoes && opcoes.soCalcular) return true;
-    // novo mapa/momento: as telas guardadas das outras ferramentas (ver abrirModuloTecnica) ficaram velhas
-    if (typeof descartarModulosGuardados === 'function') descartarModulosGuardados();
+    // novo mapa/momento: as telas guardadas das outras ferramentas (ver abrirModuloTecnica) ficaram velhas.
+    // Mesmo mapa reaberto (opcoes.mapaIgual): nada é descartado, as ferramentas ficam do jeito que estão.
+    const descartarGuardadas = !(opcoes && opcoes.mapaIgual);
+    if (descartarGuardadas && typeof descartarModulosGuardados === 'function') descartarModulosGuardados();
 
     /* Só precisamos que essa chamada calcule window.horasPlanetariasAtual
        (regente do dia/da hora, usado em mais telas) — não que ela apareça
@@ -701,6 +708,9 @@ async function executarCalculoInterno(opcoes) {
     } else {
       renderMandala();
     }
+    // abrirModuloTecnica('mandala') acima guarda a tela da ferramenta que estava aberta (ainda com o mapa ANTERIOR):
+    // quando o mapa mudou, limpa de novo, senão voltar nela mostrava o cliente velho até recarregar a página.
+    if (descartarGuardadas && typeof descartarModulosGuardados === 'function') descartarModulosGuardados();
     return true;
 
   } catch (err) {
