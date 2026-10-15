@@ -701,9 +701,6 @@ async function executarCalculoInterno(opcoes) {
     } else {
       renderMandala();
     }
-    // abrirModuloTecnica('mandala') acima guarda a tela da ferramenta que estava aberta (ainda com o mapa ANTERIOR):
-    // limpa de novo, senão voltar nela mostrava o cliente velho até recarregar a página.
-    if (typeof descartarModulosGuardados === 'function') descartarModulosGuardados();
     return true;
 
   } catch (err) {
