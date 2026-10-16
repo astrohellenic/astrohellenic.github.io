@@ -276,11 +276,15 @@ async function rzCalcular(entrada, motor) {
   const contagem = rzContagem(posicoes, pontoLon);
   const valens = rzValens(pontoLon);
 
-  // 5) horário em que o Ascendente (ou o Meio do Céu) chega ao grau do planeta, no signo que sobe (ou culmina) no horário do mapa
+  // 5) o planeta define só o GRAU (grau e minutos). O signo é o mais próximo do horário informado (= do Ascendente presumido, em ascensões):
+  //    calcula-se o horário em que o grau sobe (ou culmina) em CADA um dos 12 signos e escolhe-se o que cai mais perto do horário do mapa.
   const quando = (tipo, grau) => {
-    const signoT = rzSignoDe(angT[tipo]);
-    const todos = rzCruzamentos(tipo, grau, tMs - 13 * 3600000, tMs + 13 * 3600000, lat, lon).filter(c => c.signo === signoT);
-    return todos.sort((x, y) => Math.abs(x.ms - tMs) - Math.abs(y.ms - tMs))[0] || null;
+    const todos = rzCruzamentos(tipo, grau, tMs - 12 * 3600000, tMs + 12 * 3600000, lat, lon);   // 24 h: cada signo aparece ao menos uma vez
+    const porSigno = new Map();
+    todos.forEach(c => { const ant = porSigno.get(c.signo); if (!ant || Math.abs(c.ms - tMs) < Math.abs(ant.ms - tMs)) porSigno.set(c.signo, c); });
+    const lista = Array.from(porSigno.values()).sort((x, y) => x.ms - y.ms);
+    const escolhido = lista.slice().sort((x, y) => Math.abs(x.ms - tMs) - Math.abs(y.ms - tMs))[0] || null;
+    return { escolhido, lista };
   };
   const candidatos = [];
   const regras = [{ regra: 'ptolomeu', ids: contagem.vencedores }, { regra: 'valens', ids: [valens.termo, valens.signo] }];
@@ -293,7 +297,7 @@ async function rzCalcular(entrada, motor) {
       const distAsc = rzDistAng(lonPl, angT.asc), distMc = rzDistAng(lonPl, angT.mc);
       const tipo = (q.regra === 'ptolomeu' && distMc < distAsc) ? 'mc' : 'asc';
       const c = quando(tipo, grau);
-      candidatos.push({ regra: q.regra, id, lon: lonPl, retro: retro[id], grau, distAsc, distMc, tipo, horario: c ? { ms: c.ms, signo: c.signo } : null });
+      candidatos.push({ regra: q.regra, id, lon: lonPl, retro: retro[id], grau, distAsc, distMc, tipo, horario: c.escolhido ? { ms: c.escolhido.ms, signo: c.escolhido.signo } : null, signos: c.lista });
     });
   });
 
@@ -469,6 +473,10 @@ function rzMontarResultado(r) {
           ${item(rzAnguloHtml('asc', 24), rzPosHtml(h.asc, 18))}
           ${item(rzAnguloHtml('mc', 24), rzPosHtml(h.mc, 18))}
           ${item(rzFortunaHtml(22), rzPosHtml(h.fortuna, 18) + ` <small>${h.diurno ? 'de dia' : 'de noite'}</small>`)}
+        </div>
+        <div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">Horário em que o grau chega em cada signo, o escolhido é o mais perto do horário do mapa:</div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12.5px; margin-top:2px;">
+          ${c.signos.map(x => `<span class="${x.signo === h.signo ? 'rz-escolhido' : ''}" style="display:inline-flex; align-items:center; gap:4px;">${rzSignoHtml(x.signo, 16)} ${rzFmtHora(x.ms, fuso)}${x.signo === h.signo ? ' escolhido' : ''}</span>`).join('')}
         </div>
         ${h.faixaGrauInteiro ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">grau inteiro ${Math.floor(c.grau)}°: ${rzFmtHora(h.faixaGrauInteiro.de, fuso)} → ${rzFmtHora(h.faixaGrauInteiro.ate, fuso)}</div>` : ''}
         <div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">${rzFortunaHtml(16)} ${troca}</div>
