@@ -581,15 +581,24 @@ function renderFasesVidaUI(container) {
           <button type="button" onclick="salvarFasesVidaNaGaleria()" title="Salvar as Fases da Vida como imagem na galeria (com título e cabeçalho)" class="botao-icone">
             <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
           </button>
-          <button type="button" onclick="capturarFasesVidaParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
-            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-          </button>
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" onclick="const m=document.getElementById('fvMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" class="botao-icone">
+              <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+            </button>
+            <div id="fvMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 260px;">
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('inteira')">Ferramenta inteira (sem cabeçalho)</div>
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('leituras')">Trocas na barra, luminar da seita e sizígia</div>
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('eventos')">Só os eventos de vida</div>
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('ascensao')">Só os tempos de ascensão</div>
+            </div>
+          </div>
         </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
         ${(typeof montarCabecalhoMandalaImagemHTML === 'function') ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true }) : ''}
 
         <div id="fasesVidaResultsArea">
         <hr class="divisa">
+        <div id="fvParteLeituras">
         <div style="font-size:13px; line-height:2;">
           <div>Seita: <strong>${rMat.isDia ? 'diurna' : 'noturna'}</strong></div>
           <div class="texto-apagado" style="font-size:11.5px;">Latitude usada nos tempos de ascensão: ${fvNum(lat, 2)}°${rMat.polar ? ' — latitude polar: algum signo não nasce/se põe, resultado aproximado.' : ''}</div>
@@ -608,20 +617,26 @@ function renderFasesVidaUI(container) {
         </div>
 
         <hr class="divisa">
-        <h3 class="titulo-secao">Eventos de vida</h3>
-        ${fvBlocoEventos(leituras, lista)}
-
-        <hr class="divisa">
-        <h3 class="titulo-secao">Tempos de ascensão</h3>
-        <div class="envolve-tabela">${tabelaAscensao}</div>
-
-        <hr class="divisa">
         <div class="texto-apagado" style="font-size:11.5px; line-height:1.55;">
           <strong>Fontes.</strong> Doroteu I.22: fortuna do nativo, pelo luminar da seita. Doroteu I.10: livre ou escravo, pela sizígia. Valens II.1 e VII.2: instrumento de tempo.
           Valens VII.2 e VII.3: os efeitos se realizam ao completar os tempos e o regente que sai pode se combinar com o que entra. Valens não define a largura da transição.
           A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
           As tabelas antigas, como a de Valens com Áries 20, Câncer 33 e Capricórnio 27, são aproximações e ficam de 1 a 3 anos abaixo.
         </div>
+        </div>
+
+        <hr class="divisa">
+        <div id="fvParteEventos">
+        <h3 class="titulo-secao">Eventos de vida</h3>
+        ${fvBlocoEventos(leituras, lista)}
+        </div>
+
+        <hr class="divisa">
+        <div id="fvParteAscensao">
+        <h3 class="titulo-secao">Tempos de ascensão</h3>
+        <div class="envolve-tabela">${tabelaAscensao}</div>
+        </div>
+
         </div>
         <hr class="divisa-fim">
       </div>
@@ -668,18 +683,28 @@ function salvarFasesVidaNaGaleria() {
 }
 if (typeof window !== "undefined") window.salvarFasesVidaNaGaleria = salvarFasesVidaNaGaleria;
 
-/* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho). */
-async function capturarFasesVidaParaRelatorio() {
-  const area = document.getElementById('fasesVidaResultsArea');
+/* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho), inteiros ou por partes (mesmo menu da Liberação e dos Lotes). */
+const FV_PARTES_RELATORIO = {
+  inteira: { id: 'fasesVidaResultsArea', nome: 'Fases da Vida' },
+  leituras: { id: 'fvParteLeituras', nome: 'Fases da Vida: trocas na barra, luminar da seita e sizígia' },
+  eventos: { id: 'fvParteEventos', nome: 'Fases da Vida: eventos de vida' },
+  ascensao: { id: 'fvParteAscensao', nome: 'Fases da Vida: tempos de ascensão' }
+};
+async function capturarFasesVidaParaRelatorio(parte) {
+  const menu = document.getElementById('fvMenuRelatorio');
+  if (menu) menu.style.display = 'none';
+  const def = FV_PARTES_RELATORIO[parte] || FV_PARTES_RELATORIO.inteira;
+  const area = document.getElementById(def.id);
   if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
-  const voltar = fvPrepararCaptura(area);
+  const raiz = document.getElementById('fasesVidaResultsArea') || area;
+  const voltar = fvPrepararCaptura(raiz);
   try {
     const papiro = window.temaMandala === 'ceu';
     const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
     const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro()); // Tema Céu: imagem sem fundo
     const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
     const total = adicionarCapturaRelatorio('fasesVida', canvas.toDataURL('image/png'));
-    alert(`"Fases da Vida" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+    alert(`"${def.nome}" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar as Fases da Vida ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
