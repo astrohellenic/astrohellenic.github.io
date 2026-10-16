@@ -133,17 +133,19 @@ async function acaoCriar(corpo) {
       if (limpa(dados.email)) contato += '\nE-mail: ' + limpa(dados.email);
     }
   } catch (e) { /* sem contato na descrição, o evento sai igual */ }
-  const evento = await G.chamarGoogle(u, conexao, '/calendars/' + encodeURIComponent(principal) + '/events', {
+  const evento = await G.chamarGoogle(u, conexao, '/calendars/' + encodeURIComponent(principal) + '/events?conferenceDataVersion=1', {
     method: 'POST',
     body: JSON.stringify({
       summary: codigo ? codigo + ' - ' + nome + (servico ? ' - ' + servico : '') : (servico ? nome + ' - ' + servico : 'Atendimento - ' + nome),
       description: 'Agendado pelo Astro Hellenic.' + (servico ? '\nServiço: ' + servico : '') + contato,
       start: { dateTime: inicio.toISOString(), timeZone: fuso },
       end: { dateTime: fim.toISOString(), timeZone: fuso },
+      // todo agendamento ganha um link do Google Meet
+      conferenceData: { createRequest: { requestId: 'ah-' + String(c) + '-' + Date.now(), conferenceSolutionKey: { type: 'hangoutsMeet' } } },
       extendedProperties: { private: { origem: 'astrohellenic', mapa: String(c) } }
     })
   });
-  return ok({ ok: true, eventId: evento.id });
+  return ok({ ok: true, eventId: evento.id, meet: evento.hangoutLink || null });
 }
 
 /* Webhook do astrólogo (Configurações → Captação): avisado DEPOIS que o cliente confirma o horário, com os dados do formulário e do agendamento.
