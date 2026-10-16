@@ -122,26 +122,30 @@ async function acaoCriar(corpo) {
   const servico = String(corpo.servico || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
   // contato que o próprio cliente já preencheu no formulário (cadastro/mapa): vai pra descrição do evento, pro astrólogo ver na hora
   let contato = '';
+  let codigo = ''; // código do cliente (sequência do cadastro): vai na frente do título, "0158 - Fulano - Serviço"
   try {
-    const m = await G.supa('/rest/v1/mapas?id=eq.' + encodeURIComponent(c) + '&select=whatsapp,email');
+    const m = await G.supa('/rest/v1/mapas?id=eq.' + encodeURIComponent(c) + '&select=whatsapp,email,codigo');
     const dados = m && m[0];
     if (dados) {
       const limpa = (t) => String(t || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
+      codigo = limpa(dados.codigo);
       if (limpa(dados.whatsapp)) contato += '\nWhatsApp: ' + limpa(dados.whatsapp);
       if (limpa(dados.email)) contato += '\nE-mail: ' + limpa(dados.email);
     }
   } catch (e) { /* sem contato na descrição, o evento sai igual */ }
-  const evento = await G.chamarGoogle(u, conexao, '/calendars/' + encodeURIComponent(principal) + '/events', {
+  const evento = await G.chamarGoogle(u, conexao, '/calendars/' + encodeURIComponent(principal) + '/events?conferenceDataVersion=1', {
     method: 'POST',
     body: JSON.stringify({
-      summary: servico ? nome + ' - ' + servico : 'Atendimento - ' + nome,
+      summary: codigo ? codigo + ' - ' + nome + (servico ? ' - ' + servico : '') : (servico ? nome + ' - ' + servico : 'Atendimento - ' + nome),
       description: 'Agendado pelo Astro Hellenic.' + (servico ? '\nServiço: ' + servico : '') + contato,
       start: { dateTime: inicio.toISOString(), timeZone: fuso },
       end: { dateTime: fim.toISOString(), timeZone: fuso },
+      // todo agendamento ganha um link do Google Meet
+      conferenceData: { createRequest: { requestId: 'ah-' + String(c) + '-' + Date.now(), conferenceSolutionKey: { type: 'hangoutsMeet' } } },
       extendedProperties: { private: { origem: 'astrohellenic', mapa: String(c) } }
     })
   });
-  return ok({ ok: true, eventId: evento.id });
+  return ok({ ok: true, eventId: evento.id, meet: evento.hangoutLink || null });
 }
 
 /* Webhook do astrólogo (Configurações → Captação): avisado DEPOIS que o cliente confirma o horário, com os dados do formulário e do agendamento.
