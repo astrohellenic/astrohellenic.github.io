@@ -289,11 +289,11 @@ async function rzCalcular(entrada, motor) {
     q.ids.forEach(id => {
       if (vistos.has(id)) return; vistos.add(id);
       const lonPl = posicoes[id], grau = lonPl % 30;
-      // Ptolomeu/Hefestião: o número de graus do planeta (0 a 30) comparado ao do Ascendente e ao do Meio do Céu aproximados; Valens: só o Ascendente
-      const numAsc = angT.asc % 30, numMc = angT.mc % 30;
-      const tipo = (q.regra === 'ptolomeu' && Math.abs(grau - numMc) < Math.abs(grau - numAsc)) ? 'mc' : 'asc';
+      // Ptolomeu/Hefestião: planeta perto do Meio do Céu (pela posição no zodíaco) = o grau dele vale pro Meio do Céu; senão, pro Ascendente. Valens: só o Ascendente
+      const distAsc = rzDistAng(lonPl, angT.asc), distMc = rzDistAng(lonPl, angT.mc);
+      const tipo = (q.regra === 'ptolomeu' && distMc < distAsc) ? 'mc' : 'asc';
       const c = quando(tipo, grau);
-      candidatos.push({ regra: q.regra, id, lon: lonPl, retro: retro[id], grau, numAsc, numMc, tipo, horario: c ? { ms: c.ms, signo: c.signo } : null });
+      candidatos.push({ regra: q.regra, id, lon: lonPl, retro: retro[id], grau, distAsc, distMc, tipo, horario: c ? { ms: c.ms, signo: c.signo } : null });
     });
   });
 
@@ -460,7 +460,7 @@ function rzMontarResultado(r) {
     const item = (ico, html) => `<span style="display:inline-flex; align-items:center; gap:6px;">${ico}${html}</span>`;
     const f = h.fortunaTroca;
     const troca = (f.entra ? `entrou às ${rzFmtHora(f.entra, fuso)}` : 'entrou há mais de 6 h') + ' · ' + (f.sai ? `muda de signo às ${rzFmtHora(f.sai, fuso)}` : 'não muda em 6 h');
-    const regraMc = c.regra === 'ptolomeu' ? `<div class="texto-apagado" style="font-size:12px; margin-bottom:6px;">Regra do Meio do Céu: grau do planeta ${rzFmtGrau(c.grau)}, ${rzAnguloHtml('asc', 22)} aproximado ${rzFmtGrau(c.numAsc)}, ${rzAnguloHtml('mc', 22)} aproximado ${rzFmtGrau(c.numMc)}. Está mais perto do ${rzAnguloHtml(c.tipo, 22)}.</div>` : '';
+    const regraMc = c.regra === 'ptolomeu' ? `<div class="texto-apagado" style="font-size:12px; margin-bottom:6px;">Regra do Meio do Céu: o planeta está em ${rzPosHtml(c.lon, 16)}, o ${rzAnguloHtml('asc', 22)} aproximado em ${rzPosHtml(r.angulosT.asc, 16)} e o ${rzAnguloHtml('mc', 22)} aproximado em ${rzPosHtml(r.angulosT.mc, 16)}. Está mais perto do ${rzAnguloHtml(c.tipo, 22)}.</div>` : '';
     return `<div style="padding:8px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);">
       ${cabeca}
       <details style="margin-top:2px;"><summary>ver detalhes</summary>
