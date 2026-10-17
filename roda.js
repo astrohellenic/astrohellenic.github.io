@@ -219,7 +219,9 @@ function desenharRodaSVG(o) {
   });
 
   const isDay = ((pObj.Sun.abs - ascAbs + 360) % 360) >= 180;
-  const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+  // "Natividade" é só do mapa natal; os outros tipos levam "Mapa diurno/noturno" (mesma regra do cabeçalho em mandala.js)
+  const ehNatal = !window.currentMapType || window.currentMapType === 'Natal';
+  const sectText = ehNatal ? (isDay ? "• Natividade Diurna" : "• Natividade Noturna") : (isDay ? "• Mapa diurno" : "• Mapa noturno");
 
   const lotes = calculateSevenLots(ascAbs, isDay, pObj);
   if (!ferr) window.currentLotes = lotes;

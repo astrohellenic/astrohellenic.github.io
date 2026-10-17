@@ -1351,7 +1351,7 @@ function renderizarModalSalvamentoComOpcaoPasta(nomePadrao, dia, mes, ano, hora,
   const tipoFixo = (tipoMapaAtual === 'Revolução Solar' || tipoMapaAtual === 'Revolução Lunar') ? tipoMapaAtual : null;
   const opcoesTipo = tipoFixo
     ? `<option value="${tipoFixo}" selected>${tipoFixo}</option>`
-    : ['Trânsito', 'Pergunta', 'Evento', 'Eleição', 'Natal']
+    : ['Trânsito', 'Pergunta', 'Evento', 'Início', 'Natal']
         .map(t => `<option value="${t}" ${t === 'Trânsito' ? 'selected' : ''}>${t}</option>`).join('');
 
   let modal = document.getElementById('modalSaveCurrentMap');

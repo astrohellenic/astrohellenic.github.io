@@ -1359,7 +1359,8 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   const sunAbs = sunItem ? sunItem.grau_absoluto : 0;
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
   const isDay = ((sunAbs - ascAbs + 360) % 360) >= 180;
-  const sectText = isDay ? "• Natividade Diurna" : "• Natividade Noturna";
+  // "Natividade" é só do mapa natal; os outros tipos (Pergunta, Início, Evento, Trânsito, Revoluções...) levam "Mapa diurno/noturno".
+  const sectText = tipoAtual === 'Natal' ? (isDay ? "• Natividade Diurna" : "• Natividade Noturna") : (isDay ? "• Mapa diurno" : "• Mapa noturno");
   const loteTexto = (loteCasa1 && ROTULOS_LOTE_CASA1[loteCasa1]) ? `• ${ROTULOS_LOTE_CASA1[loteCasa1]} na Casa 1` : '';
 
   const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

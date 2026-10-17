@@ -946,3 +946,21 @@ Ferramenta nova, só admin por enquanto (`FERRAMENTAS_SO_ADMIN`, como a Fases da
 - **Precisão:** o motor devolve 0,01° (≈1 s no horário do Asc); por isso não há ajuste fino de planeta.
 - **Como testar sem login:** rodar `app.py` do `motor-astrologia` local (Flask + `pyswisseph`; no Python 3.13 instalar com `setuptools<70 --no-build-isolation`) e interceptar a URL do motor no Playwright (ou passar a base em `rzMotorHttp`). Caso 09/10/1989, Guarulhos, mapa 11:10 (antes havia janela; os horários não dependem dela): Saturno 7°57′ Capricórnio → Asc 10:45:14; Mercúrio 28°23′ Virgem → MC 10:47:33 (grau inteiro 28°: 10:46:09–10:49:49; no Asc, 12:16:08 a 12:20:43, fora da janela); Vênus 1°05′ Sagitário → Asc 10:14:54.
 - **A Lua Nova do caso de teste dá 6°43′ Libra** (conferido com `swe.calc_ut`: Sol e Lua em 6°43,3′ às 21:46:51 UT de 29/09/1989), não 6°47′ como estava no pedido; o termo (Mercúrio) e o resultado não mudam.
+
+## Catarché (17/10/2026) — regras do astrólogo e o que já foi pesquisado (não pesquisar de novo)
+
+Ferramenta `catarche.js` (só admin). Mostra o que os autores helenísticos dizem sobre o mapa de um início ou de uma pergunta, com autor e capítulo. **Não prevê.**
+
+**Como trabalhar com ele nessa ferramenta (ele pediu várias vezes):**
+- **A resposta vem dos autores antigos, não da cabeça dele nem da minha.** Faltou informação → pesquisar no texto (a outra conversa dele não tem acesso ao repositório). Se o texto diz, **coloca sem perguntar**; só perguntar quando os textos se contradizem ou calam. Nunca inventar regra (nada de pontuação, desempate, orbe, "12°"): onde o texto não pesa, mostrar os fatos e dizer que o texto não decide.
+- **Só astrologia helenística.** Nada de Dykes, árabes, medieval, mansões lunares, mapa radical, horária. Doroteu chegou por tradução árabe: onde diverge de Hefestião (grego), vale Hefestião.
+- **Um tema por vez, curto.** Ele não consegue processar muita coisa de uma vez.
+- Visual igual ao das outras ferramentas (`.titulo-secao`, `.cartao` só com linha fina, `.divisa`, fonte em `.texto-apagado`, cabeçalho global `montarCabecalhoMandalaImagemHTML`). Nunca caixa com lados.
+
+**Texto de Doroteu e Valens (tradução de Pingree/Riley), lido direto — repositórios públicos que o proxy deixa clonar só pra leitura:** `janegca/latex-dorotheus` (pasta `book05`: V.2 reto/oblíquo, V.3 tropical, V.4 gêmeos, V.5 Lua, V.33 adversários) e `janegca/latex-valens` (`book01/02-signs.tex`). Sites como astrologicon.org, sevenstarsastrology.com e wikipedia não abrem do sandbox.
+- **Reto/oblíquo (V.2):** reto = sobe em mais de 2 h (Câncer a Sagitário no norte; inverte no sul); reto com maléfico no signo ou em aspecto = lento e infortúnio; oblíquo com benéfico = ajuda a dar certo; benéficos e maléficos juntos = misto. Na ferramenta: ascensão exata comparando cada signo com o oposto (nunca com 30°: em São Paulo daria 8 retos).
+- **Tropical = os quatro cardeais** (decisão dele; Valens usa "tropical/solsticial/equinocial" para os mesmos quatro; só Ptolomeu reserva "tropical" a Câncer e Capricórnio).
+- **V.33 (briga diante de um juiz)** é a fonte de Hefestião III.37/III.38: Horóscopo = quem busca, MC = juiz, ocaso = réu, subterrâneo = resultado. Marte/Saturno no Horóscopo ou em aspecto = ruim para quem começou a briga; maléficos no ocaso = miséria para o réu; Fortuna no Horóscopo/2º = êxito de quem busca, no 7º/8º = do réu; senhor do MC com o senhor do Horóscopo (ou do ocaso) = o juiz ajuda esse lado; dívida: Lua crescendo = credor, Sol = devedor, e "o aspecto mais próximo do Ascendente é o mais forte". V.5: Lua em oposição ao Sol = brigas e "o mais novo vence".
+- **Ainda ambíguo no texto:** "lugar duplo" da Lua (V.5): a regra "casa 9 em signo bicorpóreo" é uma leitura (a editora do repositório lê como a parte cadente de um signo angular).
+
+**Tipo do mapa e cabeçalho:** os tipos salvos são Natal, Revolução Solar/Lunar, Pergunta, Evento, **Início** (trocou "Eleição", que é nome posterior), Trânsito. O cabeçalho global (`mandala.js`) e o da roda (`roda.js`) dizem **"Natividade Diurna/Noturna" só no mapa Natal**; os outros tipos dizem "Mapa diurno/noturno". Nada específico da Catarché.
