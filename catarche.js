@@ -305,10 +305,11 @@ let ctEscolha = { assunto: 'geral', tipo: 'comeco' };
 
 function ctMarcadoresHtml(s) {
   const cru = escapeHtml(String(s == null ? '' : s));
+  const caixa = (html) => `<span style="display:inline-flex; align-items:center; vertical-align:middle;">${html}</span>`;
   return cru
-    .replace(/\{P:(\w+)\}/g, (_, id) => (typeof planetaComNome === 'function') ? planetaComNome(id, 20) : ctTextoPuro(`{P:${id}}`))
+    .replace(/\{P:(\w+)\}/g, (_, id) => (typeof planetaComNome === 'function') ? caixa(planetaComNome(id, 20)) : ctTextoPuro(`{P:${id}}`))
     .replace(/\{S:(\d+)\}/g, (_, i) => (typeof signoComNome === 'function' && typeof getSignSvgHtmlDec === 'function')
-      ? signoComNome(getSignSvgHtmlDec(+i, 20), +i) : CT_SIGNOS[+i]);
+      ? caixa(signoComNome(getSignSvgHtmlDec(+i, 20), +i)) : CT_SIGNOS[+i]);
 }
 
 function ctMensagem(texto) { return `<div style="font-size:13px; font-weight:600; text-align:center; padding:16px 0;">${escapeHtml(texto)}</div>`; }
@@ -322,25 +323,34 @@ function ctLerMapa() {
   return { asc: d.Ascendente.grau_absoluto, pos, nodo: d.Nodo_Norte ? d.Nodo_Norte.grau_absoluto : 0, lat: currentGeo.lat };
 }
 
+/* Visual igual ao das outras ferramentas (componentes.css): título de seção em terracota, itens em .cartao (só linha fina em cima e embaixo),
+   .divisa (linha dupla) entre os blocos, fonte em .texto-apagado. Nada de caixa com lados e nada de cor de fundo própria. */
 function ctMontarIndicador(ind) {
-  const linhas = ind.linhas.map(l => `
-    <div class="ct-linha${l.ativo ? ' ct-ativo' : ''}">
-      <div class="ct-tem">${ctMarcadoresHtml(l.tem)}</div>
-      ${l.leitura ? `<div class="ct-leitura">${ctMarcadoresHtml(l.leitura)}</div>` : ''}
-      ${l.nota ? `<div class="ct-nota">${escapeHtml(l.nota)}</div>` : ''}
-      ${l.fonte ? `<div class="ct-fonte">Fonte: ${escapeHtml(l.fonte)}</div>` : ''}
-    </div>`).join('');
-  return `<div class="ct-indicador"><div class="ct-titulo">${escapeHtml(ind.titulo)}</div>${linhas}</div>`;
+  const fontes = [...new Set(ind.linhas.map(l => l.fonte).filter(Boolean))];
+  const itens = ind.linhas.map((l, i) => `
+      <div${i ? ' class="linha-info"' : ''} style="font-size:13px; line-height:1.7;${i ? ' margin-top:8px;' : ''}">
+        <div>${ctMarcadoresHtml(l.tem)}</div>
+        ${l.leitura ? `<div style="margin-top:4px; font-weight:700;${l.ativo ? ' color:var(--terracota);' : ''}">${ctMarcadoresHtml(l.leitura)}</div>` : ''}
+        ${l.nota ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:4px;">${escapeHtml(l.nota)}</div>` : ''}
+      </div>`).join('');
+  return `<h3 class="titulo-secao">${escapeHtml(ind.titulo)}</h3>
+    <div class="cartao">${itens}
+      ${fontes.length ? `<div class="texto-apagado" style="font-size:11.5px; margin-top:8px;">Fonte: ${fontes.map(escapeHtml).join('; ')}</div>` : ''}
+    </div>`;
 }
+
+let ctUltimo = null;              // último resultado calculado
 
 function ctExecutar() {
   const area = document.getElementById('ctResultado');
   if (!area) return;
+  ctUltimo = null;
   const e = ctLerMapa();
   if (e.erro) { area.innerHTML = ctMensagem(e.erro); return; }
   try {
     const r = ctCalcular(e, { assunto: ctEscolha.assunto, tipo: ctEscolha.tipo, oa: calcularAscensaoObliqua });
-    area.innerHTML = r.indicadores.map(ctMontarIndicador).join('');
+    ctUltimo = r;
+    area.innerHTML = r.indicadores.map(ctMontarIndicador).join('<hr class="divisa">');
   } catch (err) {
     console.error(err);
     area.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">Não foi possível calcular: ${escapeHtml(err.message || String(err))}</div>`;
@@ -354,40 +364,33 @@ if (typeof window !== 'undefined') window.ctEscolher = ctEscolher;
 function iniciarModuloCatarche() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
+  ctUltimo = null;
   const opcoesAssunto = CT_ASSUNTOS.map(a => `<option value="${a.id}"${a.id === ctEscolha.assunto ? ' selected' : ''}>${escapeHtml(a.nome)}</option>`).join('');
   container.innerHTML = `
-    <style>
-      #ct-container .ct-controles { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-bottom: 8px; }
-      #ct-container .ct-controles label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; flex: 1 1 220px; }
-      #ct-container .ct-controles .menu-select { width: 100%; font-size: 13px; }
-      #ct-container .ct-indicador { background: transparent; border: 1px solid var(--azul-egipcio-claro); padding: 10px 14px; margin: 0 0 12px; }
-      #ct-container .ct-titulo { font-family: 'Cinzel', serif; font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--terracota); margin-bottom: 6px; }
-      #ct-container .ct-linha { padding: 6px 0; font-size: 13px; line-height: 1.55; }
-      #ct-container .ct-linha + .ct-linha { border-top: 1px solid var(--azul-egipcio-claro); }
-      #ct-container .ct-tem { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; color: var(--preto-tinta); }
-      #ct-container .ct-leitura { margin-top: 3px; font-weight: 700; color: var(--preto-tinta); }
-      #ct-container .ct-ativo .ct-leitura { color: var(--terracota); }
-      #ct-container .ct-nota { margin-top: 3px; font-size: 11.5px; opacity: .75; font-style: italic; }
-      #ct-container .ct-fonte { margin-top: 3px; font-size: 11.5px; opacity: .75; }
-    </style>
     <div style="width: 100%; display: flex; flex-direction: column;">
       <div id="ct-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
-        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Catarché</h3></div>
+        <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Catarché</h3><div class="acoes-ferramenta">
+          <button type="button" onclick="salvarCatarcheNaGaleria()" title="Salvar o resultado como imagem na galeria (com título e cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
+          </button>
+          <button type="button" onclick="capturarCatarcheParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+        </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
         ${(typeof montarCabecalhoMandalaImagemHTML === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true }) : ''}
         <hr class="divisa">
-        <div class="ct-controles">
-          <label>Assunto
-            <select id="ctAssunto" class="menu-select" onchange="ctEscolher('assunto', this.value)">${opcoesAssunto}</select>
-          </label>
-          <label>Tipo do mapa
-            <select id="ctTipo" class="menu-select" onchange="ctEscolher('tipo', this.value)">
+        <div class="grade-cartoes" style="margin-bottom:10px;">
+          <div style="flex:1; min-width:220px;"><div class="rotulo" style="margin-bottom:4px;">Assunto</div>
+            <select id="ctAssunto" class="menu-select" style="width:100%; font-size:13px;" onchange="ctEscolher('assunto', this.value)">${opcoesAssunto}</select></div>
+          <div style="flex:1; min-width:220px;"><div class="rotulo" style="margin-bottom:4px;">Tipo do mapa</div>
+            <select id="ctTipo" class="menu-select" style="width:100%; font-size:13px;" onchange="ctEscolher('tipo', this.value)">
               <option value="comeco"${ctEscolha.tipo === 'comeco' ? ' selected' : ''}>Começo (obra, evento ou data a escolher)</option>
               <option value="pergunta"${ctEscolha.tipo === 'pergunta' ? ' selected' : ''}>Pergunta</option>
-            </select>
-          </label>
+            </select></div>
         </div>
-        <div class="texto-apagado" style="font-size:11.5px; line-height:1.55; margin-bottom:10px;">A ferramenta não prevê: mostra o que o texto antigo diz sobre o que o mapa tem. Casas por signos inteiros; conjunção e aspecto por signo.</div>
+        <div class="texto-apagado" style="font-size:11.5px; line-height:1.6;">A ferramenta não prevê: mostra o que o texto antigo diz sobre o que o mapa tem. Casas por signos inteiros; conjunção e aspecto por signo.</div>
+        <hr class="divisa">
         <div id="ctResultado"></div>
         <hr class="divisa-fim">
       </div>
@@ -395,3 +398,31 @@ function iniciarModuloCatarche() {
   ctExecutar();
 }
 if (typeof window !== 'undefined') window.iniciarModuloCatarche = iniciarModuloCatarche;
+
+/* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
+function salvarCatarcheNaGaleria() {
+  const area = document.getElementById('ctResultado');
+  if (!area || !ctUltimo) { alert('Abra um mapa salvo primeiro.'); return; }
+  capturarESalvarNaGaleria(
+    () => gerarImagemHtmlComCabecalho(area, { titulo: 'CATARCHÉ', comCabecalho: true, papiro: true }),
+    `Astro_Hellenic_Catarche_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
+  );
+}
+if (typeof window !== 'undefined') window.salvarCatarcheNaGaleria = salvarCatarcheNaGaleria;
+
+async function capturarCatarcheParaRelatorio() {
+  const area = document.getElementById('ctResultado');
+  if (!area || !ctUltimo) { alert('Abra um mapa salvo primeiro.'); return; }
+  try {
+    const papiro = window.temaMandala === 'ceu';
+    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro()); // Tema Céu: imagem sem fundo
+    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
+    const total = adicionarCapturaRelatorio('catarche', canvas.toDataURL('image/png'));
+    alert(`"Catarché" foi adicionada ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+  } catch (err) {
+    console.error('Erro ao adicionar a Catarché ao relatório:', err);
+    alert('Não foi possível adicionar esta tela ao relatório.');
+  }
+}
+if (typeof window !== 'undefined') window.capturarCatarcheParaRelatorio = capturarCatarcheParaRelatorio;
