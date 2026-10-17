@@ -159,7 +159,7 @@ async function acaoAvisar(corpo) {
   const cfg = await G.supa('/rest/v1/configuracoes?user_id=eq.' + encodeURIComponent(u) + '&select=webhook_url');
   const url = cfg && cfg[0] && String(cfg[0].webhook_url || '').trim();
   if (!url || !/^https:\/\//i.test(url)) return ok({ ok: true, enviado: false });
-  const m = await G.supa('/rest/v1/mapas?id=eq.' + encodeURIComponent(c) + '&user_id=eq.' + encodeURIComponent(u) + '&select=nome,data_nascimento,hora_nascimento,cidade,latitude,longitude,whatsapp,email');
+  const m = await G.supa('/rest/v1/mapas?id=eq.' + encodeURIComponent(c) + '&user_id=eq.' + encodeURIComponent(u) + '&select=nome,codigo,data_nascimento,hora_nascimento,cidade,latitude,longitude,whatsapp,email');
   const cliente = (m && m[0]) || {};
   const conexao = await G.lerConexao(u);
   const fuso = conexao ? await G.fusoDoAstrologo(u, conexao) : G.FUSO;
@@ -169,7 +169,7 @@ async function acaoAvisar(corpo) {
     astrologo_id: u,
     cliente_id: c,
     servico: String(corpo.servico || '').slice(0, 400),
-    cliente: { nome: cliente.nome || agenda.cliente_nome || '', whatsapp: cliente.whatsapp || '', email: cliente.email || '', data_nascimento: cliente.data_nascimento || '', hora_nascimento: cliente.hora_nascimento || '', cidade: cliente.cidade || '', latitude: cliente.latitude ?? null, longitude: cliente.longitude ?? null },
+    cliente: { nome: cliente.nome || agenda.cliente_nome || '', codigo: cliente.codigo ? String(cliente.codigo) : '', whatsapp: cliente.whatsapp || '', email: cliente.email || '', data_nascimento: cliente.data_nascimento || '', hora_nascimento: cliente.hora_nascimento || '', cidade: cliente.cidade || '', latitude: cliente.latitude ?? null, longitude: cliente.longitude ?? null },
     agendamento: semAgenda ? null : { data: ag.data, hora: String(ag.hora_inicio || '').slice(0, 5), fuso, duracao_min: Number(agenda.duracao) || null }
   };
   const ctrl = new AbortController();
