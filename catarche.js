@@ -124,11 +124,16 @@ function ctTemposAscensao(lat, oa) {
   return tempos;
 }
 
-/* Reto (de ascensão longa) ou oblíquo, pela lista de Doroteu V.2 / Hefestião III.1: no hemisfério norte são retos de Câncer a Sagitário
-   e oblíquos de Capricórnio a Gêmeos; no sul inverte. A lista segue o texto (seis e seis) e NÃO a conta "mais de 30°": em latitude baixa a
-   conta exata dá mais de seis (em São Paulo, lat. −23,55°, Câncer e Sagitário sobem em 30,5° e a conta daria 8 retos). O tempo exato
-   fica na tela e a ferramenta avisa quando ele discorda da lista. */
-function ctSignoReto(lat, signo) { return lat >= 0 ? (signo >= 3 && signo <= 8) : (signo >= 9 || signo <= 2); }
+/* Reto (de ascensão longa) ou oblíquo (Doroteu V.2, Hefestião III.1): ascensão exata na latitude do mapa, SEM comparar com 30°.
+   Cada signo é comparado com o signo oposto (Áries x Libra, Touro x Escorpião, Gêmeos x Sagitário, Câncer x Capricórnio, Leão x Aquário,
+   Virgem x Peixes): o que leva mais tempo para nascer é reto e o outro é oblíquo. Dá sempre seis e seis. No norte bate com a lista de
+   Hefestião (reto de Câncer a Sagitário) e no sul inverte sozinho. Comparar com 30° dava 8 retos em São Paulo (lat. −23,55°), que o texto não tem.
+   Só no equador exato (os dois tempos iguais) não há o que comparar: vale a lista do norte. `tempos` = ctTemposAscensao(). */
+function ctSignoReto(lat, signo, tempos) {
+  const dif = tempos[signo] - tempos[(signo + 6) % 12];
+  if (Math.abs(dif) < 1e-9) return signo >= 3 && signo <= 8;
+  return dif > 0;
+}
 
 /* 'tropical' (cardinais), 'solido' (fixos) ou 'bicorporeo' */
 function ctGrupoDoSigno(signo) { return ['tropical', 'solido', 'bicorporeo'][signo % 3]; }
@@ -163,15 +168,14 @@ function ctCalcular(m, opcoes) {
   /* 1. signo do Horóscopo, reto ou oblíquo */
   {
     const tempos = ctTemposAscensao(m.lat, opcoes.oa);
-    const reto = ctSignoReto(m.lat, sAsc);
+    const reto = ctSignoReto(m.lat, sAsc, tempos);
     const testem = ctTestemunhas(pos, sAsc, CT_BENEFICOS);
-    const tem = `Horóscopo em ${CT_S(sAsc)}, signo ${reto ? 'reto' : 'oblíquo'} (sobe em ${tempos[sAsc].toFixed(1).replace('.', ',')}° de ascensão na latitude do mapa).`;
+    const tem = `Horóscopo em ${CT_S(sAsc)}, signo ${reto ? 'reto' : 'oblíquo'} (sobe em ${tempos[sAsc].toFixed(1).replace('.', ',')}° de ascensão, contra ${tempos[(sAsc + 6) % 12].toFixed(1).replace('.', ',')}° do signo oposto, na latitude do mapa).`;
     let leitura;
     if (reto) leitura = CT_TEXTOS.reto;
     else if (!testem.length) leitura = CT_TEXTOS.obliquoSemBenefico;
     else leitura = CT_TEXTOS.obliquoComBenefico;
     const linhas = [{ tem, leitura, fonte: CT_TEXTOS.fonteRetoObliquo }];
-    if ((tempos[sAsc] > 30) !== reto) linhas.push({ tem: `Atenção: pela ascensão exata nesta latitude o signo sobe em ${tempos[sAsc].toFixed(1).replace('.', ',')}°, o que contradiz a lista do hemisfério.`, leitura: null, fonte: CT_TEXTOS.fonteRetoObliquo });
     if (!reto) linhas.push({ tem: `Benéficos que testemunham o Horóscopo: ${testem.length ? testem.map(t => `${CT_P(t.id)} ${t.como}`).join(', ') : 'nenhum'}.`, leitura: null, fonte: CT_TEXTOS.fonteRetoObliquo });
     indicadores.push({ id: 'horoscopo', titulo: 'Signo do Horóscopo: reto ou oblíquo', linhas, extra: { tempos, reto } });
   }
