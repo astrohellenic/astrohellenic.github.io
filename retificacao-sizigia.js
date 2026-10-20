@@ -793,10 +793,10 @@ function rzMontarFatos(r) {
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e tudo se recalcula.</div>
-    ${tabelas}
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
-    ${resumo}`;
+    ${resumo}
+    ${tabelas ? `<details style="margin-top:14px;"><summary>Visão geral: onde cada fato cai</summary>${tabelas}</details>` : ''}`;
 }
 
 /* Circumambulação a partir de um ponto: as pautas de signo (as mesmas da ferramenta) do primeiro ao último fato, com o número de cada fato.
