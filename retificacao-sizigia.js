@@ -345,6 +345,9 @@ if (typeof module !== 'undefined' && module.exports) {
    ========================================== */
 let rzUltimo = null;              // último resultado calculado
 let rzFinalSel = null;            // horário final do relatório: { idx (em rzUltimo.candidatos), ajusteMin (ajuste fino, em minutos) }
+let rzAssinatura = '';            // identifica o mapa/horário calculado: se não mudou ao reabrir a ferramenta, as escolhas (candidato, fatos, anexos) continuam
+let rzConclusao = '';             // texto da conclusão (ainda não é salvo)
+let rzAnexos = [];                // anexos escolhidos: 'ferramenta|índice da captura'
 let rzOrigemHorario = '';         // 'origem do horário' (texto do astrólogo; ainda não é salvo)
 
 function rzP2(n) { return String(n).padStart(2, '0'); }
@@ -448,10 +451,19 @@ async function rzExecutar() {
   area.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Calculando...</div>`;
   try {
     const r = await rzCalcular(e, rzMotorHttp(e.lat, e.lon));
+    const assinatura = JSON.stringify(r.entrada);
+    const mesmoMapa = assinatura === rzAssinatura && rzFinalSel && r.candidatos[rzFinalSel.idx] && r.candidatos[rzFinalSel.idx].horario;
     rzUltimo = r;
-    rzFinalSel = rzSelecaoPadrao(r);
-    if (rzMapaFinalSvg) { URL.revokeObjectURL(rzMapaFinalSvg.url); rzMapaFinalSvg = null; }   // outro mapa/cálculo: a mandala gerada não vale mais
+    if (!mesmoMapa) {
+      // outro mapa: recomeça (escolha do candidato, fatos, conclusão, anexos e a mandala gerada não valem mais)
+      rzAssinatura = assinatura;
+      rzFinalSel = rzSelecaoPadrao(r);
+      rzMapaFinalSvg = null;
+      rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = '';
+    }
     area.innerHTML = rzMontarResultado(r);
+    const cab = document.getElementById('rzCabecalho');
+    if (cab && rzMapaFinalSvg && rzMapaFinalSvg.cabecalho) cab.innerHTML = rzMapaFinalSvg.cabecalho;    // reabriu: o cabeçalho segue mostrando o horário retificado
   } catch (err) {
     console.error(err);
     area.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">Não foi possível calcular: ${escapeHtml(err.message || String(err))}</div>`;
@@ -559,6 +571,7 @@ function rzMontarResultado(r) {
     + '<hr class="divisa">' + tit(4, 'Horário retificado') + '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div>'
     + '<hr class="divisa">' + tit(5, 'Confirmação pelos fatos da vida') + '<div id="rzFatos">' + rzMontarFatos(r) + '</div>'
     + '<hr class="divisa">' + tit(6, 'O mapa final') + rzMontarMapaFinal(r)
+    + '<hr class="divisa">' + tit(7, 'Conclusão e anexos') + '<div id="rzConclusaoAnexos">' + (typeof rzMontarConclusaoAnexos === 'function' ? rzMontarConclusaoAnexos() : '') + '</div>'
     + rodape;
 }
 
@@ -818,7 +831,7 @@ let rzMapaFinalSvg = null;        // { url, ms } da última mandala gerada
 function rzMontarMapaFinal(r) { return `<div id="rzMapaFinal">${rzMontarMapaFinalCorpo(r, false)}</div>`; }
 function rzMontarMapaFinalCorpo(r, velha) {
   if (!rzFinalSel) return '';
-  if (velha && rzMapaFinalSvg) { URL.revokeObjectURL(rzMapaFinalSvg.url); rzMapaFinalSvg = null; }
+  if (velha && rzMapaFinalSvg) rzMapaFinalSvg = null;
   const hhmm = rzFmtHora(rzMsFinal(r, rzFinalSel), r.entrada.fuso).slice(0, 5);
   return `
     <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Gera a mandala no horário final (${hhmm}). O mapa que está aberto no menu não muda.</div>
@@ -838,14 +851,14 @@ async function rzGerarMandalaFinal() {
   const salvo = { dados: currentCalculatedData, momento: currentMoment, geo: currentGeo, lotes: window.currentLotes, capa: window.ceuFundoCapaUltimo };
   if (btn) btn.disabled = true;
   alvo.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Gerando...</div>`;
-  let svg = null, cabecalho = null;
+  let roda = null, cabecalho = null;
   try {
     currentMoment = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes());
     currentGeo = Object.assign({}, currentGeo, { fuso: e.fuso });
     if (!(await executarCalculo({ soCalcular: true }))) throw new Error('o motor não respondeu');
     const papiro = window.temaMandala === 'ceu';
     // 'claro' + sem fundo: o mesmo que a Mandala manda pro Relatório (no Tema Céu, a roda em tinta sobre papiro)
-    svg = (papiro ? desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true, tintaPapiro: true }) : desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true })).svg;
+    roda = papiro ? desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true, tintaPapiro: true }) : desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true });
     if (typeof montarCabecalhoMandalaImagemHTML === 'function') cabecalho = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true });
   } catch (err) {
     console.error('Mandala no horário final:', err);
@@ -854,10 +867,18 @@ async function rzGerarMandalaFinal() {
     currentCalculatedData = salvo.dados; currentMoment = salvo.momento; currentGeo = salvo.geo; window.currentLotes = salvo.lotes; window.ceuFundoCapaUltimo = salvo.capa;
     if (btn) btn.disabled = false;
   }
-  if (!svg) return;
-  if (rzMapaFinalSvg) URL.revokeObjectURL(rzMapaFinalSvg.url);
-  rzMapaFinalSvg = { url: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })), ms: minutos };
-  alvo.innerHTML = `<img src="${rzMapaFinalSvg.url}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">`;
+  if (!roda) return;
+  // imagem PNG (dataURL): o PDF é montado no servidor, que não enxerga endereços blob:
+  const png = await new Promise(resolve => {
+    const url = URL.createObjectURL(new Blob([roda.svg], { type: 'image/svg+xml;charset=utf-8' }));
+    const img = new Image();
+    img.onload = () => { const c = document.createElement('canvas'); c.width = roda.width * 2; c.height = roda.height * 2; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); resolve(c.toDataURL('image/png')); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+  if (!png) { alvo.innerHTML = rzMensagem('Não foi possível desenhar a mandala.'); return; }
+  rzMapaFinalSvg = { url: png, ms: minutos, cabecalho };
+  alvo.innerHTML = `<img src="${png}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">`;
   const cab = document.getElementById('rzCabecalho');
   if (cab && cabecalho) cab.innerHTML = cabecalho;           // o cabeçalho do topo passa a mostrar o horário retificado
 }
