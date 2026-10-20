@@ -350,6 +350,10 @@ let rzConclusao = '';             // texto da conclusão (ainda não é salvo)
 let rzAnexos = [];                // anexos escolhidos: 'ferramenta|índice da captura'
 let rzOrigemHorario = '';         // 'origem do horário' (texto do astrólogo; ainda não é salvo)
 
+/* qualquer escolha do astrólogo mudou: salva (retificacao-ficha.js) */
+function rzMudou() { if (typeof rzAgendarSalvar === 'function') rzAgendarSalvar(); }
+if (typeof window !== 'undefined') window.rzMudou = rzMudou;
+
 function rzP2(n) { return String(n).padStart(2, '0'); }
 
 /* Ícone do planeta / do signo no padrão do software: sempre o ícone; o nome ao lado só com os rótulos ligados. */
@@ -422,6 +426,7 @@ function iniciarModuloRetificacaoSizigia() {
           </button>
         </div></div>
         <div style="text-align:center; margin-bottom:8px;"><span class="selo">ferramenta de teste</span></div>
+        <div id="rzSalvoStatus" class="texto-apagado" style="text-align:center; font-size:11.5px; min-height:16px;"></div>
         <div id="rzCabecalho">${(typeof montarCabecalhoMandalaImagemHTML === 'function' && typeof currentCalculatedData !== 'undefined' && currentCalculatedData) ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true }) : ''}</div>
         <hr class="divisa">
         <div id="rzResultado"></div>
@@ -459,7 +464,8 @@ async function rzExecutar() {
       rzAssinatura = assinatura;
       rzFinalSel = rzSelecaoPadrao(r);
       rzMapaFinalSvg = null;
-      rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = '';
+      rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null;
+      if (typeof rzCarregarFicha === 'function') await rzCarregarFicha(r);      // o que já foi salvo para este cliente (e os fatos que ele enviou)
     }
     area.innerHTML = rzMontarResultado(r);
     const cab = document.getElementById('rzCabecalho');
@@ -585,7 +591,7 @@ function rzMontarDadosEntrada(r) {
     ${linha('Data de nascimento', `${rzP2(e.dia)}/${rzP2(e.mes)}/${e.ano}`)}
     ${linha('Cidade', escapeHtml(e.cidade || '—'))}
     ${linha('Horário original', `${rzP2(e.hora)}:${rzP2(e.min)} <span class="texto-apagado">(${rzFmtFuso(e.fuso)})</span>`)}
-    ${linha('Origem do horário', `<input type="text" id="rzOrigemHorario" value="${escapeHtml(rzOrigemHorario)}" placeholder="certidão, memória da família, hospital que arredondou..." oninput="rzOrigemHorario = this.value" style="width:100%;">`)}
+    ${linha('Origem do horário', `<input type="text" id="rzOrigemHorario" value="${escapeHtml(rzOrigemHorario)}" placeholder="certidão, memória da família, hospital que arredondou..." oninput="rzOrigemHorario = this.value; rzMudou()" style="width:100%;">`)}
   </table></div>`;
 }
 
@@ -637,8 +643,8 @@ function rzRedesenharFinal() {
   const m = document.getElementById('rzMapaFinal'); if (m && rzUltimo) m.innerHTML = rzMontarMapaFinalCorpo(rzUltimo, true);   // o horário mudou: a mandala gerada ficou velha
   rzRedesenharFatos();
 }
-function rzEscolherCandidato(i) { if (!rzUltimo || !rzUltimo.candidatos[i] || !rzUltimo.candidatos[i].horario) return; rzFinalSel = { idx: i, ajusteMin: 0 }; rzRedesenharFinal(); }
-function rzAjustar(min) { if (!rzFinalSel) return; rzFinalSel.ajusteMin += min; rzRedesenharFinal(); }
+function rzEscolherCandidato(i) { if (!rzUltimo || !rzUltimo.candidatos[i] || !rzUltimo.candidatos[i].horario) return; rzFinalSel = { idx: i, ajusteMin: 0 }; rzRedesenharFinal(); rzMudou(); }
+function rzAjustar(min) { if (!rzFinalSel) return; rzFinalSel.ajusteMin += min; rzRedesenharFinal(); rzMudou(); }
 if (typeof window !== 'undefined') { window.rzEscolherCandidato = rzEscolherCandidato; window.rzAjustar = rzAjustar; }
 
 /* ---------- Seção 5: fatos da vida × Circumambulação e Liberação, no horário final em teste ----------
@@ -760,6 +766,7 @@ function rzMontarFatos(r) {
   const resumo = rzFatos.some(f => f.conf)
     ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
   return `
+    ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e tudo se recalcula.</div>
     ${tabelas}
     ${linhas}
@@ -814,14 +821,14 @@ function rzMontarTabelaZR(ctx, lote, fatos) {
 
 function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if (el && rzUltimo) el.innerHTML = rzMontarFatos(rzUltimo); }
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
-function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); }
-function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); }
-function rzFatoData(id, v) { const f = rzFatoPorId(id); if (f) { f.data = v; rzRedesenharFatos(); } }
-function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; }
-function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } }
-function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } }
-function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } }
-function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } }
+function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
+function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
+function rzFatoData(id, v) { const f = rzFatoPorId(id); if (f) { f.data = v; rzRedesenharFatos(); } rzMudou(); }
+function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; rzMudou(); }
+function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } rzMudou(); }
+function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } rzMudou(); }
+function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }
+function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } rzMudou(); }
 if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------

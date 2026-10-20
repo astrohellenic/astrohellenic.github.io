@@ -292,6 +292,15 @@ function htmlCfgCaptacao() {
         <p class="cfg-card-desc">Marcado, o cliente vai direto para a sua agenda assim que enviar os dados — vale para os links que você já copiou, sem trocar nada. É só salvar. O link de redirecionamento, se houver, abre depois da escolha do horário. Desmarcado, o formulário termina como sempre.</p>
         <p class="cfg-card-desc" id="cfgAvisoAgendaRedirect" style="display:none"><strong>Atenção:</strong> com a caixinha marcada, o link de redirecionamento acima não abre depois do formulário: ele abre depois que o cliente escolher o horário na agenda.</p>
 
+        <div class="cfg-campo-largo">
+          <label class="cfg-rotulo">Relatório de retificação: fatos da vida do cliente</label>
+          <label class="cfg-checkbox"><input type="checkbox" id="cfgRetifMinLigado" onchange="atualizarCamposRetifFatos()"> Exigir um mínimo de fatos</label>
+          <input type="number" id="cfgRetifMin" class="modal-input" min="1" max="100" step="1" style="max-width:140px;" placeholder="Mínimo">
+          <label class="cfg-checkbox"><input type="checkbox" id="cfgRetifMaxLigado" onchange="atualizarCamposRetifFatos()"> Limitar a um máximo de fatos</label>
+          <input type="number" id="cfgRetifMax" class="modal-input" min="1" max="100" step="1" style="max-width:140px;" placeholder="Máximo">
+          <p class="cfg-card-desc">Vale para o formulário de quem contrata a retificação (link do serviço com "retificação" no nome). Sem mínimo, o cliente envia com quantos fatos tiver; sem máximo, ele adiciona quantos quiser. O formulário só deixa enviar dentro dessa regra.</p>
+        </div>
+
         <label class="cfg-rotulo" for="cfgFormTema">Tema do formulário e da agenda</label>
         <select id="cfgFormTema" class="modal-input">
           <option value="ceu">Céu</option>
@@ -892,6 +901,14 @@ if (document.getElementById('cfgPublicFormUrl')) document.getElementById('cfgPub
 renderLinksServicosFormulario(publicLink, user.id);
 if (document.getElementById('cfgFormAbrirAgenda')) document.getElementById('cfgFormAbrirAgenda').checked = data.formulario_abrir_agenda === true;
 mostrarAvisoAgendaRedirect();
+if (document.getElementById('cfgRetifMinLigado')) {
+  const mn = data.retificacao_fatos_min, mx = data.retificacao_fatos_max;      // null = sem mínimo / sem máximo
+  document.getElementById('cfgRetifMinLigado').checked = mn !== null && mn !== undefined;
+  document.getElementById('cfgRetifMin').value = (mn !== null && mn !== undefined) ? mn : 5;
+  document.getElementById('cfgRetifMaxLigado').checked = mx !== null && mx !== undefined;
+  document.getElementById('cfgRetifMax').value = (mx !== null && mx !== undefined) ? mx : '';
+  atualizarCamposRetifFatos();
+}
         // Atualiza a prévia do logo e o texto do botão se houver URL salva
         if (data.logo_url) {
           const previewImg = document.getElementById('cfgLogoPreview');
@@ -1019,12 +1036,30 @@ async function testarPaginaAgendar() {
   }
 }
 
+/* Mínimo/máximo de fatos da retificação: o campo do número só vale com a caixinha marcada */
+function atualizarCamposRetifFatos() {
+  const mn = document.getElementById('cfgRetifMinLigado'), mx = document.getElementById('cfgRetifMaxLigado');
+  if (!mn || !mx) return;
+  document.getElementById('cfgRetifMin').disabled = !mn.checked;
+  document.getElementById('cfgRetifMax').disabled = !mx.checked;
+}
+
 /* SALVA AS CONFIGURAÇÕES DE CAPTAÇÃO NO SUPABASE */
 async function salvarConfiguracoesCaptacao() {
   const logoUrl = document.getElementById('cfgLogoUrl').value.trim();
   const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
   const redirectUrl = document.getElementById('cfgRedirectUrl').value.trim();
   const formularioTema = document.getElementById('cfgFormTema') ? document.getElementById('cfgFormTema').value : 'claro';
+
+  // mínimo e máximo de fatos da retificação (null = sem regra)
+  const lerInteiro = (id) => { const v = parseInt(document.getElementById(id).value, 10); return Number.isFinite(v) && v >= 1 ? v : null; };
+  const minLigado = !!(document.getElementById('cfgRetifMinLigado') && document.getElementById('cfgRetifMinLigado').checked);
+  const maxLigado = !!(document.getElementById('cfgRetifMaxLigado') && document.getElementById('cfgRetifMaxLigado').checked);
+  const retifMin = minLigado ? lerInteiro('cfgRetifMin') : null;
+  const retifMax = maxLigado ? lerInteiro('cfgRetifMax') : null;
+  if (minLigado && retifMin === null) { alert('Informe o número mínimo de fatos (um número inteiro, 1 ou mais).'); return; }
+  if (maxLigado && retifMax === null) { alert('Informe o número máximo de fatos (um número inteiro, 1 ou mais).'); return; }
+  if (retifMin !== null && retifMax !== null && retifMax < retifMin) { alert('O máximo de fatos não pode ser menor que o mínimo.'); return; }
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -1038,7 +1073,9 @@ async function salvarConfiguracoesCaptacao() {
         webhook_url: webhookUrl,
         redirect_url: redirectUrl,
         formulario_tema: formularioTema,
-        formulario_abrir_agenda: !!(document.getElementById('cfgFormAbrirAgenda') && document.getElementById('cfgFormAbrirAgenda').checked)
+        formulario_abrir_agenda: !!(document.getElementById('cfgFormAbrirAgenda') && document.getElementById('cfgFormAbrirAgenda').checked),
+        retificacao_fatos_min: retifMin,
+        retificacao_fatos_max: retifMax
       }, { onConflict: 'user_id' });
 
     if (!error) {

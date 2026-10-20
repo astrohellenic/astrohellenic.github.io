@@ -29,13 +29,13 @@ function rzMontarConclusaoAnexos() {
     </label>`).join('');
   return `
     <div class="rotulo">Conclusão</div>
-    <textarea placeholder="Escreva a conclusão do relatório" oninput="rzConclusao = this.value" style="margin:6px 0 12px;">${escapeHtml(rzConclusao)}</textarea>
+    <textarea placeholder="Escreva a conclusão do relatório" oninput="rzConclusao = this.value; rzMudou()" style="margin:6px 0 12px;">${escapeHtml(rzConclusao)}</textarea>
     <div class="rotulo">Anexos</div>
     <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Marque as telas de outras ferramentas que entram no relatório, depois da conclusão. Elas aparecem aqui quando você usa "Adicionar ao Relatório" na ferramenta, com o cliente aberto.</div>
     ${itens || '<div class="texto-apagado rz-fonte">Nenhuma tela foi adicionada ainda.</div>'}
     <div style="margin-top:14px;"><button type="button" class="btn-primary" id="rzBtnGerarRelatorio" onclick="rzGerarRelatorio()">Gerar relatório</button></div>`;
 }
-function rzAnexoMarcar(chave, marcado) { rzAnexos = rzAnexos.filter(c => c !== chave); if (marcado) rzAnexos.push(chave); }
+function rzAnexoMarcar(chave, marcado) { rzAnexos = rzAnexos.filter(c => c !== chave); if (marcado) rzAnexos.push(chave); rzMudou(); }
 if (typeof window !== 'undefined') Object.assign(window, { rzAnexoMarcar });
 
 /* ---------- Relatório: páginas ---------- */
