@@ -402,6 +402,7 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container input[type="text"], #rz-container input[type="date"], #rz-container textarea { background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
       #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
       #rz-container .rz-fato { padding: 10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+      #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--azul-egipcio-claro); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
       #rz-container details > summary { cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
     </style>
@@ -698,10 +699,12 @@ function rzMontarFatos(r) {
   const ctx = rzContextoFatos(r);
   if (!ctx) return `<div class="texto-apagado rz-fonte">Escolha um horário na seção 4.</div>`;
   const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
+  const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });   // 1, 2, 3... na ordem de data
   const btnConf = (f, v, rot) => `<button type="button" class="btn-secondary" onclick="rzFatoConf(${f.id}, '${v}')" style="padding:3px 10px; font-size:12px; background:transparent; border:${f.conf === v ? 3 : 1}px solid var(--azul-egipcio-claro);">${rot}</button>`;
   const linhas = ordenados.map(f => `
     <div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
+        <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
         <input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" title="Data do fato">
         <button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>
       </div>
@@ -724,10 +727,27 @@ function rzMontarFatos(r) {
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0;">${RZ_LOTES.map(k => escolha(k, rzLoteZR, 'rzEscolherLoteZR')).join('')}</div>
       <div class="texto-apagado rz-fonte">${RZ_LOTE_NOME[rzLoteZR]} em ${rzPosHtml(ctx.pontos[rzLoteZR], 16)}</div>
     </div>
+    ${rzMontarTabelaCirc(ctx, ordenados, numero)}
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="btn-secondary" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}`;
 }
+/* Os períodos da Circumambulação (termo a termo) do primeiro ao último fato, com o número de cada fato no período em que cai */
+function rzMontarTabelaCirc(ctx, ordenados, numero) {
+  const datados = ordenados.filter(f => f.data).map(f => { const q = f.data.split('-').map(Number); return { n: numero[f.id], d: new Date(q[0], q[1] - 1, q[2], 12, 0) }; });
+  const linhas = ctx.circ.filter(l => l.startDate && l.endDate);
+  const idx = (d) => linhas.findIndex(l => d >= l.startDate && d < l.endDate);
+  const caiem = datados.map(x => ({ n: x.n, i: idx(x.d) })).filter(x => x.i >= 0);
+  if (!caiem.length) return '';
+  const de = Math.min.apply(null, caiem.map(x => x.i)), ate = Math.max.apply(null, caiem.map(x => x.i));
+  const corpo = linhas.slice(de, ate + 1).map((l, k) => {
+    const nums = caiem.filter(x => x.i === de + k).map(x => `<span class="rz-num">${x.n}</span>`).join(' ');
+    return `<tr><td>${rzSignoHtml(l.signIdx, 16)}</td><td>${l.termStartDeg}°–${l.termEndDeg}°</td><td>${rzPlanetaHtml(l.termPlanetId, 16)}</td><td>${rzDataBR(l.startDate)} a ${rzDataBR(l.endDate)}</td><td>${nums}</td></tr>`;
+  }).join('');
+  return `<details open style="margin-bottom:10px;"><summary>Circumambulação: onde cada fato cai</summary>
+    <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Signo</th><th>Termo</th><th>Planeta</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
+}
+
 function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if (el && rzUltimo) el.innerHTML = rzMontarFatos(rzUltimo); }
 function rzEscolherAfeta(k) { rzAfetaCirc = k; rzRedesenharFatos(); }
 function rzEscolherLoteZR(k) { rzLoteZR = k; rzRedesenharFatos(); }
