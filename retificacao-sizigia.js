@@ -408,6 +408,7 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .rz-fonte { font-size: 11.5px; line-height: 1.55; }
       #rz-container input[type="text"], #rz-container input[type="date"], #rz-container textarea { background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
       #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
+      #rz-container input[type="date"] { min-height: 36px; min-width: 160px; }   /* no iPad, data vazia sem isso some */
       #rz-container select { background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231F5FA3' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 8px center; color: inherit; font: inherit; font-size: 12.5px; padding: 4px 24px 4px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; }
       #rz-container .rz-tec { margin-top: 6px; }
       #rz-container .botao-texto { padding: 4px 12px; font-size: 12px; }
@@ -752,7 +753,7 @@ function rzMontarFatos(r) {
     <div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
-        <input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" title="Data do fato">
+        <label class="texto-apagado" style="font-size:12px; display:flex; align-items:center; gap:8px;">Data <input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" title="Data do fato"></label>
         <button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>
       </div>
       <textarea placeholder="O que aconteceu nessa data" oninput="rzFatoTexto(${f.id}, this.value)">${escapeHtml(f.texto)}</textarea>
