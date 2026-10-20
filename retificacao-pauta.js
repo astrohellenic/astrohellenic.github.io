@@ -113,8 +113,8 @@ function rzPautaSvg(opc) {
       const xM = x0 + ((term.termStartDeg + frac * (term.termEndDeg - term.termStartDeg)) * scale);
       const top = yOffset + Math.round(10 * k), bottom = yOffset + boxHeight - Math.round(6 * k);
       rowHtml += `<line x1="${xM}" y1="${top}" x2="${xM}" y2="${bottom}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-      rowHtml += `<circle cx="${xM}" cy="${yBaseline}" r="9" fill="none" stroke="var(--ocre)" stroke-width="2"/>`;
-      rowHtml += `<text x="${xM}" y="${yBaseline + 3.5}" font-size="10" font-weight="800" fill="var(--terracota)" text-anchor="middle">${m.n}</text>`;
+      rowHtml += `<circle cx="${xM}" cy="${yBaseline - 7}" r="9" fill="none" stroke="var(--ocre)" stroke-width="2"/>`;
+      rowHtml += `<text x="${xM}" y="${yBaseline - 3.5}" font-size="10" font-weight="800" fill="var(--terracota)" text-anchor="middle">${m.n}</text>`;   // o número fica EM CIMA da régua (como escrito à mão); o círculo desce um pouco abaixo da linha
       if (opc.comTexto) {
         const LARG_TEXTO = 80, meiaIconeTermo = Math.max(10, termHeight - 6) / 2 + 2;
         const ocupados = passagem.terms.map(t => { const xc = x0 + ((t.termStartDeg + t.termEndDeg) / 2) * scale; return [xc - meiaIconeTermo, xc + meiaIconeTermo]; });
