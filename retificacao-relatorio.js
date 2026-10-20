@@ -153,8 +153,8 @@ function rzRelMontarPaginas() {
   secao('5. Confirmação pelos fatos', [
     `<p>O horário calculado foi comparado com os fatos datados da vida${nome ? ' de ' + escapeHtml(nome) : ''}, pelas técnicas indicadas em cada fato. Cada linha mostra o que a técnica indica para a data.</p>`,
     ...cartoes,
-    ...tabelasTecnicas,
-    resumo
+    resumo,
+    ...(tabelasTecnicas.length ? [`<div class="rz-sub rz-sub-grande">Visão geral</div><div class="rz-nota">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>`, ...tabelasTecnicas] : [])
   ]);
   paginas.unshift(rzRelSecao('Relatório de retificação', fluxo));
 

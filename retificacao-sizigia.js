@@ -796,7 +796,7 @@ function rzMontarFatos(r) {
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}
-    ${tabelas ? `<details style="margin-top:14px;"><summary>Visão geral: onde cada fato cai</summary>${tabelas}</details>` : ''}`;
+    ${tabelas ? `<hr class="divisa"><h3 class="titulo-secao">Visão geral</h3><div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>${tabelas}` : ''}`;
 }
 
 /* Circumambulação a partir de um ponto: as pautas de signo (as mesmas da ferramenta) do primeiro ao último fato, com o número de cada fato.
