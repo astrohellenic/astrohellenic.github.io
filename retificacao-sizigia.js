@@ -414,7 +414,7 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .botao-texto { padding: 4px 12px; font-size: 12px; }
       #rz-container .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
       #rz-container .rz-fato { padding: 10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
-      #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--azul-egipcio-claro); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
+      #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
       #rz-container details > summary { cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
     </style>

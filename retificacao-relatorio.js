@@ -51,7 +51,7 @@ const RZ_REL_CSS = `
   .rz-rel .rz-nota { font-size: 11px; line-height: 1.6; color: #64748b; margin-bottom: 10px; }
   .rz-rel .texto-apagado { color: #64748b; }
   .rz-rel .rz-escolhido { color: #A03E25; font-weight: 700; }
-  .rz-rel .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border: 2px solid #1F5FA3; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .rz-rel .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border: 2px solid #B5852F; color: #A03E25; border-radius: 10px; font-size: 11px; font-weight: 700; }
   .rz-rel .rz-fato-rel { padding: 8px 0; border-top: 1px solid #1F5FA3; break-inside: avoid; }
   .rz-rel .rz-linha-tecnica { font-size: 11.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; margin-top: 3px; }
   .rz-rel .rz-texto { font-size: 12.5px; line-height: 1.7; color: #1e293b; margin: 4px 0; white-space: pre-wrap; }
