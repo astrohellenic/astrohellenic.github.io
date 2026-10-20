@@ -180,7 +180,7 @@ function rzRelMontarPaginas() {
 
 /* ---------- Relatório: abrir, voltar, baixar ---------- */
 async function rzGerarRelatorio() {
-  if (!rzUltimo || !rzFinalSel) { alert('Escolha o horário na seção 4 primeiro.'); return; }
+  if (!rzUltimo || !rzFinalSel) { alert('Escolha o horário retificado primeiro.'); return; }
   if (typeof injetarEstilosRelatorio !== 'function' || typeof dividirPaginasLongasEmFolhas !== 'function') { alert('O módulo de Relatório não está carregado.'); return; }
   const botao = document.getElementById('rzBtnGerarRelatorio');
   if (botao) { botao.disabled = true; botao.textContent = 'Montando...'; }
