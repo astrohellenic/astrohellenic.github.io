@@ -661,7 +661,7 @@ const RZ_LOTE_NOME = { fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', m
 const RZ_AFETA_NOME = Object.assign({ ASC: 'Ascendente', Sun: 'Sol', Moon: 'Lua', seita: 'Luminar da seita', Syz: 'Sizígia' }, RZ_LOTE_NOME);
 /* os nomes que as ferramentas usam no seletor (direcoes.js / liberacao.js) */
 const RZ_AFETA_TITULO = { ASC: 'Ascendente', Sun: 'Sol', Moon: 'Lua', Syz: 'Sizígia Prenatal', fortune: 'Lote da Fortuna', spirit: 'Lote do Espírito', venus: 'Lote de Eros', mercury: 'Lote da Necessidade', mars: 'Lote da Coragem', jupiter: 'Lote da Vitória', saturn: 'Lote de Nêmesis' };
-const RZ_AFETAS = ['ASC', 'Sun', 'Moon', 'seita', 'Syz'].concat(RZ_LOTES);
+const RZ_AFETAS = ['ASC', 'Sun', 'Moon', 'Syz'].concat(RZ_LOTES);   // o luminar da seita é o Sol (de dia) ou a Lua (de noite): já estão na lista, o nome só avisa qual é
 let rzDiurnoAtual = true;         // o horário em teste é diurno? (decide o luminar da seita)
 
 /* Um fato novo já nasce com as duas técnicas mais usadas (Circumambulação pelo Ascendente, Liberação pela Fortuna); o astrólogo troca ou remove. */
@@ -748,7 +748,7 @@ function rzMontarFatos(r) {
   const btnConf = (f, v, rot) => `<button type="button" class="botao-texto${f.conf === v ? ' rz-sel' : ''}" onclick="rzFatoConf(${f.id}, '${v}')">${rot}</button>`;
   const seletor = (f, k, t) => {
     const lista = t.tipo === 'circ' ? RZ_AFETAS : RZ_LOTES;
-    const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : (RZ_AFETA_TITULO[c] || RZ_AFETA_NOME[c]);
+    const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : (RZ_AFETA_TITULO[c] || RZ_AFETA_NOME[c]) + (((c === 'Sun' && ctx.diurno) || (c === 'Moon' && !ctx.diurno)) ? ' (luminar da seita)' : '');
     const idMenu = `rzMenu_${f.id}_${k}`;
     const linhasMenu = lista.map(c => `<div onclick="rzTecTrocar(${f.id}, ${k}, '${c}')" title="${escapeHtml(rotulo(c))}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--azul-egipcio-escuro);">${rzIconeSeletor(c, t.tipo)}</div>`).join('');
     return `<div style="position: relative; flex-shrink: 0;">
