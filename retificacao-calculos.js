@@ -84,6 +84,43 @@ function rqCircumambulacao(startAbsDeg, birthDate, lat) {
   return tabela;
 }
 
+/* Agrupa as linhas da tabela em "passagens": cada passagem é um signo com os seus termos (a pauta de signo da ferramenta). Igual ao signPassages de direcoes.js. */
+function rqPassagens(tabela) {
+  const lista = []; let atual = null;
+  tabela.forEach(row => {
+    if (!atual || atual.signIdx !== row.signIdx) { atual = { signIdx: row.signIdx, terms: [] }; lista.push(atual); }
+    atual.terms.push(row);
+  });
+  return lista;
+}
+
+function rqDataBR(d) {
+  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+}
+
+/* Raios dos aspectos (aktinobolia): cada planeta, em conjunção/sextil/quadratura/trígono/oposição ao ponto de partida, vira uma data.
+   Igual a calcularRaiosAspectos de direcoes.js. planetas: { Sun: grau absoluto, Moon: ..., Mercury, Venus, Mars, Jupiter, Saturn } */
+function rqRaiosAspectos(planetas, startAbsDeg, birthDate, lat) {
+  const aspectDefs = [
+    { offset: 0, type: 'conj' }, { offset: 60, type: 'sex' }, { offset: 90, type: 'squ' }, { offset: 120, type: 'tri' },
+    { offset: 180, type: 'opp' }, { offset: 240, type: 'tri' }, { offset: 270, type: 'squ' }, { offset: 300, type: 'sex' }
+  ];
+  const raios = [];
+  ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].forEach(pId => {
+    if (planetas[pId] === undefined) return;
+    aspectDefs.forEach(asp => {
+      const rayAbsDeg = (planetas[pId] + asp.offset) % 360;
+      const accumulatedYears = rqTempoAscensional(startAbsDeg, rayAbsDeg, lat);
+      const rayDate = new Date(birthDate.getTime() + (accumulatedYears * 365.25 * 24 * 60 * 60 * 1000));
+      raios.push({
+        rayAbsDeg, signIdx: Math.floor(rayAbsDeg / 30), degInSign: rayAbsDeg % 30, planetId: pId, aspectType: asp.type,
+        yearsOld: accumulatedYears.toFixed(1), idadeTxt: rqIdade(birthDate, rayDate), exactDate: rqDataBR(rayDate)
+      });
+    });
+  });
+  return raios;
+}
+
 /* A linha da Circumambulação que cobre uma data (ou null se a data é antes do ponto de partida ou depois dos 12 signos) */
 function rqLinhaCircumambulacao(tabela, data) {
   return tabela.find(l => l.startDate && l.endDate && data >= l.startDate && data < l.endDate) || null;
@@ -156,5 +193,5 @@ function rqIdade(de, ate) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { rqCircumambulacao, rqLinhaCircumambulacao, rqLiberacaoEm, rqSubperiodos, rqFimZR, rqTempoAscensional, rqIdade, RQ_TERMOS, RQ_ZR_ANOS };
+  module.exports = { rqPassagens, rqRaiosAspectos, rqDataBR, rqCircumambulacao, rqLinhaCircumambulacao, rqLiberacaoEm, rqSubperiodos, rqFimZR, rqTempoAscensional, rqIdade, RQ_TERMOS, RQ_ZR_ANOS };
 }

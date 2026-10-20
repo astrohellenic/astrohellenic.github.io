@@ -40,7 +40,7 @@ if (typeof window !== 'undefined') Object.assign(window, { rzAnexoMarcar });
 
 /* ---------- Relatório: páginas ---------- */
 const RZ_REL_CSS = `
-  .rel-viewer.rz-rel { --terracota: #A03E25; --azul-egipcio-claro: #1F5FA3; --azul-egipcio-escuro: #103b70; --contorno-fino: 1px; }
+  .rel-viewer.rz-rel { --terracota: #A03E25; --azul-egipcio-claro: #1F5FA3; --azul-egipcio-escuro: #103b70; --preto-tinta: #1a1410; --ocre: #B5852F; --contorno-fino: 1px; }
   .rz-rel .com-nome { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
   .rz-rel .nome-glifo { font-size: 11px; }
   .rz-rel .rz-tabela, .rz-rel table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 0 0 10px 0; color: #1e293b; }
@@ -75,6 +75,13 @@ function rzRelTabelaDaTela(htmlTela) {
 }
 /* subtítulo + primeiro pedaço da tabela num filho só (a quebra de folha nunca deixa o título sozinho); os outros pedaços seguem como filhos próprios. Devolve lista. */
 function rzRelJunto(subHtml, pedacos) { return [`<div>${subHtml}${pedacos[0] || ''}</div>`].concat(pedacos.slice(1)); }
+
+/* Circumambulação no relatório: subtítulo + a 1ª pauta num filho só; cada pauta seguinte é um filho próprio (pode ir pra outra folha) */
+function rzRelPautasCirc(ctx, chave, fatos) {
+  const svgs = (typeof rzPautasDosFatos === 'function') ? rzPautasDosFatos(ctx, chave, fatos) : [];
+  if (!svgs.length) return rzRelTabelaDaTela(rzMontarTabelaCirc(ctx, chave, fatos));
+  return rzRelJunto(`<div class="rz-sub">${rzIconeAfeta(chave, 16)} Circumambulação (${RZ_AFETA_NOME[chave]}): onde cada fato cai</div>`, svgs);
+}
 
 function rzRelSecao(titulo, filhos, classeExtra) {
   const itens = (Array.isArray(filhos) ? filhos : [filhos]).filter(Boolean);
@@ -133,13 +140,13 @@ function rzRelMontarPaginas() {
   const cartoes = ordenados.map(f => {
     const d = f.data ? rzDataDoFato(f) : null;
     const antes = d && d < ctx.nasc;
-    const linhas = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d)}</div>`).join('');
+    const linhas = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id])}</div>`).join('');
     return `<div class="rz-fato-rel"><div><span class="rz-num">${numero[f.id]}</span> <strong>${d ? rzDataBR(d) : 'sem data'}</strong>${d && !antes ? ` <span class="texto-apagado">${rqIdade(ctx.nasc, d)}</span>` : ''}</div>${f.texto ? `<div class="rz-texto">${escapeHtml(f.texto)}</div>` : ''}${antes ? '<div class="texto-apagado">Data anterior ao nascimento.</div>' : ''}${linhas}<div class="texto-apagado" style="font-size:11.5px; margin-top:3px;">Confirma: <strong>${f.conf ? rotConf[f.conf] : '—'}</strong></div></div>`;
   });
   const grupos = new Map();
   ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push({ n: numero[f.id], d: rzDataDoFato(f) }); }); });
   const tabelasTecnicas = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1))
-    .flatMap(g => rzRelTabelaDaTela(g.t.tipo === 'circ' ? rzMontarTabelaCirc(ctx, g.t.chave, g.fatos) : rzMontarTabelaZR(ctx, g.t.chave, g.fatos)));
+    .flatMap(g => g.t.tipo === 'circ' ? rzRelPautasCirc(ctx, g.t.chave, g.fatos) : rzRelTabelaDaTela(rzMontarTabelaZR(ctx, g.t.chave, g.fatos)));
   const nSim = ordenados.filter(f => f.conf === 'sim').length, nParte = ordenados.filter(f => f.conf === 'parte').length, nNao = ordenados.filter(f => f.conf === 'nao').length;
   const resumo = ordenados.some(f => f.conf)
     ? `<p>O horário ${hFinal} é confirmado por <strong>${nSim}</strong> de ${ordenados.length} ${ordenados.length === 1 ? 'fato' : 'fatos'}${nParte ? `, em parte por ${nParte}` : ''}${nNao ? ` e não é confirmado por ${nNao}` : ''}.</p>` : '';

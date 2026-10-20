@@ -42,6 +42,17 @@ for (let i = 0; i < 300; i++) {
   const l4 = vm.runInContext('calcularSubperiodosL4(__b.signIdx, __b.start, __b.end)', ctx);
   igual(l4.map(x => ({ signIdx: x.signIdx, start: x.start, end: x.end, isLysis: x.isLysis })), rq.rqSubperiodos(4, alvo3.signIdx, alvo3.start, alvo3.end), 'L4 #' + i);
 }
+// raios dos aspectos e passagens
+for (let i = 0; i < 150; i++) {
+  const lat = -60 + rnd() * 120, start = rnd() * 360;
+  const nasc = new Date(1930 + Math.floor(rnd() * 90), Math.floor(rnd() * 12), 1 + Math.floor(rnd() * 28), Math.floor(rnd() * 24), Math.floor(rnd() * 60));
+  const pl = { Sun: rnd() * 360, Moon: rnd() * 360, Mercury: rnd() * 360, Venus: rnd() * 360, Mars: rnd() * 360, Jupiter: rnd() * 360, Saturn: rnd() * 360 };
+  const data = { Sol: { grau_absoluto: pl.Sun }, Lua: { grau_absoluto: pl.Moon }, Mercúrio: { grau_absoluto: pl.Mercury }, Vênus: { grau_absoluto: pl.Venus }, Marte: { grau_absoluto: pl.Mars }, Júpiter: { grau_absoluto: pl.Jupiter }, Saturno: { grau_absoluto: pl.Saturn } };
+  ctx.currentGeo = { lat }; ctx.__s = start; ctx.__n = nasc; ctx.__data = data;
+  igual(vm.runInContext('calcularRaiosAspectos(__data, __s, __n)', ctx), rq.rqRaiosAspectos(pl, start, nasc, lat), 'raios #' + i);
+  const tab = rq.rqCircumambulacao(start, nasc, lat);
+  igual(rq.rqPassagens(tab).map(p => [p.signIdx, p.terms.length]), vm.runInContext('(function(){ const t = calcular12SignosCircumambulatoria(__s, __n, __data); const l = []; let a = null; t.forEach(r => { if (!a || a.signIdx !== r.signIdx) { a = { signIdx: r.signIdx, terms: [] }; l.push(a); } a.terms.push(r); }); return l.map(p => [p.signIdx, p.terms.length]); })()', ctx), 'passagens #' + i);
+}
 // idade
 for (let i = 0; i < 200; i++) {
   const de = new Date(1930 + Math.floor(rnd() * 80), Math.floor(rnd() * 12), 1 + Math.floor(rnd() * 28));

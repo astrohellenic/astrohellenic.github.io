@@ -698,9 +698,11 @@ function rzContextoFatos(r) {
   const pontos = { ASC: asc, Sun: sol, Moon: lua, seita: diurno ? sol : lua, Syz: r.sizigia.luaLon };
   calculateSevenLots(asc, diurno, po).forEach(l => { pontos[l.key] = l.deg; });
   if (cand.horario && !(r.sol && r.lua)) pontos.fortune = cand.horario.fortuna;
-  const memo = {};
+  const memo = {}, memoRaios = {};
+  const planetas = { Sun: sol, Moon: lua, Mercury: r.posicoes.Mercury, Venus: r.posicoes.Venus, Mars: r.posicoes.Mars, Jupiter: r.posicoes.Jupiter, Saturn: r.posicoes.Saturn };
   return {
     nasc, asc, pontos, diurno, ms,
+    raios: (chave) => memoRaios[chave] || (memoRaios[chave] = rqRaiosAspectos(planetas, pontos[chave] !== undefined ? pontos[chave] : asc, nasc, e.lat)),
     circ: (chave) => memo[chave] || (memo[chave] = rqCircumambulacao(pontos[chave] !== undefined ? pontos[chave] : asc, nasc, e.lat)),
     // Liberação: o L1 começa no signo do lote; no Espírito, se cai no mesmo signo da Fortuna, começa no signo seguinte (Valens IV.V, como liberacao.js)
     signoZR: (lote) => { const sg = rzSignoDe(pontos[lote]); return (lote === 'spirit' && sg === rzSignoDe(pontos.fortune)) ? (sg + 1) % 12 : sg; }
@@ -708,9 +710,12 @@ function rzContextoFatos(r) {
 }
 
 /* a linha de UMA técnica de UM fato (data d) */
-function rzLinhaTecnica(ctx, t, d) {
+function rzLinhaTecnica(ctx, t, d, n) {
   const ico = rzIconeAfeta(t.chave, 18);
   if (t.tipo === 'circ') {
+    // a "linha do signo" da ferramenta (pauta), com a marca do fato; sem os ajudantes de desenho, cai no texto
+    const pauta = (typeof rzPautaDoFato === 'function') ? rzPautaDoFato(ctx, t.chave, d, n) : null;
+    if (pauta) return `<div style="width:100%;"><div style="font-size:12px; margin-bottom:2px;">${ico} <strong>Circumambulação</strong> <span class="texto-apagado">(${RZ_AFETA_NOME[t.chave]})</span></div>${pauta}</div>`;
     const lc = rqLinhaCircumambulacao(ctx.circ(t.chave), d);
     return lc
       ? `${ico} <strong>Circumambulação</strong> ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
@@ -741,7 +746,7 @@ function rzMontarFatos(r) {
       <div class="rz-tec">
         <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">${seletor(f, k, t)}
           <button type="button" class="botao-icone" onclick="rzTecRemover(${f.id}, ${k})" title="Tirar esta técnica do fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button></div>
-        ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d)}</div>`}
+        ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id])}</div>`}
       </div>`).join('');
     return `
     <div class="rz-fato">
@@ -764,7 +769,7 @@ function rzMontarFatos(r) {
   const grupos = new Map();
   ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push({ n: numero[f.id], d: rzDataDoFato(f) }); }); });
   const ordemG = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1));
-  const tabelas = ordemG.map(g => g.t.tipo === 'circ' ? rzMontarTabelaCirc(ctx, g.t.chave, g.fatos) : rzMontarTabelaZR(ctx, g.t.chave, g.fatos)).join('');
+  const tabelas = ordemG.map(g => g.t.tipo === 'circ' ? rzMontarPautasCirc(ctx, g.t.chave, g.fatos) : rzMontarTabelaZR(ctx, g.t.chave, g.fatos)).join('');
   const n = (v) => rzFatos.filter(f => f.conf === v).length;
   const resumo = rzFatos.some(f => f.conf)
     ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
@@ -775,6 +780,14 @@ function rzMontarFatos(r) {
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}`;
+}
+
+/* Circumambulação a partir de um ponto: as pautas de signo (as mesmas da ferramenta) do primeiro ao último fato, com o número de cada fato.
+   Sem os ajudantes de desenho, cai na tabela de texto. */
+function rzMontarPautasCirc(ctx, chave, fatos) {
+  const svgs = (typeof rzPautasDosFatos === 'function') ? rzPautasDosFatos(ctx, chave, fatos) : [];
+  if (!svgs.length) return rzMontarTabelaCirc(ctx, chave, fatos);
+  return `<details open style="margin-bottom:10px;"><summary>${rzIconeAfeta(chave, 16)} Circumambulação (${RZ_AFETA_NOME[chave]}): onde cada fato cai</summary>${svgs.join('')}</details>`;
 }
 
 /* Circumambulação a partir de um ponto: os períodos (termo a termo) do primeiro ao último fato, com o número de cada fato onde cai. fatos: [{ n, d }] */
