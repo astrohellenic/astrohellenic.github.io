@@ -728,6 +728,7 @@ function rzMontarFatos(r) {
       <div class="texto-apagado rz-fonte">${RZ_LOTE_NOME[rzLoteZR]} em ${rzPosHtml(ctx.pontos[rzLoteZR], 16)}</div>
     </div>
     ${rzMontarTabelaCirc(ctx, ordenados, numero)}
+    ${rzMontarTabelaZR(ctx, ordenados, numero)}
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="btn-secondary" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}`;
@@ -746,6 +747,40 @@ function rzMontarTabelaCirc(ctx, ordenados, numero) {
   }).join('');
   return `<details open style="margin-bottom:10px;"><summary>Circumambulação: onde cada fato cai</summary>
     <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Signo</th><th>Termo</th><th>Planeta</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
+}
+
+/* Liberação: níveis 1, 2 e 3 só nos ramos onde há fato. Nível 1 do primeiro ao último fato; dentro de cada período com fato, o nível 2 do primeiro ao último
+   fato daquele período; e dentro de cada nível 2 com fato, o nível 3. O número de cada fato aparece na linha do nível mais fundo em que ele cai. */
+function rzMontarTabelaZR(ctx, ordenados, numero) {
+  const fatos = ordenados.filter(f => f.data).map(f => { const q = f.data.split('-').map(Number); return { n: numero[f.id], d: new Date(q[0], q[1] - 1, q[2], 12, 0) }; });
+  if (!fatos.length) return '';
+  const l1 = []; let ini = new Date(ctx.nasc);
+  for (let i = 0; i < 12; i++) { const sign = (ctx.signoZR + i) % 12; const fim = rqFimZR(ini, RQ_ZR_ANOS[sign]); l1.push({ signIdx: sign, start: new Date(ini), end: fim }); ini = new Date(fim); }
+  const faixa = (lista, fs) => {
+    const marc = fs.map(f => ({ f, i: lista.findIndex(x => f.d >= x.start && f.d < x.end) })).filter(m => m.i >= 0);
+    if (!marc.length) return [];
+    const de = Math.min.apply(null, marc.map(m => m.i)), ate = Math.max.apply(null, marc.map(m => m.i));
+    return lista.slice(de, ate + 1).map((x, k) => ({ x, fatos: marc.filter(m => m.i === de + k).map(m => m.f) }));
+  };
+  const linhas = [];
+  faixa(l1, fatos).forEach(a => {
+    linhas.push({ nivel: 1, ...a });
+    if (!a.fatos.length) return;
+    faixa(rqSubperiodos(2, a.x.signIdx, a.x.start, a.x.end), a.fatos).forEach(b => {
+      linhas.push({ nivel: 2, ...b });
+      if (!b.fatos.length) return;
+      faixa(rqSubperiodos(3, b.x.signIdx, b.x.start, b.x.end), b.fatos).forEach(c => linhas.push({ nivel: 3, ...c }));
+    });
+  });
+  if (!linhas.length) return '';
+  const corpo = linhas.map(l => {
+    // o número fica só na linha mais funda em que o fato cai: nas linhas de cima, quando o fato continua no nível de baixo, não repete
+    const filhos = linhas.some(o => o.nivel === l.nivel + 1 && o.x.start >= l.x.start && o.x.end <= l.x.end);
+    const nums = (filhos ? [] : l.fatos).map(f => `<span class="rz-num">${f.n}</span>`).join(' ');
+    return `<tr><td style="padding-left:${(l.nivel - 1) * 16 + 4}px;${l.nivel === 1 ? ' font-weight:700;' : ''}"><span class="texto-apagado" style="font-size:11px;">${l.nivel}</span> ${rzSignoHtml(l.x.signIdx, l.nivel === 1 ? 18 : 16)}</td><td>${rzDataBR(l.x.start)} a ${rzDataBR(l.x.end)}</td><td>${nums}</td></tr>`;
+  }).join('');
+  return `<details open style="margin-bottom:10px;"><summary>Liberação (${RZ_LOTE_NOME[rzLoteZR]}): onde cada fato cai</summary>
+    <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Nível e signo</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
 }
 
 function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if (el && rzUltimo) el.innerHTML = rzMontarFatos(rzUltimo); }
