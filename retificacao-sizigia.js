@@ -303,6 +303,7 @@ async function rzCalcular(entrada, motor) {
 
   // detalhes de cada horário: Asc, MC, Fortuna e quando a Fortuna muda de signo (Sol e Lua ajustados às amostras do motor)
   const lista = candidatos.filter(c => c.horario);
+  let solFn = null, luaFn = null;      // curvas do Sol e da Lua ajustadas às amostras do motor (a Fortuna de qualquer horário perto dos candidatos)
   if (lista.length) {
     const todosMs = lista.map(c => c.horario.ms);
     const de = Math.min.apply(null, todosMs) - 7 * 3600000, ate = Math.max.apply(null, todosMs) + 7 * 3600000;
@@ -311,6 +312,7 @@ async function rzCalcular(entrada, motor) {
     const js = await Promise.all(tempos.map(t => motor(t)));
     const serie = (chave) => rzAjustePoli(tempos.map((t, i) => ({ t, lon: js[i].planetas[chave].grau_absoluto })), 3);
     const sol = serie('Sol'), lua = serie('Lua');
+    solFn = sol; luaFn = lua;
     lista.forEach(c => {
       const h = c.horario, a = rzAngulos(h.ms, lat, lon), f = rzFortunaEm(h.ms, lat, lon, sol, lua);
       h.asc = a.asc; h.mc = a.mc; h.fortuna = f.lon; h.diurno = f.diurno;
@@ -321,7 +323,7 @@ async function rzCalcular(entrada, motor) {
     });
   }
 
-  return { entrada, tMs, avisos, sizigia, posicoes, retro, contagem, valens, angulosT: angT, candidatos };
+  return { entrada, tMs, avisos, sizigia, posicoes, retro, contagem, valens, angulosT: angT, candidatos, sol: solFn, lua: luaFn };
 }
 
 /* "10:45:14" no fuso dado (comSegundos) a partir de ms UT; com data se comData */
@@ -342,7 +344,7 @@ if (typeof module !== 'undefined' && module.exports) {
    TELA — sem formulário: calcula sozinha a partir do mapa que está em tela (a Mandala)
    ========================================== */
 let rzUltimo = null;              // último resultado calculado
-let rzFinalSel = null;            // horário final do relatório: { idx (em rzUltimo.candidatos), ajusteSeg (ajuste fino, em segundos) }
+let rzFinalSel = null;            // horário final do relatório: { idx (em rzUltimo.candidatos), ajusteMin (ajuste fino, em minutos) }
 let rzOrigemHorario = '';         // 'origem do horário' (texto do astrólogo; ainda não é salvo)
 
 function rzP2(n) { return String(n).padStart(2, '0'); }
@@ -397,6 +399,10 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container table { width: 100%; }
       #rz-container .rz-escolhido { color: var(--terracota); font-weight: 700; }
       #rz-container .rz-fonte { font-size: 11.5px; line-height: 1.55; }
+      #rz-container input[type="text"], #rz-container input[type="date"], #rz-container textarea { background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
+      #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
+      #rz-container .rz-fato { padding: 10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+      #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
       #rz-container details > summary { cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
     </style>
     <div style="width: 100%; display: flex; flex-direction: column;">
@@ -548,7 +554,7 @@ function rzMontarResultado(r) {
     + '<hr class="divisa">' + tit(2, 'A sizígia pré-natal') + sem(blocoSizigia)
     + '<hr class="divisa">' + tit(3, 'O cálculo') + blocoVotos.replace('<hr class="divisa">', '') + blocoHorarios
     + '<hr class="divisa">' + tit(4, 'Horário retificado') + '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div>'
-    + '<hr class="divisa">' + tit(5, 'Confirmação pelos fatos da vida') + '<div class="texto-apagado rz-fonte">Em construção: os fatos enviados pelo cliente entram aqui, em ordem de data, com a linha da Circumambulação e da Liberação de cada um.</div>'
+    + '<hr class="divisa">' + tit(5, 'Confirmação pelos fatos da vida') + '<div id="rzFatos">' + rzMontarFatos(r) + '</div>'
     + '<hr class="divisa">' + tit(6, 'O mapa final') + rzMontarMapaFinal(r)
     + rodape;
 }
@@ -572,9 +578,10 @@ function rzSelecaoPadrao(r) {
   const comHorario = (c) => c.horario;
   let idx = r.candidatos.findIndex(c => c.regra === 'ptolomeu' && comHorario(c));
   if (idx < 0) idx = r.candidatos.findIndex(comHorario);
-  return idx < 0 ? null : { idx, ajusteSeg: 0 };
+  return idx < 0 ? null : { idx, ajusteMin: 0 };
 }
-function rzMsFinal(r, sel) { return r.candidatos[sel.idx].horario.ms + sel.ajusteSeg * 1000; }
+/* Horário final = o do candidato arredondado ao minuto + o ajuste fino em minutos (o software trabalha em hora e minuto, sem segundos) */
+function rzMsFinal(r, sel) { return Math.round(r.candidatos[sel.idx].horario.ms / 60000) * 60000 + sel.ajusteMin * 60000; }
 
 function rzMontarHorarioFinal(r) {
   const sel = rzFinalSel;
@@ -591,18 +598,18 @@ function rzMontarHorarioFinal(r) {
   const orig = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000;
   const dif = Math.round((ms - orig) / 60000);
   const difTxt = dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} min`;
-  const bt = (rot, seg) => `<button type="button" class="btn-secondary" onclick="rzAjustar(${seg})" style="padding:4px 10px; font-size:12px;">${rot}</button>`;
-  const aj = sel.ajusteSeg;
+  const bt = (rot, min) => `<button type="button" class="btn-secondary" onclick="rzAjustar(${min})" style="padding:4px 10px; font-size:12px;">${rot}</button>`;
+  const aj = sel.ajusteMin;
   return `
-    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Escolha o candidato que os fatos da vida sustentam. O método dá um horário aproximado: o ajuste fino de minutos e segundos é feito abaixo.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Escolha o candidato que os fatos da vida sustentam. O método dá um horário aproximado: o ajuste fino, em minutos, é feito abaixo.</div>
     <div class="cartao" style="margin-bottom:10px;">${opcoes}</div>
     <div class="cartao">
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px;">
-        ${bt('−1 min', -60)} ${bt('−10 s', -10)} ${bt('+10 s', 10)} ${bt('+1 min', 60)} ${aj ? bt('zerar ajuste', -aj) : ''}
-        <span class="texto-apagado" style="font-size:12px;">ajuste: ${aj === 0 ? 'nenhum' : (aj > 0 ? '+' : '−') + Math.floor(Math.abs(aj) / 60) + ' min ' + (Math.abs(aj) % 60) + ' s'}</span>
+        ${bt('−5 min', -5)} ${bt('−1 min', -1)} ${bt('+1 min', 1)} ${bt('+5 min', 5)} ${aj ? bt('zerar ajuste', -aj) : ''}
+        <span class="texto-apagado" style="font-size:12px;">ajuste: ${aj === 0 ? 'nenhum' : (aj > 0 ? '+' : '−') + Math.abs(aj) + ' min'}</span>
       </div>
       <div class="rz-rolagem"><table class="tabela-epoca">
-        <tr><td><strong>Horário retificado</strong></td><td><strong class="rz-escolhido">${rzFmtHora(ms, fuso)}</strong></td></tr>
+        <tr><td><strong>Horário retificado</strong></td><td><strong class="rz-escolhido">${rzFmtHora(ms, fuso).slice(0, 5)}</strong></td></tr>
         <tr><td><strong>Diferença para o horário original</strong></td><td>${difTxt}</td></tr>
         <tr><td><strong>${rzAnguloHtml('asc', 22)} Ascendente</strong></td><td>${rzPosHtml(a.asc, 18)}</td></tr>
         <tr><td><strong>${rzAnguloHtml('mc', 22)} Meio do Céu</strong></td><td>${rzPosHtml(a.mc, 18)}</td></tr>
@@ -612,10 +619,83 @@ function rzMontarHorarioFinal(r) {
 function rzRedesenharFinal() {
   const el = document.getElementById('rzFinal'); if (el && rzUltimo) el.innerHTML = rzMontarHorarioFinal(rzUltimo);
   const m = document.getElementById('rzMapaFinal'); if (m && rzUltimo) m.innerHTML = rzMontarMapaFinalCorpo(rzUltimo, true);   // o horário mudou: a mandala gerada ficou velha
+  rzRedesenharFatos();
 }
-function rzEscolherCandidato(i) { if (!rzUltimo || !rzUltimo.candidatos[i] || !rzUltimo.candidatos[i].horario) return; rzFinalSel = { idx: i, ajusteSeg: 0 }; rzRedesenharFinal(); }
-function rzAjustar(seg) { if (!rzFinalSel) return; rzFinalSel.ajusteSeg += seg; rzRedesenharFinal(); }
+function rzEscolherCandidato(i) { if (!rzUltimo || !rzUltimo.candidatos[i] || !rzUltimo.candidatos[i].horario) return; rzFinalSel = { idx: i, ajusteMin: 0 }; rzRedesenharFinal(); }
+function rzAjustar(min) { if (!rzFinalSel) return; rzFinalSel.ajusteMin += min; rzRedesenharFinal(); }
 if (typeof window !== 'undefined') { window.rzEscolherCandidato = rzEscolherCandidato; window.rzAjustar = rzAjustar; }
+
+/* ---------- Seção 5: fatos da vida × Circumambulação e Liberação, no horário final em teste ----------
+   Os fatos (data + o que aconteceu) vêm do cliente (formulário, ainda a fazer) ou são digitados aqui. Para cada um, a ferramenta mostra a linha da
+   Circumambulação (a partir do Ascendente do horário em teste) e os níveis da Liberação (pela Fortuna do horário em teste) que cobrem a data.
+   O cálculo é COPIADO de direcoes.js/liberacao.js (retificacao-calculos.js). Mudou o horário final → tudo se recalcula. */
+let rzFatos = [{ id: 1, data: '', texto: '', conf: '' }];   // ainda não é salvo
+let rzFatoSeq = 1;
+
+function rzDataBR(d) { return `${rzP2(d.getDate())}/${rzP2(d.getMonth() + 1)}/${d.getFullYear()}`; }
+/* relógio local do mapa (no fuso dele) a partir de ms UT, como Date comum (mesmo jeito que a Mandala guarda o momento) */
+function rzRelogioLocal(ms, fuso) { const d = new Date(ms + fuso * 3600000); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()); }
+
+/* tudo o que depende do horário em teste: Ascendente, Fortuna e as tabelas, calculadas uma vez por desenho */
+function rzContextoFatos(r) {
+  if (!rzFinalSel || typeof rqCircumambulacao !== 'function') return null;
+  const e = r.entrada, ms = rzMsFinal(r, rzFinalSel);
+  const asc = rzAngulos(ms, e.lat, e.lon).asc;
+  const cand = r.candidatos[rzFinalSel.idx];
+  const fortuna = (r.sol && r.lua) ? rzFortunaEm(ms, e.lat, e.lon, r.sol, r.lua).lon : cand.horario.fortuna;
+  const nasc = rzRelogioLocal(ms, e.fuso);
+  return { nasc, asc, fortuna, circ: rqCircumambulacao(asc, nasc, e.lat), signoZR: rzSignoDe(fortuna) };
+}
+
+function rzLinhasDoFato(ctx, dataStr) {
+  const partes = dataStr.split('-').map(Number);
+  const d = new Date(partes[0], partes[1] - 1, partes[2], 12, 0);
+  if (d < ctx.nasc) return `<div class="rz-linha-tecnica texto-apagado">Data anterior ao nascimento.</div>`;
+  const idade = rqIdade(ctx.nasc, d);
+  const lc = rqLinhaCircumambulacao(ctx.circ, d);
+  const circ = lc
+    ? `${rzAnguloHtml('asc', 18)} <strong>Circumambulação</strong> ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
+    : `${rzAnguloHtml('asc', 18)} <strong>Circumambulação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
+  const z = rqLiberacaoEm(ctx.signoZR, ctx.nasc, d);
+  const niv = (n, x) => x ? `<span class="texto-apagado">nível ${n}</span> ${rzSignoHtml(x.signIdx, 18)} <span class="texto-apagado">${rzDataBR(x.start)} a ${rzDataBR(x.end)}</span>` : '';
+  const lib = z
+    ? `${rzFortunaHtml(18)} <strong>Liberação</strong> ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''}`
+    : `${rzFortunaHtml(18)} <strong>Liberação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
+  return `${idade ? `<div class="texto-apagado" style="font-size:11.5px;">${idade}</div>` : ''}<div class="rz-linha-tecnica">${circ}</div><div class="rz-linha-tecnica">${lib}</div>`;
+}
+
+function rzMontarFatos(r) {
+  const ctx = rzContextoFatos(r);
+  if (!ctx) return `<div class="texto-apagado rz-fonte">Escolha um horário na seção 4.</div>`;
+  const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
+  const btnConf = (f, v, rot) => `<button type="button" class="btn-secondary" onclick="rzFatoConf(${f.id}, '${v}')" style="padding:3px 10px; font-size:12px; background:transparent; border:${f.conf === v ? 3 : 1}px solid var(--azul-egipcio-claro);">${rot}</button>`;
+  const linhas = ordenados.map(f => `
+    <div class="rz-fato">
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
+        <input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" title="Data do fato">
+        <button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>
+      </div>
+      <textarea placeholder="O que aconteceu nessa data" oninput="rzFatoTexto(${f.id}, this.value)">${escapeHtml(f.texto)}</textarea>
+      ${f.data ? rzLinhasDoFato(ctx, f.data) : '<div class="texto-apagado rz-fonte">Preencha a data para ver as linhas.</div>'}
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">Confirma?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
+    </div>`).join('');
+  const n = (v) => rzFatos.filter(f => f.conf === v).length;
+  const resumo = rzFatos.some(f => f.conf)
+    ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
+  return `
+    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Cada fato mostra a Circumambulação (a partir do Ascendente em ${rzPosHtml(ctx.asc, 16)}) e a Liberação pela Fortuna (em ${rzPosHtml(ctx.fortuna, 16)}) do horário em teste. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e as linhas se recalculam.</div>
+    ${linhas}
+    <div style="margin-top:8px;"><button type="button" class="btn-secondary" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
+    ${resumo}`;
+}
+function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if (el && rzUltimo) el.innerHTML = rzMontarFatos(rzUltimo); }
+function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
+function rzFatoNovo() { rzFatos.push({ id: ++rzFatoSeq, data: '', texto: '', conf: '' }); rzRedesenharFatos(); }
+function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push({ id: ++rzFatoSeq, data: '', texto: '', conf: '' }); rzRedesenharFatos(); }
+function rzFatoData(id, v) { const f = rzFatoPorId(id); if (f) { f.data = v; rzRedesenharFatos(); } }
+function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; }
+function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } }
+if (typeof window !== 'undefined') Object.assign(window, { rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
@@ -625,11 +705,9 @@ function rzMontarMapaFinal(r) { return `<div id="rzMapaFinal">${rzMontarMapaFina
 function rzMontarMapaFinalCorpo(r, velha) {
   if (!rzFinalSel) return '';
   if (velha && rzMapaFinalSvg) { URL.revokeObjectURL(rzMapaFinalSvg.url); rzMapaFinalSvg = null; }
-  const ms = rzMsFinal(r, rzFinalSel);
-  const minutos = Math.round(ms / 60000) * 60000;
-  const hhmm = rzFmtHora(minutos, r.entrada.fuso).slice(0, 5);
+  const hhmm = rzFmtHora(rzMsFinal(r, rzFinalSel), r.entrada.fuso).slice(0, 5);
   return `
-    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Gera a mandala no horário final (${hhmm}). O cálculo do céu usa hora e minuto, então os segundos do ajuste fino não entram nesta imagem. O mapa que está aberto no menu não muda.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Gera a mandala no horário final (${hhmm}). O mapa que está aberto no menu não muda.</div>
     <div style="margin-bottom:8px;"><button type="button" class="btn-secondary" id="rzBtnMandala" onclick="rzGerarMandalaFinal()">Gerar mandala no horário final</button></div>
     <div id="rzMandalaFinal">${rzMapaFinalSvg ? `<img src="${rzMapaFinalSvg.url}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">` : ''}</div>`;
 }
@@ -641,7 +719,7 @@ async function rzGerarMandalaFinal() {
   if (typeof executarCalculo !== 'function' || typeof desenharRodaSVG !== 'function') { alvo.innerHTML = rzMensagem('A mandala não está disponível nesta tela.'); return; }
   if (window.__calculosEmAndamento > 0) { alvo.innerHTML = rzMensagem('Espere o cálculo atual terminar e tente de novo.'); return; }
   const e = r.entrada;
-  const minutos = Math.round(rzMsFinal(r, sel) / 60000) * 60000;
+  const minutos = rzMsFinal(r, sel);
   const d = new Date(minutos + e.fuso * 3600000);          // relógio local do mapa, lido em UTC
   const salvo = { dados: currentCalculatedData, momento: currentMoment, geo: currentGeo, lotes: window.currentLotes, capa: window.ceuFundoCapaUltimo };
   if (btn) btn.disabled = true;
