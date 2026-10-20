@@ -18,6 +18,23 @@
   <script src="publico-tema.js?v=20261011b"></script>
   
   <link rel="stylesheet" href="publico.css?v=20261010c">
+  <style>
+    /* RETIFICAÇÃO: página 2 (fatos da vida). Campos no mesmo padrão do formulário: só a linha embaixo, nunca fundo próprio. */
+    textarea { width: 100%; min-height: 64px; padding: 8px 0; font-size: 14px; font-family: 'Montserrat', sans-serif; outline: none; resize: vertical; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; }
+    textarea:focus { border-bottom-color: var(--terracota); }
+    textarea::placeholder { color: var(--preto-tinta); opacity: .5; }
+    input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 36px; }
+    .pagina-indicador { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: -10px 0 16px 0; color: var(--azul-egipcio-escuro); }
+    .fato-linha { padding: 12px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+    .fato-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .fato-num { font-family: 'Cinzel', serif; font-weight: 800; font-size: 12px; letter-spacing: .14em; color: var(--terracota); }
+    .fato-remover { background: transparent; border: 0; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); padding: 4px 0; }
+    .fatos-nota { font-size: 12.5px; line-height: 1.6; margin: 0 0 12px 0; }
+    .fatos-contador { font-size: 13px; font-weight: 700; margin: 12px 0 4px 0; }
+    .fatos-salvo { font-size: 11.5px; opacity: .7; margin: 4px 0 12px 0; }
+    .fatos-link { margin-top: 18px; font-size: 12px; line-height: 1.6; }
+    .fatos-link input { font-size: 11px; margin: 4px 0 6px 0; }
+  </style>
 </head>
 <body>
 
@@ -27,6 +44,7 @@
   </div>
   <h2 id="formTitulo">Dados para Atendimento</h2>
   <p id="formAviso" style="display:none; text-align:center; font-size:13px; margin:-8px 0 16px 0;"></p>
+  <p id="indicadorPagina" class="pagina-indicador" style="display:none;"></p>
   <div id="clienteConhecido" style="display:none; text-align:center;">
     <p id="conhecidoTexto" style="margin:0 0 16px 0;"></p>
     <button type="button" class="btn-submit" id="btnConhecidoContinuar">Continuar</button>
@@ -68,6 +86,22 @@
     <button type="submit" class="btn-submit" id="btnSubmitForm">Enviar Informações</button>
     <button type="button" class="btn-secondary" id="btnVoltarA" style="display:none; width:100%; margin-top:10px;" onclick="voltarParaEtapaA()">Voltar para os meus dados</button>
   </form>
+
+  <!-- RETIFICAÇÃO — PÁGINA 2: fatos marcantes da vida. Fica com o cliente (rascunho neste aparelho) até ele enviar. -->
+  <div id="paginaFatos" style="display:none;">
+    <p class="fatos-nota" id="fatosIntro"></p>
+    <div id="fatosLista"></div>
+    <button type="button" class="btn-secondary" id="btnAddFato" style="width:100%; margin-top:6px;" onclick="adicionarFato()">+ Adicionar outro fato</button>
+    <div class="fatos-contador" id="fatosContador"></div>
+    <div class="fatos-salvo" id="fatosSalvo"></div>
+    <button type="button" class="btn-submit" id="btnEnviarFatos" onclick="enviarFatos()">Enviar fatos</button>
+    <div class="fatos-link" id="fatosLink">
+      Pode preencher com calma: o que você digitar fica guardado neste aparelho. Para continuar depois, abra este mesmo endereço:
+      <input type="text" id="fatosLinkUrl" readonly onclick="this.select()">
+      <button type="button" class="btn-secondary" style="width:100%;" onclick="copiarLinkFatos(this)">Copiar endereço</button>
+    </div>
+  </div>
+  <div id="fatosMensagem" style="display:none; text-align:center; font-size:14px; line-height:1.7; padding:10px 0;"></div>
 </div>
 
 <div class="form-powered-by">powered by Astro Hellenic</div>
@@ -214,6 +248,10 @@
   /* SINASTRIA (link com &servico=sinastria): duas etapas — A (quem paga) e B (pessoa analisada junto).
      Os dois mapas só são gravados juntos, no fim. */
   const modoSinastria = /sinastria/i.test(new URLSearchParams(window.location.search).get('servico') || ''); /* qualquer serviço com "sinastria" no nome abre o formulário duplo */
+  /* RETIFICAÇÃO (link com &servico=...retificação...): dois formulários. Página 1 = dados do mapa (grava na hora); página 2 = fatos da vida
+     (fica com o cliente, salvo neste aparelho, até ele enviar tudo). O fechamento de sempre (webhook, agenda, redirecionamento) só roda DEPOIS dos fatos.
+     Quem volta pelo endereço da página 2 (&p=2&m=...&t=...) cai direto nela. */
+  const modoRetificacao = !modoSinastria && (/retifica/i.test(new URLSearchParams(window.location.search).get('servico') || '') || new URLSearchParams(window.location.search).get('retificacao') === '1' || (new URLSearchParams(window.location.search).get('p') === '2' && !!new URLSearchParams(window.location.search).get('m')));
   let etapaSinastria = 'A';
   let dadosA = null, dadosB = null;
 
@@ -259,7 +297,7 @@
      Os dados do cliente nunca aparecem na tela: o servidor só devolve o código do cadastro. Qualquer erro = formulário normal. */
   document.addEventListener('DOMContentLoaded', async () => {
     const email = (urlParams.get('email') || '').trim();
-    if (modoSinastria || !ownerId || !/^[^\s@]+@[^\s@]+$/.test(email)) return;
+    if (modoSinastria || modoRetificacao || !ownerId || !/^[^\s@]+@[^\s@]+$/.test(email)) return;
     let idConhecido = null;
     try {
       const { data, error } = await supabaseClient.rpc('cliente_conhecido', { p_user: ownerId, p_email: email });
@@ -291,6 +329,134 @@
       if (v && el) el.value = v;
     });
   });
+
+  /* ---------- RETIFICAÇÃO: PÁGINA 2 (fatos da vida) ---------- */
+  const retif = { mapaId: null, token: null, nome: '', fatos: [], seq: 0, min: 5, max: null };
+  const escHtml = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const chaveRascunhoFatos = () => 'retifFatos:' + ownerId + ':' + retif.mapaId;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!modoRetificacao) return;
+    const ind = document.getElementById('indicadorPagina');
+    const m = urlParams.get('m'), t = urlParams.get('t');
+    if (urlParams.get('p') === '2' && m && t) { retif.mapaId = m; retif.token = t; await abrirPaginaFatos(); return; }
+    ind.textContent = 'Página 1 de 2 · Seus dados de nascimento';
+    ind.style.display = 'block';
+    const aviso = document.getElementById('formAviso');
+    aviso.textContent = 'Na página 2 você vai informar fatos marcantes da sua vida. Você poderá fazer isso com calma, no seu tempo.';
+    aviso.style.display = 'block';
+    document.getElementById('btnSubmitForm').innerText = 'Continuar para a página 2';
+  });
+
+  function irParaFatos(mapaId, token, nome) {
+    retif.mapaId = mapaId; retif.token = token; retif.nome = nome || '';
+    try { const u = new URL(window.location.href); u.searchParams.set('m', mapaId); u.searchParams.set('t', token); u.searchParams.set('p', '2'); window.history.replaceState(null, '', u.toString()); } catch (e) { /* sem isso o endereço não muda, mas a página segue */ }
+    abrirPaginaFatos();
+    window.scrollTo(0, 0);
+  }
+
+  async function abrirPaginaFatos() {
+    const msg = (html) => { const el = document.getElementById('fatosMensagem'); el.innerHTML = html; el.style.display = 'block'; };
+    document.getElementById('clientForm').style.display = 'none';
+    document.getElementById('clienteConhecido').style.display = 'none';
+    document.getElementById('formAviso').style.display = 'none';
+    document.getElementById('formTitulo').innerText = 'Retificação de horário';
+    const ind = document.getElementById('indicadorPagina');
+    ind.textContent = 'Página 2 de 2 · Fatos marcantes da sua vida'; ind.style.display = 'block';
+    // este link vale? já foi enviado?
+    try {
+      const { data: st } = await supabaseClient.rpc('status_fatos_retificacao', { p_user: ownerId, p_mapa: retif.mapaId, p_token: retif.token });
+      if (st && st.valido === false) { msg('Este endereço não é válido. Peça um novo endereço a quem te atende.'); return; }
+      if (st && st.enviado) { msg('Você já enviou os seus fatos. Obrigado!'); return; }
+    } catch (e) { /* sem rede ou sem a função: segue; o servidor confere de novo no envio */ }
+    // mínimo e máximo de fatos (configuração do astrólogo)
+    try {
+      const { data: cfg } = await supabaseClient.rpc('config_retificacao_formulario', { p_user: ownerId });
+      if (cfg) { retif.min = (cfg.min === null || cfg.min === undefined) ? 0 : Number(cfg.min); retif.max = (cfg.max === null || cfg.max === undefined) ? null : Number(cfg.max); }
+    } catch (e) { /* fica o padrão: no mínimo 5, sem máximo */ }
+    // rascunho deste aparelho
+    let rasc = null;
+    try { rasc = JSON.parse(localStorage.getItem(chaveRascunhoFatos()) || 'null'); } catch (e) { /* sem rascunho */ }
+    if (rasc && rasc.token === retif.token) { retif.fatos = Array.isArray(rasc.fatos) ? rasc.fatos : []; if (!retif.nome) retif.nome = rasc.nome || ''; }
+    retif.fatos.forEach(f => { retif.seq = Math.max(retif.seq, f.id || 0); });
+    const inicial = Math.max(1, Math.min(retif.min || 1, 8));
+    while (retif.fatos.length < inicial) retif.fatos.push({ id: ++retif.seq, data: '', texto: '' });
+    const faixa = (retif.min ? `no mínimo ${retif.min}` : '') + (retif.min && retif.max ? ' e ' : '') + (retif.max ? `no máximo ${retif.max}` : '');
+    document.getElementById('fatosIntro').innerHTML = 'Conte acontecimentos marcantes da sua vida: cada um com a data e o que aconteceu. Por exemplo, mudanças de cidade, casamentos e separações, nascimento de filhos, cirurgias, acidentes, grandes marcos de trabalho e de estudo. Quanto mais fatos, mais precisa fica a análise.' + (faixa ? ` Informe ${faixa} ${retif.max === 1 ? 'fato' : 'fatos'}.` : '') + ' Só envie quando tiver certeza de que está tudo preenchido.';
+    document.getElementById('fatosLinkUrl').value = window.location.href;
+    document.getElementById('paginaFatos').style.display = 'block';
+    renderFatos();
+  }
+
+  function fatosPreenchidos() { return retif.fatos.filter(f => f.data && (f.texto || '').trim()); }
+
+  function ordenarFatosPorData() {
+    retif.fatos.sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
+  }
+
+  function renderFatos() {
+    ordenarFatosPorData();
+    const lista = document.getElementById('fatosLista');
+    const hoje = new Date().toISOString().slice(0, 10);
+    lista.innerHTML = retif.fatos.map((f, i) => `
+      <div class="fato-linha">
+        <div class="fato-cab"><span class="fato-num">Fato ${i + 1}</span>${retif.fatos.length > 1 ? `<button type="button" class="fato-remover" onclick="removerFato(${f.id})">Remover</button>` : ''}</div>
+        <div class="form-group"><label>Data</label><input type="date" max="${hoje}" value="${escHtml(f.data)}" onchange="mudarDataFato(${f.id}, this.value)"></div>
+        <div class="form-group"><label>O que aconteceu</label><textarea placeholder="Conte o que aconteceu nessa data" oninput="mudarTextoFato(${f.id}, this.value)">${escHtml(f.texto)}</textarea></div>
+      </div>`).join('');
+    atualizarContadorFatos();
+  }
+
+  function atualizarContadorFatos() {
+    const n = fatosPreenchidos().length;
+    const faltam = retif.min ? Math.max(0, retif.min - n) : 0;
+    document.getElementById('fatosContador').textContent = `${n} ${n === 1 ? 'fato preenchido' : 'fatos preenchidos'}` + (retif.min ? ` (no mínimo ${retif.min})` : '') + (faltam ? ` · faltam ${faltam}` : '');
+    document.getElementById('btnEnviarFatos').disabled = (n === 0) || faltam > 0 || (retif.max && n > retif.max);
+    document.getElementById('btnAddFato').style.display = (retif.max && retif.fatos.length >= retif.max) ? 'none' : '';
+  }
+
+  function guardarRascunhoFatos() {
+    const el = document.getElementById('fatosSalvo');
+    try { localStorage.setItem(chaveRascunhoFatos(), JSON.stringify({ token: retif.token, nome: retif.nome, fatos: retif.fatos })); el.textContent = 'Rascunho guardado neste aparelho.'; }
+    catch (e) { el.textContent = 'Não foi possível guardar neste aparelho. Mantenha esta página aberta até enviar.'; }
+  }
+
+  function adicionarFato() { retif.fatos.push({ id: ++retif.seq, data: '', texto: '' }); guardarRascunhoFatos(); renderFatos(); }
+  function removerFato(id) { retif.fatos = retif.fatos.filter(f => f.id !== id); guardarRascunhoFatos(); renderFatos(); }
+  function mudarDataFato(id, v) { const f = retif.fatos.find(x => x.id === id); if (f) { f.data = v; guardarRascunhoFatos(); renderFatos(); } }
+  function mudarTextoFato(id, v) { const f = retif.fatos.find(x => x.id === id); if (f) { f.texto = v; guardarRascunhoFatos(); atualizarContadorFatos(); } }
+
+  function copiarLinkFatos(btn) {
+    const campo = document.getElementById('fatosLinkUrl');
+    campo.select();
+    try { navigator.clipboard.writeText(campo.value); } catch (e) { try { document.execCommand('copy'); } catch (e2) { /* o campo já está selecionado */ } }
+    const antes = btn.innerText; btn.innerText = 'Copiado'; setTimeout(() => { btn.innerText = antes; }, 1800);
+  }
+
+  async function enviarFatos() {
+    const prontos = fatosPreenchidos();
+    if (retif.min && prontos.length < retif.min) { alert(`Faltam fatos: informe pelo menos ${retif.min}.`); return; }
+    const incompletos = retif.fatos.filter(f => (f.data && !(f.texto || '').trim()) || (!f.data && (f.texto || '').trim()));
+    if (incompletos.length && !confirm('Alguns fatos estão sem data ou sem descrição e não serão enviados. Enviar mesmo assim?')) return;
+    if (!confirm(`Enviar ${prontos.length} ${prontos.length === 1 ? 'fato' : 'fatos'}? Depois de enviados, não dá para mudar.`)) return;
+    const btn = document.getElementById('btnEnviarFatos');
+    btn.disabled = true; btn.innerText = 'Enviando...';
+    try {
+      const { error } = await supabaseClient.rpc('enviar_fatos_retificacao', {
+        p_user: ownerId, p_mapa: retif.mapaId, p_token: retif.token,
+        p_fatos: prontos.map(f => ({ data: f.data, texto: f.texto.trim() }))
+      });
+      if (error) { alert('Não foi possível enviar: ' + error.message); return; }
+      try { localStorage.removeItem(chaveRascunhoFatos()); } catch (e) { /* tudo bem */ }
+      document.getElementById('paginaFatos').style.display = 'none';
+      await concluirEnvio(retif.mapaId, retif.nome);
+    } catch (err) {
+      alert('Erro de conexão ao enviar. Seu rascunho continua guardado: tente de novo.');
+    } finally {
+      btn.disabled = false; btn.innerText = 'Enviar fatos';
+      if (document.getElementById('paginaFatos').style.display !== 'none') atualizarContadorFatos();
+    }
+  }
 
   /* Valida os campos da etapa atual; devolve os dados já normalizados, ou null se algo estiver errado. */
   function lerEtapaAtual() {
@@ -421,13 +587,23 @@
             p_whatsapp: dadosA.whatsapp, p_email: dadosA.email,
             p_nome_b: dadosB.nome, p_data_b: dadosB.data, p_hora_b: dadosB.hora, p_cidade_b: dadosB.cidade, p_lat_b: dadosB.lat, p_lon_b: dadosB.lon
           })
+        : modoRetificacao
+        ? await supabaseClient.rpc('registrar_cliente_retificacao_passo1', {
+            p_user: payload.user_id, p_nome: payload.nome, p_data: payload.data_nascimento, p_hora: payload.hora_nascimento,
+            p_cidade: payload.cidade, p_lat: payload.latitude, p_lon: payload.longitude,
+            p_whatsapp: payload.whatsapp, p_email: payload.email
+          })
         : await supabaseClient.rpc('registrar_cliente_formulario', {
             p_user: payload.user_id, p_nome: payload.nome, p_data: payload.data_nascimento, p_hora: payload.hora_nascimento,
             p_cidade: payload.cidade, p_lat: payload.latitude, p_lon: payload.longitude,
             p_whatsapp: payload.whatsapp, p_email: payload.email
           });
       const { data: novoClienteId, error } = resposta;
-      if (!error) {
+      if (!error && modoRetificacao) {
+        const r = (typeof novoClienteId === 'string') ? JSON.parse(novoClienteId) : novoClienteId;
+        fecharConfirmacao();
+        irParaFatos(String(r.id), String(r.token), payload.nome);
+      } else if (!error) {
         await concluirEnvio(novoClienteId, payload.nome);
       } else {
         alert('Erro ao enviar dados: ' + error.message);
