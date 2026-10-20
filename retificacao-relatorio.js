@@ -139,12 +139,13 @@ function rzRelMontarPaginas() {
   const rotConf = { sim: 'Sim', parte: 'Em parte', nao: 'Não' };
   const cartoes = ordenados.map(f => {
     const d = f.data ? rzDataDoFato(f) : null;
+    const dFim = d ? rzDataFimDoFato(f) : null;
     const antes = d && d < ctx.nasc;
-    const linhas = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], true)}</div>`).join('');
-    return `<div class="rz-fato-rel"><div><span class="rz-num">${numero[f.id]}</span> <strong>${d ? rzDataBR(d) : 'sem data'}</strong>${d && !antes ? ` <span class="texto-apagado">${rqIdade(ctx.nasc, d)}</span>` : ''}</div>${f.texto ? `<div class="rz-texto">${escapeHtml(f.texto)}</div>` : ''}${antes ? '<div class="texto-apagado">Data anterior ao nascimento.</div>' : ''}${linhas}<div class="texto-apagado" style="font-size:11.5px; margin-top:3px;">Confirma: <strong>${f.conf ? rotConf[f.conf] : '—'}</strong></div></div>`;
+    const linhas = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], true, dFim)}</div>`).join('');
+    return `<div class="rz-fato-rel"><div><span class="rz-num">${numero[f.id]}</span> <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? ` <span class="texto-apagado">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}</div>${f.texto ? `<div class="rz-texto">${escapeHtml(f.texto)}</div>` : ''}${antes ? '<div class="texto-apagado">Data anterior ao nascimento.</div>' : ''}${linhas}<div class="texto-apagado" style="font-size:11.5px; margin-top:3px;">Confirma: <strong>${f.conf ? rotConf[f.conf] : '—'}</strong></div></div>`;
   });
   const grupos = new Map();
-  ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push({ n: numero[f.id], d: rzDataDoFato(f) }); }); });
+  ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push(rzMarcadorDoFato(f, numero[f.id])); }); });
   const tabelasTecnicas = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1))
     .flatMap(g => g.t.tipo === 'circ' ? rzRelPautasCirc(ctx, g.t.chave, g.fatos) : rzRelTabelaDaTela(rzMontarTabelaZR(ctx, g.t.chave, g.fatos)));
   const nSim = ordenados.filter(f => f.conf === 'sim').length, nParte = ordenados.filter(f => f.conf === 'parte').length, nNao = ordenados.filter(f => f.conf === 'nao').length;

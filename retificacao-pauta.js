@@ -105,19 +105,41 @@ function rzPautaSvg(opc) {
     rowHtml += `<text x="${xTextoNatal}" y="${yBaseline + Math.round(21 * k)}" font-size="7" font-weight="700" fill="var(--terracota)" text-anchor="${ancoraNatal}">${rqDataBR(birthDate)}</text>`;
   }
 
-  // Marca de cada FATO (no lugar do cursor do "hoje"): linha tracejada, número no meio da régua e, com `comTexto`, idade e data
+  // Marca de cada FATO (no lugar do cursor do "hoje"): data = linha tracejada + número assentado na régua; período = o mesmo número no começo e uma faixa ocre até o fim
+  const cyM = yBaseline - 6.5, rM = 10.5;
+  const topM = yOffset + Math.round(10 * k), bottomM = yOffset + boxHeight - Math.round(6 * k);
+  const xDe = (dd) => {   // posição (x) de uma data dentro DESTA passagem; null se nenhum termo dela cobre a data
+    for (const term of passagem.terms) {
+      if (term.startDate && term.endDate && dd >= term.startDate && dd < term.endDate) {
+        const frac = Math.max(0, Math.min(1, (dd.getTime() - term.startDate.getTime()) / (term.endDate.getTime() - term.startDate.getTime())));
+        return x0 + ((term.termStartDeg + frac * (term.termEndDeg - term.termStartDeg)) * scale);
+      }
+    }
+    return null;
+  };
+  const pontilhado = (xM, y1, y2) => `<line x1="${xM}" y1="${y1}" x2="${xM}" y2="${y2}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+  const selo = (xM, n) => {   // o tracejado não passa por dentro do círculo (competiria com o número)
+    let h = pontilhado(xM, topM, cyM - rM) + pontilhado(xM, cyM + rM, bottomM);
+    h += `<circle cx="${xM}" cy="${cyM}" r="${rM}" fill="none" stroke="var(--ocre)" stroke-width="2"/>`;
+    h += `<text x="${xM}" y="${yBaseline - 1.5}" font-size="14" font-weight="800" fill="var(--terracota)" text-anchor="middle">${n}</text>`;   // o número fica EM CIMA da régua (como escrito à mão)
+    return h;
+  };
   marcadores.forEach(m => {
+    if (m.dFim) {
+      let xs = xDe(m.d), xe = xDe(m.dFim);
+      const comecaAqui = xs !== null, terminaAqui = xe !== null;
+      if (xs === null) xs = x0;
+      if (xe === null) xe = x1;
+      const yFaixa = yBaseline - 3;
+      rowHtml += `<line x1="${comecaAqui ? xs + rM : xs}" y1="${yFaixa}" x2="${xe}" y2="${yFaixa}" stroke="var(--ocre)" stroke-width="3" stroke-linecap="round"/>`;
+      if (terminaAqui) rowHtml += `<line x1="${xe}" y1="${yFaixa - 8}" x2="${xe}" y2="${yFaixa + 8}" stroke="var(--ocre)" stroke-width="3" stroke-linecap="round"/>`;
+      if (comecaAqui) rowHtml += selo(xs, m.n);
+      return;
+    }
     passagem.terms.forEach(term => {
       if (!(term.startDate && term.endDate && m.d >= term.startDate && m.d < term.endDate)) return;
-      const frac = Math.max(0, Math.min(1, (m.d.getTime() - term.startDate.getTime()) / (term.endDate.getTime() - term.startDate.getTime())));
-      const xM = x0 + ((term.termStartDeg + frac * (term.termEndDeg - term.termStartDeg)) * scale);
-      const top = yOffset + Math.round(10 * k), bottom = yOffset + boxHeight - Math.round(6 * k);
-      // o tracejado não passa por dentro do círculo (competiria com o número): fica só acima e abaixo dele
-      const cyM = yBaseline - 6.5, rM = 10.5;
-      rowHtml += `<line x1="${xM}" y1="${top}" x2="${xM}" y2="${cyM - rM}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-      rowHtml += `<line x1="${xM}" y1="${cyM + rM}" x2="${xM}" y2="${bottom}" stroke="var(--azul-egipcio-claro)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-      rowHtml += `<circle cx="${xM}" cy="${yBaseline - 6.5}" r="10.5" fill="none" stroke="var(--ocre)" stroke-width="2"/>`;
-      rowHtml += `<text x="${xM}" y="${yBaseline - 1.5}" font-size="14" font-weight="800" fill="var(--terracota)" text-anchor="middle">${m.n}</text>`;   // o número fica EM CIMA da régua (como escrito à mão); o círculo desce um pouco abaixo da linha
+      const xM = xDe(m.d);
+      rowHtml += selo(xM, m.n);
       if (opc.comTexto) {
         const LARG_TEXTO = 80, meiaIconeTermo = Math.max(10, termHeight - 6) / 2 + 2;
         const ocupados = passagem.terms.map(t => { const xc = x0 + ((t.termStartDeg + t.termEndDeg) / 2) * scale; return [xc - meiaIconeTermo, xc + meiaIconeTermo]; });
@@ -146,17 +168,24 @@ function rzPautaDoFato(ctx, chave, d, n) {
   return rzPautaSvg({ passagem: passagens[i], ehPrimeira: i === 0, birthDate: ctx.nasc, natalDegInSign: ctx.pontos[chave] !== undefined ? ctx.pontos[chave] % 30 : ctx.asc % 30, raios: ctx.raios(chave), marcadores: [{ n, d }], comTexto: true });
 }
 
-/* As pautas do primeiro ao último fato (uma lista de <svg>), cada uma com o número dos fatos que caem nela. fatos: [{ n, d }] */
+/* As pautas do primeiro ao último fato (uma lista de <svg>), cada uma com o número dos fatos que caem nela. Período: passa por todas as pautas entre o começo e o fim.
+   fatos: [{ n, d, dFim? }] */
 function rzPautasDosFatos(ctx, chave, fatos) {
   if (typeof rzPautaSvg !== 'function' || typeof getSignSVGDir !== 'function') return [];
   const passagens = rqPassagens(ctx.circ(chave));
-  const onde = fatos.map(f => ({ f, i: passagens.findIndex(p => p.terms.some(t => t.startDate && t.endDate && f.d >= t.startDate && f.d < t.endDate)) })).filter(x => x.i >= 0);
+  const idx = (dd) => passagens.findIndex(p => p.terms.some(t => t.startDate && t.endDate && dd >= t.startDate && dd < t.endDate));
+  const onde = fatos.map(f => {
+    const i = idx(f.d);
+    let j = -1;
+    if (f.dFim) { j = idx(f.dFim); if (j < 0) j = passagens.length - 1; if (j < i) j = i; }
+    return { f, i, j };
+  }).filter(x => x.i >= 0);
   if (!onde.length) return [];
-  const de = Math.min.apply(null, onde.map(x => x.i)), ate = Math.max.apply(null, onde.map(x => x.i));
+  const de = Math.min.apply(null, onde.map(x => x.i)), ate = Math.max.apply(null, onde.map(x => x.j >= 0 ? x.j : x.i));
   const natal = ctx.pontos[chave] !== undefined ? ctx.pontos[chave] % 30 : ctx.asc % 30;
   const out = [];
   for (let i = de; i <= ate; i++) {
-    out.push(rzPautaSvg({ passagem: passagens[i], ehPrimeira: i === 0, birthDate: ctx.nasc, natalDegInSign: natal, raios: ctx.raios(chave), marcadores: onde.filter(x => x.i === i).map(x => x.f), comTexto: false }));
+    out.push(rzPautaSvg({ passagem: passagens[i], ehPrimeira: i === 0, birthDate: ctx.nasc, natalDegInSign: natal, raios: ctx.raios(chave), marcadores: onde.filter(x => i >= x.i && i <= (x.j >= 0 ? x.j : x.i)).map(x => x.f), comTexto: false }));
   }
   return out;
 }

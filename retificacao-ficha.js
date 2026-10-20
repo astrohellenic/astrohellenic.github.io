@@ -25,7 +25,7 @@ function rzTrabalhoParaSalvar() {
     origemHorario: rzOrigemHorario,
     conclusao: rzConclusao,
     anexos: rzAnexos,
-    fatos: rzFatos.map(f => ({ id: f.id, data: f.data, texto: f.texto, conf: f.conf, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
+    fatos: rzFatos.map(f => ({ id: f.id, data: f.data, ate: f.ate, periodo: !!f.periodo, texto: f.texto, conf: f.conf, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
   };
 }
 
@@ -43,12 +43,12 @@ function rzAplicarFicha(r, linha) {
     rzAnexos = Array.isArray(t.anexos) ? t.anexos : [];
     if (Array.isArray(t.fatos) && t.fatos.length) {
       rzFatos = t.fatos.map(f => ({
-        id: ++rzFatoSeq, data: f.data || '', texto: f.texto || '', conf: f.conf || '',
+        id: ++rzFatoSeq, data: f.data || '', ate: f.ate || '', periodo: !!f.periodo && !!f.ate, texto: f.texto || '', conf: f.conf || '',
         tecnicas: (Array.isArray(f.tecnicas) && f.tecnicas.length ? f.tecnicas : []).map(x => ({ tipo: x.tipo === 'zr' ? 'zr' : 'circ', chave: x.chave }))
       }));
     }
   } else if (Array.isArray(linha.fatos) && linha.fatos.length) {
-    rzFatos = linha.fatos.map(f => { const n = rzFatoVazio(++rzFatoSeq); n.data = f.data || ''; n.texto = f.texto || ''; return n; });
+    rzFatos = linha.fatos.map(f => { const n = rzFatoVazio(++rzFatoSeq); n.data = f.data || ''; if (f.ate) { n.ate = f.ate; n.periodo = true; } n.texto = f.texto || ''; return n; });
   }
 }
 

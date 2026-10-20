@@ -402,6 +402,8 @@
       <div class="fato-linha">
         <div class="fato-cab"><span class="fato-num">Fato ${i + 1}</span>${retif.fatos.length > 1 ? `<button type="button" class="fato-remover" onclick="removerFato(${f.id})">Remover</button>` : ''}</div>
         <div class="form-group"><label>Data</label><input type="date" max="${hoje}" value="${escHtml(f.data)}" onchange="mudarDataFato(${f.id}, this.value)" onblur="dataFatoFechou()"></div>
+        <button type="button" class="fato-remover" style="margin:0 0 6px 0;${f.periodo ? ' text-decoration:underline;' : ''}" onclick="alternarPeriodoFato(${f.id})">${f.periodo ? 'Foi num dia só' : 'Foi um período (de uma data a outra)'}</button>
+        ${f.periodo ? `<div class="form-group"><label>Até</label><input type="date" max="${hoje}" min="${escHtml(f.data)}" value="${escHtml(f.ate || '')}" onchange="mudarAteFato(${f.id}, this.value)" onblur="dataFatoFechou()"></div>` : ''}
         <div class="form-group"><label>O que aconteceu</label><textarea placeholder="Conte o que aconteceu nessa data" oninput="mudarTextoFato(${f.id}, this.value)">${escHtml(f.texto)}</textarea></div>
       </div>`).join('');
     atualizarContadorFatos();
@@ -431,6 +433,12 @@
     dataFatoTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') renderFatos(); }, 1200);
   }
   function dataFatoFechou() { clearTimeout(dataFatoTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') renderFatos(); }, 150); }
+  function alternarPeriodoFato(id) { const f = retif.fatos.find(x => x.id === id); if (f) { f.periodo = !f.periodo; if (!f.periodo) f.ate = ''; guardarRascunhoFatos(); renderFatos(); } }
+  function mudarAteFato(id, v) {
+    const f = retif.fatos.find(x => x.id === id); if (f) { f.ate = v; guardarRascunhoFatos(); }
+    clearTimeout(dataFatoTimer);
+    dataFatoTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') renderFatos(); }, 1200);
+  }
   function mudarTextoFato(id, v) { const f = retif.fatos.find(x => x.id === id); if (f) { f.texto = v; guardarRascunhoFatos(); atualizarContadorFatos(); } }
 
   function copiarLinkFatos(btn) {
@@ -443,6 +451,7 @@
   async function enviarFatos() {
     const prontos = fatosPreenchidos();
     if (retif.min && prontos.length < retif.min) { alert(`Faltam fatos: informe pelo menos ${retif.min}.`); return; }
+    if (retif.fatos.some(f => f.periodo && f.ate && f.ate < f.data)) { alert('Num dos fatos, a data final está antes da data de começo.'); return; }
     const incompletos = retif.fatos.filter(f => (f.data && !(f.texto || '').trim()) || (!f.data && (f.texto || '').trim()));
     if (incompletos.length && !confirm('Alguns fatos estão sem data ou sem descrição e não serão enviados. Enviar mesmo assim?')) return;
     if (!confirm(`Enviar ${prontos.length} ${prontos.length === 1 ? 'fato' : 'fatos'}? Depois de enviados, não dá para mudar.`)) return;
@@ -451,7 +460,7 @@
     try {
       const { error } = await supabaseClient.rpc('enviar_fatos_retificacao', {
         p_user: ownerId, p_mapa: retif.mapaId, p_token: retif.token,
-        p_fatos: prontos.map(f => ({ data: f.data, texto: f.texto.trim() }))
+        p_fatos: prontos.map(f => (f.periodo && f.ate && f.ate > f.data) ? { data: f.data, ate: f.ate, texto: f.texto.trim() } : { data: f.data, texto: f.texto.trim() })
       });
       if (error) { alert('Não foi possível enviar: ' + error.message); return; }
       try { localStorage.removeItem(chaveRascunhoFatos()); } catch (e) { /* tudo bem */ }

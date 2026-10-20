@@ -666,7 +666,7 @@ const RZ_AFETAS = ['ASC', 'Sun', 'Moon', 'Syz'].concat(RZ_LOTES);   // o luminar
 let rzDiurnoAtual = true;         // o horário em teste é diurno? (decide o luminar da seita)
 
 /* Um fato novo já nasce com as duas técnicas mais usadas (Circumambulação pelo Ascendente, Liberação pela Fortuna); o astrólogo troca ou remove. */
-function rzFatoVazio(id) { return { id, data: '', texto: '', conf: '', tecnicas: [{ tipo: 'circ', chave: 'ASC' }, { tipo: 'zr', chave: 'fortune' }] }; }
+function rzFatoVazio(id) { return { id, data: '', ate: '', periodo: false, texto: '', conf: '', tecnicas: [{ tipo: 'circ', chave: 'ASC' }, { tipo: 'zr', chave: 'fortune' }] }; }
 let rzFatos = [rzFatoVazio(1)];   // ainda não é salvo
 let rzFatoSeq = 1;
 
@@ -694,6 +694,16 @@ function rzDataBR(d) { return `${rzP2(d.getDate())}/${rzP2(d.getMonth() + 1)}/${
 /* relógio local do mapa (no fuso dele) a partir de ms UT, como Date comum (mesmo jeito que a Mandala guarda o momento) */
 function rzRelogioLocal(ms, fuso) { const d = new Date(ms + fuso * 3600000); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()); }
 function rzDataDoFato(f) { const q = f.data.split('-').map(Number); return new Date(q[0], q[1] - 1, q[2], 12, 0); }
+/* fim do período (null se o fato é de um dia só ou ainda não tem a segunda data; nunca antes do começo) */
+function rzDataFimDoFato(f) {
+  if (!f.periodo || !f.ate || !f.data) return null;
+  const q = f.ate.split('-').map(Number), e = new Date(q[0], q[1] - 1, q[2], 12, 0);
+  return e > rzDataDoFato(f) ? e : null;
+}
+/* o fato como marcador das tabelas/pautas */
+function rzMarcadorDoFato(f, n) { return { n, d: rzDataDoFato(f), dFim: rzDataFimDoFato(f) }; }
+/* para as tabelas por data: um período vira duas entradas (começo e fim) com o mesmo número */
+function rzExpandirPeriodos(fatos) { return fatos.flatMap(x => x.dFim ? [{ n: x.n, d: x.d }, { n: x.n, d: x.dFim }] : [x]); }
 
 /* tudo o que depende do horário em teste: pontos (Asc, Sol, Lua, sizígia, lotes), nascimento e, sob demanda, as tabelas de cada técnica */
 function rzContextoFatos(r) {
@@ -723,7 +733,12 @@ function rzContextoFatos(r) {
 }
 
 /* a linha de UMA técnica de UM fato (data d) */
-function rzLinhaTecnica(ctx, t, d, n, paraRelatorio) {
+function rzLinhaTecnica(ctx, t, d, n, paraRelatorio, dFim) {
+  if (dFim) {
+    const um = (dd, rot) => `<div><span class="texto-apagado">${rot}</span> ${rzLinhaTecnica(ctx, t, dd, n, false)}</div>`;
+    const ico0 = rzIconeAfeta(t.chave, 18);
+    return `${paraRelatorio ? `${ico0} <strong>${t.tipo === 'circ' ? 'Circumambulação' : 'Liberação'}</strong>` : ''}${um(d, 'No começo')}${um(dFim, 'No fim')}`;
+  }
   const ico = rzIconeAfeta(t.chave, 18);
   const cab = (nomeTec) => paraRelatorio ? `${ico} <strong>${nomeTec}</strong>` : '';     // na tela o seletor já mostra o ícone e o nome: não repetir
   if (t.tipo === 'circ') {
@@ -758,22 +773,25 @@ function rzMontarFatos(r) {
   };
   const linhas = ordenados.map(f => {
     const d = f.data ? rzDataDoFato(f) : null;
+    const dFim = d ? rzDataFimDoFato(f) : null;
     const antes = d && d < ctx.nasc;
     const tecnicas = f.tecnicas.map((t, k) => `
       <div class="rz-tec">
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">${seletor(f, k, t)}<span style="font-size:13px; font-weight:700;">${t.tipo === 'circ' ? 'Circumambulação' : 'Liberação'}</span>
           <button type="button" class="botao-icone" onclick="rzTecRemover(${f.id}, ${k})" title="Tirar esta técnica do fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button></div>
-        ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id])}</div>`}
+        ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], false, dFim)}</div>`}
       </div>`).join('');
     return `
     <div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
+        <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}" onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
+        ${f.periodo ? `<span style="color:var(--azul-egipcio-escuro);">até</span><span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Fim do período"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.ate}" onchange="rzFatoAte(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>` : ''}
         <button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>
       </div>
       <textarea placeholder="O que aconteceu nessa data" oninput="rzFatoTexto(${f.id}, this.value)">${escapeHtml(f.texto)}</textarea>
-      ${!d ? '<div class="texto-apagado rz-fonte">Preencha a data para ver as linhas.</div>' : antes ? '<div class="rz-linha-tecnica texto-apagado">Data anterior ao nascimento.</div>' : `<div class="texto-apagado" style="font-size:11.5px;">${rqIdade(ctx.nasc, d)}</div>`}
+      ${!d ? '<div class="texto-apagado rz-fonte">Preencha a data para ver as linhas.</div>' : antes ? '<div class="rz-linha-tecnica texto-apagado">Data anterior ao nascimento.</div>' : `<div class="texto-apagado" style="font-size:11.5px;">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</div>`}
       ${tecnicas}
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
         <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'circ')">+ Circumambulação</button>
@@ -784,7 +802,7 @@ function rzMontarFatos(r) {
   }).join('');
   // uma tabela por técnica + ponto de partida usados, com os fatos que a usam
   const grupos = new Map();
-  ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push({ n: numero[f.id], d: rzDataDoFato(f) }); }); });
+  ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push(rzMarcadorDoFato(f, numero[f.id])); }); });
   const ordemG = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1));
   const tabelas = ordemG.map(g => g.t.tipo === 'circ' ? rzMontarPautasCirc(ctx, g.t.chave, g.fatos) : rzMontarTabelaZR(ctx, g.t.chave, g.fatos)).join('');
   const n = (v) => rzFatos.filter(f => f.conf === v).length;
@@ -809,6 +827,7 @@ function rzMontarPautasCirc(ctx, chave, fatos) {
 
 /* Circumambulação a partir de um ponto: os períodos (termo a termo) do primeiro ao último fato, com o número de cada fato onde cai. fatos: [{ n, d }] */
 function rzMontarTabelaCirc(ctx, chave, fatos) {
+  fatos = rzExpandirPeriodos(fatos);
   const linhas = ctx.circ(chave).filter(l => l.startDate && l.endDate);
   const caiem = fatos.map(x => ({ n: x.n, i: linhas.findIndex(l => x.d >= l.startDate && x.d < l.endDate) })).filter(x => x.i >= 0);
   if (!caiem.length) return '';
@@ -823,6 +842,7 @@ function rzMontarTabelaCirc(ctx, chave, fatos) {
 
 /* Liberação a partir de um lote: níveis 1, 2 e 3 só nos ramos onde há fato. O número do fato aparece na linha do nível mais fundo em que ele cai. */
 function rzMontarTabelaZR(ctx, lote, fatos) {
+  fatos = rzExpandirPeriodos(fatos);
   const l1 = []; let ini = new Date(ctx.nasc);
   for (let i = 0; i < 12; i++) { const sign = (ctx.signoZR(lote) + i) % 12; const fim = rqFimZR(ini, RQ_ZR_ANOS[sign]); l1.push({ signIdx: sign, start: new Date(ini), end: fim }); ini = new Date(fim); }
   const faixa = (lista, fs) => {
@@ -864,13 +884,20 @@ function rzFatoData(id, v) {
   clearTimeout(rzDataTimer);
   rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
 }
+function rzFatoAte(id, v) {
+  const f = rzFatoPorId(id); if (f) f.ate = v;
+  rzMudou();
+  clearTimeout(rzDataTimer);
+  rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
+}
+function rzFatoPeriodo(id) { const f = rzFatoPorId(id); if (f) { f.periodo = !f.periodo; rzRedesenharFatos(); } rzMudou(); }
 function rzFatoDataFechou() { clearTimeout(rzDataTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 150); }
 function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; rzMudou(); }
 function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } rzMudou(); }
 function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } rzMudou(); }
 function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }
 function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } rzMudou(); }
-if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
+if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoAte, rzFatoPeriodo, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
