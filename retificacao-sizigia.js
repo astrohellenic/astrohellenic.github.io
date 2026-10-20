@@ -727,9 +727,7 @@ function rzLinhaTecnica(ctx, t, d, n, paraRelatorio) {
   const ico = rzIconeAfeta(t.chave, 18);
   const cab = (nomeTec) => paraRelatorio ? `${ico} <strong>${nomeTec}</strong>` : '';     // na tela o seletor já mostra o ícone e o nome: não repetir
   if (t.tipo === 'circ') {
-    // a "linha do signo" da ferramenta (pauta), com a marca do fato; sem os ajudantes de desenho, cai no texto
-    const pauta = (typeof rzPautaDoFato === 'function') ? rzPautaDoFato(ctx, t.chave, d, n) : null;
-    if (pauta) return `<div style="width:100%;">${paraRelatorio ? `<div style="font-size:12px; margin-bottom:2px;">${ico} <strong>Circumambulação</strong> <span class="texto-apagado">(${RZ_AFETA_NOME[t.chave]})</span></div>` : ''}${pauta}</div>`;
+    // por fato: o signo e o termo em texto (como a Liberação); o desenho da linha do signo (pauta) fica na Visão geral
     const lc = rqLinhaCircumambulacao(ctx.circ(t.chave), d);
     return lc
       ? `${cab('Circumambulação')} ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
