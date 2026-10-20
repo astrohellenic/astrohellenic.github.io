@@ -342,6 +342,8 @@ if (typeof module !== 'undefined' && module.exports) {
    TELA — sem formulário: calcula sozinha a partir do mapa que está em tela (a Mandala)
    ========================================== */
 let rzUltimo = null;              // último resultado calculado
+let rzFinalSel = null;            // horário final do relatório: { idx (em rzUltimo.candidatos), ajusteSeg (ajuste fino, em segundos) }
+let rzOrigemHorario = '';         // 'origem do horário' (texto do astrólogo; ainda não é salvo)
 
 function rzP2(n) { return String(n).padStart(2, '0'); }
 
@@ -438,6 +440,7 @@ async function rzExecutar() {
   try {
     const r = await rzCalcular(e, rzMotorHttp(e.lat, e.lon));
     rzUltimo = r;
+    rzFinalSel = rzSelecaoPadrao(r);
     area.innerHTML = rzMontarResultado(r);
   } catch (err) {
     console.error(err);
@@ -520,7 +523,7 @@ function rzMontarResultado(r) {
     </table></div>`;
   const blocoVotos = `
     <hr class="divisa">
-    <details>
+    <details open>
       <summary>Contagem de votos</summary>
       <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. O ponto da sizígia está em ${rzPosHtml(s.lon, 16)}. Cada planeta recebe um voto por dignidade que tem nesse ponto: triplicidade, domicílio, exaltação e termo. Na triplicidade vale qualquer dos três senhores, pela tabela de Doroteu. Recebe mais um voto se aspecta o ponto. Ganha quem tem mais votos. No empate valem todos os empatados.</div>
       ${tabela}
@@ -536,8 +539,77 @@ function rzMontarResultado(r) {
       <strong>Fora do escopo.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio), porque o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente, e o cálculo da concepção, que é quase circular e não distingue horários.
     </div>`;
 
-  return aviso + blocoHorarios + blocoSizigia + blocoVotos + rodape;
+  // Ordem do relatório-modelo (artefato "Relatório de retificação pela sizígia"); nada que a ferramenta já mostrava foi retirado
+  const tit = (n, t) => `<h3 class="titulo-secao" style="margin-top:18px;">${n}. ${t}</h3>`;
+  const sem = (h) => h.replace('<hr class="divisa">', '').replace(/<h3 class="titulo-secao">[^<]*<\/h3>/, '');
+  return aviso
+    + tit(1, 'Dados de entrada') + rzMontarDadosEntrada(r)
+    + '<hr class="divisa">' + tit(2, 'A sizígia pré-natal') + sem(blocoSizigia)
+    + '<hr class="divisa">' + tit(3, 'O cálculo') + blocoVotos.replace('<hr class="divisa">', '') + blocoHorarios
+    + '<hr class="divisa">' + tit(4, 'Horário retificado') + '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div>'
+    + rodape;
 }
+
+/* ---------- Seção 1: dados de entrada (tudo vem do mapa em tela, menos a origem do horário) ---------- */
+function rzMontarDadosEntrada(r) {
+  const e = r.entrada;
+  const nome = (typeof currentSubjectName !== 'undefined' && currentSubjectName) ? currentSubjectName : '';
+  const linha = (rot, val) => `<tr><td><strong>${rot}</strong></td><td>${val}</td></tr>`;
+  return `<div class="rz-rolagem"><table class="tabela-epoca">
+    ${linha('Nome', escapeHtml(nome) || '—')}
+    ${linha('Data de nascimento', `${rzP2(e.dia)}/${rzP2(e.mes)}/${e.ano}`)}
+    ${linha('Cidade', escapeHtml(e.cidade || '—'))}
+    ${linha('Horário original', `${rzP2(e.hora)}:${rzP2(e.min)} <span class="texto-apagado">(${rzFmtFuso(e.fuso)})</span>`)}
+    ${linha('Origem do horário', `<input type="text" id="rzOrigemHorario" value="${escapeHtml(rzOrigemHorario)}" placeholder="certidão, memória da família, hospital que arredondou..." oninput="rzOrigemHorario = this.value" style="width:100%;">`)}
+  </table></div>`;
+}
+
+/* ---------- Seção 4: horário final = um candidato + ajuste fino ---------- */
+function rzSelecaoPadrao(r) {
+  const comHorario = (c) => c.horario;
+  let idx = r.candidatos.findIndex(c => c.regra === 'ptolomeu' && comHorario(c));
+  if (idx < 0) idx = r.candidatos.findIndex(comHorario);
+  return idx < 0 ? null : { idx, ajusteSeg: 0 };
+}
+function rzMsFinal(r, sel) { return r.candidatos[sel.idx].horario.ms + sel.ajusteSeg * 1000; }
+
+function rzMontarHorarioFinal(r) {
+  const sel = rzFinalSel;
+  if (!sel) return `<div class="texto-apagado" style="font-size:12.5px;">Nenhum candidato com horário nesse mapa.</div>`;
+  const fuso = r.entrada.fuso, e = r.entrada;
+  const nomeRegra = { ptolomeu: 'Ptolomeu e Hefestião', valens: 'Valens' };
+  const opcoes = r.candidatos.map((c, i) => c.horario ? `
+    <label style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; cursor:pointer;">
+      <input type="radio" name="rzCand" ${i === sel.idx ? 'checked' : ''} onchange="rzEscolherCandidato(${i})">
+      ${rzPlanetaRetroHtml(r, c.id, 20)} <span class="texto-apagado">${nomeRegra[c.regra]}</span> ${rzAnguloHtml(c.tipo, 22)} <strong>${rzFmtHora(c.horario.ms, fuso)}</strong>
+    </label>` : '').join('');
+  const ms = rzMsFinal(r, sel);
+  const a = rzAngulos(ms, e.lat, e.lon);
+  const orig = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000;
+  const dif = Math.round((ms - orig) / 60000);
+  const difTxt = dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} min`;
+  const bt = (rot, seg) => `<button type="button" class="btn-secondary" onclick="rzAjustar(${seg})" style="padding:4px 10px; font-size:12px;">${rot}</button>`;
+  const aj = sel.ajusteSeg;
+  return `
+    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Escolha o candidato que os fatos da vida sustentam. O método dá um horário aproximado: o ajuste fino de minutos e segundos é feito abaixo.</div>
+    <div class="cartao" style="margin-bottom:10px;">${opcoes}</div>
+    <div class="cartao">
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px;">
+        ${bt('−1 min', -60)} ${bt('−10 s', -10)} ${bt('+10 s', 10)} ${bt('+1 min', 60)} ${aj ? bt('zerar ajuste', -aj) : ''}
+        <span class="texto-apagado" style="font-size:12px;">ajuste: ${aj === 0 ? 'nenhum' : (aj > 0 ? '+' : '−') + Math.floor(Math.abs(aj) / 60) + ' min ' + (Math.abs(aj) % 60) + ' s'}</span>
+      </div>
+      <div class="rz-rolagem"><table class="tabela-epoca">
+        <tr><td><strong>Horário retificado</strong></td><td><strong class="rz-escolhido">${rzFmtHora(ms, fuso)}</strong></td></tr>
+        <tr><td><strong>Diferença para o horário original</strong></td><td>${difTxt}</td></tr>
+        <tr><td><strong>${rzAnguloHtml('asc', 22)} Ascendente</strong></td><td>${rzPosHtml(a.asc, 18)}</td></tr>
+        <tr><td><strong>${rzAnguloHtml('mc', 22)} Meio do Céu</strong></td><td>${rzPosHtml(a.mc, 18)}</td></tr>
+      </table></div>
+    </div>`;
+}
+function rzRedesenharFinal() { const el = document.getElementById('rzFinal'); if (el && rzUltimo) el.innerHTML = rzMontarHorarioFinal(rzUltimo); }
+function rzEscolherCandidato(i) { if (!rzUltimo || !rzUltimo.candidatos[i] || !rzUltimo.candidatos[i].horario) return; rzFinalSel = { idx: i, ajusteSeg: 0 }; rzRedesenharFinal(); }
+function rzAjustar(seg) { if (!rzFinalSel) return; rzFinalSel.ajusteSeg += seg; rzRedesenharFinal(); }
+if (typeof window !== 'undefined') { window.rzEscolherCandidato = rzEscolherCandidato; window.rzAjustar = rzAjustar; }
 
 /* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
 function salvarRetificacaoSizigiaNaGaleria() {
