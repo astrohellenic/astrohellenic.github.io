@@ -104,13 +104,13 @@ function rzRelMontarPaginas() {
   // 1. Dados de entrada (com o cabeçalho global, no horário retificado)
   const cab = rzMapaFinalSvg && rzMapaFinalSvg.cabecalho ? `<div class="rz-cab-svg">${rzMapaFinalSvg.cabecalho}</div>` : '';
   fluxo.push(cab);
-  secao('1. Dados de entrada', [
+  secao('Dados de entrada', [
     `<p>Esta retificação parte do horário informado${nome ? ' por ' + escapeHtml(nome) : ''}.</p>`,
     `<table>${tr('Nome', escapeHtml(nome) || '—')}${tr('Data de nascimento', `${rzP2(e.dia)}/${rzP2(e.mes)}/${e.ano}`)}${tr('Cidade', escapeHtml(e.cidade || '—'))}${tr('Horário estimado', `${rzP2(e.hora)}:${rzP2(e.min)}`)}${tr('Origem do horário', escapeHtml(rzOrigemHorario) || '—')}</table>`
   ]);
 
   // 2. Sizígia
-  secao('2. A sizígia pré-natal', [
+  secao('A sizígia pré-natal', [
     `<p>A sizígia é a última Lua Nova ou Lua Cheia antes do nascimento. É dela que a técnica parte para achar o grau do Ascendente.</p>`,
     `<table>${tr('Tipo', escapeHtml(s.tipo))}${tr('Data e hora', rzFmtHora(s.ms, fuso, true))}${tr('Ponto no zodíaco', rzPosHtml(s.lon, 18))}${tr('Luminar usado', s.luminar === 'Lua' ? 'Lua' : 'Sol')}</table>`,
     `<p>Na Lua Nova, o ponto é o grau da conjunção do Sol e da Lua. Na Lua Cheia, é o lugar da luz que está acima da Terra no instante da oposição.</p>`
@@ -120,7 +120,7 @@ function rzRelMontarPaginas() {
   const sim = (b) => b ? '✓' : '·';
   const votos = `<table class="tabela-epoca"><tr><th>Planeta</th><th>Posição</th><th>Triplicidade</th><th>Domicílio</th><th>Exaltação</th><th>Termo</th><th>Aspecto</th><th>Votos</th></tr>${r.contagem.linhas.map(l => `<tr class="${r.contagem.vencedores.includes(l.id) ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id, 18)}</td><td>${rzPosHtml(l.lon, 16)}</td><td>${sim(l.vias.triplicidade)}</td><td>${sim(l.vias.domicilio)}</td><td>${sim(l.vias.exaltacao)}</td><td>${sim(l.vias.termo)}</td><td>${rzAspectoHtml(l.vias.aspecto, l.lon, s.lon)}</td><td><strong>${l.vias.total}</strong></td></tr>`).join('')}</table>`;
   const candTab = `<table class="tabela-epoca"><tr><th>Método</th><th>Planeta</th><th>Votos</th><th>Grau</th><th>Ângulo</th><th>Horário</th></tr>${r.candidatos.map(c => `<tr class="${c === cand ? 'rz-escolhido' : ''}"><td>${nomeRegra[c.regra]}</td><td>${rzPlanetaHtml(c.id, 18)}</td><td>${c.regra === 'ptolomeu' ? r.contagem.max : '—'}</td><td>${rzPosHtml(c.lon, 16)}</td><td>${rzAnguloHtml(c.tipo, 20)}</td><td>${c.horario ? rzFmtHora(c.horario.ms, fuso).slice(0, 5) : '—'}</td></tr>`).join('')}</table>`;
-  secao('3. O cálculo', [
+  secao('O cálculo', [
     `<p>O planeta que mais domina o ponto da sizígia decide o grau do Ascendente. Quem reúne mais votos entre os modos de dominância vence. O grau e os minutos do planeta, lidos de 0 a 30, viram o grau e os minutos do Ascendente. Isso é o Animodar de Ptolomeu, descrito no Tetrabiblos III.2.</p>`,
     rzRelJunto(`<div class="rz-sub">Contagem de votos</div><div class="rz-nota">Ponto da sizígia em ${rzPosHtml(s.lon, 14)}. Um voto por dignidade que o planeta tem nesse ponto, mais um se aspecta o ponto.</div>`, rzRelFatiarTabela(votos, 12)),
     rzRelJunto(`<div class="rz-sub">Horários encontrados</div>`, rzRelFatiarTabela(candTab, 12))
@@ -128,7 +128,7 @@ function rzRelMontarPaginas() {
 
   // 4. Horário retificado
   const dif = Math.round((msFinal - (Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000)) / 60000);
-  secao('4. Horário retificado', [
+  secao('Horário retificado', [
     `<p>Com o grau do Ascendente fixado, o horário sai das ascensões do lugar, na base de cerca de 4 minutos por grau.</p>`,
     `<table>${tr('Horário retificado', `<strong class="rz-escolhido">${hFinal}</strong>`)}${tr('Diferença para o horário estimado', dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} minutos`)}${tr('Escolhido entre os candidatos', `${rzPlanetaHtml(cand.id, 18)} ${nomeRegra[cand.regra]}${rzFinalSel.ajusteMin ? ` <span class="texto-apagado">(ajuste fino de ${rzFinalSel.ajusteMin > 0 ? '+' : '−'}${Math.abs(rzFinalSel.ajusteMin)} min)</span>` : ''}`)}${tr('Ascendente', rzPosHtml(ctx.asc, 18))}${tr('Meio do Céu', rzPosHtml(rzAngulos(msFinal, e.lat, e.lon).mc, 18))}</table>`
   ]);
@@ -150,7 +150,7 @@ function rzRelMontarPaginas() {
   const nSim = ordenados.filter(f => f.conf === 'sim').length, nParte = ordenados.filter(f => f.conf === 'parte').length, nNao = ordenados.filter(f => f.conf === 'nao').length;
   const resumo = ordenados.some(f => f.conf)
     ? `<p>O horário ${hFinal} é confirmado por <strong>${nSim}</strong> de ${ordenados.length} ${ordenados.length === 1 ? 'fato' : 'fatos'}${nParte ? `, em parte por ${nParte}` : ''}${nNao ? ` e não é confirmado por ${nNao}` : ''}.</p>` : '';
-  secao('5. Confirmação pelos fatos', [
+  secao('Confirmação pelos fatos da vida', [
     `<p>O horário calculado foi comparado com os fatos datados da vida${nome ? ' de ' + escapeHtml(nome) : ''}, pelas técnicas indicadas em cada fato. Cada linha mostra o que a técnica indica para a data.</p>`,
     ...cartoes,
     resumo,
@@ -159,11 +159,11 @@ function rzRelMontarPaginas() {
   paginas.unshift(rzRelSecao('Relatório de retificação', fluxo));
 
   // 6. Mapa final
-  paginas.push(`<section class="rel-page rel-page-mapa" data-pg="rz-mapa"><div class="rel-h1">6. O mapa final</div>${rzMapaFinalSvg ? `<img class="rel-img-mandala" src="${rzMapaFinalSvg.url}" alt="Mapa com o horário retificado">` : ''}</section>`);
+  paginas.push(`<section class="rel-page rel-page-mapa" data-pg="rz-mapa"><div class="rel-h1">O mapa final</div>${rzMapaFinalSvg ? `<img class="rel-img-mandala" src="${rzMapaFinalSvg.url}" alt="Mapa com o horário retificado">` : ''}</section>`);
 
   // 7. Conclusão
   const paragrafos = rzConclusao.split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`);
-  if (paragrafos.length) paginas.push(rzRelSecao('7. Conclusão', paragrafos));
+  if (paragrafos.length) paginas.push(rzRelSecao('Conclusão', paragrafos));
 
   // 8. Anexos: telas trazidas de outras ferramentas
   const caps = rzCapturasDisponiveis().filter(c => rzAnexos.includes(c.chave));

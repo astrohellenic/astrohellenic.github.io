@@ -406,6 +406,8 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container table { width: 100%; }
       #rz-container .rz-escolhido { color: var(--terracota); font-weight: 700; }
       #rz-container .rz-fonte { font-size: 11.5px; line-height: 1.55; }
+      #rz-container details.rz-sanfona { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); margin-top: 14px; padding-top: 4px; }
+      #rz-container details.rz-sanfona > summary { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); padding: 8px 0; margin: 0 0 6px; cursor: pointer; }
       #rz-container input[type="text"], #rz-container input[type="date"], #rz-container textarea { background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
       #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
       #rz-container input[type="date"] { min-height: 36px; min-width: 160px; }   /* no iPad, data vazia sem isso some */
@@ -571,17 +573,16 @@ function rzMontarResultado(r) {
       <strong>Fora do escopo.</strong> Os métodos aproximados do Ascendente sem hora (Hefestião II.1 e II.2, Anúbio), porque o texto pode estar corrompido e todos os nascidos no mesmo dia dariam o mesmo Ascendente, e o cálculo da concepção, que é quase circular e não distingue horários.
     </div>`;
 
-  // Ordem do relatório-modelo (artefato "Relatório de retificação pela sizígia"); nada que a ferramenta já mostrava foi retirado
-  const tit = (n, t) => `<h3 class="titulo-secao" style="margin-top:18px;">${n}. ${t}</h3>`;
+  // Seções em sanfona (abrem e fecham), sem números. O que já existia na ferramenta é mantido e encaixado.
   const sem = (h) => h.replace('<hr class="divisa">', '').replace(/<h3 class="titulo-secao">[^<]*<\/h3>/, '');
+  const sanfona = (titulo, corpo) => `<details class="rz-sanfona" open><summary>${titulo}</summary>${corpo}</details>`;
   return aviso
-    + tit(1, 'Dados de entrada') + rzMontarDadosEntrada(r)
-    + '<hr class="divisa">' + tit(2, 'A sizígia pré-natal') + sem(blocoSizigia)
-    + '<hr class="divisa">' + tit(3, 'O cálculo') + blocoVotos.replace('<hr class="divisa">', '') + blocoHorarios
-    + '<hr class="divisa">' + tit(4, 'Horário retificado') + '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div>'
-    + '<hr class="divisa">' + tit(5, 'Confirmação pelos fatos da vida') + '<div id="rzFatos">' + rzMontarFatos(r) + '</div>'
-    + '<hr class="divisa">' + tit(6, 'O mapa final') + rzMontarMapaFinal(r)
-    + '<hr class="divisa">' + tit(7, 'Conclusão e anexos') + '<div id="rzConclusaoAnexos">' + (typeof rzMontarConclusaoAnexos === 'function' ? rzMontarConclusaoAnexos() : '') + '</div>'
+    + sanfona('Dados de entrada', rzMontarDadosEntrada(r))
+    + sanfona('A sizígia pré-natal', sem(blocoSizigia))
+    + sanfona('O cálculo', blocoVotos.replace('<hr class="divisa">', '') + blocoHorarios)
+    + sanfona('Horário retificado', '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div><hr class="divisa"><div id="rzFatos">' + rzMontarFatos(r) + '</div>')
+    + sanfona('O mapa final', rzMontarMapaFinal(r))
+    + sanfona('Conclusão e anexos', '<div id="rzConclusaoAnexos">' + (typeof rzMontarConclusaoAnexos === 'function' ? rzMontarConclusaoAnexos() : '') + '</div>')
     + rodape;
 }
 
@@ -724,25 +725,26 @@ function rzContextoFatos(r) {
 /* a linha de UMA técnica de UM fato (data d) */
 function rzLinhaTecnica(ctx, t, d, n, paraRelatorio) {
   const ico = rzIconeAfeta(t.chave, 18);
+  const cab = (nomeTec) => paraRelatorio ? `${ico} <strong>${nomeTec}</strong>` : '';     // na tela o seletor já mostra o ícone e o nome: não repetir
   if (t.tipo === 'circ') {
     // a "linha do signo" da ferramenta (pauta), com a marca do fato; sem os ajudantes de desenho, cai no texto
     const pauta = (typeof rzPautaDoFato === 'function') ? rzPautaDoFato(ctx, t.chave, d, n) : null;
-    if (pauta) return `<div style="width:100%;"><div style="font-size:12px; margin-bottom:2px;">${ico} <strong>Circumambulação</strong>${paraRelatorio ? ` <span class="texto-apagado">(${RZ_AFETA_NOME[t.chave]})</span>` : ''}</div>${pauta}</div>`;
+    if (pauta) return `<div style="width:100%;">${paraRelatorio ? `<div style="font-size:12px; margin-bottom:2px;">${ico} <strong>Circumambulação</strong> <span class="texto-apagado">(${RZ_AFETA_NOME[t.chave]})</span></div>` : ''}${pauta}</div>`;
     const lc = rqLinhaCircumambulacao(ctx.circ(t.chave), d);
     return lc
-      ? `${ico} <strong>Circumambulação</strong> ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
-      : `${ico} <strong>Circumambulação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
+      ? `${cab('Circumambulação')} ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
+      : `${cab('Circumambulação')} <span class="texto-apagado">nenhum período cobre essa data</span>`;
   }
   const z = rqLiberacaoEm(ctx.signoZR(t.chave), ctx.nasc, d);
   const niv = (n, x) => x ? `<span class="texto-apagado">nível ${n}</span> ${rzSignoHtml(x.signIdx, 18)} <span class="texto-apagado">${rzDataBR(x.start)} a ${rzDataBR(x.end)}</span>` : '';
   return z
-    ? `${ico} <strong>Liberação</strong> ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''}`
-    : `${ico} <strong>Liberação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
+    ? `${cab('Liberação')} ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''}`
+    : `${cab('Liberação')} <span class="texto-apagado">nenhum período cobre essa data</span>`;
 }
 
 function rzMontarFatos(r) {
   const ctx = rzContextoFatos(r);
-  if (!ctx) return `<div class="texto-apagado rz-fonte">Escolha um horário na seção 4.</div>`;
+  if (!ctx) return `<div class="texto-apagado rz-fonte">Escolha um horário acima.</div>`;
   const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
   const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });   // 1, 2, 3... na ordem de data
   const btnConf = (f, v, rot) => `<button type="button" class="botao-texto${f.conf === v ? ' rz-sel' : ''}" onclick="rzFatoConf(${f.id}, '${v}')">${rot}</button>`;
@@ -761,7 +763,7 @@ function rzMontarFatos(r) {
     const antes = d && d < ctx.nasc;
     const tecnicas = f.tecnicas.map((t, k) => `
       <div class="rz-tec">
-        <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">${seletor(f, k, t)}
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">${seletor(f, k, t)}<span style="font-size:13px; font-weight:700;">${t.tipo === 'circ' ? 'Circumambulação' : 'Liberação'}</span>
           <button type="button" class="botao-icone" onclick="rzTecRemover(${f.id}, ${k})" title="Tirar esta técnica do fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button></div>
         ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id])}</div>`}
       </div>`).join('');
@@ -779,7 +781,7 @@ function rzMontarFatos(r) {
         <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'circ')">+ Circumambulação</button>
         <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'zr')">+ Liberação</button>
       </div>
-      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">Confirma?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">O horário confirma este fato?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
     </div>`;
   }).join('');
   // uma tabela por técnica + ponto de partida usados, com os fatos que a usam
@@ -792,7 +794,7 @@ function rzMontarFatos(r) {
     ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
-    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e tudo se recalcula.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário acima e tudo se recalcula.</div>
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}
