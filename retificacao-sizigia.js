@@ -594,7 +594,7 @@ function rzMontarDadosEntrada(r) {
     ${linha('Nome', escapeHtml(nome) || '—')}
     ${linha('Data de nascimento', `${rzP2(e.dia)}/${rzP2(e.mes)}/${e.ano}`)}
     ${linha('Cidade', escapeHtml(e.cidade || '—'))}
-    ${linha('Horário original', `${rzP2(e.hora)}:${rzP2(e.min)} <span class="texto-apagado">(${rzFmtFuso(e.fuso)})</span>`)}
+    ${linha('Horário estimado', `${rzP2(e.hora)}:${rzP2(e.min)} <span class="texto-apagado">(${rzFmtFuso(e.fuso)})</span>`)}
     ${linha('Origem do horário', `<input type="text" id="rzOrigemHorario" value="${escapeHtml(rzOrigemHorario)}" placeholder="certidão, memória da família, hospital que arredondou..." oninput="rzOrigemHorario = this.value; rzMudou()" style="width:100%;">`)}
   </table></div>`;
 }
@@ -636,7 +636,7 @@ function rzMontarHorarioFinal(r) {
       </div>
       <div class="rz-rolagem"><table class="tabela-epoca">
         <tr><td><strong>Horário retificado</strong></td><td><strong class="rz-escolhido">${rzFmtHora(ms, fuso).slice(0, 5)}</strong></td></tr>
-        <tr><td><strong>Diferença para o horário original</strong></td><td>${difTxt}</td></tr>
+        <tr><td><strong>Diferença para o horário estimado</strong></td><td>${difTxt}</td></tr>
         <tr><td><strong>${rzAnguloHtml('asc', 22)} Ascendente</strong></td><td>${rzPosHtml(a.asc, 18)}</td></tr>
         <tr><td><strong>${rzAnguloHtml('mc', 22)} Meio do Céu</strong></td><td>${rzPosHtml(a.mc, 18)}</td></tr>
       </table></div>

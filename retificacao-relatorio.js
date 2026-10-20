@@ -106,7 +106,7 @@ function rzRelMontarPaginas() {
   fluxo.push(cab);
   secao('1. Dados de entrada', [
     `<p>Esta retificação parte do horário informado${nome ? ' por ' + escapeHtml(nome) : ''}.</p>`,
-    `<table>${tr('Nome', escapeHtml(nome) || '—')}${tr('Data de nascimento', `${rzP2(e.dia)}/${rzP2(e.mes)}/${e.ano}`)}${tr('Cidade', escapeHtml(e.cidade || '—'))}${tr('Horário original', `${rzP2(e.hora)}:${rzP2(e.min)}`)}${tr('Origem do horário', escapeHtml(rzOrigemHorario) || '—')}</table>`
+    `<table>${tr('Nome', escapeHtml(nome) || '—')}${tr('Data de nascimento', `${rzP2(e.dia)}/${rzP2(e.mes)}/${e.ano}`)}${tr('Cidade', escapeHtml(e.cidade || '—'))}${tr('Horário estimado', `${rzP2(e.hora)}:${rzP2(e.min)}`)}${tr('Origem do horário', escapeHtml(rzOrigemHorario) || '—')}</table>`
   ]);
 
   // 2. Sizígia
@@ -130,7 +130,7 @@ function rzRelMontarPaginas() {
   const dif = Math.round((msFinal - (Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000)) / 60000);
   secao('4. Horário retificado', [
     `<p>Com o grau do Ascendente fixado, o horário sai das ascensões do lugar, na base de cerca de 4 minutos por grau.</p>`,
-    `<table>${tr('Horário retificado', `<strong class="rz-escolhido">${hFinal}</strong>`)}${tr('Diferença para o horário original', dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} minutos`)}${tr('Escolhido entre os candidatos', `${rzPlanetaHtml(cand.id, 18)} ${nomeRegra[cand.regra]}${rzFinalSel.ajusteMin ? ` <span class="texto-apagado">(ajuste fino de ${rzFinalSel.ajusteMin > 0 ? '+' : '−'}${Math.abs(rzFinalSel.ajusteMin)} min)</span>` : ''}`)}${tr('Ascendente', rzPosHtml(ctx.asc, 18))}${tr('Meio do Céu', rzPosHtml(rzAngulos(msFinal, e.lat, e.lon).mc, 18))}</table>`
+    `<table>${tr('Horário retificado', `<strong class="rz-escolhido">${hFinal}</strong>`)}${tr('Diferença para o horário estimado', dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} minutos`)}${tr('Escolhido entre os candidatos', `${rzPlanetaHtml(cand.id, 18)} ${nomeRegra[cand.regra]}${rzFinalSel.ajusteMin ? ` <span class="texto-apagado">(ajuste fino de ${rzFinalSel.ajusteMin > 0 ? '+' : '−'}${Math.abs(rzFinalSel.ajusteMin)} min)</span>` : ''}`)}${tr('Ascendente', rzPosHtml(ctx.asc, 18))}${tr('Meio do Céu', rzPosHtml(rzAngulos(msFinal, e.lat, e.lon).mc, 18))}</table>`
   ]);
 
   // 5. Fatos da vida × técnicas
