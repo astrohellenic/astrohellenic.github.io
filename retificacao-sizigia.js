@@ -659,6 +659,8 @@ const RZ_LOTES = ['fortune', 'spirit', 'venus', 'mercury', 'mars', 'jupiter', 's
 const RZ_LOTE_ICONE = { fortune: 'fortune', spirit: 'spirit', venus: 'eros', mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis' };
 const RZ_LOTE_NOME = { fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Coragem', jupiter: 'Vitória', saturn: 'Nêmesis' };
 const RZ_AFETA_NOME = Object.assign({ ASC: 'Ascendente', Sun: 'Sol', Moon: 'Lua', seita: 'Luminar da seita', Syz: 'Sizígia' }, RZ_LOTE_NOME);
+/* os nomes que as ferramentas usam no seletor (direcoes.js / liberacao.js) */
+const RZ_AFETA_TITULO = { ASC: 'Ascendente', Sun: 'Sol', Moon: 'Lua', Syz: 'Sizígia Prenatal', fortune: 'Lote da Fortuna', spirit: 'Lote do Espírito', venus: 'Lote de Eros', mercury: 'Lote da Necessidade', mars: 'Lote da Coragem', jupiter: 'Lote da Vitória', saturn: 'Lote de Nêmesis' };
 const RZ_AFETAS = ['ASC', 'Sun', 'Moon', 'seita', 'Syz'].concat(RZ_LOTES);
 let rzDiurnoAtual = true;         // o horário em teste é diurno? (decide o luminar da seita)
 
@@ -666,6 +668,15 @@ let rzDiurnoAtual = true;         // o horário em teste é diurno? (decide o lu
 function rzFatoVazio(id) { return { id, data: '', texto: '', conf: '', tecnicas: [{ tipo: 'circ', chave: 'ASC' }, { tipo: 'zr', chave: 'fortune' }] }; }
 let rzFatos = [rzFatoVazio(1)];   // ainda não é salvo
 let rzFatoSeq = 1;
+
+/* o ícone do seletor: o MESMO das ferramentas (Circumambulação: planeta 3D, ângulo, sizígia, lote; Liberação: ícone do lote) */
+function rzIconeSeletor(chave, tipo) {
+  if (tipo === 'zr' && typeof getLotIconSVG === 'function') return getLotIconSVG(chave);
+  if (chave === 'seita') chave = rzDiurnoAtual ? 'Sun' : 'Moon';
+  if ((chave === 'Sun' || chave === 'Moon') && typeof getPlanet3DSVGDir === 'function') return getPlanet3DSVGDir(chave);
+  if (typeof getItemSVGDir === 'function' && chave !== 'Sun' && chave !== 'Moon') return getItemSVGDir(chave === 'Syz' ? 'Sizígia' : chave);
+  return rzIconeAfeta(chave, 22);
+}
 
 /* ícone de um ponto de partida (afeta): ângulo, luminar, sizígia ou lote */
 function rzIconeAfeta(chave, tam) {
@@ -711,12 +722,12 @@ function rzContextoFatos(r) {
 }
 
 /* a linha de UMA técnica de UM fato (data d) */
-function rzLinhaTecnica(ctx, t, d, n) {
+function rzLinhaTecnica(ctx, t, d, n, paraRelatorio) {
   const ico = rzIconeAfeta(t.chave, 18);
   if (t.tipo === 'circ') {
     // a "linha do signo" da ferramenta (pauta), com a marca do fato; sem os ajudantes de desenho, cai no texto
     const pauta = (typeof rzPautaDoFato === 'function') ? rzPautaDoFato(ctx, t.chave, d, n) : null;
-    if (pauta) return `<div style="width:100%;"><div style="font-size:12px; margin-bottom:2px;">${ico} <strong>Circumambulação</strong> <span class="texto-apagado">(${RZ_AFETA_NOME[t.chave]})</span></div>${pauta}</div>`;
+    if (pauta) return `<div style="width:100%;"><div style="font-size:12px; margin-bottom:2px;">${ico} <strong>Circumambulação</strong>${paraRelatorio ? ` <span class="texto-apagado">(${RZ_AFETA_NOME[t.chave]})</span>` : ''}</div>${pauta}</div>`;
     const lc = rqLinhaCircumambulacao(ctx.circ(t.chave), d);
     return lc
       ? `${ico} <strong>Circumambulação</strong> ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
@@ -737,8 +748,13 @@ function rzMontarFatos(r) {
   const btnConf = (f, v, rot) => `<button type="button" class="botao-texto${f.conf === v ? ' rz-sel' : ''}" onclick="rzFatoConf(${f.id}, '${v}')">${rot}</button>`;
   const seletor = (f, k, t) => {
     const lista = t.tipo === 'circ' ? RZ_AFETAS : RZ_LOTES;
-    const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : RZ_AFETA_NOME[c];
-    return `<select onchange="rzTecTrocar(${f.id}, ${k}, this.value)" title="${t.tipo === 'circ' ? 'Parte de' : 'Lote'}">${lista.map(c => `<option value="${c}"${c === t.chave ? ' selected' : ''}>${rotulo(c)}</option>`).join('')}</select>`;
+    const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : (RZ_AFETA_TITULO[c] || RZ_AFETA_NOME[c]);
+    const idMenu = `rzMenu_${f.id}_${k}`;
+    const linhasMenu = lista.map(c => `<div onclick="rzTecTrocar(${f.id}, ${k}, '${c}')" title="${escapeHtml(rotulo(c))}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--azul-egipcio-escuro);">${rzIconeSeletor(c, t.tipo)}</div>`).join('');
+    return `<div style="position: relative; flex-shrink: 0;">
+      <button type="button" class="botao-icone" onclick="const m=document.getElementById('${idMenu}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="${t.tipo === 'circ' ? 'Afeta direcionado' : 'Lote'}: ${escapeHtml(rotulo(t.chave))}">${rzIconeSeletor(t.chave, t.tipo)}</button>
+      <div id="${idMenu}" class="menu-flutuante" style="display: none; position: absolute; top: 40px; left: 0; z-index: 9999; width: 44px; box-sizing: border-box; max-height: 260px; overflow-y: auto;">${linhasMenu}</div>
+    </div>`;
   };
   const linhas = ordenados.map(f => {
     const d = f.data ? rzDataDoFato(f) : null;
