@@ -631,6 +631,24 @@ if (typeof window !== 'undefined') { window.rzEscolherCandidato = rzEscolherCand
    O cálculo é COPIADO de direcoes.js/liberacao.js (retificacao-calculos.js). Mudou o horário final → tudo se recalcula. */
 let rzFatos = [{ id: 1, data: '', texto: '', conf: '' }];   // ainda não é salvo
 let rzFatoSeq = 1;
+let rzAfetaCirc = 'ASC';          // ponto de partida da Circumambulação: ASC, Sun, Moon, seita (luminar da seita), Syz ou um dos 7 lotes
+let rzDiurnoAtual = true;         // o horário em teste é diurno? (decide o luminar da seita)
+let rzLoteZR = 'fortune';         // lote de partida da Liberação (os mesmos 7 lotes da ferramenta)
+const RZ_LOTES = ['fortune', 'spirit', 'venus', 'mercury', 'mars', 'jupiter', 'saturn'];
+const RZ_LOTE_ICONE = { fortune: 'fortune', spirit: 'spirit', venus: 'eros', mercury: 'necessity', mars: 'courage', jupiter: 'victory', saturn: 'nemesis' };
+const RZ_LOTE_NOME = { fortune: 'Fortuna', spirit: 'Espírito', venus: 'Eros', mercury: 'Necessidade', mars: 'Coragem', jupiter: 'Vitória', saturn: 'Nêmesis' };
+const RZ_AFETA_NOME = Object.assign({ ASC: 'Ascendente', Sun: 'Sol', Moon: 'Lua', seita: 'Luminar da seita', Syz: 'Sizígia' }, RZ_LOTE_NOME);
+
+/* ícone de um ponto de partida (afeta): ângulo, luminar, sizígia ou lote */
+function rzIconeAfeta(chave, tam) {
+  if (chave === 'ASC') return rzAnguloHtml('asc', tam);
+  if (chave === 'seita') chave = rzDiurnoAtual ? 'Sun' : 'Moon';       // o luminar da seita: Sol de dia, Lua de noite
+  if (chave === 'Sun') return rzPlanetaHtml('Sun', tam);
+  if (chave === 'Moon') return rzPlanetaHtml('Moon', tam);
+  if (chave === 'Syz') return rzSizigiaHtml(tam);
+  if (RZ_LOTE_ICONE[chave] && typeof getIconeSVG === 'function') return getIconeSVG('lote', RZ_LOTE_ICONE[chave], tam) || RZ_LOTE_NOME[chave];
+  return RZ_AFETA_NOME[chave] || chave;
+}
 
 function rzDataBR(d) { return `${rzP2(d.getDate())}/${rzP2(d.getMonth() + 1)}/${d.getFullYear()}`; }
 /* relógio local do mapa (no fuso dele) a partir de ms UT, como Date comum (mesmo jeito que a Mandala guarda o momento) */
@@ -638,13 +656,25 @@ function rzRelogioLocal(ms, fuso) { const d = new Date(ms + fuso * 3600000); ret
 
 /* tudo o que depende do horário em teste: Ascendente, Fortuna e as tabelas, calculadas uma vez por desenho */
 function rzContextoFatos(r) {
-  if (!rzFinalSel || typeof rqCircumambulacao !== 'function') return null;
+  if (!rzFinalSel || typeof rqCircumambulacao !== 'function' || typeof calculateSevenLots !== 'function') return null;
   const e = r.entrada, ms = rzMsFinal(r, rzFinalSel);
   const asc = rzAngulos(ms, e.lat, e.lon).asc;
   const cand = r.candidatos[rzFinalSel.idx];
-  const fortuna = (r.sol && r.lua) ? rzFortunaEm(ms, e.lat, e.lon, r.sol, r.lua).lon : cand.horario.fortuna;
   const nasc = rzRelogioLocal(ms, e.fuso);
-  return { nasc, asc, fortuna, circ: rqCircumambulacao(asc, nasc, e.lat), signoZR: rzSignoDe(fortuna) };
+  // Sol e Lua no horário em teste (a Lua anda ~0,5° por hora); os demais planetas ficam como no horário do mapa (minutos não os movem)
+  const sol = r.sol ? rzNorm360(r.sol(ms)) : r.posicoes.Sun, lua = r.lua ? rzNorm360(r.lua(ms)) : r.posicoes.Moon;
+  const po = {}; RZ_ORDEM.forEach(id => { po[id] = { abs: r.posicoes[id] }; });
+  po.Sun = { abs: sol }; po.Moon = { abs: lua };
+  const diurno = rzNorm360(sol - asc) >= 180;
+  rzDiurnoAtual = diurno;
+  const pontos = { ASC: asc, Sun: sol, Moon: lua, seita: diurno ? sol : lua, Syz: r.sizigia.luaLon };
+  calculateSevenLots(asc, diurno, po).forEach(l => { pontos[l.key] = l.deg; });
+  if (cand.horario && !(r.sol && r.lua)) pontos.fortune = cand.horario.fortuna;
+  // Liberação: o L1 começa no signo do lote; no Espírito, se cai no mesmo signo da Fortuna, começa no signo seguinte (Valens IV.V, como liberacao.js)
+  let signoZR = rzSignoDe(pontos[rzLoteZR]);
+  if (rzLoteZR === 'spirit' && signoZR === rzSignoDe(pontos.fortune)) signoZR = (signoZR + 1) % 12;
+  const partida = pontos[rzAfetaCirc] !== undefined ? pontos[rzAfetaCirc] : asc;
+  return { nasc, asc, pontos, diurno, partida, fortuna: pontos.fortune, circ: rqCircumambulacao(partida, nasc, e.lat), signoZR };
 }
 
 function rzLinhasDoFato(ctx, dataStr) {
@@ -654,13 +684,13 @@ function rzLinhasDoFato(ctx, dataStr) {
   const idade = rqIdade(ctx.nasc, d);
   const lc = rqLinhaCircumambulacao(ctx.circ, d);
   const circ = lc
-    ? `${rzAnguloHtml('asc', 18)} <strong>Circumambulação</strong> ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
-    : `${rzAnguloHtml('asc', 18)} <strong>Circumambulação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
+    ? `${rzIconeAfeta(rzAfetaCirc, 18)} <strong>Circumambulação</strong> ${rzSignoHtml(lc.signIdx, 18)} ${lc.termStartDeg}°–${lc.termEndDeg}° <span class="texto-apagado">termo de</span> ${rzPlanetaHtml(lc.termPlanetId, 18)} <span class="texto-apagado">de ${rzDataBR(lc.startDate)} a ${rzDataBR(lc.endDate)}</span>`
+    : `${rzIconeAfeta(rzAfetaCirc, 18)} <strong>Circumambulação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
   const z = rqLiberacaoEm(ctx.signoZR, ctx.nasc, d);
   const niv = (n, x) => x ? `<span class="texto-apagado">nível ${n}</span> ${rzSignoHtml(x.signIdx, 18)} <span class="texto-apagado">${rzDataBR(x.start)} a ${rzDataBR(x.end)}</span>` : '';
   const lib = z
-    ? `${rzFortunaHtml(18)} <strong>Liberação</strong> ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''}`
-    : `${rzFortunaHtml(18)} <strong>Liberação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
+    ? `${rzIconeAfeta(rzLoteZR, 18)} <strong>Liberação</strong> ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''}`
+    : `${rzIconeAfeta(rzLoteZR, 18)} <strong>Liberação</strong> <span class="texto-apagado">nenhum período cobre essa data</span>`;
   return `${idade ? `<div class="texto-apagado" style="font-size:11.5px;">${idade}</div>` : ''}<div class="rz-linha-tecnica">${circ}</div><div class="rz-linha-tecnica">${lib}</div>`;
 }
 
@@ -682,20 +712,32 @@ function rzMontarFatos(r) {
   const n = (v) => rzFatos.filter(f => f.conf === v).length;
   const resumo = rzFatos.some(f => f.conf)
     ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
+  const escolha = (chave, atual, fn) => `<button type="button" class="btn-secondary" onclick="${fn}('${chave}')" title="${RZ_AFETA_NOME[chave]}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; font-size:12px; background:transparent; border:${chave === atual ? 3 : 1}px solid var(--azul-egipcio-claro);">${rzIconeAfeta(chave, 18)}${chave === 'seita' ? `<span>Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})</span>` : ''}</button>`;
+  const afetas = ['ASC', 'Sun', 'Moon', 'seita', 'Syz'].concat(RZ_LOTES);
   return `
-    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Cada fato mostra a Circumambulação (a partir do Ascendente em ${rzPosHtml(ctx.asc, 16)}) e a Liberação pela Fortuna (em ${rzPosHtml(ctx.fortuna, 16)}) do horário em teste. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e as linhas se recalculam.</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Cada fato mostra as linhas do horário em teste. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e tudo se recalcula.</div>
+    <div class="cartao" style="margin-bottom:8px;">
+      <div class="rotulo">Circumambulação parte de</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0;">${afetas.map(k => escolha(k, rzAfetaCirc, 'rzEscolherAfeta')).join('')}</div>
+      <div class="texto-apagado rz-fonte">${RZ_AFETA_NOME[rzAfetaCirc]} em ${rzPosHtml(ctx.partida, 16)}</div>
+      <div class="rotulo" style="margin-top:10px;">Liberação zodiacal pelo lote</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0;">${RZ_LOTES.map(k => escolha(k, rzLoteZR, 'rzEscolherLoteZR')).join('')}</div>
+      <div class="texto-apagado rz-fonte">${RZ_LOTE_NOME[rzLoteZR]} em ${rzPosHtml(ctx.pontos[rzLoteZR], 16)}</div>
+    </div>
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="btn-secondary" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}`;
 }
 function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if (el && rzUltimo) el.innerHTML = rzMontarFatos(rzUltimo); }
+function rzEscolherAfeta(k) { rzAfetaCirc = k; rzRedesenharFatos(); }
+function rzEscolherLoteZR(k) { rzLoteZR = k; rzRedesenharFatos(); }
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push({ id: ++rzFatoSeq, data: '', texto: '', conf: '' }); rzRedesenharFatos(); }
 function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push({ id: ++rzFatoSeq, data: '', texto: '', conf: '' }); rzRedesenharFatos(); }
 function rzFatoData(id, v) { const f = rzFatoPorId(id); if (f) { f.data = v; rzRedesenharFatos(); } }
 function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; }
 function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } }
-if (typeof window !== 'undefined') Object.assign(window, { rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoTexto, rzFatoConf });
+if (typeof window !== 'undefined') Object.assign(window, { rzEscolherAfeta, rzEscolherLoteZR, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
