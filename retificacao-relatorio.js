@@ -33,7 +33,7 @@ function rzMontarConclusaoAnexos() {
     <div class="rotulo">Anexos</div>
     <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Marque as telas de outras ferramentas que entram no relatório, depois da conclusão. Elas aparecem aqui quando você usa "Adicionar ao Relatório" na ferramenta, com o cliente aberto.</div>
     ${itens || '<div class="texto-apagado rz-fonte">Nenhuma tela foi adicionada ainda.</div>'}
-    <div style="margin-top:14px;"><button type="button" class="btn-primary" id="rzBtnGerarRelatorio" onclick="rzGerarRelatorio()">Gerar relatório</button></div>`;
+    <div style="margin-top:14px;"><button type="button" class="botao-texto" id="rzBtnGerarRelatorio" onclick="rzGerarRelatorio()">Gerar relatório</button></div>`;
 }
 function rzAnexoMarcar(chave, marcado) { rzAnexos = rzAnexos.filter(c => c !== chave); if (marcado) rzAnexos.push(chave); rzMudou(); }
 if (typeof window !== 'undefined') Object.assign(window, { rzAnexoMarcar });
@@ -112,7 +112,7 @@ function rzRelMontarPaginas() {
   // 3. O cálculo: votos e todos os candidatos (Ptolomeu e Hefestião, e Valens)
   const sim = (b) => b ? '✓' : '·';
   const votos = `<table class="tabela-epoca"><tr><th>Planeta</th><th>Posição</th><th>Triplicidade</th><th>Domicílio</th><th>Exaltação</th><th>Termo</th><th>Aspecto</th><th>Votos</th></tr>${r.contagem.linhas.map(l => `<tr class="${r.contagem.vencedores.includes(l.id) ? 'rz-escolhido' : ''}"><td>${rzPlanetaHtml(l.id, 18)}</td><td>${rzPosHtml(l.lon, 16)}</td><td>${sim(l.vias.triplicidade)}</td><td>${sim(l.vias.domicilio)}</td><td>${sim(l.vias.exaltacao)}</td><td>${sim(l.vias.termo)}</td><td>${rzAspectoHtml(l.vias.aspecto, l.lon, s.lon)}</td><td><strong>${l.vias.total}</strong></td></tr>`).join('')}</table>`;
-  const candTab = `<table class="tabela-epoca"><tr><th>Método</th><th>Planeta</th><th>Grau</th><th>Ângulo</th><th>Horário</th></tr>${r.candidatos.map(c => `<tr class="${c === cand ? 'rz-escolhido' : ''}"><td>${nomeRegra[c.regra]}</td><td>${rzPlanetaHtml(c.id, 18)}</td><td>${rzPosHtml(c.lon, 16)}</td><td>${rzAnguloHtml(c.tipo, 20)}</td><td>${c.horario ? rzFmtHora(c.horario.ms, fuso).slice(0, 5) : '—'}</td></tr>`).join('')}</table>`;
+  const candTab = `<table class="tabela-epoca"><tr><th>Método</th><th>Planeta</th><th>Votos</th><th>Grau</th><th>Ângulo</th><th>Horário</th></tr>${r.candidatos.map(c => `<tr class="${c === cand ? 'rz-escolhido' : ''}"><td>${nomeRegra[c.regra]}</td><td>${rzPlanetaHtml(c.id, 18)}</td><td>${c.regra === 'ptolomeu' ? r.contagem.max : '—'}</td><td>${rzPosHtml(c.lon, 16)}</td><td>${rzAnguloHtml(c.tipo, 20)}</td><td>${c.horario ? rzFmtHora(c.horario.ms, fuso).slice(0, 5) : '—'}</td></tr>`).join('')}</table>`;
   secao('3. O cálculo', [
     `<p>O planeta que mais domina o ponto da sizígia decide o grau do Ascendente. Quem reúne mais votos entre os modos de dominância vence. O grau e os minutos do planeta, lidos de 0 a 30, viram o grau e os minutos do Ascendente. Isso é o Animodar de Ptolomeu, descrito no Tetrabiblos III.2.</p>`,
     rzRelJunto(`<div class="rz-sub">Contagem de votos</div><div class="rz-nota">Ponto da sizígia em ${rzPosHtml(s.lon, 14)}. Um voto por dignidade que o planeta tem nesse ponto, mais um se aspecta o ponto.</div>`, rzRelFatiarTabela(votos, 12)),

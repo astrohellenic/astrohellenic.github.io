@@ -410,6 +410,8 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
       #rz-container select { background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231F5FA3' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 8px center; color: inherit; font: inherit; font-size: 12.5px; padding: 4px 24px 4px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; }
       #rz-container .rz-tec { margin-top: 6px; }
+      #rz-container .botao-texto { padding: 4px 12px; font-size: 12px; }
+      #rz-container .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
       #rz-container .rz-fato { padding: 10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--azul-egipcio-claro); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
@@ -489,7 +491,7 @@ function rzMontarResultado(r) {
   const linha = (c) => {
     const h = c.horario;
     const cabeca = `<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:14px;">
-        ${rzPlanetaRetroHtml(r, c.id, 22)} ${rzPosHtml(c.lon, 18)} <span>→</span> ${h ? `${rzAnguloHtml(c.tipo, 26)} ${hora(h.ms)}` : '<span>sem horário nesse signo</span>'}
+        ${rzPlanetaRetroHtml(r, c.id, 22)} ${c.regra === 'ptolomeu' ? `<span class="texto-apagado" style="font-size:12px;">${r.contagem.max} ${r.contagem.max === 1 ? 'voto' : 'votos'}</span>` : ''} ${rzPosHtml(c.lon, 18)} <span>→</span> ${h ? `${rzAnguloHtml(c.tipo, 26)} ${hora(h.ms)}` : '<span>sem horário nesse signo</span>'}
       </div>`;
     if (!h) return `<div style="padding:8px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);">${cabeca}</div>`;
     const item = (ico, html) => `<span style="display:inline-flex; align-items:center; gap:6px;">${ico}${html}</span>`;
@@ -521,6 +523,7 @@ function rzMontarResultado(r) {
     <div class="cartao" style="margin-bottom:14px;">
       <div class="rotulo">Ptolomeu e Hefestião</div>
       <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2.</div>
+      <div style="font-size:13px; margin:2px 0 6px; font-weight:700;">${r.contagem.vencedores.length === 1 ? 'Ganhou nos votos:' : `Empate nos votos (${r.contagem.vencedores.length} planetas com ${r.contagem.max} ${r.contagem.max === 1 ? 'voto' : 'votos'}):`} ${r.contagem.vencedores.map(id => `<span style="display:inline-block; margin-right:6px;">${rzPlanetaRetroHtml(r, id, 20)}</span>`).join('')}</div>
       ${doRegra('ptolomeu')}
     </div>
     <div class="cartao">
@@ -613,14 +616,14 @@ function rzMontarHorarioFinal(r) {
   const opcoes = r.candidatos.map((c, i) => c.horario ? `
     <label style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; cursor:pointer;">
       <input type="radio" name="rzCand" ${i === sel.idx ? 'checked' : ''} onchange="rzEscolherCandidato(${i})">
-      ${rzPlanetaRetroHtml(r, c.id, 20)} <span class="texto-apagado">${nomeRegra[c.regra]}</span> ${rzAnguloHtml(c.tipo, 22)} <strong>${rzFmtHora(c.horario.ms, fuso)}</strong>
+      ${rzPlanetaRetroHtml(r, c.id, 20)} <span class="texto-apagado">${nomeRegra[c.regra]}${c.regra === 'ptolomeu' ? ', ' + r.contagem.max + (r.contagem.max === 1 ? ' voto' : ' votos') : ''}</span> ${rzAnguloHtml(c.tipo, 22)} <strong>${rzFmtHora(c.horario.ms, fuso)}</strong>
     </label>` : '').join('');
   const ms = rzMsFinal(r, sel);
   const a = rzAngulos(ms, e.lat, e.lon);
   const orig = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000;
   const dif = Math.round((ms - orig) / 60000);
   const difTxt = dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} min`;
-  const bt = (rot, min) => `<button type="button" class="btn-secondary" onclick="rzAjustar(${min})" style="padding:4px 10px; font-size:12px;">${rot}</button>`;
+  const bt = (rot, min) => `<button type="button" class="botao-texto" onclick="rzAjustar(${min})">${rot}</button>`;
   const aj = sel.ajusteMin;
   return `
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Escolha o candidato que os fatos da vida sustentam. O método dá um horário aproximado: o ajuste fino, em minutos, é feito abaixo.</div>
@@ -725,7 +728,7 @@ function rzMontarFatos(r) {
   if (!ctx) return `<div class="texto-apagado rz-fonte">Escolha um horário na seção 4.</div>`;
   const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
   const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });   // 1, 2, 3... na ordem de data
-  const btnConf = (f, v, rot) => `<button type="button" class="btn-secondary" onclick="rzFatoConf(${f.id}, '${v}')" style="padding:3px 10px; font-size:12px; background:transparent; border:${f.conf === v ? 3 : 1}px solid var(--azul-egipcio-claro);">${rot}</button>`;
+  const btnConf = (f, v, rot) => `<button type="button" class="botao-texto${f.conf === v ? ' rz-sel' : ''}" onclick="rzFatoConf(${f.id}, '${v}')">${rot}</button>`;
   const seletor = (f, k, t) => {
     const lista = t.tipo === 'circ' ? RZ_AFETAS : RZ_LOTES;
     const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : RZ_AFETA_NOME[c];
@@ -751,8 +754,8 @@ function rzMontarFatos(r) {
       ${!d ? '<div class="texto-apagado rz-fonte">Preencha a data para ver as linhas.</div>' : antes ? '<div class="rz-linha-tecnica texto-apagado">Data anterior ao nascimento.</div>' : `<div class="texto-apagado" style="font-size:11.5px;">${rqIdade(ctx.nasc, d)}</div>`}
       ${tecnicas}
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
-        <button type="button" class="btn-secondary" onclick="rzTecAdd(${f.id}, 'circ')" style="padding:3px 10px; font-size:12px;">+ Circumambulação</button>
-        <button type="button" class="btn-secondary" onclick="rzTecAdd(${f.id}, 'zr')" style="padding:3px 10px; font-size:12px;">+ Liberação</button>
+        <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'circ')">+ Circumambulação</button>
+        <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'zr')">+ Liberação</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">Confirma?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
     </div>`;
@@ -770,7 +773,7 @@ function rzMontarFatos(r) {
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário na seção 4 e tudo se recalcula.</div>
     ${tabelas}
     ${linhas}
-    <div style="margin-top:8px;"><button type="button" class="btn-secondary" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
+    <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}`;
 }
 
@@ -842,7 +845,7 @@ function rzMontarMapaFinalCorpo(r, velha) {
   const hhmm = rzFmtHora(rzMsFinal(r, rzFinalSel), r.entrada.fuso).slice(0, 5);
   return `
     <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Gera a mandala no horário final (${hhmm}). O mapa que está aberto no menu não muda.</div>
-    <div style="margin-bottom:8px;"><button type="button" class="btn-secondary" id="rzBtnMandala" onclick="rzGerarMandalaFinal()">Gerar mandala no horário final</button></div>
+    <div style="margin-bottom:8px;"><button type="button" class="botao-texto" id="rzBtnMandala" onclick="rzGerarMandalaFinal()">Gerar mandala no horário final</button></div>
     <div id="rzMandalaFinal">${rzMapaFinalSvg ? `<img src="${rzMapaFinalSvg.url}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">` : ''}</div>`;
 }
 
