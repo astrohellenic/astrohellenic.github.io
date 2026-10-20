@@ -401,7 +401,7 @@
     lista.innerHTML = retif.fatos.map((f, i) => `
       <div class="fato-linha">
         <div class="fato-cab"><span class="fato-num">Fato ${i + 1}</span>${retif.fatos.length > 1 ? `<button type="button" class="fato-remover" onclick="removerFato(${f.id})">Remover</button>` : ''}</div>
-        <div class="form-group"><label>Data</label><input type="date" max="${hoje}" value="${escHtml(f.data)}" onchange="mudarDataFato(${f.id}, this.value)"></div>
+        <div class="form-group"><label>Data</label><input type="date" max="${hoje}" value="${escHtml(f.data)}" onchange="mudarDataFato(${f.id}, this.value)" onblur="dataFatoFechou()"></div>
         <div class="form-group"><label>O que aconteceu</label><textarea placeholder="Conte o que aconteceu nessa data" oninput="mudarTextoFato(${f.id}, this.value)">${escHtml(f.texto)}</textarea></div>
       </div>`).join('');
     atualizarContadorFatos();
@@ -423,7 +423,14 @@
 
   function adicionarFato() { retif.fatos.push({ id: ++retif.seq, data: '', texto: '' }); guardarRascunhoFatos(); renderFatos(); }
   function removerFato(id) { retif.fatos = retif.fatos.filter(f => f.id !== id); guardarRascunhoFatos(); renderFatos(); }
-  function mudarDataFato(id, v) { const f = retif.fatos.find(x => x.id === id); if (f) { f.data = v; guardarRascunhoFatos(); renderFatos(); } }
+  /* Mudou a data: só guarda. Redesenhar na hora destrói a caixa e fecha o calendário no iPad; redesenha (e ordena) quando o calendário fecha. */
+  let dataFatoTimer = null;
+  function mudarDataFato(id, v) {
+    const f = retif.fatos.find(x => x.id === id); if (f) { f.data = v; guardarRascunhoFatos(); atualizarContadorFatos(); }
+    clearTimeout(dataFatoTimer);
+    dataFatoTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') renderFatos(); }, 1200);
+  }
+  function dataFatoFechou() { clearTimeout(dataFatoTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') renderFatos(); }, 150); }
   function mudarTextoFato(id, v) { const f = retif.fatos.find(x => x.id === id); if (f) { f.texto = v; guardarRascunhoFatos(); atualizarContadorFatos(); } }
 
   function copiarLinkFatos(btn) {

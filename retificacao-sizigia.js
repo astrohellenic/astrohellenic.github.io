@@ -753,7 +753,7 @@ function rzMontarFatos(r) {
     <div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
-        <label class="texto-apagado" style="font-size:12px; display:flex; align-items:center; gap:8px;">Data <input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" title="Data do fato"></label>
+        <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
         <button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>
       </div>
       <textarea placeholder="O que aconteceu nessa data" oninput="rzFatoTexto(${f.id}, this.value)">${escapeHtml(f.texto)}</textarea>
@@ -840,13 +840,21 @@ function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
 function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
-function rzFatoData(id, v) { const f = rzFatoPorId(id); if (f) { f.data = v; rzRedesenharFatos(); } rzMudou(); }
+/* Mudou a data: só guarda. Redesenhar na hora destruiria a caixa e fecharia o calendário no iPad (ele abre, "escolhe" hoje e fecha). Redesenha quando o calendário fecha. */
+let rzDataTimer = null;
+function rzFatoData(id, v) {
+  const f = rzFatoPorId(id); if (f) f.data = v;
+  rzMudou();
+  clearTimeout(rzDataTimer);
+  rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
+}
+function rzFatoDataFechou() { clearTimeout(rzDataTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 150); }
 function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; rzMudou(); }
 function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } rzMudou(); }
 function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } rzMudou(); }
 function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }
 function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } rzMudou(); }
-if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoTexto, rzFatoConf });
+if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
