@@ -781,10 +781,11 @@ function rzMontarFatos(r) {
           <button type="button" class="botao-icone" onclick="rzTecRemover(${f.id}, ${k})" title="Tirar esta técnica do fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button></div>
         ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], false, dFim)}</div>`}
       </div>`).join('');
+    const resumoF = (d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data') + (f.texto ? ' · ' + (f.texto.length > 60 ? f.texto.slice(0, 60) + '…' : f.texto) : '');
     return `
-    <div class="rz-fato">
+    <details class="rz-fato" ${f.aberto === false ? '' : 'open'} ontoggle="rzFatoAbriu(${f.id}, this.open)">
+      <summary style="cursor:pointer; padding:4px 0;"><span class="rz-num">${numero[f.id]}</span> <span style="font-size:13px; font-weight:700;">${escapeHtml(resumoF)}</span></summary>
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
-        <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
         <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}" onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
         ${f.periodo ? `<span style="color:var(--azul-egipcio-escuro);">até</span><span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Fim do período"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.ate}" onchange="rzFatoAte(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>` : ''}
@@ -798,7 +799,7 @@ function rzMontarFatos(r) {
         <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'zr')">+ Liberação</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">O horário confirma este fato?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
-    </div>`;
+    </details>`;
   }).join('');
   // uma tabela por técnica + ponto de partida usados, com os fatos que a usam
   const grupos = new Map();
@@ -811,6 +812,7 @@ function rzMontarFatos(r) {
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário acima e tudo se recalcula.</div>
+    <div style="display:flex; gap:6px; margin-bottom:4px;"><button type="button" class="botao-texto" onclick="rzFatosAbrirTodos(true)">Abrir todos</button><button type="button" class="botao-texto" onclick="rzFatosAbrirTodos(false)">Fechar todos</button></div>
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}
@@ -891,13 +893,15 @@ function rzFatoAte(id, v) {
   rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
 }
 function rzFatoPeriodo(id) { const f = rzFatoPorId(id); if (f) { f.periodo = !f.periodo; rzRedesenharFatos(); } rzMudou(); }
+function rzFatoAbriu(id, aberto) { const f = rzFatoPorId(id); if (f) f.aberto = aberto; }
+function rzFatosAbrirTodos(aberto) { rzFatos.forEach(f => { f.aberto = aberto; }); rzRedesenharFatos(); }
 function rzFatoDataFechou() { clearTimeout(rzDataTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 150); }
 function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; rzMudou(); }
 function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } rzMudou(); }
 function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } rzMudou(); }
 function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }
 function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } rzMudou(); }
-if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoData, rzFatoAte, rzFatoPeriodo, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
+if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoAbriu, rzFatosAbrirTodos, rzFatoData, rzFatoAte, rzFatoPeriodo, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
