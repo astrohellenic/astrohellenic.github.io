@@ -236,12 +236,9 @@ function htmlCfgRelatorios() {
 
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Relatório de retificação</h4>
-        <p class="cfg-card-desc">O relatório gerado na ferramenta de retificação é uma extensão do Relatório: ele usa o estilo (com papiro ou sem, capa Céu, Papiro ou cores) do serviço que você escolher aqui. Esse estilo é o que está definido na tela Relatório, no modelo desse serviço.</p>
+        <p class="cfg-card-desc">O relatório gerado na ferramenta de retificação é uma extensão do Relatório: aqui você escolhe o estilo dele (com papiro ou sem, capa Céu, Papiro ou cores), as mesmas escolhas do editor de modelos, e qual mandala vai na capa.</p>
         <div class="cfg-campos">
-          <div class="cfg-campo-largo">
-            <label class="cfg-rotulo" for="cfgRetifServico">Estilo do serviço</label>
-            <select id="cfgRetifServico" class="modal-select" onchange="salvarRelatorioRetificacaoConfig()"><option value="">Seguir o tema do software</option></select>
-          </div>
+          <div class="cfg-campo-largo" id="cfgRetifEstiloWrap" onchange="agendarSalvarRelatorioRetificacao()" onclick="agendarSalvarRelatorioRetificacao()"></div>
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo">Mandala na capa</label>
             <label class="cfg-checkbox"><input type="radio" name="cfgRetifCapaMandala" value="retificado" onchange="salvarRelatorioRetificacaoConfig()"> Mapa retificado</label>
@@ -827,16 +824,17 @@ async function carregarConfiguracoesRelatorio() {
 
 /* RELATÓRIO DE RETIFICAÇÃO (Configurações → Relatórios): qual serviço (modelo) dá o estilo e qual mandala vai na capa. Salva na hora, sem botão. */
 async function carregarRelatorioRetificacaoConfig() {
-  const sel = document.getElementById('cfgRetifServico'); if (!sel) return;
+  const wrap = document.getElementById('cfgRetifEstiloWrap'); if (!wrap) return;
   try {
+    window.relatorioEditorAlvoAtual = null;   // não há editor de modelo aberto aqui: os botões de cor/paleta do Relatório não devem salvar rascunho nenhum
     const { data: { user } } = await supabaseClient.auth.getUser(); if (!user) return;
-    const [pr, cf] = await Promise.all([
-      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
-      supabaseClient.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala, retificacao_encerramento').eq('user_id', user.id).maybeSingle()
-    ]);
-    (pr.data || []).forEach(p => { const o = document.createElement('option'); o.value = String(p.id); o.textContent = p.nome; sel.appendChild(o); });
+    const cf = await supabaseClient.from('configuracoes').select('retificacao_capa_bloco, retificacao_capa_mandala, retificacao_encerramento').eq('user_id', user.id).maybeSingle();
     const c = (cf && cf.data) || {};
-    sel.value = c.retificacao_preset_id ? String(c.retificacao_preset_id) : '';
+    // as mesmas escolhas do editor de modelos do Relatório (relatorio.js): com/sem papiro, capa Céu/Papiro, cores, borda, círculo, tamanho do título
+    const b = (c.retificacao_capa_bloco && typeof c.retificacao_capa_bloco === 'object') ? c.retificacao_capa_bloco : {};
+    const estiloPdf = estiloPdfDoModelo(b), estiloCapa = estiloCapaDoModelo(b);
+    wrap.innerHTML = relatorioCapaEstiloHtml(estiloPdf, estiloCapa)
+      + relatorioPaletaCapaHtml(b.paletaId || RELATORIO_PALETA_CAPA_PADRAO, b.corFundo, b.corTitulo, b.corCabecalho, b.corBorda, b.temBorda, b.corCirculo, b.temCirculo, b.tamanhoTitulo, estiloCapa);
     const enc = document.getElementById('cfgRetifEncerramento'); if (enc) enc.value = c.retificacao_encerramento || '';
     const v = c.retificacao_capa_mandala || 'retificado';
     document.querySelectorAll('input[name="cfgRetifCapaMandala"]').forEach(r => { r.checked = r.value === v; });
@@ -850,13 +848,16 @@ async function salvarRelatorioRetificacaoConfig() {
     const marcado = document.querySelector('input[name="cfgRetifCapaMandala"]:checked');
     const { error } = await supabaseClient.from('configuracoes').upsert({
       user_id: user.id,
-      retificacao_preset_id: document.getElementById('cfgRetifServico').value || null,
+      retificacao_capa_bloco: (typeof lerEstiloCapaDoFormulario === 'function' && document.getElementById('cfgRetifEstiloWrap') && document.getElementById('cfgRetifEstiloWrap').children.length) ? lerEstiloCapaDoFormulario() : undefined,
       retificacao_capa_mandala: marcado ? marcado.value : 'retificado',
       retificacao_encerramento: (document.getElementById('cfgRetifEncerramento').value || '').trim() || null
     }, { onConflict: 'user_id' });
     if (st) st.textContent = error ? 'Não salvou: ' + error.message : 'Salvo.';
   } catch (e) { if (st) st.textContent = 'Não salvou (sem conexão?).'; }
 }
+let relatorioRetifTimer = null;
+function agendarSalvarRelatorioRetificacao() { clearTimeout(relatorioRetifTimer); relatorioRetifTimer = setTimeout(salvarRelatorioRetificacaoConfig, 700); }
+window.agendarSalvarRelatorioRetificacao = agendarSalvarRelatorioRetificacao;
 window.salvarRelatorioRetificacaoConfig = salvarRelatorioRetificacaoConfig;
 
 /* PROCESSA O UPLOAD DO LOGO USADO NOS RELATÓRIOS (bucket 'logos', arquivo

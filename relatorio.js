@@ -2859,17 +2859,9 @@ function lerBlocosDoEditor() {
   return blocos;
 }
 
-/* Lê os blocos do editor já com os campos fixos incluídos (capa e texto
-   de encerramento) — usada tanto pelo salvamento manual quanto pelo
-   autosave do rascunho, pra nunca duas implementações divergirem de
-   como isso é montado. */
-function lerBlocosComCapaDoEditor() {
-  const blocos = lerBlocosDoEditor();
-  if (!blocos.length) return blocos;
-  const capaFonteSelect = document.getElementById('relCapaFonte');
-  const blocoCapa = { id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' };
-  const capaIdxInput = document.getElementById('relCapaCapturaIdx');
-  if (capaIdxInput && capaIdxInput.value !== '') blocoCapa.capturaIndex = parseInt(capaIdxInput.value, 10);
+/* Lê do formulário (editor do modelo OU Configurações → Relatórios) o ESTILO da capa e do PDF: paleta, cores, borda, círculo, tamanho do título, com/sem papiro. */
+function lerEstiloCapaDoFormulario() {
+  const blocoCapa = {};
   const paletaIdSelect = document.getElementById('relCapaPaletaId');
   blocoCapa.paletaId = paletaIdSelect ? paletaIdSelect.value : RELATORIO_PALETA_CAPA_PADRAO;
   if (blocoCapa.paletaId === 'custom') {
@@ -2895,6 +2887,22 @@ function lerBlocosComCapaDoEditor() {
   blocoCapa.temCirculo = temCirculoInput ? temCirculoInput.checked : false;
   const tamanhoTituloSelect = document.getElementById('relCapaTamanhoTitulo');
   blocoCapa.tamanhoTitulo = tamanhoTituloSelect ? tamanhoTituloSelect.value : RELATORIO_TAMANHO_TITULO_PADRAO;
+  return blocoCapa;
+}
+window.lerEstiloCapaDoFormulario = lerEstiloCapaDoFormulario;
+
+/* Lê os blocos do editor já com os campos fixos incluídos (capa e texto
+   de encerramento) — usada tanto pelo salvamento manual quanto pelo
+   autosave do rascunho, pra nunca duas implementações divergirem de
+   como isso é montado. */
+function lerBlocosComCapaDoEditor() {
+  const blocos = lerBlocosDoEditor();
+  if (!blocos.length) return blocos;
+  const capaFonteSelect = document.getElementById('relCapaFonte');
+  const blocoCapa = { id: '__capa__', type: 'capa', fonte: capaFonteSelect ? capaFonteSelect.value : 'mandala_natal' };
+  const capaIdxInput = document.getElementById('relCapaCapturaIdx');
+  if (capaIdxInput && capaIdxInput.value !== '') blocoCapa.capturaIndex = parseInt(capaIdxInput.value, 10);
+  Object.assign(blocoCapa, lerEstiloCapaDoFormulario());
   blocos.push(blocoCapa);
   const quillEncerramento = (window.relatorioQuillInstancias || {})['__encerramento__'];
   blocos.push({ id: '__encerramento__', type: 'encerramento', corpo: quillEncerramento ? quillEncerramento.root.innerHTML : RELATORIO_ENCERRAMENTO_PADRAO });
