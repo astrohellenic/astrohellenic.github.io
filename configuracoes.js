@@ -246,6 +246,7 @@ function htmlCfgRelatorios() {
             <label class="cfg-checkbox"><input type="radio" name="cfgRetifCapaMandala" value="nenhuma" onchange="salvarRelatorioRetificacaoConfig()"> Nenhuma mandala</label>
           </div>
         </div>
+        <hr class="divisa">
         <div class="cfg-campos">
           <div class="cfg-campo-largo">
             <label class="cfg-rotulo" for="cfgRetifEncerramento">Texto da última página</label>
