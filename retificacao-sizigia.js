@@ -580,7 +580,9 @@ function rzMontarResultado(r) {
     + sanfona('Dados de entrada', rzMontarDadosEntrada(r))
     + sanfona('A sizígia pré-natal', sem(blocoSizigia))
     + sanfona('O cálculo', blocoVotos.replace('<hr class="divisa">', '') + blocoHorarios)
-    + sanfona('Horário retificado', '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div><hr class="divisa"><div id="rzFatos">' + rzMontarFatos(r) + '</div>')
+    + sanfona('Horário retificado', '<div id="rzFinal">' + rzMontarHorarioFinal(r) + '</div>')
+    + sanfona('Fatos da vida', '<div id="rzFatos">' + rzMontarFatos(r) + '</div>')
+    + sanfona('Visão geral', '<div id="rzVisaoGeral">' + rzVgHtml + '</div>')
     + sanfona('O mapa final', rzMontarMapaFinal(r))
     + sanfona('Conclusão e anexos', '<div id="rzConclusaoAnexos">' + (typeof rzMontarConclusaoAnexos === 'function' ? rzMontarConclusaoAnexos() : '') + '</div>')
     + rodape;
@@ -757,7 +759,7 @@ function rzLinhaTecnica(ctx, t, d, n, paraRelatorio, dFim) {
 
 function rzMontarFatos(r) {
   const ctx = rzContextoFatos(r);
-  if (!ctx) return `<div class="texto-apagado rz-fonte">Escolha um horário acima.</div>`;
+  if (!ctx) { rzVgHtml = ''; return `<div class="texto-apagado rz-fonte">Escolha um horário acima.</div>`; }
   const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
   const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });   // 1, 2, 3... na ordem de data
   const btnConf = (f, v, rot) => `<button type="button" class="botao-texto${f.conf === v ? ' rz-sel' : ''}" onclick="rzFatoConf(${f.id}, '${v}')">${rot}</button>`;
@@ -814,6 +816,7 @@ function rzMontarFatos(r) {
   const n = (v) => rzFatos.filter(f => f.conf === v).length;
   const resumo = rzFatos.some(f => f.conf)
     ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
+  rzVgHtml = tabelas ? `<div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>${tabelas}` : `<div class="texto-apagado rz-fonte">Preencha a data de um fato para ver as linhas.</div>`;
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário acima e tudo se recalcula.</div>
@@ -821,7 +824,7 @@ function rzMontarFatos(r) {
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}
-    ${tabelas ? `<hr class="divisa"><details ${rzVgAberta ? 'open' : ''} ontoggle="rzVgAberta = this.open"><summary style="cursor:pointer;"><h3 class="titulo-secao" style="display:inline-block; margin:0;">Visão geral</h3></summary><div class="texto-apagado rz-fonte" style="margin:8px 0;">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>${tabelas}</details>` : ''}`;
+`;
 }
 
 /* Circumambulação a partir de um ponto: as pautas de signo (as mesmas da ferramenta) do primeiro ao último fato, com o número de cada fato.
@@ -879,7 +882,12 @@ function rzMontarTabelaZR(ctx, lote, fatos) {
     <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Nível e signo</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
 }
 
-function rzRedesenharFatos() { const el = document.getElementById('rzFatos'); if (el && rzUltimo) el.innerHTML = rzMontarFatos(rzUltimo); }
+let rzVgHtml = '';   // o conteúdo da seção "Visão geral" (calculado junto com os fatos)
+function rzRedesenharFatos() {
+  const el = document.getElementById('rzFatos'); if (!el || !rzUltimo) return;
+  el.innerHTML = rzMontarFatos(rzUltimo);
+  const vg = document.getElementById('rzVisaoGeral'); if (vg) vg.innerHTML = rzVgHtml;
+}
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
 function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
@@ -898,7 +906,6 @@ function rzFatoAte(id, v) {
   rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
 }
 function rzFatoPeriodo(id) { const f = rzFatoPorId(id); if (f) { f.periodo = !f.periodo; rzRedesenharFatos(); } rzMudou(); }
-let rzVgAberta = true;   // a "Visão geral" aberta ou fechada (sobrevive aos redesenhos)
 function rzFatoAlternar(id) { const f = rzFatoPorId(id); if (f) { f.aberto = f.aberto === false; rzRedesenharFatos(); } }
 function rzFatosAbrirTodos(aberto) { rzFatos.forEach(f => { f.aberto = aberto; }); rzRedesenharFatos(); }
 function rzFatoDataFechou() { clearTimeout(rzDataTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 150); }
