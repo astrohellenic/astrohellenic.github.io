@@ -951,7 +951,7 @@ async function rzGerarMandalaFinal() {
     const papiro = window.temaMandala === 'ceu';
     // 'claro' + sem fundo: o mesmo que a Mandala manda pro Relatório (no Tema Céu, a roda em tinta sobre papiro)
     roda = papiro ? desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true, tintaPapiro: true }) : desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true });
-    if (typeof montarCabecalhoMandalaImagemHTML === 'function') cabecalho = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true });
+    if (typeof montarCabecalhoMandalaImagemHTML === 'function') cabecalho = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true, retificado: true });
   } catch (err) {
     console.error('Mandala no horário final:', err);
     alvo.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">Não foi possível gerar a mandala: ${escapeHtml(err.message || String(err))}</div>`;
