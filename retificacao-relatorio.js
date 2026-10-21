@@ -184,16 +184,16 @@ function rzRelMontarPaginas() {
 /* ---------- Capa: a do Relatório (relatorio.js), com o estilo do serviço escolhido em Configurações → Relatórios ---------- */
 /* { preset: {id, nome, blocos} | null, mandala: 'retificado' | 'estimado' | 'nenhuma' }. Qualquer falha = padrão (segue o tema, mandala retificada). */
 async function rzRelConfig() {
-  const padrao = { preset: null, mandala: 'retificado' };
+  const padrao = { preset: null, mandala: 'retificado', encerramento: '' };
   try {
     const db = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null; if (!db) return padrao;
     const { data: { user } } = await db.auth.getUser(); if (!user) return padrao;
-    const { data: c } = await db.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala').eq('user_id', user.id).maybeSingle();
+    const { data: c } = await db.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala, retificacao_encerramento').eq('user_id', user.id).maybeSingle();
     if (!c) return padrao;
     const mandala = ['retificado', 'estimado', 'nenhuma'].includes(c.retificacao_capa_mandala) ? c.retificacao_capa_mandala : 'retificado';
     let preset = null;
     if (c.retificacao_preset_id) { const { data: p } = await db.from('relatorio_presets').select('id, nome, blocos').eq('id', c.retificacao_preset_id).maybeSingle(); if (p) preset = p; }
-    return { preset, mandala };
+    return { preset, mandala, encerramento: (c.retificacao_encerramento || '').trim() };
   } catch (e) { console.warn('Configuração do relatório de retificação:', e); return padrao; }
 }
 
@@ -221,6 +221,9 @@ async function rzRelCapa() {
     const capaFonte = cfg.mandala === 'nenhuma' ? 'nenhuma' : 'mandala_natal';
     const blocoCapa = Object.assign({}, bc, { fonte: capaFonte });
     const blocos = [blocoCapa];
+    // última página: o texto escrito em Configurações → Relatórios (parágrafos separados por linha em branco); sem texto, o do modelo ou o padrão do Relatório
+    if (cfg.encerramento) blocos.push({ type: 'encerramento', corpo: cfg.encerramento.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('') });
+    else { const be = ((cfg.preset && cfg.preset.blocos) || []).find(b => b.type === 'encerramento'); if (be) blocos.push(be); }
     const desenhar = () => renderizarMandalasDoPreset(blocos, capaFonte);
     const imgs = capaFonte === 'nenhuma' ? { png1: null, png2: null, png1Capa: null, png2Capa: null }
       : (cfg.mandala === 'retificado' ? await rzComMapaRetificado(desenhar) : await desenhar());
@@ -229,8 +232,9 @@ async function rzRelCapa() {
     const html = montarConteudoRelatorioHtml({ nome, blocos }, perfil, imgs.png1, imgs.png2, null, null, capaFonte, imgs.png1Capa, imgs.png2Capa);
     const m = html.match(/<section class="rel-page rel-capa[\s\S]*?<\/section>/);
     if (!m) return null;
+    const fim = html.match(/<section class="rel-page rel-page-encerramento"[\s\S]*?<\/section>/);
     window.relatorioPresetAtual = { nome };
-    return { html: m[0], classe: typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio(blocos) : '' };
+    return { html: m[0], fim: fim ? fim[0] : '', classe: typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio(blocos) : '' };
   } catch (err) { console.error('Capa do relatório de retificação:', err); return null; }
 }
 
@@ -256,7 +260,7 @@ async function rzGerarRelatorio() {
         <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
       </div>
       <div id="relToolbarEspacador" class="no-print"></div>
-      <div class="rel-viewer rz-rel${capa ? capa.classe : (typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : '')}">${capa ? capa.html : ''}${rzRelMontarPaginas()}</div>`;
+      <div class="rel-viewer rz-rel${capa ? capa.classe : (typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : '')}">${capa ? capa.html : ''}${rzRelMontarPaginas()}${capa ? capa.fim : ''}</div>`;
     container.scrollTop = 0;
     window.scrollTo(0, 0);
     dividirPaginasLongasEmFolhas(container);

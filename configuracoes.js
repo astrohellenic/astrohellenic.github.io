@@ -249,6 +249,12 @@ function htmlCfgRelatorios() {
             <label class="cfg-checkbox"><input type="radio" name="cfgRetifCapaMandala" value="nenhuma" onchange="salvarRelatorioRetificacaoConfig()"> Nenhuma mandala</label>
           </div>
         </div>
+        <div class="cfg-campos">
+          <div class="cfg-campo-largo">
+            <label class="cfg-rotulo" for="cfgRetifEncerramento">Texto da última página</label>
+            <textarea id="cfgRetifEncerramento" class="modal-input" rows="6" placeholder="Mensagem que encerra o relatório. Deixe uma linha em branco entre os parágrafos. Seu nome, telefone e e-mail (do perfil acima) entram sozinhos no rodapé." onchange="salvarRelatorioRetificacaoConfig()"></textarea>
+          </div>
+        </div>
         <div id="cfgRetifRelStatus" class="cfg-card-desc" style="margin:6px 0 0;"></div>
       </div>
 
@@ -826,11 +832,12 @@ async function carregarRelatorioRetificacaoConfig() {
     const { data: { user } } = await supabaseClient.auth.getUser(); if (!user) return;
     const [pr, cf] = await Promise.all([
       supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
-      supabaseClient.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala').eq('user_id', user.id).maybeSingle()
+      supabaseClient.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala, retificacao_encerramento').eq('user_id', user.id).maybeSingle()
     ]);
     (pr.data || []).forEach(p => { const o = document.createElement('option'); o.value = String(p.id); o.textContent = p.nome; sel.appendChild(o); });
     const c = (cf && cf.data) || {};
     sel.value = c.retificacao_preset_id ? String(c.retificacao_preset_id) : '';
+    const enc = document.getElementById('cfgRetifEncerramento'); if (enc) enc.value = c.retificacao_encerramento || '';
     const v = c.retificacao_capa_mandala || 'retificado';
     document.querySelectorAll('input[name="cfgRetifCapaMandala"]').forEach(r => { r.checked = r.value === v; });
     if (cf && cf.error) { const st = document.getElementById('cfgRetifRelStatus'); if (st) st.textContent = 'Não foi possível ler esta configuração: ' + cf.error.message; }
@@ -844,7 +851,8 @@ async function salvarRelatorioRetificacaoConfig() {
     const { error } = await supabaseClient.from('configuracoes').upsert({
       user_id: user.id,
       retificacao_preset_id: document.getElementById('cfgRetifServico').value || null,
-      retificacao_capa_mandala: marcado ? marcado.value : 'retificado'
+      retificacao_capa_mandala: marcado ? marcado.value : 'retificado',
+      retificacao_encerramento: (document.getElementById('cfgRetifEncerramento').value || '').trim() || null
     }, { onConflict: 'user_id' });
     if (st) st.textContent = error ? 'Não salvou: ' + error.message : 'Salvo.';
   } catch (e) { if (st) st.textContent = 'Não salvou (sem conexão?).'; }
