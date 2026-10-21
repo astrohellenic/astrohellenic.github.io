@@ -406,7 +406,10 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container table { width: 100%; }
       #rz-container .rz-escolhido { color: var(--terracota); font-weight: 700; }
       #rz-container .rz-fonte { font-size: 11.5px; line-height: 1.55; }
-      #rz-container details.rz-sanfona { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); margin-top: 14px; padding-top: 4px; }
+      /* os blocos se separam pela divisa dupla do software (<hr class="divisa">); nunca uma linha solta além dela: a última linha de uma tabela e o cartão no fim do bloco não repetem a linha da divisa */
+      #rz-container details.rz-sanfona table:last-child tr:last-child > * { border-bottom: 0; }
+      #rz-container details.rz-sanfona .cartao:first-child { border-top: 0; }
+      #rz-container details.rz-sanfona .cartao:last-child { border-bottom: 0; }
       #rz-container details.rz-sanfona > summary { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); padding: 8px 0; margin: 0 0 6px; cursor: pointer; }
       #rz-container input[type="text"], #rz-container input[type="date"], #rz-container textarea { background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
       #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
@@ -415,7 +418,8 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .rz-tec { margin-top: 6px; }
       #rz-container .botao-texto { padding: 4px 12px; font-size: 12px; }
       #rz-container .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
-      #rz-container .rz-fato { padding: 10px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+      #rz-container .rz-fato { padding: 10px 0; }
+      #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
       #rz-container details > summary { cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
@@ -522,14 +526,14 @@ function rzMontarResultado(r) {
   const doRegra = (regra) => r.candidatos.filter(c => c.regra === regra).map(linha).join('');
 
   const blocoHorarios = `
-    <h3 class="titulo-secao">Horários encontrados</h3>
-    <div class="cartao" style="margin-bottom:14px;">
+    <h3 class="titulo-secao" style="margin-top:18px;">Horários encontrados</h3>
+    <div class="cartao">
       <div class="rotulo">Ptolomeu e Hefestião</div>
       <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2.</div>
       <div style="font-size:13px; margin:2px 0 6px; font-weight:700;">${r.contagem.vencedores.length === 1 ? 'Ganhou nos votos:' : `Empate nos votos (${r.contagem.vencedores.length} planetas com ${r.contagem.max} ${r.contagem.max === 1 ? 'voto' : 'votos'}):`} ${r.contagem.vencedores.map(id => `<span style="display:inline-block; margin-right:6px;">${rzPlanetaRetroHtml(r, id, 20)}</span>`).join('')}</div>
       ${doRegra('ptolomeu')}
     </div>
-    <div class="cartao">
+    <div class="cartao" style="border-top:0;">
       <div class="rotulo">Valens</div>
       <div class="texto-apagado rz-fonte" style="margin:4px 0 6px;">Fonte: Valens, Antologias I.5. Valem o senhor do termo e o senhor do signo do ponto da sizígia.</div>
       ${doRegra('valens')}
@@ -575,7 +579,8 @@ function rzMontarResultado(r) {
 
   // Seções em sanfona (abrem e fecham), sem números. O que já existia na ferramenta é mantido e encaixado.
   const sem = (h) => h.replace('<hr class="divisa">', '').replace(/<h3 class="titulo-secao">[^<]*<\/h3>/, '');
-  const sanfona = (titulo, corpo) => `<details class="rz-sanfona" ${rzAberto('sec|' + titulo)} ontoggle="rzAbriu('sec|${titulo}', this.open)"><summary>${titulo}</summary>${corpo}</details>`;
+  let primeira = true;   // o 1º bloco já vem logo depois da divisa que fecha o cabeçalho: sem divisa extra
+  const sanfona = (titulo, corpo) => `${primeira ? (primeira = false, '') : '<hr class="divisa">'}<details class="rz-sanfona" ${rzAberto('sec|' + titulo)} ontoggle="rzAbriu('sec|${titulo}', this.open)"><summary>${titulo}</summary>${corpo}</details>`;
   return aviso
     + sanfona('Dados de entrada', rzMontarDadosEntrada(r))
     + sanfona('A sizígia pré-natal', sem(blocoSizigia))
@@ -631,8 +636,8 @@ function rzMontarHorarioFinal(r) {
   const aj = sel.ajusteMin;
   return `
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Escolha o candidato que os fatos da vida sustentam. O método dá um horário aproximado: o ajuste fino, em minutos, é feito abaixo.</div>
-    <div class="cartao" style="margin-bottom:10px;">${opcoes}</div>
-    <div class="cartao">
+    <div class="cartao">${opcoes}</div>
+    <div class="cartao" style="border-top:0;">
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px;">
         ${bt('−5 min', -5)} ${bt('−1 min', -1)} ${bt('+1 min', 1)} ${bt('+5 min', 5)} ${aj ? bt('zerar ajuste', -aj) : ''}
         <span class="texto-apagado" style="font-size:12px;">ajuste: ${aj === 0 ? 'nenhum' : (aj > 0 ? '+' : '−') + Math.abs(aj) + ' min'}</span>
