@@ -60,11 +60,16 @@ async function rzCarregarFicha(r) {
   const db = rzClienteSupabase(), mapa = rzMapaIdAtual();
   if (!db || !mapa) return;
   try {
-    const { data, error } = await db.from('retificacoes').select('fatos, enviado_em, trabalho').eq('mapa_id', mapa).maybeSingle();
-    if (error || !data) return;
+    // a linha mais recente deste mapa (se por algum motivo houver mais de uma, não trava: pega a última salva)
+    const { data: linhas, error } = await db.from('retificacoes').select('fatos, enviado_em, trabalho, atualizado_em').eq('mapa_id', mapa).order('atualizado_em', { ascending: false, nullsFirst: false }).limit(1);
+    if (error) { rzMostrarStatusSalvo('Não leu o que estava salvo: ' + error.message); return; }
+    const data = Array.isArray(linhas) ? linhas[0] : linhas;
+    if (!data) return;
     rzFichaInfo = { enviado_em: data.enviado_em, temFatosDoCliente: Array.isArray(data.fatos) && data.fatos.length > 0 };
     rzAplicarFicha(r, data);
-  } catch (e) { console.warn('Ficha da retificação não carregou:', e); }
+    const t = data.trabalho;
+    if (t && typeof t === 'object') rzMostrarStatusSalvo('Trabalho salvo carregado' + (t.abertas ? ` (${Object.keys(t.abertas).length} sanfonas guardadas)` : '') + '.');
+  } catch (e) { console.warn('Ficha da retificação não carregou:', e); rzMostrarStatusSalvo('Não leu o que estava salvo (sem conexão?).'); }
 }
 
 function rzMostrarStatusSalvo(texto) { const el = document.getElementById('rzSalvoStatus'); if (el) el.textContent = texto; }
