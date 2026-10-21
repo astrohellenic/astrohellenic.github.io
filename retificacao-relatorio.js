@@ -40,23 +40,23 @@ if (typeof window !== 'undefined') Object.assign(window, { rzAnexoMarcar });
 
 /* ---------- Relatório: páginas ---------- */
 const RZ_REL_CSS = `
-  .rel-viewer.rz-rel { --terracota: #A03E25; --azul-egipcio-claro: #1F5FA3; --azul-egipcio-escuro: #103b70; --preto-tinta: #1a1410; --ocre: #B5852F; --contorno-fino: 1px; }
+  .rel-viewer.rz-rel { --terracota: #A03E25; --azul-egipcio-claro: #1F5FA3; --azul-egipcio-escuro: #1034A6; --preto-tinta: #1a1410; --ocre: #B5852F; --contorno-fino: 1px; }
   .rz-rel .com-nome { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
   .rz-rel .nome-glifo { font-size: 11px; }
   /* tabelas: o mesmo visual de .tabela-epoca do software (componentes.css) — só linhas horizontais, sem fundo, sem linhas verticais */
   .rz-rel table { width: 100%; border-collapse: collapse; border: 0; background: transparent; font-size: 11.5px; margin: 0 0 10px 0; color: #1a1410; }
-  .rz-rel th { padding: 7px 10px; text-align: left; font-family: 'Cinzel', serif; font-weight: 800; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: #103b70; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; vertical-align: middle; }
+  .rz-rel th { padding: 7px 10px; text-align: left; font-family: 'Cinzel', serif; font-weight: 800; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: #1034A6; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; vertical-align: middle; }
   .rz-rel td { padding: 7px 10px; text-align: left; vertical-align: middle; color: #1a1410; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; }
   .rz-rel .centro { text-align: center; }
   .rz-rel .rz-sub { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #A03E25; margin: 4px 0 6px; }
   .rz-rel .rz-sub-grande { font-size: 15px; margin: 14px 0 8px; }
-  .rz-rel .rz-nota { font-size: 11px; line-height: 1.6; color: #64748b; margin-bottom: 10px; }
-  .rz-rel .texto-apagado { color: #64748b; }
+  .rz-rel .rz-nota { font-size: 11px; line-height: 1.6; color: #1a1410; opacity: .75; margin-bottom: 10px; }
+  .rz-rel .texto-apagado { color: #1a1410; opacity: .75; }
   .rz-rel .rz-escolhido { color: #A03E25; font-weight: 700; }
   .rz-rel .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border: 2px solid #B5852F; color: #A03E25; border-radius: 10px; font-size: 11px; font-weight: 700; }
   .rz-rel .rz-fato-rel { padding: 8px 0; border-top: 1px solid #1F5FA3; break-inside: avoid; }
   .rz-rel .rz-linha-tecnica { font-size: 11.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; margin-top: 3px; }
-  .rz-rel .rz-texto { font-size: 12.5px; line-height: 1.7; color: #1e293b; margin: 4px 0; white-space: pre-wrap; }
+  .rz-rel .rz-texto { font-size: 12.5px; line-height: 1.7; color: #1a1410; margin: 4px 0; white-space: pre-wrap; }
   .rz-rel .rz-cab-svg { margin-bottom: 14px; }
 `;
 

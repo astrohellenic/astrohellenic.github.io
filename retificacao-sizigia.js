@@ -411,12 +411,15 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container details.rz-sanfona .cartao:first-child { border-top: 0; }
       #rz-container details.rz-sanfona .cartao:last-child { border-bottom: 0; }
       #rz-container details.rz-sanfona > summary { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); padding: 8px 0; margin: 0 0 6px; cursor: pointer; }
-      #rz-container input[type="text"], #rz-container input[type="date"], #rz-container textarea { background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
-      #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; }
+      /* campos como no resto do software (componentes.css, .janela): de uma linha = só a linha embaixo; textarea = contorno fino; nunca cantos arredondados */
+      #rz-container input[type="text"], #rz-container input[type="date"] { background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
+      #rz-container input[type="text"]:focus, #rz-container input[type="date"]:focus { border-bottom-color: var(--terracota); }
+      #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; box-sizing: border-box; }
+      #rz-container textarea:focus { border-color: var(--terracota); }
+
       #rz-container input[type="date"] { min-height: 36px; min-width: 160px; }   /* no iPad, data vazia sem isso some */
-      #rz-container select { background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231F5FA3' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 8px center; color: inherit; font: inherit; font-size: 12.5px; padding: 4px 24px 4px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 4px; -webkit-appearance: none; appearance: none; }
+
       #rz-container .rz-tec { margin-top: 6px; }
-      #rz-container .botao-texto { padding: 4px 12px; font-size: 12px; }
       #rz-container .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
       #rz-container .rz-fato { padding: 10px 0; }
       #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
@@ -793,7 +796,7 @@ function rzMontarFatos(r) {
     return `
     <div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
-        <button type="button" onclick="rzFatoAlternar(${f.id})" title="${aberto ? 'Fechar este fato' : 'Abrir este fato'}" style="background:none; border:0; padding:4px; cursor:pointer; display:inline-flex; align-items:center;"><svg viewBox="0 0 12 12" width="14" height="14" style="transform:rotate(${aberto ? 90 : 0}deg);"><polygon points="2,1 11,6 2,11" fill="var(--azul-egipcio-claro)"/></svg></button>
+        <button type="button" onclick="rzFatoAlternar(${f.id})" title="${aberto ? 'Fechar este fato' : 'Abrir este fato'}" style="background:none; border:0; padding:4px; cursor:pointer; display:inline-flex; align-items:center;"><svg viewBox="0 0 12 12" width="14" height="14" style="transform:rotate(${aberto ? 90 : 0}deg);"><polygon points="2,1 11,6 2,11" fill="var(--azul-egipcio-escuro)"/></svg></button>
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
         <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}" onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
