@@ -4020,8 +4020,8 @@ function numerarPaginasIndice(container) {
     // olhar aqui sem baixar o PDF. É esse MESMO elemento que aparece no
     // PDF baixado (baixarRelatorioPDF manda o .rel-viewer como está, sem
     // esconder nada) — não tem número desenhado à parte.
-    // A CAPA não mostra número (ela conta como página 1, então o Índice aparece como 2): o número só existe da segunda página em diante.
-    if (pagina.classList.contains('rel-capa')) { numeroAtual += 1; return; }
+    // A CAPA não é página: não mostra número e não entra na contagem — a página 1 é a primeira depois dela (o Índice).
+    if (pagina.classList.contains('rel-capa')) return;
     let selo = pagina.querySelector(':scope > .rel-num-pagina-canto');
     if (!selo) {
       selo = document.createElement('div');

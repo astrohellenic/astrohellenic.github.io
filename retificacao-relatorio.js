@@ -101,7 +101,8 @@ function rzRelMontarPaginas() {
   const nomeRegra = { ptolomeu: 'Ptolomeu e Hefestião', valens: 'Valens' };
   const s = r.sizigia;
   const paginas = [], fluxo = [];   // fluxo: seções 1 a 5 correm juntas (a divisão em folhas é automática); o resto tem página própria
-  const secao = (titulo, filhos) => { fluxo.push(`<div class="rz-sub rz-sub-grande">${titulo}</div>`); filhos.forEach(f => Array.isArray(f) ? fluxo.push(...f) : fluxo.push(f)); };
+  const itensIndice = [];   // o que entra no Índice, na ordem das páginas (alvo = id do título, ou data-pg da página)
+  const secao = (titulo, filhos) => { const idT = 'rel-titulo-int-rz-' + itensIndice.length; itensIndice.push({ titulo, alvo: idT }); fluxo.push(`<div class="rz-sub rz-sub-grande" id="${idT}">${titulo}</div>`); filhos.forEach(f => Array.isArray(f) ? fluxo.push(...f) : fluxo.push(f)); };
 
   // 1. Dados de entrada (com o cabeçalho global, no horário retificado)
   const cab = rzMapaFinalSvg && rzMapaFinalSvg.cabecalho ? `<div class="rz-cab-svg">${rzMapaFinalSvg.cabecalho}</div>` : '';
@@ -157,16 +158,18 @@ function rzRelMontarPaginas() {
     `<p>O horário calculado foi comparado com os fatos datados da vida${nome ? ' de ' + escapeHtml(nome) : ''}, pelas técnicas indicadas em cada fato. Cada linha mostra o que a técnica indica para a data.</p>`,
     ...cartoes,
     resumo,
-    ...(tabelasTecnicas.length ? [`<div class="rz-sub rz-sub-grande">Visão geral</div><div class="rz-nota">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>`, ...tabelasTecnicas] : [])
+    ...(tabelasTecnicas.length ? [`<div class="rz-sub rz-sub-grande" id="rel-titulo-int-rz-vg">Visão geral</div><div class="rz-nota">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>`, ...tabelasTecnicas] : [])
   ]);
+  if (tabelasTecnicas.length) itensIndice.push({ titulo: 'Visão geral', alvo: 'rel-titulo-int-rz-vg' });
   paginas.unshift(rzRelSecao('Relatório de retificação', fluxo));
 
   // 6. Mapa final
+  itensIndice.push({ titulo: 'O mapa final', alvo: 'rz-mapa' });
   paginas.push(`<section class="rel-page rel-page-mapa" data-pg="rz-mapa"><div class="rel-h1">O mapa final</div>${rzMapaFinalSvg ? `<img class="rel-img-mandala" src="${rzMapaFinalSvg.url}" alt="Mapa com o horário retificado">` : ''}</section>`);
 
   // 7. Conclusão
   const paragrafos = rzConclusao.split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`);
-  if (paragrafos.length) paginas.push(rzRelSecao('Conclusão', paragrafos));
+  if (paragrafos.length) { paginas.push(rzRelSecao('Conclusão', paragrafos)); itensIndice.push({ titulo: 'Conclusão', alvo: 'rz-Conclusão' }); }
 
   // 8. Anexos: telas trazidas de outras ferramentas
   const caps = rzCapturasDisponiveis().filter(c => rzAnexos.includes(c.chave));
@@ -175,10 +178,17 @@ function rzRelMontarPaginas() {
   });
 
   // O método em palavras simples
+  itensIndice.push({ titulo: 'O método em palavras simples', alvo: 'rz-O método em palavras simples' });
   paginas.push(rzRelSecao('O método em palavras simples', [
     `<p>O horário de nascimento nem sempre é exato, e um erro de poucos minutos já muda o grau do Ascendente. Esta retificação usa um método descrito por Ptolomeu no século II, no Tetrabiblos, e usado na prática por Hefestião de Tebas, que o achou satisfatório em quase todos os casos. O método parte da Lua Nova ou Lua Cheia anterior ao nascimento e, a partir dela, acha o grau do Ascendente. Depois, o horário calculado é conferido com os fatos datados da sua vida, e só fica o horário que eles confirmam.</p>`
   ]));
+  rzRelItensIndice = itensIndice;
   return paginas.join('');
+}
+let rzRelItensIndice = [];
+/* Índice (logo depois da capa): os números de página são preenchidos por numerarPaginasIndice, que NÃO conta a capa (página 1 = o Índice) */
+function rzRelIndiceHtml() {
+  return `<section class="rel-page" data-pg="indice"><div class="rel-h1">Índice</div><ul class="rel-indice">${rzRelItensIndice.map(i => `<li><span>${escapeHtml(i.titulo)}</span><span class="rel-num-pagina" data-alvo="${i.alvo}"></span></li>`).join('')}</ul></section>`;
 }
 
 /* ---------- Capa: a do Relatório (relatorio.js), com o estilo do serviço escolhido em Configurações → Relatórios ---------- */
@@ -258,7 +268,7 @@ async function rzGerarRelatorio() {
         <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
       </div>
       <div id="relToolbarEspacador" class="no-print"></div>
-      <div class="rel-viewer rz-rel${capa ? capa.classe : (typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : '')}">${capa ? capa.html : ''}${rzRelMontarPaginas()}${capa ? capa.fim : ''}</div>`;
+      <div class="rel-viewer rz-rel${capa ? capa.classe : (typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : '')}">${capa ? capa.html : ''}${(() => { const pg = rzRelMontarPaginas(); return rzRelIndiceHtml() + pg; })()}${capa ? capa.fim : ''}</div>`;
     container.scrollTop = 0;
     window.scrollTo(0, 0);
     dividirPaginasLongasEmFolhas(container);
