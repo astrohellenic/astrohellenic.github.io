@@ -4334,6 +4334,7 @@ function injetarEstilosRelatorio() {
          livre, e "object-fit: contain" encolhe ela proporcionalmente
          pra caber no espaço que sobrar (nunca esmagada/distorcida). */
       .rel-page-mapa { display: flex; flex-direction: column; align-items: center; }
+      .rel-page-mapa > .rel-h1 { align-self: stretch; }   /* o título (e as linhas duplas) vai de margem a margem, como em todas as páginas — sem isso o align-items:center encolhia ao tamanho do texto */
       .rel-img-mandala { width: 100%; max-width: 175mm; margin-top: 10px; flex: 1; min-height: 0; object-fit: contain; }
 
       /* BLOCOS "CAPTURADOS" DE OUTRAS FERRAMENTAS (ex.: Profecção) — a
