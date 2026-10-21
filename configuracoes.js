@@ -235,6 +235,24 @@ function htmlCfgRelatorios() {
       </div>
 
       <div class="cfg-card cfg-card-largo">
+        <h4 class="cfg-card-titulo">Relatório de retificação</h4>
+        <p class="cfg-card-desc">O relatório gerado na ferramenta de retificação é uma extensão do Relatório: ele usa o estilo (com papiro ou sem, capa Céu, Papiro ou cores) do serviço que você escolher aqui. Esse estilo é o que está definido na tela Relatório, no modelo desse serviço.</p>
+        <div class="cfg-campos">
+          <div class="cfg-campo-largo">
+            <label class="cfg-rotulo" for="cfgRetifServico">Estilo do serviço</label>
+            <select id="cfgRetifServico" class="modal-select" onchange="salvarRelatorioRetificacaoConfig()"><option value="">Seguir o tema do software</option></select>
+          </div>
+          <div class="cfg-campo-largo">
+            <label class="cfg-rotulo">Mandala na capa</label>
+            <label class="cfg-checkbox"><input type="radio" name="cfgRetifCapaMandala" value="retificado" onchange="salvarRelatorioRetificacaoConfig()"> Mapa retificado</label>
+            <label class="cfg-checkbox"><input type="radio" name="cfgRetifCapaMandala" value="estimado" onchange="salvarRelatorioRetificacaoConfig()"> Mapa com o horário estimado</label>
+            <label class="cfg-checkbox"><input type="radio" name="cfgRetifCapaMandala" value="nenhuma" onchange="salvarRelatorioRetificacaoConfig()"> Nenhuma mandala</label>
+          </div>
+        </div>
+        <div id="cfgRetifRelStatus" class="cfg-card-desc" style="margin:6px 0 0;"></div>
+      </div>
+
+      <div class="cfg-card cfg-card-largo">
         <p class="cfg-card-desc" style="margin: 0;">Os modelos de relatório (quais textos e ferramentas entram, e a edição de cada um) ficam na própria tela do <strong>Relatório</strong>, junto de onde você escolhe qual usar — assim tem mais espaço de tela pra editar os textos.</p>
       </div>
     </div>`;
@@ -780,6 +798,7 @@ async function carregarEmailContaConfiguracoes() {
 /* CARREGA O PERFIL NA TELA DE CONFIGURAÇÕES > RELATÓRIOS */
 async function carregarConfiguracoesRelatorio() {
   try {
+    carregarRelatorioRetificacaoConfig();
     const perfil = await carregarPerfilRelatorio();
     if (document.getElementById('relCfgNome')) document.getElementById('relCfgNome').value = perfil.nome;
     if (document.getElementById('relCfgTelefone')) document.getElementById('relCfgTelefone').value = perfil.telefone;
@@ -799,6 +818,38 @@ async function carregarConfiguracoesRelatorio() {
     console.error("Erro ao carregar perfil de relatório:", e);
   }
 }
+
+/* RELATÓRIO DE RETIFICAÇÃO (Configurações → Relatórios): qual serviço (modelo) dá o estilo e qual mandala vai na capa. Salva na hora, sem botão. */
+async function carregarRelatorioRetificacaoConfig() {
+  const sel = document.getElementById('cfgRetifServico'); if (!sel) return;
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser(); if (!user) return;
+    const [pr, cf] = await Promise.all([
+      supabaseClient.from('relatorio_presets').select('id, nome').eq('user_id', user.id).order('nome', { ascending: true }),
+      supabaseClient.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala').eq('user_id', user.id).maybeSingle()
+    ]);
+    (pr.data || []).forEach(p => { const o = document.createElement('option'); o.value = String(p.id); o.textContent = p.nome; sel.appendChild(o); });
+    const c = (cf && cf.data) || {};
+    sel.value = c.retificacao_preset_id ? String(c.retificacao_preset_id) : '';
+    const v = c.retificacao_capa_mandala || 'retificado';
+    document.querySelectorAll('input[name="cfgRetifCapaMandala"]').forEach(r => { r.checked = r.value === v; });
+    if (cf && cf.error) { const st = document.getElementById('cfgRetifRelStatus'); if (st) st.textContent = 'Não foi possível ler esta configuração: ' + cf.error.message; }
+  } catch (e) { console.error('Configuração do relatório de retificação:', e); }
+}
+async function salvarRelatorioRetificacaoConfig() {
+  const st = document.getElementById('cfgRetifRelStatus');
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser(); if (!user) return;
+    const marcado = document.querySelector('input[name="cfgRetifCapaMandala"]:checked');
+    const { error } = await supabaseClient.from('configuracoes').upsert({
+      user_id: user.id,
+      retificacao_preset_id: document.getElementById('cfgRetifServico').value || null,
+      retificacao_capa_mandala: marcado ? marcado.value : 'retificado'
+    }, { onConflict: 'user_id' });
+    if (st) st.textContent = error ? 'Não salvou: ' + error.message : 'Salvo.';
+  } catch (e) { if (st) st.textContent = 'Não salvou (sem conexão?).'; }
+}
+window.salvarRelatorioRetificacaoConfig = salvarRelatorioRetificacaoConfig;
 
 /* PROCESSA O UPLOAD DO LOGO USADO NOS RELATÓRIOS (bucket 'logos', arquivo
    separado do logo da Captação de Clientes) */

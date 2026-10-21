@@ -181,6 +181,59 @@ function rzRelMontarPaginas() {
   return paginas.join('');
 }
 
+/* ---------- Capa: a do Relatório (relatorio.js), com o estilo do serviço escolhido em Configurações → Relatórios ---------- */
+/* { preset: {id, nome, blocos} | null, mandala: 'retificado' | 'estimado' | 'nenhuma' }. Qualquer falha = padrão (segue o tema, mandala retificada). */
+async function rzRelConfig() {
+  const padrao = { preset: null, mandala: 'retificado' };
+  try {
+    const db = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null; if (!db) return padrao;
+    const { data: { user } } = await db.auth.getUser(); if (!user) return padrao;
+    const { data: c } = await db.from('configuracoes').select('retificacao_preset_id, retificacao_capa_mandala').eq('user_id', user.id).maybeSingle();
+    if (!c) return padrao;
+    const mandala = ['retificado', 'estimado', 'nenhuma'].includes(c.retificacao_capa_mandala) ? c.retificacao_capa_mandala : 'retificado';
+    let preset = null;
+    if (c.retificacao_preset_id) { const { data: p } = await db.from('relatorio_presets').select('id, nome, blocos').eq('id', c.retificacao_preset_id).maybeSingle(); if (p) preset = p; }
+    return { preset, mandala };
+  } catch (e) { console.warn('Configuração do relatório de retificação:', e); return padrao; }
+}
+
+/* roda fn() com o céu e o mapa no horário retificado (o mapa aberto no menu não muda: tudo volta como estava) */
+async function rzComMapaRetificado(fn) {
+  const r = rzUltimo, e = r.entrada, d = new Date(rzMsFinal(r, rzFinalSel) + e.fuso * 3600000);
+  const salvo = { dados: currentCalculatedData, momento: currentMoment, geo: currentGeo, lotes: window.currentLotes, capa: window.ceuFundoCapaUltimo, ret: window.currentMapRetificado };
+  try {
+    currentMoment = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes());
+    currentGeo = Object.assign({}, currentGeo, { fuso: e.fuso });
+    if (!(await executarCalculo({ soCalcular: true }))) throw new Error('o motor não respondeu');
+    window.currentMapRetificado = true;   // o cabeçalho da mandala leva o rótulo "Retificado"
+    return await fn();
+  } finally {
+    currentCalculatedData = salvo.dados; currentMoment = salvo.momento; currentGeo = salvo.geo; window.currentLotes = salvo.lotes; window.ceuFundoCapaUltimo = salvo.capa; window.currentMapRetificado = salvo.ret;
+  }
+}
+
+/* A capa (a MESMA do Relatório: Céu, Papiro ou cores, com meandros, logo e rodapé) + a classe do estilo do PDF. Devolve { html, classe } ou null. */
+async function rzRelCapa() {
+  if (typeof renderizarMandalasDoPreset !== 'function' || typeof montarConteudoRelatorioHtml !== 'function' || typeof carregarPerfilRelatorio !== 'function') return null;
+  try {
+    const cfg = await rzRelConfig();
+    const bc = ((cfg.preset && cfg.preset.blocos) || []).find(b => b.type === 'capa') || { id: '__capa__', type: 'capa' };
+    const capaFonte = cfg.mandala === 'nenhuma' ? 'nenhuma' : 'mandala_natal';
+    const blocoCapa = Object.assign({}, bc, { fonte: capaFonte });
+    const blocos = [blocoCapa];
+    const desenhar = () => renderizarMandalasDoPreset(blocos, capaFonte);
+    const imgs = capaFonte === 'nenhuma' ? { png1: null, png2: null, png1Capa: null, png2Capa: null }
+      : (cfg.mandala === 'retificado' ? await rzComMapaRetificado(desenhar) : await desenhar());
+    const perfil = await carregarPerfilRelatorio();
+    const nome = (cfg.preset && cfg.preset.nome) || 'Retificação do horário de nascimento';
+    const html = montarConteudoRelatorioHtml({ nome, blocos }, perfil, imgs.png1, imgs.png2, null, null, capaFonte, imgs.png1Capa, imgs.png2Capa);
+    const m = html.match(/<section class="rel-page rel-capa[\s\S]*?<\/section>/);
+    if (!m) return null;
+    window.relatorioPresetAtual = { nome };
+    return { html: m[0], classe: typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio(blocos) : '' };
+  } catch (err) { console.error('Capa do relatório de retificação:', err); return null; }
+}
+
 /* ---------- Relatório: abrir, voltar, baixar ---------- */
 async function rzGerarRelatorio() {
   if (!rzUltimo || !rzFinalSel) { alert('Escolha o horário retificado primeiro.'); return; }
@@ -195,6 +248,7 @@ async function rzGerarRelatorio() {
     const estilos = document.getElementById('relatorio-estilos');
     if (estilos && !estilos.dataset.rzRel) { estilos.textContent += RZ_REL_CSS; estilos.dataset.rzRel = '1'; }   // o CSS do relatório de retificação viaja junto no PDF
     window.relatorioPresetAtual = { nome: 'Retificação pela sizígia' };
+    const capa = await rzRelCapa();
     const container = document.getElementById('mandala-container');
     container.innerHTML = `
       <div class="rel-toolbar no-print" id="relToolbarFixa">
@@ -202,7 +256,7 @@ async function rzGerarRelatorio() {
         <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
       </div>
       <div id="relToolbarEspacador" class="no-print"></div>
-      <div class="rel-viewer rz-rel${typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : ''}">${rzRelMontarPaginas()}</div>`;
+      <div class="rel-viewer rz-rel${capa ? capa.classe : (typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : '')}">${capa ? capa.html : ''}${rzRelMontarPaginas()}</div>`;
     container.scrollTop = 0;
     window.scrollTo(0, 0);
     dividirPaginasLongasEmFolhas(container);
