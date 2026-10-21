@@ -43,9 +43,11 @@ const RZ_REL_CSS = `
   .rel-viewer.rz-rel { --terracota: #A03E25; --azul-egipcio-claro: #1F5FA3; --azul-egipcio-escuro: #103b70; --preto-tinta: #1a1410; --ocre: #B5852F; --contorno-fino: 1px; }
   .rz-rel .com-nome { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
   .rz-rel .nome-glifo { font-size: 11px; }
-  .rz-rel .rz-tabela, .rz-rel table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 0 0 10px 0; color: #1e293b; }
-  .rz-rel th, .rz-rel td { border: 1px solid #1F5FA3; padding: 4px 7px; text-align: left; vertical-align: middle; background: transparent; }
-  .rz-rel th { color: #103b70; font-weight: 700; }
+  /* tabelas: o mesmo visual de .tabela-epoca do software (componentes.css) — só linhas horizontais, sem fundo, sem linhas verticais */
+  .rz-rel table { width: 100%; border-collapse: collapse; border: 0; background: transparent; font-size: 11.5px; margin: 0 0 10px 0; color: #1a1410; }
+  .rz-rel th { padding: 7px 10px; text-align: left; font-family: 'Cinzel', serif; font-weight: 800; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: #103b70; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; vertical-align: middle; }
+  .rz-rel td { padding: 7px 10px; text-align: left; vertical-align: middle; color: #1a1410; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; }
+  .rz-rel .centro { text-align: center; }
   .rz-rel .rz-sub { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #A03E25; margin: 4px 0 6px; }
   .rz-rel .rz-sub-grande { font-size: 15px; margin: 14px 0 8px; }
   .rz-rel .rz-nota { font-size: 11px; line-height: 1.6; color: #64748b; margin-bottom: 10px; }
@@ -200,7 +202,7 @@ async function rzGerarRelatorio() {
         <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
       </div>
       <div id="relToolbarEspacador" class="no-print"></div>
-      <div class="rel-viewer rz-rel">${rzRelMontarPaginas()}</div>`;
+      <div class="rel-viewer rz-rel${typeof classeTemaPapiroRelatorio === 'function' ? classeTemaPapiroRelatorio([]) : ''}">${rzRelMontarPaginas()}</div>`;
     container.scrollTop = 0;
     window.scrollTo(0, 0);
     dividirPaginasLongasEmFolhas(container);
