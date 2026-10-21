@@ -469,7 +469,7 @@ async function rzExecutar() {
       rzAssinatura = assinatura;
       rzFinalSel = rzSelecaoPadrao(r);
       rzMapaFinalSvg = null;
-      rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null;
+      rzAbertas = {}; rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null;
       if (typeof rzCarregarFicha === 'function') await rzCarregarFicha(r);      // o que já foi salvo para este cliente (e os fatos que ele enviou)
     }
     area.innerHTML = rzMontarResultado(r);
@@ -575,7 +575,7 @@ function rzMontarResultado(r) {
 
   // Seções em sanfona (abrem e fecham), sem números. O que já existia na ferramenta é mantido e encaixado.
   const sem = (h) => h.replace('<hr class="divisa">', '').replace(/<h3 class="titulo-secao">[^<]*<\/h3>/, '');
-  const sanfona = (titulo, corpo) => `<details class="rz-sanfona" open><summary>${titulo}</summary>${corpo}</details>`;
+  const sanfona = (titulo, corpo) => `<details class="rz-sanfona" ${rzAberto('sec|' + titulo)} ontoggle="rzAbriu('sec|${titulo}', this.open)"><summary>${titulo}</summary>${corpo}</details>`;
   return aviso
     + sanfona('Dados de entrada', rzMontarDadosEntrada(r))
     + sanfona('A sizígia pré-natal', sem(blocoSizigia))
@@ -832,7 +832,7 @@ function rzMontarFatos(r) {
 function rzMontarPautasCirc(ctx, chave, fatos) {
   const svgs = (typeof rzPautasDosFatos === 'function') ? rzPautasDosFatos(ctx, chave, fatos) : [];
   if (!svgs.length) return rzMontarTabelaCirc(ctx, chave, fatos);
-  return `<details open style="margin-bottom:10px;"><summary>${rzIconeAfeta(chave, 16)} Circumambulação (${RZ_AFETA_NOME[chave]}): onde cada fato cai</summary>${svgs.join('')}</details>`;
+  return `<details ${rzAberto('circ|${chave}')} ontoggle="rzAbriu('circ|${chave}', this.open)" style="margin-bottom:10px;"><summary>${rzIconeAfeta(chave, 16)} Circumambulação (${RZ_AFETA_NOME[chave]}): onde cada fato cai</summary>${svgs.join('')}</details>`;
 }
 
 /* Circumambulação a partir de um ponto: os períodos (termo a termo) do primeiro ao último fato, com o número de cada fato onde cai. fatos: [{ n, d }] */
@@ -846,7 +846,7 @@ function rzMontarTabelaCirc(ctx, chave, fatos) {
     const nums = caiem.filter(x => x.i === de + k).map(x => `<span class="rz-num">${x.n}</span>`).join(' ');
     return `<tr><td>${rzSignoHtml(l.signIdx, 16)}</td><td>${l.termStartDeg}°–${l.termEndDeg}°</td><td>${rzPlanetaHtml(l.termPlanetId, 16)}</td><td>${rzDataBR(l.startDate)} a ${rzDataBR(l.endDate)}</td><td>${nums}</td></tr>`;
   }).join('');
-  return `<details open style="margin-bottom:10px;"><summary>${rzIconeAfeta(chave, 16)} Circumambulação (${RZ_AFETA_NOME[chave]}): onde cada fato cai</summary>
+  return `<details ${rzAberto('circ|${chave}')} ontoggle="rzAbriu('circ|${chave}', this.open)" style="margin-bottom:10px;"><summary>${rzIconeAfeta(chave, 16)} Circumambulação (${RZ_AFETA_NOME[chave]}): onde cada fato cai</summary>
     <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Signo</th><th>Termo</th><th>Planeta</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
 }
 
@@ -878,10 +878,14 @@ function rzMontarTabelaZR(ctx, lote, fatos) {
     const nums = (filhos ? [] : l.fatos).map(f => `<span class="rz-num">${f.n}</span>`).join(' ');
     return `<tr><td style="padding-left:${(l.nivel - 1) * 16 + 4}px;${l.nivel === 1 ? ' font-weight:700;' : ''}"><span class="texto-apagado" style="font-size:11px;">${l.nivel}</span> ${rzSignoHtml(l.x.signIdx, l.nivel === 1 ? 18 : 16)}</td><td>${rzDataBR(l.x.start)} a ${rzDataBR(l.x.end)}</td><td>${nums}</td></tr>`;
   }).join('');
-  return `<details open style="margin-bottom:10px;"><summary>${rzIconeAfeta(lote, 16)} Liberação (${RZ_LOTE_NOME[lote]}): onde cada fato cai</summary>
+  return `<details ${rzAberto('zr|${lote}')} ontoggle="rzAbriu('zr|${lote}', this.open)" style="margin-bottom:10px;"><summary>${rzIconeAfeta(lote, 16)} Liberação (${RZ_LOTE_NOME[lote]}): onde cada fato cai</summary>
     <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Nível e signo</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
 }
 
+/* Quais sanfonas estão abertas/fechadas (seções, técnicas da Visão geral): o que foi fechado continua fechado ao recarregar (vai na ficha, junto com o resto do trabalho) */
+let rzAbertas = {};
+function rzAberto(chave) { return rzAbertas[chave] === false ? '' : 'open'; }
+function rzAbriu(chave, aberto) { if ((rzAbertas[chave] !== false) === aberto) return; rzAbertas[chave] = aberto; rzMudou(); }
 let rzVgHtml = '';   // o conteúdo da seção "Visão geral" (calculado junto com os fatos)
 function rzRedesenharFatos() {
   const el = document.getElementById('rzFatos'); if (!el || !rzUltimo) return;
@@ -906,15 +910,15 @@ function rzFatoAte(id, v) {
   rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
 }
 function rzFatoPeriodo(id) { const f = rzFatoPorId(id); if (f) { f.periodo = !f.periodo; rzRedesenharFatos(); } rzMudou(); }
-function rzFatoAlternar(id) { const f = rzFatoPorId(id); if (f) { f.aberto = f.aberto === false; rzRedesenharFatos(); } }
-function rzFatosAbrirTodos(aberto) { rzFatos.forEach(f => { f.aberto = aberto; }); rzRedesenharFatos(); }
+function rzFatoAlternar(id) { const f = rzFatoPorId(id); if (f) { f.aberto = f.aberto === false; rzRedesenharFatos(); } rzMudou(); }
+function rzFatosAbrirTodos(aberto) { rzFatos.forEach(f => { f.aberto = aberto; }); rzRedesenharFatos(); rzMudou(); }
 function rzFatoDataFechou() { clearTimeout(rzDataTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 150); }
 function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; rzMudou(); }
 function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } rzMudou(); }
 function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } rzMudou(); }
 function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }
 function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } rzMudou(); }
-if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoAlternar, rzFatosAbrirTodos, rzFatoData, rzFatoAte, rzFatoPeriodo, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
+if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoAlternar, rzFatosAbrirTodos, rzAbriu, rzFatoData, rzFatoAte, rzFatoPeriodo, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
