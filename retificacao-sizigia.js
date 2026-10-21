@@ -928,9 +928,28 @@ function rzMontarMapaFinalCorpo(r, velha) {
   return `
     <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Gera a mandala no horário final (${hhmm}). O mapa que está aberto no menu não muda.</div>
     <div style="margin-bottom:8px;"><button type="button" class="botao-texto" id="rzBtnMandala" onclick="rzGerarMandalaFinal()">Gerar mandala no horário final</button></div>
+    <div style="margin-bottom:8px;"><button type="button" class="botao-texto" onclick="rzAbrirSalvarMapa()">Salvar este mapa na lista de clientes</button></div>
     <div id="rzMandalaFinal">${rzMapaFinalSvg ? `<img src="${rzMapaFinalSvg.url}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">` : ''}</div>`;
 }
 
+/* Abre a janela de "Novo mapa" (a mesma da lista de clientes) já preenchida com o horário retificado: nome, código, data, horário, cidade, pasta e tipo
+   continuam editáveis (pode ser outro tipo de mapa, outra pasta). O mapa salvo leva a marca "Retificado". */
+function rzAbrirSalvarMapa() {
+  const r = rzUltimo; if (!r || !rzFinalSel) return;
+  if (typeof abrirModalNovoMapa !== 'function' || !document.getElementById('modalOverlay')) { alert('A janela de salvar mapa não está disponível.'); return; }
+  const e = r.entrada, d = new Date(rzMsFinal(r, rzFinalSel) + e.fuso * 3600000);   // relógio local do mapa, lido em UTC
+  abrirModalNovoMapa();
+  const campo = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  campo('modalCodigo', (typeof currentCustomCode !== 'undefined' && currentCustomCode) ? currentCustomCode : '');
+  campo('modalNome', (typeof currentSubjectName !== 'undefined' && currentSubjectName && currentSubjectName !== 'Agora') ? currentSubjectName : '');
+  campo('modalData', `${rzP2(d.getUTCDate())}/${rzP2(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`);
+  campo('modalHora', `${rzP2(d.getUTCHours())}:${rzP2(d.getUTCMinutes())}`);
+  campo('modalCidadeInput', e.cidade || '');
+  selectedCityGeo = { lat: e.lat, lon: e.lon, fuso: e.fuso, name: e.cidade || '' };
+  if (typeof activeFolder !== 'undefined' && activeFolder) campo('modalPasta', activeFolder);
+  campo('modalTipoMapa', window.currentMapType || 'Natal');
+  window.__novoMapaRetificado = true;   // depois do abrirModalNovoMapa, que zera a marca
+}
 async function rzGerarMandalaFinal() {
   const r = rzUltimo, sel = rzFinalSel;
   const alvo = document.getElementById('rzMandalaFinal'), btn = document.getElementById('rzBtnMandala');
@@ -974,7 +993,7 @@ async function rzGerarMandalaFinal() {
   const cab = document.getElementById('rzCabecalho');
   if (cab && cabecalho) cab.innerHTML = cabecalho;           // o cabeçalho do topo passa a mostrar o horário retificado
 }
-if (typeof window !== 'undefined') window.rzGerarMandalaFinal = rzGerarMandalaFinal;
+if (typeof window !== 'undefined') window.rzGerarMandalaFinal = rzGerarMandalaFinal; window.rzAbrirSalvarMapa = rzAbrirSalvarMapa;
 
 /* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
 function salvarRetificacaoSizigiaNaGaleria() {

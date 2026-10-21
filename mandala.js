@@ -358,6 +358,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
   currentMapaId = c.id || null;
   currentRascunhoId = null;
   window.currentMapType = c.tipo || "Natal";
+  window.currentMapRetificado = !!c.retificado;   // mapa salvo pela retificação (rótulo "Retificado" no cabeçalho)
 
   // Capturas de tela do Relatório (window.relatorioCapturas) são só do
   // cliente cujo mapa está em tela — trocando de cliente, limpa NA HORA
@@ -390,6 +391,7 @@ function aplicarDadosDoPerfilNoMapa(c) {
 }
 
 function abrirModalNovoMapa() {
+  window.__novoMapaRetificado = false;
   document.getElementById('modalCodigo').value = "";
   document.getElementById('modalNome').value = "";
   document.getElementById('modalData').value = "";
@@ -404,6 +406,7 @@ function abrirModalNovoMapa() {
 }
 
 function fecharModalNovoMapa() {
+  window.__novoMapaRetificado = false;
   document.getElementById('modalOverlay').style.display = "none";
 }
 
@@ -490,7 +493,8 @@ async function salvarNovoMapaModal() {
       longitude: selectedCityGeo.lon,
       whatsapp: whatsapp || null,
       email: email || null,
-      user_id: userId
+      user_id: userId,
+      ...(window.__novoMapaRetificado ? { retificado: true } : {})
     }]);
 
     if (error) { alert("Erro ao salvar o mapa: " + error.message); return; }
@@ -532,6 +536,7 @@ function carregarCeuDoMomento() {
   // de quem estava em tela antes.
   if (mapaAnteriorId) window.relatorioCapturas = {};
   window.currentMapType = "Trânsito";
+  window.currentMapRetificado = false;
   currentMoment = new Date();
 
   if (navigator.geolocation) {
@@ -1362,7 +1367,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   // "Natividade" é só do mapa natal; os outros tipos (Pergunta, Início, Evento, Trânsito, Revoluções...) levam "Mapa diurno/noturno".
   const sectText = tipoAtual === 'Natal' ? (isDay ? "• Natividade Diurna" : "• Natividade Noturna") : (isDay ? "• Mapa diurno" : "• Mapa noturno");
   // `opcoes.retificado`: mapa gerado pela retificação (sizígia) — rótulo a mais, no mesmo ocre dos outros
-  const loteTexto = [(loteCasa1 && ROTULOS_LOTE_CASA1[loteCasa1]) ? `• ${ROTULOS_LOTE_CASA1[loteCasa1]} na Casa 1` : '', opcoes.retificado ? '• Retificado' : ''].filter(Boolean).join('  ');
+  const loteTexto = [(loteCasa1 && ROTULOS_LOTE_CASA1[loteCasa1]) ? `• ${ROTULOS_LOTE_CASA1[loteCasa1]} na Casa 1` : '', (opcoes.retificado !== undefined ? opcoes.retificado : window.currentMapRetificado) ? '• Retificado' : ''].filter(Boolean).join('  ');
 
   const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const diaSemanaFormatted = diasSemana[momento.getDay()];
