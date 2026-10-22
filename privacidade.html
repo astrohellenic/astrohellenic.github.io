@@ -52,6 +52,19 @@
   <h2>4. Onde e como guardamos</h2>
   <p>Os dados ficam em banco de dados protegido por login. A autorização da Google Agenda é guardada <strong>cifrada</strong>, em área que o navegador não consegue ler; só o servidor do software a utiliza.</p>
 
+  <h2>4.1. Como protegemos os dados sensíveis</h2>
+  <p>Dados pessoais dos clientes e dados vindos da Google Agenda são tratados com estas proteções:</p>
+  <ul>
+    <li><strong>Criptografia em trânsito:</strong> toda comunicação entre o navegador, o servidor do software e o Google usa HTTPS (TLS).</li>
+    <li><strong>Criptografia em repouso:</strong> o banco de dados e o armazenamento de arquivos são cifrados pelo provedor de infraestrutura. A autorização da Google Agenda recebe uma camada extra: é cifrada por nós com AES-256-GCM antes de ser gravada.</li>
+    <li><strong>Isolamento entre astrólogos:</strong> cada astrólogo só consegue ler e alterar os seus próprios dados, garantido por regras de acesso no próprio banco de dados (segurança em nível de linha), e não apenas pela tela do software.</li>
+    <li><strong>Acesso restrito:</strong> o software exige login. A tabela da autorização do Google não pode ser lida pelo navegador; só o servidor, com uma chave guardada em variáveis de ambiente protegidas (fora do código-fonte), a utiliza.</li>
+    <li><strong>Permissões mínimas:</strong> pedimos ao Google apenas os acessos descritos na seção 3. O navegador nunca recebe a autorização do Google.</li>
+    <li><strong>Sem guardar a agenda:</strong> os compromissos lidos da Google Agenda são exibidos e descartados; não ficam gravados.</li>
+    <li><strong>Ninguém lê seus dados por curiosidade:</strong> não acessamos dados de astrólogos ou clientes, exceto se o astrólogo pedir suporte ou se a lei exigir.</li>
+    <li><strong>Exclusão e revogação:</strong> ao desconectar a Google Agenda, a autorização guardada é apagada. Também pode ser removida a qualquer momento em myaccount.google.com/permissions.</li>
+  </ul>
+
   <h2>5. Seus direitos e como desconectar</h2>
   <ul>
     <li>Você pode <strong>desconectar a Google Agenda</strong> a qualquer momento em Configurações → Agenda → Desconectar. Também pode remover o acesso em myaccount.google.com/permissions.</li>
