@@ -979,7 +979,9 @@ function renderListaMapas(lista) {
   }
 
   let html = '';
-  lista.forEach((item, index) => {
+  lista.forEach((item, indexNaTela) => {
+    // posição REAL do mapa na lista da pasta: na busca, a lista da tela é menor (filtrada), então o índice dela não serve pra abrir/editar o mapa certo
+    const index = cachedFolderData.indexOf(item);
     const cod = item.codigo ? `${item.codigo} - ` : '';
     const tipoStr = item.tipo ? ` ${item.tipo}` : '';
     const dataStr = item.dataNascimento || "Data n/i";
@@ -993,7 +995,7 @@ function renderListaMapas(lista) {
     const linkWhats = numWhats ? (numWhats.length <= 11 ? `55${numWhats}` : numWhats) : '';
 
     html += `
-      <div class="client-card-item" id="card-item-${index}">
+      <div class="client-card-item" id="card-item-${indexNaTela}">
         ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)">` : ''}
         <div class="client-corpo" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
           <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span class="client-tipo">${escapeHtml(tipoStr)}</span>${(window.retifFatosNovos && window.retifFatosNovos.has(String(item.id))) ? `<button type="button" class="selo-fatos" onclick="event.stopPropagation(); tirarSeloFatosRetificacao(${item.id})" title="O cliente enviou os fatos da vida. Toque para tirar o selinho.">fatos enviados</button>` : ''}</div>
