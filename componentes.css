@@ -13,7 +13,11 @@
 }
 
 /* CANTOS RETOS EM TUDO. Na época não se usava canto arredondado. */
-.painel, .cartao, .botao-icone, .janela, .selo { border-radius: 0; }
+.painel, .cartao, .botao-icone, .janela, .selo-fatos {
+    margin-left: 8px; padding: 0 8px; background: transparent; cursor: pointer; font-family: inherit; font-size: 10px; font-weight: 700; color: var(--ocre);
+    border: 0; border-top: var(--contorno-fino) solid var(--ocre); border-bottom: var(--contorno-fino) solid var(--ocre); border-radius: 0; vertical-align: middle;
+}
+.selo { border-radius: 0; }
 
 /* PAINEL POR BAIXO — toda ferramenta ocupa um painel. Claro/escuro: cor lisa; papiro: o fundo do papiro. */
 .painel {

@@ -855,12 +855,32 @@ async function carregarMapasDoBanco(nomePasta) {
         email: item.email || null
       }));
       ordenarCachedFolderData();
+      await carregarSelosFatosRetificacao();
       renderListaMapas(cachedFolderData);
     }
   } catch (err) {
     console.error("Erro ao carregar mapas:", err);
   }
 }
+
+/* SELINHO "fatos enviados" (retificação): aparece na lista, ao lado do nome, quando o cliente enviou os fatos da vida. Só sai quando o astrólogo toca nele
+   (não sai ao abrir a ferramenta). Fica no Supabase (retificacoes.fatos_vistos_em), então vale em qualquer aparelho. Sem a coluna ou sem rede: lista normal, sem selinho. */
+window.retifFatosNovos = window.retifFatosNovos || new Set();
+async function carregarSelosFatosRetificacao() {
+  try {
+    const { data, error } = await supabaseClient.from('retificacoes').select('mapa_id').not('enviado_em', 'is', null).is('fatos_vistos_em', null);
+    window.retifFatosNovos = new Set((!error && Array.isArray(data)) ? data.map(r => String(r.mapa_id)) : []);
+  } catch (e) { window.retifFatosNovos = new Set(); }
+}
+async function tirarSeloFatosRetificacao(id) {
+  try {
+    const { error } = await supabaseClient.from('retificacoes').update({ fatos_vistos_em: new Date().toISOString() }).eq('mapa_id', String(id));
+    if (error) { alert('Não foi possível tirar o selinho: ' + error.message); return; }
+    window.retifFatosNovos.delete(String(id));
+    renderListaMapas(cachedFolderData);
+  } catch (e) { alert('Não foi possível tirar o selinho (sem conexão?).'); }
+}
+window.tirarSeloFatosRetificacao = tirarSeloFatosRetificacao;
 
 /* ORDENAÇÃO DA LISTA DE CLIENTES (campo + direção escolhidos pelo usuário) */
 function compararValoresOrdenacao(a, b, campo) {
@@ -976,7 +996,7 @@ function renderListaMapas(lista) {
       <div class="client-card-item" id="card-item-${index}">
         ${isSelectionMode ? `<input type="checkbox" class="map-select-cb" value="${item.id}" ${isChecked} onchange="alternarSelecaoMapa(${item.id}, this.checked)">` : ''}
         <div class="client-corpo" onclick="${isSelectionMode ? `alternarSelecaoPorCard(${item.id})` : `selecionarRegistro(${index}); fecharSidebar();`}">
-          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span class="client-tipo">${escapeHtml(tipoStr)}</span></div>
+          <div class="client-name">${cod}${escapeHtml(item.nome || 'Sem Nome')}<span class="client-tipo">${escapeHtml(tipoStr)}</span>${(window.retifFatosNovos && window.retifFatosNovos.has(String(item.id))) ? `<button type="button" class="selo-fatos" onclick="event.stopPropagation(); tirarSeloFatosRetificacao(${item.id})" title="O cliente enviou os fatos da vida. Toque para tirar o selinho.">fatos enviados</button>` : ''}</div>
           <div class="client-meta">${escapeHtml(dataHoraStr)} • ${escapeHtml(cidStr)}</div>
         </div>
         ${!isSelectionMode ? `
