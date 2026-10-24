@@ -96,3 +96,4 @@ html.embutido .form-card { background: transparent; border: 0; padding-left: 0; 
 html.embutido #formLogoImg { display: none !important; }
 html.carregando-tema body { background: transparent; opacity: 0; }
 .summary-item span { overflow-wrap: anywhere; } /* e-mail e cidade compridos não passam da janela */
+html.embutido .janela { background: var(--papiro-fundo-simples); } /* janela de confirmação: papiro, não creme/branco, como a página do site em volta */
