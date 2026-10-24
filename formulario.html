@@ -314,12 +314,21 @@
       document.getElementById('clienteConhecido').style.display = 'none';
       document.getElementById('clientForm').style.display = '';
     };
-    document.getElementById('btnConhecidoContinuar').onclick = async function () {
-      this.disabled = true; this.innerText = 'Continuando...';
+    /* cliente que já tem cadastro vai direto pra frente (agenda ou o que vier depois), sem tela de confirmação; se der erro, os botões voltam */
+    const btnContinuar = document.getElementById('btnConhecidoContinuar'), linkMudou = document.getElementById('btnConhecidoMudou');
+    const textoOriginal = document.getElementById('conhecidoTexto').textContent;
+    const seguir = async () => {
+      btnContinuar.style.display = 'none'; linkMudou.parentNode.style.display = 'none';
+      document.getElementById('conhecidoTexto').textContent = textoOriginal + ' Continuando...';
       try { await concluirEnvio(idConhecido, (urlParams.get('nome') || '').trim()); }
-      catch (e) { alert('Erro de conexão. Tente de novo.'); }
-      finally { this.disabled = false; this.innerText = 'Continuar'; }
+      catch (e) {
+        document.getElementById('conhecidoTexto').textContent = textoOriginal;
+        btnContinuar.style.display = ''; linkMudou.parentNode.style.display = '';
+        alert('Erro de conexão. Tente de novo.');
+      }
     };
+    btnContinuar.onclick = seguir;
+    seguir();
   });
 
   /* PREENCHE nome, WhatsApp e e-mail se vierem no link (&nome=...&whatsapp=...&email=...), pra quem já digitou isso antes (ex.: no checkout do site do astrólogo) não digitar de novo */
