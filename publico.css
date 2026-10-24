@@ -95,3 +95,4 @@ html.embutido body { background: transparent; min-height: 0; justify-content: fl
 html.embutido .form-card { background: transparent; border: 0; padding-left: 0; padding-right: 0; }
 html.embutido #formLogoImg { display: none !important; }
 html.carregando-tema body { background: transparent; opacity: 0; }
+.summary-item span { overflow-wrap: anywhere; } /* e-mail e cidade compridos não passam da janela */
