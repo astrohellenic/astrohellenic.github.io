@@ -90,6 +90,6 @@ body.tema-ceu .modal-overlay { background: rgba(7, 13, 37, 0.7); }
 body.tema-ceu .city-results { background: var(--papiro-fundo-simples); }
 .btn-submit:focus, .btn-primary:focus, .btn-secondary:focus { outline: none; }
 
-/* Dentro de outra página (publico-embutido.js): sem fundo, sem altura mínima, sem a assinatura; quem manda no visual é a página de fora. */
+/* Tema "Embutido" (Configurações → Captação): sem fundo, sem altura mínima e sem o logo do astrólogo; quem manda no visual é a página de fora. O "powered by" fica. */
 html.embutido body { background: transparent; min-height: 0; justify-content: flex-start; padding: 0; }
-html.embutido .form-powered-by { display: none; }
+html.embutido #formLogoImg { display: none !important; }

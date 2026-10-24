@@ -1,8 +1,7 @@
-/* Páginas públicas abertas DENTRO de outra página (o Seu espaço do site do astrólogo): sem fundo próprio (a página de fora aparece)
-   e avisa a altura de si mesma, pra a moldura de fora não precisar de rolagem dupla. Fora de moldura não faz nada. */
+/* Páginas públicas abertas DENTRO de outra página (o Seu espaço do site do astrólogo): avisa a altura de si mesma, pra a moldura de fora
+   não precisar de rolagem dupla. Fora de moldura não faz nada. (O visual sem fundo/sem logo vem do tema "Embutido" em Configurações → Captação.) */
 (function () {
   if (window.parent === window) return;
-  document.documentElement.classList.add('embutido');
   var ultima = 0;
   function avisar() {
     var h = Math.ceil(document.documentElement.scrollHeight);

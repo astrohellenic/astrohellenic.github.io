@@ -8,4 +8,5 @@ function aplicarTemaPublico(valor) {
   raiz.classList.toggle('tema-escuro', escuro);
   raiz.classList.toggle('tema-sulfite', valor === 'sulfite'); // folha branca e letra de caneta (temas.css)
   document.body.classList.toggle('tema-ceu', valor === 'ceu');
+  raiz.classList.toggle('embutido', valor === 'embutido'); // sem fundo e sem logo: só o que precisa (publico.css); o 'powered by' fica
 }

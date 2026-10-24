@@ -330,8 +330,9 @@ function htmlCfgCaptacao() {
           <option value="sulfite">Sulfite</option>
           <option value="escuro">Escuro</option>
           <option value="auto">Automático (segue o aparelho do cliente)</option>
+          <option value="embutido">Embutido no seu site (sem visual)</option>
         </select>
-        <p class="cfg-card-desc">É o que o cliente vê no formulário e, em seguida, na agenda.</p>
+        <p class="cfg-card-desc">É o que o cliente vê no formulário e, em seguida, na agenda. "Embutido" é para colocar o formulário dentro de uma página do seu site: vem sem fundo e sem o seu logo, só o que é preciso, e o "powered by Astro Hellenic" continua no rodapé.</p>
 
         <div class="cfg-acoes">
           <button type="button" class="cfg-btn" onclick="testarPaginaAgendar()">Testar a página de agendar (sem gravar nada)</button>
@@ -984,7 +985,7 @@ if (document.getElementById('cfgRetifMinLigado')) {
       }
       if (document.getElementById('cfgWebhookUrl')) document.getElementById('cfgWebhookUrl').value = data.webhook_url || '';
       if (document.getElementById('cfgRedirectUrl')) document.getElementById('cfgRedirectUrl').value = data.redirect_url || '';
-      if (document.getElementById('cfgFormTema')) document.getElementById('cfgFormTema').value = ['ceu', 'sulfite', 'escuro', 'auto'].includes(data.formulario_tema) ? data.formulario_tema : 'claro';
+      if (document.getElementById('cfgFormTema')) document.getElementById('cfgFormTema').value = ['ceu', 'sulfite', 'escuro', 'auto', 'embutido'].includes(data.formulario_tema) ? data.formulario_tema : 'claro';
     }
   } catch (e) {
     console.error("Erro ao carregar configurações de captação:", e);
