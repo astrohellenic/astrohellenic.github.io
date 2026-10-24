@@ -92,4 +92,5 @@ body.tema-ceu .city-results { background: var(--papiro-fundo-simples); }
 
 /* Tema "Embutido" (Configurações → Captação): sem fundo, sem altura mínima e sem o logo do astrólogo; quem manda no visual é a página de fora. O "powered by" fica. */
 html.embutido body { background: transparent; min-height: 0; justify-content: flex-start; padding: 0; }
+html.embutido .form-card { background: transparent; border: 0; padding-left: 0; padding-right: 0; }
 html.embutido #formLogoImg { display: none !important; }
