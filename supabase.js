@@ -31,26 +31,123 @@ function calcularFusoPorLongitude(lon) {
   return Math.round(lon / 15);
 }
 
-/* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE */
-async function carregarPastasSalvas() {
+/* 1. CARREGA AS PASTAS EM ORDEM ALFABÉTICA DO SUPABASE
+   REGRA IMPORTANTE (bug de 24/10/2026): "a lista veio vazia" NUNCA pode ser entendido como "conta nova" sem ter certeza de que o login estava válido.
+   Quando a rede ainda não voltou (app reaberto, iPad acordando) ou a renovação do login falha no meio, o Supabase não dá erro: responde VAZIO, como se
+   fosse uma pessoa sem login. O site então mostrava só a pasta Clientes, sem as pastas e sem as definições, como uma conta nova — e, num app instalado, sem
+   como recarregar. Agora: só vale a resposta de um login CONFIRMADO; qualquer dúvida mostra um aviso, tenta de novo sozinho (rede de volta, app em primeiro
+   plano, a cada poucos segundos) e, quando consegue, recarrega também as definições da conta. */
+window.__contaCarregada = false;
+let __contaFalhouAntes = false, __tentativasConta = 0, __timerConta = null, __carregandoConta = false;
+
+/* usuário com login confirmado, ou null; renova o login se estiver vencendo */
+async function obterUsuarioParaCarregar() {
   try {
-    const { data, error } = await supabaseClient
-      .from('pastas')
-      .select('nome')
-      .order('nome', { ascending: true });
+    let { data: { session } } = await supabaseClient.auth.getSession();
+    const agora = Math.floor(Date.now() / 1000);
+    if (!session || (session.expires_at && session.expires_at < agora + 30)) {
+      const r = await supabaseClient.auth.refreshSession();
+      session = r && r.data ? r.data.session : null;
+    }
+    return session ? session.user : null;
+  } catch (e) { return null; }
+}
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      customFolders = data.map(p => p.nome);
-    } else if (data && data.length === 0) {
-      let userId = null;
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (user) userId = user.id;
+function telaDeLoginAberta() {
+  const o = document.getElementById('loginOverlay');
+  return !!(o && o.classList.contains('visible'));
+}
+function esconderAvisoConta() {
+  const b = document.getElementById('avisoContaNaoCarregada');
+  if (b) b.remove();
+}
+function mostrarAvisoConta() {
+  if (telaDeLoginAberta() || document.getElementById('avisoContaNaoCarregada')) return;
+  const b = document.createElement('div');
+  b.id = 'avisoContaNaoCarregada';
+  b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 10px);z-index:100000;max-width:min(560px,92vw);box-sizing:border-box;padding:12px 16px;background:#F3E3B8;color:#16233F;border:2px solid #A03E25;box-shadow:0 4px 18px rgba(0,0,0,.35);font:600 15px/1.35 Cinzel,serif;text-align:center';
+  const t = document.createElement('div');
+  t.textContent = 'Não consegui carregar os seus dados agora. Tentando de novo...';
+  const linha = document.createElement('div');
+  linha.style.cssText = 'margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+  const mk = (txt, acao) => {
+    const x = document.createElement('button');
+    x.type = 'button'; x.textContent = txt;
+    x.style.cssText = 'background:transparent;border:1.5px solid #1034A6;color:#1034A6;padding:8px 14px;font:700 14px Cinzel,serif;cursor:pointer;border-radius:0';
+    x.addEventListener('click', acao);
+    return x;
+  };
+  linha.appendChild(mk('Tentar agora', () => { tentarCarregarContaDeNovo(); }));
+  linha.appendChild(mk('Recarregar a página', () => { location.reload(); }));
+  b.appendChild(t); b.appendChild(linha);
+  document.body.appendChild(b);
+}
+function agendarNovaTentativaConta() {
+  clearTimeout(__timerConta);
+  const espera = [2000, 5000, 10000, 20000, 40000][Math.min(__tentativasConta, 4)] || 60000;
+  __tentativasConta++;
+  __timerConta = setTimeout(tentarCarregarContaDeNovo, espera);
+}
+async function tentarCarregarContaDeNovo() {
+  if (window.__contaCarregada || __carregandoConta || telaDeLoginAberta()) return; /* sem login não há o que carregar */
+  clearTimeout(__timerConta);
+  await carregarPastasSalvas();
+}
+/* ao voltar a rede ou o app para a frente, tenta na hora (só enquanto a conta não carregou) */
+window.addEventListener('online', () => { if (!window.__contaCarregada) tentarCarregarContaDeNovo(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !window.__contaCarregada && __contaFalhouAntes) tentarCarregarContaDeNovo(); });
 
-      await supabaseClient.from('pastas').insert([{ nome: 'Clientes', user_id: userId }]);
-      customFolders = ['Clientes'];
+/* depois de uma falha que se resolveu: traz de novo as definições da conta (tema, estilos, ordem dos botões...) e redesenha */
+async function recarregarDefinicoesDaConta(user) {
+  const funcoes = [typeof carregarTemaMandala === 'function' && carregarTemaMandala, typeof carregarNivelPlano === 'function' && carregarNivelPlano,
+    typeof carregarEstiloPlanetas === 'function' && carregarEstiloPlanetas, typeof carregarEstiloMandala === 'function' && carregarEstiloMandala,
+    typeof carregarMostrarRotulosGlifos === 'function' && carregarMostrarRotulosGlifos, typeof carregarOrdenacaoClientes === 'function' && carregarOrdenacaoClientes,
+    typeof carregarOrdemBotoesTopo === 'function' && carregarOrdemBotoesTopo].filter(Boolean);
+  for (const f of funcoes) { try { await f(user.id); } catch (e) { console.error(e); } }
+  try { if (typeof carregarMapasDoBanco === 'function') await carregarMapasDoBanco(activeFolder); } catch (e) { console.error(e); }
+  try { reRenderizarModuloAtivo(); } catch (e) { console.error(e); }
+}
+
+async function carregarPastasSalvas() {
+  if (__carregandoConta) return;
+  __carregandoConta = true;
+  let carregou = false, usuario = null;
+  try {
+    usuario = await obterUsuarioParaCarregar();
+    if (usuario) {
+      const ler = () => supabaseClient.from('pastas').select('nome').order('nome', { ascending: true });
+      const { data, error } = await ler();
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) { customFolders = data.map(p => p.nome); carregou = true; }
+        else {
+          /* vazio: só é "conta nova" se o servidor CONFIRMA o login agora e uma segunda leitura continua vazia */
+          const { data: conf, error: erroConf } = await supabaseClient.auth.getUser();
+          if (!erroConf && conf && conf.user) {
+            const { data: de_novo, error: erro2 } = await ler();
+            if (!erro2 && Array.isArray(de_novo)) {
+              if (de_novo.length > 0) { customFolders = de_novo.map(p => p.nome); carregou = true; }
+              else {
+                await supabaseClient.from('pastas').insert([{ nome: 'Clientes', user_id: conf.user.id }]);
+                customFolders = ['Clientes']; carregou = true;
+              }
+            }
+          }
+        }
+      }
     }
   } catch (e) {
     console.error("Erro ao carregar pastas:", e);
+  }
+  __carregandoConta = false;
+
+  if (carregou) {
+    window.__contaCarregada = true;
+    esconderAvisoConta();
+    if (__contaFalhouAntes) { __contaFalhouAntes = false; await recarregarDefinicoesDaConta(usuario); }
+  } else if (!telaDeLoginAberta()) {
+    __contaFalhouAntes = true;
+    setTimeout(mostrarAvisoConta, 800);
+    agendarNovaTentativaConta();
   }
   renderMenuPrincipal();
 
