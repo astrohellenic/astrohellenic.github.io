@@ -94,3 +94,4 @@ body.tema-ceu .city-results { background: var(--papiro-fundo-simples); }
 html.embutido body { background: transparent; min-height: 0; justify-content: flex-start; padding: 0; }
 html.embutido .form-card { background: transparent; border: 0; padding-left: 0; padding-right: 0; }
 html.embutido #formLogoImg { display: none !important; }
+html.carregando-tema body { background: transparent; opacity: 0; }
