@@ -5,7 +5,7 @@
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
     <link rel="stylesheet" href="papiro.css?v=20261011a">
     <link rel="stylesheet" href="temas.css?v=20261010t">
-    <link rel="stylesheet" href="componentes.css?v=20261023a">
+    <link rel="stylesheet" href="componentes.css?v=20261025a">
     <link rel="stylesheet" href="configuracoes.css?v=20261011b">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1104,7 +1104,7 @@ body {
 <script src="revolucao.js?v=20261009b"></script>
 <script src="revolucaoLunar.js?v=20261009b"></script>
 <script src="decenios.js?v=20261010t"></script>
-<script src="direcoes.js?v=20261014c"></script>
+<script src="direcoes.js?v=20261025a"></script>
 <script src="liberacao.js?v=20261013c"></script>
 <script src="lotes-calculadora.js?v=20261011a"></script>
 <script src="horas.js?v=20261010t"></script>
@@ -1225,7 +1225,11 @@ body:not(.modo-mandala) #main-stage {
   min-height: 100vh !important;
   height: auto !important;
   overflow: visible !important;
+  padding-left: 2px;   /* margem lateral das ferramentas: era 10px + 16px (container) + 8px (painel) + 20px (painel por dentro) */
+  padding-right: 2px;
 }
+body:not(.modo-mandala) #mandala-container { padding-left: 0; padding-right: 0; }
+body:not(.modo-mandala) #mandala-container .painel { margin-left: 0; padding-left: 6px; padding-right: 6px; }
 
 /* ==========================================================
    IMPRESSÃO. ".no-print" some só ao imprimir — usado pelas ferramentas

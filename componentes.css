@@ -352,6 +352,11 @@ body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to 
     content: ''; position: absolute; left: 4px; top: 0; width: 4px; height: 9px;
     border: solid var(--terracota); border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
+/* BOLINHA DE MARCAR (caixinha que se comporta como a bolinha: pequena, redonda, ponto terracota quando marcada) — marcar linhas da Circumambulação. */
+.painel input[type="checkbox"].bolinha-marcar { width: 11px; height: 11px; border-width: 1.5px; border-radius: 50%; }
+.painel input[type="checkbox"].bolinha-marcar:checked::after {
+    left: 50%; top: 50%; width: 5px; height: 5px; border: 0; border-radius: 50%; background: var(--terracota); transform: translate(-50%, -50%);
+}
 /* BOLINHA DE ESCOLHER (radio) — a mesma regra da caixinha: sem preenchimento nenhum (nada de "buraquinho branco" do navegador), só o contorno em azul egípcio escuro e, escolhida, um ponto em terracota. */
 input[type="radio"] {
     -webkit-appearance: none; appearance: none; background: transparent; width: 16px; height: 16px; margin: 0; cursor: pointer; flex: 0 0 auto;

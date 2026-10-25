@@ -795,7 +795,7 @@ function renderCircumambulaçõesUI() {
   const alturaSvgTela = 20 + (signPassages.length * rowHeight);
   const caixasLinhasHTML = signPassages.map((passage, i) => {
     const topPct = ((10 + (i * rowHeight) + (boxHeight / 2)) / alturaSvgTela) * 100;
-    return `<input type="checkbox" ${circumambulacaoLinhasSelecionadas.has(i) ? 'checked' : ''} onchange="alternarLinhaCircumambulacaoRelatorio(${i}, this.checked)" title="Mandar só esta linha para o Relatório" style="position: absolute; left: -24px; top: ${topPct.toFixed(3)}%; transform: translateY(-50%); width: 16px; height: 16px; margin: 0; cursor: pointer;">`;
+    return `<input type="checkbox" ${circumambulacaoLinhasSelecionadas.has(i) ? 'checked' : ''} onchange="alternarLinhaCircumambulacaoRelatorio(${i}, this.checked)" title="Mandar só esta linha para o Relatório" class="bolinha-marcar" style="position: absolute; left: -16px; top: ${topPct.toFixed(3)}%; transform: translateY(-50%);">`;
   }).join('');
 
   const afetaLabelsDir = {
