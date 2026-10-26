@@ -996,7 +996,7 @@ function injetarControleZoomMandala() {
 function atualizarCabecalhoBarraMandala() {
   const slot = document.getElementById('cabecalho-barra-mandala');
   if (!slot) return;
-  if (!currentCalculatedData || !document.getElementById('mandalaImg')) { slot.style.display = 'none'; slot.innerHTML = ''; return; }
+  if (!currentCalculatedData || !document.getElementById('mandalaImg')) { slot.style.display = 'none'; slot.innerHTML = ''; delete slot.dataset.centrado; return; }
   slot.style.display = '';
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = coresCabecalhoMandala(modoEscuro, null);
@@ -1013,7 +1013,8 @@ function atualizarCabecalhoBarraMandala() {
   const altura = layout.altura;
   slot.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="15 0 ${largura} ${altura}" style="display: block; overflow: visible;">${layout.svg}</svg>`;
   // tela estreita: ao desenhar (ou quando a largura muda), a barra fica centralizada no cabeçalho
-  if (estreita && slot.dataset.centrado !== String(largura)) { slot.dataset.centrado = String(largura); centralizarCabecalhoNaBarra(); }
+  // (ao voltar de outra ferramenta a barra reaparece com a rolagem perdida: por isso a marca é apagada quando ela some, e centraliza de novo também no quadro seguinte, já com tudo medido)
+  if (estreita && slot.dataset.centrado !== String(largura)) { slot.dataset.centrado = String(largura); centralizarCabecalhoNaBarra(); requestAnimationFrame(centralizarCabecalhoNaBarra); }
 }
 function centralizarCabecalhoNaBarra() {
   const rol = document.getElementById('barra-inferior-rolagem'), slot = document.getElementById('cabecalho-barra-mandala');
@@ -1110,7 +1111,7 @@ function atualizarBarraInferiorMandala() {
   const img = document.getElementById('mandalaImg');
   const embrulho = img && img.parentElement;
   const comMouse = mandalaSoMouse();
-  if (!visivel) { if (embrulho) embrulho.style.paddingBottom = ''; document.documentElement.style.removeProperty('--margem-rolagem-mandala'); return; }
+  if (!visivel) { if (embrulho) embrulho.style.paddingBottom = ''; document.documentElement.style.removeProperty('--margem-rolagem-mandala'); const sc = document.getElementById('cabecalho-barra-mandala'); if (sc) delete sc.dataset.centrado; return; }
   atualizarCabecalhoBarraMandala();
   barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
   atualizarSetasBarraMandala();
