@@ -1012,6 +1012,14 @@ function atualizarCabecalhoBarraMandala() {
   const layout = montarCabecalhoMandalaLayout(currentCalculatedData, 0, cores, lote, { largura: largura + 30, flexivel: true, semMoldura: true });
   const altura = layout.altura;
   slot.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="15 0 ${largura} ${altura}" style="display: block; overflow: visible;">${layout.svg}</svg>`;
+  // tela estreita: ao desenhar (ou quando a largura muda), a barra fica centralizada no cabeçalho
+  if (estreita && slot.dataset.centrado !== String(largura)) { slot.dataset.centrado = String(largura); centralizarCabecalhoNaBarra(); }
+}
+function centralizarCabecalhoNaBarra() {
+  const rol = document.getElementById('barra-inferior-rolagem'), slot = document.getElementById('cabecalho-barra-mandala');
+  if (!rol || !slot) return;
+  rol.scrollLeft = slot.offsetLeft - (rol.clientWidth - slot.offsetWidth) / 2;
+  atualizarSetasBarraMandala();
 }
 
 /* Tela estreita: a barra rola, e uma área que rola CORTA o que abre de dentro dela (e no Safari do iPhone até prende "position: fixed" nela). Então os menus

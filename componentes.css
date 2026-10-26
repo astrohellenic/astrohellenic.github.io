@@ -307,9 +307,9 @@
 /* tela larga não rola: a camada de dentro não pode cortar os menus que abrem pra cima dos botões */
 @media (min-width: 1191px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } #barra-inferior-rolagem { overflow: visible; } }
 @media (max-width: 1190px) {
-    /* tela estreita: o CABEÇALHO vem primeiro e ocupa a largura da tela (atualizarCabecalhoBarraMandala); os botões ficam depois, rolando pro lado */
-    #barra-inferior-mandala #cabecalho-barra-mandala { order: -1; }
-    #barra-inferior-mandala #mandala-actions-overlay { margin-left: 16px; }
+    /* tela estreita: a ordem é sempre botões da esquerda | cabeçalho | botões da direita; o cabeçalho tem a largura da tela e a barra abre CENTRALIZADA nele
+       (centralizarCabecalhoNaBarra, mandala.js); os botões ficam cada um do seu lado, rolando pro lado */
+    #barra-inferior-mandala #mandala-actions-overlay { margin-right: 16px; }
     #barra-inferior-mandala #mandala-controls-overlay { margin-left: 16px; }
 }
 .barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
