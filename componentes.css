@@ -307,7 +307,9 @@
 /* tela larga não rola: a camada de dentro não pode cortar os menus que abrem pra cima dos botões */
 @media (min-width: 1191px) { #barra-inferior-mandala #cabecalho-barra-mandala { flex: 1 1 0; } #barra-inferior-rolagem { overflow: visible; } }
 @media (max-width: 1190px) {
-    #barra-inferior-mandala #mandala-actions-overlay { margin-right: 16px; }
+    /* tela estreita: o CABEÇALHO vem primeiro e ocupa a largura da tela (atualizarCabecalhoBarraMandala); os botões ficam depois, rolando pro lado */
+    #barra-inferior-mandala #cabecalho-barra-mandala { order: -1; }
+    #barra-inferior-mandala #mandala-actions-overlay { margin-left: 16px; }
     #barra-inferior-mandala #mandala-controls-overlay { margin-left: 16px; }
 }
 .barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
@@ -315,8 +317,7 @@
 #barra-seta-esq, .barra-seta-esq { left: 0; justify-content: flex-start; padding-left: 4px; background: linear-gradient(to right, var(--fundo-creme) 40%, transparent); }
 #barra-seta-dir, .barra-seta-dir { right: 0; justify-content: flex-end; padding-right: 4px; background: linear-gradient(to left, var(--fundo-creme) 40%, transparent); }
 body.tema-ceu .barra-seta { background: transparent !important; }
-body.tema-ceu #barra-seta-esq, .barra-seta-esq { background: linear-gradient(to right, rgba(242, 228, 184, .95) 35%, transparent) !important; }
-body.tema-ceu #barra-seta-dir, .barra-seta-dir { background: linear-gradient(to left, rgba(242, 228, 184, .95) 35%, transparent) !important; }
+/* Papiro: nada de "luzinha" (degradê) atrás das setinhas, só a seta (as duas barras, de cima e de baixo, iguais). */
 
 /* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
    enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */

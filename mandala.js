@@ -1002,7 +1002,8 @@ function atualizarCabecalhoBarraMandala() {
   const cores = coresCabecalhoMandala(modoEscuro, null);
   // tela estreita: a barra rola e o cabeçalho tem largura própria (fixa); tela larga: estica entre os grupos
   const estreita = window.innerWidth <= 1190;
-  slot.style.width = estreita ? '640px' : '';
+  const rolBarra = document.getElementById('barra-inferior-rolagem');
+  slot.style.width = estreita ? Math.max(200, (rolBarra ? rolBarra.clientWidth : window.innerWidth - 24) - 12) + 'px' : '';
   slot.style.flex = estreita ? '0 0 auto' : '';
   // ainda sem layout (largura ~0, ex.: a barra acabou de aparecer): espera o próximo quadro em vez de desenhar o cabeçalho espremido
   if (!estreita && slot.clientWidth < 120) { requestAnimationFrame(atualizarCabecalhoBarraMandala); return; }
@@ -1087,6 +1088,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const rol = document.getElementById('barra-inferior-rolagem');
   if (rol) rol.addEventListener('scroll', atualizarSetasBarraMandala, { passive: true });
+  // tela estreita: o cabeçalho tem a largura da barra, então refaz quando ela muda (virar o aparelho)
+  if (rol && window.ResizeObserver) {
+    let ultimaRol = 0;
+    new ResizeObserver(() => { const w = rol.clientWidth; if (Math.abs(w - ultimaRol) > 2 && w > 0) { ultimaRol = w; if (window.innerWidth <= 1190) atualizarCabecalhoBarraMandala(); } }).observe(rol);
+  }
 });
 
 function atualizarBarraInferiorMandala() {
