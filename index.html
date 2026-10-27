@@ -1047,7 +1047,11 @@ body {
     <div id="modalImportOverlay">
         <div class="janela" style="width: 460px;"><div class="janela-corpo">
             <div class="titulo-secao">Importar Lista de Clientes em Massa</div>
-            <p class="re-ajuda">Cole abaixo a sua lista. Aceita formatos como:<br><b>0011 - Eryell Souza, 11/06/1999, 18:28, Mauá</b></p>
+            <div class="janela-acoes">
+                <button type="button" class="botao-texto" onclick="document.getElementById('importArquivo').click()">Importar arquivo</button>
+                <input type="file" id="importArquivo" style="display:none" onchange="importarArquivoDeMapas(this)">
+            </div>
+            <p class="re-ajuda">Ou cole abaixo a sua lista. Aceita formatos como:<br><b>0011 - Eryell Souza, 11/06/1999, 18:28, Mauá</b></p>
             <textarea id="importTextArea" class="modal-textarea" placeholder="Exemplo:
 0011 - Eryell Souza, 11/06/1999, 18:28, Mauá
 0012 - João Silva, 05/08/1985, 09:15, São Paulo"></textarea>
@@ -1093,6 +1097,7 @@ body {
 <script src="fonte-caveat.js?v=20261010v"></script>
 <script src="dialogos.js?v=20261010f"></script>
 <script src="supabase.js?v=20261024b"></script>
+<script src="importacao.js?v=20261027a"></script>
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261010v"></script>
 <script src="tabelaTecnica.js?v=20261010t"></script>
