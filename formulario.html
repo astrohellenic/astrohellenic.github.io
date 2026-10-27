@@ -25,6 +25,7 @@
     textarea:focus { border-bottom-color: var(--terracota); }
     textarea::placeholder { color: var(--preto-tinta); opacity: .5; }
     input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 36px; }
+    #whatsappPais { width: 100%; background: transparent; color: var(--preto-tinta); border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; padding: 8px 0; font-size: 14px; font-family: inherit; margin-bottom: 6px; }
     .pagina-indicador { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: -10px 0 16px 0; color: var(--azul-egipcio-escuro); }
     .fato-linha { padding: 12px 0; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
     .fato-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
@@ -76,6 +77,7 @@
 
     <div class="form-group" id="grupoWhatsapp">
       <label for="whatsapp">WhatsApp</label>
+      <select id="whatsappPais" aria-label="País do WhatsApp"><option value="+55">Brasil (+55)</option><option value="+351">Portugal (+351)</option><option value="+1">EUA / Canadá (+1)</option><option value="+31">Países Baixos (+31)</option><option value="+34">Espanha (+34)</option><option value="+33">França (+33)</option><option value="+39">Itália (+39)</option><option value="+49">Alemanha (+49)</option><option value="+44">Reino Unido (+44)</option><option value="+41">Suíça (+41)</option><option value="+32">Bélgica (+32)</option><option value="+353">Irlanda (+353)</option><option value="+352">Luxemburgo (+352)</option><option value="+43">Áustria (+43)</option><option value="+46">Suécia (+46)</option><option value="+47">Noruega (+47)</option><option value="+45">Dinamarca (+45)</option><option value="+358">Finlândia (+358)</option><option value="+244">Angola (+244)</option><option value="+258">Moçambique (+258)</option><option value="+238">Cabo Verde (+238)</option><option value="+54">Argentina (+54)</option><option value="+598">Uruguai (+598)</option><option value="+595">Paraguai (+595)</option><option value="+56">Chile (+56)</option><option value="+57">Colômbia (+57)</option><option value="+81">Japão (+81)</option><option value="+61">Austrália (+61)</option><option value="+971">Emirados Árabes (+971)</option><option value="+972">Israel (+972)</option><option value="">Outro (digite o + e o país no número)</option></select>
       <input type="tel" inputmode="tel" id="whatsapp" required placeholder="(11) 99999-9999">
     </div>
 
@@ -485,11 +487,18 @@
   }
 
   /* Valida os campos da etapa atual; devolve os dados já normalizados, ou null se algo estiver errado. */
+  /* WhatsApp sempre completo, com o país: o que a pessoa digitou com "+" vale como está; sem "+", entra o país escolhido */
+  function whatsappCompleto() {
+    const v = document.getElementById('whatsapp').value.trim();
+    const ddi = document.getElementById('whatsappPais').value;
+    return v.startsWith('+') || !ddi ? v : ddi + ' ' + v;
+  }
+
   function lerEtapaAtual() {
     const precisaContato = !(modoSinastria && etapaSinastria === 'B');
     const nome = document.getElementById('nome').value.trim();
     const campoWhats = document.getElementById('whatsapp');
-    const digitosWhats = campoWhats.value.replace(/\D/g, '');
+    const digitosWhats = whatsappCompleto().replace(/\D/g, '');
     if (precisaContato && (/[^0-9\s()+.\-]/.test(campoWhats.value) || digitosWhats.length < 10 || digitosWhats.length > 15)) {
       alert('WhatsApp inválido. Digite só números, com DDD (ex.: (11) 99999-9999).'); campoWhats.focus(); return null;
     }
@@ -507,7 +516,7 @@
     }
     return {
       nome, data: dataNorm, hora: horaNorm, cidade: selectedGeo.name, lat: selectedGeo.lat, lon: selectedGeo.lon,
-      whatsapp: precisaContato ? campoWhats.value.trim() : '', email: precisaContato ? document.getElementById('email').value.trim() : '',
+      whatsapp: precisaContato ? whatsappCompleto() : '', email: precisaContato ? document.getElementById('email').value.trim() : '',
       geo: { ...selectedGeo }
     };
   }
@@ -598,7 +607,7 @@
       cidade: selectedGeo.name,
       latitude: selectedGeo.lat,
       longitude: selectedGeo.lon,
-      whatsapp: document.getElementById('whatsapp').value.trim(),
+      whatsapp: whatsappCompleto(),
       email: document.getElementById('email').value.trim(),
       user_id: ownerId
     };

@@ -963,15 +963,13 @@ async function carregarMapasDoBanco(nomePasta) {
 /* SELINHO "fatos enviados" (retificação): aparece na lista, ao lado do nome, quando o cliente enviou os fatos da vida. Só sai quando o astrólogo toca nele
    (não sai ao abrir a ferramenta). Fica no Supabase (retificacoes.fatos_vistos_em), então vale em qualquer aparelho. Sem a coluna ou sem rede: lista normal, sem selinho. */
 window.retifFatosNovos = window.retifFatosNovos || new Set();
-// Número do WhatsApp pro link wa.me. Com "+" no começo ou mais de 11 dígitos, vale como está (já tem o país).
-// Sem país: 11 dígitos começando com 1 e sem o 9 de celular depois do DDD não é celular do Brasil (ex.: EUA 1 732...).
+// Número do WhatsApp pro link wa.me. Com "+" (o formulário sempre grava assim) vale como está, qualquer país.
+// Cadastro antigo sem "+": vale o Brasil (55), como sempre foi.
 function numeroWhatsappLink(valor) {
   const texto = valor ? String(valor).trim() : '';
   const num = texto.replace(/\D/g, '');
   if (!num) return '';
-  if (texto.startsWith('+') || num.length > 11) return num;
-  if (num.length === 11 && num[0] === '1' && num[2] !== '9') return num;
-  return '55' + num;
+  return texto.startsWith('+') || num.length > 11 ? num : '55' + num;
 }
 
 async function carregarSelosFatosRetificacao() {
