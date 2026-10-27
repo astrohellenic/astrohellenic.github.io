@@ -1364,16 +1364,34 @@ function fecharModalImportacaoTexto() {
   document.getElementById('modalImportOverlay').style.display = "none";
 }
 
+/* Coordenada da cidade escrita na lista (mesma busca do cadastro de mapa). Guarda o que já achou: cidade repetida não busca de novo. */
+async function buscarCoordenadaDaCidade(texto, cache) {
+  const chave = texto.trim().toLowerCase();
+  if (!chave) return null;
+  if (chave in cache) return cache[chave];
+  let achou = null;
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(texto)}&limit=1`);
+    const dados = await res.json();
+    if (dados && dados.length > 0) achou = { latitude: parseFloat(dados[0].lat), longitude: parseFloat(dados[0].lon) };
+  } catch (e) { achou = null; }
+  cache[chave] = achou;
+  await new Promise(r => setTimeout(r, 1100)); // o serviço de mapas pede no máximo 1 busca por segundo
+  return achou;
+}
+
 async function processarImportacaoTextoEmMassa() {
   const rawText = document.getElementById('importTextArea').value.trim();
   if (!rawText) { alert("Cole o texto com a lista de clientes."); return; }
 
   const linhas = rawText.split('\n');
   const registros = [];
+  const semCidade = [];
+  const cache = {};
 
-  linhas.forEach(linha => {
+  for (const linha of linhas) {
     let l = linha.trim();
-    if (!l) return;
+    if (!l) continue;
 
     let partes = l.split(/[,;\t]/);
     let nomeBruto = partes[0] ? partes[0].trim() : "Sem Nome";
@@ -1388,7 +1406,10 @@ async function processarImportacaoTextoEmMassa() {
 
     let dataStr = partes[1] ? partes[1].trim() : "01/01/2000";
     let horaStr = partes[2] ? partes[2].trim() : "";
-    let cidadeStr = partes[3] ? partes[3].trim() : "Brasil";
+    let cidadeStr = partes[3] ? partes[3].trim() : "";
+
+    const coord = await buscarCoordenadaDaCidade(cidadeStr, cache);
+    if (!coord) { semCidade.push(nome); continue; }
 
     registros.push({
       pasta: activeFolder,
@@ -1398,12 +1419,13 @@ async function processarImportacaoTextoEmMassa() {
       data_nascimento: dataStr,
       hora_nascimento: horaStr,
       cidade: cidadeStr,
-      latitude: -23.5505,
-      longitude: -46.6333
+      latitude: coord.latitude,
+      longitude: coord.longitude
     });
-  });
+  }
 
-  if (registros.length === 0) { alert("Nenhum registro legível encontrado."); return; }
+  const aviso = semCidade.length ? `\n\nNão achei a cidade de ${semCidade.length} e não importei: ${semCidade.join(', ')}.` : "";
+  if (registros.length === 0) { alert("Nenhum registro importado." + aviso); return; }
 
   try {
     let userId = null;
@@ -1414,7 +1436,7 @@ async function processarImportacaoTextoEmMassa() {
 
     const { error } = await supabaseClient.from('mapas').insert(registrosComUser);
     if (!error) {
-      alert(`Sucesso! ${registros.length} clientes importados para a pasta "${activeFolder}".`);
+      alert(`Sucesso! ${registros.length} clientes importados para a pasta "${activeFolder}".` + aviso);
       fecharModalImportacaoTexto();
       carregarMapasDoBanco(activeFolder);
     } else {
