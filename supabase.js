@@ -972,6 +972,14 @@ function numeroWhatsappLink(valor) {
   return texto.startsWith('+') || num.length > 11 ? num : '55' + num;
 }
 
+// Abre o WhatsApp. No iPhone/iPad (principalmente no app da tela de início) o wa.me em outra aba deixava uma página branca
+// por cima; o endereço whatsapp:// abre direto o aplicativo, sem página no meio. No computador continua o wa.me.
+function abrirWhatsapp(numero) {
+  const toque = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (toque) window.location.href = 'whatsapp://send?phone=' + numero;
+  else window.open('https://wa.me/' + numero, '_blank');
+}
+
 async function carregarSelosFatosRetificacao() {
   try {
     const { data, error } = await supabaseClient.from('retificacoes').select('mapa_id').not('enviado_em', 'is', null).is('fatos_vistos_em', null);
@@ -1109,7 +1117,7 @@ function renderListaMapas(lista) {
         ${!isSelectionMode ? `
           <div class="card-actions">
             ${linkWhats ? `
-              <button type="button" class="action-record-btn whats-btn" onclick="event.stopPropagation(); window.open('https://wa.me/${linkWhats}', '_blank')" title="Abrir WhatsApp">
+              <button type="button" class="action-record-btn whats-btn" onclick="event.stopPropagation(); abrirWhatsapp('${linkWhats}')" title="Abrir WhatsApp">
                 ${menuIcone('whatsapp', 18)}
               </button>
             ` : ''}

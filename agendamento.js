@@ -281,7 +281,7 @@ function agendaContatoDoCompromisso(ev, meet) {
   const video = (meet && /^https:\/\//.test(meet)) ? `<button type="button" class="action-record-btn meet-btn" onclick="window.open(this.dataset.url, '_blank', 'noopener')" data-url="${escapeHtml(meet)}" title="Entrar no Google Meet">${menuIcone('video', 18)}</button>` : '';
   if (!m) return video ? `<div class="card-actions">${video}</div>` : '';
   const link = numeroWhatsappLink(m.whatsapp);
-  const zap = link ? `<button type="button" class="action-record-btn whats-btn" onclick="window.open('https://wa.me/${link}', '_blank')" title="Abrir WhatsApp">${menuIcone('whatsapp', 18)}</button>` : '';
+  const zap = link ? `<button type="button" class="action-record-btn whats-btn" onclick="abrirWhatsapp('${link}')" title="Abrir WhatsApp">${menuIcone('whatsapp', 18)}</button>` : '';
   const mail = m.email ? `<button type="button" class="action-record-btn email-btn" data-email="${escapeHtml(String(m.email).trim())}" onclick="navigator.clipboard.writeText(this.dataset.email); alert('E-mail copiado!');" title="Copiar E-mail">${menuIcone('email', 18)}</button>` : '';
   return (zap || mail || video) ? `<div class="card-actions">${video}${zap}${mail}</div>` : '';
 }
