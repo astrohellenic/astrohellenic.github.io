@@ -286,16 +286,18 @@ function corDoTempoZR(f) {
   return `rgb(${de.map((c, k) => Math.round(c + (para[k] - c) * t)).join(',')})`;
 }
 
-function barraTempoZR(inicio, fim, estilo) {
+function barraTempoZR(inicio, fim, estilo, tamanhoLetra) {
   const agora = new Date();
   const f = Math.max(0, Math.min(1, (agora - inicio) / (fim - inicio)));
   const cor = corDoTempoZR(f);
-  return `<div style="height: 5px; border: 1px solid ${cor}; box-sizing: content-box; ${estilo || ''}"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>`;
+  const pct = agora >= fim ? 100 : Math.floor(f * 100);
+  const h = (estilo && /height:\s*3px/.test(estilo)) ? 3 : 5;
+  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div></div>`;
 }
 
 /* Linha de tabela só com a barrinha, logo embaixo da linha do período (níveis 2, 3 e 4). */
 function linhaBarraTempoZR(inicio, fim) {
-  return `<tr class="zr-barra"><td colspan="5" style="padding: 0 6px 5px; border-top: 0;">${barraTempoZR(inicio, fim, 'height: 3px;')}</td></tr>`;
+  return `<tr class="zr-barra"><td colspan="5" style="padding: 0 6px 5px; border-top: 0;">${barraTempoZR(inicio, fim, 'height: 3px;', 9)}</td></tr>`;
 }
 
 function calcularDataFimZR(dataInicio, anos) {
