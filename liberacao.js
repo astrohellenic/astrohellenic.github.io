@@ -271,6 +271,28 @@ function alternarL3Accordion(l1Idx, l2Idx, l3Idx, event) {
   renderLiberacaoUI();
 }
 
+/* BARRINHA DO TEMPO de cada período: vazia antes de começar, cheia depois de terminar, enchendo durante.
+   Cor vai de azul (começo) a ocre (metade) a terracota (fim), como a barra do site Falando de Astrologia,
+   lendo as cores do tema em uso (claro, escuro ou Céu). Filete fino, só contorno + preenchimento. */
+function corDoTempoZR(f) {
+  const css = getComputedStyle(document.documentElement);
+  const rgb = (nome, padrao) => {
+    const m = (css.getPropertyValue(nome).trim() || padrao).match(/^#?([0-9a-f]{6})$/i);
+    const n = parseInt((m ? m[1] : padrao.slice(1)), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  };
+  const A = rgb('--azul-egipcio-claro', '#1F5FA3'), O = rgb('--ocre', '#B5852F'), T = rgb('--terracota', '#A03E25');
+  const de = f < 0.5 ? A : O, para = f < 0.5 ? O : T, t = f < 0.5 ? f / 0.5 : (f - 0.5) / 0.5;
+  return `rgb(${de.map((c, k) => Math.round(c + (para[k] - c) * t)).join(',')})`;
+}
+
+function barraTempoZR(inicio, fim, estilo) {
+  const agora = new Date();
+  const f = Math.max(0, Math.min(1, (agora - inicio) / (fim - inicio)));
+  const cor = corDoTempoZR(f);
+  return `<div style="height: 5px; border: 1px solid ${cor}; box-sizing: content-box; ${estilo || ''}"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>`;
+}
+
 function calcularDataFimZR(dataInicio, anos) {
   const totalDias = anos * 360;
   const dataFim = new Date(dataInicio);
@@ -719,6 +741,7 @@ function renderLiberacaoUI() {
           </div>
           <strong class="texto-apagado" style="font-size: 12px;">${formatarDataBR(currentStart)} a ${formatarDataBR(currentEnd)}</strong>
         </div>
+        ${barraTempoZR(currentStart, currentEnd, 'margin: 0 16px 10px;')}
     `;
 
     if (isExpanded) {
