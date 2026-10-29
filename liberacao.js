@@ -293,6 +293,11 @@ function barraTempoZR(inicio, fim, estilo) {
   return `<div style="height: 5px; border: 1px solid ${cor}; box-sizing: content-box; ${estilo || ''}"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>`;
 }
 
+/* Linha de tabela só com a barrinha, logo embaixo da linha do período (níveis 2, 3 e 4). */
+function linhaBarraTempoZR(inicio, fim) {
+  return `<tr class="zr-barra"><td colspan="5" style="padding: 0 6px 5px; border-top: 0;">${barraTempoZR(inicio, fim, 'height: 3px;')}</td></tr>`;
+}
+
 function calcularDataFimZR(dataInicio, anos) {
   const totalDias = anos * 360;
   const dataFim = new Date(dataInicio);
@@ -773,6 +778,7 @@ function renderLiberacaoUI() {
             <td>${formatarDataBR(sub.end)}</td>
             <td class="centro">${statusL2}</td>
           </tr>
+          ${linhaBarraTempoZR(sub.start, sub.end)}
         `;
 
         if (isL2Expanded) {
@@ -806,6 +812,7 @@ function renderLiberacaoUI() {
                 <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
                 <td class="centro">${statusL3}</td>
               </tr>
+              ${linhaBarraTempoZR(subL3.start, subL3.end)}
             `;
 
             if (isL3Expanded) {
@@ -839,6 +846,7 @@ function renderLiberacaoUI() {
                     <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
                     <td class="centro">${statusL4}</td>
                   </tr>
+                  ${linhaBarraTempoZR(subL4.start, subL4.end)}
                 `;
               });
 
