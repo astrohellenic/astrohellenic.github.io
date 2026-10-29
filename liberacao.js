@@ -246,12 +246,15 @@ function alternarLoteLiberacao(lotKey) {
   renderLiberacaoUI();
 }
 
-function alternarL1Accordion(index) {
-  expandedL1Index = (expandedL1Index === index) ? null : index;
+/* A tela mostra UM signo do nível 1 por vez (o de hoje ao abrir); as setas andam pros vizinhos. */
+function irParaNivel1Liberacao(index) {
+  if (index < 0 || index > 11) return;
+  expandedL1Index = index;
   expandedL2Key = null;
   expandedL3Key = null;
   renderLiberacaoUI();
 }
+window.irParaNivel1Liberacao = irParaNivel1Liberacao;
 
 function alternarL2Accordion(l1Idx, l2Idx, event) {
   if (event) event.stopPropagation();
@@ -605,6 +608,11 @@ function renderLiberacaoUI() {
 
   const svgGaleriaZ = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
   const svgRelatorioZ = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
+  const setaNivel1 = (dir) => {
+    const destino = expandedL1Index + dir;
+    const fora = destino < 0 || destino > 11;
+    return `<button type="button" class="botao-icone"${fora ? ' disabled style="opacity: .35; cursor: default;"' : ` onclick="irParaNivel1Liberacao(${destino})"`} title="${dir < 0 ? 'Nível 1 anterior' : 'Próximo nível 1'}"><svg class="icone" viewBox="0 0 64 64"><polyline points="${dir < 0 ? '40,12 20,32 40,52' : '24,12 44,32 24,52'}"/></svg></button>`;
+  };
   const seloPico = (extra) => `<span class="selo"${extra ? ` style="${extra}"` : ''}>PICO</span>`;
   const seloSalto = (extra) => `<span class="selo salto"${extra ? ` style="${extra}"` : ''}>SALTO</span>`;
 
@@ -661,6 +669,13 @@ function renderLiberacaoUI() {
 
       <hr class="divisa">
 
+      <!-- Setas fora do #liberacaoArvoreCapture de propósito: a imagem do relatório/galeria leva só o nível 1 mostrado, sem as setas. -->
+      <div class="linha-ano-profectado">
+        ${setaNivel1(-1)}
+        <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Nível 1:</strong> ${signoComNome(getSignSVGZR((startSignIdx + expandedL1Index) % 12, 20), (startSignIdx + expandedL1Index) % 12)}</span>
+        ${setaNivel1(1)}
+      </div>
+
       <div id="liberacaoArvoreCapture">
   `;
 
@@ -670,7 +685,8 @@ function renderLiberacaoUI() {
     const currSign = (startSignIdx + i) % 12;
     const durationYears = ZR_SIGN_YEARS[currSign];
     const currentEnd = calcularDataFimZR(currentStart, durationYears);
-    const isExpanded = (expandedL1Index === i);
+    if (expandedL1Index !== i) { currentStart = new Date(currentEnd); continue; }
+    const isExpanded = true;
     const subperiodosL2 = calcularSubperiodosL2(currSign, currentStart, durationYears);
 
     const isPeakL1 = angularSignsFromFort.includes(currSign);
@@ -678,7 +694,7 @@ function renderLiberacaoUI() {
     // Nível 1: um cartão (linha em cima e embaixo); o aberto leva a marca terracota na margem e o nome em terracota.
     html += `
       <div class="cartao${isExpanded ? ' ativo' : ''}" style="margin-bottom: 12px; padding: 0;">
-        <div onclick="alternarL1Accordion(${i})" style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; user-select: none;">
+        <div style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${getSignSVGZR(currSign, 24)}
             <div>
