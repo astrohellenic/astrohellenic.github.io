@@ -608,6 +608,17 @@ function renderLiberacaoUI() {
 
   const svgGaleriaZ = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
   const svgRelatorioZ = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
+  /* Lista dos 12 signos do nível 1, na ordem das datas, com início e fim de cada um (tocar leva direto àquele nível 1). */
+  let linhasMenuNivel1 = '';
+  {
+    let ini = new Date(currentMoment);
+    for (let i = 0; i < 12; i++) {
+      const sg = (startSignIdx + i) % 12;
+      const fim = calcularDataFimZR(ini, ZR_SIGN_YEARS[sg]);
+      linhasMenuNivel1 += `<div class="item-menu${i === expandedL1Index ? ' ativa' : ''}" onclick="irParaNivel1Liberacao(${i})" style="display: flex; align-items: center; gap: 10px; justify-content: space-between;"><span style="display: flex; align-items: center; gap: 6px;">${signoComNome(getSignSVGZR(sg, 20), sg)}</span><span class="texto-apagado" style="font-size: 12px; white-space: nowrap;">${formatarDataBR(ini)} a ${formatarDataBR(fim)}</span></div>`;
+      ini = fim;
+    }
+  }
   const setaNivel1 = (dir) => {
     const destino = expandedL1Index + dir;
     const fora = destino < 0 || destino > 11;
@@ -670,10 +681,13 @@ function renderLiberacaoUI() {
       <hr class="divisa">
 
       <!-- Setas fora do #liberacaoArvoreCapture de propósito: a imagem do relatório/galeria leva só o nível 1 mostrado, sem as setas. -->
-      <div class="linha-ano-profectado">
+      <div class="linha-ano-profectado" style="position: relative;">
         ${setaNivel1(-1)}
-        <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Nível 1:</strong> ${signoComNome(getSignSVGZR((startSignIdx + expandedL1Index) % 12, 20), (startSignIdx + expandedL1Index) % 12)}</span>
+        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('liberacaoMenuNivel1'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Escolher o signo do nível 1"><strong>Nível 1:</strong> ${signoComNome(getSignSVGZR((startSignIdx + expandedL1Index) % 12, 20), (startSignIdx + expandedL1Index) % 12)}<svg class="icone" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
         ${setaNivel1(1)}
+        <div id="liberacaoMenuNivel1" class="menu-flutuante" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">
+          ${linhasMenuNivel1}
+        </div>
       </div>
 
       <div id="liberacaoArvoreCapture">
