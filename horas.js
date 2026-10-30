@@ -216,10 +216,10 @@ function iniciarModuloHoras(containerIdAlvo) {
             ${getPlanet3DSVG(horaAtual.planet.id, 48)}
           </div>
         </div>
+        ${barraTempo(horaAtual.start, horaAtual.end, 'width: 100%; box-sizing: border-box; padding: 0 16px; margin: 12px 0 10px;', 11, 'minutos', now)}
         <div class="horas-atual-periodo">
           ${iconeSolLuaHoras(horaAtual.period, 14)} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
         </div>
-        ${barraTempo(horaAtual.start, horaAtual.end, 'margin: 8px 16px 0;', 11, 'minutos', now)}
       </div>
       <hr class="divisa">
     `;
