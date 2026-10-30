@@ -3,6 +3,7 @@
    ========================================== */
 
 let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
+let dataBuscaZR = null; // data escolhida na busca ("Ir para a data"); null = hoje
 let expandedL1Index = null; // Detectado automaticamente com base no momento atual
 let expandedL2Key = null; // Guarda a chave do L2 expandido (ex: "0_2")
 let expandedL3Key = null; // Guarda a chave do L3 expandido (ex: "0_2_1")
@@ -247,6 +248,21 @@ function alternarLoteLiberacao(lotKey) {
 }
 
 /* A tela mostra UM signo do nível 1 por vez (o de hoje ao abrir); as setas andam pros vizinhos. */
+/* Busca por data: abre a árvore até o período que contém a data (nível 1, 2, 3 e 4). Vazio = volta pra hoje. */
+function irParaDataLiberacao(valor) {
+  if (valor) {
+    const [a, m, d] = valor.split('-').map(Number);
+    dataBuscaZR = new Date(a, m - 1, d, 12, 0);
+  } else {
+    dataBuscaZR = null;
+  }
+  expandedL1Index = null;
+  expandedL2Key = null;
+  expandedL3Key = null;
+  renderLiberacaoUI();
+}
+window.irParaDataLiberacao = irParaDataLiberacao;
+
 function irParaNivel1Liberacao(index) {
   if (index < 0 || index > 11) return;
   expandedL1Index = index;
@@ -487,7 +503,8 @@ function renderLiberacaoUI() {
   }
 
   // DETECÇÃO AUTOMÁTICA DO L1 ATIVO SE NENHUM ESTIVER EXPANDIDO MANUALMENTE
-  const hoje = new Date();
+  // "hoje" aqui é o momento que a árvore procura: hoje, ou a data escolhida na busca
+  const hoje = dataBuscaZR ? new Date(dataBuscaZR) : new Date();
   if (expandedL1Index === null) {
     let checkStart = new Date(currentMoment);
     for (let i = 0; i < 12; i++) {
@@ -717,6 +734,13 @@ function renderLiberacaoUI() {
         <div id="liberacaoMenuNivel1" class="menu-flutuante" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">
           ${linhasMenuNivel1}
         </div>
+      </div>
+
+      <!-- Busca por data: fora do #liberacaoArvoreCapture, não sai na imagem do relatório. -->
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; color: var(--azul-egipcio-escuro);">
+        <svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex: none;" aria-hidden="true"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg>
+        <input type="date" value="${dataBuscaZR ? `${dataBuscaZR.getFullYear()}-${String(dataBuscaZR.getMonth() + 1).padStart(2, '0')}-${String(dataBuscaZR.getDate()).padStart(2, '0')}` : ''}" onchange="irParaDataLiberacao(this.value)" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none;">
+        ${dataBuscaZR ? `<button type="button" class="botao-texto" onclick="irParaDataLiberacao('')">Hoje</button>` : ''}
       </div>
 
       <div id="liberacaoArvoreCapture">
