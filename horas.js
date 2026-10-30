@@ -200,6 +200,7 @@ function iniciarModuloHoras(containerIdAlvo) {
       <p class="horas-info">
         Nascer do Sol: <strong>${formatarHoraMinutoSegundo(sunrise)}</strong> • Pôr do Sol: <strong>${formatarHoraMinutoSegundo(sunset)}</strong>
       </p>
+      ${barraTempo(sunrise, nextSunrise, 'margin: 0 0 10px;', 11, 'horas', now)}
   `;
 
   if (horaAtual) {
@@ -218,6 +219,7 @@ function iniciarModuloHoras(containerIdAlvo) {
         <div class="horas-atual-periodo">
           ${iconeSolLuaHoras(horaAtual.period, 14)} ${horaAtual.index}ª hora • ${formatarHoraMinutoSegundo(horaAtual.start)} às ${formatarHoraMinutoSegundo(horaAtual.end)}
         </div>
+        ${barraTempo(horaAtual.start, horaAtual.end, 'margin: 8px 16px 0;', 11, 'minutos', now)}
       </div>
       <hr class="divisa">
     `;
@@ -246,7 +248,7 @@ function iniciarModuloHoras(containerIdAlvo) {
         <td class="horas-regente">${planetaComNome(item.planet.id, 30)}</td>
         <td>${formatarHoraMinutoSegundo(item.start)}</td>
         <td>${formatarHoraMinutoSegundo(item.end)}</td>
-      </tr>
+      </tr>${linhaBarraTempo(item.start, item.end, 'minutos', 5, now)}
     `;
   });
 

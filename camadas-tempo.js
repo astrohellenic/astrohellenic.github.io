@@ -29,13 +29,14 @@ const UNIDADES_TEMPO = {
   anos: { ms: 360 * 86400000, um: 'ano', varios: 'anos' },
   meses: { ms: 30 * 86400000, um: 'mês', varios: 'meses' },
   dias: { ms: 86400000, um: 'dia', varios: 'dias' },
-  horas: { ms: 3600000, um: 'hora', varios: 'horas' }
+  horas: { ms: 3600000, um: 'hora', varios: 'horas' },
+  minutos: { ms: 60000, um: 'minuto', varios: 'minutos' }
 };
 function numeroTempo(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ','); }
 
 /* unidade ('anos', 'meses', 'dias' ou 'horas'): no fim da barra aparece quanto já passou do total, na unidade do nível (ex.: 11/20 meses). */
-function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade) {
-  const agora = new Date();
+function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade, momento) {
+  const agora = momento ? new Date(momento) : new Date(); // momento: referência opcional (ex.: o momento do mapa nas Horas Planetárias); sem ele, o relógio de agora
   const f = Math.max(0, Math.min(1, (agora - inicio) / (fim - inicio)));
   const cor = corDoTempo(f);
   const pct = agora >= fim ? 100 : Math.floor(f * 100);
@@ -48,8 +49,8 @@ function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade) {
 }
 
 /* Linha de tabela só com a barrinha, logo embaixo da linha do período. colunas = quantas colunas a tabela tem. */
-function linhaBarraTempo(inicio, fim, unidade, colunas) {
-  return `<tr class="zr-barra"><td colspan="${colunas || 5}">${barraTempo(inicio, fim, 'height: 3px;', 9, unidade)}</td></tr>`;
+function linhaBarraTempo(inicio, fim, unidade, colunas, momento) {
+  return `<tr class="zr-barra"><td colspan="${colunas || 5}">${barraTempo(inicio, fim, 'height: 3px;', 9, unidade, momento)}</td></tr>`;
 }
 
 /* Cabeçalho do nível aberto. Opções:
