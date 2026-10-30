@@ -365,15 +365,21 @@ function fvCartaoTroca(r) {
 /* Fase 1 e fase 2 em duas linhas curtas (a situação de cada regente já está no cartão dos regentes). */
 function fvLinhasFases(r) {
   const t = r.troca;
-  const linha = (n, reg, periodo) => `
+  const linha = (n, reg, periodo, barra) => `
     <div style="padding:6px 0; border-top:var(--contorno-fino) solid var(--azul-egipcio-claro); font-size:13px; line-height:1.9;">
       <strong>Fase ${n}</strong>${r.fase === n ? ' <span class="selo">hoje</span>' : ''}
       <span style="${FV_LINHA} flex-wrap:wrap;">${fvPlaneta(reg.id, 22)} <span>com</span> ${fvPlaneta(r.part.id, 22)}</span>:
       ${periodo}
+      ${barra}
     </div>`;
+  /* Barras sem número (nem % nem anos: a pessoa leria como quanto falta de vida). Fase 1: do nascimento até a troca, muda de cor.
+     Fase 2: não termina; azul, avança com os anos (mesma escala de 0 a 90 anos da barra de trocas) e fica aberta à direita. */
+  const barra1 = barraTempoLimpa(r.nascimento, t.data, 'margin: 4px 0 2px;', r.hoje);
+  const fim90 = new Date(r.nascimento.getTime() + 90 * 365.25 * 86400000);
+  const barra2 = barraSemFim(t.data, fim90, 'margin: 4px 0 2px;', r.hoje);
   return `<div class="cartao">
-    ${linha(1, r.reg1, `de ${fvFmtData(r.nascimento)} até ${fvFmtData(t.data)}`)}
-    ${linha(2, r.reg2, `de ${fvFmtData(t.data)} até o fim da vida`)}
+    ${linha(1, r.reg1, `de ${fvFmtData(r.nascimento)} até ${fvFmtData(t.data)}`, barra1)}
+    ${linha(2, r.reg2, `de ${fvFmtData(t.data)} até o fim da vida`, barra2)}
   </div>`;
 }
 

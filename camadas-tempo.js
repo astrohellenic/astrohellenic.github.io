@@ -110,3 +110,21 @@ function acharPeriodo(lista, data, inicio, fim) {
   const ini = inicio || (x => x.start), f = fim || (x => x.end);
   return lista.findIndex(x => data >= ini(x) && data < f(x));
 }
+
+/* BARRAS SEM NÚMERO, para o que não é "quanto falta": nada de porcentagem nem de "x/y anos" (a pessoa leria como quanto falta de vida).
+   barraTempoLimpa: do início ao fim de um período que TERMINA (ex.: fase 1 da vida), mudando de cor (azul, ocre, terracota) como as outras.
+   barraSemFim: período que NÃO termina (ex.: fase 2 da vida): azul, enche conforme os anos passam sobre a escala dada (inicio ate escalaFim)
+   e o lado direito fica aberto, com uma setinha ("ao infinito"). momento = referência opcional (padrão: agora). */
+function barraTempoLimpa(inicio, fim, estilo, momento) {
+  const agora = momento ? new Date(momento) : new Date();
+  const f = Math.max(0, Math.min(1, (agora - inicio) / (fim - inicio)));
+  const cor = corDoTempo(f);
+  return `<div style="${estilo || ''}"><div style="height: 5px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div></div>`;
+}
+
+function barraSemFim(inicio, escalaFim, estilo, momento) {
+  const agora = momento ? new Date(momento) : new Date();
+  const f = Math.max(0, Math.min(1, (agora - inicio) / (escalaFim - inicio)));
+  const cor = 'var(--azul-egipcio-claro)';
+  return `<div style="display: flex; align-items: center; ${estilo || ''}"><div style="flex: 1; height: 5px; border: 1px solid ${cor}; border-right: 0; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div><svg viewBox="0 0 10 14" width="10" height="14" style="flex: none; margin-left: -1px;"><polyline points="1,1 8,7 1,13" fill="none" stroke="${cor}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+}
