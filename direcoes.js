@@ -364,6 +364,8 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
 
       let startDate = null;
       let endDate = null;
+      // grau onde o afeta realmente entra neste termo (no primeiro termo, o grau do próprio afeta)
+      const effStartDeg = (sOffset === 0 && termStartDeg < startDegInSign) ? startDegInSign : termStartDeg;
       let startYearsOld = null;
       let endYearsOld = null;
 
@@ -391,6 +393,7 @@ function calcular12SignosCircumambulatoria(startAbsDeg, birthDate, data) {
       tabela.push({
         signIdx: signIdx,
         termStartDeg: termStartDeg,
+        effStartDeg: effStartDeg,
         termEndDeg: termEndDeg,
         termPlanetId: t.pId,
         termPlanetSym: t.pSym,
@@ -644,6 +647,13 @@ function renderCircumambulaçõesUI() {
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
+      /* PREENCHIMENTO DO TEMPO: o termo é a própria barra. Azul egípcio do começo até o dia de hoje (termo já passado = cheio,
+         termo de hoje = até o ponto de hoje, termo futuro = vazio). No primeiro termo conta a partir do grau do afeta. */
+      if (term.startDate && term.endDate && hoje > term.startDate) {
+        const frac = Math.max(0, Math.min(1, (hoje - term.startDate) / (term.endDate - term.startDate)));
+        const xIni = x0 + (term.effStartDeg * scale);
+        rowHtml += `<rect x="${xIni}" y="${yBaseline + 1}" width="${(xEnd - xIni) * frac}" height="${termHeight}" fill="var(--azul-egipcio-escuro)" stroke="none"/>`;
+      }
       rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="none" stroke="var(--azul-egipcio-escuro)" stroke-width="1"/>`;
 
       const xCenter = xStart + (wTerm / 2);
@@ -743,7 +753,7 @@ function renderCircumambulaçõesUI() {
         const tElapsed = hoje.getTime() - term.startDate.getTime();
         const frac = Math.max(0, Math.min(1, tElapsed / tTotal));
 
-        const currDeg = term.termStartDeg + (frac * (term.termEndDeg - term.termStartDeg));
+        const currDeg = term.effStartDeg + (frac * (term.termEndDeg - term.effStartDeg));
         const xHoje = x0 + (currDeg * scale);
         const hojeTop = yOffset + Math.round(10 * k);
         const hojeBottom = yOffset + boxHeight - Math.round(6 * k);
