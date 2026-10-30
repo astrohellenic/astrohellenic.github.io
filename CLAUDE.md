@@ -1005,3 +1005,13 @@ A ferramenta `retificacao-sizigia.js` está virando um **relatório por si só**
 **Pendente:** (1) teste real do formulário (enviar fatos de verdade e conferir na ferramenta); (2) critério de desempate dos votos de Ptolomeu — NÃO decidir: achar a regra nos textos antigos; (3) rodar o SQL do selinho e publicar; (4) Telegram/WhatsApp para avisar (depois, ligado ao Falando de Astrologia).
 
 **Regras de trabalho reforçadas nesta sessão:** `?v=` bumpado no mesmo commit (conferido nos últimos 40 commits); nunca mandar "abra em aba anônima" como solução (o astrólogo detesta; a versão é o `?v=`); seguir `docs/guia-design.md` e `componentes.css` sem inventar visual; só publicar na `main` quando ele pedir; SQL sempre na conversa.
+
+## Campo de data (`<input type="date">`) no iPad/iPhone: SEMPRE com cuidado (30/10/2026) — vale para TODA tela e peça nova, aqui e no Falando de Astrologia
+
+Toda vez que um campo de data entra num lugar, o mesmo problema volta e o astrólogo tem que reclamar ("fica selecionando sem eu ter escolhido"). Antes de entregar qualquer campo de data:
+- **Nunca agir direto no `onchange`.** O seletor de data do iOS dispara `change` com a data de HOJE no instante em que abre, antes de a pessoa escolher nada. Se o `change` já redesenha a tela, busca ou grava, o seletor fecha sozinho com "hoje". Guardar o valor sem redesenhar e só agir quando a pessoa confirmar: botão (**Ir**, Salvar...) ou `onblur` depois que o seletor fecha (como `rzFatoDataFechou` na retificação).
+- **Campo vazio com `appearance: none` SOME no iPad.** Sempre `min-height: 36px; min-width: 160px` (como em `#rz-container input[type="date"]`). Sem isso não há onde tocar.
+- **O toque tem que ser no próprio campo.** Ícone de calendário ao lado é só enfeite (`showPicker()` não é confiável no iOS); se for botão, ele só pode dar foco, nunca ser a única forma de abrir.
+- **Redesenhar a tela enquanto o seletor está aberto fecha o seletor.** Não mexer no DOM do campo enquanto a pessoa escolhe.
+- O Playwright daqui NÃO reproduz o seletor do iPad: não dá para dizer que "testei" um campo de data. Dizer que o teste real é no iPad dele.
+- Caso concreto: busca por data da Liberação Zodiacal (`liberacao.js`, `irParaDataLiberacao`), que passou por três rodadas (campo sumia, ícone sem efeito, `change` escolhendo hoje) até ficar com campo de tamanho mínimo + botão **Ir**.
