@@ -110,3 +110,22 @@ function acharPeriodo(lista, data, inicio, fim) {
   const ini = inicio || (x => x.start), f = fim || (x => x.end);
   return lista.findIndex(x => data >= ini(x) && data < f(x));
 }
+
+/* BARRA ÚNICA COM TROCA, para períodos que mudam de fase e depois seguem sem fim (ex.: as duas fases da vida). SEM porcentagem e
+   SEM "x anos": a pessoa leria como quanto falta de vida. Uma barra só, de ponta a ponta:
+   - do início até a troca: enche e muda de cor (azul, ocre, terracota) até chegar na troca;
+   - da troca em diante: continua em azul, sem fim (lado direito aberto, com uma setinha), e só avança conforme o tempo passa
+     sobre a escala dada (inicio ate escalaFim; a troca fica na proporção dela).
+   momento = referência opcional (padrão: agora). */
+function barraTempoComTroca(inicio, troca, escalaFim, estilo, momento) {
+  const agora = momento ? new Date(momento) : new Date();
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const f1 = clamp((agora - inicio) / (troca - inicio));
+  const f2 = clamp((agora - troca) / (escalaFim - troca));
+  const pTroca = clamp((troca - inicio) / (escalaFim - inicio)) * 100;
+  const cor1 = corDoTempo(f1), azul = 'var(--azul-egipcio-claro)';
+  return `<div style="display: flex; align-items: center; ${estilo || ''}">
+    <div style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; border: 1px solid ${cor1}; box-sizing: border-box;"><div style="height: 100%; width: ${(f1 * 100).toFixed(2)}%; background: ${cor1};"></div></div>
+    <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>
+    <svg viewBox="0 0 10 14" width="10" height="14" style="flex: none; margin-left: -1px; margin-right: -10px;"><polyline points="1,1 8,7 1,13" fill="none" stroke="${azul}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+}

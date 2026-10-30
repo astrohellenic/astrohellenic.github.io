@@ -301,6 +301,20 @@ function fvAncoraRotulo(idadeTroca, hojeIdade) {
   return idadeTroca >= hojeIdade ? '0' : '-100%';
 }
 
+/* BARRA DE PROGRESSO (uma por leitura): barra única do nascimento até a troca do senhor da triplicidade (enche e muda de cor, sem número)
+   e, dali em diante, azul sem fim, avançando com os anos da vida. Escala de 0 a 90 anos, a mesma da barra de trocas. */
+function fvBarrasProgresso(leituras) {
+  const barras = leituras.map(l => {
+    const nasc = l.r.nascimento;
+    const fim90 = new Date(nasc.getTime() + 90 * 365.25 * 86400000);
+    return `<div style="position:relative; margin:12px 6px 0 58px;">
+      <span style="position:absolute; left:-52px; top:-6px; width:48px; display:flex; justify-content:flex-end; gap:2px;">${l.icones || ''}</span>
+      ${barraTempoComTroca(nasc, l.r.troca.data, fim90, '', l.r.hoje)}
+    </div>`;
+  }).join('');
+  return `<div id="fvBarrasProgresso">${barras}</div>`;
+}
+
 /* Barra de 0 a 90 anos: uma faixa por leitura (fase 1 | fase 2, dividida na troca dela, com legenda), "hoje" e os eventos (número do evento embaixo).
    leituras: [{ rotulo, r }]. Se as duas coincidem vem uma faixa só, com as duas legendas. */
 function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
@@ -608,6 +622,7 @@ function renderFasesVidaUI(container) {
         <hr class="divisa">
         <h3 class="titulo-secao">Trocas na barra</h3>
         <div class="texto-apagado" style="font-size:11.5px;">Hoje: ${fvFmtData(rMat.hoje)}, idade ${fvAnosMeses(rMat.nascimento, rMat.hoje)}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a 90 anos.</div>
+        ${fvBarrasProgresso(leituras)}
         ${fvLinhaDoTempo(leituras, lista, rMat.idadeHoje)}
 
         <hr class="divisa">
