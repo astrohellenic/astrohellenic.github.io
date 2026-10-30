@@ -42,7 +42,7 @@ function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade) {
   const h = (estilo && /height:\s*3px/.test(estilo)) ? 3 : 5;
   const u = UNIDADES_TEMPO[unidade];
   const total = u ? Math.round(((fim - inicio) / u.ms) * 2) / 2 : 0;
-  const passou = u ? Math.floor(Math.min(f * total, total)) : 0;
+  const passou = u ? (agora >= fim ? total : Math.floor(Math.min(f * total, total))) : 0; // terminado = total cheio (ex.: 30,5/30,5, não 30/30,5)
   const fimTexto = u ? `<span style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap; color: ${cor};">${numeroTempo(passou)}/${numeroTempo(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
   return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>${fimTexto}</div>`;
 }
@@ -55,7 +55,7 @@ function linhaBarraTempo(inicio, fim, unidade, colunas) {
 /* Cabeçalho do nível aberto. Opções:
    - id: prefixo do menu (o menu fica em id + 'MenuNivel' + n); n: número do nível; lista/idx: períodos e o aberto;
    - fnIr: nome da função global que abre o período de índice i; glifo(item, tam): HTML do glifo; fmtData(data);
-   - unidade: da barrinha; inicio(item)/fim(item): opcionais (padrão item.start / item.end). */
+   - rotulo(item): texto antes do glifo (padrão 'Nível n'); unidade: da barrinha; inicio(item)/fim(item): opcionais (padrão item.start / item.end). */
 function cabecalhoNivelTempo(o) {
   const ini = o.inicio || (x => x.start), fim = o.fim || (x => x.end);
   const x = o.lista[o.idx];
@@ -68,7 +68,7 @@ function cabecalhoNivelTempo(o) {
   return `<div style="position: relative; margin: 12px 0 8px;">
       <div class="linha-ano-profectado" style="margin-bottom: 4px;">
         <span data-html2canvas-ignore="true">${seta(-1)}</span>
-        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('${o.id}MenuNivel${o.n}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Ver todos os períodos do nível ${o.n}"><strong>Nível ${o.n}:</strong> ${o.glifo(x, 20)}<svg class="icone" data-html2canvas-ignore="true" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
+        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('${o.id}MenuNivel${o.n}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Ver todos os períodos do nível ${o.n}"><strong>${o.rotulo ? o.rotulo(x) : 'Nível ' + o.n}:</strong> ${o.glifo(x, 20)}<svg class="icone" data-html2canvas-ignore="true" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
         <span data-html2canvas-ignore="true">${seta(1)}</span>
       </div>
       <div class="texto-apagado" style="text-align: center; font-size: 12px;">${o.fmtData(ini(x))} a ${o.fmtData(fim(x))}</div>

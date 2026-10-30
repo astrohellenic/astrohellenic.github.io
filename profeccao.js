@@ -53,12 +53,14 @@
         if (janela && janela.style.display === 'block' && !janela.contains(e.target)) janela.style.display = 'none';
     });
 
+    /* NAVEGAÇÃO EM CAMADAS (igual à Liberação e aos Decênios): sem mês escolhido a tela mostra a lista dos 12 meses;
+       escolhido um mês (0 a 11), o mês vira o cabeçalho e aparece a lista dos 12 passos de 60 horas. */
     window.alternarMesProfeccao = function(index) {
-    window.expandedProfeccaoMes = (window.expandedProfeccaoMes === index) ? -1 : index;
-    if (typeof window.iniciarModuloProfeccao === 'function') {
-        window.iniciarModuloProfeccao();
-    }
-};
+        window.expandedProfeccaoMes = index;
+        if (typeof window.iniciarModuloProfeccao === 'function') {
+            window.iniciarModuloProfeccao();
+        }
+    };
 
     const SIGNS = [
         { ruler: "Mars", rulerName: "Marte" },
@@ -608,16 +610,11 @@
             currentMonthStart = nextMonthStart;
         }
 
-        // DETECTA AUTOMATICAMENTE O MÊS ATUAL CASO NENHUM ESTEJA SELECIONADO MANUALLMENTE
-        if (window.expandedProfeccaoMes === undefined) {
-            const agora = hoje.getTime();
-            const mesAtualIdx = monthlyCache.findIndex(m => agora >= m.start && agora < m.end);
-            window.expandedProfeccaoMes = (mesAtualIdx !== -1) ? mesAtualIdx : 0;
-        }
-
-        const expandedMonthSignIdx = (window.expandedProfeccaoMes !== -1 && monthlyCache[window.expandedProfeccaoMes])
-            ? monthlyCache[window.expandedProfeccaoMes].signIdx
-            : null;
+        // Mês escolhido na lista (ou, sem escolha, o mês de hoje) pinta o signo dele na mandala natal
+        const agoraMs = hoje.getTime();
+        const mesSel = (Number.isInteger(window.expandedProfeccaoMes) && monthlyCache[window.expandedProfeccaoMes]) ? window.expandedProfeccaoMes : null;
+        const mesDestaque = mesSel !== null ? mesSel : monthlyCache.findIndex(m => agoraMs >= m.start && agoraMs < m.end);
+        const expandedMonthSignIdx = (mesDestaque !== -1 && monthlyCache[mesDestaque]) ? monthlyCache[mesDestaque].signIdx : null;
 
         /* CABEÇALHO PADRÃO (mesmas 3 linhas + DIA/HORA do cabeçalho da mandala),
            uma vez para o natal (com nome) e uma vez para a Revolução Solar
@@ -712,10 +709,13 @@
             </div>
         </div>
 
-        <div id="profeccaoAnoProfectado" class="linha-ano-profectado">
+        <div id="profeccaoAnoProfectado">
+        <div class="linha-ano-profectado" style="margin-bottom: 6px;">
             ${setaAno(-1)}
             <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${signoComNome(getSignSvgHtml(profectedSignIdx, 18), profectedSignIdx)} Senhor: ${planetaComNome(SIGNS[profectedSignIdx].ruler, 26)}</span>
             ${setaAno(1)}
+        </div>
+        ${barraTempo(baseMonthStart, baseMonthStart + 12 * MONTH_MS, 'margin: 0 16px 16px;', 11, 'meses')}
         </div>
 
         <!-- Dois cabeçalhos PADRÃO (função global), cada um acima da sua mandala, lado a lado. -->
@@ -739,132 +739,38 @@
         <div id="profeccaoTabelaCard">
             <h3 class="titulo-secao" style="margin-top: 0;">Profecção Mensal - 30 dias 10 horas 30 minutos</h3>
 
-            <div id="profMensalOuterScroll" style="overflow-x: auto; overflow-y: hidden; text-align: center; margin-top: 10px; touch-action: pan-y;">
-              <div id="profMensalScaleBox">
-              <div id="profMensalWrapper" style="transform-origin: top left;">
-                <table id="profMensalTable" class="tabela-epoca">
-                    <thead>
-                        <tr>
-                            <th class="centro">Mês</th>
-                            <th class="centro">Signo</th>
-                            <th class="centro">Regente</th>
-                            <th class="centro">Início do Período</th>
-                        </tr>
-                    </thead>
-                    <tbody>
 `;
 
-        monthlyCache.forEach((m, i) => {
-            const mSign = SIGNS[m.signIdx];
-            const isExpanded = (window.expandedProfeccaoMes === i);
+        const passosDoMes = (m) => Array.from({ length: 12 }, (_, d) => ({
+            num: d + 1, signIdx: (m.signIdx + d) % 12, start: m.start + d * DAILY_STEP_MS, end: m.start + (d + 1) * DAILY_STEP_MS
+        }));
+        const listaMeses = monthlyCache.map(m => ({ num: m.monthNum, signIdx: m.signIdx, start: m.start, end: m.end }));
+        const glifoSigno = (x, tam) => signoComNome(getSignSvgHtml(x.signIdx, tam), x.signIdx);
 
-            html += `
-                <tr class="clicavel${isExpanded ? ' ativa aberta' : ''}" onclick="alternarMesProfeccao(${i})" ${isExpanded ? 'data-mes-ativo="1"' : ''} style="user-select: none;">
-                    <td class="centro"><strong>Mês ${m.monthNum}</strong></td>
-                    <td class="centro">${signoComNome(getSignSvgHtml(m.signIdx, 20), m.signIdx)}</td>
-                    <td class="centro">${planetaComNome(mSign.ruler, 30)}</td>
-                    <td class="centro">${formatarData(m.start)}</td>
-                </tr>
-            `;
+        // n = 2 (meses) ou 3 (passos de 60h); a barrinha entra logo embaixo de cada linha
+        const tabelaNivel = (n, lista, fnIr, unidade) => {
+            const linhas = lista.map((x, i) => `
+                <tr class="${fnIr ? 'clicavel' : ''}${(agoraMs >= x.start && agoraMs < x.end) ? ' ativa' : ''}"${fnIr ? ` onclick="${fnIr}(${i})"` : ''} style="user-select: none;">
+                    <td class="centro"><strong>${n === 2 ? 'Mês' : 'Passo'} ${x.num}</strong></td>
+                    <td class="centro">${glifoSigno(x, 20)}</td>
+                    <td class="centro">${planetaComNome(SIGNS[x.signIdx].ruler, n === 2 ? 30 : 26)}</td>
+                    <td class="centro">${formatarData(x.start)}</td>
+                </tr>${linhaBarraTempo(x.start, x.end, unidade, 4)}`).join('');
+            return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table id="profMensalTable" class="tabela-epoca">
+                <thead><tr><th class="centro">${n === 2 ? 'Mês' : 'Passo (60h)'}</th><th class="centro">Signo</th><th class="centro">Regente</th><th class="centro">${n === 2 ? 'Início do Período' : 'Início do Passo'}</th></tr></thead>
+                <tbody>${linhas}</tbody></table></div>`;
+        };
 
-            // Mês aberto: os 12 passos de 60 horas (um por signo, a partir do signo do mês).
-            if (isExpanded) {
-                const agoraMs = hoje.getTime();
-                let passosHtml = '';
-                for (let d = 0; d < 12; d++) {
-                    const passoIni = m.start + d * DAILY_STEP_MS;
-                    const passoSignIdx = (m.signIdx + d) % 12;
-                    const passoAtivo = agoraMs >= passoIni && agoraMs < passoIni + DAILY_STEP_MS;
-                    passosHtml += `
-                        <tr${passoAtivo ? ' class="ativa"' : ''}>
-                            <td class="centro"><strong>Passo ${d + 1}</strong></td>
-                            <td class="centro">${signoComNome(getSignSvgHtml(passoSignIdx, 20), passoSignIdx)}</td>
-                            <td class="centro">${planetaComNome(SIGNS[passoSignIdx].ruler, 26)}</td>
-                            <td class="centro">${formatarData(passoIni)}</td>
-                        </tr>`;
-                }
-                html += `
-                <tr>
-                    <td colspan="4" class="encaixe">
-                        <table class="tabela-epoca">
-                            <thead>
-                                <tr><th class="centro">Passo (60h)</th><th class="centro">Signo</th><th class="centro">Regente</th><th class="centro">Início do Passo</th></tr>
-                            </thead>
-                            <tbody>${passosHtml}</tbody>
-                        </table>
-                    </td>
-                </tr>`;
-            }
-        });
-
-        html += `</tbody></table></div></div></div></div><hr class="divisa"></div></div>`;
-        container.innerHTML = html;
-
-        // Em telas estreitas, em vez de deixar a tabela cortada com rolagem
-        // interna, encolhe ela (mantendo a proporção) até caber inteira na
-        // largura disponível — mesma técnica usada nos Decênios e no Painel
-        // Técnico. Em telas largas, onde a tabela já cabe no espaço de
-        // sempre (width: 100%), NADA é alterado: a tabela continua
-        // exatamente como sempre foi, ocupando a largura toda do cartão.
-        const outerScroll = document.getElementById('profMensalOuterScroll');
-        const scaleBox = document.getElementById('profMensalScaleBox');
-        const wrapper = document.getElementById('profMensalWrapper');
-        const tabelaMensal = document.getElementById('profMensalTable');
-        if (outerScroll && scaleBox && wrapper && tabelaMensal && outerScroll.parentElement) {
-            // O espaço disponível é o do cartão que envolve a tabela
-            // diretamente (não o do "profeccao-container" lá fora, que tem
-            // padding próprio somado ao padding do cartão — usar o de fora
-            // subestimava o quanto a tabela precisava encolher).
-            const parentEl = outerScroll.parentElement;
-            const parentStyles = getComputedStyle(parentEl);
-            const availableWidth = parentEl.clientWidth
-                - parseFloat(parentStyles.paddingLeft || 0)
-                - parseFloat(parentStyles.paddingRight || 0);
-
-            // Mede a largura "natural" (sem quebra de linha) da tabela.
-            // display:inline-block sozinho não basta: como o wrapper ainda
-            // está dentro de contêineres de largura limitada, o navegador
-            // encolhe (shrink-to-fit) a caixa até o espaço disponível em vez
-            // de revelar o quanto o conteúdo realmente precisaria — fazendo
-            // a tabela parecer que "cabe" quando na verdade não cabe.
-            // width: max-content ignora essa limitação e força a largura
-            // real do conteúdo, mesmo que estoure o contêiner.
-            tabelaMensal.style.width = 'auto';
-            wrapper.style.width = 'max-content';
-            const naturalWidth = wrapper.offsetWidth;
-            const naturalHeight = wrapper.offsetHeight;
-
-            if (availableWidth > 0 && naturalWidth > availableWidth) {
-                const escala = availableWidth / naturalWidth;
-                const scaledHeight = naturalHeight * escala;
-                scaleBox.style.display = 'inline-block';
-                wrapper.style.display = 'inline-block';
-                // width:max-content continua aplicado (não é resetado aqui):
-                // se voltasse para vazio, o navegador encolheria a caixa de
-                // novo para caber no espaço disponível (mesmo problema do
-                // shrink-to-fit acima), e o transform passaria a escalar uma
-                // caixa mais estreita que a medida — sobrando um vão vazio à
-                // direita da tabela em vez dela preencher o cartão.
-                wrapper.style.transform = `scale(${escala})`;
-                scaleBox.style.width = (naturalWidth * escala) + 'px';
-                scaleBox.style.height = scaledHeight + 'px';
-                // Contorna uma peculiaridade do navegador: um contêiner com
-                // overflow ao redor de uma <table> transformada calcula a
-                // própria altura com base no tamanho ANTES da escala.
-                outerScroll.style.height = scaledHeight + 'px';
-            } else {
-                // Cabe do jeito de sempre: desfaz a medição e devolve tudo
-                // ao estado original (nenhuma mudança visual).
-                wrapper.style.width = '';
-                wrapper.style.display = '';
-                wrapper.style.transform = '';
-                tabelaMensal.style.width = '100%';
-                scaleBox.style.display = '';
-                scaleBox.style.width = '';
-                scaleBox.style.height = '';
-                outerScroll.style.height = '';
-            }
+        if (mesSel === null) {
+            html += tabelaNivel(2, listaMeses, 'alternarMesProfeccao', 'dias');
+        } else {
+            html += cabecalhoNivelTempo({
+                id: 'profeccao', n: 2, lista: listaMeses, idx: mesSel, fnIr: 'alternarMesProfeccao', unidade: 'dias',
+                rotulo: x => `Mês ${x.num}`, glifo: glifoSigno, fmtData: formatarData
+            }) + tabelaNivel(3, passosDoMes(listaMeses[mesSel]), null, 'horas');
         }
+        html += `<hr class="divisa"></div></div>`;
+        container.innerHTML = html;
     }
 
     /* IMAGENS DA PROFECÇÃO (galeria e relatório). Título, cabeçalhos e mandalas
