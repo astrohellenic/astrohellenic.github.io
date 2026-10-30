@@ -54,7 +54,9 @@ let dataBuscaDec = null; // data escolhida na busca ("Ir para a data"); null = h
 let buscaPendenteDec = false; // a busca (ou o botão Hoje) pede pra árvore abrir até o período da data, no próximo desenho
 
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS */
-function iniciarModuloDecenios() {
+function iniciarModuloDecenios(redesenho) {
+  // Ao abrir a ferramenta (não ao redesenhar): já abre no período de hoje, até o último nível
+  if (!redesenho) { dataBuscaDec = null; buscaPendenteDec = true; }
   const container = document.getElementById('mandala-container');
   if (!container) return;
 
@@ -93,8 +95,9 @@ function renderDeceniosUI(container) {
   if (buscaPendenteDec) {
     buscaPendenteDec = false;
     const d = dataBuscaDec ? new Date(dataBuscaDec) : new Date();
-    decNivel1 = result.timelineL1.findIndex(l1 => d >= l1.startDate && d < l1.endDate);
-    decNivel2 = decNivel1 === -1 ? -1 : result.timelineL1[decNivel1].subperiods.findIndex(l2 => d >= l2.startDate && d < l2.endDate);
+    const porData = { inicio: x => x.startDate, fim: x => x.endDate };
+    decNivel1 = acharPeriodo(result.timelineL1, d, porData.inicio, porData.fim);
+    decNivel2 = decNivel1 === -1 ? -1 : acharPeriodo(result.timelineL1[decNivel1].subperiods, d, porData.inicio, porData.fim);
     if (decNivel1 === -1) decNivel1 = null;
     if (decNivel2 === -1) decNivel2 = null;
   }
@@ -241,8 +244,8 @@ function alternarSeitaManual(val) {
   overrideStartPlanet = val;
   decNivel1 = null;
   decNivel2 = null;
-  buscaPendenteDec = !!dataBuscaDec;
-  iniciarModuloDecenios();
+  buscaPendenteDec = true; // abre de novo até o período de hoje (ou da data escolhida na busca)
+  iniciarModuloDecenios(true);
 }
 
 function calcularDeceniosAutomatico(startPlanetId) {
@@ -398,7 +401,7 @@ function calcularSubperiodosL3Dec(l2Planet, l2Start, l2Days, sortedPlanets) {
 function irParaDataDecenios(valor) {
   dataBuscaDec = dataDoCampoBusca(valor);
   buscaPendenteDec = true;
-  iniciarModuloDecenios();
+  iniciarModuloDecenios(true);
 }
 window.irParaDataDecenios = irParaDataDecenios;
 
@@ -406,7 +409,7 @@ window.irParaDataDecenios = irParaDataDecenios;
 function irParaListaDec(n) {
   if (n <= 1) decNivel1 = null;
   decNivel2 = null;
-  iniciarModuloDecenios();
+  iniciarModuloDecenios(true);
 }
 window.irParaListaDec = irParaListaDec;
 
@@ -414,14 +417,14 @@ function irParaNivel1Dec(idx) {
   if (idx < 0 || idx > 9) return;
   decNivel1 = idx;
   decNivel2 = null;
-  iniciarModuloDecenios();
+  iniciarModuloDecenios(true);
 }
 window.irParaNivel1Dec = irParaNivel1Dec;
 
 function irParaNivel2Dec(idx) {
   if (decNivel1 === null || idx < 0 || idx > 6) return;
   decNivel2 = idx;
-  iniciarModuloDecenios();
+  iniciarModuloDecenios(true);
 }
 window.irParaNivel2Dec = irParaNivel2Dec;
 

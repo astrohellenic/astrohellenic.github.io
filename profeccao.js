@@ -6,7 +6,7 @@
         window.profeccaoOffsetAnos += delta;
         window.expandedProfeccaoMes = null; // Reseta para recalcular o mês ativo no novo ano
         if (typeof window.iniciarModuloProfeccao === 'function') {
-            window.iniciarModuloProfeccao();
+            window.iniciarModuloProfeccao({ redesenho: true });
         }
     };
 
@@ -45,7 +45,7 @@
         const nasc = window.profeccaoAnoNasc || 1990;
         window.profeccaoOffsetAnos = (ano - nasc) - (window.profeccaoIdadeBase || 0);
         window.expandedProfeccaoMes = null;
-        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao();
+        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao({ redesenho: true });
     };
 
     document.addEventListener('click', function(e) {
@@ -58,14 +58,14 @@
     window.alternarMesProfeccao = function(index) {
         window.expandedProfeccaoMes = index;
         if (typeof window.iniciarModuloProfeccao === 'function') {
-            window.iniciarModuloProfeccao();
+            window.iniciarModuloProfeccao({ redesenho: true });
         }
     };
 
     /* Volta à lista dos 12 meses (cabeçalho do mês: rótulo "Mês 5:" ou "Ver a lista") */
     window.irParaListaProfeccao = function() {
         window.expandedProfeccaoMes = null;
-        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao();
+        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao({ redesenho: true });
     };
 
     const SIGNS = [
@@ -546,7 +546,10 @@
     }
     window.__gerarMandalaSVGProfeccao = gerarMandalaSVG; // gancho dos testes de comparação do desenho (ver CLAUDE.md)
 
-    async function iniciarModuloProfeccao() {
+    async function iniciarModuloProfeccao(opcoes) {
+        // Ao abrir a ferramenta (sem opcoes.redesenho): volta ao ano de hoje e já abre no mês de hoje (lista dos passos)
+        const abrindo = !(opcoes && opcoes.redesenho);
+        if (abrindo) window.profeccaoOffsetAnos = 0;
         const container = document.getElementById('mandala-container');
         if (!container) return;
 
@@ -616,8 +619,12 @@
             currentMonthStart = nextMonthStart;
         }
 
-        // Mês escolhido na lista (ou, sem escolha, o mês de hoje) pinta o signo dele na mandala natal
         const agoraMs = hoje.getTime();
+        if (abrindo) {
+            const mesHoje = acharPeriodo(monthlyCache, agoraMs);
+            window.expandedProfeccaoMes = mesHoje !== -1 ? mesHoje : null;
+        }
+        // Mês escolhido na lista (ou, sem escolha, o mês de hoje) pinta o signo dele na mandala natal
         const mesSel = (Number.isInteger(window.expandedProfeccaoMes) && monthlyCache[window.expandedProfeccaoMes]) ? window.expandedProfeccaoMes : null;
         const mesDestaque = mesSel !== null ? mesSel : monthlyCache.findIndex(m => agoraMs >= m.start && agoraMs < m.end);
         const expandedMonthSignIdx = (mesDestaque !== -1 && monthlyCache[mesDestaque]) ? monthlyCache[mesDestaque].signIdx : null;

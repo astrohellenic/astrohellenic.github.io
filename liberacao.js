@@ -236,6 +236,9 @@ function iniciarModuloLiberacao() {
   const container = document.getElementById("mandala-container");
   if (!container || !currentCalculatedData) return;
 
+  // Ao abrir a ferramenta: já abre no período de hoje, até o último nível
+  dataBuscaZR = null;
+  buscaPendenteZR = true;
   renderLiberacaoUI();
 }
 
@@ -244,6 +247,7 @@ function alternarLoteLiberacao(lotKey) {
   expandedL1Index = null;
   expandedL2Key = null;
   expandedL3Key = null;
+  buscaPendenteZR = true; // abre de novo até o período de hoje (ou da data escolhida na busca)
   renderLiberacaoUI();
 }
 

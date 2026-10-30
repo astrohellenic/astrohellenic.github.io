@@ -194,7 +194,7 @@ window.executarCalculoRS = async function(perfilCliente, ano) {
       if (dropdown) dropdown.style.display = 'none';
 
       if (typeof window.iniciarModuloProfeccao === 'function') {
-        window.iniciarModuloProfeccao();
+        window.iniciarModuloProfeccao({ redesenho: true });
       }
       return;
     }

@@ -101,3 +101,11 @@ function dataDoCampoBusca(valor) {
   const [a, m, d] = valor.split('-').map(Number);
   return new Date(a, m - 1, d, 12, 0);
 }
+
+/* ABRIR NA DATA DE HOJE: toda ferramenta em camadas, ao ser aberta, já mostra o caminho até o período de hoje, até o último nível
+   (a busca por data usa o mesmo caminho, só com outra data). Esta peça acha o período da lista que contém a data (índice, ou -1);
+   inicio(item)/fim(item) opcionais (padrão item.start / item.end). */
+function acharPeriodo(lista, data, inicio, fim) {
+  const ini = inicio || (x => x.start), f = fim || (x => x.end);
+  return lista.findIndex(x => data >= ini(x) && data < f(x));
+}
