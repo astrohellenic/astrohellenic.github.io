@@ -303,18 +303,32 @@ function corDoTempoZR(f) {
   return `rgb(${de.map((c, k) => Math.round(c + (para[k] - c) * t)).join(',')})`;
 }
 
-function barraTempoZR(inicio, fim, estilo, tamanhoLetra) {
+const UNIDADE_NIVEL_ZR = { 1: 'anos', 2: 'meses', 3: 'dias', 4: 'horas' };
+const UNIDADE_ZR = {
+  anos: { ms: 360 * 86400000, um: 'ano', varios: 'anos' },
+  meses: { ms: 30 * 86400000, um: 'mês', varios: 'meses' },
+  dias: { ms: 86400000, um: 'dia', varios: 'dias' },
+  horas: { ms: 3600000, um: 'hora', varios: 'horas' }
+};
+function numeroZR(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ','); }
+
+/* unidade ('anos', 'meses', 'dias' ou 'horas'): no fim da barra aparece quanto já passou do total, na unidade do nível (ex.: 11/20 meses). */
+function barraTempoZR(inicio, fim, estilo, tamanhoLetra, unidade) {
   const agora = new Date();
   const f = Math.max(0, Math.min(1, (agora - inicio) / (fim - inicio)));
   const cor = corDoTempoZR(f);
   const pct = agora >= fim ? 100 : Math.floor(f * 100);
   const h = (estilo && /height:\s*3px/.test(estilo)) ? 3 : 5;
-  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div></div>`;
+  const u = UNIDADE_ZR[unidade];
+  const total = u ? Math.round(((fim - inicio) / u.ms) * 2) / 2 : 0;
+  const passou = u ? Math.floor(Math.min(f * total, total)) : 0;
+  const fimTexto = u ? `<span style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap; color: ${cor};">${numeroZR(passou)}/${numeroZR(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
+  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>${fimTexto}</div>`;
 }
 
 /* Linha de tabela só com a barrinha, logo embaixo da linha do período (níveis 2, 3 e 4). */
-function linhaBarraTempoZR(inicio, fim) {
-  return `<tr class="zr-barra"><td colspan="5">${barraTempoZR(inicio, fim, 'height: 3px;', 9)}</td></tr>`;
+function linhaBarraTempoZR(inicio, fim, unidade) {
+  return `<tr class="zr-barra"><td colspan="5">${barraTempoZR(inicio, fim, 'height: 3px;', 9, unidade)}</td></tr>`;
 }
 
 function calcularDataFimZR(dataInicio, anos) {
@@ -686,7 +700,7 @@ function renderLiberacaoUI() {
         <td style="line-height: 1.2;">${dataZR(n, x.start)}</td>
         <td style="line-height: 1.2;">${dataZR(n, x.end)}</td>
         <td class="centro">${status}</td>
-      </tr>${linhaBarraTempoZR(x.start, x.end)}`;
+      </tr>${linhaBarraTempoZR(x.start, x.end, UNIDADE_NIVEL_ZR[n])}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetraZR[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th><th class="centro">Status</th></tr></thead>
@@ -707,7 +721,7 @@ function renderLiberacaoUI() {
         <span data-html2canvas-ignore="true">${seta(1)}</span>
       </div>
       <div class="texto-apagado" style="text-align: center; font-size: 12px;">${formatarDataBR(x.start)} a ${formatarDataBR(x.end)}</div>
-      ${barraTempoZR(x.start, x.end, 'margin: 6px 16px 0;')}
+      ${barraTempoZR(x.start, x.end, 'margin: 6px 16px 0;', 11, UNIDADE_NIVEL_ZR[n])}
       <div id="liberacaoMenuNivel${n}" class="menu-flutuante" data-html2canvas-ignore="true" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">${itens}</div>
     </div>`;
   };
@@ -779,8 +793,8 @@ function renderLiberacaoUI() {
 
       <!-- Busca por data: fora do #liberacaoArvoreCapture, não sai na imagem do relatório. -->
       <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; color: var(--azul-egipcio-escuro);">
-        <svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex: none;" aria-hidden="true"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg>
-        <input type="date" value="${dataBuscaZR ? `${dataBuscaZR.getFullYear()}-${String(dataBuscaZR.getMonth() + 1).padStart(2, '0')}-${String(dataBuscaZR.getDate()).padStart(2, '0')}` : ''}" onchange="irParaDataLiberacao(this.value)" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none;">
+        <button type="button" class="botao-icone" onclick="const i=document.getElementById('liberacaoBuscaData'); try { i.showPicker(); } catch (e) { i.focus(); i.click(); }" title="Ir para a data"><svg class="icone" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg></button>
+        <input type="date" id="liberacaoBuscaData" value="${dataBuscaZR ? `${dataBuscaZR.getFullYear()}-${String(dataBuscaZR.getMonth() + 1).padStart(2, '0')}-${String(dataBuscaZR.getDate()).padStart(2, '0')}` : ''}" onchange="irParaDataLiberacao(this.value)" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none;">
         ${dataBuscaZR ? `<button type="button" class="botao-texto" onclick="irParaDataLiberacao('')">Hoje</button>` : ''}
       </div>
 
