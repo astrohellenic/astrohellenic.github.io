@@ -259,6 +259,15 @@ function irParaDataLiberacao(valor) {
 }
 window.irParaDataLiberacao = irParaDataLiberacao;
 
+/* Volta à lista do nível n (cabeçalho do nível: rótulo ou "Ver a lista"): limpa a escolha dele e dos de baixo. */
+function irParaListaLiberacao(n) {
+  if (n <= 1) expandedL1Index = null;
+  if (n <= 2) expandedL2Key = null;
+  expandedL3Key = null;
+  renderLiberacaoUI();
+}
+window.irParaListaLiberacao = irParaListaLiberacao;
+
 function irParaNivel1Liberacao(index) {
   if (index < 0 || index > 11) return;
   expandedL1Index = index;
@@ -662,7 +671,7 @@ function renderLiberacaoUI() {
       <tbody>${linhas}</tbody></table></div>`;
   };
   const navNivelZR = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'liberacao', n, lista, idx, fnIr, unidade: UNIDADE_NIVEL_ZR[n],
+    id: 'liberacao', n, lista, idx, fnIr, fnLista: 'irParaListaLiberacao', unidade: UNIDADE_NIVEL_ZR[n],
     glifo: (y, tam) => signoComNome(getSignSVGZR(y.signIdx, tam), y.signIdx),
     fmtData: formatarDataBR
   });

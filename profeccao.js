@@ -62,6 +62,12 @@
         }
     };
 
+    /* Volta à lista dos 12 meses (cabeçalho do mês: rótulo "Mês 5:" ou "Ver a lista") */
+    window.irParaListaProfeccao = function() {
+        window.expandedProfeccaoMes = null;
+        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao();
+    };
+
     const SIGNS = [
         { ruler: "Mars", rulerName: "Marte" },
         { ruler: "Venus", rulerName: "Vênus" },
@@ -765,7 +771,7 @@
             html += tabelaNivel(2, listaMeses, 'alternarMesProfeccao', 'dias');
         } else {
             html += cabecalhoNivelTempo({
-                id: 'profeccao', n: 2, lista: listaMeses, idx: mesSel, fnIr: 'alternarMesProfeccao', unidade: 'dias',
+                id: 'profeccao', n: 2, lista: listaMeses, idx: mesSel, fnIr: 'alternarMesProfeccao', fnLista: 'irParaListaProfeccao', unidade: 'dias',
                 rotulo: x => `Mês ${x.num}`, glifo: glifoSigno, fmtData: formatarData
             }) + tabelaNivel(3, passosDoMes(listaMeses[mesSel]), null, 'horas');
         }

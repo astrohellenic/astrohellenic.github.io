@@ -55,6 +55,8 @@ function linhaBarraTempo(inicio, fim, unidade, colunas) {
 /* Cabeçalho do nível aberto. Opções:
    - id: prefixo do menu (o menu fica em id + 'MenuNivel' + n); n: número do nível; lista/idx: períodos e o aberto;
    - fnIr: nome da função global que abre o período de índice i; glifo(item, tam): HTML do glifo; fmtData(data);
+   - fnLista: nome da função global que volta à lista deste nível (n) e limpa a escolha dele e dos de baixo; ligada ao rótulo
+     ("Nível 2:") e à primeira linha do menu ("Ver a lista"). Sem ela o cabeçalho só anda entre vizinhos;
    - rotulo(item): texto antes do glifo (padrão 'Nível n'); unidade: da barrinha; inicio(item)/fim(item): opcionais (padrão item.start / item.end). */
 function cabecalhoNivelTempo(o) {
   const ini = o.inicio || (x => x.start), fim = o.fim || (x => x.end);
@@ -64,11 +66,12 @@ function cabecalhoNivelTempo(o) {
     const fora = destino < 0 || destino >= o.lista.length;
     return `<button type="button" class="botao-icone"${fora ? ' disabled style="opacity: .35; cursor: default;"' : ` onclick="${o.fnIr}(${destino})"`} title="${dir < 0 ? 'Anterior' : 'Próximo'}"><svg class="icone" viewBox="0 0 64 64"><polyline points="${dir < 0 ? '40,12 20,32 40,52' : '24,12 44,32 24,52'}"/></svg></button>`;
   };
-  const itens = o.lista.map((y, i) => `<div class="item-menu${i === o.idx ? ' ativa' : ''}" onclick="${o.fnIr}(${i})" style="display: flex; align-items: center; gap: 10px; justify-content: space-between;"><span style="display: flex; align-items: center; gap: 6px;">${o.glifo(y, 20)}</span><span class="texto-apagado" style="font-size: 12px; white-space: nowrap;">${o.fmtData(ini(y))} a ${o.fmtData(fim(y))}</span></div>`).join('');
+  const verLista = o.fnLista ? `<div class="item-menu" onclick="${o.fnLista}(${o.n})" style="font-weight: 700;">Ver a lista</div>` : '';
+  const itens = verLista + o.lista.map((y, i) => `<div class="item-menu${i === o.idx ? ' ativa' : ''}" onclick="${o.fnIr}(${i})" style="display: flex; align-items: center; gap: 10px; justify-content: space-between;"><span style="display: flex; align-items: center; gap: 6px;">${o.glifo(y, 20)}</span><span class="texto-apagado" style="font-size: 12px; white-space: nowrap;">${o.fmtData(ini(y))} a ${o.fmtData(fim(y))}</span></div>`).join('');
   return `<div style="position: relative; margin: 12px 0 8px;">
       <div class="linha-ano-profectado" style="margin-bottom: 4px;">
         <span data-html2canvas-ignore="true">${seta(-1)}</span>
-        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('${o.id}MenuNivel${o.n}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Ver todos os períodos do nível ${o.n}"><strong>${o.rotulo ? o.rotulo(x) : 'Nível ' + o.n}:</strong> ${o.glifo(x, 20)}<svg class="icone" data-html2canvas-ignore="true" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
+        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('${o.id}MenuNivel${o.n}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Ver todos os períodos do nível ${o.n}"><strong${o.fnLista ? ` onclick="event.stopPropagation(); ${o.fnLista}(${o.n});" style="cursor: pointer;" title="Voltar à lista deste nível"` : ''}>${o.rotulo ? o.rotulo(x) : 'Nível ' + o.n}:</strong> ${o.glifo(x, 20)}<svg class="icone" data-html2canvas-ignore="true" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
         <span data-html2canvas-ignore="true">${seta(1)}</span>
       </div>
       <div class="texto-apagado" style="text-align: center; font-size: 12px;">${o.fmtData(ini(x))} a ${o.fmtData(fim(x))}</div>

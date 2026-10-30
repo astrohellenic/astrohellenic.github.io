@@ -402,6 +402,14 @@ function irParaDataDecenios(valor) {
 }
 window.irParaDataDecenios = irParaDataDecenios;
 
+/* Volta à lista do nível n (cabeçalho do nível: rótulo ou "Ver a lista"): limpa a escolha dele e dos de baixo. */
+function irParaListaDec(n) {
+  if (n <= 1) decNivel1 = null;
+  decNivel2 = null;
+  iniciarModuloDecenios();
+}
+window.irParaListaDec = irParaListaDec;
+
 function irParaNivel1Dec(idx) {
   if (idx < 0 || idx > 9) return;
   decNivel1 = idx;
@@ -455,7 +463,7 @@ function renderizarResultadosHTML(res) {
   };
 
   const navNivel = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'decenios', n, lista, idx, fnIr, unidade: UNIDADE_NIVEL_DEC[n],
+    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n],
     inicio: x => x.startDate, fim: x => x.endDate,
     glifo: (y, tam) => planetaComNome(y.planet.id, tam),
     fmtData: formatDateDec
