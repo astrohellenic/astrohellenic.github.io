@@ -288,48 +288,8 @@ function irParaNivel3Liberacao(index) {
 }
 window.irParaNivel3Liberacao = irParaNivel3Liberacao;
 
-/* BARRINHA DO TEMPO de cada período: vazia antes de começar, cheia depois de terminar, enchendo durante.
-   Cor vai de azul (começo) a ocre (metade) a terracota (fim), como a barra do site Falando de Astrologia,
-   lendo as cores do tema em uso (claro, escuro ou Céu). Filete fino, só contorno + preenchimento. */
-function corDoTempoZR(f) {
-  const css = getComputedStyle(document.documentElement);
-  const rgb = (nome, padrao) => {
-    const m = (css.getPropertyValue(nome).trim() || padrao).match(/^#?([0-9a-f]{6})$/i);
-    const n = parseInt((m ? m[1] : padrao.slice(1)), 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  };
-  const A = rgb('--azul-egipcio-claro', '#1F5FA3'), O = rgb('--ocre', '#B5852F'), T = rgb('--terracota', '#A03E25');
-  const de = f < 0.5 ? A : O, para = f < 0.5 ? O : T, t = f < 0.5 ? f / 0.5 : (f - 0.5) / 0.5;
-  return `rgb(${de.map((c, k) => Math.round(c + (para[k] - c) * t)).join(',')})`;
-}
-
 const UNIDADE_NIVEL_ZR = { 1: 'anos', 2: 'meses', 3: 'dias', 4: 'horas' };
-const UNIDADE_ZR = {
-  anos: { ms: 360 * 86400000, um: 'ano', varios: 'anos' },
-  meses: { ms: 30 * 86400000, um: 'mês', varios: 'meses' },
-  dias: { ms: 86400000, um: 'dia', varios: 'dias' },
-  horas: { ms: 3600000, um: 'hora', varios: 'horas' }
-};
-function numeroZR(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ','); }
-
-/* unidade ('anos', 'meses', 'dias' ou 'horas'): no fim da barra aparece quanto já passou do total, na unidade do nível (ex.: 11/20 meses). */
-function barraTempoZR(inicio, fim, estilo, tamanhoLetra, unidade) {
-  const agora = new Date();
-  const f = Math.max(0, Math.min(1, (agora - inicio) / (fim - inicio)));
-  const cor = corDoTempoZR(f);
-  const pct = agora >= fim ? 100 : Math.floor(f * 100);
-  const h = (estilo && /height:\s*3px/.test(estilo)) ? 3 : 5;
-  const u = UNIDADE_ZR[unidade];
-  const total = u ? Math.round(((fim - inicio) / u.ms) * 2) / 2 : 0;
-  const passou = u ? Math.floor(Math.min(f * total, total)) : 0;
-  const fimTexto = u ? `<span style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap; color: ${cor};">${numeroZR(passou)}/${numeroZR(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
-  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>${fimTexto}</div>`;
-}
-
-/* Linha de tabela só com a barrinha, logo embaixo da linha do período (níveis 2, 3 e 4). */
-function linhaBarraTempoZR(inicio, fim, unidade) {
-  return `<tr class="zr-barra"><td colspan="5">${barraTempoZR(inicio, fim, 'height: 3px;', 9, unidade)}</td></tr>`;
-}
+/* A barrinha do tempo e o cabeçalho do nível aberto vêm de camadas-tempo.js (comum com os Decênios). */
 
 function calcularDataFimZR(dataInicio, anos) {
   const totalDias = anos * 360;
@@ -700,31 +660,17 @@ function renderLiberacaoUI() {
         <td style="line-height: 1.2;">${dataZR(n, x.start)}</td>
         <td style="line-height: 1.2;">${dataZR(n, x.end)}</td>
         <td class="centro">${status}</td>
-      </tr>${linhaBarraTempoZR(x.start, x.end, UNIDADE_NIVEL_ZR[n])}`;
+      </tr>${linhaBarraTempo(x.start, x.end, UNIDADE_NIVEL_ZR[n], 5)}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetraZR[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th><th class="centro">Status</th></tr></thead>
       <tbody>${linhas}</tbody></table></div>`;
   };
-  const navNivelZR = (n, lista, idx, fnIr) => {
-    const x = lista[idx];
-    const seta = (dir) => {
-      const destino = idx + dir;
-      const fora = destino < 0 || destino >= lista.length;
-      return `<button type="button" class="botao-icone"${fora ? ' disabled style="opacity: .35; cursor: default;"' : ` onclick="${fnIr}(${destino})"`} title="${dir < 0 ? 'Anterior' : 'Próximo'}"><svg class="icone" viewBox="0 0 64 64"><polyline points="${dir < 0 ? '40,12 20,32 40,52' : '24,12 44,32 24,52'}"/></svg></button>`;
-    };
-    const itens = lista.map((y, i) => `<div class="item-menu${i === idx ? ' ativa' : ''}" onclick="${fnIr}(${i})" style="display: flex; align-items: center; gap: 10px; justify-content: space-between;"><span style="display: flex; align-items: center; gap: 6px;">${signoComNome(getSignSVGZR(y.signIdx, 20), y.signIdx)}</span><span class="texto-apagado" style="font-size: 12px; white-space: nowrap;">${formatarDataBR(y.start)} a ${formatarDataBR(y.end)}</span></div>`).join('');
-    return `<div style="position: relative; margin: 12px 0 8px;">
-      <div class="linha-ano-profectado" style="margin-bottom: 4px;">
-        <span data-html2canvas-ignore="true">${seta(-1)}</span>
-        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('liberacaoMenuNivel${n}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Ver todos os períodos do nível ${n}"><strong>Nível ${n}:</strong> ${signoComNome(getSignSVGZR(x.signIdx, 20), x.signIdx)}<svg class="icone" data-html2canvas-ignore="true" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
-        <span data-html2canvas-ignore="true">${seta(1)}</span>
-      </div>
-      <div class="texto-apagado" style="text-align: center; font-size: 12px;">${formatarDataBR(x.start)} a ${formatarDataBR(x.end)}</div>
-      ${barraTempoZR(x.start, x.end, 'margin: 6px 16px 0;', 11, UNIDADE_NIVEL_ZR[n])}
-      <div id="liberacaoMenuNivel${n}" class="menu-flutuante" data-html2canvas-ignore="true" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">${itens}</div>
-    </div>`;
-  };
+  const navNivelZR = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
+    id: 'liberacao', n, lista, idx, fnIr, unidade: UNIDADE_NIVEL_ZR[n],
+    glifo: (y, tam) => signoComNome(getSignSVGZR(y.signIdx, tam), y.signIdx),
+    fmtData: formatarDataBR
+  });
   let arvoreHTML;
   if (expandedL1Index === null) {
     arvoreHTML = tabelaNivelZR(1, l1Lista, 'irParaNivel1Liberacao');

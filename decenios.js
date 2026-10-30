@@ -46,7 +46,10 @@ function getPlanet3DSVG(planetId, size = 34) {
 }
 
 let overrideStartPlanet = null;
-let expandedL3KeyDec = null; // Guarda a chave do L3 (regência diária) expandido, ex.: "0_2" ou "active_1"
+/* NAVEGAÇÃO EM CAMADAS (igual à Liberação Zodiacal): decNivel1 (0-9) e decNivel2 (0-6) guardam o caminho escolhido.
+   Sem nada escolhido, a tela mostra a lista do Nível 1; escolhido o 1, a lista do 2; escolhido o 2, a lista do 3. */
+let decNivel1 = null;
+let decNivel2 = null;
 
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS */
 function iniciarModuloDecenios() {
@@ -220,31 +223,10 @@ function encolherTabelasDecVisiveis(root) {
   });
 }
 
-/* Quando uma tabela já encolhida (ver encolherTabelaLargaDec) tem uma linha
-   interna aberta/fechada (ex.: o accordion do L3), sua altura real muda,
-   mas o wrapper que a envolve ficou com a altura fixa medida antes disso —
-   sem este ajuste, o conteúdo novo fica cortado (só é visível no celular,
-   que é onde a tabela chega a ser encolhida). */
-function ajustarAlturaWrapperEscaladoDec(elDentroDaTabela) {
-  const tableEl = elDentroDaTabela && elDentroDaTabela.closest
-    ? elDentroDaTabela.closest('table[data-auto-scaled-dec="1"]')
-    : null;
-  if (!tableEl) return;
-
-  const scaleBox = tableEl.parentElement;
-  const outerScroll = scaleBox && scaleBox.parentElement;
-  if (!scaleBox || !outerScroll) return;
-
-  const match = /scale\(([^)]+)\)/.exec(tableEl.style.transform);
-  const escala = match ? parseFloat(match[1]) : 1;
-  const scaledHeight = tableEl.offsetHeight * escala;
-
-  scaleBox.style.height = scaledHeight + 'px';
-  outerScroll.style.height = scaledHeight + 'px';
-}
-
 function alternarSeitaManual(val) {
   overrideStartPlanet = val;
+  decNivel1 = null;
+  decNivel2 = null;
   iniciarModuloDecenios();
 }
 
@@ -397,178 +379,71 @@ function calcularSubperiodosL3Dec(l2Planet, l2Start, l2Days, sortedPlanets) {
   return subperiodos;
 }
 
-function alternarL3AccordionDec(l1Idx, l2Idx, event) {
-  if (event) event.stopPropagation();
-  const key = `${l1Idx}_${l2Idx}`;
-  const previousKey = expandedL3KeyDec;
-
-  if (previousKey && previousKey !== key) {
-    const prevSubRow = document.getElementById(`dec_l3_row_${previousKey}`);
-    const prevMainRow = document.getElementById(`dec_l2_row_${previousKey}`);
-    if (prevSubRow) prevSubRow.style.display = 'none';
-    if (prevMainRow) prevMainRow.classList.remove('aberta');
-    ajustarAlturaWrapperEscaladoDec(prevMainRow);
-  }
-
-  const subRow = document.getElementById(`dec_l3_row_${key}`);
-  const mainRow = document.getElementById(`dec_l2_row_${key}`);
-  if (!subRow || !mainRow) return;
-
-  const willOpen = previousKey !== key;
-  expandedL3KeyDec = willOpen ? key : null;
-
-  subRow.style.display = willOpen ? 'table-row' : 'none';
-  mainRow.classList.toggle('aberta', willOpen);
-
-  if (willOpen) encolherTabelasDecVisiveis(subRow);
-  ajustarAlturaWrapperEscaladoDec(mainRow);
+function irParaNivel1Dec(idx) {
+  if (idx < 0 || idx > 9) return;
+  decNivel1 = idx;
+  decNivel2 = null;
+  iniciarModuloDecenios();
 }
+window.irParaNivel1Dec = irParaNivel1Dec;
 
-// ABRE/FECHA O DETALHE DE UM L1 NA LINHA DO TEMPO (COM A TABELA DE L2 DENTRO)
-function alternarDetalhesL1Dec(idx) {
-  const el = document.getElementById(`dec_l1_details_${idx}`);
-  if (!el) return;
-  const willOpen = el.style.display === 'none';
-  el.style.display = willOpen ? 'block' : 'none';
-  if (willOpen) encolherTabelasDecVisiveis(el);
+function irParaNivel2Dec(idx) {
+  if (decNivel1 === null || idx < 0 || idx > 6) return;
+  decNivel2 = idx;
+  iniciarModuloDecenios();
 }
+window.irParaNivel2Dec = irParaNivel2Dec;
 
-// RENDERIZA A SUB-TABELA DO NÍVEL 3 (ABERTA DENTRO DA CÉLULA COLSPAN DA LINHA DO NÍVEL 2)
-function renderL3SubTableDec(l2Obj, sortedPlanets) {
-  const subperiodosL3 = calcularSubperiodosL3Dec(l2Obj.planet, l2Obj.startDate, l2Obj.days, sortedPlanets);
-
-  return `
-    <table class="tabela-epoca">
-      <thead>
-        <tr><th class="centro">Nível 3</th><th>Duração</th><th>Início</th><th>Término</th></tr>
-      </thead>
-      <tbody>
-        ${subperiodosL3.map(sub3 => `
-          <tr>
-            <td class="centro">${planetaComNome(sub3.planet.id, 26)}</td>
-            <td><strong>${formatDiasDec(sub3.days)}</strong> dias</td>
-            <td>${formatDateHoraDec(sub3.startDate)}</td>
-            <td>${formatDateHoraDec(sub3.endDate)}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-}
-
-// LINHAS DO NÍVEL 2 (cada uma com a linha escondida do Nível 3 logo abaixo). argsClique = argumentos de alternarL3AccordionDec.
-function linhasNivel2Dec(subperiodos, prefixoChave, argsClique, tamIcone, sortedPlanets) {
-  return subperiodos.map((sub, i) => {
-    const chave = `${prefixoChave}_${i}`;
-    return `
-      <tr id="dec_l2_row_${chave}" class="clicavel${sub.isActive ? ' ativa' : ''}" onclick="alternarL3AccordionDec(${argsClique(i)}, event)">
-        <td class="centro">${planetaComNome(sub.planet.id, tamIcone)}</td>
-        <td>${sub.months} meses (${sub.days} dias)</td>
-        <td>${formatDateDec(sub.startDate)}</td>
-        <td>${formatDateDec(sub.endDate)}</td>
-      </tr>
-      <tr id="dec_l3_row_${chave}" style="display: none;">
-        <td colspan="4" class="encaixe">
-          ${renderL3SubTableDec(sub, sortedPlanets)}
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
+const UNIDADE_NIVEL_DEC = { 1: 'meses', 2: 'meses', 3: 'dias' };
 
 function renderizarResultadosHTML(res) {
-  const { activeL1, activeL2, timelineL1, sortedPlanets } = res;
-  if (!activeL1 || !activeL2) {
-    return `<div class="cartao texto-apagado" style="text-align: center; font-size: 13px;">A idade atual do nativo está fora da janela dos 10 primeiros ciclos de Decênios.</div>`;
-  }
-
+  const { timelineL1, sortedPlanets } = res;
+  const hoje = new Date();
   const formatMin = m => String(m || 0).padStart(2, '0');
-  const cabecaNivel2 = `<tr><th class="centro">Nível 2</th><th>Duração</th><th>Início</th><th>Término</th></tr>`;
 
-  // Cartão pequeno do Nível 1 / Nível 2 do período ativo
-  const cartaoNivel = (rotulo, nomeCurto, item, meses) => `
-    <div class="cartao">
-      <span class="rotulo">${rotulo}</span>
-      <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          ${getPlanet3DSVG(item.planet.id, 42)}
-          <div class="texto-apagado linha-glifo" style="font-size: 11px;">${nomePlaneta(item.planet.id) ? nomePlaneta(item.planet.id) + ' em' : 'em'} ${signoComNome(getSignSvgHtmlDec(item.planet.signIdx, 18), item.planet.signIdx)} ${item.planet.degree}°${formatMin(item.planet.minute)}'</div>
-        </div>
-        <span class="selo">${meses} meses</span>
-      </div>
-      <div class="linha-info">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Início do ${nomeCurto}:</span><strong>${formatDateDec(item.startDate)}</strong></div>
-        <div style="display: flex; justify-content: space-between;"><span>Término do ${nomeCurto}:</span><strong>${formatDateDec(item.endDate)}</strong></div>
-      </div>
-    </div>
-  `;
+  const l1Lista = timelineL1;
+  const l2Lista = decNivel1 !== null ? l1Lista[decNivel1].subperiods : null;
+  const l3Lista = (l2Lista && decNivel2 !== null)
+    ? calcularSubperiodosL3Dec(l2Lista[decNivel2].planet, l2Lista[decNivel2].startDate, l2Lista[decNivel2].days, sortedPlanets)
+    : null;
 
-  return `
-    <!-- PERÍODO ATIVO -->
-    <div>
-      <h3 class="titulo-secao">Período ativo</h3>
+  const tamLetra = { 1: 12, 2: 12, 3: 11 };
+  const duracao = (n, x) => n === 1 ? '129 meses' : n === 2 ? `${x.months} meses (${x.days} dias)` : `<strong>${formatDiasDec(x.days)}</strong> dias`;
+  const dataDec = (n, d) => n === 3 ? formatDateHoraDec(d) : formatDateDec(d);
 
-      <div class="grade-cartoes">
-        ${cartaoNivel('Nível 1 - Regente da Era', 'Nível 1', activeL1, 129)}
-        ${cartaoNivel('Nível 2 - Executor do Momento', 'Nível 2', activeL2, activeL2.months)}
-      </div>
+  const tabelaNivel = (n, lista, fnIr) => {
+    const linhas = lista.map((x, i) => {
+      const ativa = (hoje >= x.startDate && hoje < x.endDate) ? ' ativa' : '';
+      // Nível 1: a posição do planeta no mapa (signo e grau), bem pequena embaixo do planeta
+      const posicao = n === 1
+        ? `<div class="texto-apagado linha-glifo" style="font-size: 10px; justify-content: center; flex-wrap: nowrap; white-space: nowrap; gap: 3px;">${getSignSvgHtmlDec(x.planet.signIdx, 13)} ${x.planet.degree}°${formatMin(x.planet.minute)}'</div>`
+        : '';
+      return `<tr class="${fnIr ? 'clicavel' : ''}${ativa}"${fnIr ? ` onclick="${fnIr}(${i})"` : ''}>
+        <td class="centro">${planetaComNome(x.planet.id, 26 - n * 2)}${posicao}</td>
+        <td>${duracao(n, x)}</td>
+        <td style="line-height: 1.2;">${dataDec(n, x.startDate)}</td>
+        <td style="line-height: 1.2;">${dataDec(n, x.endDate)}</td>
+      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4)}`;
+    }).join('');
+    return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetra[n]}px;">
+      <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
+  };
 
-      <!-- TABELA DA ERA ATIVA -->
-      <div class="cartao" style="margin-top: 14px;">
-        <div class="cabeca-cartao">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            ${getPlanet3DSVG(activeL1.planet.id, 28)}
-            <span class="nome-nivel">Nível 1 ativo</span>
-          </div>
-          <strong class="texto-apagado" style="font-size: 11px;">${formatDateDec(activeL1.startDate)} a ${formatDateDec(activeL1.endDate)}</strong>
-        </div>
-        <div class="envolve-tabela">
-          <table class="tabela-epoca">
-            <thead>${cabecaNivel2}</thead>
-            <tbody>
-              ${linhasNivel2Dec(activeL1.subperiods, 'active', i => `'active', ${i}`, 32, sortedPlanets)}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+  const navNivel = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
+    id: 'decenios', n, lista, idx, fnIr, unidade: UNIDADE_NIVEL_DEC[n],
+    inicio: x => x.startDate, fim: x => x.endDate,
+    glifo: (y, tam) => planetaComNome(y.planet.id, tam),
+    fmtData: formatDateDec
+  });
 
-    <hr class="divisa">
-
-    <!-- CRONOGRAMA DA LINHA DO TEMPO -->
-    <div>
-      <div class="cabeca-cartao">
-        <h3 class="titulo-secao" style="margin: 0;">Linha do tempo dos decênios</h3>
-        <span class="texto-apagado" style="font-size: 11px;">Calendário egípcio: 360 dias por ano</span>
-      </div>
-
-      <div>
-        ${timelineL1.map((l1, idx) => `
-          <div class="cartao${l1.isActive ? ' ativo' : ''}" style="margin-bottom: 8px; padding: 0;">
-            <div style="padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="alternarDetalhesL1Dec(${idx})">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                ${getPlanet3DSVG(l1.planet.id, 32)}
-                <div>
-                  <span class="nome-nivel">Nível 1${nomePlaneta(l1.planet.id) ? ' - ' + nomePlaneta(l1.planet.id) : ''}</span>
-                  <div class="texto-apagado linha-glifo" style="font-size: 11px;">em ${signoComNome(getSignSvgHtmlDec(l1.planet.signIdx, 15), l1.planet.signIdx)} ${l1.planet.degree}°${formatMin(l1.planet.minute)}' - 129 meses</div>
-                </div>
-              </div>
-              <strong class="texto-apagado" style="font-size: 11px;">${formatDateDec(l1.startDate)} a ${formatDateDec(l1.endDate)}</strong>
-            </div>
-
-            <div id="dec_l1_details_${idx}" style="display: none; padding: 0 12px 10px;">
-              <table class="tabela-epoca">
-                <thead>${cabecaNivel2}</thead>
-                <tbody>
-                  ${linhasNivel2Dec(l1.subperiods, String(idx), i => `${idx}, ${i}`, 28, sortedPlanets)}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-
-    <hr class="divisa">
-  `;
+  let html;
+  if (decNivel1 === null) {
+    html = tabelaNivel(1, l1Lista, 'irParaNivel1Dec');
+  } else {
+    html = navNivel(1, l1Lista, decNivel1, 'irParaNivel1Dec');
+    if (decNivel2 === null) html += tabelaNivel(2, l2Lista, 'irParaNivel2Dec');
+    else html += navNivel(2, l2Lista, decNivel2, 'irParaNivel2Dec') + tabelaNivel(3, l3Lista, null);
+  }
+  return html + `<hr class="divisa">`;
 }
