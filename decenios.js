@@ -50,6 +50,8 @@ let overrideStartPlanet = null;
    Sem nada escolhido, a tela mostra a lista do Nível 1; escolhido o 1, a lista do 2; escolhido o 2, a lista do 3. */
 let decNivel1 = null;
 let decNivel2 = null;
+let dataBuscaDec = null; // data escolhida na busca ("Ir para a data"); null = hoje
+let buscaPendenteDec = false; // a busca (ou o botão Hoje) pede pra árvore abrir até o período da data, no próximo desenho
 
 /* FUNÇÃO DE ENTRADA CHAMADA PELO SUPABASE.JS */
 function iniciarModuloDecenios() {
@@ -87,6 +89,15 @@ function renderDeceniosUI(container) {
 
   // PROCESSA O CÁLCULO INSTANTANEAMENTE
   const result = calcularDeceniosAutomatico(startPlanetKey);
+
+  if (buscaPendenteDec) {
+    buscaPendenteDec = false;
+    const d = dataBuscaDec ? new Date(dataBuscaDec) : new Date();
+    decNivel1 = result.timelineL1.findIndex(l1 => d >= l1.startDate && d < l1.endDate);
+    decNivel2 = decNivel1 === -1 ? -1 : result.timelineL1[decNivel1].subperiods.findIndex(l2 => d >= l2.startDate && d < l2.endDate);
+    if (decNivel1 === -1) decNivel1 = null;
+    if (decNivel2 === -1) decNivel2 = null;
+  }
 
   const ano = currentMoment.getFullYear();
   const mes = String(currentMoment.getMonth() + 1).padStart(2, '0');
@@ -131,6 +142,9 @@ function renderDeceniosUI(container) {
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
       ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
+
+      <!-- Busca por data: fora do #decennialsResultsArea, não sai na imagem da galeria nem do relatório. -->
+      ${buscaPorDataHTML({ id: 'decenioBuscaData', data: dataBuscaDec, fnIr: 'irParaDataDecenios' })}
 
       <!-- EXIBIÇÃO DOS RESULTADOS DOS DECÊNIOS -->
       <div id="decennialsResultsArea">
@@ -227,6 +241,7 @@ function alternarSeitaManual(val) {
   overrideStartPlanet = val;
   decNivel1 = null;
   decNivel2 = null;
+  buscaPendenteDec = !!dataBuscaDec;
   iniciarModuloDecenios();
 }
 
@@ -379,6 +394,14 @@ function calcularSubperiodosL3Dec(l2Planet, l2Start, l2Days, sortedPlanets) {
   return subperiodos;
 }
 
+/* Busca por data: abre até o período que contém a data (Nível 1 e 2). Vazio = volta pra hoje. */
+function irParaDataDecenios(valor) {
+  dataBuscaDec = dataDoCampoBusca(valor);
+  buscaPendenteDec = true;
+  iniciarModuloDecenios();
+}
+window.irParaDataDecenios = irParaDataDecenios;
+
 function irParaNivel1Dec(idx) {
   if (idx < 0 || idx > 9) return;
   decNivel1 = idx;
@@ -398,7 +421,8 @@ const UNIDADE_NIVEL_DEC = { 1: 'meses', 2: 'meses', 3: 'dias' };
 
 function renderizarResultadosHTML(res) {
   const { timelineL1, sortedPlanets } = res;
-  const hoje = new Date();
+  // "hoje" aqui é o momento que a árvore marca: hoje, ou a data escolhida na busca
+  const hoje = dataBuscaDec ? new Date(dataBuscaDec) : new Date();
   const formatMin = m => String(m || 0).padStart(2, '0');
 
   const l1Lista = timelineL1;

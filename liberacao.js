@@ -253,12 +253,7 @@ let buscaPendenteZR = false; // a busca por data (ou o botão Hoje) pede pra ár
 
 /* Busca por data: abre até o período que contém a data (nível 1, 2, 3 e 4). Vazio = volta pra hoje. */
 function irParaDataLiberacao(valor) {
-  if (valor) {
-    const [a, m, d] = valor.split('-').map(Number);
-    dataBuscaZR = new Date(a, m - 1, d, 12, 0);
-  } else {
-    dataBuscaZR = null;
-  }
+  dataBuscaZR = dataDoCampoBusca(valor);
   buscaPendenteZR = true;
   renderLiberacaoUI();
 }
@@ -738,12 +733,7 @@ function renderLiberacaoUI() {
       <hr class="divisa">
 
       <!-- Busca por data: fora do #liberacaoArvoreCapture, não sai na imagem do relatório. -->
-      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; color: var(--azul-egipcio-escuro);">
-        <button type="button" class="botao-icone" onclick="const i=document.getElementById('liberacaoBuscaData'); try { i.showPicker(); } catch (e) { i.focus(); i.click(); }" title="Ir para a data"><svg class="icone" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg></button>
-        <input type="date" id="liberacaoBuscaData" value="${dataBuscaZR ? `${dataBuscaZR.getFullYear()}-${String(dataBuscaZR.getMonth() + 1).padStart(2, '0')}-${String(dataBuscaZR.getDate()).padStart(2, '0')}` : ''}" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; min-height: 36px; min-width: 160px; box-sizing: border-box;">
-        <button type="button" class="botao-texto" onclick="const v=document.getElementById('liberacaoBuscaData').value; if (v) irParaDataLiberacao(v);">Ir</button>
-        ${dataBuscaZR ? `<button type="button" class="botao-texto" onclick="irParaDataLiberacao('')">Hoje</button>` : ''}
-      </div>
+      ${buscaPorDataHTML({ id: 'liberacaoBuscaData', data: dataBuscaZR, fnIr: 'irParaDataLiberacao' })}
 
       <div id="liberacaoArvoreCapture">
         ${arvoreHTML}

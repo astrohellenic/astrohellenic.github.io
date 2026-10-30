@@ -8,6 +8,7 @@
       Uma linha só: "62% [barra] 11/20 meses" (quanto já passou do total, na unidade do nível).
    2) CABEÇALHO DO NÍVEL ABERTO na navegação em camadas: "← Nível 2: glifo ▾ →", datas e a barrinha;
       a setinha abre a lista de todos os períodos daquele nível.
+   3) BUSCA POR DATA ("Ir para a data"): calendário + campo + botão Ir (+ Hoje quando há data escolhida).
 
    Quem usa passa o que é próprio da ferramenta (glifo, formato da data, nome da função que abre o período).
    Mexeu aqui? Conferir a Liberação e os Decênios. */
@@ -74,4 +75,26 @@ function cabecalhoNivelTempo(o) {
       ${barraTempo(ini(x), fim(x), 'margin: 6px 16px 0;', 11, o.unidade)}
       <div id="${o.id}MenuNivel${o.n}" class="menu-flutuante" data-html2canvas-ignore="true" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">${itens}</div>
     </div>`;
+}
+
+/* BUSCA POR DATA. A ferramenta guarda a data escolhida (Date ao meio-dia, ou null = hoje) e, quando a pessoa toca em Ir,
+   abre a árvore até o período que contém a data. O campo NUNCA age sozinho ao mudar (o seletor do iPad dispara "change" com a data
+   de hoje no instante em que abre): só o botão Ir leva à data. Tamanho mínimo no campo: vazio com appearance:none some no iPad.
+   Opções: id (do campo), data (Date ou null), fnIr (função global que recebe 'AAAA-MM-DD' ou '' para voltar a hoje). */
+function buscaPorDataHTML(o) {
+  const d = o.data;
+  const valor = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
+  return `<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; color: var(--azul-egipcio-escuro);">
+        <button type="button" class="botao-icone" onclick="const i=document.getElementById('${o.id}'); try { i.showPicker(); } catch (e) { i.focus(); i.click(); }" title="Ir para a data"><svg class="icone" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg></button>
+        <input type="date" id="${o.id}" value="${valor}" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; min-height: 36px; min-width: 160px; box-sizing: border-box;">
+        <button type="button" class="botao-texto" onclick="const v=document.getElementById('${o.id}').value; if (v) ${o.fnIr}(v);">Ir</button>
+        ${d ? `<button type="button" class="botao-texto" onclick="${o.fnIr}('')">Hoje</button>` : ''}
+      </div>`;
+}
+
+/* 'AAAA-MM-DD' do campo -> Date ao meio-dia (hora local), ou null se vazio */
+function dataDoCampoBusca(valor) {
+  if (!valor) return null;
+  const [a, m, d] = valor.split('-').map(Number);
+  return new Date(a, m - 1, d, 12, 0);
 }
