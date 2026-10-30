@@ -297,7 +297,7 @@ function barraTempoZR(inicio, fim, estilo, tamanhoLetra) {
 
 /* Linha de tabela só com a barrinha, logo embaixo da linha do período (níveis 2, 3 e 4). */
 function linhaBarraTempoZR(inicio, fim) {
-  return `<tr class="zr-barra"><td colspan="5" style="padding: 0 6px 5px; border-top: 0;">${barraTempoZR(inicio, fim, 'height: 3px;', 9)}</td></tr>`;
+  return `<tr class="zr-barra"><td colspan="5">${barraTempoZR(inicio, fim, 'height: 3px;', 9)}</td></tr>`;
 }
 
 function calcularDataFimZR(dataInicio, anos) {

@@ -131,6 +131,9 @@
     padding: 10px 12px; color: var(--preto-tinta); background: transparent; border: 0;
     border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
 }
+/* Liberação: a barrinha do tempo fica DENTRO da linha, acima da divisa: a linha do período perde a divisa e quem fecha é a linha da barra */
+.tabela-epoca tr:has(+ tr.zr-barra) > td { border-bottom: 0; padding-bottom: 6px; }
+.tabela-epoca tr.zr-barra > td { padding: 0 6px 8px; }
 .tabela-epoca .centro { text-align: center; }
 .tabela-epoca td.encaixe { padding: 0; }
 .tabela-epoca tr.clicavel { cursor: pointer; }
