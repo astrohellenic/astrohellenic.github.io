@@ -647,12 +647,12 @@ function renderCircumambulaçõesUI() {
       const xEnd = x0 + (term.termEndDeg * scale);
       const wTerm = xEnd - xStart;
 
-      /* PREENCHIMENTO DO TEMPO: o termo é a própria barra. Azul egípcio do começo até o dia de hoje (termo já passado = cheio,
+      /* PREENCHIMENTO DO TEMPO: o termo é a própria barra. Azul egípcio claro (o mesmo das linhas) do começo até o dia de hoje (termo já passado = cheio,
          termo de hoje = até o ponto de hoje, termo futuro = vazio). No primeiro termo conta a partir do grau do afeta. */
       if (term.startDate && term.endDate && hoje > term.startDate) {
         const frac = Math.max(0, Math.min(1, (hoje - term.startDate) / (term.endDate - term.startDate)));
         const xIni = x0 + (term.effStartDeg * scale);
-        rowHtml += `<rect x="${xIni}" y="${yBaseline + 1}" width="${(xEnd - xIni) * frac}" height="${termHeight}" fill="var(--azul-egipcio-escuro)" stroke="none"/>`;
+        rowHtml += `<rect x="${xIni}" y="${yBaseline + 1}" width="${(xEnd - xIni) * frac}" height="${termHeight}" fill="var(--azul-egipcio-claro)" stroke="none"/>`;
       }
       rowHtml += `<rect x="${xStart}" y="${yBaseline + 1}" width="${wTerm}" height="${termHeight}" fill="none" stroke="var(--azul-egipcio-escuro)" stroke-width="1"/>`;
 
