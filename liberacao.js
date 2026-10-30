@@ -247,8 +247,11 @@ function alternarLoteLiberacao(lotKey) {
   renderLiberacaoUI();
 }
 
-/* A tela mostra UM signo do nível 1 por vez (o de hoje ao abrir); as setas andam pros vizinhos. */
-/* Busca por data: abre a árvore até o período que contém a data (nível 1, 2, 3 e 4). Vazio = volta pra hoje. */
+/* NAVEGAÇÃO EM CAMADAS. O caminho escolhido fica em expandedL1Index (0-11), expandedL2Key ("i_s") e expandedL3Key ("i_s_t"):
+   sem nada escolhido, a tela mostra a lista do nível 1; escolhido o 1, a lista do 2; e assim até a lista do 4. */
+let buscaPendenteZR = false; // a busca por data (ou o botão Hoje) pede pra árvore abrir até o período da data, no próximo desenho
+
+/* Busca por data: abre até o período que contém a data (nível 1, 2, 3 e 4). Vazio = volta pra hoje. */
 function irParaDataLiberacao(valor) {
   if (valor) {
     const [a, m, d] = valor.split('-').map(Number);
@@ -256,9 +259,7 @@ function irParaDataLiberacao(valor) {
   } else {
     dataBuscaZR = null;
   }
-  expandedL1Index = null;
-  expandedL2Key = null;
-  expandedL3Key = null;
+  buscaPendenteZR = true;
   renderLiberacaoUI();
 }
 window.irParaDataLiberacao = irParaDataLiberacao;
@@ -272,20 +273,20 @@ function irParaNivel1Liberacao(index) {
 }
 window.irParaNivel1Liberacao = irParaNivel1Liberacao;
 
-function alternarL2Accordion(l1Idx, l2Idx, event) {
-  if (event) event.stopPropagation();
-  const key = `${l1Idx}_${l2Idx}`;
-  expandedL2Key = (expandedL2Key === key) ? null : key;
+function irParaNivel2Liberacao(index) {
+  if (expandedL1Index === null || index < 0) return;
+  expandedL2Key = `${expandedL1Index}_${index}`;
   expandedL3Key = null;
   renderLiberacaoUI();
 }
+window.irParaNivel2Liberacao = irParaNivel2Liberacao;
 
-function alternarL3Accordion(l1Idx, l2Idx, l3Idx, event) {
-  if (event) event.stopPropagation();
-  const key = `${l1Idx}_${l2Idx}_${l3Idx}`;
-  expandedL3Key = (expandedL3Key === key) ? null : key;
+function irParaNivel3Liberacao(index) {
+  if (expandedL2Key === null || index < 0) return;
+  expandedL3Key = `${expandedL2Key}_${index}`;
   renderLiberacaoUI();
 }
+window.irParaNivel3Liberacao = irParaNivel3Liberacao;
 
 /* BARRINHA DO TEMPO de cada período: vazia antes de começar, cheia depois de terminar, enchendo durante.
    Cor vai de azul (começo) a ocre (metade) a terracota (fim), como a barra do site Falando de Astrologia,
@@ -502,61 +503,47 @@ function renderLiberacaoUI() {
     startSignIdx = Math.floor(activeLotObj.deg / 30);
   }
 
-  // DETECÇÃO AUTOMÁTICA DO L1 ATIVO SE NENHUM ESTIVER EXPANDIDO MANUALMENTE
   // "hoje" aqui é o momento que a árvore procura: hoje, ou a data escolhida na busca
   const hoje = dataBuscaZR ? new Date(dataBuscaZR) : new Date();
-  if (expandedL1Index === null) {
-    let checkStart = new Date(currentMoment);
-    for (let i = 0; i < 12; i++) {
-      const currSign = (startSignIdx + i) % 12;
-      const durationYears = ZR_SIGN_YEARS[currSign];
-      const checkEnd = calcularDataFimZR(checkStart, durationYears);
 
-      if (hoje >= checkStart && hoje < checkEnd) {
-        expandedL1Index = i;
+  /* Caminho (nível 1, 2 e 3) que contém uma data. Serve pra busca por data e pra pintar a mandala no período de hoje. */
+  const caminhoPorData = (d) => {
+    const r = { i: null, s: null, t: null };
+    let ini = new Date(currentMoment);
+    for (let i = 0; i < 12; i++) {
+      const sg = (startSignIdx + i) % 12;
+      const anos = ZR_SIGN_YEARS[sg];
+      const fim = calcularDataFimZR(ini, anos);
+      if (d >= ini && d < fim) {
+        r.i = i;
+        const l2 = calcularSubperiodosL2(sg, ini, anos);
+        const s = l2.findIndex(x => d >= x.start && d < x.end);
+        if (s !== -1) {
+          r.s = s;
+          const l3 = calcularSubperiodosL3(l2[s].signIdx, l2[s].start, l2[s].end);
+          const t = l3.findIndex(x => d >= x.start && d < x.end);
+          if (t !== -1) r.t = t;
+        }
         break;
       }
-      checkStart = new Date(checkEnd);
+      ini = new Date(fim);
     }
-    if (expandedL1Index === null) expandedL1Index = 0; // Fallback
+    return r;
+  };
+  if (buscaPendenteZR) {
+    buscaPendenteZR = false;
+    const c = caminhoPorData(hoje);
+    expandedL1Index = c.i;
+    expandedL2Key = (c.i !== null && c.s !== null) ? `${c.i}_${c.s}` : null;
+    expandedL3Key = (c.i !== null && c.s !== null && c.t !== null) ? `${c.i}_${c.s}_${c.t}` : null;
   }
-
-  // DETECÇÃO AUTOMÁTICA DO L2/L3 ATIVOS (mesmo princípio do L1: já abre no
-  // subperíodo do momento atual, em cascata, sem precisar clicar).
-  if (expandedL2Key === null || expandedL3Key === null) {
-    let l1Start = new Date(currentMoment);
-    let l1Sign = startSignIdx;
-    let l1Years = ZR_SIGN_YEARS[l1Sign];
-    for (let i = 0; i <= expandedL1Index; i++) {
-      const currSign = (startSignIdx + i) % 12;
-      const durationYears = ZR_SIGN_YEARS[currSign];
-      const currentEnd = calcularDataFimZR(l1Start, durationYears);
-      if (i === expandedL1Index) {
-        l1Sign = currSign;
-        l1Years = durationYears;
-      } else {
-        l1Start = new Date(currentEnd);
-      }
-    }
-
-    const subperiodosL2Auto = calcularSubperiodosL2(l1Sign, l1Start, l1Years);
-
-    if (expandedL2Key === null) {
-      const idxL2 = subperiodosL2Auto.findIndex(sub => hoje >= sub.start && hoje < sub.end);
-      if (idxL2 !== -1) expandedL2Key = `${expandedL1Index}_${idxL2}`;
-    }
-
-    if (expandedL2Key !== null && expandedL3Key === null) {
-      const [l1IdxKey, l2IdxKey] = expandedL2Key.split('_').map(Number);
-      if (l1IdxKey === expandedL1Index) {
-        const l2Sub = subperiodosL2Auto[l2IdxKey];
-        if (l2Sub) {
-          const subperiodosL3Auto = calcularSubperiodosL3(l2Sub.signIdx, l2Sub.start, l2Sub.end);
-          const idxL3 = subperiodosL3Auto.findIndex(sub => hoje >= sub.start && hoje < sub.end);
-          if (idxL3 !== -1) expandedL3Key = `${l1IdxKey}_${l2IdxKey}_${idxL3}`;
-        }
-      }
-    }
+  // a mandala: com nada escolhido, mostra o período de hoje; escolhido algo, mostra o caminho escolhido
+  let mL1 = expandedL1Index, mL2 = expandedL2Key, mL3 = expandedL3Key;
+  if (mL1 === null) {
+    const c = caminhoPorData(hoje);
+    mL1 = c.i;
+    mL2 = (c.i !== null && c.s !== null) ? `${c.i}_${c.s}` : null;
+    mL3 = (c.i !== null && c.s !== null && c.t !== null) ? `${c.i}_${c.s}_${c.t}` : null;
   }
 
   /* DESCOBRE O SIGNO ABERTO DE CADA NÍVEL (L1/L2/L3/L4), PRA PINTAR A
@@ -588,21 +575,21 @@ function renderLiberacaoUI() {
       const detYears = ZR_SIGN_YEARS[detSign];
       const detEnd = calcularDataFimZR(detStart, detYears);
 
-      if (i === expandedL1Index) {
+      if (i === mL1) {
         l1HighlightSignIdx = detSign;
         const detSubL2 = calcularSubperiodosL2(detSign, detStart, detYears);
         const lysisL2 = detSubL2.find(sub => sub.isLysis);
         if (lysisL2) l2SaltoSignIdx = lysisL2.signIdx;
 
         detSubL2.forEach((sub, sIdx) => {
-          if (expandedL2Key === `${i}_${sIdx}`) {
+          if (mL2 === `${i}_${sIdx}`) {
             l2HighlightSignIdx = sub.signIdx;
             const detSubL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
             const lysisL3 = detSubL3.find(subL3 => subL3.isLysis);
             if (lysisL3) l3SaltoSignIdx = lysisL3.signIdx;
 
             detSubL3.forEach((subL3, l3Idx) => {
-              if (expandedL3Key === `${i}_${sIdx}_${l3Idx}`) {
+              if (mL3 === `${i}_${sIdx}_${l3Idx}`) {
                 l3HighlightSignIdx = subL3.signIdx;
                 const detSubL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
                 const lysisL4 = detSubL4.find(subL4 => subL4.isLysis);
@@ -654,24 +641,88 @@ function renderLiberacaoUI() {
 
   const svgGaleriaZ = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
   const svgRelatorioZ = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
-  /* Lista dos 12 signos do nível 1, na ordem das datas, com início e fim de cada um (tocar leva direto àquele nível 1). */
-  let linhasMenuNivel1 = '';
+  const seloPico = (extra) => `<span class="selo"${extra ? ` style="${extra}"` : ''}>PICO</span>`;
+  const seloSalto = (extra) => `<span class="selo salto"${extra ? ` style="${extra}"` : ''}>SALTO</span>`;
+
+  /* NAVEGAÇÃO EM CAMADAS: a tela mostra só a lista do nível em que você está; os níveis de cima ficam como uma linha cada
+     (← → andam entre os vizinhos, a setinha abre a lista completa daquele nível, com as datas). */
+  const l1Lista = [];
   {
     let ini = new Date(currentMoment);
     for (let i = 0; i < 12; i++) {
       const sg = (startSignIdx + i) % 12;
       const fim = calcularDataFimZR(ini, ZR_SIGN_YEARS[sg]);
-      linhasMenuNivel1 += `<div class="item-menu${i === expandedL1Index ? ' ativa' : ''}" onclick="irParaNivel1Liberacao(${i})" style="display: flex; align-items: center; gap: 10px; justify-content: space-between;"><span style="display: flex; align-items: center; gap: 6px;">${signoComNome(getSignSVGZR(sg, 20), sg)}</span><span class="texto-apagado" style="font-size: 12px; white-space: nowrap;">${formatarDataBR(ini)} a ${formatarDataBR(fim)}</span></div>`;
-      ini = fim;
+      l1Lista.push({ signIdx: sg, start: new Date(ini), end: fim, years: ZR_SIGN_YEARS[sg] });
+      ini = new Date(fim);
     }
   }
-  const setaNivel1 = (dir) => {
-    const destino = expandedL1Index + dir;
-    const fora = destino < 0 || destino > 11;
-    return `<button type="button" class="botao-icone"${fora ? ' disabled style="opacity: .35; cursor: default;"' : ` onclick="irParaNivel1Liberacao(${destino})"`} title="${dir < 0 ? 'Nível 1 anterior' : 'Próximo nível 1'}"><svg class="icone" viewBox="0 0 64 64"><polyline points="${dir < 0 ? '40,12 20,32 40,52' : '24,12 44,32 24,52'}"/></svg></button>`;
+  let l2Lista = null, l2Sel = null, l3Lista = null, l3Sel = null, l4Lista = null;
+  if (expandedL1Index !== null) {
+    const x1 = l1Lista[expandedL1Index];
+    l2Lista = calcularSubperiodosL2(x1.signIdx, x1.start, x1.years);
+    if (expandedL2Key !== null) {
+      l2Sel = Number(expandedL2Key.split('_')[1]);
+      const x2 = l2Lista[l2Sel];
+      l3Lista = calcularSubperiodosL3(x2.signIdx, x2.start, x2.end);
+      if (expandedL3Key !== null) {
+        l3Sel = Number(expandedL3Key.split('_')[2]);
+        const x3 = l3Lista[l3Sel];
+        l4Lista = calcularSubperiodosL4(x3.signIdx, x3.start, x3.end);
+      }
+    }
+  }
+  const tamLetraZR = { 1: 12, 2: 12, 3: 11, 4: 10 };
+  const duracaoZR = (n, x) => n === 1 ? `${x.years} Anos` : n === 2 ? `${x.months} Meses (${x.days} Dias)` : n === 3 ? `${x.days} Dias` : `${x.hours} Horas`;
+  const dataZR = (n, d) => n >= 3 ? formatarDataHoraBR(d) : formatarDataBR(d);
+  const tabelaNivelZR = (n, lista, fnIr) => {
+    const linhas = lista.map((x, i) => {
+      const peak = angularSignsFromFort.includes(x.signIdx);
+      const fs = n === 1 ? '' : `font-size: ${tamLetraZR[n] - 3}px;`;
+      const status = (x.isLysis ? seloSalto('margin-right: 4px;' + fs) : '') + (peak ? seloPico(fs) : '');
+      const ativa = (hoje >= x.start && hoje < x.end) ? ' ativa' : '';
+      return `<tr class="${fnIr ? 'clicavel' : ''}${ativa}"${fnIr ? ` onclick="${fnIr}(${i})"` : ''}>
+        <td class="centro">${signoComNome(getSignSVGZR(x.signIdx, 26 - n * 2), x.signIdx)}</td>
+        <td>${duracaoZR(n, x)}</td>
+        <td style="line-height: 1.2;">${dataZR(n, x.start)}</td>
+        <td style="line-height: 1.2;">${dataZR(n, x.end)}</td>
+        <td class="centro">${status}</td>
+      </tr>${linhaBarraTempoZR(x.start, x.end)}`;
+    }).join('');
+    return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetraZR[n]}px;">
+      <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th><th class="centro">Status</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
   };
-  const seloPico = (extra) => `<span class="selo"${extra ? ` style="${extra}"` : ''}>PICO</span>`;
-  const seloSalto = (extra) => `<span class="selo salto"${extra ? ` style="${extra}"` : ''}>SALTO</span>`;
+  const navNivelZR = (n, lista, idx, fnIr) => {
+    const x = lista[idx];
+    const seta = (dir) => {
+      const destino = idx + dir;
+      const fora = destino < 0 || destino >= lista.length;
+      return `<button type="button" class="botao-icone"${fora ? ' disabled style="opacity: .35; cursor: default;"' : ` onclick="${fnIr}(${destino})"`} title="${dir < 0 ? 'Anterior' : 'Próximo'}"><svg class="icone" viewBox="0 0 64 64"><polyline points="${dir < 0 ? '40,12 20,32 40,52' : '24,12 44,32 24,52'}"/></svg></button>`;
+    };
+    const itens = lista.map((y, i) => `<div class="item-menu${i === idx ? ' ativa' : ''}" onclick="${fnIr}(${i})" style="display: flex; align-items: center; gap: 10px; justify-content: space-between;"><span style="display: flex; align-items: center; gap: 6px;">${signoComNome(getSignSVGZR(y.signIdx, 20), y.signIdx)}</span><span class="texto-apagado" style="font-size: 12px; white-space: nowrap;">${formatarDataBR(y.start)} a ${formatarDataBR(y.end)}</span></div>`).join('');
+    return `<div style="position: relative; margin: 12px 0 8px;">
+      <div class="linha-ano-profectado" style="margin-bottom: 4px;">
+        <span data-html2canvas-ignore="true">${seta(-1)}</span>
+        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('liberacaoMenuNivel${n}'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Ver todos os períodos do nível ${n}"><strong>Nível ${n}:</strong> ${signoComNome(getSignSVGZR(x.signIdx, 20), x.signIdx)}<svg class="icone" data-html2canvas-ignore="true" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
+        <span data-html2canvas-ignore="true">${seta(1)}</span>
+      </div>
+      <div class="texto-apagado" style="text-align: center; font-size: 12px;">${formatarDataBR(x.start)} a ${formatarDataBR(x.end)}</div>
+      ${barraTempoZR(x.start, x.end, 'margin: 6px 16px 0;')}
+      <div id="liberacaoMenuNivel${n}" class="menu-flutuante" data-html2canvas-ignore="true" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">${itens}</div>
+    </div>`;
+  };
+  let arvoreHTML;
+  if (expandedL1Index === null) {
+    arvoreHTML = tabelaNivelZR(1, l1Lista, 'irParaNivel1Liberacao');
+  } else {
+    arvoreHTML = navNivelZR(1, l1Lista, expandedL1Index, 'irParaNivel1Liberacao');
+    if (l2Sel === null) arvoreHTML += tabelaNivelZR(2, l2Lista, 'irParaNivel2Liberacao');
+    else {
+      arvoreHTML += navNivelZR(2, l2Lista, l2Sel, 'irParaNivel2Liberacao');
+      if (l3Sel === null) arvoreHTML += tabelaNivelZR(3, l3Lista, 'irParaNivel3Liberacao');
+      else arvoreHTML += navNivelZR(3, l3Lista, l3Sel, 'irParaNivel3Liberacao') + tabelaNivelZR(4, l4Lista, null);
+    }
+  }
 
   let html = `
     <div style="width: 100%;">
@@ -726,16 +777,6 @@ function renderLiberacaoUI() {
 
       <hr class="divisa">
 
-      <!-- Setas fora do #liberacaoArvoreCapture de propósito: a imagem do relatório/galeria leva só o nível 1 mostrado, sem as setas. -->
-      <div class="linha-ano-profectado" style="position: relative;">
-        ${setaNivel1(-1)}
-        <span class="linha-glifo" style="justify-content: center; gap: 6px; cursor: pointer;" onclick="const m=document.getElementById('liberacaoMenuNivel1'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Escolher o signo do nível 1"><strong>Nível 1:</strong> ${signoComNome(getSignSVGZR((startSignIdx + expandedL1Index) % 12, 20), (startSignIdx + expandedL1Index) % 12)}<svg class="icone" viewBox="0 0 64 64" style="width: 14px; height: 14px;"><polyline points="12,24 32,44 52,24"/></svg></span>
-        ${setaNivel1(1)}
-        <div id="liberacaoMenuNivel1" class="menu-flutuante" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">
-          ${linhasMenuNivel1}
-        </div>
-      </div>
-
       <!-- Busca por data: fora do #liberacaoArvoreCapture, não sai na imagem do relatório. -->
       <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; color: var(--azul-egipcio-escuro);">
         <svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex: none;" aria-hidden="true"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg>
@@ -744,166 +785,8 @@ function renderLiberacaoUI() {
       </div>
 
       <div id="liberacaoArvoreCapture">
+        ${arvoreHTML}
   `;
-
-  let currentStart = new Date(currentMoment);
-
-  for (let i = 0; i < 12; i++) {
-    const currSign = (startSignIdx + i) % 12;
-    const durationYears = ZR_SIGN_YEARS[currSign];
-    const currentEnd = calcularDataFimZR(currentStart, durationYears);
-    if (expandedL1Index !== i) { currentStart = new Date(currentEnd); continue; }
-    const isExpanded = true;
-    const subperiodosL2 = calcularSubperiodosL2(currSign, currentStart, durationYears);
-
-    const isPeakL1 = angularSignsFromFort.includes(currSign);
-
-    // Nível 1: um cartão (linha em cima e embaixo); o aberto leva a marca terracota na margem e o nome em terracota.
-    html += `
-      <div class="cartao${isExpanded ? ' ativo' : ''}" style="margin-bottom: 12px; padding: 0;">
-        <div style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            ${getSignSVGZR(currSign, 24)}
-            <div>
-              <span class="nome-nivel">Nível 1: ${SIGN_NAMES_ZR[currSign].toUpperCase()}</span>
-              <span class="texto-apagado" style="font-size: 12px; margin-left: 6px;">${durationYears} Anos</span>
-              ${isPeakL1 ? seloPico('margin-left: 8px;') : ''}
-            </div>
-          </div>
-          <strong class="texto-apagado" style="font-size: 12px;">${formatarDataBR(currentStart)} a ${formatarDataBR(currentEnd)}</strong>
-        </div>
-        ${barraTempoZR(currentStart, currentEnd, 'margin: 0 16px 10px;')}
-    `;
-
-    if (isExpanded) {
-      html += `
-        <div class="envolve-tabela" style="padding: 0 10px 10px;">
-          <table class="tabela-epoca" style="font-size: 12px;">
-            <thead>
-              <tr>
-                <th class="centro">Nível 2 Subperíodo</th>
-                <th>Duração</th>
-                <th>Início</th>
-                <th>Término</th>
-                <th class="centro">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-
-      subperiodosL2.forEach((sub, sIdx) => {
-        const isL2Expanded = (expandedL2Key === `${i}_${sIdx}`);
-        const isPeakL2 = angularSignsFromFort.includes(sub.signIdx);
-        const statusL2 = (sub.isLysis ? seloSalto('margin-right: 4px;') : '') + (isPeakL2 ? seloPico() : '');
-
-        html += `
-          <tr class="clicavel${isL2Expanded ? ' ativa aberta' : ''}" onclick="alternarL2Accordion(${i}, ${sIdx}, event)">
-            <td class="centro">${signoComNome(getSignSVGZR(sub.signIdx, 20), sub.signIdx)}</td>
-            <td>${sub.months} Meses (${sub.days} Dias)</td>
-            <td>${formatarDataBR(sub.start)}</td>
-            <td>${formatarDataBR(sub.end)}</td>
-            <td class="centro">${statusL2}</td>
-          </tr>
-          ${linhaBarraTempoZR(sub.start, sub.end)}
-        `;
-
-        if (isL2Expanded) {
-          const subperiodosL3 = calcularSubperiodosL3(sub.signIdx, sub.start, sub.end);
-          html += `
-            <tr>
-              <td colspan="5" class="encaixe">
-                <table class="tabela-epoca" style="font-size: 11px;">
-                  <thead>
-                    <tr>
-                      <th class="centro">Nível 3 Subperíodo</th>
-                      <th>Duração</th>
-                      <th>Início</th>
-                      <th>Término</th>
-                      <th class="centro">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-          `;
-
-          subperiodosL3.forEach((subL3, l3Idx) => {
-            const isL3Expanded = (expandedL3Key === `${i}_${sIdx}_${l3Idx}`);
-            const isPeakL3 = angularSignsFromFort.includes(subL3.signIdx);
-            const statusL3 = (subL3.isLysis ? seloSalto('margin-right: 4px; font-size: 9px;') : '') + (isPeakL3 ? seloPico('font-size: 9px;') : '');
-
-            html += `
-              <tr class="clicavel${isL3Expanded ? ' ativa aberta' : ''}" onclick="alternarL3Accordion(${i}, ${sIdx}, ${l3Idx}, event)">
-                <td class="centro">${signoComNome(getSignSVGZR(subL3.signIdx, 18), subL3.signIdx)}</td>
-                <td>${subL3.days} Dias</td>
-                <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.start)}</td>
-                <td style="line-height: 1.2;">${formatarDataHoraBR(subL3.end)}</td>
-                <td class="centro">${statusL3}</td>
-              </tr>
-              ${linhaBarraTempoZR(subL3.start, subL3.end)}
-            `;
-
-            if (isL3Expanded) {
-              const subperiodosL4 = calcularSubperiodosL4(subL3.signIdx, subL3.start, subL3.end);
-              html += `
-                <tr>
-                  <td colspan="5" class="encaixe">
-                    <table class="tabela-epoca" style="font-size: 10px;">
-                      <thead>
-                        <tr>
-                          <th class="centro">Nível 4 Subperíodo</th>
-                          <th>Duração</th>
-                          <th>Início</th>
-                          <th>Término</th>
-                          <th class="centro">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-              `;
-
-              subperiodosL4.forEach((subL4, l4Idx) => {
-                const isL4Ativo = (hoje >= subL4.start && hoje < subL4.end);
-                const isPeakL4 = angularSignsFromFort.includes(subL4.signIdx);
-                const statusL4 = (subL4.isLysis ? seloSalto('margin-right: 3px; font-size: 8px;') : '') + (isPeakL4 ? seloPico('font-size: 8px;') : '');
-
-                html += `
-                  <tr${isL4Ativo ? ' class="ativa"' : ''}>
-                    <td class="centro">${signoComNome(getSignSVGZR(subL4.signIdx, 16), subL4.signIdx)}</td>
-                    <td>${subL4.hours} Horas</td>
-                    <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.start)}</td>
-                    <td style="line-height: 1.2;">${formatarDataHoraBR(subL4.end)}</td>
-                    <td class="centro">${statusL4}</td>
-                  </tr>
-                  ${linhaBarraTempoZR(subL4.start, subL4.end)}
-                `;
-              });
-
-              html += `
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              `;
-            }
-          });
-
-          html += `
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          `;
-        }
-      });
-
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    html += `</div>`;
-    currentStart = new Date(currentEnd);
-  }
 
   html += `
       </div>
