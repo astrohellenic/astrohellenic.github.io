@@ -146,6 +146,149 @@ function fvCalcularFases(entrada) {
     fase: idadeHoje < idadeTroca ? 1 : 2, idadeHoje, hoje: entrada.hoje, nascimento: entrada.nascimento };
 }
 
+
+/* ---------- Duração da vida: Paulo de Alexandria, Introdução, cap. 36 "Sobre o domínio" (oikodespoteia) ----------
+   Só a duração (sem o destruidor / anareta). Passos do texto:
+   1. Lugares de negócio (dealing places). Dia: Horóscopo, Meio do Céu e Bom Espírito (casas 1, 10, 11) e, em signo masculino, o Descendente (7)
+      e o signo que "se põe sobre ele" (6). Noite: os 4 ângulos, Boa Fortuna (5), Bom Espírito (11), a pós-ascensão do Horóscopo (2) e o signo
+      que se põe sobre o Descendente (6). Casas por signos inteiros.
+   2. Pontos de partida, nesta ordem: a luz da seita e a outra luz, se estão nesses lugares; depois a sizígia pré-natal; depois os Lotes da Fortuna e do
+      Espírito; por fim o senhor do Horóscopo. De cada ponto saem os candidatos: senhor do termo, da exaltação, da triplicidade (pela seita) e da casa.
+   3. O candidato vale se está num lugar de negócio e configurado com o ponto de onde saiu (conjunção, sextil, quadratura, trígono ou oposição). Entre
+      os que valem, ganha quem tem mais "contas" (psephos: quantas dignidades tem naquele ponto); empate: ângulo, matutino, no próprio trono (exaltação),
+      olhando a luz da seita. É o "senhor da vida" (oikodespotes / kurios).
+   4. Anos. Bem situado (nem cadente nem sob os raios do Sol): anos maiores (Saturno 57, Júpiter 79, Marte 66, Vênus 82, Mercúrio 76; Sol 120, Lua 108).
+      Cadente ou sob os raios: anos menores "da menor recorrência" (N anos, N meses, N dias e N horas).
+   5. Se o senhor é um dos cinco planetas, os que "testemunham" (lançam aspecto para a frente, na ordem dos signos) acrescentam: Vênus +8, Mercúrio +20,
+      Júpiter +12, Saturno +30 e Marte +15 (se bem e propriamente situados, ou seja, no próprio signo e fora de cadente/raios do Sol); Saturno ou Marte
+      fora da própria casa tiram os mesmos anos. Os benéficos cadentes ou sob os raios não contam.
+   Interpretações minhas onde o texto é curto (ver "notas" no resultado): "propriamente situado" = no domicílio; testemunho = aspecto de signos inteiros
+   para a frente (sextil, quadratura, trígono, oposição), sem conjunção; "diminuindo em número" não é calculado. */
+const FV_ANOS_MAIORES = { Sun: 120, Moon: 108, Saturn: 57, Jupiter: 79, Mars: 66, Venus: 82, Mercury: 76 };
+const FV_TESTEMUNHAS = { Venus: 8, Mercury: 20, Jupiter: 12, Saturn: 30, Mars: 15 };    // anos que cada um acrescenta (ou tira, Saturno e Marte fora de casa)
+const FV_PONTO_NOME = { luz: 'Luz', sizigia: 'Sizígia pré-natal', fortuna: 'Lote da Fortuna', espirito: 'Lote do Espírito', asc: 'Senhor do Horóscopo' };
+
+function fvSenhorDoTermo(absGraus) {
+  if (typeof EGYPTIAN_TERMS === 'undefined') return null;
+  const s = Math.floor(absGraus / 30) % 12, g = absGraus - s * 30;
+  const faixa = (EGYPTIAN_TERMS[s] || []).find(t => g < t.deg);
+  return faixa ? (FV_SIMBOLO_ID[faixa.p] || null) : null;
+}
+function fvSenhorDaExaltacao(signo) {
+  return Object.keys(FV_EXALTACAO).find(id => FV_EXALTACAO[id] === signo) || null;
+}
+// "N anos, N meses, N dias e N horas" no calendário egípcio (mês de 30 dias, ano de 360): total em anos
+function fvMenorRecorrencia(n) { return n + n / 12 + n / 360 + n / 8640; }
+
+function fvCalcularDuracao(entrada) {
+  const d = entrada.dados;
+  if (!d || !d.Ascendente || !d.Sol || !d.Lua) return null;
+  const norm = a => ((a % 360) + 360) % 360;
+  const ids = Object.keys(FV_PLANETAS);
+  const abs = {};
+  for (const id of ids) { const o = d[FV_PLANETAS[id].chave]; if (!o) return null; abs[id] = norm(o.grau_absoluto); }
+  const ascAbs = norm(d.Ascendente.grau_absoluto);
+  const isDia = ((abs.Sun - ascAbs + 360) % 360) >= 180;
+  const signoDe = a => Math.floor(norm(a) / 30) % 12;
+  const signoAsc = signoDe(ascAbs);
+  const casaDe = a => ((signoDe(a) - signoAsc + 12) % 12) + 1;
+  const masculino = s => s % 2 === 0;                                   // fogo e ar
+  const distAng = (a, b) => { const x = Math.abs(norm(a) - norm(b)); return Math.min(x, 360 - x); };
+
+  const casa7 = (signoAsc + 6) % 12, casa6 = (signoAsc + 5) % 12;
+  const lugares = isDia
+    ? [1, 10, 11].concat(masculino(casa7) ? [7] : [], masculino(casa6) ? [6] : [])
+    : [1, 4, 7, 10, 5, 11, 2, 6];
+  const emLugar = a => lugares.includes(casaDe(a));
+  const cadente = a => fvCondicaoCasa(casaDe(a)) === 'cadente';
+  const sobRaios = id => id !== 'Sun' && distAng(abs[id], abs.Sun) < 15;
+  const bemSituado = id => !cadente(abs[id]) && !sobRaios(id);
+  const noProprioSigno = id => FV_DOMICILIO[signoDe(abs[id])] === id;
+  const configurados = (sA, sB) => [0, 2, 3, 4, 6].includes(Math.min((sA - sB + 12) % 12, (sB - sA + 12) % 12));
+  const luzSeita = isDia ? 'Sun' : 'Moon', outraLuz = isDia ? 'Moon' : 'Sun';
+
+  // pontos de partida, na ordem do texto
+  const fontes = [];
+  [luzSeita, outraLuz].forEach(id => { if (emLugar(abs[id])) fontes.push({ tipo: 'luz', id, abs: abs[id] }); });
+  if (d.Sizigia && d.Sizigia.grau_absoluto !== undefined) fontes.push({ tipo: 'sizigia', abs: norm(d.Sizigia.grau_absoluto) });
+  const fortunaAbs = norm(isDia ? ascAbs + abs.Moon - abs.Sun : ascAbs + abs.Sun - abs.Moon);
+  const espiritoAbs = norm(isDia ? ascAbs + abs.Sun - abs.Moon : ascAbs + abs.Moon - abs.Sun);
+  fontes.push({ tipo: 'fortuna', abs: fortunaAbs }, { tipo: 'espirito', abs: espiritoAbs });
+  fontes.push({ tipo: 'asc', abs: ascAbs });
+
+  const candidatosDe = (f) => {
+    const votos = {};
+    const dar = (id, motivo) => { if (id) (votos[id] = votos[id] || []).push(motivo); };
+    const s = signoDe(f.abs);
+    if (f.tipo === 'asc') { dar(FV_DOMICILIO[s], 'domicílio'); return votos; }
+    dar(fvSenhorDoTermo(f.abs), 'termo');
+    dar(fvSenhorDaExaltacao(s), 'exaltação');
+    dar(FV_TRIPLICIDADE[FV_ELEMENTOS[s % 4]][isDia ? 'dia' : 'noite'][0], 'triplicidade');
+    dar(FV_DOMICILIO[s], 'domicílio');
+    return votos;
+  };
+  const confirmacoes = (id) => {
+    const c = [];
+    if (fvCondicaoCasa(casaDe(abs[id])) === 'angular') c.push('em ângulo');
+    if (id !== 'Sun' && ((abs.Sun - abs[id] + 360) % 360) < 180) c.push('matutino');
+    if (FV_EXALTACAO[id] === signoDe(abs[id])) c.push('no próprio trono');
+    if (id !== luzSeita && configurados(signoDe(abs[id]), signoDe(abs[luzSeita]))) c.push('olha a luz da seita');
+    return c;
+  };
+
+  let escolhido = null, semConfirmacao = false;
+  for (const f of fontes) {
+    const votos = candidatosDe(f);
+    const validos = Object.keys(votos).filter(id => f.tipo === 'asc' || (emLugar(abs[id]) && configurados(signoDe(f.abs), signoDe(abs[id]))));
+    if (!validos.length) continue;
+    validos.sort((a, b) => (votos[b].length - votos[a].length) || (confirmacoes(b).length - confirmacoes(a).length));
+    escolhido = { fonte: f, id: validos[0], votos: votos[validos[0]], empate: validos.filter(id => votos[id].length === votos[validos[0]].length && confirmacoes(id).length === confirmacoes(validos[0]).length && id !== validos[0]) };
+    break;
+  }
+  if (!escolhido) {                                                     // ninguém passou no filtro: fica o mais votado do primeiro ponto
+    const f = fontes[0], votos = candidatosDe(f);
+    const ordem = Object.keys(votos).sort((a, b) => votos[b].length - votos[a].length);
+    if (!ordem.length) return null;
+    escolhido = { fonte: f, id: ordem[0], votos: votos[ordem[0]], empate: [] };
+    semConfirmacao = true;
+  }
+  const R = escolhido.id;
+
+  // anos-base
+  const bem = bemSituado(R);
+  const base = bem
+    ? { tipo: 'maiores', anos: FV_ANOS_MAIORES[R], motivo: 'bem situado (nem cadente nem sob os raios do Sol)' }
+    : { tipo: 'menores', n: FV_PLANETAS[R].anosMenores, anos: fvMenorRecorrencia(FV_PLANETAS[R].anosMenores),
+        motivo: cadente(abs[R]) ? 'cadente' : 'sob os raios do Sol' };
+
+  // testemunhas (só quando o senhor é um dos cinco planetas)
+  const testemunhas = [];
+  if (R !== 'Sun' && R !== 'Moon') {
+    Object.keys(FV_TESTEMUNHAS).filter(t => t !== R).forEach(t => {
+      const dist = (signoDe(abs[R]) - signoDe(abs[t]) + 12) % 12;      // o senhor está à frente de quem testemunha
+      if (![2, 3, 4, 6].includes(dist)) return;
+      const anos = FV_TESTEMUNHAS[t];
+      const benefico = t === 'Venus' || t === 'Jupiter';
+      let efeito = anos, motivo = 'acrescenta';
+      if (benefico && (cadente(abs[t]) || sobRaios(t))) { efeito = 0; motivo = cadente(abs[t]) ? 'benéfico cadente: sem efeito' : 'benéfico sob os raios do Sol: sem efeito'; }
+      else if (t === 'Saturn' || t === 'Mars') {
+        if (!noProprioSigno(t)) { efeito = -anos; motivo = 'fora da própria casa: tira'; }
+        else if (!bemSituado(t)) { efeito = 0; motivo = 'na própria casa, mas cadente ou sob os raios: o texto não prevê'; }
+        else motivo = 'bem e propriamente situado: acrescenta';
+      }
+      testemunhas.push({ id: t, efeito, motivo });
+    });
+  }
+  const total = Math.max(0, base.anos + testemunhas.reduce((a, t) => a + t.efeito, 0));
+  const nasc = entrada.nascimento ? new Date(entrada.nascimento) : null;
+  return {
+    isDia, lugares, fonte: escolhido.fonte, senhor: { id: R, signo: signoDe(abs[R]), casa: casaDe(abs[R]), grau: Math.floor(norm(abs[R]) % 30), votos: escolhido.votos, confirmacoes: confirmacoes(R), bem },
+    empate: escolhido.empate, semConfirmacao, base, testemunhas, total,
+    data: nasc ? new Date(nasc.getTime() + total * 365.25 * 86400000) : null, nascimento: nasc,
+    fonteSigno: signoDe(escolhido.fonte.abs), fonteCasa: casaDe(escolhido.fonte.abs), fonteGrau: Math.floor(norm(escolhido.fonte.abs) % 30)
+  };
+}
+
 /* Eventos de vida: idade em anos de cada evento (a data, quando foi digitada, manda) e a fase em que cai. */
 function fvIdadeDoEvento(ev, nascimento) {
   if (ev.data) {
@@ -171,7 +314,7 @@ function fvDistanciaTroca(dataEvento, dataTroca) {
 const FV_MARCACOES = { novo: 'começo de algo novo', fim: 'fim de algo antigo' };   // etiqueta do usuário: a ferramenta não interpreta
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fvTemposAscensao, fvDignidades, fvCalcularFases, fvIdadeDoEvento, fvFaseDoEvento, fvDistanciaTroca, fvAnosMesesDias, FV_SIGNOS };
+  module.exports = { fvCalcularDuracao, fvTemposAscensao, fvDignidades, fvCalcularFases, fvIdadeDoEvento, fvFaseDoEvento, fvDistanciaTroca, fvAnosMesesDias, FV_SIGNOS };
 }
 
 /* ==========================================
@@ -550,6 +693,46 @@ function fvBlocoLeitura(titulo, condicao, explica, fonte, origemHtml, aviso, r) 
     </div>`;
 }
 
+
+/* Bloco "Duração da vida" (Paulo, cap. 36): ponto de partida, senhor da vida, anos-base e testemunhas, tudo à vista com a regra do texto. */
+function fvBlocoDuracao(r) {
+  if (!r) return '<div class="texto-apagado" style="font-size:12px;">Sem dados suficientes para a duração da vida.</div>';
+  const f = r.fonte;
+  const iconePonto = f.tipo === 'luz' ? fvPlaneta(f.id, 22)
+    : f.tipo === 'sizigia' ? fvSizigia(22)
+    : f.tipo === 'fortuna' ? ((typeof getLotIconSVG === 'function') ? getLotIconSVG('fortune', 22) : '') 
+    : f.tipo === 'espirito' ? ((typeof getLotIconSVG === 'function') ? getLotIconSVG('spirit', 22) : '') : '';
+  const nomePonto = f.tipo === 'luz' ? '' : `<span>${FV_PONTO_NOME[f.tipo]}</span>`;
+  const S = r.senhor;
+  const base = r.base.tipo === 'maiores'
+    ? `<strong>${r.base.anos} anos</strong> <span class="texto-apagado">(anos maiores: ${r.base.motivo})</span>`
+    : `<strong>${fvFmtAnos(r.base.anos)}</strong> <span class="texto-apagado">(anos menores, ${r.base.n} anos, ${r.base.n} meses, ${r.base.n} dias e ${r.base.n} horas: ${r.base.motivo})</span>`;
+  const linhasTest = r.testemunhas.length ? r.testemunhas.map(t => `
+      <div style="${FV_LINHA} flex-wrap:wrap; font-size:13px; padding:3px 0;">${fvPlaneta(t.id, 22)}
+        <strong style="color:${t.efeito < 0 ? 'var(--terracota)' : 'inherit'};">${t.efeito > 0 ? '+' : (t.efeito < 0 ? '−' : '')}${Math.abs(t.efeito)} anos</strong>
+        <span class="texto-apagado" style="font-size:11.5px;">${t.motivo}</span>
+      </div>`).join('') : `<div class="texto-apagado" style="font-size:12px;">Nenhum planeta testemunha o senhor da vida${(S.id === 'Sun' || S.id === 'Moon') ? ' (o senhor é uma das luzes: valem só os anos dela)' : ''}.</div>`;
+  const notas = [];
+  if (r.semConfirmacao) notas.push('Nenhum candidato passou no filtro do texto (em lugar de negócio e configurado com o ponto); ficou o mais votado do primeiro ponto.');
+  if (r.empate.length) notas.push('Empate com ' + r.empate.map(id => FV_PLANETAS[id].nome).join(', ') + ': o texto não desempata.');
+  return `
+    <div style="font-size:15px; margin:6px 0 10px;"><strong>${fvFmtAnos(r.total)}</strong>${r.data ? ` <span class="texto-apagado" style="font-size:12px;">· até ${fvFmtData(r.data)}</span>` : ''}</div>
+    <div class="cartao">
+      <span class="rotulo">Ponto de partida, lugares de negócio: casas ${r.lugares.join(', ')}</span>
+      <div style="${FV_LINHA} font-size:13px; flex-wrap:wrap; margin-top:3px;">${iconePonto} ${nomePonto} <span>em</span> ${fvSigno(r.fonteSigno, 22)} <span>${r.fonteGrau}° · casa ${r.fonteCasa}</span></div>
+      <div style="margin-top:10px;"><span class="rotulo">Senhor da vida (oikodespotes)</span></div>
+      <div style="${FV_LINHA} font-size:13px; flex-wrap:wrap; margin-top:3px;">${fvPlaneta(S.id, 26)} <span>em</span> ${fvSigno(S.signo, 22)} <span>${S.grau}° · casa ${S.casa} · <strong>${fvCondicaoCasa(S.casa)}</strong></span></div>
+      <div class="texto-apagado" style="font-size:11.5px; margin-top:3px; line-height:1.6;">Contas (dignidades no ponto): ${S.votos.join(' · ')}${S.confirmacoes.length ? '<br>' + S.confirmacoes.join(' · ') : ''}</div>
+    </div>
+    <div class="cartao" style="margin-top:10px;">
+      <span class="rotulo">Anos do senhor</span>
+      <div style="font-size:13px; margin:3px 0 10px; line-height:1.8;">${base}</div>
+      <span class="rotulo">Planetas que testemunham o senhor</span>
+      <div style="margin-top:3px;">${linhasTest}</div>
+    </div>
+    ${notas.map(n => `<div class="texto-apagado" style="font-size:11.5px; margin-top:8px;">${n}</div>`).join('')}`;
+}
+
 function renderFasesVidaUI(container) {
   fvCarregarEventos();                                              // assíncrono: redesenha quando os eventos chegam
   const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
@@ -571,6 +754,7 @@ function renderFasesVidaUI(container) {
     ? [{ rotulo: 'material · social', r: rMat, icones: icoLum + icoSiz }]
     : [{ rotulo: 'material', r: rMat, icones: icoLum }].concat(rSoc ? [{ rotulo: 'social', r: rSoc, icones: icoSiz }] : []);
   const lista = fvEventosOrdenados(rMat.nascimento);
+  const duracao = fvCalcularDuracao({ dados: currentCalculatedData, nascimento: rMat.nascimento });
 
   const tabelaAscensao = `
     <table class="tabela-epoca">
@@ -602,6 +786,7 @@ function renderFasesVidaUI(container) {
             <div id="fvMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 260px;">
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('inteira')">Ferramenta inteira (sem cabeçalho)</div>
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('leituras')">Trocas na barra, luminar da seita e sizígia</div>
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('duracao')">Só a duração da vida</div>
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('eventos')">Só os eventos de vida</div>
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('ascensao')">Só os tempos de ascensão</div>
             </div>
@@ -638,6 +823,13 @@ function renderFasesVidaUI(container) {
           A regra exata de qual signo conta é hipótese em teste. Os tempos de ascensão são calculados por ascensão oblíqua, com obliquidade de 23,44° e 1 grau de ascensão igual a 1 ano.
           As tabelas antigas, como a de Valens com Áries 20, Câncer 33 e Capricórnio 27, são aproximações e ficam de 1 a 3 anos abaixo.
         </div>
+        </div>
+
+        <hr class="divisa">
+        <div id="fvParteDuracao">
+        <h3 class="titulo-secao">Duração da vida</h3>
+        <div class="texto-apagado" style="font-size:11.5px;">Paulo de Alexandria, Introdução, capítulo 36 (oikodespoteia). Só a duração, sem o destruidor.</div>
+        ${fvBlocoDuracao(duracao)}
         </div>
 
         <hr class="divisa">
@@ -702,6 +894,7 @@ if (typeof window !== "undefined") window.salvarFasesVidaNaGaleria = salvarFases
 const FV_PARTES_RELATORIO = {
   inteira: { id: 'fasesVidaResultsArea', nome: 'Fases da Vida' },
   leituras: { id: 'fvParteLeituras', nome: 'Fases da Vida: trocas na barra, luminar da seita e sizígia' },
+  duracao: { id: 'fvParteDuracao', nome: 'Fases da Vida: duração da vida' },
   eventos: { id: 'fvParteEventos', nome: 'Fases da Vida: eventos de vida' },
   ascensao: { id: 'fvParteAscensao', nome: 'Fases da Vida: tempos de ascensão' }
 };
