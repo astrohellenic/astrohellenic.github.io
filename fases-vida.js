@@ -163,7 +163,7 @@ function fvCalcularFases(entrada) {
       Cadente ou sob os raios: anos menores "da menor recorrência" (N anos, N meses, N dias e N horas). Se o Sol ou a Lua têm relação com o senhor,
       o Sol dá 120 e a Lua 108 (leitura provisória: TROCA os anos do senhor).
    5. Quem testemunha o senhor (conjunção ou aspecto de signos inteiros, sem direção; o senhor é um dos cinco planetas): Vênus +8, Mercúrio +20,
-      Júpiter +12; Saturno +30 e Marte +15 se em casa (domicílio), e tiram os mesmos anos se fora de casa. Benéficos (Vênus e Júpiter) cadentes ou
+      Júpiter +12; Saturno +30 e Marte +15 se em casa (domicílio), e tiram os mesmos anos se fora de casa. Os que só acrescentam (Vênus, Júpiter e Mercúrio) cadentes ou
       sob os raios do Sol não valem. "Subtrativo em números" ainda não é calculado. */
 const FV_ANOS_MAIORES = { Sun: 120, Moon: 108, Saturn: 57, Jupiter: 79, Mars: 66, Venus: 82, Mercury: 76 };
 const FV_TESTEMUNHAS = { Venus: 8, Mercury: 20, Jupiter: 12, Saturn: 30, Mars: 15 };    // anos que cada um acrescenta (Saturno e Marte tiram, se fora de casa)
@@ -306,7 +306,7 @@ function fvCalcularDuracao(entrada) {
     Object.keys(FV_TESTEMUNHAS).filter(t => t !== R).forEach(t => {
       if (!configurados(signoDe(abs[t]), signoDe(abs[R]))) return;
       const anos = FV_TESTEMUNHAS[t];
-      const benefico = t === 'Venus' || t === 'Jupiter';
+      const benefico = t === 'Venus' || t === 'Jupiter' || t === 'Mercury';      // os que só acrescentam: cadente ou sob os raios não valem
       const bemT = bemSituado(t);
       let efeito = anos, motivo = 'acrescenta';
       if (benefico && !bemT) { efeito = 0; motivo = (cadente(abs[t]) ? 'benéfico cadente' : 'benéfico sob os raios do Sol') + ': sem serventia'; }
@@ -794,7 +794,7 @@ function fvBlocoDuracao(r) {
   if (r.semConfirmacao) notas.push('Nenhum candidato passou no filtro do texto (em lugar de negócio e configurado com o ponto); ficou o mais votado do primeiro ponto.');
   if (r.empate.length) notas.push('Empate com ' + r.empate.map(id => FV_PLANETAS[id].nome).join(', ') + ': o texto não desempata.');
   const regras = `<div class="texto-apagado" style="font-size:11.5px; margin-top:10px; line-height:1.6;">
-      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus e Júpiter cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor: dão os anos deles em vez dos anos do senhor (leitura provisória). "Subtrativo em números" não é calculado.</div>`;
+      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor: dão os anos deles em vez dos anos do senhor (leitura provisória). "Subtrativo em números" não é calculado.</div>`;
   return `${resultado}
     <h4 class="titulo-secao" style="margin-top:18px;">Cálculos</h4>
     ${lugares}${pontos}
