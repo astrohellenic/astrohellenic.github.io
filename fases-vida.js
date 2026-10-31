@@ -846,8 +846,9 @@ function renderFasesVidaUI(container) {
             </button>
             <div id="fvMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 260px;">
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('inteira')">Ferramenta inteira (sem cabeçalho)</div>
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('cima')">Só a metade de cima (regentes da triplicidade)</div>
+              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('baixo')">Só a metade de baixo (duração da vida)</div>
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('leituras')">Trocas na barra, luminar da seita e sizígia</div>
-              <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('duracao')">Só a duração da vida</div>
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('eventos')">Só os eventos de vida</div>
               <div class="item-menu" onclick="capturarFasesVidaParaRelatorio('ascensao')">Só os tempos de ascensão</div>
             </div>
@@ -857,6 +858,7 @@ function renderFasesVidaUI(container) {
         ${(typeof montarCabecalhoMandalaImagemHTML === 'function') ? montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true }) : ''}
 
         <div id="fasesVidaResultsArea">
+        <div id="fvMetadeCima">
         <hr class="divisa">
         <div id="fvParteLeituras">
         <div style="font-size:13px; line-height:2;">
@@ -896,6 +898,7 @@ function renderFasesVidaUI(container) {
         <div id="fvParteAscensao">
         <h3 class="titulo-secao">Tempos de ascensão</h3>
         <div class="envolve-tabela">${tabelaAscensao}</div>
+        </div>
         </div>
 
         <hr class="divisa">
@@ -956,8 +959,9 @@ if (typeof window !== "undefined") window.salvarFasesVidaNaGaleria = salvarFases
 /* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho), inteiros ou por partes (mesmo menu da Liberação e dos Lotes). */
 const FV_PARTES_RELATORIO = {
   inteira: { id: 'fasesVidaResultsArea', nome: 'Fases da Vida' },
+  cima: { id: 'fvMetadeCima', nome: 'Fases da Vida: regentes da triplicidade (metade de cima)' },
+  baixo: { id: 'fvParteDuracao', nome: 'Fases da Vida: duração da vida (metade de baixo)' },
   leituras: { id: 'fvParteLeituras', nome: 'Fases da Vida: trocas na barra, luminar da seita e sizígia' },
-  duracao: { id: 'fvParteDuracao', nome: 'Fases da Vida: duração da vida' },
   eventos: { id: 'fvParteEventos', nome: 'Fases da Vida: eventos de vida' },
   ascensao: { id: 'fvParteAscensao', nome: 'Fases da Vida: tempos de ascensão' }
 };
