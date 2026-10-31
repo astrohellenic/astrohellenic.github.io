@@ -161,8 +161,8 @@ function fvCalcularFases(entrada) {
       do astrólogo: soma tudo (contas de dignidade no ponto + pivô + matutino + trono + olha a luz da seita) e vence quem tem mais.
    4. Anos. Bem situado (nem cadente nem sob os raios do Sol): anos maiores (Saturno 57, Júpiter 79, Marte 66, Vênus 82, Mercúrio 76; Sol 120, Lua 108).
       Cadente ou sob os raios: anos menores "da menor recorrência" (N anos, N meses, N dias e N horas). Se o Sol ou a Lua têm relação com o senhor,
-      o Sol dá 120 e a Lua 108 (leitura provisória: TROCA os anos do senhor).
-   5. Quem testemunha o senhor (conjunção ou aspecto de signos inteiros, sem direção; o senhor é um dos cinco planetas): Vênus +8, Mercúrio +20,
+      o Sol dá 120 e a Lua 108 e a conta FECHA aí (se os dois, vale o luminar da seita).
+   5. Só quando o senhor é um dos cinco planetas e nem o Sol nem a Lua têm relação com ele: quem o testemunha (conjunção ou aspecto de signos inteiros, sem direção): Vênus +8, Mercúrio +20,
       Júpiter +12; Saturno +30 e Marte +15 se em casa (domicílio), e tiram os mesmos anos se fora de casa. Os que só acrescentam (Vênus, Júpiter e Mercúrio) cadentes ou
       sob os raios do Sol não valem. "Subtrativo em números" ainda não é calculado. */
 const FV_ANOS_MAIORES = { Sun: 120, Moon: 108, Saturn: 57, Jupiter: 79, Mars: 66, Venus: 82, Mercury: 76 };
@@ -297,7 +297,7 @@ function fvCalcularDuracao(entrada) {
   let trocaLuz = null;
   if (R !== 'Sun' && R !== 'Moon') {
     const rel = [luzSeita, outraLuz].filter(l => configurados(signoDe(abs[l]), signoDe(abs[R])));
-    if (rel.length) { const l = rel[0]; trocaLuz = { id: l, figura: nomeFigura(signoDe(abs[l]), signoDe(abs[R])) }; base = { tipo: 'luz', anos: FV_ANOS_MAIORES[l], luz: l, motivo: `${FV_PLANETAS[l].nome} em relação com o senhor (${trocaLuz.figura}): dá os anos dela` }; }
+    if (rel.length) { const l = rel[0]; trocaLuz = { id: l, figura: nomeFigura(signoDe(abs[l]), signoDe(abs[R])) }; base = { tipo: 'luz', anos: FV_ANOS_MAIORES[l], luz: l, motivo: `${FV_PLANETAS[l].nome} em relação com o senhor (${trocaLuz.figura}): a conta fecha nos anos dele(a)` }; }
   }
 
   // testemunhas (só quando o senhor é um dos cinco planetas): conjunção ou aspecto, sem direção
@@ -318,7 +318,7 @@ function fvCalcularDuracao(entrada) {
     });
   }
   const somaTest = testemunhas.reduce((a, t) => a + t.efeito, 0);
-  const total = Math.max(0, base.anos + somaTest);
+  const total = trocaLuz ? base.anos : Math.max(0, base.anos + somaTest);   // Sol ou Lua em relação com o senhor: a conta fecha nos anos deles, sem somar testemunhas
   let semTroca = null;                                                   // o que daria sem a troca pelos anos do Sol ou da Lua (pra comparar)
   if (trocaLuz) { const anosSenhor = bem ? FV_ANOS_MAIORES[R] : fvMenorRecorrencia(FV_PLANETAS[R].anosMenores); semTroca = { anosSenhor, total: Math.max(0, anosSenhor + somaTest) }; }
   const nasc = entrada.nascimento ? new Date(entrada.nascimento) : null;
@@ -758,15 +758,15 @@ function fvBlocoDuracao(r) {
       <div style="font-size:13px; margin:3px 0 10px; line-height:1.8;">${r.base.tipo === 'maiores'
         ? `<strong>${r.base.anos} anos</strong> <span class="texto-apagado">(anos maiores: ${r.base.motivo})</span>`
         : r.base.tipo === 'luz'
-        ? `<strong>${r.base.anos} anos</strong> <span class="texto-apagado">(${r.base.motivo}; leitura provisória)</span>`
+        ? `<strong>${r.base.anos} anos</strong> <span class="texto-apagado">(${r.base.motivo})</span>`
         : `<strong>${fvFmtAnos(r.base.anos)}</strong> <span class="texto-apagado">(anos menores, ${r.base.n} anos, ${r.base.n} meses, ${r.base.n} dias e ${r.base.n} horas: ${r.base.motivo})</span>`}</div>
-      ${r.semTroca ? `<div class="texto-apagado" style="font-size:11.5px; margin:-4px 0 10px;">Sem essa troca: o senhor daria ${fvFmtAnos(r.semTroca.anosSenhor)} e o total seria ${fvFmtAnos(r.semTroca.total)}.</div>` : ''}
+      ${r.semTroca ? `<div class="texto-apagado" style="font-size:11.5px; margin:-4px 0 10px;">Sem essa relação, o senhor daria ${fvFmtAnos(r.semTroca.anosSenhor)} e, somadas as testemunhas, o total seria ${fvFmtAnos(r.semTroca.total)}.</div>` : ''}
       <span class="rotulo">Quem testemunha o senhor</span>
-      <div style="margin-top:3px;">${r.testemunhas.length ? r.testemunhas.map(t => `
+      <div style="margin-top:3px;">${r.trocaLuz ? '<div class="texto-apagado" style="font-size:12px;">Não se somam: com o Sol ou a Lua em relação com o senhor, a conta já está completa.</div>' : (r.testemunhas.length ? r.testemunhas.map(t => `
         <div style="${FV_LINHA} flex-wrap:wrap; font-size:13px; padding:3px 0;">${fvPlaneta(t.id, 22)}
           <strong style="color:${t.efeito < 0 ? 'var(--terracota)' : 'inherit'};">${t.efeito > 0 ? '+' : (t.efeito < 0 ? '−' : '')}${Math.abs(t.efeito)} anos</strong>
           <span class="texto-apagado" style="font-size:11.5px;">${t.figura}, casa ${t.casa}: ${t.motivo}</span>
-        </div>`).join('') : `<div class="texto-apagado" style="font-size:12px;">Ninguém${(S.id === 'Sun' || S.id === 'Moon') ? ' (o senhor é uma das luzes: valem só os anos dela)' : ''}.</div>`}</div>
+        </div>`).join('') : `<div class="texto-apagado" style="font-size:12px;">Ninguém${(S.id === 'Sun' || S.id === 'Moon') ? ' (o senhor é uma das luzes: valem só os anos dela)' : ''}.</div>`)}</div>
     </div>`;
 
   // ---- cálculos ----
@@ -794,7 +794,7 @@ function fvBlocoDuracao(r) {
   if (r.semConfirmacao) notas.push('Nenhum candidato passou no filtro do texto (em lugar de negócio e configurado com o ponto); ficou o mais votado do primeiro ponto.');
   if (r.empate.length) notas.push('Empate com ' + r.empate.map(id => FV_PLANETAS[id].nome).join(', ') + ': o texto não desempata.');
   const regras = `<div class="texto-apagado" style="font-size:11.5px; margin-top:10px; line-height:1.6;">
-      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor: dão os anos deles em vez dos anos do senhor (leitura provisória). "Subtrativo em números" não é calculado.</div>`;
+      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor (se os dois, o luminar da seita): a conta fecha nos anos dele (120 ou 108), sem somar testemunhas; as testemunhas só somam quando o senhor é um dos cinco planetas e nenhuma luz tem relação com ele. "Subtrativo em números" não é calculado.</div>`;
   return `${resultado}
     <h4 class="titulo-secao" style="margin-top:18px;">Cálculos</h4>
     ${lugares}${pontos}
