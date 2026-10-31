@@ -116,22 +116,14 @@ function acharPeriodo(lista, data, inicio, fim) {
    - do início até a troca: enche e muda de cor (azul, ocre, terracota) até chegar na troca;
    - da troca em diante: continua em azul, sem fim (lado direito aberto, com uma setinha), e só avança conforme o tempo passa
      sobre a escala dada (inicio ate escalaFim; a troca fica na proporção dela).
-   fimVida (opcional): se a pessoa quiser mostrar o fim, a parte azul termina nessa data, sem setinha.
    momento = referência opcional (padrão: agora). */
-function barraTempoComTroca(inicio, troca, escalaFim, estilo, momento, fimVida) {
+function barraTempoComTroca(inicio, troca, escalaFim, estilo, momento) {
   const agora = momento ? new Date(momento) : new Date();
   const clamp = v => Math.max(0, Math.min(1, v));
   const f1 = clamp((agora - inicio) / (troca - inicio));
   const f2 = clamp((agora - troca) / (escalaFim - troca));
   const pTroca = clamp((troca - inicio) / (escalaFim - inicio)) * 100;
   const cor1 = corDoTempo(f1), azul = 'var(--azul-egipcio-claro)';
-  if (fimVida) {                         // com fim conhecido (ex.: a duração da vida): a parte azul termina ali, sem setinha
-    const pFim = Math.max(pTroca + 0.5, clamp((fimVida - inicio) / (escalaFim - inicio)) * 100);
-    const f2fim = clamp((agora - troca) / (fimVida - troca));
-    return `<div style="display: flex; align-items: center; ${estilo || ''}">
-    <div style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; border: 1px solid ${cor1}; box-sizing: border-box;"><div style="height: 100%; width: ${(f1 * 100).toFixed(2)}%; background: ${cor1};"></div></div>
-    <div style="width: ${(pFim - pTroca).toFixed(3)}%; flex: none; height: 5px; border: 1px solid ${azul}; border-left: 0; box-sizing: border-box;"><div style="height: 100%; width: ${(f2fim * 100).toFixed(2)}%; background: ${azul};"></div></div></div>`;
-  }
   return `<div style="display: flex; align-items: center; ${estilo || ''}">
     <div style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; border: 1px solid ${cor1}; box-sizing: border-box;"><div style="height: 100%; width: ${(f1 * 100).toFixed(2)}%; background: ${cor1};"></div></div>
     <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>

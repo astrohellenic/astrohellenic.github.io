@@ -346,13 +346,7 @@ let fvEventos = [];
 let fvEventosMapaId = null;     // mapa a que fvEventos pertence (null = nenhum mapa salvo em tela)
 let fvEventosErro = '';
 
-/* A duração da vida só aparece na barra de cima quando o astrólogo liga, no bloco "Duração da vida" (caso a caso, na consulta). Ao abrir a ferramenta volta a ficar desligado. */
-let fvValidadeNaBarra = false;
-function fvAlternarValidadeNaBarra(ligado) { fvValidadeNaBarra = !!ligado; fvReRenderizar(); }
-if (typeof window !== 'undefined') window.fvAlternarValidadeNaBarra = fvAlternarValidadeNaBarra;
-
 function iniciarModuloFasesVida() {
-  fvValidadeNaBarra = false;
   const container = document.getElementById('mandala-container');
   if (!container) return;
   if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData) {
@@ -472,21 +466,14 @@ function fvAncoraRotulo(idadeTroca, hojeIdade) {
 }
 
 /* BARRA DE PROGRESSO (uma por leitura): barra única do nascimento até a troca do senhor da triplicidade (enche e muda de cor, sem número)
-   e, dali em diante, azul sem fim, avançando com os anos da vida. Escala de 0 a 90 anos, a mesma da barra de trocas. Com a duração ligada (bloco
-   "Duração da vida"), a parte azul termina no fim da duração e a escala cresce se ela passar de 90. */
-function fvBarrasProgresso(leituras, duracao, max) {
-  const comFim = !!(fvValidadeNaBarra && duracao && duracao.data);
-  const barras = leituras.map((l, i) => {
+   e, dali em diante, azul sem fim, avançando com os anos da vida. Escala de 0 a 90 anos, a mesma da barra de trocas. */
+function fvBarrasProgresso(leituras) {
+  const barras = leituras.map(l => {
     const nasc = l.r.nascimento;
-    const fimEscala = new Date(nasc.getTime() + max * 365.25 * 86400000);
-    const ultima = i === leituras.length - 1;
-    const pFim = comFim ? Math.min(100, (duracao.total / max) * 100) : 0;
-    const rotuloFim = (comFim && ultima)
-      ? `<span style="position:absolute; left:${pFim}%; top:12px; transform:translateX(-100%); font-size:9.5px; font-weight:700; color:var(--azul-egipcio-claro); white-space:nowrap;">duração: ${fvFmtAnos(duracao.total)}</span>` : '';
-    return `<div style="position:relative; margin:12px 6px ${comFim && ultima ? 26 : 0}px 58px;">
+    const fim90 = new Date(nasc.getTime() + 90 * 365.25 * 86400000);
+    return `<div style="position:relative; margin:12px 6px 0 58px;">
       <span style="position:absolute; left:-52px; top:-6px; width:48px; display:flex; justify-content:flex-end; gap:2px;">${l.icones || ''}</span>
-      ${barraTempoComTroca(nasc, l.r.troca.data, fimEscala, '', l.r.hoje, comFim ? duracao.data : null)}
-      ${rotuloFim}
+      ${barraTempoComTroca(nasc, l.r.troca.data, fim90, '', l.r.hoje)}
     </div>`;
   }).join('');
   return `<div id="fvBarrasProgresso">${barras}</div>`;
@@ -494,8 +481,8 @@ function fvBarrasProgresso(leituras, duracao, max) {
 
 /* Barra de 0 a 90 anos: uma faixa por leitura (fase 1 | fase 2, dividida na troca dela, com legenda), "hoje" e os eventos (número do evento embaixo).
    leituras: [{ rotulo, r }]. Se as duas coincidem vem uma faixa só, com as duas legendas. */
-function fvLinhaDoTempo(leituras, eventos, hojeIdade, max) {
-  const MAX = max || 90;
+function fvLinhaDoTempo(leituras, eventos, hojeIdade) {
+  const MAX = 90;
   const pc = (anos) => Math.max(0, Math.min(100, (anos / MAX) * 100));
   const nFaixas = leituras.length;
   const topoFaixa = (i) => 14 + i * 34;
@@ -508,7 +495,7 @@ function fvLinhaDoTempo(leituras, eventos, hojeIdade, max) {
       <span style="position:absolute; left:${pc(l.r.troca.idade / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 1</span>
       <span style="position:absolute; left:${pc((l.r.troca.idade + MAX) / 2)}%; top:${topoFaixa(i) - 13}px; transform:translateX(-50%); font-size:9.5px; font-weight:700;">fase 2</span>
       <span style="position:absolute; left:${pc(l.r.troca.idade)}%; top:${topoFaixa(i) + 15}px; transform:translateX(${fvAncoraRotulo(l.r.troca.idade, hojeIdade)}); font-size:9.5px; font-weight:700; color:var(--terracota); white-space:nowrap; padding:0 3px;" title="Troca, ${fvAnosMeses(l.r.nascimento, l.r.troca.data)}">troca ${l.rotulo}: ${fvAnosMeses(l.r.nascimento, l.r.troca.data)}</span>`).join('');
-  const ticks = Array.from({ length: Math.floor(MAX / 10) + 1 }, (_, k) => k * 10).map(a =>
+  const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(a =>
     `<span style="position:absolute; left:${pc(a)}%; transform:translateX(-50%); font-size:9.5px; top:${ticksTop + 14}px;">${a}</span>`).join('');
   const marcas = eventos.map((e, i) => `
       <div style="position:absolute; left:${pc(e.idade)}%; top:4px; height:${fimFaixas + 4}px; width:0; border-left:2px solid var(--terracota);" title="${escapeHtml(e.titulo)}, ${fvFmtAnos(e.idade)}"></div>
@@ -829,7 +816,6 @@ function renderFasesVidaUI(container) {
     : [{ rotulo: 'material', r: rMat, icones: icoLum }].concat(rSoc ? [{ rotulo: 'social', r: rSoc, icones: icoSiz }] : []);
   const lista = fvEventosOrdenados(rMat.nascimento);
   const duracao = fvCalcularDuracao({ dados: currentCalculatedData, nascimento: rMat.nascimento });
-  const maxEscala = (fvValidadeNaBarra && duracao) ? Math.max(90, Math.ceil(duracao.total / 10) * 10) : 90;
 
   const tabelaAscensao = `
     <table class="tabela-epoca">
@@ -881,9 +867,9 @@ function renderFasesVidaUI(container) {
 
         <hr class="divisa">
         <h3 class="titulo-secao">Trocas na barra</h3>
-        <div class="texto-apagado" style="font-size:11.5px;">Hoje: ${fvFmtData(rMat.hoje)}, idade ${fvAnosMeses(rMat.nascimento, rMat.hoje)}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a ${maxEscala} anos.</div>
-        ${fvBarrasProgresso(leituras, duracao, maxEscala)}
-        ${fvLinhaDoTempo(leituras, lista, rMat.idadeHoje, maxEscala)}
+        <div class="texto-apagado" style="font-size:11.5px;">Hoje: ${fvFmtData(rMat.hoje)}, idade ${fvAnosMeses(rMat.nascimento, rMat.hoje)}. A vida tem duas fases; não existe terceira. Escala da barra: 0 a 90 anos.</div>
+        ${fvBarrasProgresso(leituras)}
+        ${fvLinhaDoTempo(leituras, lista, rMat.idadeHoje)}
 
         <hr class="divisa">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr)); gap:24px; align-items:start;">
@@ -916,7 +902,6 @@ function renderFasesVidaUI(container) {
         <div id="fvParteDuracao">
         <h3 class="titulo-secao">Duração da vida</h3>
         <div class="texto-apagado" style="font-size:11.5px;">Paulo de Alexandria, Introdução, capítulo 36 (oikodespoteia). Só a duração, sem o destruidor.</div>
-        ${duracao ? `<div data-html2canvas-ignore="true" style="margin:8px 0 2px;"><label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;"><input type="checkbox" class="bolinha-marcar" ${fvValidadeNaBarra ? 'checked' : ''} onchange="fvAlternarValidadeNaBarra(this.checked)"> Mostrar a duração na barra de cima</label></div>` : ''}
         ${fvBlocoDuracao(duracao)}
         </div>
 
