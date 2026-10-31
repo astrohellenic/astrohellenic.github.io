@@ -30,7 +30,8 @@ const UNIDADES_TEMPO = {
   meses: { ms: 30 * 86400000, um: 'mês', varios: 'meses' },
   dias: { ms: 86400000, um: 'dia', varios: 'dias' },
   horas: { ms: 3600000, um: 'hora', varios: 'horas' },
-  minutos: { ms: 60000, um: 'minuto', varios: 'minutos' }
+  minutos: { ms: 60000, um: 'minuto', varios: 'minutos' },
+  anosCivis: { ms: 365.25 * 86400000, um: 'ano', varios: 'anos', inteiro: true }   // anos de calendário (idade e duração da vida), em números inteiros
 };
 function numeroTempo(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ','); }
 
@@ -42,7 +43,7 @@ function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade, momento) {
   const pct = agora >= fim ? 100 : Math.floor(f * 100);
   const h = (estilo && /height:\s*3px/.test(estilo)) ? 3 : 5;
   const u = UNIDADES_TEMPO[unidade];
-  const total = u ? Math.round(((fim - inicio) / u.ms) * 2) / 2 : 0;
+  const total = u ? (u.inteiro ? Math.round((fim - inicio) / u.ms) : Math.round(((fim - inicio) / u.ms) * 2) / 2) : 0;
   const passou = u ? (agora >= fim ? total : Math.floor(Math.min(f * total, total))) : 0; // terminado = total cheio (ex.: 30,5/30,5, não 30/30,5)
   const fimTexto = u ? `<span style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap; color: ${cor};">${numeroTempo(passou)}/${numeroTempo(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
   return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>${fimTexto}</div>`;

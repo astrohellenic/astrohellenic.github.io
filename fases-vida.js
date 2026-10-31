@@ -902,6 +902,7 @@ function renderFasesVidaUI(container) {
         <div id="fvParteDuracao">
         <h3 class="titulo-secao">Duração da vida</h3>
         <div class="texto-apagado" style="font-size:11.5px;">Paulo de Alexandria, Introdução, capítulo 36 (oikodespoteia). Só a duração, sem o destruidor.</div>
+        ${duracao && duracao.data ? barraTempo(rMat.nascimento, duracao.data, 'margin: 12px 0 4px;', 11, 'anosCivis', rMat.hoje) : ''}
         ${fvBlocoDuracao(duracao)}
         </div>
 
