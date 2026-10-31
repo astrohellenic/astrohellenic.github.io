@@ -82,6 +82,12 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
     capturada: true,
     telaOrigem: 'Ferramentas > Fases da Vida'
   },
+  duracaoVida: {
+    label: 'Duração da Vida (o resultado que você deixou pronto na ferramenta)',
+    tituloIndice: 'Duração da Vida',
+    capturada: true,
+    telaOrigem: 'Ferramentas > Duração da Vida'
+  },
   retificacaoSizigia: {
     label: 'Achador de horário pela sizígia (o resultado que você deixou pronto na ferramenta)',
     tituloIndice: 'Achador de horário pela sizígia',
@@ -199,6 +205,7 @@ const RELATORIO_CATALOGO_BLOCOS = RELATORIO_BLOCOS_PADRAO.concat([
   { id: 'horas', type: 'ferramenta' },
   { id: 'isopsefia', type: 'ferramenta' },
   { id: 'fasesVida', type: 'ferramenta' },
+  { id: 'duracaoVida', type: 'ferramenta' },
   { id: 'retificacaoSizigia', type: 'ferramenta' },
   { id: 'catarche', type: 'ferramenta' },
   { id: 'lotes_calculados', type: 'ferramenta' },
