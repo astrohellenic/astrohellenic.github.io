@@ -125,21 +125,44 @@ function calcularAscensaoObliqua(longitudeEclipticaGraus, latitudeGraus) {
   return normalizar360(ra - ad);
 }
 
+/* Tempo de ascensão de cada um dos 12 signos (em anos, 1° de ascensão = 1 ano) na latitude dada: a ascensão oblíqua do fim do signo menos a do começo.
+   (Os antigos tiravam isso de tabelas por clima, só do hemisfério norte; aqui sai da conta, para qualquer latitude, norte ou sul.) */
+let _temposSignosDirCache = { lat: null, tempos: null };
+function temposAscensaoDosSignosDir(latitudeGraus) {
+  if (_temposSignosDirCache.lat === latitudeGraus) return _temposSignosDirCache.tempos;
+  const tempos = [];
+  for (let s = 0; s < 12; s++) {
+    const ini = calcularAscensaoObliqua(s * 30, latitudeGraus), fim = calcularAscensaoObliqua((s + 1) * 30, latitudeGraus);
+    tempos.push(normalizar360(fim - ini));
+  }
+  _temposSignosDirCache = { lat: latitudeGraus, tempos };
+  return tempos;
+}
+
 /**
  * Tempo de ascensão (em "anos", pela convenção 1° = 1 ano) entre dois
- * graus absolutos da eclíptica, percorridos na ordem direta dos signos
- * (sentido do início ao fim, sempre para frente).
+ * graus absolutos da eclíptica, percorridos na ordem direta dos signos.
+ * RÉGUA DE PAULO E DE VALENS (Paulo, cap. 34; Valens I.7): o tempo de ascensão
+ * do SIGNO dividido IGUALMENTE pelos seus 30 graus (Escorpião sobe em 35 anos:
+ * 14 meses por grau). Não calcula grau por grau. (Antes de 31/10/2026 esta
+ * função calculava a ascensão oblíqua de cada grau; a diferença é de dias a
+ * poucos meses.)
  * @param {number} grauInicioAbs - grau absoluto de partida (0-360)
  * @param {number} grauFimAbs - grau absoluto de chegada (0-360)
  * @param {number} latitudeGraus - latitude do nativo (positiva=N, negativa=S)
- * @returns {number} anos decorridos (sempre positivo, considera volta ao
- *   zodíaco se o fim "está atrás" do início em termos de OA)
+ * @returns {number} anos decorridos (sempre positivo, dando a volta no
+ *   zodíaco se o fim "está atrás" do início)
  */
 function tempoAscensionalEntreGraus(grauInicioAbs, grauFimAbs, latitudeGraus) {
-  const oaInicio = calcularAscensaoObliqua(grauInicioAbs, latitudeGraus);
-  const oaFim = calcularAscensaoObliqua(grauFimAbs, latitudeGraus);
-  let anos = oaFim - oaInicio;
-  if (anos < 0) anos += 360;
+  const tempos = temposAscensaoDosSignosDir(latitudeGraus);
+  let falta = normalizar360(grauFimAbs - grauInicioAbs), x = normalizar360(grauInicioAbs), anos = 0;
+  while (falta > 1e-9) {
+    const signo = Math.floor((x + 1e-9) / 30) % 12, ate = (signo + 1) * 30;
+    const passo = Math.min(ate - x, falta);
+    anos += (passo / 30) * tempos[signo];
+    x = normalizar360(x + passo);
+    falta -= passo;
+  }
   return anos;
 }
 

@@ -22,7 +22,7 @@ for (let i = 0; i < 300; i++) {
   ctx.currentGeo = { lat };
   ctx.__s = start; ctx.__n = nasc; ctx.__d = {};
   const orig = vm.runInContext('calcular12SignosCircumambulatoria(__s, __n, __d)', ctx);
-  igual(orig.map(l => { const c = Object.assign({}, l); delete c.termPlanetSym; return c; }), rq.rqCircumambulacao(start, nasc, lat), 'circumambulação #' + i);   // o símbolo do planeta é só de tela e não foi copiado
+  igual(orig.map(l => { const c = Object.assign({}, l); delete c.termPlanetSym; delete c.effStartDeg; return c; }), rq.rqCircumambulacao(start, nasc, lat), 'circumambulação #' + i);   // o símbolo do planeta e o grau de início exibido (effStartDeg) são só de tela e não foi copiado
 }
 // Liberação: L2/L3/L4 e o L1 percorrido como em renderLiberacaoUI
 for (let i = 0; i < 300; i++) {

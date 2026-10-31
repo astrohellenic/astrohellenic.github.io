@@ -45,10 +45,26 @@ function rqDiferencaAscensional(decl, lat) {
 function rqAscensaoObliqua(lon, lat) {
   return rqNorm(rqAscensaoReta(lon) - rqDiferencaAscensional(rqDeclinacao(lon), lat));
 }
-/* anos (1° de ascensão = 1 ano) entre dois graus absolutos, sempre para frente */
+/* anos (1° de ascensão = 1 ano) entre dois graus absolutos, sempre para frente. Igual a tempoAscensionalEntreGraus (direcoes.js): régua de Paulo e de
+   Valens, o tempo de ascensão do signo dividido igualmente pelos 30 graus. */
+let _rqTemposSignos = { lat: null, tempos: null };
+function rqTemposSignos(lat) {
+  if (_rqTemposSignos.lat === lat) return _rqTemposSignos.tempos;
+  const tempos = [];
+  for (let s = 0; s < 12; s++) tempos.push(rqNorm(rqAscensaoObliqua((s + 1) * 30, lat) - rqAscensaoObliqua(s * 30, lat)));
+  _rqTemposSignos = { lat, tempos };
+  return tempos;
+}
 function rqTempoAscensional(grauInicioAbs, grauFimAbs, lat) {
-  let anos = rqAscensaoObliqua(grauFimAbs, lat) - rqAscensaoObliqua(grauInicioAbs, lat);
-  if (anos < 0) anos += 360;
+  const tempos = rqTemposSignos(lat);
+  let falta = rqNorm(grauFimAbs - grauInicioAbs), x = rqNorm(grauInicioAbs), anos = 0;
+  while (falta > 1e-9) {
+    const signo = Math.floor((x + 1e-9) / 30) % 12, ate = (signo + 1) * 30;
+    const passo = Math.min(ate - x, falta);
+    anos += (passo / 30) * tempos[signo];
+    x = rqNorm(x + passo);
+    falta -= passo;
+  }
   return anos;
 }
 
