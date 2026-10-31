@@ -193,17 +193,25 @@ function dvCalcular(entrada) {
 
 
 /* ---------- Crises no caminho (Paulo, caps. 34 e 35): o que pode interromper a vida antes da duração ----------
-   Caminham ao mesmo tempo o Sol, a Lua e o Horóscopo, do grau em que nasceram, pela ordem dos signos; o tempo vem da ascensão oblíqua
-   (a mesma conta da Circumambulação: 1° de ascensão = 1 ano, tempoAscensionalEntreGraus em direcoes.js). O contato acontece quando quem caminha chega ao
-   ponto do raio do astro (grau do astro + ângulo). Alvos: Marte e Saturno (todas as figuras); o Sol e a Lua entre si; para as luzes, os nodos (conjunção e
-   oposição). Esquerda e direita, pelo exemplo de Paulo (Sol em Escorpião encontra, no mesmo grau, Marte em Leão: "quadrado à esquerda"): o raio lançado
-   para a frente do astro (grau + 60 ou + 90) é a ESQUERDA; para trás (grau − 60 ou − 90), a DIREITA.
-   Níveis: 2 traz a morte (conjunção, oposição e quadratura à esquerda com maléfico, e Sol com Lua); 1 perigosa (sextil à esquerda, e luz com nodo,
-   e o laço da Lua se desfazendo); 0 segura (trígono, e sextil e quadratura à direita). */
+   Só o que o texto nomeia (cap. 34, "Sobre as crises"):
+   - Quem caminha: o Sol e a Lua, do grau em que nasceram, pela ordem dos signos; o Horóscopo "às vezes", e só com os raios dos maléficos. O tempo vem da
+     ascensão oblíqua (a mesma conta da Circumambulação: 1° de ascensão = 1 ano, tempoAscensionalEntreGraus em direcoes.js). O contato acontece quando quem
+     caminha chega ao ponto do raio do astro (grau do astro + ângulo).
+   - Pares que o texto nomeia: de DIA o Sol com Marte ("perigosa"); de NOITE a Lua com Saturno ("crise assustadora"); de dia ou de noite uma luz com um nodo,
+     por conjunção ou oposição ("perigosa"); o Sol com a Lua e a Lua com o Sol ("perigosa e traz a morte"). Os outros pares com maléfico (ex.: Sol com
+     Saturno de dia) o texto não nomeia: ficam de fora. O Horóscopo entra só com Marte e Saturno.
+   - Figuras: trígono, em qualquer lado, dá segurança; sextil e quadratura à DIREITA não fazem mal; quadratura à ESQUERDA é a mais perigosa; sextil à
+     esquerda, oposição e conjunção são "destrutivos, fatais e perigosos", e o sextil à esquerda é o mais fácil de suportar. Esquerda e direita pelo exemplo
+     de Paulo (Sol em Escorpião encontra, no mesmo grau, Marte em Leão: "quadrado à esquerda"): o raio lançado para a frente do astro (grau + 60 ou + 90) é
+     a ESQUERDA; para trás (grau − 60 ou − 90), a DIREITA.
+   - "Traz a morte" só onde o texto diz "death-bringing": o Sol com a Lua e a Lua com o Sol (em figura que faz mal) e, no exemplo de Paulo, o Sol (de dia)
+     em quadratura à esquerda de Marte. O resto que faz mal é "perigosa".
+   - Laço da Lua (cap. 35): se a Lua nasce a menos de 5° antes de uma figura do Sol, o laço se desfaz quando ela chega lá ("perigosa").
+   Níveis: 2 traz a morte; 1 perigosa; 0 segura. */
 const DV_FIGURAS_CRISE = [
-  { off: 0,   nome: 'conjunção',             cls: 'forte' },
-  { off: 180, nome: 'oposição',              cls: 'forte' },
-  { off: 90,  nome: 'quadratura à esquerda', cls: 'forte', nota: 'a mais perigosa' },
+  { off: 0,   nome: 'conjunção',             cls: 'forte', nota: 'destrutiva, fatal' },
+  { off: 180, nome: 'oposição',              cls: 'forte', nota: 'destrutiva, fatal' },
+  { off: 90,  nome: 'quadratura à esquerda', cls: 'esq90', nota: 'a mais perigosa' },
   { off: 60,  nome: 'sextil à esquerda',     cls: 'media', nota: 'o mais fácil de suportar' },
   { off: 270, nome: 'quadratura à direita',  cls: 'segura', nota: 'não faz mal' },
   { off: 300, nome: 'sextil à direita',      cls: 'segura', nota: 'não faz mal' },
@@ -217,33 +225,43 @@ function dvCrises(dados, lat, anosMax) {
   const g = o => (o && o.grau_absoluto !== undefined) ? norm(o.grau_absoluto) : null;
   const pos = { Sun: g(dados.Sol), Moon: g(dados.Lua), Asc: g(dados.Ascendente), Mars: g(dados['Marte']), Saturn: g(dados['Saturno']), NodeN: g(dados.Nodo_Norte) };
   const isDia = ((pos.Sun - pos.Asc + 360) % 360) >= 180;
-  const andarilhos = ['Sun', 'Moon', 'Asc'];
   const crises = [];
   const somar = (andarilho, alvo, rayAbs, figura, nivel, nota) => {
     const anos = tempoAscensionalEntreGraus(pos[andarilho], rayAbs, lat);
     if (anos < 0.03 || anos > anosMax) return;
     crises.push({ andarilho, alvo, anos, figura, nivel, nota: nota || '' });
   };
-  andarilhos.forEach(w => {
-    const alvos = ['Mars', 'Saturn'];
-    if (w === 'Sun') alvos.push('Moon');
-    if (w === 'Moon') alvos.push('Sun');
-    alvos.forEach(t => {
-      if (pos[t] === null) return;
-      DV_FIGURAS_CRISE.forEach(f => {
-        const luzes = (t === 'Sun' || t === 'Moon');
-        const nivel = f.cls === 'segura' ? 0 : (f.cls === 'media' ? 1 : 2);
-        const pior = (w === 'Sun' && t === 'Mars' && isDia) ? 'o pior de dia' : ((w === 'Moon' && t === 'Saturn' && !isDia) ? 'o pior de noite' : '');
-        const nota = [f.nota, nivel === 2 && pior ? pior : ''].filter(Boolean).join('; ');
-        somar(w, t, norm(pos[t] + f.off), f.nome, nivel, nota);
-      });
+  // nível de uma figura, conforme o par (ver o comentário lá em cima)
+  const nivelDa = (tipoPar, f) => {
+    if (f.cls === 'segura') return 0;
+    if (tipoPar === 'luzes') return 2;                                   // Sol com Lua: "perigosa e traz a morte"
+    if (tipoPar === 'seita') return f.cls === 'esq90' ? 2 : 1;            // exemplo de Paulo: Sol em quadratura à esquerda de Marte, "crise que traz a morte"
+    return 1;                                                            // Horóscopo com maléfico
+  };
+  const caminhar = (w, t, tipoPar, notaPar) => {
+    if (pos[t] === null) return;
+    DV_FIGURAS_CRISE.forEach(f => {
+      const nivel = nivelDa(tipoPar, f);
+      const nota = [f.nota, nivel ? notaPar : ''].filter(Boolean).join('; ');
+      somar(w, t, norm(pos[t] + f.off), f.nome, nivel, nota);
     });
-    if ((w === 'Sun' || w === 'Moon') && pos.NodeN !== null) {            // luzes com os nodos: conjunção ou oposição
-      somar(w, 'NodeN', pos.NodeN, 'conjunção com o nodo ascendente', 1, '');
-      somar(w, 'NodeS', norm(pos.NodeN + 180), 'conjunção com o nodo descendente', 1, '');
-    }
+  };
+  // o par da seita: de dia o Sol com Marte; de noite a Lua com Saturno
+  if (isDia) caminhar('Sun', 'Mars', 'seita', 'crise perigosa de dia');
+  else caminhar('Moon', 'Saturn', 'seita', 'crise assustadora de noite');
+  // o Sol com a Lua e a Lua com o Sol
+  caminhar('Sun', 'Moon', 'luzes', 'perigosa e traz a morte');
+  caminhar('Moon', 'Sun', 'luzes', 'perigo de morte');
+  // o Horóscopo, só com os raios dos maléficos
+  caminhar('Asc', 'Mars', 'asc', '');
+  caminhar('Asc', 'Saturn', 'asc', '');
+  // as luzes com os nodos: conjunção ou oposição
+  ['Sun', 'Moon'].forEach(w => {
+    if (pos.NodeN === null) return;
+    somar(w, 'NodeN', pos.NodeN, 'conjunção com o nodo ascendente', 1, '');
+    somar(w, 'NodeS', norm(pos.NodeN + 180), 'conjunção com o nodo descendente', 1, '');
   });
-  // laço da Lua (cap. 35): se a Lua nasce a menos de 5° antes de uma figura do Sol (a caminho dela), o laço se desfaz quando ela chega lá
+  // laço da Lua (cap. 35)
   [0, 60, 90, 120, 180, 240, 270, 300].forEach(off => {
     const ponto = norm(pos.Sun + off), falta = norm(ponto - pos.Moon);
     if (falta > 0 && falta <= 5) somar('Moon', 'Sun', ponto, 'dissolução do laço da Lua', 1, 'o laço se desfaz');
@@ -309,7 +327,7 @@ function dvBlocoDuracao(r) {
   if (r.semConfirmacao) notas.push('Nenhum candidato passou no filtro do texto (em lugar de negócio e configurado com o ponto); ficou o mais votado do primeiro ponto.');
   if (r.empate.length) notas.push('Empate com ' + r.empate.map(id => FV_PLANETAS[id].nome).join(', ') + ': o texto não desempata.');
   const regras = `<div class="texto-apagado" style="font-size:11.5px; margin-top:10px; line-height:1.6;">
-      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor (se os dois, o luminar da seita): a conta fecha nos anos dele (120 ou 108), sem somar testemunhas; as testemunhas só somam quando o senhor é um dos cinco planetas e nenhuma luz tem relação com ele. "Subtrativo em números" não é calculado.<br><br>Crises: o Sol, a Lua e o Horóscopo caminham ao mesmo tempo do grau em que nasceram, pelos tempos de ascensão (a mesma conta da Circumambulação). Encontram os raios de Marte e Saturno, o Sol e a Lua entre si e, para as luzes, os nodos. Esquerda é o raio lançado para a frente do astro (grau + 60° ou + 90°), como no exemplo de Paulo (Sol em Escorpião e Marte em Leão, quadrado à esquerda); direita é para trás. Traz a morte: conjunção, oposição e quadratura à esquerda com maléfico, e Sol com Lua. Perigosa: sextil à esquerda, luz com nodo e a dissolução do laço da Lua. Segura: trígono, e sextil e quadratura à direita.</div>`;
+      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor (se os dois, o luminar da seita): a conta fecha nos anos dele (120 ou 108), sem somar testemunhas; as testemunhas só somam quando o senhor é um dos cinco planetas e nenhuma luz tem relação com ele. "Subtrativo em números" não é calculado.<br><br>Crises, como no capítulo 34: o Sol e a Lua caminham do grau em que nasceram, e o Horóscopo só com os maléficos (pelos tempos de ascensão, como na Circumambulação). Os pares que o texto nomeia: de dia o Sol com Marte, de noite a Lua com Saturno, uma luz com um nodo, e o Sol com a Lua. Os outros pares com maléfico o texto não nomeia. Esquerda é o raio lançado para a frente do astro (grau + 60° ou + 90°), como no exemplo de Paulo (Sol em Escorpião e Marte em Leão, quadrado à esquerda); direita é para trás. "Traz a morte" só no Sol com a Lua e no Sol de dia em quadratura à esquerda de Marte (o exemplo de Paulo); o resto que faz mal é "perigosa". Segura: trígono, e sextil e quadratura à direita.</div>`;
   return {
     resultado,
     calculos: `<h3 class="titulo-secao">Cálculos</h3>
