@@ -26,7 +26,8 @@ function rzTrabalhoParaSalvar() {
     conclusao: rzConclusao,
     anexos: rzAnexos,
     abertas: rzAbertas,
-    fatos: rzFatos.map(f => ({ id: f.id, data: f.data, ate: f.ate, periodo: !!f.periodo, aberto: f.aberto !== false, texto: f.texto, conf: f.conf, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
+    feitos: rzFeitos,
+    fatos: rzFatos.map(f => ({ id: f.id, data: f.data, ate: f.ate, periodo: !!f.periodo, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto, conf: f.conf, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
   };
 }
 
@@ -43,9 +44,10 @@ function rzAplicarFicha(r, linha) {
     rzConclusao = t.conclusao || '';
     rzAnexos = Array.isArray(t.anexos) ? t.anexos : [];
     rzAbertas = (t.abertas && typeof t.abertas === 'object') ? t.abertas : {};
+    rzFeitos = (t.feitos && typeof t.feitos === 'object') ? t.feitos : {};
     if (Array.isArray(t.fatos) && t.fatos.length) {
       rzFatos = t.fatos.map(f => ({
-        id: ++rzFatoSeq, data: f.data || '', ate: f.ate || '', periodo: !!f.periodo && !!f.ate, aberto: f.aberto !== false, texto: f.texto || '', conf: f.conf || '',
+        id: ++rzFatoSeq, data: f.data || '', ate: f.ate || '', periodo: !!f.periodo && !!f.ate, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto || '', conf: f.conf || '',
         tecnicas: (Array.isArray(f.tecnicas) && f.tecnicas.length ? f.tecnicas : []).map(x => ({ tipo: x.tipo === 'zr' ? 'zr' : 'circ', chave: x.chave }))
       }));
     }

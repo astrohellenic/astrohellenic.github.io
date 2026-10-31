@@ -421,6 +421,11 @@ function iniciarModuloRetificacaoSizigia() {
 
       #rz-container .rz-tec { margin-top: 6px; }
       #rz-container .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
+      #rz-container .rz-prog { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 13px; font-weight: 700; color: var(--azul-egipcio-escuro); }
+      #rz-container .rz-prog-barra { flex: 1; height: 10px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); box-sizing: border-box; position: relative; }
+      #rz-container .rz-prog-barra > span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--azul-egipcio-claro); }
+      #rz-container input[type="checkbox"].rz-feito { -webkit-appearance: none; appearance: none; background: transparent; width: 18px; height: 18px; margin: 0 0 0 10px; cursor: pointer; flex: 0 0 auto; border: 1.5px solid var(--azul-egipcio-escuro); border-radius: 0; position: relative; vertical-align: middle; }
+      #rz-container input[type="checkbox"].rz-feito:checked::after { content: ''; position: absolute; left: 5px; top: 0; width: 4px; height: 10px; border: solid var(--terracota); border-width: 0 2px 2px 0; transform: rotate(45deg); }
       #rz-container .rz-fato { padding: 10px 0; }
       #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
@@ -476,7 +481,7 @@ async function rzExecutar() {
       rzAssinatura = assinatura;
       rzFinalSel = rzSelecaoPadrao(r);
       rzMapaFinalSvg = null;
-      rzAbertas = {}; rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null;
+      rzAbertas = {}; rzFeitos = {}; rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null;
       if (typeof rzCarregarFicha === 'function') await rzCarregarFicha(r);      // o que já foi salvo para este cliente (e os fatos que ele enviou)
     }
     area.innerHTML = rzMontarResultado(r);
@@ -583,8 +588,9 @@ function rzMontarResultado(r) {
   // Seções em sanfona (abrem e fecham), sem números. O que já existia na ferramenta é mantido e encaixado.
   const sem = (h) => h.replace('<hr class="divisa">', '').replace(/<h3 class="titulo-secao">[^<]*<\/h3>/, '');
   let primeira = true;   // o 1º bloco já vem logo depois da divisa que fecha o cabeçalho: sem divisa extra
-  const sanfona = (titulo, corpo) => `${primeira ? (primeira = false, '') : '<hr class="divisa">'}<details class="rz-sanfona" ${rzAberto('sec|' + titulo)} ontoggle="rzAbriu('sec|${titulo}', this.open)"><summary>${titulo}</summary>${corpo}</details>`;
+  const sanfona = (titulo, corpo) => `${primeira ? (primeira = false, '') : '<hr class="divisa">'}<details class="rz-sanfona" ${rzAberto('sec|' + titulo)} ontoggle="rzAbriu('sec|${titulo}', this.open)"><summary>${titulo}${RZ_ETAPAS.includes(titulo) ? `<input type="checkbox" class="rz-feito" title="Marcar esta etapa como feita" ${rzFeitos['sec|' + titulo] ? 'checked' : ''} onclick="event.stopPropagation()" onchange="rzMarcarEtapa(this.parentNode.firstChild.textContent, this.checked)">` : ''}</summary>${corpo}</details>`;
   return aviso
+    + `<div id="rzProgresso" class="rz-prog">${rzProgressoHtml()}</div>`
     + sanfona('Dados de entrada', rzMontarDadosEntrada(r))
     + sanfona('A sizígia pré-natal', sem(blocoSizigia))
     + sanfona('O cálculo', blocoVotos.replace('<hr class="divisa">', '') + blocoHorarios)
@@ -798,6 +804,7 @@ function rzMontarFatos(r) {
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
         <button type="button" onclick="rzFatoAlternar(${f.id})" title="${aberto ? 'Fechar este fato' : 'Abrir este fato'}" style="background:none; border:0; padding:4px; cursor:pointer; display:inline-flex; align-items:center;"><svg viewBox="0 0 12 12" width="14" height="14" style="transform:rotate(${aberto ? 90 : 0}deg);"><polygon points="2,1 11,6 2,11" fill="var(--azul-egipcio-escuro)"/></svg></button>
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
+        <input type="checkbox" class="rz-feito" title="Marcar este fato como feito" ${f.feito ? 'checked' : ''} onchange="rzFatoFeito(${f.id}, this.checked)">
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
         <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}" onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
         ${f.periodo ? `<span style="color:var(--azul-egipcio-escuro);">até</span><span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Fim do período"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.ate}" onchange="rzFatoAte(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>` : ''}
@@ -892,6 +899,17 @@ function rzMontarTabelaZR(ctx, lote, fatos) {
 
 /* Quais sanfonas estão abertas/fechadas (seções, técnicas da Visão geral): o que foi fechado continua fechado ao recarregar (vai na ficha, junto com o resto do trabalho) */
 let rzAbertas = {};
+/* "Feito": o astrólogo marca à mão cada etapa (seção) e cada fato quando termina de analisar. A barra do topo só conta o que foi marcado. */
+let rzFeitos = {};
+const RZ_ETAPAS = ['Dados de entrada', 'A sizígia pré-natal', 'O cálculo', 'Horário retificado', 'Visão geral', 'O mapa final', 'Conclusão e anexos'];
+function rzProgressoCalc() { const e = RZ_ETAPAS.filter(t => rzFeitos['sec|' + t]).length, f = rzFatos.filter(x => x.feito).length; return { feitos: e + f, total: RZ_ETAPAS.length + rzFatos.length }; }
+function rzProgressoHtml() {
+  const { feitos, total } = rzProgressoCalc(), pct = total ? Math.round(feitos / total * 100) : 0;
+  return `<span class="rz-prog-pct">${pct}%</span><span class="rz-prog-barra"><span style="width:${pct}%;"></span></span><span class="rz-prog-n">${feitos}/${total}</span>`;
+}
+function rzAtualizarProgresso() { const el = document.getElementById('rzProgresso'); if (el) el.innerHTML = rzProgressoHtml(); }
+function rzMarcarEtapa(titulo, v) { if (v) rzFeitos['sec|' + titulo] = true; else delete rzFeitos['sec|' + titulo]; rzAtualizarProgresso(); rzMudou(); }
+function rzFatoFeito(id, v) { const f = rzFatoPorId(id); if (f) f.feito = !!v; rzAtualizarProgresso(); rzMudou(); }
 function rzAberto(chave) { return rzAbertas[chave] === false ? '' : 'open'; }
 function rzAbriu(chave, aberto) { if ((rzAbertas[chave] !== false) === aberto) return; rzAbertas[chave] = aberto; rzMudou(); }
 let rzVgHtml = '';   // o conteúdo da seção "Visão geral" (calculado junto com os fatos)
@@ -899,6 +917,7 @@ function rzRedesenharFatos() {
   const el = document.getElementById('rzFatos'); if (!el || !rzUltimo) return;
   el.innerHTML = rzMontarFatos(rzUltimo);
   const vg = document.getElementById('rzVisaoGeral'); if (vg) vg.innerHTML = rzVgHtml;
+  rzAtualizarProgresso();
 }
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
