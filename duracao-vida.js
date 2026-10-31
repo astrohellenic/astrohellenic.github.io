@@ -191,6 +191,66 @@ function dvCalcular(entrada) {
   };
 }
 
+
+/* ---------- Crises no caminho (Paulo, caps. 34 e 35): o que pode interromper a vida antes da duração ----------
+   Caminham ao mesmo tempo o Sol, a Lua e o Horóscopo, do grau em que nasceram, pela ordem dos signos; o tempo vem da ascensão oblíqua
+   (a mesma conta da Circumambulação: 1° de ascensão = 1 ano, tempoAscensionalEntreGraus em direcoes.js). O contato acontece quando quem caminha chega ao
+   ponto do raio do astro (grau do astro + ângulo). Alvos: Marte e Saturno (todas as figuras); o Sol e a Lua entre si; para as luzes, os nodos (conjunção e
+   oposição). Esquerda e direita, pelo exemplo de Paulo (Sol em Escorpião encontra, no mesmo grau, Marte em Leão: "quadrado à esquerda"): o raio lançado
+   para a frente do astro (grau + 60 ou + 90) é a ESQUERDA; para trás (grau − 60 ou − 90), a DIREITA.
+   Níveis: 2 traz a morte (conjunção, oposição e quadratura à esquerda com maléfico, e Sol com Lua); 1 perigosa (sextil à esquerda, e luz com nodo,
+   e o laço da Lua se desfazendo); 0 segura (trígono, e sextil e quadratura à direita). */
+const DV_FIGURAS_CRISE = [
+  { off: 0,   nome: 'conjunção',             cls: 'forte' },
+  { off: 180, nome: 'oposição',              cls: 'forte' },
+  { off: 90,  nome: 'quadratura à esquerda', cls: 'forte', nota: 'a mais perigosa' },
+  { off: 60,  nome: 'sextil à esquerda',     cls: 'media', nota: 'o mais fácil de suportar' },
+  { off: 270, nome: 'quadratura à direita',  cls: 'segura', nota: 'não faz mal' },
+  { off: 300, nome: 'sextil à direita',      cls: 'segura', nota: 'não faz mal' },
+  { off: 120, nome: 'trígono',               cls: 'segura', nota: 'dá segurança' },
+  { off: 240, nome: 'trígono',               cls: 'segura', nota: 'dá segurança' }
+];
+
+function dvCrises(dados, lat, anosMax) {
+  if (typeof tempoAscensionalEntreGraus !== 'function' || !dados || !dados.Ascendente || !dados.Sol || !dados.Lua) return [];
+  const norm = a => ((a % 360) + 360) % 360;
+  const g = o => (o && o.grau_absoluto !== undefined) ? norm(o.grau_absoluto) : null;
+  const pos = { Sun: g(dados.Sol), Moon: g(dados.Lua), Asc: g(dados.Ascendente), Mars: g(dados['Marte']), Saturn: g(dados['Saturno']), NodeN: g(dados.Nodo_Norte) };
+  const isDia = ((pos.Sun - pos.Asc + 360) % 360) >= 180;
+  const andarilhos = ['Sun', 'Moon', 'Asc'];
+  const crises = [];
+  const somar = (andarilho, alvo, rayAbs, figura, nivel, nota) => {
+    const anos = tempoAscensionalEntreGraus(pos[andarilho], rayAbs, lat);
+    if (anos < 0.03 || anos > anosMax) return;
+    crises.push({ andarilho, alvo, anos, figura, nivel, nota: nota || '' });
+  };
+  andarilhos.forEach(w => {
+    const alvos = ['Mars', 'Saturn'];
+    if (w === 'Sun') alvos.push('Moon');
+    if (w === 'Moon') alvos.push('Sun');
+    alvos.forEach(t => {
+      if (pos[t] === null) return;
+      DV_FIGURAS_CRISE.forEach(f => {
+        const luzes = (t === 'Sun' || t === 'Moon');
+        const nivel = f.cls === 'segura' ? 0 : (f.cls === 'media' ? 1 : 2);
+        const pior = (w === 'Sun' && t === 'Mars' && isDia) ? 'o pior de dia' : ((w === 'Moon' && t === 'Saturn' && !isDia) ? 'o pior de noite' : '');
+        const nota = [f.nota, nivel === 2 && pior ? pior : ''].filter(Boolean).join('; ');
+        somar(w, t, norm(pos[t] + f.off), f.nome, nivel, nota);
+      });
+    });
+    if ((w === 'Sun' || w === 'Moon') && pos.NodeN !== null) {            // luzes com os nodos: conjunção ou oposição
+      somar(w, 'NodeN', pos.NodeN, 'conjunção com o nodo ascendente', 1, '');
+      somar(w, 'NodeS', norm(pos.NodeN + 180), 'conjunção com o nodo descendente', 1, '');
+    }
+  });
+  // laço da Lua (cap. 35): se a Lua nasce a menos de 5° antes de uma figura do Sol (a caminho dela), o laço se desfaz quando ela chega lá
+  [0, 60, 90, 120, 180, 240, 270, 300].forEach(off => {
+    const ponto = norm(pos.Sun + off), falta = norm(ponto - pos.Moon);
+    if (falta > 0 && falta <= 5) somar('Moon', 'Sun', ponto, 'dissolução do laço da Lua', 1, 'o laço se desfaz');
+  });
+  return crises.sort((a, b) => a.anos - b.anos);
+}
+
 /* Duração da vida (Paulo, cap. 36): o resultado numa parte; a parte dos cálculos em outra, toda à vista (pontos de partida, candidatos, contas,
    lugares de negócio e quem testemunha), pra decidir cada escolha do texto. */
 function dvIconePonto(f, tam) {
@@ -249,7 +309,7 @@ function dvBlocoDuracao(r) {
   if (r.semConfirmacao) notas.push('Nenhum candidato passou no filtro do texto (em lugar de negócio e configurado com o ponto); ficou o mais votado do primeiro ponto.');
   if (r.empate.length) notas.push('Empate com ' + r.empate.map(id => FV_PLANETAS[id].nome).join(', ') + ': o texto não desempata.');
   const regras = `<div class="texto-apagado" style="font-size:11.5px; margin-top:10px; line-height:1.6;">
-      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor (se os dois, o luminar da seita): a conta fecha nos anos dele (120 ou 108), sem somar testemunhas; as testemunhas só somam quando o senhor é um dos cinco planetas e nenhuma luz tem relação com ele. "Subtrativo em números" não é calculado.</div>`;
+      Regras aplicadas: o vencedor é quem soma mais entre as contas de dignidade no ponto e as marcas do texto (no pivô, nascer matutino, no próprio trono, olha a luz da seita). Casa boa = nem cadente nem sob os raios do Sol (menos de 15°). Testemunhar = conjunção (mesmo signo) ou aspecto de signos inteiros (sextil, quadratura, trígono, oposição), sem direção. Saturno e Marte somam se estão em casa (domicílio) e tiram se estão fora. Vênus, Júpiter e Mercúrio cadentes ou sob os raios não contam. Sol ou Lua em relação com o senhor (se os dois, o luminar da seita): a conta fecha nos anos dele (120 ou 108), sem somar testemunhas; as testemunhas só somam quando o senhor é um dos cinco planetas e nenhuma luz tem relação com ele. "Subtrativo em números" não é calculado.<br><br>Crises: o Sol, a Lua e o Horóscopo caminham ao mesmo tempo do grau em que nasceram, pelos tempos de ascensão (a mesma conta da Circumambulação). Encontram os raios de Marte e Saturno, o Sol e a Lua entre si e, para as luzes, os nodos. Esquerda é o raio lançado para a frente do astro (grau + 60° ou + 90°), como no exemplo de Paulo (Sol em Escorpião e Marte em Leão, quadrado à esquerda); direita é para trás. Traz a morte: conjunção, oposição e quadratura à esquerda com maléfico, e Sol com Lua. Perigosa: sextil à esquerda, luz com nodo e a dissolução do laço da Lua. Segura: trígono, e sextil e quadratura à direita.</div>`;
   return {
     resultado,
     calculos: `<h3 class="titulo-secao">Cálculos</h3>
@@ -276,6 +336,49 @@ function dvNotaAnareta() {
 }
 
 
+/* Ícones de quem caminha e de quem é encontrado */
+function dvIconeAndarilho(k) {
+  return k === 'Asc' ? '<span style="font-size:10.5px; font-weight:800; color:var(--terracota);">ASC</span>' : fvPlaneta(k, 20);
+}
+function dvIconeAlvo(k) {
+  if (k === 'NodeN') return (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'northNode', 20) : '☊';
+  if (k === 'NodeS') return (typeof getIconeSVG === 'function') ? getIconeSVG('outro', 'southNode', 20) : '☋';
+  return fvPlaneta(k, 20);
+}
+const DV_NIVEL_TXT = ['segura', 'perigosa', 'traz a morte'];
+function dvBolinha(nivel, extra) {
+  const tam = nivel === 0 ? 10 : 14, cor = nivel === 0 ? 'var(--azul-egipcio-claro)' : 'var(--terracota)';
+  return `<span style="display:inline-block; width:${tam}px; height:${tam}px; border:2px solid ${cor}; box-sizing:border-box; border-radius:50%; background:${nivel === 2 ? cor : 'transparent'}; ${extra || ''}"></span>`;
+}
+// A barra da duração (porcentagem, cor mudando, x/y anos) com as bolinhas das crises em cima, nas idades em que acontecem
+function dvBarraComCrises(r, crises, nascimento, hoje) {
+  const total = r.total, idade = Math.max(0, (hoje - nascimento) / (365.25 * 86400000));
+  const f = Math.max(0, Math.min(1, idade / total)), cor = corDoTempo(f);
+  const pct = f >= 1 ? 100 : Math.floor(f * 100);
+  const inteiro = Math.round(total);
+  const bolas = crises.map((c, i) => {
+    const x = Math.min(100, (c.anos / total) * 100);
+    const num = (c.nivel >= 1) ? `<span style="position:absolute; left:${x}%; ${i % 2 ? 'top:calc(100% + 9px)' : 'bottom:calc(100% + 9px)'}; transform:translateX(-50%); font-size:9.5px; font-weight:700; color:var(--terracota);">${Math.floor(c.anos)}</span>` : '';
+    return `<div title="${Math.floor(c.anos)} anos" style="position:absolute; left:${x}%; top:50%; transform:translate(-50%,-50%);">${dvBolinha(c.nivel)}</div>${num}`;
+  }).join('');
+  return `<div style="display:flex; align-items:center; gap:8px; margin:34px 0 36px;">
+    <span style="min-width:34px; text-align:right; font-size:11px; font-weight:700; line-height:1; color:${cor};">${pct}%</span>
+    <div style="position:relative; flex:1; height:5px; border:1px solid ${cor}; box-sizing:content-box;"><div style="height:100%; width:${(f * 100).toFixed(2)}%; background:${cor};"></div>${bolas}</div>
+    <span style="font-size:11px; white-space:nowrap; line-height:1; color:${cor};">${Math.floor(idade)}/${inteiro} anos</span>
+  </div>`;
+}
+function dvListaCrises(crises) {
+  if (!crises.length) return '<div class="texto-apagado" style="font-size:12px;">Nenhum contato com maléfico, luz ou nodo dentro da duração.</div>';
+  return crises.map(c => `
+    <div style="display:flex; gap:10px; align-items:center; padding:6px 0; border-top:var(--contorno-fino) solid var(--azul-egipcio-claro); font-size:12.5px;">
+      <span style="width:22px; display:flex; justify-content:center;">${dvBolinha(c.nivel)}</span>
+      <span style="width:124px; flex:none; font-weight:700;">${fvFmtAnos(c.anos)}</span>
+      <span style="display:flex; align-items:center; gap:8px; flex:none; width:210px;">${dvIconeAndarilho(c.andarilho)} <span>×</span> ${dvIconeAlvo(c.alvo)}</span>
+      <span style="flex:1;">${c.figura}${c.nota ? ` <span class="texto-apagado">(${c.nota})</span>` : ''}</span>
+      <span style="font-weight:700; white-space:nowrap; color:${c.nivel ? 'var(--terracota)' : 'var(--azul-egipcio-claro)'};">${DV_NIVEL_TXT[c.nivel]}</span>
+    </div>`).join('');
+}
+
 function iniciarModuloDuracaoVida() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
@@ -291,7 +394,10 @@ function renderDuracaoVidaUI(container) {
   const hoje = new Date();
   const r = dvCalcular({ dados: currentCalculatedData, nascimento });
   const bloco = dvBlocoDuracao(r);
-  const barra = (r && r.data) ? barraTempo(nascimento, r.data, 'margin: 12px 0 4px;', 11, 'anosCivis', hoje) : '';
+  const lat = (typeof currentGeo !== 'undefined' && currentGeo && currentGeo.lat !== undefined) ? currentGeo.lat : -23.5505;
+  const crises = r ? dvCrises(currentCalculatedData, lat, r.total) : [];
+  const barra = (r && r.data) ? dvBarraComCrises(r, crises, nascimento, hoje) : '';
+  const legenda = `<div class="texto-apagado" style="font-size:11.5px;">Os números são as idades. <span style="display:inline-flex; align-items:center; gap:4px;">${dvBolinha(2)} traz a morte</span> · <span style="display:inline-flex; align-items:center; gap:4px;">${dvBolinha(1)} perigosa</span> · <span style="display:inline-flex; align-items:center; gap:4px;">${dvBolinha(0)} segura</span></div>`;
   const svgGaleria = '<svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>';
   const svgRelatorio = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
   container.innerHTML = `
@@ -317,6 +423,10 @@ function renderDuracaoVidaUI(container) {
         <div class="texto-apagado" style="font-size:11.5px;">Paulo de Alexandria, Introdução, capítulo 36 (oikodespoteia). Só a duração, sem o destruidor.</div>
         ${barra}
         ${bloco.resultado}
+        <h3 class="titulo-secao" style="margin-top:20px;">Crises no caminho</h3>
+        <div class="texto-apagado" style="font-size:11.5px;">O Sol, a Lua e o Horóscopo caminhando ao mesmo tempo, pelos tempos de ascensão. Paulo, capítulos 34 e 35.</div>
+        ${legenda}
+        <div style="margin-top:10px;">${dvListaCrises(crises)}</div>
         </div>
         ${bloco.calculos ? `<hr class="divisa"><div id="dvParteCalculos">${bloco.calculos}</div>` : ''}
         </div>
