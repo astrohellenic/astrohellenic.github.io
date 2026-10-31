@@ -150,9 +150,8 @@ function fvCalcularFases(entrada) {
 /* ---------- Duração da vida: Paulo de Alexandria, Introdução, cap. 36 "Sobre o domínio" (oikodespoteia) ----------
    Só a duração (sem o destruidor / anareta: ver a nota no rodapé da ferramenta). Passos do texto:
    1. Lugares de negócio (dealing places). Dia: Horóscopo, Meio do Céu e Bom Espírito (casas 1, 10, 11) e, "em signo masculino", o Descendente (7)
-      e o signo que "se põe sobre ele". Noite: os 4 ângulos, Boa Fortuna (5), Bom Espírito (11), a pós-ascensão do Horóscopo (2) e o signo que se
-      põe sobre o Descendente. Casas por signos inteiros. FV_LUGAR_SE_POE: qual casa é "o signo que se põe sobre o Descendente" (o texto não diz
-      o número; o astrólogo decide: 6 ou 7).
+      e o signo que "se põe sobre ele" (a casa 7: é o signo acima do horizonte que desce sobre o Descendente; a 6 já passou, está abaixo, então os
+      dois nomes caem no mesmo signo). Noite: os 4 ângulos, Boa Fortuna (5), Bom Espírito (11) e a pós-ascensão do Horóscopo (2). Casas por signos inteiros.
    2. Pontos de partida, nesta ordem: a luz da seita e a outra luz, se estão nesses lugares; depois a sizígia pré-natal; depois os Lotes da Fortuna e do
       Espírito; por fim o senhor do Horóscopo. De cada ponto saem os candidatos: senhor do termo, da exaltação, da triplicidade (pela seita) e da casa.
    3. O candidato vale se está num lugar de negócio e configurado com o ponto de onde saiu (conjunção ou um dos quatro aspectos: sextil, quadratura,
@@ -166,7 +165,7 @@ function fvCalcularFases(entrada) {
 const FV_ANOS_MAIORES = { Sun: 120, Moon: 108, Saturn: 57, Jupiter: 79, Mars: 66, Venus: 82, Mercury: 76 };
 const FV_TESTEMUNHAS = { Venus: 8, Mercury: 20, Jupiter: 12, Saturn: 30, Mars: 15 };    // anos que cada um acrescenta (Saturno e Marte tiram, se mal situados)
 const FV_PONTO_NOME = { luz: 'Luz', sizigia: 'Sizígia pré-natal', fortuna: 'Lote da Fortuna', espirito: 'Lote do Espírito', asc: 'Senhor do Horóscopo' };
-const FV_LUGAR_SE_POE = 6;                                                               // "o signo que se põe sobre o Descendente": casa 6 ou 7 (a decidir)
+const FV_LUGAR_SE_POE = 7;                                                               // "o signo que se põe sobre o Descendente": a casa 7 (acima do horizonte, descendo sobre ele; a 6 já passou, abaixo)
 const FV_FIGURAS = { 0: 'conjunção', 2: 'sextil', 3: 'quadratura', 4: 'trígono', 6: 'oposição' };
 
 function fvSenhorDoTermo(absGraus) {
@@ -752,7 +751,7 @@ function fvBlocoDuracao(r) {
       <span class="rotulo">Lugares de negócio (${r.isDia ? 'nascimento diurno' : 'nascimento noturno'})</span>
       <div style="font-size:12.5px; line-height:1.9; margin-top:3px;">${r.lugaresInfo.map(l => `
         <div>${l.entra ? '<strong>casa ' + l.casa + '</strong>' : '<span class="texto-apagado">casa ' + l.casa + '</span>'} · ${l.nome}${l.nota ? ` <span class="texto-apagado">(${l.nota})</span>` : ''}</div>`).join('')}</div>
-      <div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">O texto não diz o número da casa do "signo que se põe sobre o Descendente": hoje conta como casa ${FV_LUGAR_SE_POE} (constante FV_LUGAR_SE_POE).</div>
+      <div class="texto-apagado" style="font-size:11.5px; margin-top:6px;">O "signo que se põe sobre o Descendente" é o da casa ${FV_LUGAR_SE_POE}: o que está acima do horizonte descendo sobre ele.</div>
     </div>`;
   const pontos = r.avaliacao.map(av => {
     const f = av.fonte;
