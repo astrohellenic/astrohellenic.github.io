@@ -408,13 +408,16 @@ function dvBarraComCrises(r, crises, nascimento, hoje) {
 }
 function dvListaCrises(crises) {
   if (!crises.length) return '<div class="texto-apagado" style="font-size:12px;">Nenhum contato com maléfico, luz ou nodo dentro da duração.</div>';
+  // cada linha quebra em duas no celular (flex-wrap), em vez de cortar
   return crises.map(c => `
-    <div style="display:flex; gap:10px; align-items:center; padding:6px 0; border-top:var(--contorno-fino) solid var(--azul-egipcio-claro); font-size:12.5px;">
-      <span style="width:22px; display:flex; justify-content:center;">${dvBolinha(c.nivel)}</span>
-      <span style="width:124px; flex:none; font-weight:700;">${fvFmtAnos(c.anos)}</span>
-      <span style="display:flex; align-items:center; gap:8px; flex:none; width:210px;">${dvIconeAndarilho(c.andarilho)} <span>×</span> ${dvIconeAlvo(c.alvo)}</span>
-      <span style="flex:1;">${c.figura}${c.nota ? ` <span class="texto-apagado">(${c.nota})</span>` : ''}</span>
-      <span style="font-weight:700; white-space:nowrap; color:${c.nivel ? 'var(--terracota)' : 'var(--azul-egipcio-claro)'};">${DV_NIVEL_TXT[c.nivel]}</span>
+    <div style="display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; padding:7px 0; border-top:var(--contorno-fino) solid var(--azul-egipcio-claro); font-size:12.5px;">
+      <span style="display:flex; align-items:center; gap:10px; flex:none;">
+        <span style="width:22px; display:flex; justify-content:center;">${dvBolinha(c.nivel)}</span>
+        <span style="font-weight:700;">${fvFmtAnos(c.anos)}</span>
+      </span>
+      <span style="display:flex; align-items:center; gap:8px; flex:none;">${dvIconeAndarilho(c.andarilho)} <span>×</span> ${dvIconeAlvo(c.alvo)}</span>
+      <span style="flex:1 1 200px; min-width:0;">${c.figura}${c.nota ? ` <span class="texto-apagado">(${c.nota})</span>` : ''}</span>
+      <span style="font-weight:700; white-space:nowrap; margin-left:auto; color:${c.nivel ? 'var(--terracota)' : 'var(--azul-egipcio-claro)'};">${DV_NIVEL_TXT[c.nivel]}</span>
     </div>`).join('');
 }
 
