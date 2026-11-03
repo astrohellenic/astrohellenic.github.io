@@ -95,15 +95,19 @@ async function rzSalvarFicha() {
   }
 }
 
-/* Link só da página dos fatos (página 2 do formulário), para quem já está cadastrado: usa a chave da ficha do mapa (cria se ainda não tem). */
-async function rzCopiarLinkFatos() {
-  const out = document.getElementById('rzLinkFatosSaida');
-  const msg = (t) => { if (out) out.innerHTML = t; };
+/* Link só da página dos fatos (página 2 do formulário), para quem já está cadastrado. Usa a chave da ficha do mapa (cria se ainda não tem).
+   Padrão de link do software: só o ícone de elo; tocar copia e o ícone vira ✓ por um instante (igual ao Falando de Astrologia). */
+const RZ_SVG_ELO = '<svg viewBox="0 0 64 64" width="30" height="30" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M27 37a11 11 0 0 0 15.5 0l9-9a11 11 0 0 0-15.5-15.5l-3 3"/><path d="M37 27a11 11 0 0 0-15.5 0l-9 9a11 11 0 0 0 15.5 15.5l3-3"/></svg>';
+const RZ_SVG_ELO_OK = '<svg viewBox="0 0 64 64" width="30" height="30" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 34l14 14 26-28"/></svg>';
+async function rzCopiarLinkFatos(btn) {
+  const aviso = document.getElementById('rzLinkFatosAviso');
+  const msg = (t) => { if (aviso) aviso.innerHTML = t; };
+  msg('');
   const db = rzClienteSupabase(), mapa = rzMapaIdAtual();
-  if (!db || !mapa) { msg('<span style="color:var(--terracota);">Abra um mapa salvo primeiro.</span>'); return; }
+  if (!db || !mapa) { msg('Abra um mapa salvo primeiro.'); return; }
   try {
     const { data: { user } } = await db.auth.getUser();
-    if (!user) { msg('<span style="color:var(--terracota);">Sessão não identificada.</span>'); return; }
+    if (!user) { msg('Sessão não identificada.'); return; }
     const { data: linha, error: e1 } = await db.from('retificacoes').select('token, enviado_em').eq('mapa_id', mapa).maybeSingle();
     if (e1) throw e1;
     let token = linha && linha.token;
@@ -114,16 +118,21 @@ async function rzCopiarLinkFatos() {
     }
     const url = `https://astrohellenic.github.io/formulario.html?u=${user.id}&m=${encodeURIComponent(mapa)}&t=${encodeURIComponent(token)}&p=2`;
     let copiou = false;
-    try { await navigator.clipboard.writeText(url); copiou = true; } catch (e) { /* sem permissão: o endereço fica no campo, para copiar à mão */ }
-    msg(`${copiou ? 'Link copiado.' : 'Copie o link abaixo.'}${linha && linha.enviado_em ? ' <span style="color:var(--terracota);">Atenção: o cliente já enviou os fatos; o link vai dizer que já foi enviado.</span>' : ''}<br><input type="text" readonly value="${url}" onfocus="this.select()" style="width:100%; font-size:12px;">`);
+    try { await navigator.clipboard.writeText(url); copiou = true; } catch (e) {
+      const t = document.createElement('textarea'); t.style.cssText = 'position:fixed;top:0;left:0;opacity:0'; t.value = url; document.body.appendChild(t); t.focus(); t.select();
+      try { copiou = document.execCommand('copy'); } catch (e2) { /* segue sem copiar */ } document.body.removeChild(t);
+    }
+    if (copiou) { if (btn) { btn.innerHTML = RZ_SVG_ELO_OK; setTimeout(() => { btn.innerHTML = RZ_SVG_ELO; }, 1500); } }
+    else msg('Não consegui copiar neste aparelho.');
+    if (linha && linha.enviado_em) msg('O cliente já enviou os fatos; o link vai avisar que já foi enviado.');
   } catch (e) {
-    msg(`<span style="color:var(--terracota);">Não consegui gerar o link: ${(e && e.message) || 'erro'}</span>`);
+    msg(`Não consegui gerar o link: ${(e && e.message) || 'erro'}`);
   }
 }
 
 /* Faixa na seção 5: o que a ficha diz sobre os fatos do cliente, e o botão do link só dos fatos */
 function rzFichaAviso() {
-  const botao = `<div style="margin-bottom:8px;"><button type="button" class="botao-texto" onclick="rzCopiarLinkFatos()">Copiar link dos fatos</button><div id="rzLinkFatosSaida" class="texto-apagado rz-fonte" style="margin-top:4px;"></div></div>`;
+  const botao = `<div style="display:flex; align-items:center; gap:4px; margin-bottom:8px;"><span class="texto-apagado rz-fonte">Link dos fatos</span><button type="button" title="Copiar o link dos fatos" aria-label="Copiar o link dos fatos" onclick="rzCopiarLinkFatos(this)" style="background:transparent; border:0; border-radius:0; padding:6px 10px; color:var(--azul-egipcio-escuro, #1034A6); cursor:pointer;">${RZ_SVG_ELO}</button></div><div id="rzLinkFatosAviso" class="rz-fonte" style="color:var(--terracota); margin:-4px 0 8px;"></div>`;
   if (!rzFichaInfo) return botao;
   if (rzFichaInfo.enviado_em) {
     const d = new Date(rzFichaInfo.enviado_em);
