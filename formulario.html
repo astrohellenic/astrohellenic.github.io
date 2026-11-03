@@ -496,6 +496,13 @@
       if (error) { alert('Não foi possível enviar: ' + error.message); return; }
       try { localStorage.removeItem(chaveRascunhoFatos()); } catch (e) { /* tudo bem */ }
       document.getElementById('paginaFatos').style.display = 'none';
+      /* link só dos fatos (gerado pela ferramenta para quem já está cadastrado, sem "servico" de retificação no endereço): não é cadastro novo,
+         então NÃO avisa o webhook, não abre agenda nem redireciona. Só agradece. */
+      if (!/retifica/i.test(new URLSearchParams(window.location.search).get('servico') || '')) {
+        const el = document.getElementById('fatosMensagem');
+        el.innerHTML = 'Recebemos os seus fatos. Obrigado!'; el.style.display = 'block';
+        return;
+      }
       await concluirEnvio(retif.mapaId, retif.nome);
     } catch (err) {
       alert('Erro de conexão ao enviar. Seu rascunho continua guardado: tente de novo.');
