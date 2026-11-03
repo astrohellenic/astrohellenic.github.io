@@ -90,6 +90,9 @@ function rzVias(id, lonPlaneta, lonPonto) {
   return vias;
 }
 
+/* Desempate de Ptolomeu: dois horários a até tantos minutos um do outro contam como "próximos" (não está em Ptolomeu; erro normal de registro de horário) */
+const RZ_LIMITE_PROXIMO_MIN = 15;
+
 /* posicoes: { Sun: lon, Moon: lon, ... } → { linhas: [{id, lon, vias}], vencedores: [ids] } (empate: todos os empatados) */
 function rzContagem(posicoes, lonPonto) {
   const linhas = RZ_ORDEM.filter(id => posicoes[id] !== undefined).map(id => ({ id, lon: posicoes[id], vias: rzVias(id, posicoes[id], lonPonto) }));
@@ -301,6 +304,39 @@ async function rzCalcular(entrada, motor) {
     });
   });
 
+  // 6) desempate de Ptolomeu (Tetrabiblos III.2), só quando há empate nos votos:
+  //    1º vale o planeta cujo horário cai mais perto do horário informado (grau mais perto do que está nascendo, pelas ascensões);
+  //    2º se ficarem próximos (RZ_LIMITE_PROXIMO_MIN), vale o mais ligado aos centros e à seita. Onde isso não decide, ficam todos para o astrólogo escolher.
+  let desempate = null;
+  if (contagem.vencedores.length > 1) {
+    const diurno = rzNorm360(posicoes.Sun - angT.asc) >= 180;
+    const signoAsc = rzSignoDe(angT.asc);
+    const seitaDe = (id) => {
+      if (id === 'Mercury') return (rzNorm360(posicoes.Sun - posicoes.Mercury) < 180) === diurno;   // matutino = diurno, vespertino = noturno
+      return (id === 'Sun' || id === 'Jupiter' || id === 'Saturn') === diurno;
+    };
+    const itens = candidatos.filter(c => c.regra === 'ptolomeu').map(c => {
+      const casa = (rzSignoDe(c.lon) - signoAsc + 12) % 12;
+      return { c, id: c.id, ms: c.horario ? c.horario.ms : null, distMin: c.horario ? Math.abs(c.horario.ms - tMs) / 60000 : null,
+        centro: [0, 3, 6, 9].includes(casa), casa: casa + 1, seita: seitaDe(c.id), ficou: false };
+    });
+    const comHora = itens.filter(i => i.ms !== null).sort((x, y) => x.distMin - y.distMin);
+    let criterio = 'escolher';
+    if (comHora.length) {
+      const melhor = comHora[0].distMin;
+      const proximos = comHora.filter(i => i.distMin - melhor <= RZ_LIMITE_PROXIMO_MIN);
+      if (proximos.length === 1) { proximos[0].ficou = true; criterio = 'distancia'; }
+      else {
+        const fortes = proximos.filter(i => i.centro && i.seita);
+        if (fortes.length === 1) { fortes[0].ficou = true; criterio = 'centro-seita'; }
+        else { (fortes.length ? fortes : proximos).forEach(i => { i.ficou = true; }); criterio = 'escolher'; }
+      }
+    } else itens.forEach(i => { i.ficou = true; });
+    const fora = new Set(itens.filter(i => !i.ficou).map(i => i.c));
+    for (let k = candidatos.length - 1; k >= 0; k--) if (fora.has(candidatos[k])) candidatos.splice(k, 1);
+    desempate = { criterio, diurno, limiteMin: RZ_LIMITE_PROXIMO_MIN, itens: itens.map(i => ({ id: i.id, ms: i.ms, distMin: i.distMin, centro: i.centro, casa: i.casa, seita: i.seita, ficou: i.ficou })) };
+  }
+
   // detalhes de cada horário: Asc, MC, Fortuna e quando a Fortuna muda de signo (Sol e Lua ajustados às amostras do motor)
   const lista = candidatos.filter(c => c.horario);
   let solFn = null, luaFn = null;      // curvas do Sol e da Lua ajustadas às amostras do motor (a Fortuna de qualquer horário perto dos candidatos)
@@ -323,7 +359,7 @@ async function rzCalcular(entrada, motor) {
     });
   }
 
-  return { entrada, tMs, avisos, sizigia, posicoes, retro, contagem, valens, angulosT: angT, candidatos, sol: solFn, lua: luaFn };
+  return { entrada, tMs, avisos, sizigia, posicoes, retro, contagem, desempate, valens, angulosT: angT, candidatos, sol: solFn, lua: luaFn };
 }
 
 /* "10:45:14" no fuso dado (comSegundos) a partir de ms UT; com data se comData */
@@ -567,13 +603,25 @@ function rzMontarResultado(r) {
         return `<tr class="${venc ? 'rz-escolhido' : ''}"><td>${rzPlanetaRetroHtml(r, l.id)}</td><td>${rzPosHtml(l.lon, 18)}</td><td class="centro">${x(l.vias.triplicidade)}</td><td class="centro">${x(l.vias.domicilio)}</td><td class="centro">${x(l.vias.exaltacao)}</td><td class="centro">${x(l.vias.termo)}</td><td>${rzAspectoHtml(l.vias.aspecto, l.lon, s.lon)}</td><td class="centro"><strong>${l.vias.total}</strong></td></tr>`;
       }).join('')}
     </table></div>`;
+  const d = r.desempate;
+  const fmtDist = (m) => m === null ? '—' : (m < 1 ? 'menos de 1 min' : `${Math.round(m)} min`);
+  const textoCriterio = { 'distancia': 'Decidiu: horário mais perto do informado', 'centro-seita': 'Decidiu: signo de centro e da seita', 'escolher': 'Não decidiu: escolha entre os que ficaram' };
+  const blocoDesempate = !d ? '' : `
+    <div style="font-size:13px; margin:12px 0 6px; font-weight:700;">Desempate (${d.itens.length} planetas empatados)</div>
+    <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2. Primeiro vale o planeta cujo horário fica mais perto do horário informado. Se ficarem próximos (até ${d.limiteMin} min de diferença), vale o mais ligado aos centros e à seita. Mapa ${d.diurno ? 'diurno' : 'noturno'}.</div>
+    <div class="rz-rolagem"><table class="tabela-epoca">
+      <tr><th>Planeta</th><th>Horário</th><th class="centro">Distância do informado</th><th class="centro">Signo de centro</th><th class="centro">Da seita</th><th class="centro">Resultado</th></tr>
+      ${d.itens.map(i => `<tr class="${i.ficou ? 'rz-escolhido' : ''}"><td>${rzPlanetaRetroHtml(r, i.id)}</td><td>${i.ms === null ? '—' : rzFmtHora(i.ms, fuso)}</td><td class="centro">${fmtDist(i.distMin)}</td><td class="centro">${i.centro ? '✓ casa ' + i.casa : '·'}</td><td class="centro">${i.seita ? '✓' : '·'}</td><td class="centro">${i.ficou ? 'fica' : 'sai'}</td></tr>`).join('')}
+    </table></div>
+    <div style="font-size:13px; margin:8px 0;"><strong>${textoCriterio[d.criterio]}.</strong></div>`;
   const blocoVotos = `
     <hr class="divisa">
     <details open>
       <summary>Contagem de votos</summary>
-      <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. O ponto da sizígia está em ${rzPosHtml(s.lon, 16)}. Cada planeta recebe um voto por dignidade que tem nesse ponto: triplicidade, domicílio, exaltação e termo. Na triplicidade vale qualquer dos três senhores, pela tabela de Doroteu. Recebe mais um voto se aspecta o ponto. Ganha quem tem mais votos. No empate valem todos os empatados.</div>
+      <div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Fonte: Ptolomeu, Tetrabiblos III.2; Hefestião, Apotelesmatika II.2. O ponto da sizígia está em ${rzPosHtml(s.lon, 16)}. Cada planeta recebe um voto por dignidade que tem nesse ponto: triplicidade, domicílio, exaltação e termo. Na triplicidade vale qualquer dos três senhores, pela tabela de Doroteu. Recebe mais um voto se aspecta o ponto. Ganha quem tem mais votos. No empate, desempata o horário mais perto do informado e, se ficarem próximos, o signo de centro e da seita.</div>
       ${tabela}
       <div style="font-size:13px; margin:8px 0;">${r.contagem.vencedores.length > 1 ? 'Empate entre' : 'Vencedor:'} ${r.contagem.vencedores.map(id => `<span style="display:inline-block; margin-right:8px;">${rzPlanetaRetroHtml(r, id, 20)}</span>`).join('')} (${r.contagem.max} votos).</div>
+      ${blocoDesempate}
     </details>`;
 
   const rodape = `
