@@ -390,6 +390,11 @@
     let rasc = null;
     try { rasc = JSON.parse(localStorage.getItem(chaveRascunhoFatos()) || 'null'); } catch (e) { /* sem rascunho */ }
     if (rasc && rasc.token === retif.token) { retif.fatos = Array.isArray(rasc.fatos) ? rasc.fatos : []; if (!retif.nome) retif.nome = rasc.nome || ''; }
+    // rascunho guardado no banco (vale em qualquer aparelho e tem prioridade sobre o do aparelho)
+    try {
+      const { data: rb } = await supabaseClient.rpc('ler_rascunho_fatos', { p_user: ownerId, p_mapa: retif.mapaId, p_token: retif.token });
+      if (Array.isArray(rb) && rb.length) retif.fatos = rb;
+    } catch (e) { /* segue com o do aparelho */ }
     retif.fatos.forEach(f => { retif.seq = Math.max(retif.seq, f.id || 0); });
     const inicial = Math.max(1, Math.min(retif.min || 1, 8));
     while (retif.fatos.length < inicial) retif.fatos.push({ id: ++retif.seq, data: '', texto: '' });
@@ -429,10 +434,24 @@
     document.getElementById('btnAddFato').style.display = (retif.max && retif.fatos.length >= retif.max) ? 'none' : '';
   }
 
+  /* O rascunho é guardado no banco (sozinho, um instante depois da última mudança), para o cliente continuar de qualquer aparelho.
+     Uma cópia no aparelho segue como reserva, se a conexão falhar. */
+  let rascunhoTimer = null;
   function guardarRascunhoFatos() {
     const el = document.getElementById('fatosSalvo');
-    try { localStorage.setItem(chaveRascunhoFatos(), JSON.stringify({ token: retif.token, nome: retif.nome, fatos: retif.fatos })); el.textContent = 'Rascunho guardado neste aparelho.'; }
-    catch (e) { el.textContent = 'Não foi possível guardar neste aparelho. Mantenha esta página aberta até enviar.'; }
+    let local = true;
+    try { localStorage.setItem(chaveRascunhoFatos(), JSON.stringify({ token: retif.token, nome: retif.nome, fatos: retif.fatos })); } catch (e) { local = false; }
+    el.textContent = 'Salvando...';
+    clearTimeout(rascunhoTimer);
+    rascunhoTimer = setTimeout(async () => {
+      try {
+        const { error } = await supabaseClient.rpc('salvar_rascunho_fatos', { p_user: ownerId, p_mapa: retif.mapaId, p_token: retif.token, p_fatos: retif.fatos });
+        if (error) throw error;
+        el.textContent = 'Salvo.';
+      } catch (e) {
+        el.textContent = local ? 'Sem conexão: guardado só neste aparelho por enquanto.' : 'Não foi possível salvar. Mantenha esta página aberta até enviar.';
+      }
+    }, 1200);
   }
 
   function adicionarFato() { retif.fatos.push({ id: ++retif.seq, data: '', texto: '' }); guardarRascunhoFatos(); renderFatos(); }
