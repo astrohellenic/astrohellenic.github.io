@@ -531,9 +531,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
         ${combustaoStopsSVG(false, true)}
       </radialGradient></defs><circle cx="${posSol.x}" cy="${posSol.y}" r="${rSobRaiosGlow}" fill="url(#${gid})"/>`;
   }
-  if (destaques) (destaques.fatias || []).forEach(f => { svg += fatiaDestaque(f.signIdx, f.cor); });
-
-  if (estiloRoda.preenchimentoSigno) { // cada signo (do miolo ao arco de cima da faixa) pintado em transparência na cor do elemento
+  if (estiloRoda.preenchimentoSigno) { // cada signo (do miolo ao arco de cima da faixa) pintado em transparência na cor do elemento (por baixo das fatias de nível, que ficam por cima)
     const rF = pR + (estiloRoda.faixaMeia || 9 * latPxPerGrau) - 4 - (estiloRoda.faixaLinhaLargura || 0);
     for (let i = 0; i < 12; i++) {
       const A = eclToScreenAngle(i * 30, house1RefAbs), a1 = polarToCart(cx, cy, R.Aspects, A), a2 = polarToCart(cx, cy, R.Aspects, A - 30), b1 = polarToCart(cx, cy, rF, A), b2 = polarToCart(cx, cy, rF, A - 30), am = polarToCart(cx, cy, (rF + R.Aspects) / 2, A - 15);
@@ -541,6 +539,8 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
       svg += `<path d="M${a1.x.toFixed(1)} ${a1.y.toFixed(1)} L${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${rF} ${rF} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)} L${a2.x.toFixed(1)} ${a2.y.toFixed(1)} A${R.Aspects} ${R.Aspects} 0 0 1 ${a1.x.toFixed(1)} ${a1.y.toFixed(1)} Z" fill="${corF}" fill-opacity="${estiloRoda.preenchimentoSigno}" stroke="none"/>`;
     }
   }
+  if (destaques) (destaques.fatias || []).forEach(f => { svg += fatiaDestaque(f.signIdx, f.cor); });
+
   if (estiloRoda.faixaZodiaco) {
     // Faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
     svg += montarBandaZodiacoCeuSVG({
