@@ -37,7 +37,8 @@ const RODA_ESTILOS = {
 /* "Astro Hellenic" de linhas retas: a MESMA roda do tracejado (a chave 'astrohellenic' ficou sendo a tracejada porque é a que já estava
    salva no Supabase e é o padrão do Céu), só que com todos os traços lisos — anéis, divisas, eixos, retículos e divisas da faixa do zodíaco. */
 RODA_ESTILOS.astrohellenic.nome = 'Estilo Astro Hellenic Tracejado';
-RODA_ESTILOS.astrohellenic.faixaLinhaUnica = true; // duas linhas coladas entre os signos, cada uma na cor do elemento (sem o vão); o reto herda
+RODA_ESTILOS.astrohellenic.faixaLinhaUnica = true;   // duas linhas coladas entre os signos, cada uma na cor do elemento (sem o vão); o reto herda
+RODA_ESTILOS.astrohellenic.faixaLinhaLargura = 3;    // espessura da peça do signo (laterais, arco de cima e arco do miolo), crescendo pra DENTRO do signo; os termos não mudam
 RODA_ESTILOS.astrohellenic.mioloPorElemento = true; // círculo do miolo em arcos na cor do elemento de cada signo (todos os estilos Astro Hellenic; o reto herda)
 /* "Comum" (a mandala de sempre dos sites por aí): signos num anel único por dentro (linha única, como no francês) e termos + dodecatemória por fora da faixa dos
    planetas (termos mais perto, dodecatemória na borda). Os raios dos anéis de fora e do anel dos signos são deste estilo. */
@@ -71,7 +72,6 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   nome: 'Estilo Astro Hellenic comum',
   faixaZodiaco: true,
   faixaSemGlifos: true,           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
-  faixaArcoLargura: 3,            // arco do elemento na borda de fora da faixa
   signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
   raioLotes: 172,                 // lotes encostados no miolo (onde ficava o número da casa)
   fioLoteDe: 'Aspects',           // o fio dos lotes vai até a borda do miolo
@@ -532,7 +532,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     svg += montarBandaZodiacoCeuSVG({
       cx, cy, pR, meia: estiloRoda.faixaMeia || 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
       elemCores: ELEMENT_SIGN_COLORS, elemCeu: temaCeu ? { duplo: elemDuplo, pos: corElemPos } : null, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
-      rTerra: R.Aspects, rAneis: (estiloRoda.faixaMeia ? pR - estiloRoda.faixaMeia + 4 : R.SignSector), semGlifos: !!estiloRoda.faixaSemGlifos, linhaUnica: !!estiloRoda.faixaLinhaUnica, linhaLargura: window.__linhaLarguraTeste || estiloRoda.faixaLinhaLargura, arcoLargura: estiloRoda.faixaArcoLargura, eclipticaTracejada: !!estiloRoda.eclipticaTracejada, corUnica: temaCeu ? null : goldColor,
+      rTerra: R.Aspects, rAneis: (estiloRoda.faixaMeia ? pR - estiloRoda.faixaMeia + 4 : R.SignSector), semGlifos: !!estiloRoda.faixaSemGlifos, linhaUnica: !!estiloRoda.faixaLinhaUnica, linhaLargura: window.__linhaLarguraTeste || estiloRoda.faixaLinhaLargura, eclipticaTracejada: !!estiloRoda.eclipticaTracejada, corUnica: temaCeu ? null : goldColor,
       corNumero: temaCeu ? corCalculadoCeu : null, reto: !!estiloRoda.retas // números das casas: o mesmo branco/azul-escuro dos ícones calculados
     });
   }
@@ -540,7 +540,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     // Tema Céu: a Terra no miolo (decoração de céu — não existe fora dele, lá o miolo é o disco liso de sempre)
     svg += montarTerraCeuSVG(cx, cy, R.Aspects, 'none', ceuParams.dia, skyRotation); // o contorno do disco é desenhado mais abaixo, na cor adaptativa
   } else {
-    svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}" stroke="${goldColor}" stroke-width="2"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="${fundoDiscoEfetivo}"${estiloRoda.mioloPorElemento ? '' : ` stroke="${goldColor}" stroke-width="2"`}/>`;
   }
 
   const occupiedSigns = new Set();
@@ -612,14 +612,15 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   }
   // Astro Hellenic comum: o círculo do miolo é pintado em 12 arcos, cada signo na cor do seu elemento
   if (estiloRoda.mioloPorElemento) {
+    const W = window.__linhaLarguraTeste || estiloRoda.faixaLinhaLargura || 1.6, rA = R.Aspects + W / 2; // a linha de baixo do signo faz parte da peça: mesma espessura das laterais, crescendo pra dentro do signo
     for (let i = 0; i < 12; i++) {
-      const A = eclToScreenAngle(i * 30, house1RefAbs), q1 = polarToCart(cx, cy, R.Aspects, A), q2 = polarToCart(cx, cy, R.Aspects, A - 30), qm = polarToCart(cx, cy, R.Aspects, A - 15);
+      const A = eclToScreenAngle(i * 30, house1RefAbs), q1 = polarToCart(cx, cy, rA, A), q2 = polarToCart(cx, cy, rA, A - 30), qm = polarToCart(cx, cy, rA, A - 15);
       const corArco = temaCeu ? corElemPos(SIGN_ELEMENTS[i], qm.x, qm.y) : ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
-      svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${R.Aspects} ${R.Aspects} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)}" fill="none" stroke="${corArco}" stroke-width="2.4"/>`;
+      svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${rA} ${rA} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)}" fill="none" stroke="${corArco}" stroke-width="${W}"/>`;
     }
   }
   // contorno do disco do miolo (Céu): mesma cor adaptativa das divisas
-  if (temaCeu) svg += emitirTracejado(cor => `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="none" stroke="${cor}" stroke-width="2"/>`, goldColor);
+  if (temaCeu && !estiloRoda.mioloPorElemento) svg += emitirTracejado(cor => `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="none" stroke="${cor}" stroke-width="2"/>`, goldColor);
 
   if (!porSigno) svg += emitirTracejado(cor => {
     let out = '';
