@@ -68,6 +68,7 @@ RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
 RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   nome: 'Estilo Astro Hellenic comum',
   faixaZodiaco: true,
+  mioloPorElemento: true,       // círculo do miolo em arcos na cor do elemento de cada signo
   faixaSemGlifos: true,
   faixaLinhaUnica: true,          // uma divisa só entre os signos; o elemento vai nos arcos da faixa (sem o vão das duas linhas)           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
   signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
@@ -607,6 +608,14 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     }
     return out;
   }, goldColor);
+  }
+  // Astro Hellenic comum: o círculo do miolo é pintado em 12 arcos, cada signo na cor do seu elemento
+  if (estiloRoda.mioloPorElemento) {
+    for (let i = 0; i < 12; i++) {
+      const A = eclToScreenAngle(i * 30, house1RefAbs), q1 = polarToCart(cx, cy, R.Aspects, A), q2 = polarToCart(cx, cy, R.Aspects, A - 30), qm = polarToCart(cx, cy, R.Aspects, A - 15);
+      const corArco = temaCeu ? corElemPos(SIGN_ELEMENTS[i], qm.x, qm.y) : ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
+      svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${R.Aspects} ${R.Aspects} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)}" fill="none" stroke="${corArco}" stroke-width="2.4"/>`;
+    }
   }
   // contorno do disco do miolo (Céu): mesma cor adaptativa das divisas
   if (temaCeu) svg += emitirTracejado(cor => `<circle cx="${cx}" cy="${cy}" r="${R.Aspects}" fill="none" stroke="${cor}" stroke-width="2"/>`, goldColor);
