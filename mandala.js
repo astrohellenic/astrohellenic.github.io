@@ -1757,9 +1757,9 @@ function montarBandaZodiacoCeuSVG(o) {
     // sem o fecho de baixo (arco na borda de dentro da faixa): o signo fica aberto pra baixo e as
     // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
     const tracosSigno = (cor) => { let svg = '';
-    if (linhaUnica) { // uma divisa só entre os signos (sem o vão das duas linhas); o elemento vai nos arcos colados da faixa, de ponta a ponta do signo
-      const b1 = P(r2, A), b2 = P(r2, A - 30), b3 = P(r1, A - 30), b4 = P(r1, A);
-      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)} M${b4.x.toFixed(1)} ${b4.y.toFixed(1)} A${r1} ${r1} 0 0 0 ${b3.x.toFixed(1)} ${b3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="3"/>`;
+    if (linhaUnica) { // uma divisa só entre os signos (sem o vão das duas linhas); o elemento vai no arco de fora da faixa, de ponta a ponta do signo (aberto por baixo, como sempre)
+      const b1 = P(r2, A), b2 = P(r2, A - 30);
+      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="3"/>`;
       const d0 = P(rTerra, A), d1 = P(r2, A);
       svg += `<line x1="${d0.x.toFixed(1)}" y1="${d0.y.toFixed(1)}" x2="${d1.x.toFixed(1)}" y2="${d1.y.toFixed(1)}" stroke="${corUnica || cor}" stroke-width="1.6"/>`;
       return svg;
