@@ -69,6 +69,9 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   nome: 'Estilo Astro Hellenic comum',
   faixaZodiaco: true,
   faixaSemGlifos: true,           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
+  signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
+  raioLotes: 172,                 // lotes encostados no miolo (onde ficava o número da casa)
+  fioLoteDe: 'Aspects',           // o fio dos lotes vai até a borda do miolo
   faixaMeia: 95,                  // meia largura da faixa (px): cabe entre o anel dos signos e os termos (446)
   eclipticaTracejada: true        // só a linha da eclíptica é tracejada
 });
@@ -813,8 +816,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     const raioEfetivo = (item.type === 'lot' ? estiloRoda.raioLotes : pR) + (item.rOffset || 0);
 
     // Fio do ponto até os dentinhos de grau: lotes → régua do anel indicado em fioLoteDe (se o estilo tiver); o resto → régua do anel dos termos
-    const rFio = inv ? aTer[0] : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
-    const fioPraFora = inv || rFio > raioEfetivo; // anel por fora do ponto: o fio sai pra fora; por dentro: pra dentro
+    const fioLoteMiolo = inv && item.type === 'lot' && estiloRoda.fioLoteDe; // lotes do Astro Hellenic comum: encostados no miolo, fio pra dentro
+    const rFio = fioLoteMiolo ? R[estiloRoda.fioLoteDe] : inv ? aTer[0] : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
+    const fioPraFora = (inv && !fioLoteMiolo) || rFio > raioEfetivo; // anel por fora do ponto: o fio sai pra fora; por dentro: pra dentro
     const p1 = polarToCart(cx, cy, rFio, item.aScreen);
     const dFio = item.type === 'lot' ? 12 : 19;
     const p2 = polarToCart(cx, cy, fioPraFora ? raioEfetivo + dFio : raioEfetivo - dFio, item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
