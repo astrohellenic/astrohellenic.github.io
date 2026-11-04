@@ -1760,8 +1760,8 @@ function montarBandaZodiacoCeuSVG(o) {
     if (linhaUnica) { // duas linhas COLADAS (sem vão) entre os signos, cada uma na cor do elemento do seu signo; arco de fora de ponta a ponta (aberto por baixo)
       const tr = reto ? '' : ' stroke-dasharray="5 4"';
       const LARG = linhaLargura || 1.6;
-      const ra = r2 - LARG / 2, b1 = P(ra, A), b2 = P(ra, A - 30); // arco de cima: mesma espessura das laterais, crescendo pra dentro do signo
-      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${ra} ${ra} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="${LARG}"${tr}/>`; // a linha cresce só pra DENTRO do signo (deslocada meia largura), então as duas vizinhas continuam encostadas
+      const ra = r2 - LARG, b1 = P(ra, A), b2 = P(ra, A - 30); // arco de cima: dobro da espessura de cada divisa, crescendo pra dentro do signo
+      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${ra} ${ra} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="${LARG * 2}"${tr}/>`; // arco de cima com o DOBRO da divisa; a linha cresce só pra DENTRO do signo (deslocada meia largura), então as duas vizinhas continuam encostadas
       [[A, A - 30], [A - 30, A]].forEach(([ang, pra]) => { // cada borda do signo, deslocada meia largura pra dentro dele (a vizinha faz o mesmo do outro lado)
         const e0 = P(rTerra, ang), e1 = P(r2, ang), n = Math.hypot(e1.x - e0.x, e1.y - e0.y) || 1;
         let nx = -(e1.y - e0.y) / n, ny = (e1.x - e0.x) / n; // normal à linha

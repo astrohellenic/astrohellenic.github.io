@@ -612,11 +612,11 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   }
   // Astro Hellenic comum: o círculo do miolo é pintado em 12 arcos, cada signo na cor do seu elemento
   if (estiloRoda.mioloPorElemento) {
-    const W = window.__linhaLarguraTeste || estiloRoda.faixaLinhaLargura || 1.6, rA = R.Aspects + W / 2; // a linha de baixo do signo faz parte da peça: mesma espessura das laterais, crescendo pra dentro do signo
+    const W = window.__linhaLarguraTeste || estiloRoda.faixaLinhaLargura || 1.6, rA = R.Aspects + W; // arco do miolo com o DOBRO da espessura de cada divisa (as duas vizinhas coladas parecem uma linha só, do dobro); // a linha de baixo do signo faz parte da peça: mesma espessura das laterais, crescendo pra dentro do signo
     for (let i = 0; i < 12; i++) {
       const A = eclToScreenAngle(i * 30, house1RefAbs), q1 = polarToCart(cx, cy, rA, A), q2 = polarToCart(cx, cy, rA, A - 30), qm = polarToCart(cx, cy, rA, A - 15);
       const corArco = temaCeu ? corElemPos(SIGN_ELEMENTS[i], qm.x, qm.y) : ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
-      svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${rA} ${rA} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)}" fill="none" stroke="${corArco}" stroke-width="${W}"/>`;
+      svg += `<path d="M${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${rA} ${rA} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)}" fill="none" stroke="${corArco}" stroke-width="${W * 2}"/>`;
     }
   }
   // contorno do disco do miolo (Céu): mesma cor adaptativa das divisas
