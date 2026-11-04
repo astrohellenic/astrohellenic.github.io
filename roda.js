@@ -107,7 +107,9 @@ const CORES_NIVEIS = {
 const ALFA_NIVEL_RAMPA = [0.16, 0.30, 0.48, 0.70]; // opacidade do preenchimento de cada nível (sobre o padrão de 0,40)
 window.CORES_NIVEIS = CORES_NIVEIS;
 function corNivelMandala(nivel, alfa) {
-  const rampa = CORES_NIVEIS[window.coresNiveis] || CORES_NIVEIS.verde; // sem escolha salva: verde
+  // Plano Básico: só o verde (a escolha guardada na conta não é apagada; volta sozinha se o plano subir). Violeta e ocre são do Essencial pra cima.
+  const escolhida = (typeof coresNiveisLiberadoNoPlano === 'function' && !coresNiveisLiberadoNoPlano(window.coresNiveis)) ? 'verde' : window.coresNiveis;
+  const rampa = CORES_NIVEIS[escolhida] || CORES_NIVEIS.verde; // sem escolha salva: verde
   const i = Math.max(1, Math.min(4, nivel)) - 1;
   if (alfa === undefined) return rampa.tons[i];
   const n = parseInt(rampa.base.slice(1), 16);

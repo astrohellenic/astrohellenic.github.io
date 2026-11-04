@@ -312,6 +312,11 @@ function estiloPlanetasLiberadoNoPlano(estilo) {
   if (estilo !== 'esferico') return true;
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
+/* Cor dos níveis: o verde é pra todos; violeta e ocre são do Essencial pra cima (mesma regra dos temas e dos ícones esféricos). */
+function coresNiveisLiberadoNoPlano(cor) {
+  if (!cor || cor === 'verde') return true;
+  return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
+}
 function aplicarLimiteEstiloPlanetas() {
   if (estiloPlanetasLiberadoNoPlano(window.estiloPlanetas)) return;
   window.estiloPlanetas = 'simples';
@@ -338,6 +343,7 @@ async function carregarNivelPlano(userId) {
   aplicarVisibilidadeFerramentasAdmin();
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
   aplicarLimiteEstiloPlanetas();
+  if (!coresNiveisLiberadoNoPlano(window.coresNiveis)) reRenderizarModuloAtivo(); // Básico com violeta/ocre guardado: volta a desenhar em verde
   if (!temaLiberadoNoPlano(window.temaMandala)) salvarAparencia('claro');
   else if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
@@ -440,6 +446,7 @@ async function carregarCoresNiveis(userId) {
 }
 
 async function salvarCoresNiveis(cor) {
+  if (!coresNiveisLiberadoNoPlano(cor)) { alert('Violeta e ocre são do plano Essencial ou Pro. No plano Básico os níveis ficam em verde.'); return; }
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Sessão não identificada."); return; }

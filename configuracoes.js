@@ -135,7 +135,7 @@ function htmlCfgAparencia() {
   const opcaoNivel = (chave, titulo, desc) => {
     const tons = window.CORES_NIVEIS[chave].tons;
     const faixa = `<span class="cfg-opcao-icone" style="width:auto;display:inline-flex;gap:2px;align-items:center">${tons.map((t, i) => `<span style="display:inline-block;width:20px;height:26px;background:${t}" title="Nível ${i + 1}"></span>`).join('')}</span>`;
-    return opcao(`salvarCoresNiveis('${chave}')`, coresNivelAtual === chave, faixa, titulo, desc);
+    return opcao(`salvarCoresNiveis('${chave}')`, (coresNiveisLiberadoNoPlano(window.coresNiveis) ? coresNivelAtual : 'verde') === chave, faixa, titulo, desc + (coresNiveisLiberadoNoPlano(chave) ? '' : ' — plano Essencial ou Pro'));
   };
 
   const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo);

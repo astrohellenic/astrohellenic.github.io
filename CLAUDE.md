@@ -1015,3 +1015,18 @@ Toda vez que um campo de data entra num lugar, o mesmo problema volta e o astró
 - **Redesenhar a tela enquanto o seletor está aberto fecha o seletor.** Não mexer no DOM do campo enquanto a pessoa escolhe.
 - O Playwright daqui NÃO reproduz o seletor do iPad: não dá para dizer que "testei" um campo de data. Dizer que o teste real é no iPad dele.
 - Caso concreto: busca por data da Liberação Zodiacal (`liberacao.js`, `irParaDataLiberacao`), que passou por três rodadas (campo sumia, ícone sem efeito, `change` escolhendo hoje) até ficar com campo de tamanho mínimo + botão **Ir**.
+
+## PUBLICAR NA `main`: SÓ COM "PODE PUBLICAR" EXPLÍCITO, E TUDO DE UMA VEZ (04/11/2026) — regra dele, vale acima de qualquer outra
+
+**Só publicar (`git push ... :main`) quando o astrólogo disser, com todas as letras, "pode publicar".** Nenhuma outra frase vale como ordem: "rodei o SQL", "ficou bom", "gostei", "pode ficar assim", "tá ótimo", resposta a um teste ou a uma pergunta minha. Eu já publiquei por interpretar um desses como "sim" e ele ficou (com razão) bravo.
+- **Publicar tudo de uma vez.** Ele quer fazer tudo o que tem para ser feito e só então publicar; nunca publicar "de picado", uma coisa por vez, nem toda vez que uma coisa fica pronta. Terminou uma parte? Commit e push da BRANCH (nunca da `main`), e seguir para o que falta.
+- Cada "pode publicar" vale só para o que estava pronto naquela hora; coisa nova depois precisa de outra ordem.
+- Não repetir SQL que ele já disse que rodou (nem se der erro: dizer só o que está errado, ex.: projeto do Supabase errado — o do Astro Hellenic NÃO é o do Falando de Astrologia).
+
+## Planos (`perfis.nivel`): o que cada um tem (04/11/2026)
+- **Básico**, **Essencial**, **Pro**, **Admin**. Temas Céu/Sulfite, ícones esféricos dos planetas e a **cor dos níveis** (violeta e ocre; o verde é pra todos, é o padrão) são do **Essencial pra cima**. Ferramentas em teste (`FERRAMENTAS_SO_ADMIN`) só Admin. Plano ainda não carregado = nada bloqueado (menos as ferramentas de teste).
+- **Decidido por ele, AINDA NÃO FEITO:** o Essencial só pode usar **até 10 mapas**; o Pro, quantos quiser.
+
+## Estilos da mandala e cor dos níveis (04/11/2026)
+- Estilos em `RODA_ESTILOS` (`roda.js`): `astrohellenic` (tracejado), `astrohellenic_reto`, `comum`, `astrohellenic_comum`, `astrohellenic_colorido` (signo pintado em transparência na cor do elemento, menos o signo que tem nível) e `frances`. Nos estilos Astro Hellenic o círculo do miolo é pintado por arcos na cor do elemento e a divisa entre signos são duas linhas coladas (sem vão), 3 px, crescendo pra dentro do signo; o arco de cima e o do miolo têm o DOBRO; termos não mudam. Miniaturas dos estilos em `mandala-estilo-<chave>.png` são imagens fixas: **mudou o desenho de um estilo, regerar a miniatura**.
+- Cor dos níveis: `configuracoes.cores_niveis` (`verde` padrão, `violeta`, `ocre`), `corNivelMandala` em `roda.js`: uma cor só por rampa, nível 1 mais fluido (plano de fundo) e nível 4 mais denso. Não existe mais "uma cor diferente por nível".
