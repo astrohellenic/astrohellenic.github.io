@@ -1745,7 +1745,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada, linhaUnica, arcoLargura } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada, linhaUnica, arcoLargura, linhaLargura } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1761,7 +1761,7 @@ function montarBandaZodiacoCeuSVG(o) {
       const tr = reto ? '' : ' stroke-dasharray="5 4"';
       const b1 = P(r2, A), b2 = P(r2, A - 30);
       svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="${arcoLargura || 1.6}"${tr}/>`;
-      const LARG = 1.6;
+      const LARG = linhaLargura || 1.6; // a linha cresce só pra DENTRO do signo (deslocada meia largura), então as duas vizinhas continuam encostadas
       [[A, A - 30], [A - 30, A]].forEach(([ang, pra]) => { // cada borda do signo, deslocada meia largura pra dentro dele (a vizinha faz o mesmo do outro lado)
         const e0 = P(rTerra, ang), e1 = P(r2, ang), n = Math.hypot(e1.x - e0.x, e1.y - e0.y) || 1;
         let nx = -(e1.y - e0.y) / n, ny = (e1.x - e0.x) / n; // normal à linha
