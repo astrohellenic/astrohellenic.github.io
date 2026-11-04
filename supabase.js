@@ -429,23 +429,23 @@ async function carregarEstiloMandala(userId) {
 }
 
 /* COR DOS NÍVEIS (Liberação, Profecção...) — preferência do astrólogo, guardada no Supabase (configuracoes.cores_niveis: 'verde' | 'violeta' | 'ocre';
-   vazio = as cores de sempre). Sem a coluna criada, vale o de sempre e nada quebra. */
+   vazio = verde). Sem a coluna criada, vale o verde e nada quebra. */
 async function carregarCoresNiveis(userId) {
-  let cor = null;
+  let cor = 'verde';
   try {
     const { data, error } = await supabaseClient.from('configuracoes').select('cores_niveis').eq('user_id', userId).maybeSingle();
     if (!error && data && window.CORES_NIVEIS && window.CORES_NIVEIS[data.cores_niveis]) cor = data.cores_niveis;
   } catch (e) { console.error("Erro ao carregar a cor dos níveis:", e); }
-  if (cor !== (window.coresNiveis || null)) { window.coresNiveis = cor; reRenderizarModuloAtivo(); }
+  if (cor !== (window.coresNiveis || 'verde')) { window.coresNiveis = cor; reRenderizarModuloAtivo(); }
 }
 
 async function salvarCoresNiveis(cor) {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Sessão não identificada."); return; }
-    const { error } = await supabaseClient.from('configuracoes').upsert({ user_id: user.id, cores_niveis: cor || null }, { onConflict: 'user_id' });
+    const { error } = await supabaseClient.from('configuracoes').upsert({ user_id: user.id, cores_niveis: cor }, { onConflict: 'user_id' });
     if (!error) {
-      window.coresNiveis = cor || null;
+      window.coresNiveis = cor;
       reRenderizarModuloAtivo();
       if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
     } else if (/cores_niveis/i.test(error.message || '')) {

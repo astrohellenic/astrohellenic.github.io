@@ -128,13 +128,14 @@ function htmlCfgAparencia() {
       ${ativa ? `<span class="cfg-opcao-check">${menuIcone('checkCirculo', 20)}</span>` : ''}
     </button>`;
   const fa = (nome) => `<span class="cfg-opcao-icone">${menuIcone(nome, 22)}</span>`;
+  // Estilo da mandala: cada opção mostra o desenho pequeno do próprio estilo (mandala-estilo-<chave>.png)
+  const miniMandala = (chave) => `<span class="cfg-opcao-icone" style="width:auto"><img src="mandala-estilo-${chave}.png?v=1" alt="" width="84" height="84" style="display:block"></span>`;
   // Cor dos níveis: cada opção mostra os 4 níveis lado a lado (quadrados, do nível 1 ao 4), pra ver a cor que está escolhendo
-  const coresNivelAtual = window.CORES_NIVEIS && window.CORES_NIVEIS[window.coresNiveis] ? window.coresNiveis : null;
+  const coresNivelAtual = window.CORES_NIVEIS && window.CORES_NIVEIS[window.coresNiveis] ? window.coresNiveis : 'verde';
   const opcaoNivel = (chave, titulo, desc) => {
-    const pal = paletaEpoca(false);
-    const tons = chave ? window.CORES_NIVEIS[chave].tons : [pal.verde, pal.ocre, pal.azulClaro, pal.cinza];
+    const tons = window.CORES_NIVEIS[chave].tons;
     const faixa = `<span class="cfg-opcao-icone" style="width:auto;display:inline-flex;gap:2px;align-items:center">${tons.map((t, i) => `<span style="display:inline-block;width:20px;height:26px;background:${t}" title="Nível ${i + 1}"></span>`).join('')}</span>`;
-    return opcao(`salvarCoresNiveis(${chave ? `'${chave}'` : 'null'})`, coresNivelAtual === chave, faixa, titulo, desc);
+    return opcao(`salvarCoresNiveis('${chave}')`, coresNivelAtual === chave, faixa, titulo, desc);
   };
 
   const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo);
@@ -183,20 +184,19 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Estilo da mandala</h4>
         <p class="cfg-card-desc">Só o <strong>formato</strong> do desenho — onde cada coisa fica. As cores e os ícones não mudam: seguem o tema (Céu, Claro, Escuro, papiro).</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarEstiloMandala('astrohellenic_reto')", estiloMandalaEscolhido === 'astrohellenic_reto', fa('alvo'), 'Estilo Astro Hellenic', 'Faixa do zodíaco com os planetas dentro, linhas retas')}
-          ${opcao("salvarEstiloMandala('comum')", estiloMandalaEscolhido === 'comum', fa('alvo'), 'Estilo comum', 'Signos e casas por dentro, planetas na eclíptica, régua de graus com termos e dodecatemória por fora')}
-          ${opcao("salvarEstiloMandala('astrohellenic_colorido')", estiloMandalaEscolhido === 'astrohellenic_colorido', fa('alvo'), 'Estilo Astro Hellenic colorido', 'O Astro Hellenic com cada signo pintado, em transparência, na cor do elemento')}
-          ${opcao("salvarEstiloMandala('astrohellenic_comum')", estiloMandalaEscolhido === 'astrohellenic_comum', fa('alvo'), 'Estilo Astro Hellenic comum', 'Faixa dos signos na eclíptica, signos por dentro, termos e dodecatemória por fora')}
-          ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', fa('alvo'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
-          ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', fa('pizza'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
+          ${opcao("salvarEstiloMandala('astrohellenic_reto')", estiloMandalaEscolhido === 'astrohellenic_reto', miniMandala('astrohellenic_reto'), 'Estilo Astro Hellenic', 'Faixa do zodíaco com os planetas dentro, linhas retas')}
+          ${opcao("salvarEstiloMandala('comum')", estiloMandalaEscolhido === 'comum', miniMandala('comum'), 'Estilo comum', 'Signos e casas por dentro, planetas na eclíptica, régua de graus com termos e dodecatemória por fora')}
+          ${opcao("salvarEstiloMandala('astrohellenic_colorido')", estiloMandalaEscolhido === 'astrohellenic_colorido', miniMandala('astrohellenic_colorido'), 'Estilo Astro Hellenic colorido', 'O Astro Hellenic com cada signo pintado, em transparência, na cor do elemento')}
+          ${opcao("salvarEstiloMandala('astrohellenic_comum')", estiloMandalaEscolhido === 'astrohellenic_comum', miniMandala('astrohellenic_comum'), 'Estilo Astro Hellenic comum', 'Faixa dos signos na eclíptica, signos por dentro, termos e dodecatemória por fora')}
+          ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', miniMandala('astrohellenic'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
+          ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', miniMandala('frances'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
         </div>
       </div>
 
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Cor dos níveis</h4>
-        <p class="cfg-card-desc">As cores dos níveis da Liberação e da Profecção, em todas as mandalas. Nas opções de uma cor só, o nível 1 é o mais <strong>fluido</strong> (o plano de fundo) e o nível 4 o mais <strong>denso</strong> (o que está acontecendo na prática).</p>
+        <p class="cfg-card-desc">As cores dos níveis da Liberação e da Profecção, em todas as mandalas. O nível 1 é o mais <strong>fluido</strong> (o plano de fundo) e o nível 4 o mais <strong>denso</strong> (o que está acontecendo na prática).</p>
         <div class="cfg-opcoes">
-          ${opcaoNivel(null, 'As cores de sempre', 'Verde, amarelo, azul e cinza')}
           ${opcaoNivel('verde', 'Verde', 'Do verde mais claro ao mais profundo')}
           ${opcaoNivel('violeta', 'Violeta', 'Do violeta mais claro ao mais profundo')}
           ${opcaoNivel('ocre', 'Ocre', 'Do ocre mais claro ao mais profundo')}
