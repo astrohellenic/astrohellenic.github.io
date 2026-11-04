@@ -1106,22 +1106,22 @@ body {
 <script src="papiro.js?v=20261010v"></script>
 <script src="fonte-caveat.js?v=20261010v"></script>
 <script src="dialogos.js?v=20261010f"></script>
-<script src="supabase.js?v=20261104b"></script>
+<script src="supabase.js?v=20261104c"></script>
 <script src="importacao.js?v=20261027a"></script>
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261010v"></script>
 <script src="tabelaTecnica.js?v=20261010t"></script>
 <script src="mandala.js?v=20261104j"></script>
-<script src="roda.js?v=20261104n"></script>
+<script src="roda.js?v=20261104o"></script>
 <script src="isopsefia.js?v=20261010t"></script>
-<script src="profeccao.js?v=20261030d"></script>
+<script src="profeccao.js?v=20261104a"></script>
 <script src="sinastria.js?v=20261010t"></script>
 <script src="revolucao.js?v=20261030a"></script>
 <script src="revolucaoLunar.js?v=20261009b"></script>
 <script src="camadas-tempo.js?v=20261031b"></script>
 <script src="decenios.js?v=20261030d"></script>
 <script src="direcoes.js?v=20261031a"></script>
-<script src="liberacao.js?v=20261030j"></script>
+<script src="liberacao.js?v=20261104a"></script>
 <script src="lotes-calculadora.js?v=20261011a"></script>
 <script src="horas.js?v=20261030b"></script>
 <script src="fases-vida.js?v=20261031j"></script>
@@ -1135,7 +1135,7 @@ body {
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261031a"></script>
 <script src="agendamento.js?v=20261027b"></script>
-<script src="configuracoes.js?v=20261104b"></script>
+<script src="configuracoes.js?v=20261104c"></script>
 <script src="financeiro.js?v=20261010d"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
@@ -1589,6 +1589,7 @@ body:not(.modo-mandala) #mandala-container .painel { margin-left: 0; padding-lef
         if (typeof carregarNivelPlano === 'function') carregarNivelPlano(user.id);
         if (typeof carregarEstiloPlanetas === 'function') carregarEstiloPlanetas(user.id);
         if (typeof carregarEstiloMandala === 'function') carregarEstiloMandala(user.id);
+        if (typeof carregarCoresNiveis === 'function') carregarCoresNiveis(user.id);
         if (typeof carregarMostrarRotulosGlifos === 'function') carregarMostrarRotulosGlifos(user.id);
         if (typeof carregarOrdenacaoClientes === 'function') carregarOrdenacaoClientes(user.id);
         if (typeof carregarOrdemBotoesTopo === 'function') carregarOrdemBotoesTopo(user.id);

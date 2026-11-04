@@ -128,6 +128,14 @@ function htmlCfgAparencia() {
       ${ativa ? `<span class="cfg-opcao-check">${menuIcone('checkCirculo', 20)}</span>` : ''}
     </button>`;
   const fa = (nome) => `<span class="cfg-opcao-icone">${menuIcone(nome, 22)}</span>`;
+  // Cor dos níveis: cada opção mostra os 4 níveis lado a lado (quadrados, do nível 1 ao 4), pra ver a cor que está escolhendo
+  const coresNivelAtual = window.CORES_NIVEIS && window.CORES_NIVEIS[window.coresNiveis] ? window.coresNiveis : null;
+  const opcaoNivel = (chave, titulo, desc) => {
+    const pal = paletaEpoca(false);
+    const tons = chave ? window.CORES_NIVEIS[chave].tons : [pal.verde, pal.ocre, pal.azulClaro, pal.cinza];
+    const faixa = `<span class="cfg-opcao-icone" style="width:auto;display:inline-flex;gap:2px;align-items:center">${tons.map((t, i) => `<span style="display:inline-block;width:20px;height:26px;background:${t}" title="Nível ${i + 1}"></span>`).join('')}</span>`;
+    return opcao(`salvarCoresNiveis(${chave ? `'${chave}'` : 'null'})`, coresNivelAtual === chave, faixa, titulo, desc);
+  };
 
   const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo);
   const itensOrdem = ordem.map((chave, idx) => !ferramentaLiberada(chave) ? '' : `
@@ -181,6 +189,17 @@ function htmlCfgAparencia() {
           ${opcao("salvarEstiloMandala('astrohellenic_comum')", estiloMandalaEscolhido === 'astrohellenic_comum', fa('alvo'), 'Estilo Astro Hellenic comum', 'Faixa dos signos na eclíptica, signos por dentro, termos e dodecatemória por fora')}
           ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', fa('alvo'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
           ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', fa('pizza'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
+        </div>
+      </div>
+
+      <div class="cfg-card cfg-card-largo">
+        <h4 class="cfg-card-titulo">Cor dos níveis</h4>
+        <p class="cfg-card-desc">As cores dos níveis da Liberação e da Profecção, em todas as mandalas. Nas opções de uma cor só, o nível 1 é o mais <strong>fluido</strong> (o plano de fundo) e o nível 4 o mais <strong>denso</strong> (o que está acontecendo na prática).</p>
+        <div class="cfg-opcoes">
+          ${opcaoNivel(null, 'As cores de sempre', 'Verde, amarelo, azul e cinza')}
+          ${opcaoNivel('verde', 'Verde', 'Do verde mais claro ao mais profundo')}
+          ${opcaoNivel('violeta', 'Violeta', 'Do violeta mais claro ao mais profundo')}
+          ${opcaoNivel('ocre', 'Ocre', 'Do ocre mais claro ao mais profundo')}
         </div>
       </div>
 

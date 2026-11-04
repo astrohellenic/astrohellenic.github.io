@@ -97,7 +97,23 @@ function estiloMandalaAtual(naPinturaCeu) {
    como a renderMandala sempre leu; "o" traz só as opções de pintura de cada chamada (as mesmas de renderMandala). */
 /* COR DE CADA NÍVEL nas mandalas (destaque de signo): a mesma em toda ferramenta — Nível 1 verde (o do WhatsApp), Nível 2 ocre, Nível 3 azul egípcio
    claro, Nível 4 cinza (o do elemento ar). Sempre com transparência (alfa), pra a mandala aparecer por baixo. Versão do modo (claro/escuro) automática. */
+/* Cor dos níveis escolhida em Configurações → Aparência (window.coresNiveis: 'verde' | 'violeta' | 'ocre'; sem escolha = as cores de sempre).
+   Nas rampas uma cor só vai do mais FLUIDO (nível 1, o plano de fundo) ao mais DENSO (nível 4, o que está acontecendo na prática). */
+const CORES_NIVEIS = {
+  verde:   { nome: 'Verde',   base: '#2F6B45', tons: ['#A9CDB3', '#76AE88', '#3F8A5C', '#173F2A'] },
+  violeta: { nome: 'Violeta', base: '#5E3A85', tons: ['#C9B3DD', '#A07CC4', '#7A4FA3', '#3F1F66'] },
+  ocre:    { nome: 'Ocre',    base: '#B5852F', tons: ['#EAD9A8', '#D9BD6E', '#B5852F', '#6B4A0E'] }
+};
+const ALFA_NIVEL_RAMPA = [0.16, 0.30, 0.48, 0.70]; // opacidade do preenchimento de cada nível (sobre o padrão de 0,40)
+window.CORES_NIVEIS = CORES_NIVEIS;
 function corNivelMandala(nivel, alfa) {
+  const rampa = CORES_NIVEIS[window.coresNiveis];
+  if (rampa) {
+    const i = Math.max(1, Math.min(4, nivel)) - 1;
+    if (alfa === undefined) return rampa.tons[i];
+    const n = parseInt(rampa.base.slice(1), 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${Math.min(1, ALFA_NIVEL_RAMPA[i] * alfa / 0.40).toFixed(2)})`;
+  }
   const escuro = document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu';
   const pal = paletaEpoca(escuro);
   const hex = [null, pal.verde, pal.ocre, pal.azulClaro, pal.cinza][nivel] || pal.cinza;

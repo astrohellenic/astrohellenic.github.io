@@ -893,9 +893,9 @@
             if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
             const canvas = recortarCanvasAoConteudo(bruto, fundo);
             const legenda = modo === 'tabela' ? null : [
-                { cor: corNivelMandala(1), texto: 'Verde: signo profectado do ano' },
-                { cor: corNivelMandala(2), texto: 'Amarelo: ascendente da Revolução Solar' },
-                { cor: corNivelMandala(3), texto: 'Azul: mês selecionado' }
+                { cor: corNivelMandala(1), texto: (window.coresNiveis ? 'Nível 1' : 'Verde') + ': signo profectado do ano' },
+                { cor: corNivelMandala(2), texto: (window.coresNiveis ? 'Nível 2' : 'Amarelo') + ': ascendente da Revolução Solar' },
+                { cor: corNivelMandala(3), texto: (window.coresNiveis ? 'Nível 3' : 'Azul') + ': mês selecionado' }
             ];
             const total = adicionarCapturaRelatorio('profeccao', canvas.toDataURL('image/png'), legenda);
             const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandalas' ? 'Mandalas' : 'Ferramenta inteira';

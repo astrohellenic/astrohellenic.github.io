@@ -100,7 +100,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && !w
 /* depois de uma falha que se resolveu: traz de novo as definições da conta (tema, estilos, ordem dos botões...) e redesenha */
 async function recarregarDefinicoesDaConta(user) {
   const funcoes = [typeof carregarTemaMandala === 'function' && carregarTemaMandala, typeof carregarNivelPlano === 'function' && carregarNivelPlano,
-    typeof carregarEstiloPlanetas === 'function' && carregarEstiloPlanetas, typeof carregarEstiloMandala === 'function' && carregarEstiloMandala,
+    typeof carregarEstiloPlanetas === 'function' && carregarEstiloPlanetas, typeof carregarEstiloMandala === 'function' && carregarEstiloMandala, typeof carregarCoresNiveis === 'function' && carregarCoresNiveis,
     typeof carregarMostrarRotulosGlifos === 'function' && carregarMostrarRotulosGlifos, typeof carregarOrdenacaoClientes === 'function' && carregarOrdenacaoClientes,
     typeof carregarOrdemBotoesTopo === 'function' && carregarOrdemBotoesTopo].filter(Boolean);
   for (const f of funcoes) { try { await f(user.id); } catch (e) { console.error(e); } }
@@ -425,6 +425,36 @@ async function carregarEstiloMandala(userId) {
   if (estilo && estilo !== window.estiloMandala) {
     window.estiloMandala = estilo;
     reRenderizarModuloAtivo();
+  }
+}
+
+/* COR DOS NÍVEIS (Liberação, Profecção...) — preferência do astrólogo, guardada no Supabase (configuracoes.cores_niveis: 'verde' | 'violeta' | 'ocre';
+   vazio = as cores de sempre). Sem a coluna criada, vale o de sempre e nada quebra. */
+async function carregarCoresNiveis(userId) {
+  let cor = null;
+  try {
+    const { data, error } = await supabaseClient.from('configuracoes').select('cores_niveis').eq('user_id', userId).maybeSingle();
+    if (!error && data && window.CORES_NIVEIS && window.CORES_NIVEIS[data.cores_niveis]) cor = data.cores_niveis;
+  } catch (e) { console.error("Erro ao carregar a cor dos níveis:", e); }
+  if (cor !== (window.coresNiveis || null)) { window.coresNiveis = cor; reRenderizarModuloAtivo(); }
+}
+
+async function salvarCoresNiveis(cor) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Sessão não identificada."); return; }
+    const { error } = await supabaseClient.from('configuracoes').upsert({ user_id: user.id, cores_niveis: cor || null }, { onConflict: 'user_id' });
+    if (!error) {
+      window.coresNiveis = cor || null;
+      reRenderizarModuloAtivo();
+      if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+    } else if (/cores_niveis/i.test(error.message || '')) {
+      alert("Falta criar a coluna da cor dos níveis no banco. No Supabase, abra o SQL Editor e rode:\n\nalter table configuracoes add column if not exists cores_niveis text;\n\nDepois escolha a cor de novo.");
+    } else {
+      alert("Erro ao salvar a cor dos níveis: " + error.message);
+    }
+  } catch (e) {
+    alert("Erro de conexão ao salvar a cor dos níveis.");
   }
 }
 
