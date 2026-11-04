@@ -1745,7 +1745,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada, linhaUnica } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1756,7 +1756,14 @@ function montarBandaZodiacoCeuSVG(o) {
     const q1 = P(r2, a1), q2 = P(r2, a2), q3 = P(r1, a2), q4 = P(r1, a1);
     // sem o fecho de baixo (arco na borda de dentro da faixa): o signo fica aberto pra baixo e as
     // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
-    const tracosSigno = (cor) => { let svg = ''; // (no Céu: uma vez por metade do horizonte, cada uma na cor do elemento para aquele fundo)
+    const tracosSigno = (cor) => { let svg = '';
+    if (linhaUnica) { // uma divisa só entre os signos (sem o vão das duas linhas); o elemento vai nos arcos colados da faixa, de ponta a ponta do signo
+      const b1 = P(r2, A), b2 = P(r2, A - 30), b3 = P(r1, A - 30), b4 = P(r1, A);
+      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)} M${b4.x.toFixed(1)} ${b4.y.toFixed(1)} A${r1} ${r1} 0 0 0 ${b3.x.toFixed(1)} ${b3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="3"/>`;
+      const d0 = P(rTerra, A), d1 = P(r2, A);
+      svg += `<line x1="${d0.x.toFixed(1)}" y1="${d0.y.toFixed(1)}" x2="${d1.x.toFixed(1)}" y2="${d1.y.toFixed(1)}" stroke="${corUnica || cor}" stroke-width="1.6"/>`;
+      return svg;
+    } // (no Céu: uma vez por metade do horizonte, cada uma na cor do elemento para aquele fundo)
     svg += `<path d="M${q4.x.toFixed(1)} ${q4.y.toFixed(1)} L${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6"${reto ? '' : ' stroke-dasharray="5 4"'} stroke-linejoin="round"/>`;
     // as divisas do signo seguem pra dentro: pausam nos anéis de termos/dodecatemória (de rAneis
     // pra fora) e continuam até encostar na Terra

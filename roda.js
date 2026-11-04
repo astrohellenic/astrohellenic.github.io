@@ -68,7 +68,8 @@ RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
 RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   nome: 'Estilo Astro Hellenic comum',
   faixaZodiaco: true,
-  faixaSemGlifos: true,           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
+  faixaSemGlifos: true,
+  faixaLinhaUnica: true,          // uma divisa só entre os signos; o elemento vai nos arcos da faixa (sem o vão das duas linhas)           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
   signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
   raioLotes: 172,                 // lotes encostados no miolo (onde ficava o número da casa)
   fioLoteDe: 'Aspects',           // o fio dos lotes vai até a borda do miolo
@@ -529,7 +530,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     svg += montarBandaZodiacoCeuSVG({
       cx, cy, pR, meia: estiloRoda.faixaMeia || 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
       elemCores: ELEMENT_SIGN_COLORS, elemCeu: temaCeu ? { duplo: elemDuplo, pos: corElemPos } : null, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
-      rTerra: R.Aspects, rAneis: (estiloRoda.faixaMeia ? pR - estiloRoda.faixaMeia + 4 : R.SignSector), semGlifos: !!estiloRoda.faixaSemGlifos, eclipticaTracejada: !!estiloRoda.eclipticaTracejada, corUnica: temaCeu ? null : goldColor,
+      rTerra: R.Aspects, rAneis: (estiloRoda.faixaMeia ? pR - estiloRoda.faixaMeia + 4 : R.SignSector), semGlifos: !!estiloRoda.faixaSemGlifos, linhaUnica: !!estiloRoda.faixaLinhaUnica, eclipticaTracejada: !!estiloRoda.eclipticaTracejada, corUnica: temaCeu ? null : goldColor,
       corNumero: temaCeu ? corCalculadoCeu : null, reto: !!estiloRoda.retas // números das casas: o mesmo branco/azul-escuro dos ícones calculados
     });
   }
