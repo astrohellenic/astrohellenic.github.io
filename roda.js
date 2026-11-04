@@ -79,8 +79,8 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   eclipticaTracejada: true        // só a linha da eclíptica é tracejada
 });
 
-/* "Astro Hellenic colorido": o Astro Hellenic (reto) com cada signo PINTADO, em transparência, na cor do seu elemento (do miolo até o arco de cima da faixa). */
-RODA_ESTILOS.astrohellenic_colorido = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
+/* "Astro Hellenic colorido": o Astro Hellenic COMUM com cada signo PINTADO, em transparência, na cor do seu elemento (do miolo até o arco de cima da faixa). */
+RODA_ESTILOS.astrohellenic_colorido = Object.assign({}, RODA_ESTILOS.astrohellenic_comum, {
   nome: 'Estilo Astro Hellenic colorido',
   preenchimentoSigno: 0.2         // opacidade da cor do elemento por cima do papel/céu
 });
