@@ -79,6 +79,12 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   eclipticaTracejada: true        // só a linha da eclíptica é tracejada
 });
 
+/* "Astro Hellenic colorido": o Astro Hellenic (reto) com cada signo PINTADO, em transparência, na cor do seu elemento (do miolo até o arco de cima da faixa). */
+RODA_ESTILOS.astrohellenic_colorido = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
+  nome: 'Estilo Astro Hellenic colorido',
+  preenchimentoSigno: 0.2         // opacidade da cor do elemento por cima do papel/céu
+});
+
 /* Estilo da mandala escolhido em Configurações → Aparência (carregado do Supabase depois do login, ver
    carregarEstiloMandala em supabase.js): 'frances', 'astrohellenic' (tracejado) ou 'astrohellenic_reto'. Sem escolha ainda: o padrão de sempre — a pintura do
    Céu já nasceu no desenho Astro Hellenic; todas as outras (claro, escuro, papiro, tinta do relatório) são no francês. */
@@ -527,6 +533,14 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
   }
   if (destaques) (destaques.fatias || []).forEach(f => { svg += fatiaDestaque(f.signIdx, f.cor); });
 
+  if (estiloRoda.preenchimentoSigno) { // cada signo (do miolo ao arco de cima da faixa) pintado em transparência na cor do elemento
+    const rF = pR + (estiloRoda.faixaMeia || 9 * latPxPerGrau) - 4 - (estiloRoda.faixaLinhaLargura || 0);
+    for (let i = 0; i < 12; i++) {
+      const A = eclToScreenAngle(i * 30, house1RefAbs), a1 = polarToCart(cx, cy, R.Aspects, A), a2 = polarToCart(cx, cy, R.Aspects, A - 30), b1 = polarToCart(cx, cy, rF, A), b2 = polarToCart(cx, cy, rF, A - 30), am = polarToCart(cx, cy, (rF + R.Aspects) / 2, A - 15);
+      const corF = temaCeu ? corElemPos(SIGN_ELEMENTS[i], am.x, am.y) : ELEMENT_SIGN_COLORS[SIGN_ELEMENTS[i]];
+      svg += `<path d="M${a1.x.toFixed(1)} ${a1.y.toFixed(1)} L${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${rF} ${rF} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)} L${a2.x.toFixed(1)} ${a2.y.toFixed(1)} A${R.Aspects} ${R.Aspects} 0 0 1 ${a1.x.toFixed(1)} ${a1.y.toFixed(1)} Z" fill="${corF}" fill-opacity="${estiloRoda.preenchimentoSigno}" stroke="none"/>`;
+    }
+  }
   if (estiloRoda.faixaZodiaco) {
     // Faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
     svg += montarBandaZodiacoCeuSVG({
