@@ -177,6 +177,7 @@ function htmlCfgAparencia() {
         <div class="cfg-opcoes">
           ${opcao("salvarEstiloMandala('astrohellenic_reto')", estiloMandalaEscolhido === 'astrohellenic_reto', fa('alvo'), 'Estilo Astro Hellenic', 'Faixa do zodíaco com os planetas dentro, linhas retas')}
           ${opcao("salvarEstiloMandala('comum')", estiloMandalaEscolhido === 'comum', fa('alvo'), 'Estilo comum', 'Signos e casas por dentro, planetas na eclíptica, régua de graus com termos e dodecatemória por fora')}
+          ${opcao("salvarEstiloMandala('astrohellenic_comum')", estiloMandalaEscolhido === 'astrohellenic_comum', fa('alvo'), 'Estilo Astro Hellenic comum', 'Faixa dos signos na eclíptica, signos por dentro, termos e dodecatemória por fora')}
           ${opcao("salvarEstiloMandala('astrohellenic')", estiloMandalaEscolhido === 'astrohellenic', fa('alvo'), 'Estilo Astro Hellenic Tracejado', 'O mesmo desenho, com divisas e eixos tracejados')}
           ${opcao("salvarEstiloMandala('frances')", estiloMandalaEscolhido === 'frances', fa('pizza'), 'Estilo francês', 'O desenho clássico: signos num anel por dentro, planetas por fora')}
         </div>

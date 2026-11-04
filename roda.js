@@ -62,6 +62,16 @@ RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   anelDodec: [472, 498],          // dodecatemória na borda — a roda inteira tem o MESMO tamanho do Astro Hellenic (borda em 498)
   raioDestaque: 498
 });
+/* "Astro Hellenic comum": o comum (termos e dodecatemória por fora, régua de graus, miolo e signos por dentro, sem sombra embaixo dos ícones calculados)
+   com a faixa de signos do Astro Hellenic na eclíptica (contorno na cor do elemento, planetas dentro). Número da casa e glifo ficam por dentro, como no comum;
+   só a linha da eclíptica é tracejada, o resto é traço liso. */
+RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
+  nome: 'Estilo Astro Hellenic comum',
+  faixaZodiaco: true,
+  faixaSemGlifos: true,           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
+  faixaMeia: 95,                  // meia largura da faixa (px): cabe entre o anel dos signos e os termos (446)
+  eclipticaTracejada: true        // só a linha da eclíptica é tracejada
+});
 
 /* Estilo da mandala escolhido em Configurações → Aparência (carregado do Supabase depois do login, ver
    carregarEstiloMandala em supabase.js): 'frances', 'astrohellenic' (tracejado) ou 'astrohellenic_reto'. Sem escolha ainda: o padrão de sempre — a pintura do
@@ -514,9 +524,9 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
   if (estiloRoda.faixaZodiaco) {
     // Faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
     svg += montarBandaZodiacoCeuSVG({
-      cx, cy, pR, meia: 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
+      cx, cy, pR, meia: estiloRoda.faixaMeia || 9 * latPxPerGrau, ref: house1RefAbs, skyRotation, dia: ceuParams ? ceuParams.dia : 1, tinta,
       elemCores: ELEMENT_SIGN_COLORS, elemCeu: temaCeu ? { duplo: elemDuplo, pos: corElemPos } : null, signElem: SIGN_ELEMENTS, glifos: MONOLINE_ZODIAC_SVGS,
-      rTerra: R.Aspects, rAneis: R.SignSector, corUnica: temaCeu ? null : goldColor,
+      rTerra: R.Aspects, rAneis: (estiloRoda.faixaMeia ? pR - estiloRoda.faixaMeia + 4 : R.SignSector), semGlifos: !!estiloRoda.faixaSemGlifos, eclipticaTracejada: !!estiloRoda.eclipticaTracejada, corUnica: temaCeu ? null : goldColor,
       corNumero: temaCeu ? corCalculadoCeu : null, reto: !!estiloRoda.retas // números das casas: o mesmo branco/azul-escuro dos ícones calculados
     });
   }
@@ -744,7 +754,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   });
 
   const refSignIdx = Math.floor(house1RefAbs / 30);
-  if (!estiloRoda.faixaZodiaco) { // com a faixa do zodíaco os números e glifos dos signos ficam na faixa
+  if (!estiloRoda.faixaZodiaco || estiloRoda.faixaSemGlifos) { // com a faixa do zodíaco os números e glifos dos signos ficam na faixa (exceto no Astro Hellenic comum, onde ficam por dentro)
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, inv ? estiloRoda.signos.numero : 122, aMid);

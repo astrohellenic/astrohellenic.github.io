@@ -1745,7 +1745,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1767,8 +1767,8 @@ function montarBandaZodiacoCeuSVG(o) {
     return svg; };
     svg += elemCeu ? elemCeu.duplo(signElem[i], tracosSigno) : tracosSigno(cor);
     const Am = A - 15, pG = P(rOut - 26, Am), pN = P(rIn + 20, Am);
-    svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${elemCeu ? elemCeu.pos(signElem[i], pG.x, pG.y) : cor};">${glifos[i]}</svg>`;
-    svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    if (!semGlifos) svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${elemCeu ? elemCeu.pos(signElem[i], pG.x, pG.y) : cor};">${glifos[i]}</svg>`;
+    if (!semGlifos) svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
   }
   // linha da eclíptica + marcas de grau (1°, 5°, 10°), em duas tintas: azul-marinho de dia acima
   // do horizonte, claro à noite e no espaço
@@ -1780,7 +1780,7 @@ function montarBandaZodiacoCeuSVG(o) {
     const seg = `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)}L${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
     if (deg % 10 === 0) marcas.forte += seg; else if (deg % 5 === 0) marcas.media += seg; else marcas.fina += seg;
   }
-  const grupoTinta = (cor, clip) => `<g ${clip ? `clip-path="url(#${clip})" ` : ''}stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
+  const grupoTinta = (cor, clip) => `<g ${clip ? `clip-path="url(#${clip})" ` : ''}stroke="${cor}" fill="none"><circle cx="${cx}" cy="${cy}" r="${pR}" stroke-opacity=".7" stroke-width="1.3"${eclipticaTracejada ? ' stroke-dasharray="6 4"' : ''}/><path d="${marcas.fina}" stroke-opacity=".55" stroke-width=".8"/><path d="${marcas.media}" stroke-opacity=".65" stroke-width="1"/><path d="${marcas.forte}" stroke-opacity=".75" stroke-width="1.4"/></g>`;
   svg += corUnica ? grupoTinta(corUnica, null) : (grupoTinta(tintaCima, 'ceuMeiaTela') + grupoTinta(tintaBaixo, 'ceuMeiaTelaBaixo'));
   return svg;
 }
