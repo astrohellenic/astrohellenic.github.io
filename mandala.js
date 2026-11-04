@@ -1745,7 +1745,7 @@ window.addEventListener('resize', () => alinharFundoCeuTela());
    sempre (mesmas cores), translúcido. Número da casa (signo inteiro) na borda de dentro.
    Linha da eclíptica com marcas de grau. Só pintura/desenho: sem <mask>. */
 function montarBandaZodiacoCeuSVG(o) {
-  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada, linhaUnica } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
+  const { cx, cy, pR, meia, ref, skyRotation, dia, tinta, elemCores, elemCeu, signElem, glifos, rTerra, rAneis, corUnica, corNumero, reto, semGlifos, eclipticaTracejada, linhaUnica, arcoLargura } = o; // corNumero(x,y): cor do número da casa (Céu: branco/azul-escuro conforme o céu) // corUnica: fora do Tema Céu não há horizonte/céu, a linha da eclíptica é de uma cor só
   const rIn = pR - meia, rOut = pR + meia, INS = 0.55, RIN = 4;
   const P = (r, a) => polarToCart(cx, cy, r, a);
   const refSignIdx = Math.floor(ref / 30);
@@ -1758,17 +1758,20 @@ function montarBandaZodiacoCeuSVG(o) {
     // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
     const tracosSigno = (cor) => { let svg = '';
     if (linhaUnica) { // duas linhas COLADAS (sem vão) entre os signos, cada uma na cor do elemento do seu signo; arco de fora de ponta a ponta (aberto por baixo)
+      const tr = reto ? '' : ' stroke-dasharray="5 4"';
       const b1 = P(r2, A), b2 = P(r2, A - 30);
-      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="3"/>`;
+      svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="${arcoLargura || 1.6}"${tr}/>`;
       const LARG = 1.6;
       [[A, A - 30], [A - 30, A]].forEach(([ang, pra]) => { // cada borda do signo, deslocada meia largura pra dentro dele (a vizinha faz o mesmo do outro lado)
-        const d0 = P(rTerra, ang), d1 = P(r2, ang);
-        const rad = { x: d1.x - d0.x, y: d1.y - d0.y }, n = Math.hypot(rad.x, rad.y) || 1;
-        let nx = -rad.y / n, ny = rad.x / n; // normal à linha
+        const e0 = P(rTerra, ang), e1 = P(r2, ang), n = Math.hypot(e1.x - e0.x, e1.y - e0.y) || 1;
+        let nx = -(e1.y - e0.y) / n, ny = (e1.x - e0.x) / n; // normal à linha
         const lado = P(rTerra + 40, pra), meio = P(rTerra + 40, ang); // pra qual lado fica o interior do signo
         if ((lado.x - meio.x) * nx + (lado.y - meio.y) * ny < 0) { nx = -nx; ny = -ny; }
-        const o = LARG / 2;
-        svg += `<line x1="${(d0.x + nx * o).toFixed(1)}" y1="${(d0.y + ny * o).toFixed(1)}" x2="${(d1.x + nx * o).toFixed(1)}" y2="${(d1.y + ny * o).toFixed(1)}" stroke="${cor}" stroke-width="${LARG}"/>`;
+        const o2 = LARG / 2;
+        [[rTerra, rAneis], [r1, r2]].forEach(([ra, rb]) => { // do miolo até o anel dos signos, pausa nos anéis, e a faixa
+          const d0 = P(ra, ang), d1 = P(rb, ang);
+          svg += `<line x1="${(d0.x + nx * o2).toFixed(1)}" y1="${(d0.y + ny * o2).toFixed(1)}" x2="${(d1.x + nx * o2).toFixed(1)}" y2="${(d1.y + ny * o2).toFixed(1)}" stroke="${cor}" stroke-opacity=".9" stroke-width="${LARG}"${tr}/>`;
+        });
       });
       return svg;
     } // (no Céu: uma vez por metade do horizonte, cada uma na cor do elemento para aquele fundo)
