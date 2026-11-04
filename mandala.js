@@ -1784,7 +1784,7 @@ function montarBandaZodiacoCeuSVG(o) {
     });
     return svg; };
     svg += elemCeu ? elemCeu.duplo(signElem[i], tracosSigno) : tracosSigno(cor);
-    const Am = A - 15, pG = P(rOut - 26, Am), pN = P(rIn + 20, Am);
+    const Am = A - 15, pG = P(rOut - 26 - (linhaUnica ? Math.max(0, 2 * (linhaLargura || 1.6) - 1.6) : 0), Am), pN = P(rIn + 20, Am);
     if (!semGlifos) svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${elemCeu ? elemCeu.pos(signElem[i], pG.x, pG.y) : cor};">${glifos[i]}</svg>`;
     if (!semGlifos) svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
   }
