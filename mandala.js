@@ -1757,11 +1757,19 @@ function montarBandaZodiacoCeuSVG(o) {
     // sem o fecho de baixo (arco na borda de dentro da faixa): o signo fica aberto pra baixo e as
     // divisas seguem até a Terra. Só o arco de fora e as duas laterais.
     const tracosSigno = (cor) => { let svg = '';
-    if (linhaUnica) { // uma divisa só entre os signos (sem o vão das duas linhas); o elemento vai no arco de fora da faixa, de ponta a ponta do signo (aberto por baixo, como sempre)
+    if (linhaUnica) { // duas linhas COLADAS (sem vão) entre os signos, cada uma na cor do elemento do seu signo; arco de fora de ponta a ponta (aberto por baixo)
       const b1 = P(r2, A), b2 = P(r2, A - 30);
       svg += `<path d="M${b1.x.toFixed(1)} ${b1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${b2.x.toFixed(1)} ${b2.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="3"/>`;
-      const d0 = P(rTerra, A), d1 = P(r2, A);
-      svg += `<line x1="${d0.x.toFixed(1)}" y1="${d0.y.toFixed(1)}" x2="${d1.x.toFixed(1)}" y2="${d1.y.toFixed(1)}" stroke="${corUnica || cor}" stroke-width="1.6"/>`;
+      const LARG = 1.6;
+      [[A, A - 30], [A - 30, A]].forEach(([ang, pra]) => { // cada borda do signo, deslocada meia largura pra dentro dele (a vizinha faz o mesmo do outro lado)
+        const d0 = P(rTerra, ang), d1 = P(r2, ang);
+        const rad = { x: d1.x - d0.x, y: d1.y - d0.y }, n = Math.hypot(rad.x, rad.y) || 1;
+        let nx = -rad.y / n, ny = rad.x / n; // normal à linha
+        const lado = P(rTerra + 40, pra), meio = P(rTerra + 40, ang); // pra qual lado fica o interior do signo
+        if ((lado.x - meio.x) * nx + (lado.y - meio.y) * ny < 0) { nx = -nx; ny = -ny; }
+        const o = LARG / 2;
+        svg += `<line x1="${(d0.x + nx * o).toFixed(1)}" y1="${(d0.y + ny * o).toFixed(1)}" x2="${(d1.x + nx * o).toFixed(1)}" y2="${(d1.y + ny * o).toFixed(1)}" stroke="${cor}" stroke-width="${LARG}"/>`;
+      });
       return svg;
     } // (no Céu: uma vez por metade do horizonte, cada uma na cor do elemento para aquele fundo)
     svg += `<path d="M${q4.x.toFixed(1)} ${q4.y.toFixed(1)} L${q1.x.toFixed(1)} ${q1.y.toFixed(1)} A${r2} ${r2} 0 0 0 ${q2.x.toFixed(1)} ${q2.y.toFixed(1)} L${q3.x.toFixed(1)} ${q3.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-opacity=".9" stroke-width="1.6"${reto ? '' : ' stroke-dasharray="5 4"'} stroke-linejoin="round"/>`;
