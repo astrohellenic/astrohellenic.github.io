@@ -680,7 +680,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   /* TERMOS E DODECATEMÓRIAS POR SIGNO (esboço): eles fazem parte do signo, então ficam no CAMPO dele, na cor do elemento, e acompanham o contorno
      da faixa do zodíaco (que deixa INS graus de folga de cada lado — o "vãozinho" entre um signo e o outro). Tudo que cai nessa folga não é desenhado. */
   if (porSigno) {
-    const INS = 0.55;
+    const INS = 0; // sem vão entre os signos: os campos se encostam e as duas laterais ficam coladas, cada uma na cor do seu signo
     for (let i = 0; i < 12; i++) {
       const blocoSigno = (cor) => { let svg = ''; // (svg local: a peça do signo sai inteira, numa cor só, e no Céu é desenhada uma vez por metade)
       const A = eclToScreenAngle(i * 30, house1RefAbs), a1 = A - INS, a2 = A - 30 + INS;
@@ -690,7 +690,12 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
         const s = P(rr, a1), e = P(rr, a2);
         svg += `<path d="M${s.x.toFixed(1)} ${s.y.toFixed(1)} A${rr} ${rr} 0 0 0 ${e.x.toFixed(1)} ${e.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="${k === 1 ? 1.5 : 2}"${tracejadoCeu}/>`;
       });
-      [a1, a2].forEach(ang => { const s = P(R.SignSector, ang), e = P(R.Termos, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="2"${tracejadoCeu}/>`; });
+      [[a1, a2], [a2, a1]].forEach(([ang, pra]) => { // cada lateral deslocada meia largura pra dentro do signo (a vizinha faz o mesmo do outro lado): coladas, sem vão
+        const s = P(R.SignSector, ang), e = P(R.Termos, ang), n = Math.hypot(e.x - s.x, e.y - s.y) || 1;
+        let nx = -(e.y - s.y) / n, ny = (e.x - s.x) / n;
+        const l1 = P(R.SignSector + 20, pra), l0 = P(R.SignSector + 20, ang);
+        if ((l1.x - l0.x) * nx + (l1.y - l0.y) * ny < 0) { nx = -nx; ny = -ny; }
+        svg += `<line x1="${(s.x + nx).toFixed(1)}" y1="${(s.y + ny).toFixed(1)}" x2="${(e.x + nx).toFixed(1)}" y2="${(e.y + ny).toFixed(1)}" stroke="${cor}" stroke-width="2"${tracejadoCeu}/>`; });
       // divisas da dodecatemória (de 2,5° em 2,5°, só as de dentro do signo)
       for (let d = 1; d < 12; d++) { const ang = eclToScreenAngle(i * 30 + d * 2.5, house1RefAbs), s = P(R.SignSector, ang), e = P(R.Dodec, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; }
       // divisas dos termos (só as de dentro do signo)
