@@ -21,6 +21,7 @@
 
 /* PAINEL POR BAIXO — toda ferramenta ocupa um painel. Claro/escuro: cor lisa; papiro: o fundo do papiro. */
 .painel {
+    border: 0; /* sem a linha ocre de cima e de baixo (vinha do grupo de cima) */
     background: var(--fundo-creme);
     color: var(--preto-tinta);
     padding: 20px;
