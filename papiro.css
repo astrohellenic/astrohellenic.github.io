@@ -101,9 +101,14 @@ body.tema-ceu .janela::after {
 body.tema-ceu .rel-editor-tela { clip-path: none !important; }
 
 /* Cabeçalho do Céu: papiro liso (sem borda quebrada) por dentro da moldura, e sem as duas linhas que o ::after desenhava (a linha do cabeçalho é o <hr> dele). */
-body.tema-ceu #top-bar::before { inset: 0; clip-path: none; }
+
 body.tema-ceu #top-bar::after { display: none; }
 
 
 /* Barra de botões da mandala (embaixo): só a linha de cima, como o cabeçalho do software, ao contrário. */
 body.tema-ceu #barra-inferior-mandala::after { border-bottom: 0; }
+
+/* Céu: o papiro do cabeçalho do software e da barra da Mandala é o FUNDO da própria folha (como o painel das ferramentas), com a borda rasgada no recorte da folha:
+   assim a moldura (borda da folha) fica DENTRO do papiro, nunca solta no céu. */
+body.tema-ceu #top-bar, body.tema-ceu #barra-inferior-mandala { background: var(--papiro-fundo) !important; clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%); overflow: visible; }
+body.tema-ceu #top-bar::before, body.tema-ceu #barra-inferior-mandala::before { display: none; }
