@@ -918,8 +918,8 @@ document.documentElement.classList.toggle('so-mouse', mandalaSoMouse());
 
 /* No celular em pé a mandala (o anel de fora) tem que ocupar praticamente a largura toda: a imagem ganha uma escala-base um pouco maior que 1 (o céu de fundo que passa da tela é cortado; o anel e
    os ícones continuam inteiros). O rótulo do zoom continua 100%. Sem zoom (<= 100%) não há rolagem: o que passa da tela é cortado. */
-function escalaBaseMandala() { return window.innerWidth <= 700 ? 1.09 : 1; }
-function aplicarOverflowMandala() { const c = document.getElementById('mandala-container'); if (c) c.style.overflow = mandalaZoomPercent <= 100 ? 'hidden' : ''; }
+function escalaBaseMandala() { return 1; } // sem escala extra: o anel de fora nunca é cortado
+function aplicarOverflowMandala() { const c = document.getElementById('mandala-container'); if (c) c.style.overflow = ''; }
 window.addEventListener('resize', () => { const img = document.getElementById('mandalaImg'); if (img) { img.style.transform = `scale(${(mandalaZoomPercent / 100 * escalaBaseMandala()).toFixed(2)})`; if (typeof alinharFundoCeuTela === 'function') alinharFundoCeuTela(); } });
 
 function ajustarZoomMandala(delta) {
