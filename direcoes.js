@@ -612,9 +612,12 @@ function renderCircumambulaçõesUI() {
     const yOffset = 10 + (localIdx * rowHeight);
     let rowHtml = '';
 
-    // Moldura da Pauta
-    // Cada pauta é um cartão: só uma linha fina em cima e outra embaixo, sem os lados, cantos retos.
-    rowHtml += `<line x1="10" y1="${yOffset}" x2="910" y2="${yOffset}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/><line x1="10" y1="${yOffset + boxHeight}" x2="910" y2="${yOffset + boxHeight}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+    // Sem moldura: nada em cima nem embaixo de cada pauta. Só a linha de divisa entre um signo e o outro (a mesma das tabelas de
+    // Liberação, Decênios...), no meio do espaço entre as duas pautas; a primeira pauta não leva.
+    if (localIdx > 0) {
+      const yDivisa = yOffset - (rowHeight - boxHeight) / 2;
+      rowHtml += `<line x1="10" y1="${yDivisa}" x2="910" y2="${yDivisa}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+    }
 
     // Ícone Monoline do Signo
     rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passage.signIdx, Math.round(34 * k))}</g>`;
