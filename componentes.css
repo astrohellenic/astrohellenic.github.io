@@ -328,6 +328,9 @@
 #barra-linha-botoes { position: relative; }
 /* UMA divisa entre CADA botão (igual à barra de cima): os botões, o seletor Dia e os dois grupos, todos separados por linha de 2px */
 #barra-inferior-mandala :is(.icon-btn, .botao-icone, .time-select) { border-left: 2px solid var(--azul-egipcio-claro) !important; border-radius: 0; align-self: stretch; }
+/* O stepper de tempo (< Dia >) e o zoom (− 100% +) são UMA peça cada: a divisa fica só na frente da peça, nunca dentro dela */
+#barra-inferior-mandala :is(.time-stepper, #mandalaZoomContainer) :is(.icon-btn, .botao-icone, .time-select) { border-left: 0 !important; }
+#barra-inferior-mandala :is(.time-stepper, #mandalaZoomContainer) { border-left: 2px solid var(--azul-egipcio-claro); align-self: stretch; display: flex; align-items: center; padding: 0 6px; }
 #barra-inferior-mandala #mandala-actions-overlay > .icon-btn:first-child { border-left: 0 !important; }
 .barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
 .barra-seta.visivel { display: flex; }
