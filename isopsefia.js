@@ -285,7 +285,7 @@ function renderConteudoAbaAtual() {
                   <td class="centro iso-mono">${calc.bruto} - (12 × ${calc.divisaoInteira}) = <strong>${calc.resto}</strong></td>
                   <td class="centro">${calc.resto > 0 ? calc.resto + 'º Topos' : '-'}</td>
                   <td class="iso-col-glifo">${signoComNome(getSignSvgHtmlIso(ativ.signIdx, 22), ativ.signIdx)}</td>
-                  <td class="centro" data-html2canvas-ignore="true"><button type="button" class="botao-texto" onclick="removerTermoPlanilha(${idx})">Excluir</button></td>
+                  <td class="centro" data-html2canvas-ignore="true"><button type="button" class="botao-texto janela-apagar" onclick="removerTermoPlanilha(${idx})">Excluir</button></td>
                 </tr>
               `;
             }).join('')}

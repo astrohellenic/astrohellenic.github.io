@@ -57,6 +57,7 @@
    O céu é o céu: estas cores valem nos três modos (não têm versão adaptada). A cor de cada ponto muda entre a "noite"
    e o "dia" conforme a altura do Sol naquele lugar (mistura das duas, ver misturarHexCeu em mandala.js). */
 :root {
+    --sobre-terracota: #F3E3B8; /* texto sobre botão preenchido de terracota (igual ao Falando de Astrologia), em todos os temas */
     --ceu-linha-noite: #E6EEFF;       /* tracejados e linhas da roda, de noite / abaixo do horizonte */
     --ceu-icone-noite: #DBE6FF;       /* ícones calculados (lotes, ângulos, nodos, sizígia) e números das casas, de noite */
     --ceu-tinta-dia: #1D3A66;         /* os mesmos, de dia, acima do horizonte sobre o céu claro */

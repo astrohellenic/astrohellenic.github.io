@@ -345,7 +345,7 @@ function imprimirEntradasPDF() {
       <div class="janela-linha-botoes">
         <button type="button" class="botao-texto" id="finPdfPapiro">Com papiro (tinta sobre papiro)</button>
         <button type="button" class="botao-texto" id="finPdfSimples">Sem papiro (fundo branco)</button>
-        <button type="button" class="botao-texto" id="finPdfCancelar">Cancelar</button>
+        <button type="button" class="botao-texto janela-sec" id="finPdfCancelar">Cancelar</button>
       </div>
     </div></div>`;
   document.body.appendChild(overlay);

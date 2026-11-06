@@ -3560,7 +3560,7 @@ function montarEExibirRelatorio(container, preset, perfil, png1, png2, lotesNata
 
   const htmlRelatorio = `
     <div class="rel-toolbar no-print" id="relToolbarFixa">
-      <button type="button" class="botao-texto" onclick="voltarConfigRelatorio()">${menuIcone('voltar', 16)} Voltar</button>
+      <button type="button" class="botao-texto janela-sec" onclick="voltarConfigRelatorio()">${menuIcone('voltar', 16)} Voltar</button>
       <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
     </div>
     <div id="relToolbarEspacador" class="no-print"></div>

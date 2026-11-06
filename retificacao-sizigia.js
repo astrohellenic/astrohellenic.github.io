@@ -883,7 +883,7 @@ function rzMontarFatos(r) {
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário acima e tudo se recalcula.</div>
-    <div style="display:flex; gap:6px; margin-bottom:4px;"><button type="button" class="botao-texto" onclick="rzFatosAbrirTodos(true)">Abrir todos</button><button type="button" class="botao-texto" onclick="rzFatosAbrirTodos(false)">Fechar todos</button></div>
+    <div style="display:flex; gap:6px; margin-bottom:4px;"><button type="button" class="botao-texto janela-sec" onclick="rzFatosAbrirTodos(true)">Abrir todos</button><button type="button" class="botao-texto janela-sec" onclick="rzFatosAbrirTodos(false)">Fechar todos</button></div>
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
     ${resumo}

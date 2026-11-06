@@ -93,7 +93,7 @@ function buscaPorDataHTML(o) {
         <button type="button" class="botao-icone" onclick="const i=document.getElementById('${o.id}'); try { i.showPicker(); } catch (e) { i.focus(); i.click(); }" title="Ir para a data"><svg class="icone" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg></button>
         <input type="date" id="${o.id}" value="${valor}" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; min-height: 36px; min-width: 160px; box-sizing: border-box;">
         <button type="button" class="botao-texto" onclick="const v=document.getElementById('${o.id}').value; if (v) ${o.fnIr}(v);">Ir</button>
-        ${d ? `<button type="button" class="botao-texto" onclick="${o.fnIr}('')">Hoje</button>` : ''}
+        ${d ? `<button type="button" class="botao-texto janela-sec" onclick="${o.fnIr}('')">Hoje</button>` : ''}
       </div>`;
 }
 

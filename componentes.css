@@ -668,3 +668,20 @@ input[type="radio"]:checked::after {
     border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
     border-image: url(moldura-redes.svg?v=1) 130 80 round;
 }
+
+
+/* BOTÕES DE TEXTO — o mesmo padrão do Falando de Astrologia, em todos os temas e em todo o software (os botões de ÍCONE ficam como são):
+   • botão importante (Entrar, Salvar, Adicionar, Gerar...): preenchido de terracota, texto claro, canto reto;
+   • botão secundário (.janela-sec: Cancelar, Voltar, "Não tem uma conta?"...): só a palavra, azul egípcio, SUBLINHADA, sem caixa;
+   • apagar (.janela-apagar): só a palavra, pequena, apagada e sublinhada, para ninguém tocar sem querer.
+   Botão nunca muda no hover (nem cor, nem forma). */
+.botao-texto, .botao-texto:hover, .botao-texto:active {
+    background: var(--terracota); color: var(--sobre-terracota);
+    border: 0; border-radius: 0; box-shadow: none; padding: 9px 18px; font-size: 13px; font-weight: 700;
+}
+.janela .botao-texto.janela-sec, .botao-texto.janela-sec, .botao-texto.janela-sec:hover, .botao-texto.janela-sec:active {
+    background: none; color: var(--azul-egipcio-escuro); border: 0; padding: 6px 4px; text-decoration: underline;
+}
+.janela .botao-texto.janela-apagar, .botao-texto.janela-apagar, .botao-texto.janela-apagar:hover {
+    background: none; color: var(--azul-egipcio-escuro); opacity: .6; border: 0; padding: 4px; font-size: 12px; text-decoration: underline;
+}

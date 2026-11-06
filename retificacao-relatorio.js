@@ -264,7 +264,7 @@ async function rzGerarRelatorio() {
     const container = document.getElementById('mandala-container');
     container.innerHTML = `
       <div class="rel-toolbar no-print" id="relToolbarFixa">
-        <button type="button" class="botao-texto" onclick="rzVoltarDoRelatorio()">${menuIcone('voltar', 16)} Voltar</button>
+        <button type="button" class="botao-texto janela-sec" onclick="rzVoltarDoRelatorio()">${menuIcone('voltar', 16)} Voltar</button>
         <button type="button" id="relBtnBaixarPdf" class="botao-texto" onclick="baixarRelatorioPDF()">${menuIcone('baixarArquivo', 16)} Baixar PDF</button>
       </div>
       <div id="relToolbarEspacador" class="no-print"></div>

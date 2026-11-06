@@ -234,3 +234,6 @@
 .cfg-btn .icone, .cfg-seta .icone { flex: 0 0 auto; }
 .cfg-servico-link { padding: 8px 0; }
 .cfg-servico-link .cfg-servico-nome { margin-bottom: 4px; }
+
+/* Botões da página de Configurações: o mesmo padrão dos botões de texto do software (componentes.css) — só a palavra, azul, sublinhada; sem linhas em cima e embaixo. */
+.cfg-btn, .cfg-btn:hover { background: none; color: var(--azul-egipcio-escuro); border: 0; text-decoration: underline; padding: 5px 8px; font-size: 13px; }
