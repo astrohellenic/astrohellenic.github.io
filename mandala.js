@@ -1049,11 +1049,13 @@ function soltarMenusDaBarraMandala(botao) {
       document.body.appendChild(menu);
     }
     const larg = menu.offsetWidth || 280;
-    const folga = menu.id === 'dropdown-rs-container' ? 30 : 10; // só a Revolução Solar fica por dentro da moldura; os outros menus seguem como eram
+    const folga = 10;
     const esq = Math.max(folga, Math.min(rb ? rb.left : folga, window.innerWidth - larg - folga));
     menu.style.position = 'fixed'; menu.style.top = 'auto'; menu.style.right = 'auto';
     menu.style.left = esq + 'px'; menu.style.bottom = base + 'px';
-    menu.style.maxWidth = menu.id === 'dropdown-rs-container' ? 'calc(100vw - 60px)' : 'calc(100vw - 20px)'; menu.style.zIndex = '10000';
+    menu.style.maxWidth = 'calc(100vw - 20px)'; menu.style.zIndex = '10000';
+    // a lista de anos faz o menu crescer pra cima: nunca passa do topo da tela, rola por dentro
+    menu.style.maxHeight = Math.max(160, window.innerHeight - base - 70) + 'px'; menu.style.overflowY = 'auto';
   });
 }
 document.addEventListener('click', (e) => {
@@ -1064,6 +1066,9 @@ document.addEventListener('click', (e) => {
   }
   const botao = e.target.closest && e.target.closest('#barra-inferior-mandala button');
   if (botao) setTimeout(() => soltarMenusDaBarraMandala(botao), 0);
+  // tocar dentro de um menu já solto (abrir a lista de anos) refaz a altura máxima dele
+  const dentro = e.target.closest && e.target.closest('body > .menu-flutuante[data-da-barra]');
+  if (dentro) setTimeout(() => soltarMenusDaBarraMandala(null), 0);
 }, true);
 
 function atualizarSetasBarraMandala() {
