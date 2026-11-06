@@ -711,13 +711,12 @@ input[type="radio"]:checked::after {
     #barra-inferior-mandala #cabecalho-barra-mandala { padding-top: 0; }
 }
 
-/* CELULAR DEITADO (tela muito baixa): não dá para caber tudo e ainda sobrar mandala. Então a mandala ocupa a ALTURA INTEIRA da tela e o resto (o cabeçalho do mapa e os botões de baixo)
-   fica logo abaixo, à vista ao rolar a página. Nada some. */
-@media (max-height: 520px) {
-    :root.modo-mandala, html body.modo-mandala { height: auto; overflow: auto; }
-    html body.modo-mandala #main-stage { height: auto; min-height: 100dvh; overflow: visible; }
-    html body.modo-mandala #mandala-screen { overflow: visible; flex-direction: column; }
-    html body.modo-mandala #mandala-container { order: 1; flex: none; height: calc(100dvh - 24px); }
-    html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; bottom: auto; margin-top: 8px; }
+/* MANDALA: a imagem da mandala é a estrela e fica INTEIRA na tela — no celular ocupa praticamente a largura toda (só uma pequena margem) e no desktop/iPad cabe na altura que sobra depois do cabeçalho
+   do software. O cabeçalho do mapa e os botões vêm logo ABAIXO dela, na rolagem da página (se não couberem na primeira tela, ficam mais para baixo). Nada some. */
+:root.modo-mandala, html body.modo-mandala { height: auto; overflow: auto; }
+html body.modo-mandala #main-stage { height: auto; min-height: 100dvh; overflow: visible; }
+html body.modo-mandala #mandala-screen { flex: none !important; overflow: visible !important; flex-direction: column; }
+html body.modo-mandala #mandala-container { order: 1; flex: none; height: min(calc(100vw - 12px), calc(100dvh - var(--topbar-altura) - 36px)); }
+html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; bottom: auto; margin-top: 8px; }
 }
 }

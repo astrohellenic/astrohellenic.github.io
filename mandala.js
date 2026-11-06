@@ -916,6 +916,12 @@ function mandalaSoMouse() {
 }
 document.documentElement.classList.toggle('so-mouse', mandalaSoMouse());
 
+/* No celular em pé a mandala (o anel de fora) tem que ocupar praticamente a largura toda: a imagem ganha uma escala-base um pouco maior que 1 (o céu de fundo que passa da tela é cortado; o anel e
+   os ícones continuam inteiros). O rótulo do zoom continua 100%. Sem zoom (<= 100%) não há rolagem: o que passa da tela é cortado. */
+function escalaBaseMandala() { return window.innerWidth <= 700 ? 1.09 : 1; }
+function aplicarOverflowMandala() { const c = document.getElementById('mandala-container'); if (c) c.style.overflow = mandalaZoomPercent <= 100 ? 'hidden' : ''; }
+window.addEventListener('resize', () => { const img = document.getElementById('mandalaImg'); if (img) { img.style.transform = `scale(${(mandalaZoomPercent / 100 * escalaBaseMandala()).toFixed(2)})`; if (typeof alinharFundoCeuTela === 'function') alinharFundoCeuTela(); } });
+
 function ajustarZoomMandala(delta) {
   // Acima de 200% o passo é maior (senão são dezenas de cliques até 500%).
   const sentido = delta < 0 ? -1 : 1;
@@ -923,9 +929,10 @@ function ajustarZoomMandala(delta) {
   mandalaZoomPercent = Math.max(MANDALA_ZOOM_MIN, Math.min(MANDALA_ZOOM_MAX, mandalaZoomPercent + sentido * passo));
   const img = document.getElementById('mandalaImg');
   if (img) {
-    img.style.transform = `scale(${(mandalaZoomPercent / 100).toFixed(2)})`;
+    img.style.transform = `scale(${(mandalaZoomPercent / 100 * escalaBaseMandala()).toFixed(2)})`;
     // Ampliada, a imagem cresce pra direita/baixo (rolável); do centro, a borda esquerda ficaria cortada e inalcançável.
-    img.style.transformOrigin = mandalaZoomPercent > 100 ? 'top left' : 'top center';
+    img.style.transformOrigin = mandalaZoomPercent > 100 ? 'top left' : 'center center';
+    aplicarOverflowMandala();
   }
   setTimeout(atualizarBarraInferiorMandala, 160); // depois da animação do zoom (120ms)
   const label = document.getElementById('mandalaZoomLabel');
@@ -1118,12 +1125,9 @@ function atualizarBarraInferiorMandala() {
   barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
   atualizarSetasBarraMandala();
   // Com mouse: a área da mandala termina acima da barra (a barra de rolagem de baixo fica visível); com toque: a barra cobre e a imagem ganha recuo.
-  if (comMouse) document.documentElement.style.setProperty('--margem-rolagem-mandala', (barra.offsetHeight + 10) + 'px');
-  else document.documentElement.style.removeProperty('--margem-rolagem-mandala');
-  if (embrulho) {
-    embrulho.style.boxSizing = 'border-box';
-    embrulho.style.paddingBottom = comMouse ? '' : (barra.offsetHeight + 10) + 'px';
-  }
+  // a barra não flutua mais sobre a mandala (fica logo abaixo dela, em fluxo normal): nenhum recuo embaixo
+  document.documentElement.style.removeProperty('--margem-rolagem-mandala');
+  if (embrulho) { embrulho.style.boxSizing = 'border-box'; embrulho.style.paddingBottom = ''; }
 }
 window.atualizarBarraInferiorMandala = atualizarBarraInferiorMandala;
 function ajustarPosicaoMandalaActionsOverlay() { atualizarBarraInferiorMandala(); }
@@ -2020,9 +2024,10 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
-    <img id="mandalaImg" src="${svgTelaUrl}" alt="Mandala Astrológica" draggable="false" style="-webkit-touch-callout: none; max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100).toFixed(2)}); transform-origin: ${mandalaZoomPercent > 100 ? 'top left' : 'top center'}; transition: transform 120ms ease-out;">
+    <img id="mandalaImg" src="${svgTelaUrl}" alt="Mandala Astrológica" draggable="false" style="-webkit-touch-callout: none; max-width: 100%; max-height: 100%; object-fit: contain; display: block; transform: scale(${(mandalaZoomPercent / 100 * escalaBaseMandala()).toFixed(2)}); transform-origin: ${mandalaZoomPercent > 100 ? 'top left' : 'center center'}; transition: transform 120ms ease-out;">
   </div>
 `;
+          aplicarOverflowMandala();
      
     // Só a mandala ao vivo (não as cópias do Relatório, que passam estiloForcado):
     // com o Tema Céu, o céu continua pra fora da imagem; senão limpa o fundo.
