@@ -257,6 +257,9 @@
 #top-bar .icon-btn.matriz-visibilidade-ativa, #top-bar .icon-btn.ativo { background: transparent; color: var(--terracota); }
 #top-bar .top-bar-controls { gap: 0; align-self: stretch; }
 #top-bar .top-bar-controls .icon-btn { align-self: stretch; }
+/* centralizado quando sobra espaço (margens automáticas nas pontas); quando não cabe, rola normalmente sem cortar o primeiro botão */
+#top-bar .top-bar-controls > :first-child { margin-left: auto; }
+#top-bar .top-bar-controls > :last-child { margin-right: auto; }
 #top-bar .top-bar-controls .icon-btn + .icon-btn { border-left: 2px solid var(--azul-egipcio-claro); }
 /* menu (esquerda) e engrenagem (direita): travados, em ocre, cada um separado do resto por uma divisa */
 #top-bar .menu-toggle-btn, #top-bar .menu-toggle-btn:hover { color: var(--ocre); align-self: stretch; margin-right: 0; border-right: 2px solid var(--azul-egipcio-claro); }
