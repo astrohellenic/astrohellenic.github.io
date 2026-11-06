@@ -126,3 +126,6 @@ body.tema-ceu.mandala-papiro-tela #top-bar, body.tema-ceu.mandala-papiro-tela #b
 }
 body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala { border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
 html body.tema-ceu.mandala-papiro-tela #main-stage { background-origin: border-box !important; background-clip: border-box !important; } /* o papel começa na borda da folha (senão repete por baixo da moldura) */
+
+/* O papel das folhas com moldura começa na BORDA da folha (senão o degradê repete por baixo da moldura e aparecem faixas escuras/claras, as "manchas" do papiro). */
+html body.tema-ceu .painel, html body.tema-ceu #top-bar, html body.tema-ceu #barra-inferior-mandala { background-origin: border-box !important; background-clip: border-box !important; }
