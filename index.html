@@ -512,6 +512,8 @@ body {
         /* o fundo do <html> também (senão, onde a página acaba ou no "puxão" do celular, aparece uma faixa creme do tema anterior embaixo do céu) */
         html:has(body.tema-ceu) { background-color: #070d25; }
         body.tema-ceu #main-stage { background-color: #070d25; }
+        /* Papiro: o fundo do <html>/<body> (que o iPhone pinta atrás da hora e da bateria) é o do papiro, não o azul-escuro do céu */
+        body.tema-papiro, html:has(body.tema-papiro), body.tema-papiro #main-stage { background-color: #e6d3a0; }
         body.tema-ceu #mandala-screen {
             background-color: transparent;
         }
