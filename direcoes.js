@@ -821,6 +821,11 @@ function renderCircumambulaçõesUI() {
       const globalIdx = indicesGlobais ? indicesGlobais[idxLocal] : (offsetGlobalInicial + idxLocal);
       svgInner += gerarLinhaSigno(passage, idxLocal, globalIdx === 0);
     });
+    // como toda tabela, termina com uma linha embaixo da última pauta
+    if (passagesSubset.length) {
+      const yFim = 10 + passagesSubset.length * rowHeight - (rowHeight - boxHeight) / 2;
+      svgInner += `<line x1="10" y1="${yFim}" x2="910" y2="${yFim}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+    }
     return `<svg viewBox="0 0 920 ${alturaSvg}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${svgInner}</svg>`;
   }
 
