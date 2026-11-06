@@ -127,6 +127,8 @@ function htmlCfgAparencia() {
       </span>
       ${ativa ? `<span class="cfg-opcao-check">${menuIcone('checkCirculo', 20)}</span>` : ''}
     </button>`;
+  // cada tema mostra a miniatura de como ele é (tema-<chave>.png)
+  const miniTema = (chave) => `<span class="cfg-opcao-icone" style="width:auto"><img src="tema-${chave}.png?v=1" alt="" width="100" height="64" style="display:block"></span>`;
   const fa = (nome) => `<span class="cfg-opcao-icone">${menuIcone(nome, 22)}</span>`;
   // Estilo da mandala: cada opção mostra o desenho pequeno do próprio estilo (mandala-estilo-<chave>.png)
   const miniMandala = (chave) => `<span class="cfg-opcao-icone" style="width:auto"><img src="mandala-estilo-${chave}.png?v=1" alt="" width="84" height="84" style="display:block"></span>`;
@@ -154,12 +156,12 @@ function htmlCfgAparencia() {
         <h4 class="cfg-card-titulo">Tema</h4>
         <p class="cfg-card-desc">Uma escolha só: ao escolher uma opção, as outras ficam desmarcadas. O <strong>Automático</strong> acompanha o aparelho (claro quando o aparelho está claro, escuro quando está escuro) e nunca escolhe o Céu. Fica salvo neste aparelho — cada aparelho ou navegador tem o seu.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu' + (temaLiberadoNoPlano('ceu') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarAparencia('papiro')", escolha === 'papiro', fa('pergaminho'), 'Papiro', 'Papiro em tudo, sem céu' + (temaLiberadoNoPlano('papiro') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarAparencia('sulfite')", escolha === 'sulfite', fa('sol'), 'Sulfite', 'Folha branca, escrito à mão com caneta' + (temaLiberadoNoPlano('sulfite') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho' + (temaLiberadoNoPlano('claro') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho' + (temaLiberadoNoPlano('escuro') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('automatico'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho' + (temaLiberadoNoPlano('auto') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('ceu')", escolha === 'ceu', miniTema('ceu'), 'Céu', 'Papiro e tinta sobre o céu' + (temaLiberadoNoPlano('ceu') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('papiro')", escolha === 'papiro', miniTema('papiro'), 'Papiro', 'Papiro em tudo, sem céu' + (temaLiberadoNoPlano('papiro') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('sulfite')", escolha === 'sulfite', miniTema('sulfite'), 'Sulfite', 'Folha branca, escrito à mão com caneta' + (temaLiberadoNoPlano('sulfite') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('claro')", escolha === 'claro', miniTema('claro'), 'Claro', 'Sempre com fundo claro, não importa o aparelho' + (temaLiberadoNoPlano('claro') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', miniTema('escuro'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho' + (temaLiberadoNoPlano('escuro') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('auto')", escolha === 'auto', miniTema('auto'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho' + (temaLiberadoNoPlano('auto') ? '' : ' — plano Essencial ou Pro'))}
         </div>
       </div>
 

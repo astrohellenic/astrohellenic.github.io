@@ -343,6 +343,7 @@ async function carregarNivelPlano(userId) {
     const { data, error } = await supabaseClient.from('perfis').select('nivel').eq('user_id', userId).maybeSingle();
     if (error) return;
     window.nivelPlano = (data && data.nivel) || 'basico';
+    try { localStorage.setItem('astro_nivel_plano', window.nivelPlano); } catch (e) {} // só para o próximo carregamento abrir já no tema certo (Básico = Papiro), sem piscar outro tema
   } catch (e) { return; }
   aplicarVisibilidadeFerramentasAdmin();
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.

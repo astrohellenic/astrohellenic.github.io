@@ -241,3 +241,4 @@
 
 /* Quando o cartão termina numa lista de opções (ou num campo com linha embaixo), a linha dela já fecha o cartão: o cartão não leva outra linha, nem o espaço até ela. */
 .cfg-card:has(> .cfg-opcoes:last-child), .cfg-card:has(textarea:last-child) { border-bottom: 0; padding-bottom: 0; }
+.cfg-opcao-icone img { outline: 1px solid var(--azul-egipcio-claro); outline-offset: 0; }
