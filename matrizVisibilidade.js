@@ -280,7 +280,7 @@ function toggleMatrizVisibilidadeNaMandala() {
 
   if (jaMostrandoMatriz) {
     if (botao) botao.classList.remove('matriz-visibilidade-ativa');
-    container.style.overflowY = '';
+    container.style.overflowY = ''; container.style.overflowX = ''; container.style.height = '';
     if (typeof renderMandala === 'function') renderMandala();
   } else {
     if (botao) botao.classList.add('matriz-visibilidade-ativa');
@@ -345,29 +345,28 @@ function ajustarRecuoMatrizVisibilidade() {
   const container = document.getElementById('mandala-container');
   if (!recuo || !container) return;
   if (typeof atualizarBarraInferiorMandala === 'function') atualizarBarraInferiorMandala(); // sem a imagem da mandala, o cabeçalho da barra some (a Matriz tem o dela)
-  let base = 0;
-  const barra = document.getElementById('barra-inferior-mandala');
-  if (barra) base = container.getBoundingClientRect().bottom - barra.getBoundingClientRect().top;
-  recuo.style.paddingTop = '0px'; recuo.style.paddingLeft = '4px'; recuo.style.paddingRight = '4px';
-  recuo.style.paddingBottom = Math.max(24, Math.ceil(base + 14)) + 'px';
-  /* A Matriz cabe no espaço que existe entre o topo e a barra de baixo: sem espaço sobrando em cima e sem precisar rolar.
-     Tira a folga em cima do título e limita a altura da grade ao que sobra (a largura acompanha, na proporção dela). */
+  /* A Matriz NÃO fica presa na caixa quadrada da mandala (altura fixa, rolando por dentro): é uma tela comum, com a altura do próprio
+     conteúdo, e a página inteira rola/amplia com o dedo (pinça nativa) como em todas as outras ferramentas. Ao abrir ela já cabe na
+     tela (sem precisar rolar): a grade usa a altura que sobra entre o topo e a barra de baixo. */
+  container.style.height = 'auto'; container.style.overflowY = 'visible'; container.style.overflowX = 'visible';
+  recuo.style.paddingTop = '0px'; recuo.style.paddingBottom = '8px'; recuo.style.paddingLeft = '4px'; recuo.style.paddingRight = '4px';
   const painel = document.getElementById('matrizVisibilidadeMandalaContainer');
-  if (painel) { painel.style.marginTop = '0'; painel.style.paddingTop = '4px'; painel.style.width = '100%'; painel.style.paddingBottom = '0px'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; painel.style.boxSizing = 'border-box'; }
+  if (painel) { painel.style.marginTop = '0'; painel.style.paddingTop = '4px'; painel.style.paddingBottom = '0px'; painel.style.width = '100%'; painel.style.boxSizing = 'border-box'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; }
   const titulo = painel && painel.querySelector('.titulo-ferramenta');
   if (titulo) titulo.style.marginTop = '0';
   const svg = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
-  if (svg && barra) {
+  const barra = document.getElementById('barra-inferior-mandala');
+  if (svg) {
     svg.style.maxHeight = ''; svg.style.width = ''; svg.style.height = 'auto';
-    const sobra = barra.getBoundingClientRect().top - svg.getBoundingClientRect().top - 26;
+    const alturaBarra = barra ? barra.getBoundingClientRect().height + 8 : 0;
+    const sobra = window.innerHeight - svg.getBoundingClientRect().top - alturaBarra - 24;
     const vb = (svg.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
     const proporcao = vb.length === 4 && vb[3] > 0 ? vb[2] / vb[3] : 1;
     const raiz = document.getElementById('matrizVisibilidadeResponsivaRoot');
     if (raiz) raiz.style.width = '100%';
     const larguraMax = raiz ? raiz.getBoundingClientRect().width : 0;
-    if (sobra > 120 && larguraMax > 0) { svg.style.maxWidth = '100%'; svg.style.height = 'auto'; svg.style.width = Math.floor(Math.min(larguraMax, sobra * proporcao)) + 'px'; }
+    if (sobra > 120 && larguraMax > 0) { svg.style.maxWidth = '100%'; svg.style.width = Math.floor(Math.min(larguraMax, sobra * proporcao)) + 'px'; }
   }
-  container.style.overflowY = 'hidden'; // a Matriz cabe na tela: nada de rolar (ao sair da ferramenta, abrirModuloTecnica/renderMandala refazem o estilo)
   if (typeof window.__cabecalhoGradeAplicar === 'function') window.__cabecalhoGradeAplicar();
 }
 window.addEventListener('resize', () => setTimeout(ajustarRecuoMatrizVisibilidade, 60));

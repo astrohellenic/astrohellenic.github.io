@@ -783,6 +783,7 @@ function abrirModuloTecnica(modulo, forcar) {
   // aqui, no único lugar que troca de módulo, pra nunca vazar de um
   // módulo pro outro (a mandala continua recebendo "scroll" de volta).
   if (cRadix) cRadix.style.overflowY = (modulo === 'mandala' || modulo === 'radix') ? '' : 'visible';
+  if (cRadix && (modulo === 'mandala' || modulo === 'radix')) { cRadix.style.height = ''; cRadix.style.overflowX = ''; } // a Matriz de Visibilidade solta a caixa da mandala; ao voltar, ela volta
 
   // Fora do modo Mandala/Radix, o #top-bar (ícones das ferramentas) vira
   // position:fixed (ver body.topbar-fixo no index.html) — assim o
