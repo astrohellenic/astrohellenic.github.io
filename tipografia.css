@@ -12,7 +12,7 @@ button { font-family: inherit; }
 
 /* CINZEL: título da ferramenta, botões, abas, menus */
 .titulo-ferramenta, button, .botao-texto, .cfg-btn, .cfg-btn-mini, .cfg-nav-item, .folder-tab-btn, .add-folder-btn, .sidebar-title,
-.btn-submit, .btn-primary, .btn-secondary, .dia-btn, .hora-btn, h1 {
+.btn-submit, .btn-primary, .btn-secondary, .dia-btn, .hora-btn, .login-privacidade a, h1 {
     font-family: var(--fonte-titulo); text-transform: lowercase; letter-spacing: .04em;
 }
 

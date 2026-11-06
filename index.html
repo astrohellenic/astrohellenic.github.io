@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="papiro.css?v=20261106o">
     <link rel="stylesheet" href="temas.css?v=20261106d">
     <link rel="stylesheet" href="componentes.css?v=20261106w">
-    <link rel="stylesheet" href="tipografia.css?v=20261106a">
+    <link rel="stylesheet" href="tipografia.css?v=20261106b">
     <link rel="stylesheet" href="configuracoes.css?v=20261106d">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1214,11 +1214,13 @@ body {
     content: ''; position: absolute; inset: -9px; z-index: -1; pointer-events: none; background: var(--papiro-fundo);
     clip-path: polygon(0 5px, 2% 0, 9% 3px, 17% 0, 26% 4px, 35% 1px, 46% 4px, 58% 0, 69% 3px, 80% 0, 90% 4px, 97% 1px, 100% 5px, calc(100% - 3px) 30%, 100% 55%, calc(100% - 4px) 80%, 100% calc(100% - 4px), 98% calc(100% - 1px), 90% 100%, 80% calc(100% - 4px), 69% calc(100% - 1px), 58% 100%, 46% calc(100% - 4px), 35% calc(100% - 1px), 24% 100%, 14% calc(100% - 4px), 5% calc(100% - 1px), 0 calc(100% - 4px), 4px 70%, 0 45%, 3px 22%);
   }
+  /* a moldura de meandros é do papiro: aqui ela é a borda da folha (o ::after), por dentro do papel (que passa 9px por fora, com a borda rasgada) */
+  #loginOverlay .login-card { --m: .22; }
   #loginOverlay .login-card::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: url(moldura-redes.svg?v=1) 130 80 round;
   }
-  #loginOverlay .janela-corpo { padding: 30px 30px 26px; gap: 0; }
+  #loginOverlay .janela-corpo { padding: calc(30px + 130px * var(--m)) calc(24px + 80px * var(--m)) calc(26px + 130px * var(--m)); gap: 0; }
   .login-brand { margin-bottom: 22px; }
   .login-field-container { position: relative; width: 100%; margin-bottom: 14px; text-align: left; }
   #loginOverlay .login-field { box-sizing: border-box; width: 100%; padding: 8px 34px 8px 0; font-family: inherit; font-size: 14px; outline: none; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; }
@@ -1227,6 +1229,7 @@ body {
   .password-toggle-icon { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; }
   .login-options { display: flex; align-items: center; justify-content: flex-start; font-size: 12px; font-weight: 700; color: var(--azul-egipcio-escuro); margin: 4px 0 20px; }
   #loginOverlay .login-options label { margin: 0; font-family: inherit; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--azul-egipcio-escuro); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .login-privacidade a { color: var(--azul-egipcio-escuro); text-decoration: underline; }
   .login-btn { width: 100%; padding: 11px 10px; font-size: 13px; }
   .login-toggle-link { margin: 14px auto 0; display: block; padding: 8px 14px; }
   #loginErrorMsg { color: var(--terracota) !important; font-size: 12px; font-weight: 700; margin-bottom: 12px; text-align: left; }
