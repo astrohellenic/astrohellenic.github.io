@@ -441,7 +441,7 @@ input[type="radio"]:checked::after {
 
 /* TABELAS (Profecção, Liberação, Decênios): a coluna centraliza pelo ÍCONE (planeta ou signo); o nome fica ao lado, fora do cálculo do centro */
 .tabela-epoca td.centro .com-nome { position: relative; display: inline-flex; justify-content: center; gap: 0; }
-.tabela-epoca td.centro .com-nome .nome-glifo { position: absolute; left: 100%; margin-left: 6px; font-size: 10px; letter-spacing: 0; } /* a Architects Daughter em maiúscula é mais larga: nome menor, pra não passar por cima da coluna do lado */
+.tabela-epoca td.centro .com-nome .nome-glifo { position: absolute; left: 100%; margin-left: 6px; font-size: 10px; letter-spacing: 0; } /* a letra da maiúscula é mais larga: nome menor, pra não passar por cima da coluna do lado */
 @media (max-width: 600px) { .tabela-epoca td.centro .com-nome { flex-direction: column; gap: 2px; } .tabela-epoca td.centro .com-nome .nome-glifo { position: static; margin: 0; } } /* celular: o nome desce pra baixo do ícone (não cabe ao lado) */
 /* Profecção Mensal: o ícone do planeta sem nome também é inline-block (como o do signo), pra imagem salva (html2canvas) centralizar igual à tela */
 #profMensalTable td.centro > svg { display: inline-block; vertical-align: middle; }
