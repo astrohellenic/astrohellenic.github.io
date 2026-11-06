@@ -1001,14 +1001,12 @@ function atualizarCabecalhoBarraMandala() {
   slot.style.display = '';
   const modoEscuro = document.documentElement.classList.contains('tema-escuro');
   const cores = coresCabecalhoMandala(modoEscuro, null);
-  // tela estreita: a barra rola e o cabeçalho tem largura própria (fixa); tela larga: estica entre os grupos
-  const estreita = window.innerWidth <= 1190;
-  const rolBarra = document.getElementById('barra-inferior-rolagem');
-  slot.style.width = estreita ? Math.max(200, (rolBarra ? rolBarra.clientWidth : window.innerWidth - 24) - 12) + 'px' : '';
-  slot.style.flex = estreita ? '0 0 auto' : '';
+  // o cabeçalho é uma faixa própria, de ponta a ponta acima da mandala: a largura é a do slot
+  slot.style.width = ''; slot.style.flex = '';
+  const estreita = false;
   // ainda sem layout (largura ~0, ex.: a barra acabou de aparecer): espera o próximo quadro em vez de desenhar o cabeçalho espremido
-  if (!estreita && slot.clientWidth < 120) { requestAnimationFrame(atualizarCabecalhoBarraMandala); return; }
-  const largura = Math.max(200, Math.floor(slot.clientWidth));
+  if (slot.clientWidth < 120) { requestAnimationFrame(atualizarCabecalhoBarraMandala); return; }
+  const largura = Math.max(200, Math.floor(slot.clientWidth) - 20); // 10px de folga de cada lado (o texto da ponta não encosta na borda)
   const lote = (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC') ? selectedHouse1Lot : null;
   const layout = montarCabecalhoMandalaLayout(currentCalculatedData, 0, cores, lote, { largura: largura + 30, flexivel: true, semMoldura: true });
   const altura = layout.altura;
@@ -1117,12 +1115,9 @@ function atualizarBarraInferiorMandala() {
   barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
   atualizarSetasBarraMandala();
   // Com mouse: a área da mandala termina acima da barra (a barra de rolagem de baixo fica visível); com toque: a barra cobre e a imagem ganha recuo.
-  if (comMouse) document.documentElement.style.setProperty('--margem-rolagem-mandala', (barra.offsetHeight + 10) + 'px');
-  else document.documentElement.style.removeProperty('--margem-rolagem-mandala');
-  if (embrulho) {
-    embrulho.style.boxSizing = 'border-box';
-    embrulho.style.paddingBottom = comMouse ? '' : (barra.offsetHeight + 10) + 'px';
-  }
+  // a barra não flutua mais sobre a mandala (é uma barra em cima, em fluxo normal): nenhum recuo embaixo
+  document.documentElement.style.removeProperty('--margem-rolagem-mandala');
+  if (embrulho) { embrulho.style.boxSizing = 'border-box'; embrulho.style.paddingBottom = ''; }
 }
 window.atualizarBarraInferiorMandala = atualizarBarraInferiorMandala;
 function ajustarPosicaoMandalaActionsOverlay() { atualizarBarraInferiorMandala(); }
@@ -1432,7 +1427,7 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   const reservaHoras = (temDia || temHora) ? (opcoes.flexivel ? 95 : 105) : 0;
   const maxW = largura - 60 - reservaHoras;
   // flexível (barra da tela): mede com as fontes de verdade (Cinzel/Montserrat), que são mais largas que a genérica — senão o texto passa da conta
-  const famTitulo = opcoes.flexivel ? "Cinzel, serif" : undefined, famTexto = opcoes.flexivel ? "Montserrat, sans-serif" : undefined;
+  const famTitulo = opcoes.flexivel ? "'Architects Daughter', cursive" : undefined, famTexto = opcoes.flexivel ? "'Architects Daughter', cursive" : undefined;
   const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20, famTitulo);
   /* Cabeçalho flexível (barra inferior): cada informação cabe numa linha só — se não cabe no tamanho normal, a letra diminui um pouco
      (até um mínimo legível) antes de quebrar em duas linhas. */

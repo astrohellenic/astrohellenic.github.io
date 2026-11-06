@@ -3,9 +3,9 @@
 <head>
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
-    <link rel="stylesheet" href="papiro.css?v=20261106d">
+    <link rel="stylesheet" href="papiro.css?v=20261106f">
     <link rel="stylesheet" href="temas.css?v=20261106d">
-    <link rel="stylesheet" href="componentes.css?v=20261106g">
+    <link rel="stylesheet" href="componentes.css?v=20261106k">
     <link rel="stylesheet" href="tipografia.css?v=20261106a">
     <link rel="stylesheet" href="configuracoes.css?v=20261106d">
     <meta charset="UTF-8">
@@ -845,7 +845,7 @@ body {
         <!-- TELA DA MANDALA: agrupa o desenho + os controles exclusivos dela -->
         <div id="mandala-screen" style="position: relative; flex: 1; display: flex; overflow: hidden;">
             
-            <!-- BARRA INFERIOR DA MANDALA: uma barra só (esquerda | cabeçalho | direita); no celular quebra em três faixas. Ver atualizarBarraInferiorMandala (mandala.js) -->
+            <!-- BARRA DE BOTÕES DA MANDALA: uma barra só (os dois grupos unidos), segunda barra logo abaixo do cabeçalho do software, como a barra própria de cada ferramenta no Falando de Astrologia. Ver atualizarBarraInferiorMandala (mandala.js) -->
             <div id="barra-inferior-mandala">
             <button type="button" id="barra-seta-esq" class="barra-seta" aria-label="Mais botões à esquerda" onclick="rolarBarraInferiorMandala(-1)"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="40,12 20,32 40,52"/></svg></button>
             <button type="button" id="barra-seta-dir" class="barra-seta" aria-label="Mais botões à direita" onclick="rolarBarraInferiorMandala(1)"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="24,12 44,32 24,52"/></svg></button>
@@ -900,8 +900,6 @@ body {
                 </div>
             </div>
 
-            <!-- CABEÇALHO (nome, data, local...): desenhado em JS, estica entre os dois grupos -->
-            <div id="cabecalho-barra-mandala"></div>
 
             <!-- CONTROLES EXCLUSIVOS DA MANDALA (aparecem só aqui) -->
             <div id="mandala-controls-overlay" style="display: flex; align-items: center; gap: 8px;">
@@ -922,6 +920,9 @@ body {
             </div>
             
        <!-- RENDERIZADOR DA MANDALA -->
+            <!-- CABEÇALHO (nome, data, local...): fora da barra de botões, em faixa própria acima da mandala; desenhado em JS -->
+            <div id="cabecalho-barra-mandala"></div>
+
             <div id="mandala-container">
                 <div id="loadingSpinner" style="color: #d4af37; font-size: 13px; font-weight: 600; text-align: center;">
                     <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 8px; display: block;"></i>
@@ -1115,7 +1116,7 @@ body {
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261106e"></script>
 <script src="tabelaTecnica.js?v=20261106e"></script>
-<script src="mandala.js?v=20261106f"></script>
+<script src="mandala.js?v=20261106h"></script>
 <script src="roda.js?v=20261106e"></script>
 <script src="isopsefia.js?v=20261106c"></script>
 <script src="profeccao.js?v=20261106e"></script>

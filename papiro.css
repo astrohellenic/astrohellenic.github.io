@@ -103,3 +103,9 @@ body.tema-ceu .rel-editor-tela { clip-path: none !important; }
 /* Cabeçalho do Céu: papiro liso (sem borda quebrada) por dentro da moldura, e sem as duas linhas que o ::after desenhava (a linha do cabeçalho é o <hr> dele). */
 body.tema-ceu #top-bar::before { inset: 0; clip-path: none; }
 body.tema-ceu #top-bar::after { display: none; }
+
+/* Céu: a barra de botões e o cabeçalho da mandala são papiro liso por dentro da moldura (sem borda rasgada), nunca flutuando sobre o céu. */
+body.tema-ceu #barra-inferior-mandala { background: var(--papiro-fundo); }
+body.tema-ceu #barra-inferior-mandala::before, body.tema-ceu #barra-inferior-mandala::after { display: none; }
+body.tema-ceu #cabecalho-barra-mandala { background: var(--papiro-fundo); }
+body.tema-ceu #cabecalho-barra-mandala::before, body.tema-ceu #cabecalho-barra-mandala::after { display: none; }
