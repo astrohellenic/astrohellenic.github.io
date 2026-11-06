@@ -671,7 +671,8 @@ body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra
 }
 body:not(.tema-ceu), body.tema-papiro { --moldura-m: .25; --moldura-v: calc(130px * var(--moldura-m)); --moldura-h: calc(80px * var(--moldura-m)); --topbar-topo: calc(var(--moldura-v) + 4px); }
 @media (min-width: 900px) { body:not(.tema-ceu), body.tema-papiro { --moldura-m: .3; } }
-body:not(.tema-ceu)::after, body.tema-papiro::after {
+/* só no software (que tem o #main-stage): as páginas públicas embutidas no site do astrólogo (formulário, agenda...) não levam esta moldura, senão ela dobra com a do site */
+body:has(#main-stage):not(.tema-ceu)::after, body:has(#main-stage).tema-papiro::after {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 45;
     border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
     border-image: url(moldura-redes.svg?v=1) 130 80 round;
