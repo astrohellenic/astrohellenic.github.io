@@ -696,3 +696,19 @@ input[type="radio"]:checked::after {
     #barra-inferior-mandala #cabecalho-barra-mandala { order: 2; flex: 1 1 0; width: auto; padding: 0 12px; border-bottom: 0; border-left: 2px solid var(--azul-egipcio-claro); border-right: 2px solid var(--azul-egipcio-claro); margin: 0 6px; }
     #barra-inferior-mandala #mandala-controls-overlay { order: 3; margin: 0; }
 }
+
+
+/* TELAS BAIXAS (celular em pé, celular deitado, laptop baixo): a altura é a coisa mais escassa, então os dois papiros (cabeçalho do software e bloco de baixo da
+   Mandala) ficam mais enxutos para a mandala ter o maior espaço possível: moldura mais fina nas duas, sem o logo, e — no celular deitado — sem a faixa do
+   cabeçalho do mapa (ficam só os botões). */
+#top-bar, #barra-inferior-mandala { --m: .12; }
+@media (max-height: 760px) {
+    html body #top-bar .top-bar-logo { display: none; }
+    html body #top-bar .top-bar-linha { margin-top: 0; }
+    html body #top-bar .top-bar-linha-baixo { margin: 8px 0 2px; }
+    #barra-inferior-mandala :is(#mandala-actions-overlay, #mandala-controls-overlay) :is(.icon-btn, .botao-icone) { padding: 4px 8px; }
+    #barra-inferior-mandala #cabecalho-barra-mandala { padding-top: 0; }
+}
+@media (max-height: 520px) {
+    #barra-inferior-mandala #cabecalho-barra-mandala { display: none !important; }
+}
