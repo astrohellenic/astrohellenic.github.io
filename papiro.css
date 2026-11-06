@@ -100,5 +100,6 @@ body.tema-ceu .janela::after {
    Aqui a folha do editor fica sem o recorte (bordas retas, mesmo papiro); as barras e janelas, que são pequenas, mantêm a borda quebrada. */
 body.tema-ceu .rel-editor-tela { clip-path: none !important; }
 
-/* Barra superior: só a linha de baixo (a de cima saiu, como na barra do Hellenic Daily). */
-body.tema-ceu #top-bar::after { border-top: 0; }
+/* Cabeçalho do Céu: papiro liso (sem borda quebrada) por dentro da moldura, e sem as duas linhas que o ::after desenhava (a linha do cabeçalho é o <hr> dele). */
+body.tema-ceu #top-bar::before { inset: 0; clip-path: none; }
+body.tema-ceu #top-bar::after { display: none; }

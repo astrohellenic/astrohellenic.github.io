@@ -239,25 +239,29 @@
 /* tabela que abre dentro de outra: mesma marca terracota na margem da tabela de fora */
 .tabela-epoca tr > td.encaixe:first-child { border-left-color: var(--terracota); }
 
-/* BARRA SUPERIOR — entre duas linhas duplas (sem moldura em volta, sem cantos). Ícones em azul egípcio escuro; hover/ativo em terracota. */
+/* BARRA SUPERIOR / CABEÇALHO — igual ao do Falando de Astrologia e do Hellenic Daily: logo no alto, a linha de botões (menu travado à esquerda,
+   engrenagem travada à direita, os dois em ocre; os outros em azul rolam entre eles), divisas de 2px entre os botões que NÃO encostam na linha
+   de baixo (a linha fica 16px mais abaixo), e a linha azul de 2px embaixo. Ícones em azul egípcio escuro; hover/ativo em terracota. */
 #top-bar {
     background: var(--fundo-creme);
     border: 0;
-    border-bottom: 2px solid var(--azul-egipcio-claro); /* igual à barra do Hellenic Daily: só a linha de baixo (sem a de cima) e divisas entre os botões */
     border-radius: 0;
     box-shadow: var(--sombra, none);
 }
+#top-bar .top-bar-linha-baixo { background: var(--azul-egipcio-claro); }
 #top-bar .menu-toggle-btn, #top-bar .icon-btn {
     background: transparent; border: 0; border-radius: 0; color: var(--azul-egipcio-escuro);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 6px 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 9px 14px; flex-shrink: 0;
 }
-#top-bar .menu-toggle-btn { margin-right: 4px; }
 #top-bar .menu-toggle-btn:hover, #top-bar .icon-btn:hover { background: transparent; color: var(--terracota); }
 #top-bar .icon-btn.matriz-visibilidade-ativa, #top-bar .icon-btn.ativo { background: transparent; color: var(--terracota); }
-#top-bar .menu-toggle-btn, #top-bar .menu-toggle-btn:hover { color: var(--ocre); align-self: stretch; padding: 6px 12px; margin-right: 0; border-right: 2px solid var(--azul-egipcio-claro); }
 #top-bar .top-bar-controls { gap: 0; align-self: stretch; }
-#top-bar .top-bar-controls .icon-btn { align-self: stretch; padding: 6px 12px; }
+#top-bar .top-bar-controls .icon-btn { align-self: stretch; }
 #top-bar .top-bar-controls .icon-btn + .icon-btn { border-left: 2px solid var(--azul-egipcio-claro); }
+/* menu (esquerda) e engrenagem (direita): travados, em ocre, cada um separado do resto por uma divisa */
+#top-bar .menu-toggle-btn, #top-bar .menu-toggle-btn:hover { color: var(--ocre); align-self: stretch; margin-right: 0; border-right: 2px solid var(--azul-egipcio-claro); }
+#top-bar .top-bar-engrenagem .icon-btn, #top-bar .top-bar-engrenagem .icon-btn:hover { color: var(--ocre); align-self: stretch; border-left: 2px solid var(--azul-egipcio-claro); }
+#top-bar .top-bar-engrenagem .icon-btn.ativo { color: var(--terracota); }
 .action-record-btn { display: flex; align-items: center; justify-content: center; }
 .action-record-btn .icone { display: block; }
 

@@ -138,7 +138,7 @@ function htmlCfgAparencia() {
     return opcao(`salvarCoresNiveis('${chave}')`, (coresNiveisLiberadoNoPlano(window.coresNiveis) ? coresNivelAtual : 'verde') === chave, faixa, titulo, desc + (coresNiveisLiberadoNoPlano(chave) ? '' : ' — plano Essencial ou Pro'));
   };
 
-  const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo);
+  const ordem = completarOrdemBotoesTopo(window.ordemBotoesTopo).filter(chave => chave !== 'configuracoes'); /* a engrenagem fica travada à direita, fora da ordem */
   const itensOrdem = ordem.map((chave, idx) => !ferramentaLiberada(chave) ? '' : `
     <div class="cfg-ordem-item">
       <span class="cfg-ordem-nome"><span class="cfg-ordem-pos">${idx + 1}</span>${escapeHtml(ROTULOS_BOTOES_TOPO[chave] || chave)}</span>

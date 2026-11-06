@@ -637,11 +637,12 @@ async function salvarOrdemBotoesTopo(novaOrdem) {
 /* USADO PELAS SETAS ▲▼ DA TELA DE APARÊNCIA: troca a posição de uma chave
    com a vizinha (direcao: -1 sobe, +1 desce) e salva. */
 function moverBotaoTopo(chave, direcao) {
-  const ordemAtual = completarOrdemBotoesTopo(window.ordemBotoesTopo);
+  const ordemAtual = completarOrdemBotoesTopo(window.ordemBotoesTopo).filter(c => c !== 'configuracoes'); /* a engrenagem é travada à direita: fora da ordem que se mexe */
   const i = ordemAtual.indexOf(chave);
   const j = i + direcao;
   if (i === -1 || j < 0 || j >= ordemAtual.length) return;
   [ordemAtual[i], ordemAtual[j]] = [ordemAtual[j], ordemAtual[i]];
+  ordemAtual.push('configuracoes');
   salvarOrdemBotoesTopo(ordemAtual);
 }
 

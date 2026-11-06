@@ -97,6 +97,7 @@ function ajustarEspacadorTopBar() {
   const topBar = document.getElementById('top-bar');
   const espacador = document.getElementById('top-bar-espacador');
   if (!topBar || !espacador) return;
+  document.documentElement.style.setProperty('--topbar-altura', topBar.offsetHeight + 'px'); /* o cabeçalho tem logo + botões: a altura é medida, não fixa */
   espacador.style.height = document.body.classList.contains('topbar-fixo') ? topBar.offsetHeight + 'px' : '';
   if (typeof ajustarEspacadoresBarraFixaRelatorio === 'function') ajustarEspacadoresBarraFixaRelatorio();
 }
