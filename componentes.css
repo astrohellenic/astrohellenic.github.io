@@ -339,16 +339,15 @@
 body.tema-ceu .barra-seta { background: transparent !important; }
 /* Papiro: nada de "luzinha" (degradê) atrás das setinhas, só a seta (as duas barras, de cima e de baixo, iguais). */
 
-/* TÍTULO DA FERRAMENTA + SEUS BOTÕES NA MESMA LINHA — dentro do painel: o título fica centralizado e os botões (seletor, salvar na galeria,
-   enviar ao relatório) na ponta direita da mesma linha. No celular os botões descem para uma linha logo abaixo do título. */
-.cabeca-ferramenta { position: relative; z-index: 30; display: flex; align-items: center; justify-content: center; margin: 0 0 12px; }
-.cabeca-ferramenta .titulo-ferramenta { margin: 0; padding: 0 130px; }
-.acoes-ferramenta { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; }
-@media (max-width: 700px) {
-    .cabeca-ferramenta { flex-direction: column; }
-    .cabeca-ferramenta .titulo-ferramenta { padding: 0; }
-    .acoes-ferramenta { position: static; transform: none; margin-top: 8px; justify-content: center; }
-}
+/* TÍTULO DA FERRAMENTA + SEUS BOTÕES — o título (rótulo da ferramenta, Cinzel) fica centralizado; os botões ficam logo ABAIXO dele, centralizados, e
+   cada botão é como uma aba: uma divisa de 2px entre um e outro (igual à barra de cima). Abaixo dos botões entra o cabeçalho, SEM linha entre eles;
+   a única linha é a do fim do cabeçalho. */
+.cabeca-ferramenta { position: relative; z-index: 30; display: flex; align-items: center; justify-content: center; margin: 0 0 8px; }
+.cabeca-ferramenta .titulo-ferramenta { margin: 0; padding: 0; }
+.cabeca-ferramenta:has(> .acoes-ferramenta) { flex-direction: column; }
+.acoes-ferramenta { position: static; transform: none; margin-top: 8px; display: flex; align-items: stretch; justify-content: center; gap: 0; }
+.acoes-ferramenta > * { display: flex; align-items: center; padding: 0 8px; }
+.acoes-ferramenta > :not(:first-child) { border-left: 2px solid var(--azul-egipcio-claro); }
 
 /* ITENS DE MENU FLUTUANTE (lista de anos, opções do relatório...): texto azul egípcio escuro, uma linha fina entre os itens; o ativo/ao passar fica terracota. */
 .item-menu { padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--azul-egipcio-escuro); border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-left: 3px solid transparent; }
@@ -442,7 +441,8 @@ input[type="radio"]:checked::after {
 
 /* TABELAS (Profecção, Liberação, Decênios): a coluna centraliza pelo ÍCONE (planeta ou signo); o nome fica ao lado, fora do cálculo do centro */
 .tabela-epoca td.centro .com-nome { position: relative; display: inline-flex; justify-content: center; gap: 0; }
-.tabela-epoca td.centro .com-nome .nome-glifo { position: absolute; left: 100%; margin-left: 8px; }
+.tabela-epoca td.centro .com-nome .nome-glifo { position: absolute; left: 100%; margin-left: 6px; font-size: 10px; letter-spacing: 0; } /* a Architects Daughter em maiúscula é mais larga: nome menor, pra não passar por cima da coluna do lado */
+@media (max-width: 600px) { .tabela-epoca td.centro .com-nome { flex-direction: column; gap: 2px; } .tabela-epoca td.centro .com-nome .nome-glifo { position: static; margin: 0; } } /* celular: o nome desce pra baixo do ícone (não cabe ao lado) */
 /* Profecção Mensal: o ícone do planeta sem nome também é inline-block (como o do signo), pra imagem salva (html2canvas) centralizar igual à tela */
 #profMensalTable td.centro > svg { display: inline-block; vertical-align: middle; }
 

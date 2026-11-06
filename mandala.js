@@ -1313,7 +1313,7 @@ function quebrarTrechosCabecalho(trechos, maxW, px, familia) {
   return linhas;
 }
 
-/* FILETE DO CABEÇALHO — linha simples EM CIMA e EMBAIXO (era dupla), sem os lados
+/* FILETE DO CABEÇALHO — uma linha simples só, no FIM do cabeçalho (era duas em cima e duas embaixo), sem os lados
    (a divisa do software: ver o guia de design, docs/guia-design.md). A cor é o azul egípcio claro da paleta de época
    (temas.css, lida por paletaEpoca em papiro.js). No papel (papiro e tinta sobre a folha) as linhas entram um pouco
    pra dentro, pra a borda rasgada do papel não encostar nelas. */
@@ -1322,7 +1322,7 @@ function filetesCabecalhoSVG(x, y, w, h, cores) {
   const cor = paletaEpoca(!!cores.escuro).azulClaro;
   const o1 = papel ? 4.5 : 1.2, o2 = o1 + 4.2, recuo = papel ? 10 : 0; // vão de ~3px entre as duas linhas: sobrevive quando o cabeçalho é reduzido
   const linha = (yy, sw) => `<line x1="${x + recuo}" y1="${yy}" x2="${x + w - recuo}" y2="${yy}" stroke="${cor}" stroke-width="${sw}"/>`;
-  return linha(y + o1, 1.1) + linha(y + h - o1, 1.1); // linha SIMPLES em cima e embaixo (era dupla)
+  return linha(y + h - o1, 1.1); // UMA linha só, no FIM do cabeçalho (o de cima não tem linha: abaixo dos botões o cabeçalho entra direto)
 }
 // canto do retângulo do cabeçalho: reto (a época não tinha canto arredondado); o recorte do papiro precisa do rx="10" original
 function cantoCabecalho(cores) { return cores.papiro ? 10 : 0; }
