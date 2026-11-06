@@ -298,7 +298,6 @@
    O cabeçalho é desenhado em JS (atualizarBarraInferiorMandala). A rolagem fica numa camada de dentro pra o papiro e as linhas não rolarem. */
 /* BARRA DE BOTÕES DA MANDALA — fica EMBAIXO, como sempre foi. Os dois grupos (ações e controles) agora são UMA barra só, lado a lado e centralizados,
    com uma divisa entre eles; o cabeçalho do mapa não fica mais dentro dela (é a faixa #cabecalho-barra-mandala, acima da mandala). */
-#mandala-screen { flex-direction: column; }
 #barra-inferior-mandala {
     position: absolute; left: 0; right: 0; bottom: 12px; z-index: 20; box-sizing: border-box;
     background: var(--fundo-creme);
@@ -314,7 +313,7 @@
 }
 /* Botões da barra inferior mais juntos (sobra mais espaço pro cabeçalho): sem vão entre eles e com pouca folga em volta de cada ícone. */
 #barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay { gap: 0 !important; }
-#barra-inferior-mandala #mandala-actions-overlay .icon-btn { padding: 6px 5px; }
+#barra-inferior-mandala :is(#mandala-actions-overlay, #mandala-controls-overlay) :is(.icon-btn, .botao-icone) { padding: 6px 10px; }
 #barra-inferior-mandala #mandala-controls-overlay .time-stepper, #barra-inferior-mandala #mandalaZoomContainer { gap: 0 !important; }
 #barra-inferior-mandala #mandala-controls-overlay .icon-btn:not(.botao-icone) { width: 30px !important; }
 #barra-inferior-mandala #lotRotationBtnContainer { margin-right: 0 !important; }
@@ -324,9 +323,12 @@
 @media (min-width: 1191px) { #barra-inferior-rolagem { overflow: visible; } }
 #barra-inferior-rolagem > :first-child { margin-left: auto; }
 #barra-inferior-rolagem > :last-child { margin-right: auto; }
-#barra-inferior-mandala #mandala-actions-overlay { padding-right: 8px !important; margin-right: 8px; border-right: 2px solid var(--azul-egipcio-claro) !important; align-self: stretch; }
-/* CABEÇALHO DO MAPA — faixa própria, de ponta a ponta, acima da mandala */
-#cabecalho-barra-mandala { display: block; flex: none; width: 100%; min-width: 0; overflow: hidden; margin: 0 0 8px; padding: 0 10px 6px; border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
+/* CABEÇALHO DO MAPA — no mesmo lugar de antes (embaixo): faixa própria em cima da linha de botões, com a linha simples embaixo */
+#barra-inferior-mandala #cabecalho-barra-mandala { display: block; background: none; box-shadow: none; border-top: 0; width: 100%; min-width: 0; overflow: hidden; margin: 0; padding: 4px 10px 6px; box-sizing: border-box; border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
+#barra-linha-botoes { position: relative; }
+/* UMA divisa entre CADA botão (igual à barra de cima): os botões, o seletor Dia e os dois grupos, todos separados por linha de 2px */
+#barra-inferior-mandala :is(.icon-btn, .botao-icone, .time-select) { border-left: 2px solid var(--azul-egipcio-claro) !important; border-radius: 0; align-self: stretch; }
+#barra-inferior-mandala #mandala-actions-overlay > .icon-btn:first-child { border-left: 0 !important; }
 .barra-seta { display: none; position: absolute; top: 0; bottom: 0; z-index: 3; width: 34px; padding: 0; border: 0; cursor: pointer; align-items: center; color: var(--terracota); }
 .barra-seta.visivel { display: flex; }
 #barra-seta-esq, .barra-seta-esq { left: 0; justify-content: flex-start; padding-left: 4px; background: linear-gradient(to right, var(--fundo-creme) 40%, transparent); }

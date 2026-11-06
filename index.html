@@ -3,9 +3,9 @@
 <head>
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
-    <link rel="stylesheet" href="papiro.css?v=20261106g">
+    <link rel="stylesheet" href="papiro.css?v=20261106h">
     <link rel="stylesheet" href="temas.css?v=20261106d">
-    <link rel="stylesheet" href="componentes.css?v=20261106l">
+    <link rel="stylesheet" href="componentes.css?v=20261106n">
     <link rel="stylesheet" href="tipografia.css?v=20261106a">
     <link rel="stylesheet" href="configuracoes.css?v=20261106d">
     <meta charset="UTF-8">
@@ -847,6 +847,9 @@ body {
             
             <!-- BARRA DE BOTÕES DA MANDALA: uma barra só (os dois grupos unidos), segunda barra logo abaixo do cabeçalho do software, como a barra própria de cada ferramenta no Falando de Astrologia. Ver atualizarBarraInferiorMandala (mandala.js) -->
             <div id="barra-inferior-mandala">
+            <!-- CABEÇALHO (nome, data, local...): fica no MESMO lugar de antes (embaixo), numa faixa própria em cima da linha de botões; desenhado em JS -->
+            <div id="cabecalho-barra-mandala"></div>
+            <div id="barra-linha-botoes">
             <button type="button" id="barra-seta-esq" class="barra-seta" aria-label="Mais botões à esquerda" onclick="rolarBarraInferiorMandala(-1)"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="40,12 20,32 40,52"/></svg></button>
             <button type="button" id="barra-seta-dir" class="barra-seta" aria-label="Mais botões à direita" onclick="rolarBarraInferiorMandala(1)"><svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="24,12 44,32 24,52"/></svg></button>
             <div id="barra-inferior-rolagem">
@@ -918,11 +921,9 @@ body {
             </div>
             </div>
             </div>
+            </div>
             
        <!-- RENDERIZADOR DA MANDALA -->
-            <!-- CABEÇALHO (nome, data, local...): fora da barra de botões, em faixa própria acima da mandala; desenhado em JS -->
-            <div id="cabecalho-barra-mandala"></div>
-
             <div id="mandala-container">
                 <div id="loadingSpinner" style="color: #d4af37; font-size: 13px; font-weight: 600; text-align: center;">
                     <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #d4af37; margin-bottom: 8px; display: block;"></i>
