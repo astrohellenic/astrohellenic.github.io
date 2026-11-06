@@ -613,8 +613,8 @@ function renderCircumambulaçõesUI() {
     let rowHtml = '';
 
     // Sem moldura: nada em cima nem embaixo de cada pauta. Só a linha de divisa entre um signo e o outro (a mesma das tabelas de
-    // Liberação, Decênios...), no meio do espaço entre as duas pautas; a primeira pauta não leva.
-    if (localIdx > 0) {
+    // Liberação, Decênios...), no meio do espaço entre as duas pautas. Como toda tabela, começa com uma linha em cima: a primeira pauta também leva.
+    {
       const yDivisa = yOffset - (rowHeight - boxHeight) / 2;
       rowHtml += `<line x1="10" y1="${yDivisa}" x2="910" y2="${yDivisa}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
     }
