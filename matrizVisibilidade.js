@@ -351,7 +351,7 @@ function ajustarRecuoMatrizVisibilidade() {
   container.style.height = 'auto'; container.style.overflowY = 'visible'; container.style.overflowX = 'visible';
   recuo.style.paddingTop = '0px'; recuo.style.paddingBottom = '8px'; recuo.style.paddingLeft = '4px'; recuo.style.paddingRight = '4px';
   const painel = document.getElementById('matrizVisibilidadeMandalaContainer');
-  if (painel) { painel.style.marginTop = '0'; painel.style.paddingTop = '4px'; painel.style.paddingBottom = '0px'; painel.style.width = '100%'; painel.style.boxSizing = 'border-box'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; }
+  if (painel) { painel.style.margin = '0'; painel.style.paddingTop = '4px'; painel.style.paddingBottom = '0px'; painel.style.width = '100%'; painel.style.boxSizing = 'border-box'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; }
   const titulo = painel && painel.querySelector('.titulo-ferramenta');
   if (titulo) titulo.style.marginTop = '0';
   const svg = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
