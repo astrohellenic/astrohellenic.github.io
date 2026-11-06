@@ -480,5 +480,5 @@ function renderizarResultadosHTML(res) {
     if (decNivel2 === null) html += tabelaNivel(2, l2Lista, 'irParaNivel2Dec');
     else html += navNivel(2, l2Lista, decNivel2, 'irParaNivel2Dec') + tabelaNivel(3, l3Lista, null);
   }
-  return html + `<hr class="divisa">`;
+  return html;
 }

@@ -620,8 +620,6 @@ function renderLotesUI() {
         </div>
       </div>
 
-      <hr class="divisa">
-
       </div>
     </div>
   `;

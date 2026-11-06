@@ -431,7 +431,6 @@ function renderPainelTecnico(data, containerId) {
         <div id="painelPrincipalContainer" style="text-align: center; margin: 12px 0;">
           ${montarSVGPainelPrincipal(listaElementos)}
         </div>
-        <hr class="divisa">
       </div>
       </div>
     `;

@@ -754,7 +754,6 @@ function renderLiberacaoUI() {
 
   html += `
       </div>
-      <hr class="divisa">
     </div>
     </div>
   `;

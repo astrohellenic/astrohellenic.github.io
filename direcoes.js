@@ -886,7 +886,6 @@ function renderCircumambulaçõesUI() {
             ${svgTela}
           </div>
         </div>
-        <hr class="divisa">
 
     </div>
     </div>

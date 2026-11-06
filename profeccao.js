@@ -787,7 +787,7 @@
                 rotulo: x => `Mês ${x.num}`, glifo: glifoSigno, fmtData: formatarData
             }) + tabelaNivel(3, passosDoMes(listaMeses[mesSel]), null, 'horas');
         }
-        html += `<hr class="divisa"></div></div>`;
+        html += `</div></div>`;
         container.innerHTML = html;
     }
 

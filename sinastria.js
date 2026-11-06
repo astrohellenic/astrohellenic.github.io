@@ -716,7 +716,6 @@
                     ${acoesHtml}
                 </div>
                 ${mandalasHtml}
-                <hr class="divisa">
             </div>
             </div>
         `;

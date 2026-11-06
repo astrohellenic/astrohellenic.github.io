@@ -252,7 +252,6 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
     </div>
-    <hr class="divisa">
   `;
 }
 

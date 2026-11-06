@@ -257,7 +257,6 @@ function iniciarModuloHoras(containerIdAlvo) {
     </table>
     </div>
     </div>
-    <hr class="divisa">
   </div>
   </div>
   `;
