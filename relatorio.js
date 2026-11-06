@@ -2360,7 +2360,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
           <hr class="divisa">
 
           ${relatorioCapaSeletorHtml(capaFonteAtual, blocoCapaAtual.capturaIndex)}
-          ${relatorioCapaEstiloHtml(estiloPdfAtual, capaEstiloAtual)}
+          ${relatorioCapaEstiloHtml(estiloPdfAtual, capaEstiloAtual, (opcoes.molduraPaginasOverride != null ? opcoes.molduraPaginasOverride : blocoCapaAtual.molduraPaginas === true))}
           ${relatorioPaletaCapaHtml(paletaCapaAtual, corFundoCapaAtual, corTituloCapaAtual, corCabecalhoCapaAtual, corBordaCapaAtual, temBordaCapaAtual, corCirculoCapaAtual, temCirculoCapaAtual, tamanhoTituloCapaAtual, capaEstiloAtual)}
           
 
@@ -2535,7 +2535,7 @@ function relatorioCapaSeletorHtml(capaFonteAtual, capturaIndexAtual) {
    escolha na hora de gerar o relatório de verdade. */
 /* ESTILO DO PDF e da CAPA — sempre disponíveis, em qualquer tema do software. Com papiro: capa Céu ou capa Papiro. Sem papiro
    (branco): as capas de cores. */
-function relatorioCapaEstiloHtml(estiloPdf, estiloCapa) {
+function relatorioCapaEstiloHtml(estiloPdf, estiloCapa, molduraPaginas) {
   const radio = (nome, valor, rotulo, marcado, aoMudar) => `<label class="re-opcao-radio"><input type="radio" name="${nome}" value="${valor}" ${marcado ? 'checked' : ''} onchange="${aoMudar}"> ${rotulo}</label>`;
   const papiro = estiloPdf === 'papiro';
   return `
@@ -2547,6 +2547,10 @@ function relatorioCapaEstiloHtml(estiloPdf, estiloCapa) {
       <div class="re-opcoes-linha">
         ${radio('relEstiloPdf', 'papiro', 'Com papiro', papiro, 'alternarEstiloPdfEditor(this.value)')}
         ${radio('relEstiloPdf', 'branco', 'Sem papiro (branco)', !papiro, 'alternarEstiloPdfEditor(this.value)')}
+      </div>
+      <div id="relMolduraWrap" class="re-linha-check"${papiro ? ' style="display: none;"' : ''}>
+        <input type="checkbox" id="relMolduraPaginas" ${molduraPaginas ? 'checked' : ''}>
+        <label for="relMolduraPaginas">Moldura nas páginas</label>
       </div>
       <div id="relCapaOpcoesPapiro"${papiro ? '' : ' style="display: none;"'}>
         <div class="titulo-secao" style="margin-top: 18px;">Capa com papiro</div>
@@ -2569,6 +2573,8 @@ function alternarEstiloPdfEditor(valor) {
   if (opcoes) opcoes.style.display = papiro ? '' : 'none';
   const cores = document.getElementById('relCapaCoresWrap');
   if (cores) cores.style.display = papiro ? 'none' : '';
+  const mold = document.getElementById('relMolduraWrap');
+  if (mold) mold.style.display = papiro ? 'none' : '';
 }
 window.alternarEstiloPdfEditor = alternarEstiloPdfEditor;
 
@@ -2890,6 +2896,9 @@ function lerEstiloCapaDoFormulario() {
   const capaEstiloInput = document.querySelector('input[name="relCapaEstilo"]:checked');
   blocoCapa.capaEstilo = blocoCapa.estiloPdf === 'branco' ? 'paleta' : (capaEstiloInput ? capaEstiloInput.value : 'ceu');
   blocoCapa.capaPapiro = blocoCapa.capaEstilo === 'papiro';
+  const molduraInput = document.getElementById('relMolduraPaginas');
+  blocoCapa.molduraPaginas = blocoCapa.estiloPdf === 'branco' && !!(molduraInput && molduraInput.checked); // com papiro a moldura é sempre
+
   const temCirculoInput = document.getElementById('relCapaTemCirculo');
   blocoCapa.temCirculo = temCirculoInput ? temCirculoInput.checked : false;
   const tamanhoTituloSelect = document.getElementById('relCapaTamanhoTitulo');
@@ -3147,7 +3156,7 @@ async function atualizarPreviaEditorModelo() {
     return;
   }
   const capaIdxPreview = document.getElementById('relCapaCapturaIdx');
-  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, capturaIndex: (capaIdxPreview && capaIdxPreview.value !== '') ? parseInt(capaIdxPreview.value, 10) : undefined, paletaId: paletaCapa, temBorda: temBordaCapa, estiloPdf: estiloPdfCapa, capaEstilo: capaEstiloCapa, capaPapiro: capaEstiloCapa === 'papiro', temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
+  const blocoCapaPreview = { id: '__capa__', type: 'capa', fonte: capaFonte, capturaIndex: (capaIdxPreview && capaIdxPreview.value !== '') ? parseInt(capaIdxPreview.value, 10) : undefined, paletaId: paletaCapa, temBorda: temBordaCapa, estiloPdf: estiloPdfCapa, molduraPaginas: estiloPdfCapa === 'branco' && !!(document.getElementById('relMolduraPaginas') || {}).checked, capaEstilo: capaEstiloCapa, capaPapiro: capaEstiloCapa === 'papiro', temCirculo: temCirculoCapa, tamanhoTitulo: tamanhoTituloCapa };
   if (paletaCapa === 'custom') {
     blocoCapaPreview.corFundo = corFundoCapa;
     blocoCapaPreview.corTitulo = corTituloCapa;
@@ -3185,6 +3194,7 @@ async function atualizarPreviaEditorModelo() {
     corBordaCapaOverride: corBordaCapa,
     temBordaCapaOverride: temBordaCapa,
     estiloPdfOverride: estiloPdfCapa,
+    molduraPaginasOverride: estiloPdfCapa === 'branco' && !!(document.getElementById('relMolduraPaginas') || {}).checked,
     capaEstiloOverride: capaEstiloCapa,
     corCirculoCapaOverride: corCirculoCapa,
     temCirculoCapaOverride: temCirculoCapa,
@@ -3427,7 +3437,9 @@ function voltarConfigRelatorio() {
 /* PDF "COM PAPIRO" do relatório: escolha do modelo (Estilo do PDF), independente do tema do software. Devolve a classe que
    vai no .rel-viewer — o CSS correspondente (ver ".rel-tema-papiro" em injetarEstilosRelatorio) é SÓ pintura. */
 function classeTemaPapiroRelatorio(blocos) {
-  return estiloPdfDoModelo((blocos || []).find(b => b.type === 'capa')) === 'papiro' ? ' rel-tema-papiro' : '';
+  const capa = (blocos || []).find(b => b.type === 'capa');
+  const papiro = estiloPdfDoModelo(capa) === 'papiro';
+  return (papiro ? ' rel-tema-papiro' : '') + ((papiro || (capa && capa.molduraPaginas === true)) ? ' rel-com-moldura' : '');
 }
 
 /* Monta o conteúdo de dentro de ".rel-viewer" (capa + índice + páginas +
@@ -4137,6 +4149,7 @@ function injetarEstilosRelatorio() {
   /* Cores vêm do papiro global (papiro.css/papiro.js) — aqui valores literais, não var(), porque este CSS
      também vai pro PDF (HTML mandado pro servidor), que não tem o papiro.css. */
   const papiroCoresRel = papiroCores();
+  const molduraPaginaUrl = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 794 1123' preserveAspectRatio='none'><defs><pattern id='m' width='24' height='16' patternUnits='userSpaceOnUse'><path d='M0 14H4V2H20V14H12V7H16V10' fill='none' stroke='%231F5FA3' stroke-width='1.7'/></pattern></defs><rect x='12' y='12' width='770' height='1099' fill='none' stroke='%232B1D12' stroke-width='1.2'/><rect x='17' y='17' width='760' height='1089' fill='none' stroke='%23B5852F' stroke-width='3.2'/><rect x='22' y='22' width='750' height='1079' fill='none' stroke='%232B1D12' stroke-width='1.2'/><svg x='36' y='28' width='722' height='16'><rect width='722' height='16' fill='url(%23m)'/></svg><svg x='36' y='1079' width='722' height='16'><rect width='722' height='16' fill='url(%23m)'/></svg></svg>")`; // moldura de meandros da página (a mesma do Falando de Astrologia): os mesmos três filetes e a faixa de meandros em cima e embaixo
   const papiroFolhaBg = (typeof window !== 'undefined' && window.PAPIRO_FOLHA_JPG)
     ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, ${papiroCoresRel.meio}`
     : `radial-gradient(ellipse at 12% 6%, rgba(255,244,210,0.6) 0%, transparent 40%),
@@ -4462,6 +4475,9 @@ function injetarEstilosRelatorio() {
       .rel-tema-papiro .rel-page:not(.rel-capa) {
         background: ${papiroFolhaBg};
       }
+      /* MOLDURA NAS PÁGINAS: sempre no PDF com papiro; no PDF sem papiro, só se o modelo escolheu (blocoCapa.molduraPaginas). Desenhada por cima da folha, só nas margens (o texto não muda de lugar). */
+      .rel-com-moldura .rel-page:not(.rel-capa)::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: ${molduraPaginaUrl} no-repeat 0 0 / 100% 100%; pointer-events: none; z-index: 0; }
+      .rel-com-moldura .rel-page:not(.rel-capa) .rel-num-pagina-canto { right: 10mm; bottom: 12.5mm; z-index: 1; }
       /* Paleta tirada de papiros reais (referências do astrólogo): tinta
          PRETA no texto, vermelho-tijolo só em filetes/molduras e detalhes
          pequenos, azul-tinta (dos desenhos do canvas do papiro) em tabelas.

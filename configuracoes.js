@@ -856,7 +856,7 @@ async function carregarRelatorioRetificacaoConfig() {
     // as mesmas escolhas do editor de modelos do Relatório (relatorio.js): com/sem papiro, capa Céu/Papiro, cores, borda, círculo, tamanho do título
     const b = (c.retificacao_capa_bloco && typeof c.retificacao_capa_bloco === 'object') ? c.retificacao_capa_bloco : {};
     const estiloPdf = estiloPdfDoModelo(b), estiloCapa = estiloCapaDoModelo(b);
-    wrap.innerHTML = relatorioCapaEstiloHtml(estiloPdf, estiloCapa)
+    wrap.innerHTML = relatorioCapaEstiloHtml(estiloPdf, estiloCapa, b.molduraPaginas === true)
       + relatorioPaletaCapaHtml(b.paletaId || RELATORIO_PALETA_CAPA_PADRAO, b.corFundo, b.corTitulo, b.corCabecalho, b.corBorda, b.temBorda, b.corCirculo, b.temCirculo, b.tamanhoTitulo, estiloCapa);
     const enc = document.getElementById('cfgRetifEncerramento'); if (enc) enc.value = c.retificacao_encerramento || '';
     const v = c.retificacao_capa_mandala || 'retificado';

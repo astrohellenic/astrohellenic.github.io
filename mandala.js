@@ -2021,6 +2021,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     ctx.drawImage(imgLoader, 0, 0, canvas.width, canvas.height);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
+       window.lastRenderedPngGaleria = ''; emoldurarCanvasGaleria(canvas).then(cv => { window.lastRenderedPngGaleria = cv.toDataURL('image/png'); }).catch(() => {});
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
@@ -2095,7 +2096,7 @@ function salvarImagemMandala() {
     return salvarMatrizVisibilidadeNaGaleria();
   }
   if (!lastRenderedPngUrl) { alert('Nenhuma mandala na tela pra salvar.'); return; }
-  salvarPngNaGaleria(lastRenderedPngUrl, `Astro_Hellenic_${(currentSubjectName || 'mandala').replace(/\s+/g, '_')}.png`);
+  salvarPngNaGaleria(window.lastRenderedPngGaleria || lastRenderedPngUrl, `Astro_Hellenic_${(currentSubjectName || 'mandala').replace(/\s+/g, '_')}.png`);
 }
 window.salvarImagemMandala = salvarImagemMandala;
 
@@ -2153,6 +2154,38 @@ function mostrarBotaoSalvarImagem(pngDataUrl, nome) {
    tela): mostra "Gerando imagem…", espera o canvas e abre a folha de salvar.
    "gerarCanvas" é uma função async que devolve o canvas. */
 let salvandoImagemEmAndamento = false;
+/* MOLDURA NAS IMAGENS SALVAS NA GALERIA (regra do astrólogo): toda imagem salva ganha a moldura de meandros (a mesma do software). O quadro cresce em volta da imagem
+   (nada da imagem fica coberto); a margem leva o papiro com textura no Tema Céu, ou a cor do fundo da própria imagem nos outros temas. A moldura é a imagem
+   moldura-redes.svg desenhada em 9 partes (cantos fixos, lados repetidos), como o border-image da tela. */
+let __molduraImgPromise = null;
+function carregarMolduraImg() {
+  if (!__molduraImgPromise) __molduraImgPromise = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = 'moldura-redes.svg?v=1'; });
+  return __molduraImgPromise;
+}
+async function emoldurarCanvasGaleria(canvas) {
+  const img = await carregarMolduraImg();
+  if (!img) return canvas;
+  const s = Math.max(0.35, Math.min(1.1, canvas.width / 1400)); // espessura proporcional ao tamanho da imagem
+  const bw = Math.round(80 * s), bt = Math.round(130 * s);
+  const out = document.createElement('canvas');
+  out.width = canvas.width + 2 * bw; out.height = canvas.height + 2 * bt;
+  const o = out.getContext('2d');
+  if (window.temaMandala === 'ceu' && typeof papiroTexturaCanvas === 'function') papiroTexturaCanvas(o, out.width, out.height, 2);
+  else { const px = canvas.getContext('2d').getImageData(2, 2, 1, 1).data; o.fillStyle = `rgba(${px[0]},${px[1]},${px[2]},${px[3] ? 1 : 0})`; if (!px[3]) o.fillStyle = '#ffffff'; o.fillRect(0, 0, out.width, out.height); }
+  o.drawImage(canvas, bw, bt);
+  const W = 496, H = 360, L = 80, T = 130, cw = W - 2 * L, ch = H - 2 * T;
+  // cantos
+  o.drawImage(img, 0, 0, L, T, 0, 0, bw, bt); o.drawImage(img, W - L, 0, L, T, out.width - bw, 0, bw, bt);
+  o.drawImage(img, 0, H - T, L, T, 0, out.height - bt, bw, bt); o.drawImage(img, W - L, H - T, L, T, out.width - bw, out.height - bt, bw, bt);
+  // lados (repetem, "round": o número de repetições é inteiro e a peça se ajusta)
+  const nx = Math.max(1, Math.round((out.width - 2 * bw) / (cw * s))), ny = Math.max(1, Math.round((out.height - 2 * bt) / (ch * s)));
+  const sw = (out.width - 2 * bw) / nx, sh = (out.height - 2 * bt) / ny;
+  for (let i = 0; i < nx; i++) { o.drawImage(img, L, 0, cw, T, bw + i * sw, 0, sw, bt); o.drawImage(img, L, H - T, cw, T, bw + i * sw, out.height - bt, sw, bt); }
+  for (let j = 0; j < ny; j++) { o.drawImage(img, 0, T, L, ch, 0, bt + j * sh, bw, sh); o.drawImage(img, W - L, T, L, ch, out.width - bw, bt + j * sh, bw, sh); }
+  return out;
+}
+window.emoldurarCanvasGaleria = emoldurarCanvasGaleria;
+
 async function capturarESalvarNaGaleria(gerarCanvas, nome) {
   if (salvandoImagemEmAndamento) return;
   salvandoImagemEmAndamento = true;
@@ -2179,6 +2212,7 @@ async function capturarESalvarNaGaleria(gerarCanvas, nome) {
       pctx.drawImage(canvas, 0, 0);
       canvas = comPapel;
     }
+    canvas = await emoldurarCanvasGaleria(canvas);
     dataUrl = canvas.toDataURL('image/png');
   } catch (err) {
     console.error('Erro ao gerar a imagem:', err);
