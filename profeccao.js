@@ -20,6 +20,11 @@
         const abrir = janela.style.display !== 'block';
         janela.style.display = abrir ? 'block' : 'none';
         if (!abrir) return;
+        // o botão fica no meio da tela no celular: a janelinha não pode sair pela lateral
+        janela.style.left = 'auto'; janela.style.right = '0';
+        const rj = janela.getBoundingClientRect(), pai = janela.offsetParent ? janela.offsetParent.getBoundingClientRect() : { left: 0 };
+        const alvo = Math.max(10, Math.min(rj.left, window.innerWidth - rj.width - 10));
+        if (Math.abs(alvo - rj.left) > 1) { janela.style.right = 'auto'; janela.style.left = (alvo - pai.left) + 'px'; }
         const nasc = window.profeccaoAnoNasc || 1990;
         const anoSel = nasc + (window.profeccaoIdadeBase || 0) + window.profeccaoOffsetAnos;
         const nome = (typeof currentSubjectName !== 'undefined' && currentSubjectName) ? currentSubjectName : 'Mapa Atual';
