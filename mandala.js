@@ -1049,10 +1049,11 @@ function soltarMenusDaBarraMandala(botao) {
       document.body.appendChild(menu);
     }
     const larg = menu.offsetWidth || 280;
-    const esq = Math.max(10, Math.min(rb ? rb.left : 10, window.innerWidth - larg - 10));
+    const folga = 30; // a moldura da página ocupa as laterais: o menu fica por dentro dela, sem encostar
+    const esq = Math.max(folga, Math.min(rb ? rb.left : folga, window.innerWidth - larg - folga));
     menu.style.position = 'fixed'; menu.style.top = 'auto'; menu.style.right = 'auto';
     menu.style.left = esq + 'px'; menu.style.bottom = base + 'px';
-    menu.style.maxWidth = 'calc(100vw - 20px)'; menu.style.zIndex = '10000';
+    menu.style.maxWidth = 'calc(100vw - 60px)'; menu.style.zIndex = '10000';
   });
 }
 document.addEventListener('click', (e) => {
