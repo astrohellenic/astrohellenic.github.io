@@ -104,8 +104,6 @@ body.tema-ceu .rel-editor-tela { clip-path: none !important; }
 body.tema-ceu #top-bar::before { inset: 0; clip-path: none; }
 body.tema-ceu #top-bar::after { display: none; }
 
-/* Céu: a barra de botões e o cabeçalho da mandala são papiro liso por dentro da moldura (sem borda rasgada), nunca flutuando sobre o céu. */
-body.tema-ceu #barra-inferior-mandala { background: var(--papiro-fundo); }
-body.tema-ceu #barra-inferior-mandala::before, body.tema-ceu #barra-inferior-mandala::after { display: none; }
+/* Céu: o cabeçalho do mapa (faixa acima da mandala) é papiro liso, sem borda rasgada. */
 body.tema-ceu #cabecalho-barra-mandala { background: var(--papiro-fundo); }
 body.tema-ceu #cabecalho-barra-mandala::before, body.tema-ceu #cabecalho-barra-mandala::after { display: none; }

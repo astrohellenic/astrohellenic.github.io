@@ -1115,9 +1115,12 @@ function atualizarBarraInferiorMandala() {
   barra.style.setProperty('--altura-barra-inferior', (barra.offsetHeight + 24) + 'px');
   atualizarSetasBarraMandala();
   // Com mouse: a área da mandala termina acima da barra (a barra de rolagem de baixo fica visível); com toque: a barra cobre e a imagem ganha recuo.
-  // a barra não flutua mais sobre a mandala (é uma barra em cima, em fluxo normal): nenhum recuo embaixo
-  document.documentElement.style.removeProperty('--margem-rolagem-mandala');
-  if (embrulho) { embrulho.style.boxSizing = 'border-box'; embrulho.style.paddingBottom = ''; }
+  if (comMouse) document.documentElement.style.setProperty('--margem-rolagem-mandala', (barra.offsetHeight + 10) + 'px');
+  else document.documentElement.style.removeProperty('--margem-rolagem-mandala');
+  if (embrulho) {
+    embrulho.style.boxSizing = 'border-box';
+    embrulho.style.paddingBottom = comMouse ? '' : (barra.offsetHeight + 10) + 'px';
+  }
 }
 window.atualizarBarraInferiorMandala = atualizarBarraInferiorMandala;
 function ajustarPosicaoMandalaActionsOverlay() { atualizarBarraInferiorMandala(); }
