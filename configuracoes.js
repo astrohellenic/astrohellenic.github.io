@@ -117,7 +117,7 @@ function htmlCfgAparencia() {
   let modo = 'auto';
   try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
   // Uma escolha só: o Céu vence os outros; Claro/Escuro/Automático só valem fora dele.
-  const escolha = (window.temaMandala === 'ceu' || window.temaMandala === 'sulfite') ? window.temaMandala : modo;
+  const escolha = window.temaPapiro ? 'papiro' : ((window.temaMandala === 'ceu' || window.temaMandala === 'sulfite') ? window.temaMandala : modo);
 
   const opcao = (acao, ativa, iconeHtml, titulo, desc) => `
     <button type="button" class="cfg-opcao${ativa ? ' ativa' : ''}" onclick="${acao}">
@@ -155,6 +155,7 @@ function htmlCfgAparencia() {
         <p class="cfg-card-desc">Uma escolha só: ao escolher uma opção, as outras ficam desmarcadas. O <strong>Automático</strong> acompanha o aparelho (claro quando o aparelho está claro, escuro quando está escuro) e nunca escolhe o Céu. Fica salvo neste aparelho — cada aparelho ou navegador tem o seu.</p>
         <div class="cfg-opcoes">
           ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu' + (temaLiberadoNoPlano('ceu') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('papiro')", escolha === 'papiro', fa('pergaminho'), 'Papiro', 'Papiro em tudo, sem céu' + (temaLiberadoNoPlano('papiro') ? '' : ' — plano Essencial ou Pro'))}
           ${opcao("salvarAparencia('sulfite')", escolha === 'sulfite', fa('sol'), 'Sulfite', 'Folha branca, escrito à mão com caneta' + (temaLiberadoNoPlano('sulfite') ? '' : ' — plano Essencial ou Pro'))}
           ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho')}
           ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho')}

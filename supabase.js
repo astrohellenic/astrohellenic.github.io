@@ -179,6 +179,7 @@ const MENU_ICONES = {
   agenda: '<rect x="8" y="12" width="48" height="44" rx="4"/><line x1="8" y1="24" x2="56" y2="24"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/><line x1="18" y1="34" x2="26" y2="34"/><line x1="30" y1="34" x2="38" y2="34"/><line x1="42" y1="34" x2="46" y2="34"/><line x1="18" y1="44" x2="26" y2="44"/><line x1="30" y1="44" x2="38" y2="44"/>',
   seguranca: '<path d="M32 6 L52 14 V32 C52 44 44 52 32 58 C20 52 12 44 12 32 V14 Z"/><polyline points="23,32 30,39 42,25"/>',
   estrela: '<path d="M32 8 L38 25 L56 26 L42 37 L47 55 L32 45 L17 55 L22 37 L8 26 L26 25 Z"/>',
+  pergaminho: '<path d="M22 10 H50 V50 H26 Q18 50 18 42 V14 Q18 10 22 10 Z M26 50 Q26 42 18 42 M26 22 H42 M26 30 H42 M26 38 H36"/>',
   sol: '<circle cx="32" cy="32" r="10"/><path d="M32 6 V14 M32 50 V58 M6 32 H14 M50 32 H58 M14 14 L20 20 M44 44 L50 50 M14 50 L20 44 M44 20 L50 14"/>',
   lua: '<path d="M46 38 A22 22 0 1 1 26 10 A17 17 0 0 0 46 38 Z"/>',
   automatico: '<circle cx="32" cy="32" r="22"/><path d="M32 10 A22 22 0 0 1 32 54 Z"/>',
@@ -260,17 +261,20 @@ function renderMenuPrincipal() {
 function lerTemaMandalaLocal() {
   try {
     const t = localStorage.getItem('astro_tema_mandala');
-    return (t === 'ceu' || t === 'claro' || t === 'sulfite') ? t : null;
+    return (t === 'ceu' || t === 'claro' || t === 'sulfite' || t === 'papiro') ? t : null;
   } catch (e) { return null; }
 }
 
 function aplicarTemaMandala(tema) {
-  window.temaMandala = tema;
+  const papiro = tema === 'papiro';
+  if (papiro) tema = 'ceu';
+  window.temaMandala = tema; window.temaPapiro = papiro; window.mandalaPapiroTela = papiro;
   if (typeof window.aplicarModoCor === 'function') { // o Céu não tem base escura: reaplica o modo com o tema já definido
     let modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {}
     window.aplicarModoCor(modo);
   }
   document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  document.body.classList.toggle('tema-papiro', papiro);
   document.documentElement.classList.toggle('tema-sulfite', tema === 'sulfite');
   // Se a mandala já tinha sido desenhada com outro tema, refaz o desenho já com o tema certo.
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
@@ -303,7 +307,7 @@ async function carregarTemaMandala(userId) {
    nesse caso NADA é bloqueado, pra um erro de rede nunca trancar quem paga. Os temas Céu e Sulfite são do Essencial pra cima. */
 const NIVEIS_COM_TEMAS = ['essencial', 'pro', 'admin'];
 function temaLiberadoNoPlano(tema) {
-  if (tema !== 'ceu' && tema !== 'sulfite') return true;
+  if (tema !== 'ceu' && tema !== 'sulfite' && tema !== 'papiro') return true;
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
 /* Ícones esféricos dos planetas: também do Essencial pra cima (os simples são pra todos). A escolha guardada na conta NÃO é apagada —
@@ -357,17 +361,21 @@ async function carregarNivelPlano(userId) {
    window.aplicarModoCor vem do script inline em index.html (roda antes de supabase.js). */
 function salvarAparencia(escolha) {
   if (!temaLiberadoNoPlano(escolha)) { alert('Este tema é do plano Essencial ou Pro. No plano Básico você usa os temas Claro e Escuro.'); return; }
-  const tema = (escolha === 'ceu' || escolha === 'sulfite') ? escolha : 'claro';
+  const tema = (escolha === 'ceu' || escolha === 'sulfite' || escolha === 'papiro') ? escolha : 'claro';
   try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
-  window.temaMandala = tema; // antes do aplicarModoCor: ele consulta se o Céu está ligado
+  const ehPapiro = tema === 'papiro'; // tema Papiro: por dentro é o Céu com a folha sempre ligada e sem céu (classe tema-papiro)
+  window.temaMandala = ehPapiro ? 'ceu' : tema; // antes do aplicarModoCor: ele consulta se o Céu está ligado
+  window.temaPapiro = ehPapiro; window.mandalaPapiroTela = ehPapiro;
   let modo = escolha;
-  if (tema === 'ceu' || tema === 'sulfite') { modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {} }
+  if (tema === 'ceu' || tema === 'sulfite' || ehPapiro) { modo = 'auto'; try { modo = localStorage.getItem('astro_modo_cor') || 'auto'; } catch (e) {} }
   else { try { localStorage.setItem('astro_modo_cor', escolha); } catch (e) {} }
   if (typeof window.aplicarModoCor === 'function') window.aplicarModoCor(modo);
-  document.body.classList.toggle('tema-ceu', tema === 'ceu');
+  document.body.classList.toggle('tema-ceu', tema === 'ceu' || ehPapiro);
+  document.body.classList.toggle('tema-papiro', ehPapiro);
   document.documentElement.classList.toggle('tema-sulfite', tema === 'sulfite');
   if (typeof currentCalculatedData !== 'undefined' && currentCalculatedData && typeof renderMandala === 'function') {
     if (mandalaEstaNaTela()) renderMandala();
+    else if (typeof reRenderizarModuloAtivo === 'function') reRenderizarModuloAtivo();
   }
   if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }

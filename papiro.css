@@ -115,12 +115,12 @@ body.tema-ceu #top-bar::before, body.tema-ceu #barra-inferior-mandala::before { 
 
 /* Mandala em PAPIRO (botão céu/papiro): a tela inteira vira UMA folha de papiro, então ela tem UMA moldura só, em volta de tudo. As folhas menores (cabeçalho do software e barra de
    baixo) perdem o papiro e a moldura próprios; da barra de baixo fica só a linha de cima do cabeçalho do mapa. */
-body.tema-ceu.mandala-papiro-tela #main-stage {
+body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage {
     --m: .25; box-sizing: border-box;
     border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
     border-image: url(moldura-redes.svg?v=1) 130 80 round;
 }
-@media (min-width: 900px) { body.tema-ceu.mandala-papiro-tela #main-stage { --m: .3; } }
+@media (min-width: 900px) { body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage { --m: .3; } }
 body.tema-ceu.mandala-papiro-tela #top-bar, body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala {
     border-image: none; border-style: none; border-width: 0; background: transparent !important; clip-path: none;
 }
@@ -129,3 +129,13 @@ html body.tema-ceu.mandala-papiro-tela #main-stage { background-origin: border-b
 
 /* O papel das folhas com moldura começa na BORDA da folha (senão o degradê repete por baixo da moldura e aparecem faixas escuras/claras, as "manchas" do papiro). */
 html body.tema-ceu .painel, html body.tema-ceu #top-bar, html body.tema-ceu #barra-inferior-mandala { background-origin: border-box !important; background-clip: border-box !important; }
+
+/* TEMA PAPIRO — papiro em tudo, sem céu. A página inteira é UMA folha de papiro (o fundo da tela, fixo, igual para a barra de cima, que acompanha a rolagem) com UMA moldura em volta
+   (body::after, em componentes.css). Nada de papiro em cima de papiro: o cabeçalho do software, o painel de cada ferramenta e a barra de baixo da Mandala ficam lisos, sem papiro nem
+   moldura próprios. A Mandala é sempre em tinta (a folha liga sozinha) e o botão céu/papiro não existe neste tema. */
+html body.tema-papiro #main-stage { background: var(--papiro-fundo) !important; background-size: auto !important; background-position: 0 0 !important; background-attachment: fixed !important; }
+html body.tema-papiro #top-bar { background: var(--papiro-fundo) !important; background-attachment: fixed !important; border: 0 !important; border-image: none !important; clip-path: none !important; }
+html body.tema-papiro #top-bar::before, html body.tema-papiro #top-bar::after { display: none !important; }
+html body.tema-papiro #barra-inferior-mandala { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro) !important; }
+html body.tema-papiro .painel { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; }
+html body.tema-papiro #btn-mandala-papiro { display: none !important; }
