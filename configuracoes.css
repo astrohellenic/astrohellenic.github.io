@@ -82,7 +82,8 @@
 .cfg-opcoes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-  gap: 10px 16px;
+  gap: 0;
+  border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); /* UMA linha em cima do conjunto; cada opção só tem a de baixo: nunca duas linhas com espaço no meio */
 }
 .cfg-opcao {
   display: flex;
@@ -92,7 +93,7 @@
   padding: 12px 12px 12px 10px;
   border: 0;
   border-left: 3px solid transparent;
-  border-top: var(--contorno-fino) solid var(--azul-egipcio-claro);
+  border-top: 0;
   border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro);
   border-radius: 0;
   background: transparent;
@@ -237,3 +238,6 @@
 
 /* Botões da página de Configurações: os que eram de texto terracota com linha em cima e embaixo são os IMPORTANTES, então ficam preenchidos de terracota (o mesmo padrão dos botões de texto do software, componentes.css). */
 .cfg-btn, .cfg-btn:hover, .cfg-btn:active { background: var(--terracota); color: var(--sobre-terracota); border: 0; border-radius: 0; text-decoration: none; padding: 9px 18px; font-size: 13px; }
+
+/* Quando o cartão termina numa lista de opções (ou num campo com linha embaixo), a linha dela já fecha o cartão: o cartão não leva outra linha, nem o espaço até ela. */
+.cfg-card:has(> .cfg-opcoes:last-child), .cfg-card:has(textarea:last-child) { border-bottom: 0; padding-bottom: 0; }

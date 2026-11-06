@@ -675,9 +675,9 @@ async function capturarLotesSelecionadosParaRelatorio() {
 
   const temp = document.createElement('div');
   temp.className = 'lotes-captura-temp'; // no Tema Céu herda as variáveis de cor em tinta da folha
-  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: ${larguraTotal}px; padding: ${PAD}px; background: transparent; font-family: "Montserrat", sans-serif;`;
+  temp.style.cssText = `position: fixed; top: 0; left: -9999px; width: ${larguraTotal}px; padding: ${PAD}px; background: transparent; font-family: 'Architects Daughter', cursive;`;
   temp.innerHTML = `
-    <div style="display: grid; grid-template-columns: repeat(${numCols}, ${CARD_W}px); gap: ${GAP}px;">
+    <div class="grade-linhas" style="display: grid; grid-template-columns: repeat(${numCols}, ${CARD_W}px); gap: 0 ${GAP}px;">
       ${selecionados.map(l => renderLoteCardHTML(l.iconHTML, l.nome, l.deg, p.asc, l.legenda)).join('')}
     </div>
   `;

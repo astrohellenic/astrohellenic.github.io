@@ -111,7 +111,7 @@
 }
 
 /* CARTÕES EM GRADE, CABEÇA E LINHA DE INFORMAÇÃO */
-.grade-cartoes { display: flex; flex-wrap: wrap; gap: 14px; }
+.grade-cartoes { display: flex; flex-wrap: wrap; gap: 0 14px; }
 .grade-cartoes > .cartao { flex: 1; min-width: 260px; }
 .cabeca-cartao { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .linha-info { font-size: 11px; color: var(--preto-tinta); border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); padding-top: 8px; }
@@ -396,7 +396,8 @@ input[type="radio"]:checked::after {
 .passo-tempo .menu-select { flex: 0 0 auto; width: auto; padding: 4px 6px; }
 
 /* GRADE DOS LOTES (Calculadora de Lotes): cartões lado a lado, quebrando linha sozinhos */
-.grade-lotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.grade-lotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 12px; margin-bottom: 8px; border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.grade-lotes > .cartao { border-top: 0; }
 
 /* HORAS PLANETÁRIAS: o bloco "agora" (Dia e Hora atuais) e a rolagem da tabela */
 .horas-info { font-size: 12px; text-align: center; margin: 0 0 16px; opacity: .85; }
@@ -658,16 +659,26 @@ input[type="radio"]:checked::after {
 #relEditorEspacadorBarra, #relToolbarEspacador { margin-top: 10px; }
 
 
-/* MOLDURA COM MEANDROS GREGOS (a mesma do Falando de Astrologia) — a moldura é do PAPIRO, nunca do céu nem da tela: cada folha (o cabeçalho do software, o
-   painel de cada ferramenta, a barra de botões da Mandala) tem a sua, com o meandro em cima e embaixo. A Mandala em si fica solta no céu, sem moldura.
-   É a borda da própria folha (border-image: cantos fixos, lados repetem), então o conteúdo já fica por dentro dela e ela acompanha a altura da folha. */
-#top-bar, #barra-inferior-mandala { --m: .17; }
-.painel { --m: .25; }
-@media (min-width: 900px) { .painel { --m: .3; } }
-#top-bar, #barra-inferior-mandala, .painel {
+/* MOLDURA COM MEANDROS GREGOS (a mesma do Falando de Astrologia). A moldura é do PAPIRO:
+   • NO CÉU há vários papiros soltos (cabeçalho do software, painel de cada ferramenta, bloco de baixo da Mandala): cada um tem a SUA moldura (a borda da própria folha), e a Mandala fica solta no céu;
+   • NOS OUTROS TEMAS (claro, escuro, sulfite) não há céu nem papiros: a tela é UMA peça só, com UMA moldura só em volta da página inteira (acompanha a altura da página; o conteúdo fica por dentro). */
+body.tema-ceu #top-bar, body.tema-ceu #barra-inferior-mandala { --m: .17; }
+body.tema-ceu .painel { --m: .25; }
+@media (min-width: 900px) { body.tema-ceu .painel { --m: .3; } }
+body.tema-ceu #top-bar, body.tema-ceu #barra-inferior-mandala, body.tema-ceu .painel {
     border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
     border-image: url(moldura-redes.svg?v=1) 130 80 round;
 }
+body:not(.tema-ceu) { --moldura-m: .25; --moldura-v: calc(130px * var(--moldura-m)); --moldura-h: calc(80px * var(--moldura-m)); --topbar-topo: calc(var(--moldura-v) + 4px); }
+@media (min-width: 900px) { body:not(.tema-ceu) { --moldura-m: .3; } }
+body:not(.tema-ceu)::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 45;
+    border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
+    border-image: url(moldura-redes.svg?v=1) 130 80 round;
+}
+html body:not(.tema-ceu) #main-stage { padding: calc(var(--moldura-v) + 4px) calc(var(--moldura-h) + 4px); }
+html body:not(.tema-ceu).topbar-fixo #top-bar { left: calc(var(--moldura-h) + 4px); right: calc(var(--moldura-h) + 4px); }
+@media print { body::after { display: none !important; } }
 
 
 /* BOTÕES DE TEXTO — o mesmo padrão do Falando de Astrologia, em todos os temas e em todo o software (os botões de ÍCONE ficam como são):
@@ -700,7 +711,7 @@ input[type="radio"]:checked::after {
 
 /* TELAS BAIXAS (celular em pé, laptop baixo): NADA some — o logo, o cabeçalho do mapa e todos os botões continuam à vista —, mas ficam mais compactos para a mandala ter mais espaço:
    moldura mais fina nos dois papiros, logo menor e botões mais juntos. */
-#top-bar, #barra-inferior-mandala { --m: .12; }
+body.tema-ceu #top-bar, body.tema-ceu #barra-inferior-mandala { --m: .12; }
 @media (max-height: 760px) {
     html body #top-bar .top-bar-logo { margin-top: 0; }
     html body #top-bar .top-bar-logo img { height: 24px; }
@@ -720,3 +731,15 @@ html body.modo-mandala #mandala-container { order: 1; flex: none; height: min(ca
 html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; bottom: auto; margin-top: 8px; }
 }
 }
+
+
+/* NUNCA DUAS LINHAS COM ESPAÇO NO MEIO (regra do astrólogo, 06/11/2026) —
+   • cartões em grade: UMA linha em cima do conjunto e cada cartão só com a de baixo (sem vão entre as fileiras);
+   • o que termina numa linha e vem logo antes de uma divisa (<hr class="divisa">) não repete a linha: a divisa é quem fecha. */
+.grade-cartoes, .grade-linhas { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+.grade-cartoes > .cartao, .grade-linhas > .cartao { border-top: 0; }
+:is(.cartao, .re-item, .envolve-tabela):has(+ .divisa) { border-bottom: 0; }
+*:has(+ .divisa) :is(.cartao, .re-item):last-child { border-bottom: 0; }
+*:has(+ .divisa) tbody > tr:last-child > * { border-bottom: 0; }
+:is(.cartao, .re-item, .envolve-tabela):has(+ .divisa) :is(tbody, table) > tr:last-child > *, .envolve-tabela:has(+ .divisa) tbody tr:last-child > *, table:has(+ .divisa) tbody tr:last-child > * { border-bottom: 0; }
+.grade-lotes + .divisa, .grade-cartoes + .divisa, .grade-linhas + .divisa { display: none; } /* a última linha de cartões já fecha o conjunto */
