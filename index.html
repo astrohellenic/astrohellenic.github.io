@@ -20,6 +20,7 @@
     (function() {
       var t = null;
       try { t = localStorage.getItem('astro_tema_mandala'); } catch (e) {}
+      if (!t) t = 'papiro'; // sem escolha neste aparelho: o Papiro é o tema padrão (a cara da marca)
       if (t === 'ceu' || t === 'claro' || t === 'sulfite') window.temaMandala = t;
       if (t === 'papiro') { window.temaMandala = 'ceu'; window.temaPapiro = true; window.mandalaPapiroTela = true; } // tema Papiro: papiro em tudo, sem céu (por dentro é o Céu com a folha sempre ligada)
       if (t === 'sulfite') document.documentElement.classList.add('tema-sulfite'); // Sulfite: folha branca e caneta (cores em temas.css)
@@ -1113,7 +1114,7 @@ body {
 <script src="papiro.js?v=20261106e"></script>
 <script src="fontes-imagem.js?v=20261106a"></script>
 <script src="dialogos.js?v=20261010f"></script>
-<script src="supabase.js?v=20261106u"></script>
+<script src="supabase.js?v=20261106v"></script>
 <script src="importacao.js?v=20261027a"></script>
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261106e"></script>
@@ -1142,7 +1143,7 @@ body {
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261106t"></script>
 <script src="agendamento.js?v=20261106c"></script>
-<script src="configuracoes.js?v=20261106u"></script>
+<script src="configuracoes.js?v=20261106v"></script>
 <script src="financeiro.js?v=20261106f"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos

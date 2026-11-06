@@ -157,9 +157,9 @@ function htmlCfgAparencia() {
           ${opcao("salvarAparencia('ceu')", escolha === 'ceu', fa('estrela'), 'Céu', 'Papiro e tinta sobre o céu' + (temaLiberadoNoPlano('ceu') ? '' : ' — plano Essencial ou Pro'))}
           ${opcao("salvarAparencia('papiro')", escolha === 'papiro', fa('pergaminho'), 'Papiro', 'Papiro em tudo, sem céu' + (temaLiberadoNoPlano('papiro') ? '' : ' — plano Essencial ou Pro'))}
           ${opcao("salvarAparencia('sulfite')", escolha === 'sulfite', fa('sol'), 'Sulfite', 'Folha branca, escrito à mão com caneta' + (temaLiberadoNoPlano('sulfite') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho')}
-          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho')}
-          ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('automatico'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho')}
+          ${opcao("salvarAparencia('claro')", escolha === 'claro', fa('sol'), 'Claro', 'Sempre com fundo claro, não importa o aparelho' + (temaLiberadoNoPlano('claro') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('escuro')", escolha === 'escuro', fa('lua'), 'Escuro', 'Sempre com fundo escuro, não importa o aparelho' + (temaLiberadoNoPlano('escuro') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarAparencia('auto')", escolha === 'auto', fa('automatico'), 'Automático', 'Acompanha o tema claro/escuro configurado neste aparelho' + (temaLiberadoNoPlano('auto') ? '' : ' — plano Essencial ou Pro'))}
         </div>
       </div>
 

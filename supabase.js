@@ -288,7 +288,7 @@ function aplicarTemaMandala(tema) {
    antes dessa mudança), guarda no aparelho e aplica — quem já usava o Céu não perde a escolha. */
 async function carregarTemaMandala(userId) {
   if (lerTemaMandalaLocal()) return;
-  let tema = 'claro';
+  let tema = 'papiro'; // aparelho novo, sem escolha: o Papiro é o tema padrão
   try {
     const { data, error } = await supabaseClient
       .from('configuracoes')
@@ -307,7 +307,7 @@ async function carregarTemaMandala(userId) {
    nesse caso NADA é bloqueado, pra um erro de rede nunca trancar quem paga. Os temas Céu e Sulfite são do Essencial pra cima. */
 const NIVEIS_COM_TEMAS = ['essencial', 'pro', 'admin'];
 function temaLiberadoNoPlano(tema) {
-  if (tema !== 'ceu' && tema !== 'sulfite' && tema !== 'papiro') return true;
+  if (tema === 'papiro') return true; // o Papiro é o tema padrão da marca: de todos os planos (Básico incluso)
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
 /* Ícones esféricos dos planetas: também do Essencial pra cima (os simples são pra todos). A escolha guardada na conta NÃO é apagada —
@@ -348,7 +348,7 @@ async function carregarNivelPlano(userId) {
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
   aplicarLimiteEstiloPlanetas();
   if (!coresNiveisLiberadoNoPlano(window.coresNiveis)) reRenderizarModuloAtivo(); // Básico com violeta/ocre guardado: volta a desenhar em verde
-  if (!temaLiberadoNoPlano(window.temaMandala)) salvarAparencia('claro');
+  if (!window.temaPapiro && !temaLiberadoNoPlano('claro')) aplicarTemaMandala('papiro'); // Básico só tem o Papiro: qualquer outro tema guardado fica de lado (a escolha não é apagada)
   else if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
 
@@ -360,7 +360,7 @@ async function carregarNivelPlano(userId) {
    - 'claro' / 'escuro' / 'auto': desliga o Céu e aplica o modo — o automático só escolhe entre claro e escuro, nunca Céu.
    window.aplicarModoCor vem do script inline em index.html (roda antes de supabase.js). */
 function salvarAparencia(escolha) {
-  if (!temaLiberadoNoPlano(escolha)) { alert('Este tema é do plano Essencial ou Pro. No plano Básico você usa os temas Claro e Escuro.'); return; }
+  if (!temaLiberadoNoPlano(escolha)) { alert('Este tema é do plano Essencial ou Pro. No plano Básico você usa o tema Papiro.'); return; }
   const tema = (escolha === 'ceu' || escolha === 'sulfite' || escolha === 'papiro') ? escolha : 'claro';
   try { localStorage.setItem('astro_tema_mandala', tema); } catch (e) {}
   const ehPapiro = tema === 'papiro'; // tema Papiro: por dentro é o Céu com a folha sempre ligada e sem céu (classe tema-papiro)
