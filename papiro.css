@@ -99,3 +99,6 @@ body.tema-ceu .janela::after {
    tamanho estoura o limite de camada do Safari do iPad: ao tocar fora do texto a tela aparece "dividida na metade" até o próximo toque.
    Aqui a folha do editor fica sem o recorte (bordas retas, mesmo papiro); as barras e janelas, que são pequenas, mantêm a borda quebrada. */
 body.tema-ceu .rel-editor-tela { clip-path: none !important; }
+
+/* Barra superior: só a linha de baixo (a de cima saiu, como na barra do Hellenic Daily). */
+body.tema-ceu #top-bar::after { border-top: 0; }

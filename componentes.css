@@ -243,8 +243,7 @@
 #top-bar {
     background: var(--fundo-creme);
     border: 0;
-    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: 2px solid var(--azul-egipcio-claro); /* igual à barra do Hellenic Daily: só a linha de baixo (sem a de cima) e divisas entre os botões */
     border-radius: 0;
     box-shadow: var(--sombra, none);
 }
@@ -255,6 +254,10 @@
 #top-bar .menu-toggle-btn { margin-right: 4px; }
 #top-bar .menu-toggle-btn:hover, #top-bar .icon-btn:hover { background: transparent; color: var(--terracota); }
 #top-bar .icon-btn.matriz-visibilidade-ativa, #top-bar .icon-btn.ativo { background: transparent; color: var(--terracota); }
+#top-bar .menu-toggle-btn, #top-bar .menu-toggle-btn:hover { color: var(--ocre); align-self: stretch; padding: 6px 12px; margin-right: 0; border-right: 2px solid var(--azul-egipcio-claro); }
+#top-bar .top-bar-controls { gap: 0; align-self: stretch; }
+#top-bar .top-bar-controls .icon-btn { align-self: stretch; padding: 6px 12px; }
+#top-bar .top-bar-controls .icon-btn + .icon-btn { border-left: 2px solid var(--azul-egipcio-claro); }
 .action-record-btn { display: flex; align-items: center; justify-content: center; }
 .action-record-btn .icone { display: block; }
 
