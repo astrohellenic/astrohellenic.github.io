@@ -95,6 +95,4 @@
 :root.tema-sulfite {
     --fonte-sulfite: 'Caveat', cursive;
 }
-html.tema-sulfite body, html.tema-sulfite body *:not(i):not([class*="fa-"]):not(.fa):not(.fas):not(.far):not(.fab) {
-    font-family: var(--fonte-sulfite) !important;
-}
+/* (o Sulfite não tem mais fonte própria: a tipografia é uma só, em tipografia.css, igual em todos os temas) */

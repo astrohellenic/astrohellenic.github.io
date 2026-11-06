@@ -65,7 +65,7 @@ function mostrarAvisoConta() {
   if (telaDeLoginAberta() || document.getElementById('avisoContaNaoCarregada')) return;
   const b = document.createElement('div');
   b.id = 'avisoContaNaoCarregada';
-  b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 10px);z-index:100000;max-width:min(560px,92vw);box-sizing:border-box;padding:12px 16px;background:#F3E3B8;color:#16233F;border:2px solid #A03E25;box-shadow:0 4px 18px rgba(0,0,0,.35);font:600 15px/1.35 Cinzel,serif;text-align:center';
+  b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 10px);z-index:100000;max-width:min(560px,92vw);box-sizing:border-box;padding:12px 16px;background:#F3E3B8;color:#16233F;border:2px solid #A03E25;box-shadow:0 4px 18px rgba(0,0,0,.35);font-size:15px;font-weight:600;line-height:1.35;text-align:center';
   const t = document.createElement('div');
   t.textContent = 'Não consegui carregar os seus dados agora. Tentando de novo...';
   const linha = document.createElement('div');
@@ -73,7 +73,7 @@ function mostrarAvisoConta() {
   const mk = (txt, acao) => {
     const x = document.createElement('button');
     x.type = 'button'; x.textContent = txt;
-    x.style.cssText = 'background:transparent;border:1.5px solid #1034A6;color:#1034A6;padding:8px 14px;font:700 14px Cinzel,serif;cursor:pointer;border-radius:0';
+    x.style.cssText = 'background:transparent;border:1.5px solid #1034A6;color:#1034A6;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer;border-radius:0';
     x.addEventListener('click', acao);
     return x;
   };

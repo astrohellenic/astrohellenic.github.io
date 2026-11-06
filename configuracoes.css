@@ -7,7 +7,6 @@
 #configuracoes-container {
   width: 100%;
   align-self: stretch;
-  font-family: 'Montserrat', sans-serif;
   color: var(--preto-tinta);
 }
 
@@ -67,7 +66,6 @@
 }
 .cfg-card-largo { grid-column: 1 / -1; }
 .cfg-card-titulo {
-  font-family: 'Cinzel', serif;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .14em;
@@ -161,7 +159,7 @@
 .cfg-campo-largo { grid-column: 1 / -1; }
 .cfg-rotulo {
   display: block; margin: 0 0 2px;
-  font-family: 'Cinzel', serif; font-weight: 700; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--preto-tinta);
+  font-weight: 700; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--preto-tinta);
 }
 .cfg-linha-campo { display: flex; gap: 12px; align-items: flex-end; }
 .cfg-linha-campo .modal-input { flex: 1; min-width: 0; }

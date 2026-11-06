@@ -855,7 +855,7 @@ function renderCircumambulaçõesUI() {
 
   let html = `
     <div style="width: 100%;">
-      <div class="dir-outer painel" id="circumambulacao-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
+      <div class="dir-outer painel" id="circumambulacao-container" style="width: 100%; min-height: 100%;">
 
         <div class="cabeca-ferramenta"><h3 class="dir-titulo titulo-ferramenta">
           Circumambulação pelos Termos

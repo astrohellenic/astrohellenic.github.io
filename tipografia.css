@@ -1,0 +1,28 @@
+/* TIPOGRAFIA ÚNICA DO ASTRO HELLENIC — a mesma do Falando de Astrologia (06/11/2026), igual em TODOS os temas. A fonte de cada texto é decidida
+   SÓ AQUI. Nenhuma página, script ou outro CSS escreve font-family: usa a classe do papel (ou deixa o papel pelo elemento).
+   • CINZEL (caixa baixa): título da ferramenta/página, TODOS os botões (qualquer estilo), abas e menus.
+   • ARCHITECTS DAUGHTER MAIÚSCULA: subtítulos, nome das coisas (cliente, pasta, nível, título de cartão) e rótulos (nomes de campo, cabeçalho de tabela).
+   • ARCHITECTS DAUGHTER NORMAL: corpo de texto e o que se digita.
+   Exceções (imagens/PDF desenhados em SVG, canvas ou jsPDF, que precisam da fonte embutida): ver verificar-tipografia.js. */
+:root { --fonte-titulo: 'Cinzel', serif; --fonte-mao: 'Architects Daughter', 'Segoe Print', 'Comic Sans MS', cursive; }
+
+/* corpo do texto e campos */
+html, body, input, select, textarea { font-family: var(--fonte-mao); }
+button { font-family: inherit; }
+
+/* CINZEL: título da ferramenta, botões, abas, menus */
+.titulo-ferramenta, button, .botao-texto, .cfg-btn, .cfg-btn-mini, .cfg-nav-item, .folder-tab-btn, .add-folder-btn, .sidebar-title,
+.btn-submit, .btn-primary, .btn-secondary, .dia-btn, .hora-btn, h1 {
+    font-family: var(--fonte-titulo); text-transform: lowercase; letter-spacing: .04em;
+}
+
+/* ARCHITECTS DAUGHTER MAIÚSCULA: subtítulos, nome das coisas, rótulos */
+.titulo-secao, .nome-nivel, .cfg-card-titulo, .sidebar-nome-pasta, .menu-pasta .nome-pasta, .client-name, .re-linha-nome.custom,
+#rz-container details > summary, .modal-card h3, .summary-item strong, h2, h3, h4,
+.rotulo, .cfg-rotulo, .cal-mes, .ag-dia-titulo, .fato-num, .janela label, .rel-seletor-imagem-grupo-titulo, .tabela-epoca th, label, .titulo-sec {
+    font-family: var(--fonte-mao); text-transform: uppercase; letter-spacing: .03em;
+}
+
+/* o que se escreve dentro dos campos e o texto dos botões de ícone não mudam de caixa */
+input, select, textarea { text-transform: none; letter-spacing: 0; }
+.botao-icone, .icon-btn, .menu-toggle-btn { font-family: inherit; text-transform: none; letter-spacing: 0; }

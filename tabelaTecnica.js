@@ -283,7 +283,7 @@ function montarSVGPainelPrincipal(listaElementos) {
   const totalH = y;
 
   const corBorda = 'var(--azul-egipcio-claro)'; // grade quadriculada: linhas nos lados mantidas, cantos retos, na cor das divisas
-  let svg = `<svg width="${totalW + 2}" height="${totalH + 2}" viewBox="0 0 ${totalW + 2} ${totalH + 2}" style="display: inline-block; max-width: 100%; height: auto; font-family: 'Montserrat', sans-serif;"><g transform="translate(1 1)">`;
+  let svg = `<svg width="${totalW + 2}" height="${totalH + 2}" viewBox="0 0 ${totalW + 2} ${totalH + 2}" style="display: inline-block; max-width: 100%; height: auto;"><g transform="translate(1 1)">`;
 
   // Cabeçalho — Ponto/Signo/Grau/Latitude/Termo ocupam as duas linhas
   // (equivalente ao rowspan="2" de antes); Dodecatemória ocupa as duas
@@ -423,7 +423,7 @@ function renderPainelTecnico(data, containerId) {
 
     const html = `
       <div style="width: 100%;">
-      <div id="painel-tecnico-container" class="painel painel-tecnico-folha" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
+      <div id="painel-tecnico-container" class="painel painel-tecnico-folha" style="width: 100%; min-height: 100%;">
         <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Painel Técnico de Natividades</h3><div class="acoes-ferramenta">${btnSalvar}${btnRelatorio}</div></div>
 
         ${montarCabecalhoMandalaImagemHTML(data, 'painelTecnicoHeader', { tintaSobreFolha: true })}

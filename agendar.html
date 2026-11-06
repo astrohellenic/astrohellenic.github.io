@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="temas.css?v=20261010t">
-    <link rel="stylesheet" href="papiro.css?v=20261106c">
-    <link rel="stylesheet" href="componentes.css?v=20261106f">
+    <link rel="stylesheet" href="temas.css?v=20261106d">
+    <link rel="stylesheet" href="papiro.css?v=20261106d">
+    <link rel="stylesheet" href="componentes.css?v=20261106g">
+  <link rel="stylesheet" href="tipografia.css?v=20261106a">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Agendar Atendimento</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Cinzel:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="publico-tema.js?v=20261024d"></script>
   <script src="publico-embutido.js?v=20261105a"></script>
-  <link rel="stylesheet" href="publico.css?v=20261024g">
+  <link rel="stylesheet" href="publico.css?v=20261106a">
   <style>
     /* layout estilo Google Agenda: calendário + horários lado a lado (no celular, um embaixo do outro) */
     .form-card { max-width: 860px; }
     .ag-grade { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(260px, 1fr); gap: 32px; align-items: start; }
     .ag-cal { min-width: 0; }
     .cal-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .cal-mes { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--preto-tinta); }
+    .cal-mes { font-weight: 800; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--preto-tinta); }
     .cal-seta { background: transparent; border: 0; cursor: pointer; font-size: 26px; line-height: 1; padding: 0 8px; color: var(--azul-egipcio-escuro); }
     .cal-seta:disabled { opacity: .25; cursor: default; }
     .cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; justify-items: center; }
     .cal-semana { margin-bottom: 4px; font-size: 11px; font-weight: 700; opacity: .7; }
-    .cal-dia, .cal-vazio { width: 100%; max-width: 42px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; }
+    .cal-dia, .cal-vazio { width: 100%; max-width: 42px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px; font-weight: 600; }
     .cal-dia.off { opacity: .3; font-weight: 500; }
     button.cal-dia { cursor: pointer; background: transparent; color: var(--azul-egipcio-escuro); border: var(--contorno-fino) solid var(--azul-egipcio-claro); padding: 0; }
     button.cal-dia.sel { color: var(--terracota); border-color: var(--terracota); box-shadow: inset 0 0 0 2px var(--terracota); }
-    .ag-dia-titulo { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .06em; color: var(--terracota); margin-bottom: 12px; }
+    .ag-dia-titulo { font-weight: 800; font-size: 14px; letter-spacing: .06em; color: var(--terracota); margin-bottom: 12px; }
     .ag-horas .horas { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
     @media (max-width: 759px) { .ag-grade { grid-template-columns: 1fr; gap: 22px; } .form-card { max-width: 440px; } }
   </style>

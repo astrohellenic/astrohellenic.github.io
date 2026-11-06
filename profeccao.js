@@ -494,7 +494,7 @@
        (as duas mini-mandalas — RS e natal — coexistem na página) e o planeta 3D. Sem cabeçalho nem céu. */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+            return `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px;">Sem dados para desenhar o mapa.</div>`;
         }
 
         const profectedSignIdx = (opcoes.profectedSignIdx !== undefined) ? opcoes.profectedSignIdx : null;
@@ -554,7 +554,7 @@
         if (!container) return;
 
         if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--terracota); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--terracota);">Nenhum mapa carregado no sistema.</div>`;
             return;
         }
 
@@ -691,7 +691,7 @@
 
         let html = `
     <div style="width: 100%;">
-    <div id="profeccao-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div id="profeccao-container" class="painel" style="width: 100%;">
 
         <div class="cabeca-ferramenta">
             <h2 class="titulo-ferramenta">Profecção Anual <span style="display: block;">${idade} ${idade === 1 ? 'ano' : 'anos'}</span></h2>

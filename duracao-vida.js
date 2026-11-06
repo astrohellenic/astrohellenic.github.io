@@ -444,7 +444,7 @@ function renderDuracaoVidaUI(container) {
   const svgRelatorio = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
   container.innerHTML = `
     <div style="width: 100%; display: flex; flex-direction: column;">
-      <div id="duracao-vida-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+      <div id="duracao-vida-container" class="painel" style="width: 100%;">
         <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Duração da Vida</h3><div class="acoes-ferramenta">
           <button type="button" onclick="salvarDuracaoVidaNaGaleria()" title="Salvar a Duração da Vida como imagem na galeria (com título e cabeçalho)" class="botao-icone">${svgGaleria}</button>
           <div style="position: relative; flex-shrink: 0;">

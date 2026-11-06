@@ -590,7 +590,7 @@ function renderFasesVidaUI(container) {
 
   container.innerHTML = `
     <div style="width: 100%; display: flex; flex-direction: column;">
-      <div id="fases-vida-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+      <div id="fases-vida-container" class="painel" style="width: 100%;">
         <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Fases da Vida — Regentes da Triplicidade</h3><div class="acoes-ferramenta">
           <button type="button" onclick="salvarFasesVidaNaGaleria()" title="Salvar as Fases da Vida como imagem na galeria (com título e cabeçalho)" class="botao-icone">
             <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>

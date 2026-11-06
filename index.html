@@ -3,10 +3,11 @@
 <head>
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
-    <link rel="stylesheet" href="papiro.css?v=20261106c">
-    <link rel="stylesheet" href="temas.css?v=20261010t">
-    <link rel="stylesheet" href="componentes.css?v=20261106f">
-    <link rel="stylesheet" href="configuracoes.css?v=20261106a">
+    <link rel="stylesheet" href="papiro.css?v=20261106d">
+    <link rel="stylesheet" href="temas.css?v=20261106d">
+    <link rel="stylesheet" href="componentes.css?v=20261106g">
+    <link rel="stylesheet" href="tipografia.css?v=20261106a">
+    <link rel="stylesheet" href="configuracoes.css?v=20261106d">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
@@ -97,7 +98,7 @@
     <!-- FONTES E ÍCONES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;500;600;700&family=Cinzel:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.6/quill.snow.min.css">
 
@@ -229,7 +230,6 @@ html, body {
   width: 100%;
   background-color: var(--bg-main);
   color: var(--text-dark);
-  font-family: 'Montserrat', sans-serif;
 }
 
 /* Trava de tela cheia: some ligada só quando a mandala está ativa */
@@ -1110,35 +1110,35 @@ body {
 <script src="papiro.js?v=20261010v"></script>
 <script src="fonte-caveat.js?v=20261010v"></script>
 <script src="dialogos.js?v=20261010f"></script>
-<script src="supabase.js?v=20261106b"></script>
+<script src="supabase.js?v=20261106c"></script>
 <script src="importacao.js?v=20261027a"></script>
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261010v"></script>
-<script src="tabelaTecnica.js?v=20261010t"></script>
+<script src="tabelaTecnica.js?v=20261106c"></script>
 <script src="mandala.js?v=20261106b"></script>
 <script src="roda.js?v=20261106a"></script>
-<script src="isopsefia.js?v=20261010t"></script>
-<script src="profeccao.js?v=20261104b"></script>
-<script src="sinastria.js?v=20261010t"></script>
+<script src="isopsefia.js?v=20261106c"></script>
+<script src="profeccao.js?v=20261106c"></script>
+<script src="sinastria.js?v=20261106c"></script>
 <script src="revolucao.js?v=20261030a"></script>
 <script src="revolucaoLunar.js?v=20261009b"></script>
 <script src="camadas-tempo.js?v=20261031b"></script>
-<script src="decenios.js?v=20261030d"></script>
-<script src="direcoes.js?v=20261031a"></script>
-<script src="liberacao.js?v=20261104b"></script>
-<script src="lotes-calculadora.js?v=20261011a"></script>
-<script src="horas.js?v=20261030b"></script>
-<script src="fases-vida.js?v=20261031j"></script>
-<script src="duracao-vida.js?v=20261031f"></script>
+<script src="decenios.js?v=20261106c"></script>
+<script src="direcoes.js?v=20261106c"></script>
+<script src="liberacao.js?v=20261106c"></script>
+<script src="lotes-calculadora.js?v=20261106c"></script>
+<script src="horas.js?v=20261106c"></script>
+<script src="fases-vida.js?v=20261106c"></script>
+<script src="duracao-vida.js?v=20261106c"></script>
 <script src="retificacao-calculos.js?v=20261031a"></script>
-<script src="retificacao-sizigia.js?v=20261103a"></script>
+<script src="retificacao-sizigia.js?v=20261106c"></script>
 <script src="retificacao-pauta.js?v=20261020f"></script>
 <script src="retificacao-ficha.js?v=20261103b"></script>
 <script src="retificacao-relatorio.js?v=20261021f"></script>
-<script src="catarche.js?v=20261017e"></script>
+<script src="catarche.js?v=20261106c"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261106a"></script>
-<script src="agendamento.js?v=20261027b"></script>
+<script src="agendamento.js?v=20261106c"></script>
 <script src="configuracoes.js?v=20261106b"></script>
 <script src="financeiro.js?v=20261106a"></script>
 
@@ -1185,7 +1185,6 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 999999;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
   #loginOverlay.visible {
@@ -1217,7 +1216,7 @@ body {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
     border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
   }
-  #loginOverlay .janela-corpo { padding: 30px 30px 26px; gap: 0; font-family: 'Montserrat', sans-serif; }
+  #loginOverlay .janela-corpo { padding: 30px 30px 26px; gap: 0; }
   .login-brand { margin-bottom: 22px; }
   .login-field-container { position: relative; width: 100%; margin-bottom: 14px; text-align: left; }
   #loginOverlay .login-field { box-sizing: border-box; width: 100%; padding: 8px 34px 8px 0; font-family: inherit; font-size: 14px; outline: none; color: var(--preto-tinta); background: transparent; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; }

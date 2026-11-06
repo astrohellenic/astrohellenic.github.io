@@ -182,7 +182,7 @@ function iniciarModuloHoras(containerIdAlvo) {
 
   let html = `
     <div style="width: 100%;">
-    <div id="horas-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div id="horas-container" class="painel" style="width: 100%;">
 
     <!-- Título e, na mesma linha, os botões: galeria e relatório -->
     <div class="cabeca-ferramenta">

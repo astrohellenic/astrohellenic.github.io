@@ -113,7 +113,7 @@ function renderDeceniosUI(container) {
 
   container.innerHTML = `
     <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-      <div id="decenios-container" class="painel" style="width: 100%; flex: 1; overflow-y: auto; font-family: 'Montserrat', sans-serif;">
+      <div id="decenios-container" class="painel" style="width: 100%; flex: 1; overflow-y: auto;">
 
       <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Decênios Helenísticos</h3><div class="acoes-ferramenta">
         ${luzEmCasaNaoOperante ? `

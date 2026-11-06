@@ -202,7 +202,7 @@
        sem cabeçalho nem céu. Devolve { svg, rCanvas } (rCanvas = a margem que ESTE mapa pediria sozinho). */
     function gerarMandalaSVG(dados, opcoes = {}) {
         if (!dados || !dados.Ascendente) {
-            return { svg: `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
+            return { svg: `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px;">Sem dados para desenhar o mapa.</div>`, rCanvas: 0 };
         }
 
         // TEMA CÉU — roda SECUNDÁRIA: "tinta sobre o papiro" (as cores vêm da roda central).
@@ -710,7 +710,7 @@
 
         container.innerHTML = `
             <div style="width: 100%;">
-            <div id="sinastria-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+            <div id="sinastria-container" class="painel" style="width: 100%;">
                 <div class="cabeca-ferramenta">
                     <h2 class="titulo-ferramenta">Sinastria</h2>
                     ${acoesHtml}
@@ -790,7 +790,7 @@
         if (!container) return;
 
         if (typeof currentCalculatedData === 'undefined' || !currentCalculatedData || !currentCalculatedData.Ascendente) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--terracota); font-family: sans-serif;">Nenhum mapa carregado no sistema.</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--terracota);">Nenhum mapa carregado no sistema.</div>`;
             return;
         }
 

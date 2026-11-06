@@ -158,7 +158,7 @@ function renderIsopsefiaUI(container) {
 
   container.innerHTML = `
     <div style="width: 100%;">
-    <div id="isopsefia-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div id="isopsefia-container" class="painel" style="width: 100%;">
 
       <div class="cabeca-ferramenta">
         <h3 class="titulo-ferramenta">Isopsefia Helenística</h3>

@@ -446,7 +446,7 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container details.rz-sanfona table:last-child tr:last-child > * { border-bottom: 0; }
       #rz-container details.rz-sanfona .cartao:first-child { border-top: 0; }
       #rz-container details.rz-sanfona .cartao:last-child { border-bottom: 0; }
-      #rz-container details.rz-sanfona > summary { font-family: 'Cinzel', serif; font-weight: 800; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); padding: 8px 0; margin: 0 0 6px; cursor: pointer; }
+      #rz-container details.rz-sanfona > summary { font-weight: 800; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); padding: 8px 0; margin: 0 0 6px; cursor: pointer; }
       /* campos como no resto do software (componentes.css, .janela): de uma linha = só a linha embaixo; textarea = contorno fino; nunca cantos arredondados */
       #rz-container input[type="text"], #rz-container input[type="date"] { background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
       #rz-container input[type="text"]:focus, #rz-container input[type="date"]:focus { border-bottom-color: var(--terracota); }
@@ -466,10 +466,10 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
-      #rz-container details > summary { cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
+      #rz-container details > summary { cursor: pointer; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
     </style>
     <div style="width: 100%; display: flex; flex-direction: column;">
-      <div id="rz-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+      <div id="rz-container" class="painel" style="width: 100%;">
         <div class="cabeca-ferramenta"><h3 class="titulo-ferramenta">Achador de horário pela sizígia</h3><div class="acoes-ferramenta">
           <button type="button" onclick="salvarRetificacaoSizigiaNaGaleria()" title="Salvar o resultado como imagem na galeria (com título e cabeçalho)" class="botao-icone">
             <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>

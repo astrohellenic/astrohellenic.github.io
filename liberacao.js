@@ -101,7 +101,7 @@ function fragmentoPlaneta3DZR(planetId, sufixo) {
    (fatias + etiquetas em faixa + coroas com o número do nível), os rótulos de PICO e SALTO e as cores deles. Casa 1 sempre num lote. */
 function gerarMandalaNatalZR(dados, opcoes = {}) {
   if (!dados || !dados.Ascendente) {
-    return `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px; font-family: 'Montserrat', sans-serif;">Sem dados para desenhar o mapa.</div>`;
+    return `<div style="padding: 40px 10px; text-align: center; color: var(--preto-tinta); opacity: .75; font-size: 12px;">Sem dados para desenhar o mapa.</div>`;
   }
 
   const l1SignIdx = (opcoes.l1SignIdx !== undefined) ? opcoes.l1SignIdx : null;
@@ -694,7 +694,7 @@ function renderLiberacaoUI() {
 
   let html = `
     <div style="width: 100%;">
-    <div class="lib-outer painel" id="liberacao-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
+    <div class="lib-outer painel" id="liberacao-container" style="width: 100%; min-height: 100%;">
 
       <div id="liberacaoHeaderCapture">
         <!-- Título, e na mesma linha os botões: lote ativo (Casa 1), salvar na galeria e enviar ao relatório. -->

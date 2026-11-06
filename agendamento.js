@@ -189,7 +189,7 @@ function renderAgendaSetup(container, ctx) {
     : `<div class="menu-vazio">Nenhum agendamento futuro ainda.</div>`;
 
   container.innerHTML = `
-    <div id="agenda-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div id="agenda-container" class="painel" style="width: 100%;">
 
       <div class="cabeca-ferramenta">
         <h3 class="titulo-ferramenta">Agenda</h3>

@@ -521,7 +521,7 @@ function renderLotesUI() {
   const svgRelatorioL = '<svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>';
 
   let html = `
-    <div class="lotes-outer painel" id="lotes-container" style="width: 100%; min-height: 100%; font-family: 'Montserrat', sans-serif;">
+    <div class="lotes-outer painel" id="lotes-container" style="width: 100%; min-height: 100%;">
 
       <!-- Título e, na mesma linha, os botões: galeria e relatório -->
       <div class="cabeca-ferramenta">
