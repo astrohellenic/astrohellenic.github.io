@@ -215,9 +215,9 @@ function desenharRodaSVG(o) {
      de tinta clara (Tema Escuro) — sem isso, o halo brilha como uma
      mancha branca em volta de cada número no meio do disco escuro. */
   const tinta = {
-    fundoDisco: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff'),
+    fundoDisco: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : fundoPainelClaro()),
     dourado: pal.azulEscuro, douradoCasas: pal.terracota,
-    halo: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : '#ffffff'),
+    halo: papiro ? 'none' : (ferr && ferr.fundoDisco) || (modoEscuro ? ((ferr && ferr.fundoEscuro) || '#1c1917') : fundoPainelClaro()),
     inkForte: pal.azulEscuro, inkPlaneta: pal.pretoTinta, navio: pal.azulEscuro, linhaConectora: rgbaHex(pal.azulEscuro, 0.55),
     aspectoOposicao: pal.laranja, aspectoTrigono: pal.azulEscuro, aspectoQuadratura: pal.terracota, aspectoSextil: pal.azulClaro, // os mesmos em TODOS os temas
     elementoFogo: pal.laranja, elementoTerra: pal.marrom, elementoAr: pal.cinza, elementoAgua: pal.azulClaro,
