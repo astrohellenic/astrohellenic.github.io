@@ -112,3 +112,17 @@ body.tema-ceu #barra-inferior-mandala::after { border-bottom: 0; }
    assim a moldura (borda da folha) fica DENTRO do papiro, nunca solta no céu. */
 body.tema-ceu #top-bar, body.tema-ceu #barra-inferior-mandala { background: var(--papiro-fundo) !important; clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%); overflow: visible; }
 body.tema-ceu #top-bar::before, body.tema-ceu #barra-inferior-mandala::before { display: none; }
+
+/* Mandala em PAPIRO (botão céu/papiro): a tela inteira vira UMA folha de papiro, então ela tem UMA moldura só, em volta de tudo. As folhas menores (cabeçalho do software e barra de
+   baixo) perdem o papiro e a moldura próprios; da barra de baixo fica só a linha de cima do cabeçalho do mapa. */
+body.tema-ceu.mandala-papiro-tela #main-stage {
+    --m: .25; box-sizing: border-box;
+    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
+    border-image: url(moldura-redes.svg?v=1) 130 80 round;
+}
+@media (min-width: 900px) { body.tema-ceu.mandala-papiro-tela #main-stage { --m: .3; } }
+body.tema-ceu.mandala-papiro-tela #top-bar, body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala {
+    border-image: none; border-style: none; border-width: 0; background: transparent !important; clip-path: none;
+}
+body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala { border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
+html body.tema-ceu.mandala-papiro-tela #main-stage { background-origin: border-box !important; background-clip: border-box !important; } /* o papel começa na borda da folha (senão repete por baixo da moldura) */
