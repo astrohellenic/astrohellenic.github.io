@@ -743,3 +743,9 @@ html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; b
 *:has(+ .divisa) tbody > tr:last-child > * { border-bottom: 0; }
 :is(.cartao, .re-item, .envolve-tabela):has(+ .divisa) :is(tbody, table) > tr:last-child > *, .envolve-tabela:has(+ .divisa) tbody tr:last-child > *, table:has(+ .divisa) tbody tr:last-child > * { border-bottom: 0; }
 .grade-lotes + .divisa, .grade-cartoes + .divisa, .grade-linhas + .divisa { display: none; } /* a última linha de cartões já fecha o conjunto */
+
+
+/* MENU LATERAL: é uma folha própria (abre por cima da tela), então leva a SUA moldura de meandros em volta, em todos os temas (no Céu, por dentro do papiro). */
+#sidebar { --m: .2; box-sizing: border-box; border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: url(moldura-redes.svg?v=1) 130 80 round; }
+html body.tema-ceu #sidebar { background-origin: border-box; background-clip: border-box; }
+.sidebar-header { min-width: 0; } .sidebar-header img { height: auto; max-height: 34px; max-width: 100%; min-width: 0; }
