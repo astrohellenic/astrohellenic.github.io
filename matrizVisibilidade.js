@@ -348,7 +348,25 @@ function ajustarRecuoMatrizVisibilidade() {
   let base = 0;
   const barra = document.getElementById('barra-inferior-mandala');
   if (barra) base = container.getBoundingClientRect().bottom - barra.getBoundingClientRect().top;
-  recuo.style.paddingTop = '16px';
+  recuo.style.paddingTop = '0px'; recuo.style.paddingLeft = '4px'; recuo.style.paddingRight = '4px';
   recuo.style.paddingBottom = Math.max(24, Math.ceil(base + 14)) + 'px';
+  /* A Matriz cabe no espaço que existe entre o topo e a barra de baixo: sem espaço sobrando em cima e sem precisar rolar.
+     Tira a folga em cima do título e limita a altura da grade ao que sobra (a largura acompanha, na proporção dela). */
+  const painel = document.getElementById('matrizVisibilidadeMandalaContainer');
+  if (painel) { painel.style.marginTop = '0'; painel.style.paddingTop = '4px'; painel.style.width = '100%'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; painel.style.boxSizing = 'border-box'; }
+  const titulo = painel && painel.querySelector('.titulo-ferramenta');
+  if (titulo) titulo.style.marginTop = '0';
+  const svg = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
+  if (svg && barra) {
+    svg.style.maxHeight = ''; svg.style.width = ''; svg.style.height = 'auto';
+    const sobra = barra.getBoundingClientRect().top - svg.getBoundingClientRect().top - 20;
+    const vb = (svg.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+    const proporcao = vb.length === 4 && vb[3] > 0 ? vb[2] / vb[3] : 1;
+    const raiz = document.getElementById('matrizVisibilidadeResponsivaRoot');
+    if (raiz) raiz.style.width = '100%';
+    const larguraMax = raiz ? raiz.getBoundingClientRect().width : 0;
+    if (sobra > 120 && larguraMax > 0) { svg.style.maxWidth = '100%'; svg.style.height = 'auto'; svg.style.width = Math.floor(Math.min(larguraMax, sobra * proporcao)) + 'px'; }
+  }
+  if (typeof window.__cabecalhoGradeAplicar === 'function') window.__cabecalhoGradeAplicar();
 }
 window.addEventListener('resize', () => setTimeout(ajustarRecuoMatrizVisibilidade, 60));
