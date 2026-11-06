@@ -3,10 +3,10 @@
 <head>
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
-    <link rel="stylesheet" href="papiro.css?v=20261011a">
+    <link rel="stylesheet" href="papiro.css?v=20261106a">
     <link rel="stylesheet" href="temas.css?v=20261010t">
-    <link rel="stylesheet" href="componentes.css?v=20261030a">
-    <link rel="stylesheet" href="configuracoes.css?v=20261011b">
+    <link rel="stylesheet" href="componentes.css?v=20261106a">
+    <link rel="stylesheet" href="configuracoes.css?v=20261106a">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astro Hellenic</title>
@@ -1133,10 +1133,10 @@ body {
 <script src="retificacao-relatorio.js?v=20261021f"></script>
 <script src="catarche.js?v=20261017e"></script>
 <script src="papiro-folha.js?v=20261005a"></script>
-<script src="relatorio.js?v=20261031a"></script>
+<script src="relatorio.js?v=20261106a"></script>
 <script src="agendamento.js?v=20261027b"></script>
 <script src="configuracoes.js?v=20261104e"></script>
-<script src="financeiro.js?v=20261010d"></script>
+<script src="financeiro.js?v=20261106a"></script>
 
 <!-- No iPad com trackpad/mouse, um único toque às vezes dispara dois eventos
      de clique bem próximos um do outro (ex.: abre e fecha o mesmo acordeão
@@ -1211,7 +1211,7 @@ body {
   }
   #loginOverlay .login-card::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
   }
   #loginOverlay .janela-corpo { padding: 30px 30px 26px; gap: 0; font-family: 'Montserrat', sans-serif; }
   .login-brand { margin-bottom: 22px; }

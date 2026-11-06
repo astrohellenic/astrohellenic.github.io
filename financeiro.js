@@ -264,9 +264,9 @@ function finRelCss(c) {
   .finrp-pg * { box-sizing: border-box; margin: 0; padding: 0; }
   .finrp-col { width: 640px; margin: 0 auto; }
   .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; letter-spacing: .2em; text-align: center; color: ${c.titulo}; text-transform: uppercase; line-height: 44px; }
-  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 800; letter-spacing: .2em; color: ${c.titulo}; text-transform: uppercase; line-height: 30px; border-bottom: 4px double ${c.linha}; }
+  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 800; letter-spacing: .2em; color: ${c.titulo}; text-transform: uppercase; line-height: 30px; border-bottom: 1px solid ${c.linha}; }
   .finrp-cartao { border: 0; background: transparent; margin-bottom: 14px; overflow: hidden; }
-  .finrp-total { padding: 14px 0; border-bottom: 4px double ${c.linha}; }
+  .finrp-total { padding: 14px 0; border-bottom: 1px solid ${c.linha}; }
   .finrp-total-rot { height: 16px; line-height: 16px; font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: ${c.texto}; text-transform: uppercase; letter-spacing: .14em; }
   .finrp-total-val { height: 32px; line-height: 32px; margin: 2px 0 8px 0; font-size: 26px; font-weight: 800; color: ${c.total}; }
   .finrp-area { height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }

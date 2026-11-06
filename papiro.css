@@ -58,8 +58,8 @@ body.tema-ceu #top-bar::before, body.tema-ceu #mandala-actions-overlay::before, 
 }
 body.tema-ceu #top-bar::after, body.tema-ceu #mandala-actions-overlay::after, body.tema-ceu #mandala-controls-overlay::after, body.tema-ceu #cabecalho-barra-mandala::after, body.tema-ceu #barra-inferior-mandala::after, body.tema-ceu .rel-editor-tabs::after, body.tema-ceu .rel-toolbar::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
 }
 
 /* NUNCA PAPIRO EM CIMA DE PAPIRO — onde o fundo já é papiro, a peça de papiro quebrado some e ficam só as linhas duplas / o conteúdo.
@@ -92,7 +92,7 @@ body.tema-ceu .janela-sugestoes { background: var(--papiro-fundo-simples); }
 body.tema-ceu .janela { border-top-color: transparent; border-bottom-color: transparent; }
 body.tema-ceu .janela::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
 }
 
 /* EDITOR DO RELATÓRIO: a folha é MUITO alta (todas as páginas do modelo numa coluna só). Um recorte de borda quebrada (clip-path) numa folha desse

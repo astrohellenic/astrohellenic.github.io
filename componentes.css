@@ -8,7 +8,7 @@
    migração começar, uma ferramenta por vez. Ver o guia de design. */
 
 :root {
-    --divisa-espessura: 4px;   /* a linha dupla = duas linhas finas (border-style: double) */
+    --divisa-espessura: 1px;   /* linha simples de 1px, a mesma do Falando de Astrologia (era dupla de 4px) */
     --contorno-fino: 1px;      /* contorno dos cartões menores */
 }
 
@@ -31,12 +31,12 @@
    Uso: no topo da ferramenta, no fim do cabeçalho, entre cada bloco e no final. */
 .divisa {
     border: 0;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
     margin: 18px 0;
 }
 .divisa-fim {
     border: 0;
-    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
     margin: 18px 0;
 }
 
@@ -152,8 +152,8 @@
 .sidebar-header {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     margin-top: 10px; padding: 14px 16px; background: transparent;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
 }
 .sidebar-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--terracota); margin: 0; }
 .sidebar-nome-pasta { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--terracota); }
@@ -228,8 +228,8 @@
 .sidebar-title { line-height: 38px; }
 
 /* Os botões de ação do topo (novo mapa, importar) são um bloco à parte: fechados por divisa dupla, não por linha simples */
-.menu-acoes { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 16px; border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro); }
-.menu-list { border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro); }
+.menu-acoes { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 16px; border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
+.menu-list { border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
 .menu-list .menu-item:last-child { border-bottom: 0; }
 /* cores dos ícones de ação: editar = cinza (ar), WhatsApp = verde, e-mail = azul egípcio claro, apagar = terracota */
 .action-record-btn.edit-btn { color: var(--cinza); }
@@ -242,8 +242,8 @@
 #top-bar {
     background: var(--fundo-creme);
     border: 0;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
     border-radius: 0;
     box-shadow: var(--sombra, none);
 }
@@ -263,8 +263,8 @@
     position: relative; z-index: 0;
     background: var(--fundo-creme);
     border: 0;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
     border-radius: 0;
     box-shadow: var(--sombra, none);
     padding: 2px 12px;
@@ -288,8 +288,8 @@
 #barra-inferior-mandala {
     position: absolute; left: 0; right: 0; bottom: 12px; z-index: 20; box-sizing: border-box;
     background: var(--fundo-creme);
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
     box-shadow: var(--sombra, none);
     padding: 2px 12px;
 }
@@ -433,12 +433,12 @@ input[type="radio"]:checked::after {
 .ag-nota { font-size: 12px; text-align: center; margin: 0 0 4px; opacity: .85; }
 .ag-colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 24px 0; }
 .ag-bloco { min-width: 0; padding: 0 24px; }
-.ag-bloco + .ag-bloco { border-left: var(--divisa-espessura) double var(--azul-egipcio-claro); }
+.ag-bloco + .ag-bloco { border-left: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
 .ag-bloco:first-child { padding-left: 0; }
 .ag-bloco:last-child { padding-right: 0; }
 @media (max-width: 760px) {
     .ag-bloco { padding: 0; }
-    .ag-bloco + .ag-bloco { border-left: 0; border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); padding-top: 18px; }
+    .ag-bloco + .ag-bloco { border-left: 0; border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); padding-top: 18px; }
 }
 .ag-rotulo { display: block; margin: 12px 0 2px; color: var(--preto-tinta); }
 #agenda-container select, #agenda-container input {
@@ -452,7 +452,7 @@ input[type="radio"]:checked::after {
 .ag-aviso a { color: var(--terracota); font-weight: 700; }
 .ag-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); }
 .ag-item-corpo { min-width: 0; }
-.ag-dia { padding-bottom: 6px; border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro); }
+.ag-dia { padding-bottom: 6px; border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
 .ag-dia:last-child { border-bottom: 0; }
 .ag-dia .ag-item:last-child { border-bottom: 0; }
 .ag-dia-titulo { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--terracota); margin: 14px 0 2px; }
@@ -533,7 +533,7 @@ input[type="radio"]:checked::after {
 .rel-editor-tabs, .rel-toolbar {
     position: fixed; top: calc(var(--topbar-topo) + var(--topbar-altura) + var(--topbar-folga)); left: 10px; right: 10px; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 0; row-gap: 0;
     background: var(--fundo-creme); padding: 8px 14px; border: 0;
-    border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
 }
 .rel-toolbar { justify-content: center; gap: 18px; }
 .rel-toolbar .botao-texto, .rel-editor-btn-salvar { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -570,7 +570,7 @@ input[type="radio"]:checked::after {
 .janela {
     position: relative; box-sizing: border-box; max-width: 100%;
     background: var(--fundo-creme); color: var(--preto-tinta);
-    border: 0; border-top: var(--divisa-espessura) double var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) double var(--azul-egipcio-claro);
+    border: 0; border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
     box-shadow: var(--sombra-janela, none); font-family: 'Montserrat', sans-serif;
 }
 .janela-corpo { box-sizing: border-box; max-height: 88vh; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 4px; }

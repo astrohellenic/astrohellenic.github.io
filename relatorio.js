@@ -4188,7 +4188,7 @@ function injetarEstilosRelatorio() {
       .rel-h1 {
         font-family: 'Cinzel', serif; font-size: 19px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
-        border: 0; border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; border-radius: 0; padding: 11px 0; margin-bottom: 26px; background: transparent;
+        border: 0; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; border-radius: 0; padding: 11px 0; margin-bottom: 26px; background: transparent;
         break-inside: avoid; page-break-inside: avoid;
       }
 
@@ -4220,7 +4220,7 @@ function injetarEstilosRelatorio() {
       .rel-corpo h2 {
         font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.03em;
-        border: 0; border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; border-radius: 0; padding: 7px 0; margin: 22px 0 16px; background: transparent;
+        border: 0; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; border-radius: 0; padding: 7px 0; margin: 22px 0 16px; background: transparent;
         break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid;
       }
       .rel-corpo h3 { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: #9a6d18; margin: 18px 0 8px; break-after: avoid; page-break-after: avoid; }
@@ -4249,7 +4249,7 @@ function injetarEstilosRelatorio() {
          azul egípcio claro, cabeçalho em Cinzel terracota, texto em preto de tinta, sem fundo próprio. Cores literais da paleta clara
          (o PDF não tem as variáveis do software). */
       .rel-tabela-caixa { display: inline-block; text-align: left; border: 0; border-radius: 0; overflow: visible; }
-      .tabela-enxuta { border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: transparent; font-size: 12px; color: #1A1410; border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; }
+      .tabela-enxuta { border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: transparent; font-size: 12px; color: #1A1410; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; }
       .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1F5FA3; padding: 8px 10px; text-align: center; vertical-align: middle; }
       .tabela-enxuta th { background-color: transparent; font-family: 'Cinzel', serif; font-weight: 800; color: #A03E25; text-transform: uppercase; font-size: 10px; letter-spacing: 0.14em; }
       .rel-rotulo-celula { font-size: 9px; font-weight: 700; color: #1A1410; line-height: 1.1; text-align: center; }
@@ -4284,7 +4284,7 @@ function injetarEstilosRelatorio() {
          quase em branco quando a borda usava "height: 100%" aqui. */
       .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); padding: 5mm; }
       .rel-capa-moldura { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 8px; box-sizing: border-box; padding: 18mm 16mm; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; align-self: stretch; border-top: 4px double currentColor; border-bottom: 4px double currentColor; padding: 10px 0; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; align-self: stretch; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; padding: 10px 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
          altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
@@ -4363,7 +4363,7 @@ function injetarEstilosRelatorio() {
       .rel-titulo-captura {
         font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
-        border-top: 4px double #1F5FA3; border-bottom: 4px double #1F5FA3; padding: 8px 0;
+        border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; padding: 8px 0;
         margin-bottom: 14px; flex-shrink: 0;
       }
       /* ATUALIZAÇÃO (29/09/2026): a versão anterior dava "max-height:100%"
