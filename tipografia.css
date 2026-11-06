@@ -11,18 +11,56 @@ html, body, input, select, textarea { font-family: var(--fonte-mao); }
 button { font-family: inherit; }
 
 /* CINZEL: título da ferramenta, botões, abas, menus */
-.titulo-ferramenta, button, .botao-texto, .cfg-btn, .cfg-btn-mini, .cfg-nav-item, .folder-tab-btn, .add-folder-btn, .sidebar-title,
-.btn-submit, .btn-primary, .btn-secondary, .dia-btn, .hora-btn, .login-privacidade a, h1 {
+html body .titulo-ferramenta,
+html body button,
+html body .botao-texto,
+html body .cfg-btn,
+html body .cfg-btn-mini,
+html body .cfg-nav-item,
+html body .folder-tab-btn,
+html body .add-folder-btn,
+html body .sidebar-title,
+html body .btn-submit,
+html body .btn-primary,
+html body .btn-secondary,
+html body .dia-btn,
+html body .hora-btn,
+html body .login-privacidade a,
+html body h1 {
     font-family: var(--fonte-titulo); text-transform: lowercase; letter-spacing: .04em;
 }
 
 /* ARCHITECTS DAUGHTER MAIÚSCULA: subtítulos, nome das coisas, rótulos */
-.titulo-secao, .nome-nivel, .cfg-card-titulo, .sidebar-nome-pasta, .menu-pasta .nome-pasta, .client-name, .re-linha-nome.custom,
-#rz-container details > summary, .modal-card h3, .summary-item strong, h2, h3, h4,
-.rotulo, .cfg-rotulo, .cal-mes, .ag-dia-titulo, .fato-num, .janela label, .rel-seletor-imagem-grupo-titulo, .tabela-epoca th, label, .titulo-sec {
+html body .titulo-secao,
+html body .cfg-opcao-nome,
+html body .nome-nivel,
+html body .cfg-card-titulo,
+html body .sidebar-nome-pasta,
+html body .menu-pasta .nome-pasta,
+html body .client-name,
+html body .re-linha-nome.custom,
+html body #rz-container details > summary,
+html body .modal-card h3,
+html body .summary-item strong,
+html body h2,
+html body h3,
+html body h4,
+html body .rotulo,
+html body .cfg-rotulo,
+html body .cal-mes,
+html body .ag-dia-titulo,
+html body .fato-num,
+html body .janela label,
+html body .rel-seletor-imagem-grupo-titulo,
+html body .tabela-epoca th,
+html body label,
+html body .titulo-sec {
     font-family: var(--fonte-mao); text-transform: uppercase; letter-spacing: .03em;
 }
 
 /* o que se escreve dentro dos campos e o texto dos botões de ícone não mudam de caixa */
 input, select, textarea { text-transform: none; letter-spacing: 0; }
 .botao-icone, .icon-btn, .menu-toggle-btn { font-family: inherit; text-transform: none; letter-spacing: 0; }
+
+/* texto de descrição dentro de um botão-cartão (ex.: as opções de Configurações): corpo de texto, não botão */
+html body .cfg-opcao-desc, html body .cfg-card-desc { font-family: var(--fonte-mao); text-transform: none; letter-spacing: 0; }
