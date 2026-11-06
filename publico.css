@@ -98,3 +98,7 @@ html.carregando-tema body { background: transparent; opacity: 0; }
 .summary-item span { overflow-wrap: anywhere; } /* e-mail e cidade compridos não passam da janela */
 html.embutido .janela { background: var(--papiro-fundo-simples); } /* janela de confirmação: papiro, não creme/branco, como a página do site em volta */
 html.embutido .city-results { background: var(--papiro-fundo-simples); } /* lista de cidades em papiro, como a janela de confirmação */
+
+/* Botões das páginas públicas (formulário, agenda, sobre): o mesmo padrão do software — o importante (terracota com linhas) vira preenchido de terracota; o secundário (azul) vira só a palavra sublinhada. Nunca muda no hover. */
+.btn-submit, .btn-submit:hover, .btn-primary, .btn-primary:hover { background: var(--terracota); color: var(--sobre-terracota); border: 0; border-radius: 0; padding: 11px 20px; }
+.btn-secondary, .btn-secondary:hover { background: none; color: var(--azul-egipcio-escuro); border: 0; border-radius: 0; text-decoration: underline; padding: 8px 6px; }
