@@ -440,9 +440,9 @@ input[type="radio"]:checked::after {
 .tabela-epoca td.horas-regente .com-nome { display: flex; justify-content: flex-start; }
 
 /* TABELAS (Profecção, Liberação, Decênios): a coluna centraliza pelo ÍCONE (planeta ou signo); o nome fica ao lado, fora do cálculo do centro */
-.tabela-epoca td.centro .com-nome { position: relative; display: inline-flex; justify-content: center; gap: 0; }
-.tabela-epoca td.centro .com-nome .nome-glifo { position: absolute; left: 100%; margin-left: 6px; font-size: 10px; letter-spacing: 0; } /* a letra da maiúscula é mais larga: nome menor, pra não passar por cima da coluna do lado */
-@media (max-width: 600px) { .tabela-epoca td.centro .com-nome { flex-direction: column; gap: 2px; } .tabela-epoca td.centro .com-nome .nome-glifo { position: static; margin: 0; } } /* celular: o nome desce pra baixo do ícone (não cabe ao lado) */
+.tabela-epoca td.centro .com-nome { display: inline-flex; justify-content: center; gap: 8px; } /* ícone e nome juntos, no meio da coluna: a coluna cresce pra caber o nome (antes o nome ficava solto ao lado e passava por cima da coluna vizinha) */
+.tabela-epoca td.centro .com-nome .nome-glifo { font-size: 10px; letter-spacing: 0; }
+@media (max-width: 600px) { .tabela-epoca td.centro .com-nome { flex-direction: column; gap: 2px; } } /* celular: o nome desce pra baixo do ícone */
 /* Profecção Mensal: o ícone do planeta sem nome também é inline-block (como o do signo), pra imagem salva (html2canvas) centralizar igual à tela */
 #profMensalTable td.centro > svg { display: inline-block; vertical-align: middle; }
 
@@ -663,7 +663,7 @@ input[type="radio"]:checked::after {
 :root { --moldura-m: .25; --moldura-v: calc(130px * var(--moldura-m)); --moldura-h: calc(80px * var(--moldura-m)); }
 @media (min-width: 900px) { :root { --moldura-m: .32; } }
 body::after {
-    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 45;
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 45; /* presa na PÁGINA (não na tela): numa ferramenta longa ela vai até o fim da página e rola junto, como no Falando de Astrologia */
     border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
     border-image: url(moldura-redes.svg?v=1) 130 80 round;
 }
