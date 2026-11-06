@@ -641,3 +641,15 @@ input[type="radio"]:checked::after {
 
 /* o vão a mais entre a barra do sistema e a do relatório (20px em vez de 10px) também vale pro espaço reservado do conteúdo */
 #relEditorEspacadorBarra, #relToolbarEspacador { margin-top: 10px; }
+
+
+/* MOLDURA COM MEANDROS GREGOS (a mesma do Falando de Astrologia), em volta da tela, em TODOS os temas. Cantos fixos, lados repetem
+   (border-image). --moldura-v / --moldura-h são a espessura em cima/embaixo e dos lados: tudo que fica dentro da tela respeita essas medidas. */
+:root { --moldura-m: .25; --moldura-v: calc(130px * var(--moldura-m)); --moldura-h: calc(80px * var(--moldura-m)); }
+@media (min-width: 900px) { :root { --moldura-m: .32; } }
+body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 45;
+    border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
+    border-image: url(moldura-redes.svg?v=1) 130 80 round;
+}
+@media print { body::after { display: none; } }
