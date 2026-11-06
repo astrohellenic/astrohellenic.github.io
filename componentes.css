@@ -698,17 +698,26 @@ input[type="radio"]:checked::after {
 }
 
 
-/* TELAS BAIXAS (celular em pé, celular deitado, laptop baixo): a altura é a coisa mais escassa, então os dois papiros (cabeçalho do software e bloco de baixo da
-   Mandala) ficam mais enxutos para a mandala ter o maior espaço possível: moldura mais fina nas duas, sem o logo, e — no celular deitado — sem a faixa do
-   cabeçalho do mapa (ficam só os botões). */
+/* TELAS BAIXAS (celular em pé, laptop baixo): NADA some — o logo, o cabeçalho do mapa e todos os botões continuam à vista —, mas ficam mais compactos para a mandala ter mais espaço:
+   moldura mais fina nos dois papiros, logo menor e botões mais juntos. */
 #top-bar, #barra-inferior-mandala { --m: .12; }
 @media (max-height: 760px) {
-    html body #top-bar .top-bar-logo { display: none; }
-    html body #top-bar .top-bar-linha { margin-top: 0; }
+    html body #top-bar .top-bar-logo { margin-top: 0; }
+    html body #top-bar .top-bar-logo img { height: 24px; }
+    html body #top-bar .top-bar-linha { margin-top: 4px; }
     html body #top-bar .top-bar-linha-baixo { margin: 8px 0 2px; }
+    #top-bar .menu-toggle-btn, #top-bar .icon-btn { padding: 5px 12px; }
     #barra-inferior-mandala :is(#mandala-actions-overlay, #mandala-controls-overlay) :is(.icon-btn, .botao-icone) { padding: 4px 8px; }
     #barra-inferior-mandala #cabecalho-barra-mandala { padding-top: 0; }
 }
+
+/* CELULAR DEITADO (tela muito baixa): não dá para caber tudo e ainda sobrar mandala. Então a mandala ocupa a ALTURA INTEIRA da tela e o resto (o cabeçalho do mapa e os botões de baixo)
+   fica logo abaixo, à vista ao rolar a página. Nada some. */
 @media (max-height: 520px) {
-    #barra-inferior-mandala #cabecalho-barra-mandala { display: none !important; }
+    :root.modo-mandala, html body.modo-mandala { height: auto; overflow: auto; }
+    html body.modo-mandala #main-stage { height: auto; min-height: 100dvh; overflow: visible; }
+    html body.modo-mandala #mandala-screen { overflow: visible; flex-direction: column; }
+    html body.modo-mandala #mandala-container { order: 1; flex: none; height: calc(100dvh - 24px); }
+    html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; bottom: auto; margin-top: 8px; }
+}
 }
