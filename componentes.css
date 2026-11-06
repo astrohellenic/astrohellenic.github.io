@@ -302,7 +302,7 @@
     position: absolute; left: 0; right: 0; bottom: 12px; z-index: 20; box-sizing: border-box;
     background: var(--fundo-creme);
     border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
-    border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro);
+    border-bottom: 0; /* igual ao topo, ao contrário: linha em cima, cabeçalho, botões; NENHUMA linha entre cabeçalho e botões nem embaixo dos botões */
     box-shadow: var(--sombra, none);
     padding: 2px 12px;
 }
@@ -324,7 +324,7 @@
 #barra-inferior-rolagem > :first-child { margin-left: auto; }
 #barra-inferior-rolagem > :last-child { margin-right: auto; }
 /* CABEÇALHO DO MAPA — no mesmo lugar de antes (embaixo): faixa própria em cima da linha de botões, com a linha simples embaixo */
-#barra-inferior-mandala #cabecalho-barra-mandala { display: block; background: none; box-shadow: none; border-top: 0; width: 100%; min-width: 0; overflow: hidden; margin: 0; padding: 4px 10px 6px; box-sizing: border-box; border-bottom: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
+#barra-inferior-mandala #cabecalho-barra-mandala { display: block; background: none; box-shadow: none; border-top: 0; width: 100%; min-width: 0; overflow: hidden; margin: 0; padding: 4px 10px 0; box-sizing: border-box; border-bottom: 0; }
 #barra-linha-botoes { position: relative; }
 /* UMA divisa entre CADA botão (igual à barra de cima): os botões, o seletor Dia e os dois grupos, todos separados por linha de 2px */
 #barra-inferior-mandala :is(.icon-btn, .botao-icone, .time-select) { border-left: 2px solid var(--azul-egipcio-claro) !important; border-radius: 0; align-self: stretch; }

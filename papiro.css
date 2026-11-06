@@ -104,3 +104,6 @@ body.tema-ceu .rel-editor-tela { clip-path: none !important; }
 body.tema-ceu #top-bar::before { inset: 0; clip-path: none; }
 body.tema-ceu #top-bar::after { display: none; }
 
+
+/* Barra de botões da mandala (embaixo): só a linha de cima, como o cabeçalho do software, ao contrário. */
+body.tema-ceu #barra-inferior-mandala::after { border-bottom: 0; }
