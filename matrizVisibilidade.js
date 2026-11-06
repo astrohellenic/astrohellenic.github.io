@@ -247,7 +247,7 @@ function renderMatrizVisibilidadeResponsivaHTML(data) {
   );
 
   return `
-    <h3 class="titulo-ferramenta">Matriz de Visibilidade (Theoria)</h3>
+    <h3 class="titulo-ferramenta">Matriz de Visibilidade</h3>
     ${montarCabecalhoMandalaImagemHTML(data, 'matrizVisibilidadeCabecalho', { tintaSobreFolha: true })}
     <div id="matrizVisibilidadeResponsivaRoot" style="text-align: center;">
       ${svgMatriz}
@@ -280,6 +280,7 @@ function toggleMatrizVisibilidadeNaMandala() {
 
   if (jaMostrandoMatriz) {
     if (botao) botao.classList.remove('matriz-visibilidade-ativa');
+    container.style.overflowY = '';
     if (typeof renderMandala === 'function') renderMandala();
   } else {
     if (botao) botao.classList.add('matriz-visibilidade-ativa');
@@ -301,7 +302,7 @@ function toggleMatrizVisibilidadeNaMandala() {
 function salvarMatrizVisibilidadeNaGaleria() {
   const svgEl = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
   if (!svgEl) return;
-  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, papiro: true, titulo: 'MATRIZ DE VISIBILIDADE (THEORIA)' }), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
+  capturarESalvarNaGaleria(() => gerarImagemFerramentaDoSvg(svgEl, { comCabecalho: true, papiro: true, titulo: 'MATRIZ DE VISIBILIDADE' }), `Astro_Hellenic_Matriz_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`);
 }
 window.salvarMatrizVisibilidadeNaGaleria = salvarMatrizVisibilidadeNaGaleria;
 window.toggleMatrizVisibilidadeNaMandala = toggleMatrizVisibilidadeNaMandala;
@@ -352,13 +353,13 @@ function ajustarRecuoMatrizVisibilidade() {
   /* A Matriz cabe no espaço que existe entre o topo e a barra de baixo: sem espaço sobrando em cima e sem precisar rolar.
      Tira a folga em cima do título e limita a altura da grade ao que sobra (a largura acompanha, na proporção dela). */
   const painel = document.getElementById('matrizVisibilidadeMandalaContainer');
-  if (painel) { painel.style.marginTop = '0'; painel.style.paddingTop = '4px'; painel.style.width = '100%'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; painel.style.boxSizing = 'border-box'; }
+  if (painel) { painel.style.marginTop = '0'; painel.style.paddingTop = '4px'; painel.style.width = '100%'; painel.style.paddingBottom = '0px'; painel.style.paddingLeft = '6px'; painel.style.paddingRight = '6px'; painel.style.boxSizing = 'border-box'; }
   const titulo = painel && painel.querySelector('.titulo-ferramenta');
   if (titulo) titulo.style.marginTop = '0';
   const svg = document.querySelector('#matrizVisibilidadeResponsivaRoot svg');
   if (svg && barra) {
     svg.style.maxHeight = ''; svg.style.width = ''; svg.style.height = 'auto';
-    const sobra = barra.getBoundingClientRect().top - svg.getBoundingClientRect().top - 20;
+    const sobra = barra.getBoundingClientRect().top - svg.getBoundingClientRect().top - 26;
     const vb = (svg.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
     const proporcao = vb.length === 4 && vb[3] > 0 ? vb[2] / vb[3] : 1;
     const raiz = document.getElementById('matrizVisibilidadeResponsivaRoot');
@@ -366,6 +367,7 @@ function ajustarRecuoMatrizVisibilidade() {
     const larguraMax = raiz ? raiz.getBoundingClientRect().width : 0;
     if (sobra > 120 && larguraMax > 0) { svg.style.maxWidth = '100%'; svg.style.height = 'auto'; svg.style.width = Math.floor(Math.min(larguraMax, sobra * proporcao)) + 'px'; }
   }
+  container.style.overflowY = 'hidden'; // a Matriz cabe na tela: nada de rolar (ao sair da ferramenta, abrirModuloTecnica/renderMandala refazem o estilo)
   if (typeof window.__cabecalhoGradeAplicar === 'function') window.__cabecalhoGradeAplicar();
 }
 window.addEventListener('resize', () => setTimeout(ajustarRecuoMatrizVisibilidade, 60));

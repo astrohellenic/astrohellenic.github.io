@@ -54,7 +54,7 @@ const RELATORIO_FERRAMENTAS_DISPONIVEIS = {
   },
   matriz_visibilidade_mandala: {
     label: 'Matriz de Visibilidade (a que você deixou aberta no lugar da Mandala)',
-    tituloIndice: 'Matriz de Visibilidade (Theoria)',
+    tituloIndice: 'Matriz de Visibilidade',
     capturada: true,
     telaOrigem: 'a tela principal da Mandala (botão de Matriz de Visibilidade)'
   },
