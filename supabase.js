@@ -311,10 +311,10 @@ function temaLiberadoNoPlano(tema) {
   if (tema === 'papiro') return true; // o Papiro é o tema padrão da marca: de todos os planos (Básico incluso)
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
-/* Ícones esféricos dos planetas: também do Essencial pra cima (os simples são pra todos). A escolha guardada na conta NÃO é apagada —
+/* Escolha do estilo dos ícones dos planetas (simples ou esféricos): do Essencial pra cima. A escolha guardada na conta NÃO é apagada —
    só deixa de valer enquanto o plano não libera, e volta sozinha se o plano subir. */
 function estiloPlanetasLiberadoNoPlano(estilo) {
-  if (estilo !== 'esferico') return true;
+  // a ESCOLHA entre simples e esféricos é do Essencial pra cima (o Básico só tem o Papiro, que usa os ícones de tinta dele)
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
 /* Cor dos níveis: o verde é pra todos; violeta e ocre são do Essencial pra cima (mesma regra dos temas e dos ícones esféricos). */
@@ -323,7 +323,7 @@ function coresNiveisLiberadoNoPlano(cor) {
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
 function aplicarLimiteEstiloPlanetas() {
-  if (estiloPlanetasLiberadoNoPlano(window.estiloPlanetas)) return;
+  if (estiloPlanetasLiberadoNoPlano(window.estiloPlanetas) || window.estiloPlanetas === 'simples') return;
   window.estiloPlanetas = 'simples';
   reRenderizarModuloAtivo();
 }
@@ -402,7 +402,7 @@ async function carregarEstiloPlanetas(userId) {
 
 /* SALVA O ESTILO DOS ÍCONES DOS PLANETAS ESCOLHIDO E ATUALIZA A TELA NA HORA */
 async function salvarEstiloPlanetas(estilo) {
-  if (!estiloPlanetasLiberadoNoPlano(estilo)) { alert('Os ícones esféricos são do plano Essencial ou Pro. No plano Básico você usa os ícones simples.'); return; }
+  if (!estiloPlanetasLiberadoNoPlano(estilo)) { alert('Escolher o estilo dos ícones dos planetas é do plano Essencial ou Pro.'); return; }
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Sessão não identificada."); return; }
