@@ -746,7 +746,7 @@
         if (!comTitulo) return topo;
         const W = topo.width / 2;
         const cores = (window.temaMandala === 'ceu') ? coresCabecalhoTinta() : coresCabecalhoMandala(document.documentElement.classList.contains('tema-escuro'), null);
-        const titulo = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">SINASTRIA</text></svg>`, W, 34, fundo, 2);
+        const titulo = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">sinastria</text></svg>`, W, 34, fundo, 2);
         const gap = 32;
         const saida = document.createElement('canvas');
         saida.width = topo.width;

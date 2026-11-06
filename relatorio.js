@@ -1010,7 +1010,7 @@ function renderRelatorioSetup(container, presets, rascunhos) {
   ` : '';
 
   container.innerHTML = `
-    <div class="rel-setup-tela painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div class="rel-setup-tela painel" style="width: 100%;">
 
       <div class="cabeca-ferramenta">
         <h3 class="titulo-ferramenta">Relatório</h3>
@@ -2091,7 +2091,7 @@ function injetarEstilosEditorRelatorio() {
       .rel-editor-tela .ql-picker.ql-header { width: 110px; }
 
       .rel-quill-mount .ql-toolbar.ql-snow { border-radius: 0; background: #fffdf5; }
-      .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: 'Montserrat', sans-serif; }
+      .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: inherit; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
 
@@ -2326,7 +2326,7 @@ function renderizarTelaEditorRelatorio(objetoEditavel, opcoes, config) {
   injetarEstilosEditorRelatorio();
 
   container.innerHTML = `
-    <div class="rel-editor-tela painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div class="rel-editor-tela painel" style="width: 100%;">
 
       <div class="rel-editor-tabs" id="relEditorTabsFixa">
         <div class="rel-editor-tabs-conteudo">
@@ -3701,9 +3701,9 @@ async function baixarRelatorioPDF() {
 <head>
 <meta charset="utf-8">
 <title>${escapeHtml(nomeArquivoRelatorioPDF(window.relatorioPresetAtual || {}).replace(/\.pdf$/, ''))}</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Cinzel:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Montserrat', sans-serif; }</style>
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Architects Daughter', cursive; }</style>
 <style>${estilos ? estilos.textContent : ''}</style>
 </head>
 <body>${viewerParaPdf.outerHTML}</body>
@@ -4160,7 +4160,7 @@ function injetarEstilosRelatorio() {
         box-shadow: 0 2px 12px rgba(0,0,0,0.12);
         padding: 18mm 16mm;
         box-sizing: border-box;
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Architects Daughter', cursive;
       }
 
       /* Número da página, canto inferior direito — mesma posição e cor
@@ -4168,7 +4168,7 @@ function injetarEstilosRelatorio() {
          numerarPaginaPdf em baixarRelatorioPDF). Escondido durante a
          captura de tela de cada página pro PDF, senão ficaria em dobro
          (o da imagem capturada + o que o jsPDF escreve por cima). */
-      .rel-num-pagina-canto { position: absolute; right: 10mm; bottom: 8mm; font-size: 10px; font-weight: 700; color: #9a6d18; font-family: 'Montserrat', sans-serif; }
+      .rel-num-pagina-canto { position: absolute; right: 10mm; bottom: 8mm; font-size: 10px; font-weight: 700; color: #9a6d18; font-family: 'Architects Daughter', cursive; }
 
       /* Altura mínima proporcional à largura (razão A4: 210x297mm), só
          na PRÉVIA em tela — trancada num "@media screen" (nunca dentro
@@ -4187,7 +4187,7 @@ function injetarEstilosRelatorio() {
 
       .rel-h1 {
         font-family: 'Cinzel', serif; font-size: 19px; font-weight: 800; color: #103b70;
-        text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
+        text-align: center; text-transform: lowercase; letter-spacing: 0.04em;
         border: 0; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; border-radius: 0; padding: 11px 0; margin-bottom: 26px; background: transparent;
         break-inside: avoid; page-break-inside: avoid;
       }
@@ -4218,12 +4218,12 @@ function injetarEstilosRelatorio() {
          arredondado, padding) — só um pouco menor, pra ainda dar pra
          diferenciar do título do bloco (.rel-h1, o único por página). */
       .rel-corpo h2 {
-        font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
+        font-family: 'Architects Daughter', cursive; font-size: 16px; font-weight: 800; color: #103b70;
         text-align: center; text-transform: uppercase; letter-spacing: 0.03em;
         border: 0; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; border-radius: 0; padding: 7px 0; margin: 22px 0 16px; background: transparent;
         break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid;
       }
-      .rel-corpo h3 { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: #9a6d18; margin: 18px 0 8px; break-after: avoid; page-break-after: avoid; }
+      .rel-corpo h3 { font-family: 'Architects Daughter', cursive; font-size: 13px; font-weight: 800; color: #9a6d18; margin: 18px 0 8px; break-after: avoid; page-break-after: avoid; text-transform: uppercase;}
       .rel-corpo h2:first-child, .rel-corpo h3:first-child { margin-top: 0; }
 
       /* Listas do texto rico (Quill) dentro de um bloco de texto — o
@@ -4249,9 +4249,9 @@ function injetarEstilosRelatorio() {
          azul egípcio claro, cabeçalho em Cinzel terracota, texto em preto de tinta, sem fundo próprio. Cores literais da paleta clara
          (o PDF não tem as variáveis do software). */
       .rel-tabela-caixa { display: inline-block; text-align: left; border: 0; border-radius: 0; overflow: visible; }
-      .tabela-enxuta { border-collapse: collapse; font-family: 'Montserrat', sans-serif; background: transparent; font-size: 12px; color: #1A1410; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; }
+      .tabela-enxuta { border-collapse: collapse; font-family: 'Architects Daughter', cursive; background: transparent; font-size: 12px; color: #1A1410; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; }
       .tabela-enxuta th, .tabela-enxuta td { border: 1px solid #1F5FA3; padding: 8px 10px; text-align: center; vertical-align: middle; }
-      .tabela-enxuta th { background-color: transparent; font-family: 'Cinzel', serif; font-weight: 800; color: #A03E25; text-transform: uppercase; font-size: 10px; letter-spacing: 0.14em; }
+      .tabela-enxuta th { background-color: transparent; font-family: 'Architects Daughter', cursive; font-weight: 800; color: #A03E25; text-transform: uppercase; font-size: 10px; letter-spacing: 0.14em; }
       .rel-rotulo-celula { font-size: 9px; font-weight: 700; color: #1A1410; line-height: 1.1; text-align: center; }
       .tabela-enxuta tr { break-inside: avoid; page-break-inside: avoid; }
 
@@ -4284,7 +4284,7 @@ function injetarEstilosRelatorio() {
          quase em branco quando a borda usava "height: 100%" aqui. */
       .rel-capa.rel-capa-com-borda { background: var(--rel-capa-borda, var(--rel-capa-bg, #ffffff)); padding: 5mm; }
       .rel-capa-moldura { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--rel-capa-bg, #ffffff); border-radius: 8px; box-sizing: border-box; padding: 18mm 16mm; }
-      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; align-self: stretch; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; padding: 10px 0; }
+      .rel-titulo-capa { font-family: 'Cinzel', serif; font-weight: 800; color: var(--rel-capa-titulo, #103b70); font-size: var(--rel-capa-titulo-tamanho, 30px); line-height: 1.25; text-transform: lowercase; letter-spacing: 0.03em; margin-top: 14mm; flex-shrink: 0; align-self: stretch; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; padding: 10px 0; }
       .rel-capa-centro { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
       /* max-height em mm fixo, não em porcentagem: "100%" dependia da
          altura do pai (.rel-capa-centro, dentro do flexbox da capa) ser
@@ -4359,10 +4359,10 @@ function injetarEstilosRelatorio() {
          mesmo — sem a caixa com fundo creme e contorno do ".rel-h1" dos
          blocos de texto — pra identificar a imagem sem competir com ela. */
       .rel-page-captura { display: flex; flex-direction: column; padding: 14mm 10mm; }
-      .rel-legenda-captura { flex-shrink: 0; padding-top: 8px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.6; }
+      .rel-legenda-captura { flex-shrink: 0; padding-top: 8px; font-family: 'Architects Daughter', cursive; font-size: 14px; font-weight: 600; line-height: 1.6; }
       .rel-titulo-captura {
         font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; color: #103b70;
-        text-align: center; text-transform: uppercase; letter-spacing: 0.04em;
+        text-align: center; text-transform: lowercase; letter-spacing: 0.04em;
         border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; padding: 8px 0;
         margin-bottom: 14px; flex-shrink: 0;
       }
@@ -4445,7 +4445,7 @@ function injetarEstilosRelatorio() {
       /* ENCERRAMENTO */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
       .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; break-inside: avoid; page-break-inside: avoid; }
-      .rel-rodape-nome { font-family: 'Cinzel', serif; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; }
+      .rel-rodape-nome { font-family: 'Architects Daughter', cursive; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; text-transform: uppercase;}
 
       /* TEMA "CÉU + PAPIRO" (.rel-tema-papiro no .rel-viewer, ver
          classeTemaPapiroRelatorio) — SÓ PINTURA nas folhas do corpo

@@ -105,7 +105,7 @@ function montarSVGMatrizVisibilidade(colunas, posicoes, estiloExtra) {
   // Células sem preenchimento (o painel aparece por baixo); linhas na mesma cor das divisas (azul egípcio claro).
   const linha = 'fill="none" stroke="var(--azul-egipcio-claro)" stroke-width="1"';
 
-  let svg = `<svg width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" style="display: block; font-family: 'Montserrat', sans-serif;${estiloExtra || ''}"><g transform="translate(1 1)">`;
+  let svg = `<svg width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" style="display: block; font-family: 'Architects Daughter';${estiloExtra || ''}"><g transform="translate(1 1)">`;
 
   // Canto vazio (linha 0, coluna 0)
   svg += `<rect x="0" y="0" width="${C}" height="${C}" ${linha}/>`;

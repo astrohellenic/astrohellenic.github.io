@@ -181,7 +181,7 @@ function renderFinanceiro(container, ctx) {
   const svgImprimir = menuIcone('imprimir', 22);
 
   container.innerHTML = `
-    <div id="financeiro-container" class="painel" style="width: 100%; font-family: 'Montserrat', sans-serif;">
+    <div id="financeiro-container" class="painel" style="width: 100%;">
       <div id="finColuna" class="fin-coluna">
 
         <div class="cabeca-ferramenta">
@@ -259,15 +259,15 @@ function finCoresPdf(papiro) {
 
 function finRelCss(c) {
   return `
-  .finrp-pg { width: 210mm; height: 297mm; padding: ${FIN_PG_TOPO}px 40px 0 40px; position: relative; overflow: hidden; background: ${c.fundo}; color: ${c.texto}; font-family: 'Montserrat', sans-serif; box-sizing: border-box; page-break-after: always; break-after: page; }
+  .finrp-pg { width: 210mm; height: 297mm; padding: ${FIN_PG_TOPO}px 40px 0 40px; position: relative; overflow: hidden; background: ${c.fundo}; color: ${c.texto}; font-family: 'Architects Daughter', cursive; box-sizing: border-box; page-break-after: always; break-after: page; }
   .finrp-pg:last-child { page-break-after: auto; break-after: auto; }
   .finrp-pg * { box-sizing: border-box; margin: 0; padding: 0; }
   .finrp-col { width: 640px; margin: 0 auto; }
-  .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; letter-spacing: .2em; text-align: center; color: ${c.titulo}; text-transform: uppercase; line-height: 44px; }
-  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 800; letter-spacing: .2em; color: ${c.titulo}; text-transform: uppercase; line-height: 30px; border-bottom: 1px solid ${c.linha}; }
+  .finrp-titulo { height: 44px; margin-bottom: 14px; font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; letter-spacing: .2em; text-align: center; color: ${c.titulo}; text-transform: lowercase; line-height: 44px; }
+  .finrp-mes { height: 36px; margin-bottom: 14px; text-align: center; font-family: 'Architects Daughter', cursive; font-size: 14px; font-weight: 800; letter-spacing: .2em; color: ${c.titulo}; text-transform: uppercase; line-height: 30px; border-bottom: 1px solid ${c.linha}; }
   .finrp-cartao { border: 0; background: transparent; margin-bottom: 14px; overflow: hidden; }
   .finrp-total { padding: 14px 0; border-bottom: 1px solid ${c.linha}; }
-  .finrp-total-rot { height: 16px; line-height: 16px; font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: ${c.texto}; text-transform: uppercase; letter-spacing: .14em; }
+  .finrp-total-rot { height: 16px; line-height: 16px; font-family: 'Architects Daughter', cursive; font-size: 10px; font-weight: 700; color: ${c.texto}; text-transform: uppercase; letter-spacing: .14em; }
   .finrp-total-val { height: 32px; line-height: 32px; margin: 2px 0 8px 0; font-size: 26px; font-weight: 800; color: ${c.total}; }
   .finrp-area { height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
   .finrp-area span span { color: ${c.mudo}; }
@@ -366,7 +366,7 @@ async function baixarEntradasPDF(papiro) {
     const { html } = finMontarPaginasRelatorio();
     const cores = finCoresPdf(papiro === true);
     const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${finNomeArquivoRelatorio('pdf').replace(/\.pdf$/, '')}</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Cinzel:wght@500;700;800&display=swap">
 <style>@page { size: A4; margin: 0; } html, body { margin: 0; padding: 0; background: #ffffff; } ${finRelCss(cores)}</style></head><body>${html}</body></html>`;
     const url = (typeof RELATORIO_PDF_API_URL !== 'undefined') ? RELATORIO_PDF_API_URL : 'https://astrohellenicgithubio.vercel.app/api/gerar-pdf';
     if (window.astroAbaPdf && abaPdf && window.astroAbaPdf.enviar(abaPdf, url, doc, finNomeArquivoRelatorio('pdf').replace(/\.pdf$/, ''))) return; // aba nova: o servidor devolve o PDF já com o nome do arquivo

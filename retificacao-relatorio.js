@@ -45,10 +45,10 @@ const RZ_REL_CSS = `
   .rz-rel .nome-glifo { font-size: 11px; }
   /* tabelas: o mesmo visual de .tabela-epoca do software (componentes.css) — só linhas horizontais, sem fundo, sem linhas verticais */
   .rz-rel table { width: 100%; border-collapse: collapse; border: 0; background: transparent; font-size: 11.5px; margin: 0 0 10px 0; color: #1a1410; }
-  .rz-rel th { padding: 7px 10px; text-align: left; font-family: 'Cinzel', serif; font-weight: 800; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: #1034A6; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; vertical-align: middle; }
+  .rz-rel th { padding: 7px 10px; text-align: left; font-family: 'Architects Daughter', cursive; font-weight: 800; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: #1034A6; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; vertical-align: middle; }
   .rz-rel td { padding: 7px 10px; text-align: left; vertical-align: middle; color: #1a1410; background: transparent; border: 0; border-bottom: 1px solid #1F5FA3; }
   .rz-rel .centro { text-align: center; }
-  .rz-rel .rz-sub { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #A03E25; margin: 4px 0 6px; }
+  .rz-rel .rz-sub { font-family: 'Architects Daughter', cursive; font-size: 13px; font-weight: 700; color: #A03E25; margin: 4px 0 6px; text-transform: uppercase;}
   .rz-rel .rz-sub-grande { font-size: 15px; margin: 14px 0 8px; }
   .rz-rel .rz-nota { font-size: 11px; line-height: 1.6; color: #1a1410; opacity: .75; margin-bottom: 10px; }
   .rz-rel .texto-apagado { color: #1a1410; opacity: .75; }

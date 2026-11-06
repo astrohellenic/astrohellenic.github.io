@@ -5,14 +5,14 @@ const fs = require('fs'), path = require('path');
 const EXCECOES = {
   'tipografia.css': 'a regra em si',
   'temas.css': 'comentário histórico do Sulfite',
-  'relatorio.js': 'relatório: prévia e PDF (documento com fontes próprias)', 'retificacao-relatorio.js': 'relatório da retificação (PDF)',
-  'financeiro.js': 'relatório do Financeiro (PDF)',
-  'mandala.js': 'textos dentro do SVG/PNG do cabeçalho e da roda (imagem salva precisa da fonte no próprio desenho)',
+  'relatorio.js': 'relatório: documento/PDF autônomo (não tem o tipografia.css), segue os mesmos papéis', 'retificacao-relatorio.js': 'relatório da retificação (PDF), mesmos papéis',
+  'financeiro.js': 'relatório do Financeiro (PDF), mesmos papéis',
+  'mandala.js': 'textos dentro de SVG/PNG: usam Cinzel (título) e Architects Daughter (resto), embutidas na imagem por aplicarFonteSVG',
   'roda.js': 'textos dentro do SVG da roda', 'papiro.js': 'troca de fonte nas imagens salvas',
   'lotes-calculadora.js': 'texto em SVG/imagem', 'liberacao.js': 'texto em SVG/imagem', 'profeccao.js': 'texto em SVG/imagem',
   'sinastria.js': 'texto em SVG/imagem', 'horas.js': 'texto em SVG/imagem', 'direcoes.js': 'texto em SVG/imagem',
   'matrizVisibilidade.js': 'texto em SVG', 'tabelaTecnica.js': 'texto em SVG',
-  'fonte-caveat.js': 'dados da fonte embutida nas imagens do Sulfite', 'tz-lookup.js': 'biblioteca de fuso (dados)',
+  'fontes-imagem.js': 'dados das fontes embutidas nas imagens', 'tz-lookup.js': 'biblioteca de fuso (dados)',
   'dialogos.js': 'janela de impressão (documento à parte)'
 };
 const ERRO = /Cinzel|Montserrat|Caveat|Architects/;

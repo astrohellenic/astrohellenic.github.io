@@ -41,7 +41,7 @@ const SIGN_NAMES_ZR = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem
    (inline direto no HTML não precisa, mas isolado como recurso precisa). */
 function svgComoImagemZR(svgInterno, largura, altura, viewBox) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="${viewBox}">${svgInterno}</svg>`;
-  return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
+  return `<img src="data:image/svg+xml,${encodeURIComponent(aplicarFonteSVG(svg))}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
 }
 
 /* Vira <img> (ver svgComoImagemZR), então não enxerga var(--x) do CSS —
@@ -165,7 +165,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       const pPico = polarToCart(cx, cy, rPico, aScreenPico);
       out += `<g transform="translate(${pPico.x + desloc.x}, ${pPico.y + desloc.y})">
         <rect x="-17" y="-7" width="34" height="14" fill="${cores.picoBg}" stroke="${cores.picoBorder}" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.picoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">PICO</text>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.picoText}" text-anchor="middle" font-family="'Architects Daughter'">PICO</text>
     </g>`;
     });
 
@@ -178,7 +178,7 @@ function gerarMandalaNatalZR(dados, opcoes = {}) {
       out += `<g transform="translate(${pSalto.x + desloc.x}, ${pSalto.y + desloc.y})">
         <text x="0" y="-11" font-size="8" font-weight="900" fill="${cores.saltoLabel}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="2" paint-order="stroke fill">${rotuloNiveisSalto}</text>
         <rect x="-17" y="-7" width="34" height="14" fill="${cores.saltoBg}" stroke="${cores.saltoBorder}" stroke-width="1"/>
-        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.saltoText}" text-anchor="middle" font-family="'Montserrat', sans-serif">SALTO</text>
+        <text x="0" y="3.2" font-size="8" font-weight="800" fill="${cores.saltoText}" text-anchor="middle" font-family="'Architects Daughter'">SALTO</text>
     </g>`;
     });
     return out;
@@ -788,7 +788,7 @@ async function montarImagemLiberacao(opc) {
   let y = 0, partes = '';
   const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   if (opc.titulo) {
-    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">LIBERAÇÃO ZODIACAL</text>`;
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">liberação zodiacal</text>`;
     y += 44;
   }
   if (opc.cabecalho) {

@@ -299,7 +299,7 @@ async function montarImagemHoras(comCabecalho) {
   const corTituloImg = papiro ? '#a03e25' : cores.titulo;
   const W = 480;
   const pecas = [];
-  pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTituloImg}">HORAS PLANETÁRIAS</text></svg>`, W, 34, fundo, 2));
+  pecas.push(await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="34" viewBox="0 0 ${W} 34"><text x="${W / 2}" y="26" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTituloImg}">horas planetárias</text></svg>`, W, 34, fundo, 2));
   const svgEl = document.querySelector('#horasCabecalho svg');
   if (svgEl) {
     const xml = new XMLSerializer().serializeToString(svgEl);

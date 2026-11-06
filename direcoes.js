@@ -461,7 +461,7 @@ window.alternarLinhaCircumambulacaoRelatorio = alternarLinhaCircumambulacaoRelat
 function svgPautasComTamanho(svgStr, largura, altura, k) {
   return svgStr
     .replace(/ style="[^"]*"/, '')
-    .replace('<svg viewBox', `<svg width="${largura * k}" height="${altura * k}" font-family="sans-serif" viewBox`);
+    .replace('<svg viewBox', `<svg width="${largura * k}" height="${altura * k}" font-family="'Architects Daughter'" viewBox`);
 }
 
 /* Fator de escala em que as pautas aparecem NA TELA (o SVG encolhe pra
@@ -509,7 +509,7 @@ function salvarCircumambulacaoNaGaleria() {
     const papelFundo = papiro ? papiroTexturaSvg('papiroCaptura', largura, altura) : '';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
       ${papelFundo}
-      <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">CIRCUMAMBULAÇÃO PELOS TERMOS</text>
+      <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${corTitulo}">circumambulação pelos termos</text>
       <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
       ${pautas}
     </svg>`;

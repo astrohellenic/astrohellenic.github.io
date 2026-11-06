@@ -1408,19 +1408,19 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     <rect x="15" y="${headerY}" width="930" height="${altura}" rx="${cantoCabecalho(cores)}" ry="${cantoCabecalho(cores)}" fill="${cores.fundo}" stroke="none" />${filetesCabecalhoSVG(15, headerY, 930, altura, cores)}
 
     <!-- Textos das 3 Linhas alinhados à esquerda -->
-    <text x="30" y="${headerY + 23 + respiro}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${escapeHtml(headerTitle)}</text>
-    <text x="30" y="${headerY + 41 + respiro}" font-family="'Montserrat', sans-serif" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(resumirLocalCabecalho(geoCab.city))}</text>
-        <text x="30" y="${headerY + 57 + respiro}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${loteTexto ? `  ${loteTexto}` : ''}</tspan></text>
+    <text x="30" y="${headerY + 23 + respiro}" font-family="'Architects Daughter'" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${escapeHtml(String(headerTitle).toUpperCase())}</text>
+    <text x="30" y="${headerY + 41 + respiro}" font-family="'Architects Daughter'" font-size="12" font-weight="500" fill="${cores.dataCidade}">${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${escapeHtml(resumirLocalCabecalho(geoCab.city))}</text>
+        <text x="30" y="${headerY + 57 + respiro}" font-family="'Architects Daughter'" font-size="11" font-weight="600" fill="${cores.zodiaco}">Zodíaco Tropical • Signos Inteiros • ${escapeHtml(tipoFormatado)} <tspan fill="${cores.sect}" font-weight="700">  ${sectText}${loteTexto ? `  ${loteTexto}` : ''}</tspan></text>
   </g>`;
     if (horasInfo) {
       /* Rótulo (DIA / HORA) em cima e o planeta embaixo dele, cada um numa
          coluna — desenho único do software inteiro. */
       if (temDia) {
-        svg += `<text x="840" y="${headerY + 22 + respiro}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text>
+        svg += `<text x="840" y="${headerY + 22 + respiro}" font-family="'Architects Daughter'" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text>
       <g transform="translate(840, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
       }
       if (temHora) {
-        svg += `<text x="910" y="${headerY + 22 + respiro}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text>
+        svg += `<text x="910" y="${headerY + 22 + respiro}" font-family="'Architects Daughter'" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text>
       <g transform="translate(910, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
       }
     }
@@ -1448,17 +1448,17 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   let y = headerY + 23 + respiro, textos = '';
   linhasTitulo.forEach((ln, i) => {
     if (i > 0) y += 22;
-    textos += `<text x="30" y="${y}" font-family="'Cinzel', serif" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Architects Daughter'" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${ln.map(tr => escapeHtml(String(tr.t).toUpperCase())).join('')}</text>`;
   });
   y += 18;
   linhasData.forEach((ln, i) => {
     if (i > 0) y += 16;
-    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="${pxData}" font-weight="500" fill="${cores.dataCidade}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Architects Daughter'" font-size="${pxData}" font-weight="500" fill="${cores.dataCidade}">${ln.map(tr => escapeHtml(tr.t)).join('')}</text>`;
   });
   y += 17;
   linhasZod.forEach((ln, i) => {
     if (i > 0) y += 15;
-    textos += `<text x="30" y="${y}" font-family="'Montserrat', sans-serif" font-size="${pxZod}" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Architects Daughter'" font-size="${pxZod}" font-weight="600" fill="${cores.zodiaco}">${ln.map(tr => tr.cor === cores.zodiaco ? escapeHtml(tr.t) : `<tspan fill="${tr.cor}" font-weight="700">${escapeHtml(tr.t)}</tspan>`).join('')}</text>`;
   });
   altura = Math.max((opcoes.flexivel ? 70 : 75) + respiro, Math.round(y - headerY + 14), opcoes.alturaMinima || 0);
   /* semMoldura: o cabeçalho da barra inferior da tela não leva fundo nem linhas próprias — quem desenha papel e linhas duplas é a barra toda. */
@@ -1477,10 +1477,10 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     dx = Math.max(0, (espaco - conteudo) / 2 - 15);
   }
   if (temDia) {
-    svg += `<text x="${xDia}" y="${headerY + 22 + respiro}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${xDia}, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+    svg += `<text x="${xDia}" y="${headerY + 22 + respiro}" font-family="'Architects Daughter'" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${xDia}, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
   }
   if (temHora) {
-    svg += `<text x="${xHora}" y="${headerY + 22 + respiro}" font-family="'Montserrat', sans-serif" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${xHora}, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+    svg += `<text x="${xHora}" y="${headerY + 22 + respiro}" font-family="'Architects Daughter'" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">HORA</text><g transform="translate(${xHora}, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
   }
   if (dx > 0) svg = `<g transform="translate(${dx.toFixed(1)}, 0)">${svg}</g>`;
   svg += '</g>';
@@ -1787,7 +1787,7 @@ function montarBandaZodiacoCeuSVG(o) {
     svg += elemCeu ? elemCeu.duplo(signElem[i], tracosSigno) : tracosSigno(cor);
     const Am = A - 15, pG = P(rOut - 26 - (linhaUnica ? Math.max(0, 2 * (linhaLargura || 1.6) - 1.6) : 0), Am), pN = P(rIn + 20, Am);
     if (!semGlifos) svg += `<svg x="${(pG.x - 17).toFixed(1)}" y="${(pG.y - 17).toFixed(1)}" width="34" height="34" viewBox="0 0 64 64" opacity=".72" style="color: ${elemCeu ? elemCeu.pos(signElem[i], pG.x, pG.y) : cor};">${glifos[i]}</svg>`;
-    if (!semGlifos) svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Cinzel', serif" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    if (!semGlifos) svg += `<text x="${pN.x.toFixed(1)}" y="${(pN.y + 5).toFixed(1)}" font-family="'Architects Daughter'" font-size="13" font-weight="bold" fill="${corNumero ? corNumero(pN.x, pN.y) : tinta.douradoCasas}" fill-opacity=".85" text-anchor="middle" stroke="${tinta.halo}" stroke-opacity=".6" stroke-width="3" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
   }
   // linha da eclíptica + marcas de grau (1°, 5°, 10°), em duas tintas: azul-marinho de dia acima
   // do horizonte, claro à noite e no espaço
@@ -2193,7 +2193,7 @@ function resolverVariaveisCssNoSvg(svgStr) {
   return svgStr.replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m);
 }
 async function rasterizarSvgParaCanvas(svgStr, largura, altura, fundo, escala) {
-  const url = URL.createObjectURL(new Blob([resolverVariaveisCssNoSvg(svgStr)], { type: 'image/svg+xml;charset=utf-8' }));
+  const url = URL.createObjectURL(new Blob([aplicarFonteSVG(resolverVariaveisCssNoSvg(svgStr))], { type: 'image/svg+xml;charset=utf-8' }));
   try {
     const img = new Image();
     await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('SVG não carregou')); img.src = url; });
@@ -2304,7 +2304,7 @@ async function gerarImagemHtmlComCabecalho(elemento, opcoes) {
   const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
   let y = 0, partes = '';
   if (opcoes.titulo) {
-    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo)}</text>`;
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(String(opcoes.titulo).toLowerCase())}</text>`;
     y += 44;
   }
   if (opcoes.comCabecalho) {
@@ -2361,7 +2361,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   let internoXml = new XMLSerializer().serializeToString(svgEl);
   internoXml = internoXml.replace(/var\((--[a-z0-9-]+)\)/gi, (m, nome) => cs.getPropertyValue(nome).trim() || m);
   const interno = internoXml
-    .replace(/ style="[^"]*"/, ' font-family="sans-serif"')
+    .replace(/ style="[^"]*"/, ` font-family="'Architects Daughter'"`)
     .replace('<svg ', `<svg x="${borda}" y="${borda}" `);
   const conteudo = `<defs><clipPath id="molduraFerramenta"><rect x="${borda}" y="${borda}" width="${w}" height="${h}" rx="${raio}" ry="${raio}"/></clipPath></defs>
     <g clip-path="url(#molduraFerramenta)">${interno}</g>
@@ -2381,7 +2381,7 @@ async function gerarImagemFerramentaDoSvg(svgEl, opcoes) {
   const papelFundo = papiro ? papiroTexturaSvg('papiroCaptura', largura, altura) : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
     ${papelFundo}
-    <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(opcoes.titulo || '')}</text>
+    <text x="${largura / 2}" y="${yTitulo}" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${papiro ? '#a03e25' : cores.titulo}">${escapeHtml(String(opcoes.titulo || '').toLowerCase())}</text>
     <g transform="translate(${(largura - 960) / 2}, 0)">${cabecalho}</g>
     <g transform="translate(${(largura - Wk) / 2}, ${yConteudo}) scale(${k})">${conteudo}</g>
   </svg>`;

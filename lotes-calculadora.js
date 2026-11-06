@@ -37,10 +37,10 @@ const SIGN_NAMES_LOTES = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Vir
 const __svgLotesSulfiteUrls = {};
 function svgComoImagemLotes(svgInterno, largura, altura, viewBox) {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="${viewBox}">${svgInterno}</svg>`;
-  /* Sulfite: o texto do ícone (abreviação do lote, "ASC") é em Caveat. Como <img> não enxerga a fonte da página, ela vai embutida no
-     SVG (aplicarFonteSulfiteSVG, papiro.js) — e como isso pesa, a imagem vira um blob guardado por SVG (mesmo ícone = mesma URL). */
-  if (window.temaMandala === 'sulfite' && /font-family="'Caveat'/.test(svg)) {
-    if (!__svgLotesSulfiteUrls[svg]) __svgLotesSulfiteUrls[svg] = URL.createObjectURL(new Blob([aplicarFonteSulfiteSVG(svg)], { type: 'image/svg+xml' }));
+  /* O texto do ícone (abreviação do lote, "ASC") usa as fontes do software; como <img> não enxerga a fonte da página, ela vai embutida no SVG
+     (aplicarFonteSVG, papiro.js) — e como isso pesa, a imagem vira um blob guardado por SVG (mesmo ícone = mesma URL). */
+  if (/<text\b/.test(svg)) {
+    if (!__svgLotesSulfiteUrls[svg]) __svgLotesSulfiteUrls[svg] = URL.createObjectURL(new Blob([aplicarFonteSVG(svg)], { type: 'image/svg+xml' }));
     return `<img src="${__svgLotesSulfiteUrls[svg]}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
   }
   return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="${largura}" height="${altura}" style="display: block; margin: 0 auto;" alt="">`;
@@ -75,7 +75,7 @@ function getASCIconSVGLotes(size = 22) {
   const fundo = ceu ? '' : getIconeFundoSilhueta('outro', 'angulo', fundoPainelClaro());
   const sulfite = window.temaMandala === 'sulfite';
   const corTxt = ceu ? '#a03e25' : (sulfite ? paletaEpoca(false).pretoTinta : '#000000');
-  const interno = `<g transform="translate(50,50) scale(0.9) translate(-50,-50)">${fundo}${frag}</g><text x="50" y="58" font-size="${sulfite ? 19 : 16}" font-weight="900" fill="${corTxt}" ${sulfite ? `font-family="'Caveat', cursive" ` : ''}text-anchor="middle">ASC</text>`;
+  const interno = `<g transform="translate(50,50) scale(0.9) translate(-50,-50)">${fundo}${frag}</g><text x="50" y="58" font-size="${sulfite ? 19 : 16}" font-weight="900" fill="${corTxt}" font-family="'Architects Daughter'" text-anchor="middle">ASC</text>`;
   return svgComoImagemLotes(interno, size, size, '0 0 100 100');
 }
 
@@ -104,7 +104,7 @@ function getLoteAbbrevIconSVG(abbrev, size = 22) { // todos os temas: azul egíp
   const cor = paletaEpoca(document.documentElement.classList.contains('tema-escuro') && window.temaMandala !== 'ceu').azulEscuro;
   const len = (abbrev || '').length;
   const fontSize = (len <= 2 ? 10 : (len === 3 ? 8.3 : (len === 4 ? 7 : 6))) * (sulfite ? 1.2 : 1); // Caveat é miúda: um pouco maior pra ter o mesmo peso
-  const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" ${sulfite ? `font-family="'Caveat', cursive" ` : ''}text-anchor="middle">${abbrev}</text>`;
+  const interno = `<circle cx="0" cy="0" r="10" fill="none" stroke="${cor}" stroke-width="1.8"/><text x="0" y="3" font-size="${fontSize}" font-weight="800" fill="${cor}" font-family="'Architects Daughter'" text-anchor="middle">${abbrev}</text>`;
   return svgComoImagemLotes(interno, size, size, '-12 -12 24 24');
 }
 

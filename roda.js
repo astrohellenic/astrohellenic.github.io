@@ -806,7 +806,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   for (let i = 0; i < 12; i++) {
     const aMid = eclToScreenAngle((i * 30) + 15, house1RefAbs);
     const pNum = polarToCart(cx, cy, inv ? estiloRoda.signos.numero : 122, aMid);
-    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Cinzel', serif" font-size="15" font-weight="bold" fill="${temaCeu ? corCalculadoCeu(pNum.x, pNum.y) : tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
+    svg += `<text x="${pNum.x}" y="${pNum.y + 5}" font-family="'Architects Daughter'" font-size="15" font-weight="bold" fill="${temaCeu ? corCalculadoCeu(pNum.x, pNum.y) : tinta.douradoCasas}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="4" paint-order="stroke fill">${((i - refSignIdx + 12) % 12) + 1}</text>`;
 
     const pSym = polarToCart(cx, cy, inv ? estiloRoda.signos.glifo : 166, aMid);
     const gT = inv ? estiloRoda.signos.glifoTam : 34;
@@ -964,6 +964,6 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   });
 
   svg += `</svg>`;
-  svg = aplicarFonteSulfiteSVG(svg); // Sulfite: a roda é uma imagem isolada, a fonte Caveat tem que ir dentro dela
+  svg = aplicarFonteSVG(svg); // a roda é uma imagem isolada: as fontes do software vão dentro dela
   return { svg, width, height, headerY, headerH, papiroNaTela, ceuParams, rCanvasNatural: R_canvasFerrNatural };
 }
