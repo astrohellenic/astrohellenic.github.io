@@ -572,6 +572,7 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
 
   const occupiedSigns = new Set();
   PLANETS_DEF.forEach(p => { occupiedSigns.add(Math.floor(pObj[p.id].abs / 30)); });
+  occupiedSigns.add(Math.floor((((house1RefAbs % 360) + 360) % 360) / 30)); // a Casa 1 (Ascendente, ou o lote que a ocupa ao girar o mapa) sempre entra nos aspectos, com ou sem planeta nela
   const occupiedArray = Array.from(occupiedSigns);
   for (let i = 0; i < occupiedArray.length; i++) {
     for (let j = i + 1; j < occupiedArray.length; j++) {
