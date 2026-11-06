@@ -24,6 +24,13 @@
       try { if (localStorage.getItem('astro_nivel_plano') === 'basico') t = 'papiro'; } catch (e) {} // plano Básico só tem o Papiro: abre direto nele (a escolha guardada não é apagada)
       if (t === 'ceu' || t === 'claro' || t === 'sulfite') window.temaMandala = t;
       if (t === 'papiro') { window.temaMandala = 'ceu'; window.temaPapiro = true; window.mandalaPapiroTela = true; } // tema Papiro: papiro em tudo, sem céu (por dentro é o Céu com a folha sempre ligada)
+      // cor da barra de cima do aparelho (relógio/bateria): a mesma do tema, como nos outros apps (Papiro = cor do papiro)
+      window.corBarraSistema = function(tema) {
+        var c = { papiro: '#e6d3a0', sulfite: '#ffffff', claro: '#fffdf5', ceu: '#070d25' }[tema] || '#e6d3a0';
+        if (tema === 'claro' && document.documentElement.classList.contains('tema-escuro')) c = '#070d25';
+        var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', c);
+      };
+      window.corBarraSistema(t === 'ceu' || t === 'claro' || t === 'sulfite' || t === 'papiro' ? t : 'papiro');
       if (t === 'sulfite') document.documentElement.classList.add('tema-sulfite'); // Sulfite: folha branca e caneta (cores em temas.css)
     })();
     </script>
@@ -92,11 +99,11 @@
     <!-- APP INSTALÁVEL (iPhone/iPad: Compartilhar > Adicionar à Tela de Início; Android: Instalar aplicativo): abre em tela cheia,
          sem a barra do navegador. É o mesmo site, só empacotado: não há versão separada para manter. -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#070d25">
+    <meta name="theme-color" content="#e6d3a0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Astro Hellenic">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- FONTES E ÍCONES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1115,7 +1122,7 @@ body {
 <script src="papiro.js?v=20261106e"></script>
 <script src="fontes-imagem.js?v=20261106a"></script>
 <script src="dialogos.js?v=20261010f"></script>
-<script src="supabase.js?v=20261106w"></script>
+<script src="supabase.js?v=20261106x"></script>
 <script src="importacao.js?v=20261027a"></script>
 <script src="planetIcons.js?v=20261010t"></script>
 <script src="matrizVisibilidade.js?v=20261106e"></script>

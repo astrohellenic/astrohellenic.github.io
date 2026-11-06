@@ -267,6 +267,7 @@ function lerTemaMandalaLocal() {
 
 function aplicarTemaMandala(tema) {
   const papiro = tema === 'papiro';
+  if (typeof window.corBarraSistema === 'function') window.corBarraSistema(tema);
   if (papiro) tema = 'ceu';
   window.temaMandala = tema; window.temaPapiro = papiro; window.mandalaPapiroTela = papiro;
   if (typeof window.aplicarModoCor === 'function') { // o Céu não tem base escura: reaplica o modo com o tema já definido
