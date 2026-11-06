@@ -1427,26 +1427,32 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
 
   /* LAYOUT ESTREITO (ex.: um cabeçalho por mandala, lado a lado): mesmas fontes,
      mesmas cores e mesmos textos — só quebra em mais linhas o que não cabe. */
-  const reservaHoras = (temDia || temHora) ? (opcoes.flexivel ? 95 : 105) : 0;
+  /* TELA ESTREITA (celular): o cabeçalho tem SEMPRE 3 linhas (nome, data e local, zodíaco). Em vez de quebrar cada informação em duas linhas, a letra diminui até caber, e o DIA/HORA
+     vai pequeno na ponta da linha do nome (assim as outras duas linhas usam a largura inteira). */
+  const compacto = !!opcoes.flexivel && largura < 620 && window.innerWidth < 1100;
+  const reservaHoras = compacto ? 0 : ((temDia || temHora) ? (opcoes.flexivel ? 95 : 105) : 0);
   const maxW = largura - 60 - reservaHoras;
+  const maxWTit = compacto ? largura - 60 - ((temDia || temHora) ? 118 : 0) : maxW;
   // flexível (barra da tela): mede com as fontes de verdade (Cinzel/Montserrat), que são mais largas que a genérica — senão o texto passa da conta
   const famTitulo = opcoes.flexivel ? "'Architects Daughter', cursive" : undefined, famTexto = opcoes.flexivel ? "'Architects Daughter', cursive" : undefined;
-  const linhasTitulo = quebrarTrechosCabecalho([{ t: headerTitle, cor: cores.titulo, peso: 800 }], maxW, 20, famTitulo);
+  let pxTit = 20;
+  let linhasTitulo = quebrarTrechosCabecalho([{ t: String(headerTitle).toUpperCase(), cor: cores.titulo, peso: 800 }], maxWTit, 20, famTitulo);
+  if (compacto) for (const px of [20, 18, 16, 14, 12, 11]) { const l = quebrarTrechosCabecalho([{ t: String(headerTitle).toUpperCase(), cor: cores.titulo, peso: 800 }], maxWTit, px, famTitulo); pxTit = px; linhasTitulo = l; if (l.length === 1) break; }
   /* Cabeçalho flexível (barra inferior): cada informação cabe numa linha só — se não cabe no tamanho normal, a letra diminui um pouco
      (até um mínimo legível) antes de quebrar em duas linhas. */
   const cabeNumaLinha = (trechos, tamanhos) => {
     if (opcoes.flexivel) for (const px of tamanhos) { const l = quebrarTrechosCabecalho(trechos, maxW, px, famTexto); if (l.length === 1) return { linhas: l, px }; }
     return { linhas: quebrarTrechosCabecalho(trechos, maxW, tamanhos[0], famTexto), px: tamanhos[0] };
   };
-  const { linhas: linhasData, px: pxData } = cabeNumaLinha([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${resumirLocalCabecalho(geoCab.city)}`, cor: cores.dataCidade, peso: 500 }], [12, 11, 10.5]);
+  const { linhas: linhasData, px: pxData } = cabeNumaLinha([{ t: `${diaSemanaFormatted} • ${dia}/${mes}/${ano} às ${hora}:${min} (${fusoFormatted}) • ${resumirLocalCabecalho(geoCab.city)}`, cor: cores.dataCidade, peso: 500 }], compacto ? [12, 11, 10, 9, 8.5, 8] : [12, 11, 10.5]);
   const trechosZod = [{ t: `Zodíaco Tropical • Signos Inteiros • ${tipoFormatado}`, cor: cores.zodiaco, peso: 600 }, { t: sectText, cor: cores.sect, peso: 700 }];
   if (loteTexto) trechosZod.push({ t: loteTexto, cor: cores.sect, peso: 700 });
-  const { linhas: linhasZod, px: pxZod } = cabeNumaLinha(trechosZod, [11, 10, 9.5]);
+  const { linhas: linhasZod, px: pxZod } = cabeNumaLinha(trechosZod, compacto ? [11, 10, 9, 8.5, 8, 7.5] : [11, 10, 9.5]);
 
   let y = headerY + 23 + respiro, textos = '';
   linhasTitulo.forEach((ln, i) => {
     if (i > 0) y += 22;
-    textos += `<text x="30" y="${y}" font-family="'Architects Daughter'" font-size="20" font-weight="800" fill="${cores.nome || cores.titulo}">${ln.map(tr => escapeHtml(String(tr.t).toUpperCase())).join('')}</text>`;
+    textos += `<text x="30" y="${y}" font-family="'Architects Daughter'" font-size="${pxTit}" font-weight="800" fill="${cores.nome || cores.titulo}">${ln.map(tr => escapeHtml(String(tr.t).toUpperCase())).join('')}</text>`;
   });
   y += 18;
   linhasData.forEach((ln, i) => {
@@ -1473,6 +1479,14 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
     xDia = 30 + maiorTexto + 50; xHora = xDia + 56;
     const conteudo = (xHora + 25) - 30, espaco = largura - 30;
     dx = Math.max(0, (espaco - conteudo) / 2 - 15);
+  }
+  if (compacto) { // DIA/HORA pequenos, na ponta da linha do nome: "DIA ♀  HORA ♃"
+    const yLab = headerY + 22 + respiro, yIco = headerY + 17 + respiro, xFim = largura - 30;
+    const xHoraIco = xFim - 10, xHoraLab = xHoraIco - 8 - 28, xDiaIco = xHoraLab - 14 - 10, xDiaLab = xDiaIco - 8 - 20;
+    if (temDia) svg += `<text x="${xDiaLab}" y="${yLab}" font-family="'Architects Daughter'" font-size="9" font-weight="700" fill="${cores.rotulo || cores.titulo}">DIA</text><g transform="translate(${xDiaIco}, ${yIco})"><g transform="scale(0.2) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
+    if (temHora) svg += `<text x="${xHoraLab}" y="${yLab}" font-family="'Architects Daughter'" font-size="9" font-weight="700" fill="${cores.rotulo || cores.titulo}">HORA</text><g transform="translate(${xHoraIco}, ${yIco})"><g transform="scale(0.2) translate(-50, -50)">${planetIconFragment(horasInfo.hourRulerId)}</g></g>`;
+    svg += '</g>';
+    return { svg, altura };
   }
   if (temDia) {
     svg += `<text x="${xDia}" y="${headerY + 22 + respiro}" font-family="'Architects Daughter'" font-size="11" font-weight="700" fill="${cores.rotulo || cores.titulo}" text-anchor="middle">DIA</text><g transform="translate(${xDia}, ${headerY + 49 + respiro})"><g transform="scale(0.36) translate(-50, -50)">${planetIconFragment(horasInfo.dayRulerId)}</g></g>`;
