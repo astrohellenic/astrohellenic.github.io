@@ -165,15 +165,16 @@ function htmlCfgAparencia() {
         </div>
       </div>
 
-      <div class="cfg-card cfg-card-largo">
+      ${['claro', 'escuro', 'auto'].includes(escolha) ? `<div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Ícones dos planetas</h4>
-        <p class="cfg-card-desc">Como os 7 planetas clássicos aparecem em toda a ferramenta (mandala, horas planetárias, tabela técnica, decênios, profecção e direções). <strong>Vale só para os temas Claro, Escuro e Automático.</strong> No tema Céu essa escolha não se aplica: o Céu tem os seus próprios ícones, que só existem nele. Sua escolha fica guardada e volta quando você sair do Céu.</p>
         <div class="cfg-opcoes">
-          ${opcao("salvarEstiloPlanetas('simples')", estiloAtual === 'simples', fa('planetaSimples'), 'Planetas ícones simples', 'Glifos planetários, iguais aos usados nos termos egípcios' + (estiloPlanetasLiberadoNoPlano('simples') ? '' : ' — plano Essencial ou Pro'))}
-          ${opcao("salvarEstiloPlanetas('esferico')", estiloAtual === 'esferico', fa('planetaEsferico'), 'Planetas ícones esféricos', 'Ilustrações 3D com gradiente para cada planeta' + (estiloPlanetasLiberadoNoPlano('esferico') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarEstiloPlanetas('simples')", estiloAtual === 'simples', fa('planetaSimples'), 'Ícones metálicos', 'Glifos planetários dourados' + (estiloPlanetasLiberadoNoPlano('simples') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarEstiloPlanetas('esferico')", estiloAtual === 'esferico', fa('planetaEsferico'), 'Ícones esféricos', 'Ilustrações 3D com gradiente para cada planeta' + (estiloPlanetasLiberadoNoPlano('esferico') ? '' : ' — plano Essencial ou Pro'))}
+          ${opcao("salvarEstiloPlanetas('seita')", estiloAtual === 'seita', fa('planetaSeita'), 'Ícones por seita', 'Planetas da seita em vermelho, os outros em azul' + (estiloPlanetasLiberadoNoPlano('seita') ? '' : ' — plano Essencial ou Pro'))}
         </div>
       </div>
 
+` : ''}
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Rótulos dos glifos</h4>
         <p class="cfg-card-desc">Escreve o nome ao lado do glifo dos planetas e dos signos (Sol, Lua, Áries, Touro...). Ajuda quando você mostra o mapa para alguém que não conhece os símbolos. Aparece em todas as ferramentas, <strong>menos dentro das mandalas</strong>, onde não há espaço.</p>

@@ -185,6 +185,7 @@ const MENU_ICONES = {
   automatico: '<circle cx="32" cy="32" r="22"/><path d="M32 10 A22 22 0 0 1 32 54 Z"/>',
   planetaSimples: '<circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="2"/>',
   planetaEsferico: '<circle cx="32" cy="32" r="22"/><path d="M19 26 A15 15 0 0 1 30 17"/>',
+  planetaSeita: '<circle cx="32" cy="32" r="22"/><path d="M32 10 V54"/>',
   fonte: '<path d="M10 52 L26 12 L42 52 M16 38 H36"/><path d="M50 28 V52"/>',
   olhoCortado: '<path d="M6 32 C14 18 24 14 32 14 C40 14 50 18 58 32 C50 46 40 50 32 50 C24 50 14 46 6 32 Z"/><circle cx="32" cy="32" r="8"/><line x1="10" y1="54" x2="54" y2="10"/>',
   alvo: '<circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="12"/><circle cx="32" cy="32" r="2"/>',

@@ -153,6 +153,15 @@ const COR_TINTA_TERRACOTA = '#a03e25';
 const COR_TINTA_OCRE = '#B5852F'; // eixos ASC-DSC / MC-IC (traço + triângulo) nas rodas em tinta sobre papiro
 const COR_TINTA_SOMBRA = '#1b2a4a'; // azul quase preto da tinta de escrever: sombra translúcida embaixo dos ícones calculados no estilo reto, sobre papiro
 
+/* ÍCONES POR SEITA fora do papiro: no Claro/Escuro/Automático o astrólogo (Essencial+) pode escolher os ícones de tinta do papiro
+   (planeta da seita em terracota, os outros em azul), em vez dos metálicos ou dos esféricos. Papiro, Céu e Sulfite sempre usam esses. */
+function estiloPlanetasPorSeita() {
+  return typeof window !== 'undefined' && window.estiloPlanetas === 'seita';
+}
+function tintaSeitaForaDoPapiro() {
+  return estiloPlanetasPorSeita() && !temaCeuAtivoNosIcones() && !temaSulfiteAtivoNosIcones();
+}
+
 function temaCeuAtivoNosIcones() {
   return typeof window !== 'undefined' && window.temaMandala === 'ceu';
 }
@@ -188,8 +197,9 @@ function planetaEstaNaSeita(planetId, dados) {
 /* Regra geral do papiro: lotes, nodos e lunação pré-natal (sizígia) são sempre em preto de tinta (não o preto puro). */
 const COR_TINTA_PRETO = '#1a1410';
 function corIconePapiro(categoria, chave, dados) {
-  if (temaSulfiteAtivoNosIcones() && typeof paletaEpoca === 'function') {
-    const pal = paletaEpoca(false);
+  if ((temaSulfiteAtivoNosIcones() || tintaSeitaForaDoPapiro()) && typeof paletaEpoca === 'function') {
+    // no Escuro os planetas usam as cores claras da paleta escura; lotes, nodos, sizígia e ângulos ficam em tinta escura porque a roda os desenha sobre um disco claro
+    const pal = paletaEpoca(tintaSeitaForaDoPapiro() && categoria === 'planeta' && document.documentElement.classList.contains('tema-escuro'));
     if (categoria === 'lote' || (categoria === 'outro' && ['northNode', 'southNode', 'sizigia'].includes(chave))) return pal.pretoTinta;
     if (categoria === 'outro' && chave === 'angulo') return pal.ocre;
     return (categoria === 'planeta' && planetaEstaNaSeita(chave, dados)) ? pal.terracota : pal.azulClaro;
@@ -219,7 +229,7 @@ function recolorirIconePapiro(bruto, cor) {
 
 /* SVG bruto do ícone: o de sempre, ou o de papiro no Tema Céu. */
 function brutoDoIcone(categoria, chave, dados, corForcada) {
-  if (temaCeuAtivoNosIcones() || temaSulfiteAtivoNosIcones()) {
+  if (temaCeuAtivoNosIcones() || temaSulfiteAtivoNosIcones() || tintaSeitaForaDoPapiro()) {
     const base = (ICONES_SIMPLES_NOVO[categoria] || {})[chave] || '';
     return base ? recolorirIconePapiro(base, corForcada || corIconePapiro(categoria, chave, dados)) : '';
   }
