@@ -658,13 +658,13 @@ input[type="radio"]:checked::after {
 #relEditorEspacadorBarra, #relToolbarEspacador { margin-top: 10px; }
 
 
-/* MOLDURA COM MEANDROS GREGOS (a mesma do Falando de Astrologia), em volta da tela, em TODOS os temas. Cantos fixos, lados repetem
-   (border-image). --moldura-v / --moldura-h são a espessura em cima/embaixo e dos lados: tudo que fica dentro da tela respeita essas medidas. */
-:root { --moldura-m: .25; --moldura-v: calc(130px * var(--moldura-m)); --moldura-h: calc(80px * var(--moldura-m)); }
-@media (min-width: 900px) { :root { --moldura-m: .32; } }
-body::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 45; /* presa na PÁGINA (não na tela): numa ferramenta longa ela vai até o fim da página e rola junto, como no Falando de Astrologia */
-    border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
+/* MOLDURA COM MEANDROS GREGOS (a mesma do Falando de Astrologia) — a moldura é do PAPIRO, nunca do céu nem da tela: cada folha (o cabeçalho do software, o
+   painel de cada ferramenta, a barra de botões da Mandala) tem a sua, com o meandro em cima e embaixo. A Mandala em si fica solta no céu, sem moldura.
+   É a borda da própria folha (border-image: cantos fixos, lados repetem), então o conteúdo já fica por dentro dela e ela acompanha a altura da folha. */
+#top-bar, #barra-inferior-mandala { --m: .17; }
+.painel { --m: .25; }
+@media (min-width: 900px) { .painel { --m: .3; } }
+#top-bar, #barra-inferior-mandala, .painel {
+    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
     border-image: url(moldura-redes.svg?v=1) 130 80 round;
 }
-@media print { body::after { display: none; } }
