@@ -1049,11 +1049,11 @@ function soltarMenusDaBarraMandala(botao) {
       document.body.appendChild(menu);
     }
     const larg = menu.offsetWidth || 280;
-    const folga = 30; // a moldura da página ocupa as laterais: o menu fica por dentro dela, sem encostar
+    const folga = menu.id === 'dropdown-rs-container' ? 30 : 10; // só a Revolução Solar fica por dentro da moldura; os outros menus seguem como eram
     const esq = Math.max(folga, Math.min(rb ? rb.left : folga, window.innerWidth - larg - folga));
     menu.style.position = 'fixed'; menu.style.top = 'auto'; menu.style.right = 'auto';
     menu.style.left = esq + 'px'; menu.style.bottom = base + 'px';
-    menu.style.maxWidth = 'calc(100vw - 60px)'; menu.style.zIndex = '10000';
+    menu.style.maxWidth = menu.id === 'dropdown-rs-container' ? 'calc(100vw - 60px)' : 'calc(100vw - 20px)'; menu.style.zIndex = '10000';
   });
 }
 document.addEventListener('click', (e) => {
