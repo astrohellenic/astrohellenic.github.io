@@ -2102,6 +2102,16 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: inherit; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
+      /* Título/Subtítulo já com a cara do relatório final enquanto se escreve (Cinzel, caixa baixa, filetes) */
+      .rel-quill-mount .ql-editor h2 {
+        font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: lowercase; letter-spacing: 0.04em;
+        border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; padding: 7px 0; margin: 22px 0 16px;
+      }
+      .rel-quill-mount .ql-editor h3 {
+        font-family: 'Architects Daughter', cursive; font-size: 13px; font-weight: 800; color: #9a6d18;
+        text-transform: uppercase; margin: 18px 0 8px;
+      }
 
       /* Linha de "aqui quebra a página" sobreposta ao Quill (ver
          criarOverlayQuebraPaginaQuill) — nunca é conteúdo de verdade
@@ -4239,8 +4249,8 @@ function injetarEstilosRelatorio() {
          arredondado, padding) — só um pouco menor, pra ainda dar pra
          diferenciar do título do bloco (.rel-h1, o único por página). */
       .rel-corpo h2 {
-        font-family: 'Architects Daughter', cursive; font-size: 16px; font-weight: 800; color: #103b70;
-        text-align: center; text-transform: uppercase; letter-spacing: 0.03em;
+        font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: lowercase; letter-spacing: 0.04em;
         border: 0; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; border-radius: 0; padding: 7px 0; margin: 22px 0 16px; background: transparent;
         break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid;
       }
@@ -4464,7 +4474,10 @@ function injetarEstilosRelatorio() {
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
+      /* Última página: o texto curto fica CENTRALIZADO no meio da página (vertical e horizontal); só o contato fica no pé. */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
+      .rel-page-encerramento > .rel-corpo { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+      .rel-page-encerramento .rel-corpo p:not([class*="ql-align"]) { text-align: center; }
       .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; break-inside: avoid; page-break-inside: avoid; }
       .rel-rodape-nome { font-family: 'Architects Daughter', cursive; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; text-transform: uppercase;}
 

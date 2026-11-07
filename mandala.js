@@ -1377,7 +1377,7 @@ function resumirLocalCabecalho(local) {
   return partes.join(', ');
 }
 
-function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
+function montarCabecalhoMandalaLayoutBase(data, headerY, cores, loteCasa1, opcoes) {
   opcoes = opcoes || {};
   const largura = opcoes.largura || 960;
   const headerTitle = opcoes.titulo !== undefined ? opcoes.titulo : currentSubjectName;
@@ -1498,6 +1498,27 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   if (dx > 0) svg = `<g transform="translate(${dx.toFixed(1)}, 0)">${svg}</g>`;
   svg += '</g>';
   return { svg, altura, larguraNatural: naturalW };
+}
+/* Altura do cabeçalho em PAPIRO (com moldura): maior que o de sempre pra caber os filetes e a faixa de meandros. */
+const CABECALHO_PAPIRO_ALTURA = 150;
+let _meandroCabContador = 0;
+/* Todo papiro leva moldura (três filetes + meandros em cima e embaixo, a mesma da capa/folhas). Aqui o cabeçalho em papiro
+   ganha a moldura: o papel cresce e o conteúdo de sempre (nome, data, DIA/HORA) é encolhido ~3% pra ficar por dentro dela. */
+function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
+  const base = montarCabecalhoMandalaLayoutBase(data, headerY, cores, loteCasa1, opcoes);
+  if (!(cores && cores.papiro) || (opcoes && (opcoes.flexivel || opcoes.semMoldura))) return base;
+  const mRect = base.svg.match(/<rect x="15" y="[\d.\-]+" width="[\d.]+" height="[\d.]+" rx="10"[^>]*\/>/);
+  if (!mRect) return base;
+  const W = parseFloat(mRect[0].match(/width="([\d.]+)"/)[1]);
+  const altN = CABECALHO_PAPIRO_ALTURA, Y0 = headerY, id = 'relMeandroCab' + (_meandroCabContador++);
+  const s = (W - 30) / W, tx = 30 - 15 * s, ty = Y0 + 35 - s * Y0;
+  const retang = (inset, cor, sw) => `<rect x="${(16 + inset).toFixed(1)}" y="${(Y0 + 5 + inset).toFixed(1)}" width="${(W - 2 - 2 * inset).toFixed(1)}" height="${(altN - 10 - 2 * inset).toFixed(1)}" fill="none" stroke="${cor}" stroke-width="${sw}"/>`;
+  const faixa = yy => `<svg x="36" y="${yy}" width="888" height="16"><rect width="888" height="16" fill="url(#${id})"/></svg>`;
+  const moldura = `<defs><pattern id="${id}" width="24" height="16" patternUnits="userSpaceOnUse"><path d="M0 14H4V2H20V14H12V7H16V10" fill="none" stroke="#1F5FA3" stroke-width="1.7"/></pattern></defs>`
+    + retang(0, '#2B1D12', 1.1) + retang(3.5, '#B5852F', 2.6) + retang(7, '#2B1D12', 1.1) + faixa(Y0 + 16) + faixa(Y0 + altN - 32);
+  const rect = `<rect x="15" y="${headerY}" width="${W}" height="${altN}" rx="10" ry="10" fill="${cores.fundo}" stroke="none" />`;
+  const conteudo = base.svg.replace(mRect[0], '');
+  return { svg: rect + moldura + `<g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${conteudo}</g>`, altura: altN, larguraNatural: base.larguraNatural };
 }
 window.montarCabecalhoMandalaLayout = montarCabecalhoMandalaLayout;
 
