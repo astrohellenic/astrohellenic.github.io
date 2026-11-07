@@ -125,3 +125,6 @@
 .tempo-trilho { border-style: solid; border-width: 1px; border-image: var(--grad-tempo, linear-gradient(to right, #1F5FA3, #B5852F, #A03E25)) 1; }
 .tempo-pct { color: var(--azul-egipcio-claro, #1F5FA3); }
 .tempo-fim { color: var(--terracota, #A03E25); }
+
+/* Sulfite: o texto sobre botão preenchido é VAZADO (branco, a cor do papel), nunca o creme dourado do papiro */
+:root.tema-sulfite { --sobre-terracota: #FFFFFF; }
