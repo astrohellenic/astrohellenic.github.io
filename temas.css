@@ -112,3 +112,11 @@
 :root.tema-sulfite .btn-primary {
     background-image: var(--tinta-vaos) !important; background-size: 200px 200px;
 }
+
+/* barra de TEMPO: degradê azul → ocre → terracota nas cores do tema (camadas-tempo.js: enchimentoTempo) */
+:root { --grad-tempo: linear-gradient(to right, var(--azul-egipcio-claro), var(--ocre), var(--terracota)); }
+/* Sulfite: vãos de caneta também nas barras (de tempo, por cima do degradê, e de progresso) */
+:root.tema-sulfite .preench:not(.tempo), :root.tema-sulfite #rz-container .rz-prog-barra > span, :root.tema-sulfite #fvBarrasProgresso .preench:not(.tempo) {
+    background-image: var(--tinta-vaos) !important; background-size: 200px 200px;
+}
+:root.tema-sulfite .preench.tempo { background-image: var(--tinta-vaos), var(--grad-tempo) !important; background-size: 200px 200px, var(--tw) 100% !important; background-repeat: repeat, no-repeat !important; }

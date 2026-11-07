@@ -3,8 +3,8 @@
    (Liberação Zodiacal, Decênios e as que vierem).
 
    1) BARRINHA DO TEMPO de cada período: vazia antes de começar, cheia depois de terminar, enchendo durante.
-      Cor vai de azul (começo) a ocre (metade) a terracota (fim), como a barra do site Falando de Astrologia,
-      lendo as cores do tema em uso (claro, escuro ou Céu). Filete fino, só contorno + preenchimento.
+      O degradê azul → ocre → terracota fica visível na barra inteira e o preenchimento o revela (enchimentoTempo), como a barra do
+      site Falando de Astrologia, lendo as cores do tema em uso (claro, escuro ou Céu). Filete fino, só contorno + preenchimento.
       Uma linha só: "62% [barra] 11/20 meses" (quanto já passou do total, na unidade do nível).
    2) CABEÇALHO DO NÍVEL ABERTO na navegação em camadas: "← Nível 2: glifo ▾ →", datas e a barrinha;
       a setinha abre a lista de todos os períodos daquele nível.
@@ -23,6 +23,13 @@ function corDoTempo(f) {
   const A = rgb('--azul-egipcio-claro', '#1F5FA3'), O = rgb('--ocre', '#B5852F'), T = rgb('--terracota', '#A03E25');
   const de = f < 0.5 ? A : O, para = f < 0.5 ? O : T, t = f < 0.5 ? f / 0.5 : (f - 0.5) / 0.5;
   return `rgb(${de.map((c, k) => Math.round(c + (para[k] - c) * t)).join(',')})`;
+}
+
+/* Enchimento da barra de tempo: o degradê azul → ocre → terracota (cores do tema, --grad-tempo em temas.css) fica FIXO na barra inteira e o
+   preenchimento só o revela até onde o tempo chegou (f = fração já passada, 0 a 1). Em Sulfite a classe leva os vãos de caneta. */
+function enchimentoTempo(f) {
+  const tw = (f > 0 ? 100 / f : 100).toFixed(2);
+  return `class="preench tempo" style="height: 100%; width: ${(f * 100).toFixed(2)}%; --tw: ${tw}%; background: var(--grad-tempo, linear-gradient(to right, #1F5FA3, #B5852F, #A03E25)) 0 0 / ${tw}% 100% no-repeat;"`;
 }
 
 const UNIDADES_TEMPO = {
@@ -46,7 +53,7 @@ function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade, momento) {
   const total = u ? (u.inteiro ? Math.round((fim - inicio) / u.ms) : Math.round(((fim - inicio) / u.ms) * 2) / 2) : 0;
   const passou = u ? (agora >= fim ? total : Math.floor(Math.min(f * total, total))) : 0; // terminado = total cheio (ex.: 30,5/30,5, não 30/30,5)
   const fimTexto = u ? `<span style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap; color: ${cor};">${numeroTempo(passou)}/${numeroTempo(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
-  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid ${cor}; box-sizing: content-box;"><div style="height: 100%; width: ${(f * 100).toFixed(2)}%; background: ${cor};"></div></div>${fimTexto}</div>`;
+  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid var(--azul-egipcio-claro); box-sizing: content-box;"><div ${enchimentoTempo(f)}></div></div>${fimTexto}</div>`;
 }
 
 /* Linha de tabela só com a barrinha, logo embaixo da linha do período. colunas = quantas colunas a tabela tem. */
@@ -124,9 +131,9 @@ function barraTempoComTroca(inicio, troca, escalaFim, estilo, momento) {
   const f1 = clamp((agora - inicio) / (troca - inicio));
   const f2 = clamp((agora - troca) / (escalaFim - troca));
   const pTroca = clamp((troca - inicio) / (escalaFim - inicio)) * 100;
-  const cor1 = corDoTempo(f1), azul = 'var(--azul-egipcio-claro)';
+  const azul = 'var(--azul-egipcio-claro)';
   return `<div style="display: flex; align-items: center; ${estilo || ''}">
-    <div style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; border: 1px solid ${cor1}; box-sizing: border-box;"><div style="height: 100%; width: ${(f1 * 100).toFixed(2)}%; background: ${cor1};"></div></div>
-    <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>
+    <div style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; border: 1px solid var(--azul-egipcio-claro); box-sizing: border-box;"><div ${enchimentoTempo(f1)}></div></div>
+    <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div class="preench" style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>
     <svg viewBox="0 0 10 14" width="10" height="14" style="flex: none; margin-left: -1px; margin-right: -10px;"><polyline points="1,1 8,7 1,13" fill="none" stroke="${azul}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 }
