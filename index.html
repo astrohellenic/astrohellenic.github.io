@@ -3,9 +3,10 @@
 <head>
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
-    <link rel="stylesheet" href="papiro.css?v=20261107b">
-    <link rel="stylesheet" href="temas.css?v=20261107b">
-    <link rel="stylesheet" href="componentes.css?v=20261107b">
+    <link rel="stylesheet" href="papiro.css?v=20261107c">
+    <link rel="stylesheet" href="temas.css?v=20261107c">
+    <script src="moldura.js?v=1"></script>
+    <link rel="stylesheet" href="componentes.css?v=20261107c">
     <link rel="stylesheet" href="tipografia.css?v=20261106d">
     <link rel="stylesheet" href="configuracoes.css?v=20261106i">
     <meta charset="UTF-8">
@@ -1231,7 +1232,7 @@ body {
   #loginOverlay .login-card { --m: .22; }
   #loginOverlay .login-card::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: var(--moldura-img) 130 80 round;
+    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
   }
   #loginOverlay .janela-corpo { padding: calc(30px + 130px * var(--m)) calc(24px + 80px * var(--m)) calc(26px + 130px * var(--m)); gap: 0; }
   .login-brand { margin-bottom: 22px; }

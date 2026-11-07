@@ -667,7 +667,7 @@ body.tema-ceu:not(.tema-papiro) .painel { --m: .25; }
 @media (min-width: 900px) { body.tema-ceu:not(.tema-papiro) .painel { --m: .3; } }
 body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra-inferior-mandala, body.tema-ceu:not(.tema-papiro) .painel {
     border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
-    border-image: var(--moldura-img) 130 80 round;
+    border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
 }
 body:not(.tema-ceu), body.tema-papiro { --moldura-m: .25; --moldura-v: calc(130px * var(--moldura-m)); --moldura-h: calc(80px * var(--moldura-m)); --topbar-topo: calc(var(--moldura-v) + 4px); }
 @media (min-width: 900px) { body:not(.tema-ceu), body.tema-papiro { --moldura-m: .3; } }
@@ -675,7 +675,7 @@ body:not(.tema-ceu), body.tema-papiro { --moldura-m: .25; --moldura-v: calc(130p
 html:not(.embutido) body:not(.tema-ceu)::after, html:not(.embutido) body.tema-papiro::after {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 45;
     border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
-    border-image: var(--moldura-img) 130 80 round;
+    border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
 }
 html body:not(.tema-ceu) #main-stage, html body.tema-papiro #main-stage { padding: calc(var(--moldura-v) + 4px) calc(var(--moldura-h) + 4px); }
 html body:not(.tema-ceu).topbar-fixo #top-bar, html body.tema-papiro.topbar-fixo #top-bar { left: calc(var(--moldura-h) + 4px); right: calc(var(--moldura-h) + 4px); }
@@ -747,6 +747,6 @@ html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; b
 
 
 /* MENU LATERAL: é uma folha própria (abre por cima da tela), então leva a SUA moldura de meandros em volta, em todos os temas (no Céu, por dentro do papiro). */
-#sidebar { --m: .2; box-sizing: border-box; border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: var(--moldura-img) 130 80 round; }
+#sidebar { --m: .2; box-sizing: border-box; border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round; }
 html body.tema-ceu #sidebar { background-origin: border-box; background-clip: border-box; }
 .sidebar-header { min-width: 0; } .sidebar-header img { height: auto; max-height: 34px; max-width: 100%; min-width: 0; }
