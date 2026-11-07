@@ -1288,6 +1288,14 @@ function evitarRolagemAoFormatar(quill) {
   toolbar.addEventListener('mousedown', () => {
     executarSemMoverRolagem(() => {});
   }, true);
+  /* Os botões da barra (Imagem, Negrito, lista...) agem no CLIQUE, que vem DEPOIS do mousedown acima: aí o Quill chama quill.focus(), que rola a página
+     até o cursor. Com o cursor longe da barra (texto comprido), tocar em "Imagem" jogava a tela lá pra baixo e a pessoa perdia onde estava.
+     Durante o clique o Quill não rola nada (a rolagem volta ao lugar, um quadro depois, caso o próprio navegador tenha rolado ao focar). */
+  toolbar.addEventListener('click', () => {
+    quill.scrollIntoView = function () {};
+    setTimeout(() => { delete quill.scrollIntoView; }, 0);
+    executarSemMoverRolagem(() => {});
+  }, true);
 }
 
 /* Cria de fato os editores Quill pra cada linha de texto pendente (ver
