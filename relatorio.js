@@ -4231,8 +4231,8 @@ function injetarEstilosRelatorio() {
          arredondado, padding) — só um pouco menor, pra ainda dar pra
          diferenciar do título do bloco (.rel-h1, o único por página). */
       .rel-corpo h2 {
-        font-family: 'Architects Daughter', cursive; font-size: 16px; font-weight: 800; color: #103b70;
-        text-align: center; text-transform: uppercase; letter-spacing: 0.03em;
+        font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: lowercase; letter-spacing: 0.04em;
         border: 0; border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; border-radius: 0; padding: 7px 0; margin: 22px 0 16px; background: transparent;
         break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid;
       }
