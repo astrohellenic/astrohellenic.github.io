@@ -2094,6 +2094,16 @@ function injetarEstilosEditorRelatorio() {
       .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: inherit; }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
+      /* Título/Subtítulo já com a cara do relatório final enquanto se escreve (Cinzel, caixa baixa, filetes) */
+      .rel-quill-mount .ql-editor h2 {
+        font-family: 'Cinzel', serif; font-size: 16px; font-weight: 800; color: #103b70;
+        text-align: center; text-transform: lowercase; letter-spacing: 0.04em;
+        border-top: 1px solid #1F5FA3; border-bottom: 1px solid #1F5FA3; padding: 7px 0; margin: 22px 0 16px;
+      }
+      .rel-quill-mount .ql-editor h3 {
+        font-family: 'Architects Daughter', cursive; font-size: 13px; font-weight: 800; color: #9a6d18;
+        text-transform: uppercase; margin: 18px 0 8px;
+      }
 
       /* Linha de "aqui quebra a página" sobreposta ao Quill (ver
          criarOverlayQuebraPaginaQuill) — nunca é conteúdo de verdade
