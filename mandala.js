@@ -1500,7 +1500,7 @@ function montarCabecalhoMandalaLayoutBase(data, headerY, cores, loteCasa1, opcoe
   return { svg, altura, larguraNatural: naturalW };
 }
 /* Altura do cabeçalho em PAPIRO (com moldura): maior que o de sempre pra caber os filetes e a faixa de meandros. */
-const CABECALHO_PAPIRO_ALTURA = 136;
+const CABECALHO_PAPIRO_ALTURA = 150;
 let _meandroCabContador = 0;
 /* Todo papiro leva moldura (três filetes + meandros em cima e embaixo, a mesma da capa/folhas). Aqui o cabeçalho em papiro
    ganha a moldura: o papel cresce e o conteúdo de sempre (nome, data, DIA/HORA) é encolhido ~3% pra ficar por dentro dela. */
@@ -1511,11 +1511,11 @@ function montarCabecalhoMandalaLayout(data, headerY, cores, loteCasa1, opcoes) {
   if (!mRect) return base;
   const W = parseFloat(mRect[0].match(/width="([\d.]+)"/)[1]);
   const altN = CABECALHO_PAPIRO_ALTURA, Y0 = headerY, id = 'relMeandroCab' + (_meandroCabContador++);
-  const s = (W - 30) / W, tx = 30 - 15 * s, ty = Y0 + 29 - s * Y0;
+  const s = (W - 30) / W, tx = 30 - 15 * s, ty = Y0 + 35 - s * Y0;
   const retang = (inset, cor, sw) => `<rect x="${(16 + inset).toFixed(1)}" y="${(Y0 + 5 + inset).toFixed(1)}" width="${(W - 2 - 2 * inset).toFixed(1)}" height="${(altN - 10 - 2 * inset).toFixed(1)}" fill="none" stroke="${cor}" stroke-width="${sw}"/>`;
-  const faixa = yy => `<rect x="30" y="${yy}" width="${W - 30}" height="10" fill="url(#${id})"/>`;
-  const moldura = `<defs><pattern id="${id}" width="15" height="10" patternUnits="userSpaceOnUse" patternTransform="translate(30 0)"><path d="M0 8.75 H 2.5 V 1.25 H 12.5 V 8.75 H 7.5 V 4.4 H 10 V 6.25" fill="none" stroke="#1F5FA3" stroke-width="1.05"/></pattern></defs>`
-    + retang(0, '#2B1D12', 1.1) + retang(3.5, '#B5852F', 2.6) + retang(7, '#2B1D12', 1.1) + faixa(Y0 + 16) + faixa(Y0 + altN - 26);
+  const faixa = yy => `<svg x="36" y="${yy}" width="888" height="16"><rect width="888" height="16" fill="url(#${id})"/></svg>`;
+  const moldura = `<defs><pattern id="${id}" width="24" height="16" patternUnits="userSpaceOnUse"><path d="M0 14H4V2H20V14H12V7H16V10" fill="none" stroke="#1F5FA3" stroke-width="1.7"/></pattern></defs>`
+    + retang(0, '#2B1D12', 1.1) + retang(3.5, '#B5852F', 2.6) + retang(7, '#2B1D12', 1.1) + faixa(Y0 + 16) + faixa(Y0 + altN - 32);
   const rect = `<rect x="15" y="${headerY}" width="${W}" height="${altN}" rx="10" ry="10" fill="${cores.fundo}" stroke="none" />`;
   const conteudo = base.svg.replace(mRect[0], '');
   return { svg: rect + moldura + `<g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${conteudo}</g>`, altura: altN, larguraNatural: base.larguraNatural };
