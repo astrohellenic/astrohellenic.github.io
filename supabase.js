@@ -396,36 +396,25 @@ async function carregarEstiloPlanetas(userId) {
   } catch (e) {
     console.error("Erro ao carregar estilo dos planetas:", e);
   }
-  window.estiloPlanetas = estilo;
+  // escolha do APARELHO (localStorage) vale primeiro; o que estava na conta só serve de ponto de partida num aparelho sem escolha
+  let local = null; try { local = localStorage.getItem('astro_estilo_planetas'); } catch (e) {}
+  window.estiloPlanetas = local || estilo;
   aplicarLimiteEstiloPlanetas();
   reRenderizarModuloAtivo();
 }
 
 /* SALVA O ESTILO DOS ÍCONES DOS PLANETAS ESCOLHIDO E ATUALIZA A TELA NA HORA */
-async function salvarEstiloPlanetas(estilo) {
+function salvarEstiloPlanetas(estilo) {
   if (!estiloPlanetasLiberadoNoPlano(estilo)) { alert('Escolher o estilo dos ícones dos planetas é do plano Essencial ou Pro.'); return; }
-  try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) { alert("Sessão não identificada."); return; }
-
-    const { error } = await supabaseClient
-      .from('configuracoes')
-      .upsert({ user_id: user.id, estilo_planetas: estilo }, { onConflict: 'user_id' });
-
-    if (!error) {
-      window.estiloPlanetas = estilo;
-      reRenderizarModuloAtivo();
-      if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
-    } else {
-      alert("Erro ao salvar estilo dos planetas: " + error.message);
-    }
-  } catch (e) {
-    alert("Erro de conexão ao salvar estilo dos planetas.");
-  }
+  // escolha do APARELHO: não vai mais pra conta
+  try { localStorage.setItem('astro_estilo_planetas', estilo); } catch (e) {}
+  window.estiloPlanetas = estilo;
+  reRenderizarModuloAtivo();
+  if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
 
-/* ESTILO DA MANDALA (Astro Hellenic / francês) — preferência do astrólogo, guardada no Supabase (configuracoes.estilo_mandala),
-   não no aparelho. Só o FORMATO do desenho (ver estiloMandalaAtual em mandala.js); cores e ícones seguem o tema.
+/* ESTILO DA MANDALA — desde 07/11/2026 é escolha do APARELHO e por tema (localStorage astro_estilo_mandala, ver roda.js). O que está na conta
+   (configuracoes.estilo_mandala) só serve de ponto de partida num aparelho que ainda não escolheu. Só o FORMATO do desenho (ver estiloMandalaAtual em mandala.js); cores e ícones seguem o tema.
    Sem escolha salva (ou coluna ainda não criada), vale o padrão de sempre de cada tema. */
 async function carregarEstiloMandala(userId) {
   let estilo = null;
@@ -476,27 +465,11 @@ async function salvarCoresNiveis(cor) {
   }
 }
 
-async function salvarEstiloMandala(estilo) {
-  try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) { alert("Sessão não identificada."); return; }
-
-    const { error } = await supabaseClient
-      .from('configuracoes')
-      .upsert({ user_id: user.id, estilo_mandala: estilo }, { onConflict: 'user_id' });
-
-    if (!error) {
-      window.estiloMandala = estilo;
-      reRenderizarModuloAtivo();
-      if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
-    } else if (/estilo_mandala/i.test(error.message || '')) {
-      alert("Falta criar a coluna do estilo da mandala no banco. No Supabase, abra o SQL Editor e rode:\n\nalter table configuracoes add column estilo_mandala text;\n\nDepois escolha o estilo de novo.");
-    } else {
-      alert("Erro ao salvar o estilo da mandala: " + error.message);
-    }
-  } catch (e) {
-    alert("Erro de conexão ao salvar o estilo da mandala.");
-  }
+function salvarEstiloMandala(estilo) {
+  // escolha do APARELHO e do tema em uso (ver estiloMandalaAtual em roda.js): não vai mais pra conta
+  guardarEstiloMandalaAparelho(estilo);
+  reRenderizarModuloAtivo();
+  if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
 
 /* RÓTULOS DOS GLIFOS (nome do planeta ao lado do ícone) — preferência do astrólogo, guardada no Supabase (configuracoes.mostrar_rotulos_glifos),

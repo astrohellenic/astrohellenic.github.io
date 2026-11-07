@@ -88,7 +88,24 @@ RODA_ESTILOS.astrohellenic_colorido = Object.assign({}, RODA_ESTILOS.astrohellen
 /* Estilo da mandala escolhido em Configurações → Aparência (carregado do Supabase depois do login, ver
    carregarEstiloMandala em supabase.js): 'frances', 'astrohellenic' (tracejado) ou 'astrohellenic_reto'. Sem escolha ainda: o padrão de sempre — a pintura do
    Céu já nasceu no desenho Astro Hellenic; todas as outras (claro, escuro, papiro, tinta do relatório) são no francês. */
+/* O estilo é escolha do APARELHO e vale por tema (papiro, céu, sulfite, claro, escuro): no localStorage, chave astro_estilo_mandala = { tema: estilo }.
+   Aparelho sem escolha pra aquele tema: vale o que estava salvo na conta antes (window.estiloMandala, vindo do Supabase), depois o padrão de sempre. */
+function temaDoEstiloMandala() {
+  if (window.temaPapiro) return 'papiro';
+  if (window.temaMandala === 'ceu' || window.temaMandala === 'sulfite') return window.temaMandala;
+  return document.documentElement.classList.contains('tema-escuro') ? 'escuro' : 'claro';
+}
+function lerEstilosMandalaAparelho() {
+  try { return JSON.parse(localStorage.getItem('astro_estilo_mandala') || '{}') || {}; } catch (e) { return {}; }
+}
+function guardarEstiloMandalaAparelho(estilo, tema) {
+  const m = lerEstilosMandalaAparelho();
+  m[tema || temaDoEstiloMandala()] = estilo;
+  try { localStorage.setItem('astro_estilo_mandala', JSON.stringify(m)); } catch (e) {}
+}
 function estiloMandalaAtual(naPinturaCeu) {
+  const local = lerEstilosMandalaAparelho()[temaDoEstiloMandala()];
+  if (RODA_ESTILOS[local]) return local;
   if (RODA_ESTILOS[window.estiloMandala]) return window.estiloMandala;
   return naPinturaCeu ? 'astrohellenic' : 'frances';
 }
