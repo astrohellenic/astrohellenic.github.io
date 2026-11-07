@@ -4167,7 +4167,26 @@ function injetarEstilosRelatorio() {
   /* Cores vêm do papiro global (papiro.css/papiro.js) — aqui valores literais, não var(), porque este CSS
      também vai pro PDF (HTML mandado pro servidor), que não tem o papiro.css. */
   const papiroCoresRel = papiroCores();
-  const molduraPaginaUrl = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 794 1123' preserveAspectRatio='none'><defs><pattern id='m' width='24' height='16' patternUnits='userSpaceOnUse'><path d='M0 14H4V2H20V14H12V7H16V10' fill='none' stroke='%231F5FA3' stroke-width='1.7'/></pattern></defs><rect x='12' y='12' width='770' height='1099' fill='none' stroke='%232B1D12' stroke-width='1.2'/><rect x='17' y='17' width='760' height='1089' fill='none' stroke='%23B5852F' stroke-width='3.2'/><rect x='22' y='22' width='750' height='1079' fill='none' stroke='%232B1D12' stroke-width='1.2'/><svg x='36' y='28' width='722' height='16'><rect width='722' height='16' fill='url(%23m)'/></svg><svg x='36' y='1079' width='722' height='16'><rect width='722' height='16' fill='url(%23m)'/></svg></svg>")`; // moldura de meandros da página (a mesma do Falando de Astrologia): os mesmos três filetes e a faixa de meandros em cima e embaixo
+  /* Moldura de meandros da página (a mesma do Falando de Astrologia): os mesmos três filetes e a faixa de meandros em cima e embaixo.
+     Em pedaços que nunca esticam o meandro: o topo fica colado em cima, o pé colado embaixo e os filetes das laterais são retas que só esticam no
+     comprimento. Antes era UM desenho esticado para a altura da folha: numa página mais alta que uma folha (uma captura grande), o meandro esticava
+     junto e passava por cima do título. Numa folha A4 o resultado é idêntico ao de antes (conferido pixel a pixel). */
+  const _mPad = `<defs><pattern id='m' width='24' height='16' patternUnits='userSpaceOnUse'><path d='M0 14H4V2H20V14H12V7H16V10' fill='none' stroke='%231F5FA3' stroke-width='1.7'/></pattern></defs>`;
+  const _mFaixa = y => `<svg x='36' y='${y}' width='722' height='16'><rect width='722' height='16' fill='url(%23m)'/></svg>`;
+  const _mTraco = (d, cor, larg) => `<path d='${d}' fill='none' stroke='${cor}' stroke-width='${larg}' stroke-linecap='square'/>`;
+  const _mUrl = (alt, corpo, semProporcao) => `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 794 ${alt}'${semProporcao ? " preserveAspectRatio='none'" : ''}>${corpo}</svg>")`;
+  const _mHoriz = (y1, y2, y3) => _mTraco(`M12 ${y1}H782`, '%232B1D12', 1.2) + _mTraco(`M17 ${y2}H777`, '%23B5852F', 3.2) + _mTraco(`M22 ${y3}H772`, '%232B1D12', 1.2);
+  const molduraTopoUrl = _mUrl(60, _mPad + _mHoriz(12, 17, 22) + _mFaixa(28));
+  const molduraPeUrl = _mUrl(60, _mPad + _mHoriz(48, 43, 38) + _mFaixa(16));
+  /* cada filete lateral é um traço reto que só estica no comprimento (esticar uma reta não distorce nada), começando e terminando nos cantos */
+  const _mLado = (x1, x2, cor, larg) => _mUrl(100, _mTraco(`M${x1} 0V100M${x2} 0V100`, cor, larg).replace(" stroke-linecap='square'", ''), true);
+  const molduraPaginaBg = [
+    `${molduraTopoUrl} no-repeat 0 0 / 100% auto`,
+    `${molduraPeUrl} no-repeat 0 100% / 100% auto`,
+    `${_mLado(12, 782, '%232B1D12', 1.2)} no-repeat 0 12px / 100% calc(100% - 24px)`,
+    `${_mLado(17, 777, '%23B5852F', 3.2)} no-repeat 0 17px / 100% calc(100% - 34px)`,
+    `${_mLado(22, 772, '%232B1D12', 1.2)} no-repeat 0 22px / 100% calc(100% - 44px)`
+  ].join(', ');
   const papiroFolhaBg = (typeof window !== 'undefined' && window.PAPIRO_FOLHA_JPG)
     ? `url("${window.PAPIRO_FOLHA_JPG}") center / 100% 100% no-repeat, ${papiroCoresRel.meio}`
     : `radial-gradient(ellipse at 12% 6%, rgba(255,244,210,0.6) 0%, transparent 40%),
@@ -4497,7 +4516,7 @@ function injetarEstilosRelatorio() {
         background: ${papiroFolhaBg};
       }
       /* MOLDURA NAS PÁGINAS: sempre no PDF com papiro; no PDF sem papiro, só se o modelo escolheu (blocoCapa.molduraPaginas). Desenhada por cima da folha, só nas margens (o texto não muda de lugar). */
-      .rel-com-moldura .rel-page:not(.rel-capa)::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: ${molduraPaginaUrl} no-repeat 0 0 / 100% 100%; pointer-events: none; z-index: 0; }
+      .rel-com-moldura .rel-page:not(.rel-capa)::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: ${molduraPaginaBg}; pointer-events: none; z-index: 0; }
       .rel-com-moldura .rel-page:not(.rel-capa) .rel-num-pagina-canto { right: 10mm; bottom: 12.5mm; z-index: 1; }
       /* Paleta tirada de papiros reais (referências do astrólogo): tinta
          PRETA no texto, vermelho-tijolo só em filetes/molduras e detalhes
