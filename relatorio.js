@@ -2100,6 +2100,9 @@ function injetarEstilosEditorRelatorio() {
 
       .rel-quill-mount .ql-toolbar.ql-snow { border-radius: 0; background: #fffdf5; }
       .rel-quill-mount .ql-container.ql-snow { border-radius: 0; font-family: inherit; }
+      /* O próprio campo do Quill JÁ É o .ql-container (a regra acima, de "descendente", nunca pegava): sem isso o texto do corpo e a barra saíam em Helvetica/Arial */
+      .rel-quill-mount.ql-container.ql-snow, .rel-quill-mount .ql-editor, .rel-editor-tela .ql-toolbar.ql-snow, .rel-barra-formatacao .ql-toolbar.ql-snow,
+      .rel-editor-tela .ql-snow .ql-picker, .rel-barra-formatacao .ql-snow .ql-picker { font-family: var(--fonte-mao); }
       .rel-quill-mount .ql-editor { min-height: 180px; font-size: 12.5px; line-height: 1.6; }
       .rel-quill-mount .ql-editor img { max-width: 100%; height: auto; }
       /* Título/Subtítulo já com a cara do relatório final enquanto se escreve (Cinzel, caixa baixa, filetes) */
