@@ -29,7 +29,7 @@ function corDoTempo(f) {
    preenchimento só o revela até onde o tempo chegou (f = fração já passada, 0 a 1). Em Sulfite a classe leva os vãos de caneta. */
 function enchimentoTempo(f) {
   const tw = (f > 0 ? 100 / f : 100).toFixed(2);
-  return `class="preench tempo" style="height: 100%; width: ${(f * 100).toFixed(2)}%; --tw: ${tw}%; background: var(--grad-tempo, linear-gradient(to right, #1F5FA3, #B5852F, #A03E25)) 0 0 / ${tw}% 100% no-repeat;"`;
+  return `class="tempo" style="height: 100%; width: ${(f * 100).toFixed(2)}%; --tw: ${tw}%; background: var(--grad-tempo, linear-gradient(to right, #1F5FA3, #B5852F, #A03E25)) 0 0 / ${tw}% 100% no-repeat;"`;
 }
 
 const UNIDADES_TEMPO = {
@@ -134,6 +134,6 @@ function barraTempoComTroca(inicio, troca, escalaFim, estilo, momento) {
   const azul = 'var(--azul-egipcio-claro)';
   return `<div style="display: flex; align-items: center; ${estilo || ''}">
     <div class="tempo-trilho" style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; box-sizing: border-box;"><div ${enchimentoTempo(f1)}></div></div>
-    <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div class="preench" style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>
+    <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>
     <svg viewBox="0 0 10 14" width="10" height="14" style="flex: none; margin-left: -1px; margin-right: -10px;"><polyline points="1,1 8,7 1,13" fill="none" stroke="${azul}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 }
