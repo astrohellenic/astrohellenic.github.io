@@ -52,8 +52,8 @@ function barraTempo(inicio, fim, estilo, tamanhoLetra, unidade, momento) {
   const u = UNIDADES_TEMPO[unidade];
   const total = u ? (u.inteiro ? Math.round((fim - inicio) / u.ms) : Math.round(((fim - inicio) / u.ms) * 2) / 2) : 0;
   const passou = u ? (agora >= fim ? total : Math.floor(Math.min(f * total, total))) : 0; // terminado = total cheio (ex.: 30,5/30,5, não 30/30,5)
-  const fimTexto = u ? `<span style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap; color: ${cor};">${numeroTempo(passou)}/${numeroTempo(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
-  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1; color: ${cor};">${pct}%</span><div style="flex: 1; height: ${h}px; border: 1px solid var(--azul-egipcio-claro); box-sizing: content-box;"><div ${enchimentoTempo(f)}></div></div>${fimTexto}</div>`;
+  const fimTexto = u ? `<span class="tempo-fim" style="font-size: ${tamanhoLetra || 11}px; line-height: 1; white-space: nowrap;">${numeroTempo(passou)}/${numeroTempo(total)} ${total === 1 ? u.um : u.varios}</span>` : '';
+  return `<div style="display: flex; align-items: center; gap: 6px; ${(estilo || '').replace(/height:\s*3px;?/, '')}"><span style="font-size: ${tamanhoLetra || 11}px; font-weight: 700; min-width: 34px; text-align: right; line-height: 1;" class="tempo-pct">${pct}%</span><div class="tempo-trilho" style="flex: 1; height: ${h}px; box-sizing: content-box;"><div ${enchimentoTempo(f)}></div></div>${fimTexto}</div>`;
 }
 
 /* Linha de tabela só com a barrinha, logo embaixo da linha do período. colunas = quantas colunas a tabela tem. */
@@ -133,7 +133,7 @@ function barraTempoComTroca(inicio, troca, escalaFim, estilo, momento) {
   const pTroca = clamp((troca - inicio) / (escalaFim - inicio)) * 100;
   const azul = 'var(--azul-egipcio-claro)';
   return `<div style="display: flex; align-items: center; ${estilo || ''}">
-    <div style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; border: 1px solid var(--azul-egipcio-claro); box-sizing: border-box;"><div ${enchimentoTempo(f1)}></div></div>
+    <div class="tempo-trilho" style="width: ${pTroca.toFixed(3)}%; flex: none; height: 5px; box-sizing: border-box;"><div ${enchimentoTempo(f1)}></div></div>
     <div style="flex: 1; height: 5px; border: 1px solid ${azul}; border-left: 0; border-right: 0; box-sizing: border-box;"><div class="preench" style="height: 100%; width: ${(f2 * 100).toFixed(2)}%; background: ${azul};"></div></div>
     <svg viewBox="0 0 10 14" width="10" height="14" style="flex: none; margin-left: -1px; margin-right: -10px;"><polyline points="1,1 8,7 1,13" fill="none" stroke="${azul}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 }

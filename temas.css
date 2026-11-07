@@ -120,3 +120,8 @@
     background-image: var(--tinta-vaos) !important; background-size: 200px 200px;
 }
 :root.tema-sulfite .preench.tempo { background-image: var(--tinta-vaos), var(--grad-tempo) !important; background-size: 200px 200px, var(--tw) 100% !important; background-repeat: repeat, no-repeat !important; }
+
+/* BARRA DE TEMPO: o contorno acompanha o degradê; o % antes é azul e o tanto/tanto depois é terracota */
+.tempo-trilho { border-style: solid; border-width: 1px; border-image: var(--grad-tempo, linear-gradient(to right, #1F5FA3, #B5852F, #A03E25)) 1; }
+.tempo-pct { color: var(--azul-egipcio-claro, #1F5FA3); }
+.tempo-fim { color: var(--terracota, #A03E25); }

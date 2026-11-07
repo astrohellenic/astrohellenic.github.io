@@ -401,9 +401,9 @@ function dvBarraComCrises(r, crises, nascimento, hoje) {
     return `<div title="${Math.floor(c.anos)} anos" style="position:absolute; left:${x}%; top:50%; transform:translate(-50%,-50%);">${dvBolinha(c.nivel)}</div>${num}`;
   }).join('');
   return `<div style="display:flex; align-items:center; gap:8px; margin:34px 0 36px;">
-    <span style="min-width:34px; text-align:right; font-size:11px; font-weight:700; line-height:1; color:${cor};">${pct}%</span>
-    <div style="position:relative; flex:1; height:5px; border:1px solid var(--azul-egipcio-claro); box-sizing:content-box;"><div ${enchimentoTempo(f)}></div>${bolas}</div>
-    <span style="font-size:11px; white-space:nowrap; line-height:1; color:${cor};">${Math.floor(idade)}/${inteiro} anos</span>
+    <span style="min-width:34px; text-align:right; font-size:11px; font-weight:700; line-height:1;" class="tempo-pct">${pct}%</span>
+    <div class="tempo-trilho" style="position:relative; flex:1; height:5px; box-sizing:content-box;"><div ${enchimentoTempo(f)}></div>${bolas}</div>
+    <span class="tempo-fim" style="font-size:11px; white-space:nowrap; line-height:1;">${Math.floor(idade)}/${inteiro} anos</span>
   </div>`;
 }
 function dvListaCrises(crises) {
