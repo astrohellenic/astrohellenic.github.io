@@ -405,7 +405,7 @@ function desenharRodaSVG(o) {
   const R_canvasFerr = Math.max(R_canvasFerrNatural, (ferr && ferr.rCanvasMinimo) || 0);
   const cy = ferr ? R_canvasFerr : R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
-  const headerH = 75;
+  const headerH = (!ferr && !papiro && papiroCabecalho && typeof CABECALHO_PAPIRO_ALTURA !== 'undefined') ? CABECALHO_PAPIRO_ALTURA - 5 : 75; // papiro com moldura é mais alto
   const headerGapBottom = 20;
   /* A largura também precisa acompanhar R_Ceu: sem isso, o céu (que agora
      varia de tamanho por mapa) pode passar dos 480px de raio e ser cortado

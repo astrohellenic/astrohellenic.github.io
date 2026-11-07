@@ -4466,7 +4466,10 @@ function injetarEstilosRelatorio() {
       .rel-captura-faltando { color: #b45309; font-size: 13px; }
 
       /* ENCERRAMENTO */
+      /* Última página: o texto curto fica CENTRALIZADO no meio da página (vertical e horizontal); só o contato fica no pé. */
       .rel-page-encerramento { display: flex; flex-direction: column; justify-content: space-between; }
+      .rel-page-encerramento > .rel-corpo { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+      .rel-page-encerramento .rel-corpo p:not([class*="ql-align"]) { text-align: center; }
       .rel-rodape-astrologo { border-top: 1.5px solid #c59b27; padding-top: 14px; font-size: 12px; color: #334155; break-inside: avoid; page-break-inside: avoid; }
       .rel-rodape-nome { font-family: 'Architects Daughter', cursive; font-weight: 800; color: #103b70; font-size: 13px; margin-bottom: 3px; text-transform: uppercase;}
 
