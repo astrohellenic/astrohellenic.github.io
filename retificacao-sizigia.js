@@ -459,7 +459,7 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
       #rz-container .rz-prog { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 13px; font-weight: 700; color: var(--azul-egipcio-escuro); }
       #rz-container .rz-prog-pct { color: var(--azul-egipcio-claro); }
-      #rz-container .rz-prog-n { color: var(--terracota); }
+      #rz-container .rz-prog-n { color: var(--azul-egipcio-claro); }
       #rz-container .rz-prog-barra { flex: 1; height: 10px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); box-sizing: border-box; position: relative; }
       #rz-container .rz-prog-barra > span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--azul-egipcio-claro); }
       #rz-container input[type="checkbox"].rz-feito { -webkit-appearance: none; appearance: none; background: transparent; width: 18px; height: 18px; margin: 0 0 0 10px; cursor: pointer; flex: 0 0 auto; border: 1.5px solid var(--azul-egipcio-escuro); border-radius: 0; position: relative; vertical-align: middle; }
