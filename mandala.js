@@ -2163,10 +2163,21 @@ let salvandoImagemEmAndamento = false;
 /* MOLDURA NAS IMAGENS SALVAS NA GALERIA (regra do astrólogo): toda imagem salva ganha a moldura de meandros (a mesma do software). O quadro cresce em volta da imagem
    (nada da imagem fica coberto); a margem leva o papiro com textura no Tema Céu, ou a cor do fundo da própria imagem nos outros temas. A moldura é a imagem
    moldura-redes.svg desenhada em 9 partes (cantos fixos, lados repetidos), como o border-image da tela. */
-let __molduraImgPromise = null;
+let __molduraSvgTexto = null, __molduraImgCache = {};
+/* a moldura sai nas cores DO TEMA (as mesmas variáveis de temas.css que a tela usa: contorno, filete ocre, meandro azul) */
 function carregarMolduraImg() {
-  if (!__molduraImgPromise) __molduraImgPromise = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = 'moldura-redes.svg?v=1'; });
-  return __molduraImgPromise;
+  const css = getComputedStyle(document.documentElement);
+  const cor = (n, r) => (css.getPropertyValue(n) || '').trim() || r;
+  const c = { contorno: cor('--moldura-contorno', '#2B1D12'), ocre: cor('--ocre', '#B5852F'), azul: cor('--azul-egipcio-claro', '#1F5FA3') };
+  const chave = c.contorno + c.ocre + c.azul;
+  if (!__molduraImgCache[chave]) __molduraImgCache[chave] = (async () => {
+    try {
+      if (!__molduraSvgTexto) __molduraSvgTexto = await (await fetch('moldura-redes.svg?v=1')).text();
+      const svg = __molduraSvgTexto.replace(/#2B1D12/gi, c.contorno).replace(/#B5852F/gi, c.ocre).replace(/#1F5FA3/gi, c.azul);
+      return await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+    } catch (e) { return null; }
+  })();
+  return __molduraImgCache[chave];
 }
 async function emoldurarCanvasGaleria(canvas) {
   const img = await carregarMolduraImg();

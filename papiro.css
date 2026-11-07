@@ -118,7 +118,7 @@ body.tema-ceu #top-bar::before, body.tema-ceu #barra-inferior-mandala::before { 
 body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage {
     --m: .25; box-sizing: border-box;
     border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
-    border-image: url(moldura-redes.svg?v=1) 130 80 round;
+    border-image: var(--moldura-img) 130 80 round;
 }
 @media (min-width: 900px) { body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage { --m: .3; } }
 body.tema-ceu.mandala-papiro-tela #top-bar, body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala {
