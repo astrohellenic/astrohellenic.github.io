@@ -119,7 +119,6 @@ body.tema-ceu #top-bar::before, body.tema-ceu #barra-inferior-mandala::before { 
 body.tema-ceu.mandala-papiro-tela #top-bar, body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala {
     border-image: none; border-style: none; border-width: 0; background: transparent !important; clip-path: none;
 }
-body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala { border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro); }
 html body.tema-ceu.mandala-papiro-tela #main-stage { background-origin: border-box !important; background-clip: border-box !important; } /* o papel começa na borda da folha (senão repete por baixo da moldura) */
 
 /* O papel das folhas com moldura começa na BORDA da folha (senão o degradê repete por baixo da moldura e aparecem faixas escuras/claras, as "manchas" do papiro). */
@@ -131,7 +130,7 @@ html body.tema-ceu .painel, html body.tema-ceu #top-bar, html body.tema-ceu #bar
 html body.tema-papiro #main-stage { background: var(--papiro-fundo) !important; background-size: auto !important; background-position: 0 0 !important; background-attachment: fixed !important; }
 html body.tema-papiro #top-bar { background: var(--papiro-fundo) !important; background-attachment: fixed !important; border: 0 !important; border-image: none !important; clip-path: none !important; }
 html body.tema-papiro #top-bar::before, html body.tema-papiro #top-bar::after { display: none !important; }
-html body.tema-papiro #barra-inferior-mandala { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro) !important; }
+html body.tema-papiro #barra-inferior-mandala { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; border-top: 0 !important; }
 html body.tema-papiro .painel { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; }
 html body.tema-papiro #btn-mandala-papiro { display: none !important; }
 
@@ -142,7 +141,6 @@ html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #barra-inferior-mandala
 html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) .painel {
     border-image: none !important; border-style: none !important; border-width: 0 !important; background: transparent !important; clip-path: none !important; box-shadow: none !important;
 }
-html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #barra-inferior-mandala { border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro) !important; }
 
 /* CÉU, FERRAMENTA ABERTA (Profecção, Liberação, Tabela...): a barra de cima e o painel da ferramenta são UM papiro só, com UMA moldura só, e o céu aparece em volta.
    A folha é do #main-stage (::before = papel com a borda rasgada, ::after = moldura de meandros); a barra de cima e o painel ficam sem papel nem moldura próprios.
@@ -179,3 +177,7 @@ html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage::after {
 }
 html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #top-bar,
 html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #mandala-screen { position: relative; z-index: 1; }
+
+/* BARRA DE BAIXO DA MANDALA: NENHUMA linha embaixo do meandro / em cima do cabeçalho do mapa, em qualquer tema (quem separa a barra é o próprio meandro ou o papiro). */
+html body:not(.tema-ceu) #barra-inferior-mandala { border-top-width: 0 !important; }
+html body.tema-ceu #barra-inferior-mandala::after { border-top: 0 !important; border-bottom: 0 !important; }
