@@ -115,12 +115,7 @@ body.tema-ceu #top-bar::before, body.tema-ceu #barra-inferior-mandala::before { 
 
 /* Mandala em PAPIRO (botão céu/papiro): a tela inteira vira UMA folha de papiro, então ela tem UMA moldura só, em volta de tudo. As folhas menores (cabeçalho do software e barra de
    baixo) perdem o papiro e a moldura próprios; da barra de baixo fica só a linha de cima do cabeçalho do mapa. */
-body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage {
-    --m: .25; box-sizing: border-box;
-    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
-    border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
-}
-@media (min-width: 900px) { body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage { --m: .3; } }
+/* (a folha da Mandala em papiro com o céu em volta está no fim deste arquivo, igual à das ferramentas) */
 body.tema-ceu.mandala-papiro-tela #top-bar, body.tema-ceu.mandala-papiro-tela #barra-inferior-mandala {
     border-image: none; border-style: none; border-width: 0; background: transparent !important; clip-path: none;
 }
@@ -169,3 +164,18 @@ html body.tema-ceu:not(.tema-papiro):not(.modo-mandala):not(.topbar-fixo) #top-b
 html body.tema-ceu:not(.tema-papiro):not(.modo-mandala):not(.topbar-fixo) .painel {
     border-image: none !important; border-style: none !important; border-width: 0 !important; background: transparent !important; clip-path: none !important; box-shadow: none !important;
 }
+
+/* CÉU, MANDALA NO PAPIRO (botão céu/papiro): igual às ferramentas — a folha de papiro (::before) com UMA moldura (::after) fica dentro do #main-stage e o céu aparece em volta. */
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage { position: relative; --m: .25; box-sizing: border-box; background-color: transparent; padding: calc(10px + 130px * var(--m) + 2px) calc(5px + 80px * var(--m)) calc(130px * var(--m) + 14px); }
+@media (min-width: 900px) { html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage { --m: .3; } }
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage::before {
+    content: ''; position: absolute; z-index: 0; pointer-events: none; inset: 10px 5px 10px 5px; background: var(--papiro-fundo);
+    clip-path: polygon(0 4px, 6% 0, 15% 3px, 27% 0, 38% 4px, 50% 1px, 63% 4px, 75% 0, 88% 3px, 95% 0, 100% 4px, calc(100% - 3px) 3%, 100% 8%, calc(100% - 4px) 14%, 100% 20%, calc(100% - 3px) 27%, 100% 34%, calc(100% - 4px) 42%, 100% 50%, calc(100% - 3px) 58%, 100% 66%, calc(100% - 4px) 74%, 100% 82%, calc(100% - 3px) 90%, 100% calc(100% - 4px), 93% calc(100% - 1px), 82% 100%, 70% calc(100% - 4px), 57% calc(100% - 1px), 45% 100%, 33% calc(100% - 4px), 20% calc(100% - 1px), 9% 100%, 0 calc(100% - 4px), 4px 92%, 0 82%, 3px 70%, 0 58%, 4px 46%, 0 34%, 3px 22%, 0 10%);
+}
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage::after {
+    content: ''; position: absolute; z-index: 0; pointer-events: none; inset: 14px 9px 14px 9px;
+    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
+    border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
+}
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #top-bar,
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #mandala-screen { position: relative; z-index: 1; }

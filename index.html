@@ -3,7 +3,7 @@
 <head>
     <script>/* o link de "esqueci minha senha" chega com #...type=recovery; o Supabase limpa isso logo depois de ler, então guardo aqui no começo */
     window.__recuperacaoSenha = /type=recovery/.test(location.hash + location.search);</script>
-    <link rel="stylesheet" href="papiro.css?v=20261108b">
+    <link rel="stylesheet" href="papiro.css?v=20261108c">
     <link rel="stylesheet" href="temas.css?v=20261107zo">
     <script src="moldura.js?v=1"></script>
     <link rel="stylesheet" href="componentes.css?v=20261107c">
@@ -461,7 +461,7 @@ body {
         }
         /* Botão céu/papiro da Mandala: só existe no Tema Céu; "apertado" enquanto a mandala está no papiro */
         /* Mandala sobre papiro: a folha cobre o palco (o céu continua por baixo, pintado por JS) */
-        body.tema-ceu.mandala-papiro-tela #main-stage { background: var(--papiro-fundo) !important; }
+        body.tema-ceu.tema-papiro.mandala-papiro-tela #main-stage { background: var(--papiro-fundo) !important; }
         /* O seletor com o #mandala-actions-overlay é de propósito: componentes.css põe display:flex em "#mandala-actions-overlay .icon-btn" (mais forte que só o id do botão) e o botão aparecia em TODOS os temas. */
         #mandala-actions-overlay #btn-mandala-papiro { display: none; }
         body.tema-ceu #mandala-actions-overlay #btn-mandala-papiro { display: flex; }
