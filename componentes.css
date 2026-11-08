@@ -758,3 +758,13 @@ html body:not(.modo-mandala):not(.topbar-fixo) #top-bar { margin-bottom: 0; }
 html body:not(.modo-mandala):not(.topbar-fixo) #top-bar .top-bar-linha-baixo { margin-bottom: 0; }
 html body:not(.modo-mandala):not(.topbar-fixo) #mandala-container { padding-top: 0; }
 html body:not(.modo-mandala):not(.topbar-fixo) #mandala-container .painel { padding-top: 18px; }
+
+
+/* JANELA COM MOLDURA DE MEANDROS (todos os temas): a janela é uma folha própria, então leva a SUA moldura (a borda da folha, o ::after), como o cartão de login. Sem as duas linhas duplas de antes. */
+.janela { --m: .22; border-top-width: 0 !important; border-bottom-width: 0 !important; }
+html body.tema-ceu .janela::after, html body:not(.tema-ceu) .janela::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
+    border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
+}
+.janela > .janela-corpo { padding: calc(18px + 130px * var(--m)) calc(22px + 80px * var(--m)); max-height: calc(88vh - 2px * 130px * var(--m)); }
