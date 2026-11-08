@@ -750,3 +750,11 @@ html body.modo-mandala #barra-inferior-mandala { order: 2; position: relative; b
 #sidebar { --m: .2; box-sizing: border-box; border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m)); border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round; }
 html body.tema-ceu #sidebar { background-origin: border-box; background-clip: border-box; }
 .sidebar-header { min-width: 0; } .sidebar-header img { height: auto; max-height: 34px; max-width: 100%; min-width: 0; }
+
+
+/* FERRAMENTA ABERTA, TODOS OS TEMAS: do traço azul que fecha a barra de botões até o título da ferramenta é UMA linha de distância (antes eram ~50px
+   empilhados: margem da barra + margem do traço + respiro do container + respiro do painel). O Relatório (barra fixa) e a Mandala ficam como estavam. */
+html body:not(.modo-mandala):not(.topbar-fixo) #top-bar { margin-bottom: 0; }
+html body:not(.modo-mandala):not(.topbar-fixo) #top-bar .top-bar-linha-baixo { margin-bottom: 0; }
+html body:not(.modo-mandala):not(.topbar-fixo) #mandala-container { padding-top: 0; }
+html body:not(.modo-mandala):not(.topbar-fixo) #mandala-container .painel { padding-top: 18px; }
