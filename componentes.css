@@ -662,7 +662,8 @@ input[type="radio"]:checked::after {
 /* MOLDURA COM MEANDROS GREGOS (a mesma do Falando de Astrologia). A moldura é do PAPIRO:
    • NO CÉU há vários papiros soltos (cabeçalho do software, painel de cada ferramenta, bloco de baixo da Mandala): cada um tem a SUA moldura (a borda da própria folha), e a Mandala fica solta no céu;
    • NOS OUTROS TEMAS (claro, escuro, sulfite) não há céu nem papiros: a tela é UMA peça só, com UMA moldura só em volta da página inteira (acompanha a altura da página; o conteúdo fica por dentro). */
-body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra-inferior-mandala { --m: .17; }
+body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra-inferior-mandala { --m: .25; }
+@media (min-width: 900px) { body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra-inferior-mandala { --m: .3; } }
 body.tema-ceu:not(.tema-papiro) .painel { --m: .25; }
 @media (min-width: 900px) { body.tema-ceu:not(.tema-papiro) .painel { --m: .3; } }
 body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra-inferior-mandala, body.tema-ceu:not(.tema-papiro) .painel {
@@ -712,7 +713,6 @@ html body:not(.tema-ceu).topbar-fixo #top-bar, html body.tema-papiro.topbar-fixo
 
 /* TELAS BAIXAS (celular em pé, laptop baixo): NADA some — o logo, o cabeçalho do mapa e todos os botões continuam à vista —, mas ficam mais compactos para a mandala ter mais espaço:
    moldura mais fina nos dois papiros, logo menor e botões mais juntos. */
-body.tema-ceu:not(.tema-papiro) #top-bar, body.tema-ceu:not(.tema-papiro) #barra-inferior-mandala { --m: .12; }
 @media (max-height: 760px) {
     html body #top-bar .top-bar-logo { margin-top: 0; }
     html body #top-bar .top-bar-logo img { height: 24px; }
