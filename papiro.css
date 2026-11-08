@@ -139,3 +139,12 @@ html body.tema-papiro #top-bar::before, html body.tema-papiro #top-bar::after { 
 html body.tema-papiro #barra-inferior-mandala { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro) !important; }
 html body.tema-papiro .painel { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; }
 html body.tema-papiro #btn-mandala-papiro { display: none !important; }
+
+/* CÉU SEM CÉU (botão céu/papiro): a tela vira UMA folha de papiro só, com UMA moldura só (a do #main-stage). A barra de cima, a de baixo e o painel da ferramenta
+   (ex.: Matriz de Visibilidade) NÃO levam moldura própria — antes as regras do Céu (componentes.css) ganhavam e apareciam caixas com meandro dentro da folha. */
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #top-bar,
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #barra-inferior-mandala,
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) .painel {
+    border-image: none !important; border-style: none !important; border-width: 0 !important; background: transparent !important; clip-path: none !important; box-shadow: none !important;
+}
+html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #barra-inferior-mandala { border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro) !important; }
