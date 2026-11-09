@@ -356,7 +356,8 @@ function calcularSubperiodosL2(l1SignIdx, l1Start, l1Years) {
       days: days,
       start: new Date(currStart),
       end: new Date(currEnd),
-      isLysis: (count === 12)
+      isLysis: (count === 12),
+      cortado: isClamped
     });
 
     if (isClamped) break;
@@ -396,7 +397,8 @@ function calcularSubperiodosL3(l2SignIdx, l2Start, l2End) {
       days: totalDaysL3,
       start: new Date(currStart),
       end: new Date(currEnd),
-      isLysis: (count === 12)
+      isLysis: (count === 12),
+      cortado: isClamped
     });
 
     if (isClamped) break;
@@ -436,7 +438,8 @@ function calcularSubperiodosL4(l3SignIdx, l3Start, l3End) {
       hours: totalHoursL4,
       start: new Date(currStart),
       end: new Date(currEnd),
-      isLysis: (count === 12)
+      isLysis: (count === 12),
+      cortado: isClamped
     });
 
     if (isClamped) break;
@@ -654,7 +657,28 @@ function renderLiberacaoUI() {
     }
   }
   const tamLetraZR = { 1: 12, 2: 12, 3: 11, 4: 10 };
-  const duracaoZR = (n, x) => n === 1 ? `${x.years} Anos` : n === 2 ? `${x.months} Meses (${x.days} Dias)` : n === 3 ? `${x.days} Dias` : `${x.hours} Horas`;
+  // O último período de cada nível é cortado pelo fim do nível de cima: mostra a duração REAL, não a cheia.
+  const plural = (q, um, varios) => `${q} ${q === 1 ? um : varios}`;
+  const duracaoCortadaZR = (n, x) => {
+    const min = Math.round((x.end - x.start) / 60000);
+    const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), mi = min % 60;
+    if (n === 2) {
+      const meses = Math.floor(d / 30), dd = d % 30;
+      const partes = [];
+      if (meses) partes.push(plural(meses, 'Mês', 'Meses'));
+      if (dd) partes.push(plural(dd, 'Dia', 'Dias'));
+      if (h) partes.push(plural(h, 'Hora', 'Horas'));
+      if (mi) partes.push(plural(mi, 'Minuto', 'Minutos'));
+      return (partes.join(' e ') || '0 Dias') + (meses ? ` (${plural(d, 'Dia', 'Dias')})` : '');
+    }
+    const partes = [];
+    if (n === 3 && d) partes.push(plural(d, 'Dia', 'Dias'));
+    const horas = n === 3 ? h : d * 24 + h;
+    if (horas) partes.push(plural(horas, 'Hora', 'Horas'));
+    if (mi) partes.push(plural(mi, 'Minuto', 'Minutos'));
+    return partes.join(' e ') || '0 Horas';
+  };
+  const duracaoZR = (n, x) => (n > 1 && x.cortado) ? duracaoCortadaZR(n, x) : n === 1 ? `${x.years} Anos` : n === 2 ? `${x.months} Meses (${x.days} Dias)` : n === 3 ? `${x.days} Dias` : `${x.hours} Horas`;
   const dataZR = (n, d) => n >= 3 ? formatarDataHoraBR(d) : formatarDataBR(d);
   const tabelaNivelZR = (n, lista, fnIr) => {
     const linhas = lista.map((x, i) => {
