@@ -181,6 +181,5 @@ html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #main-stage::after {
 html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #top-bar,
 html body.tema-ceu.mandala-papiro-tela:not(.tema-papiro) #mandala-screen { position: relative; z-index: 1; }
 
-/* BARRA DE BAIXO DA MANDALA: NENHUMA linha embaixo do meandro / em cima do cabeçalho do mapa, em qualquer tema (quem separa a barra é o próprio meandro ou o papiro). */
-html body:not(.tema-ceu) #barra-inferior-mandala { border-top-width: 0 !important; }
-html body.tema-ceu #barra-inferior-mandala::after { border-top: 0 !important; border-bottom: 0 !important; }
+/* BARRA DE BAIXO DA MANDALA: linha de cima, na espessura de todas as linhas do sistema (--divisa-espessura), em TODOS os temas (o inverso da barra de cima, que tem a linha embaixo).
+   Céu/papiro: vem do ::after; os demais temas: do border-top da própria barra (componentes.css). */
