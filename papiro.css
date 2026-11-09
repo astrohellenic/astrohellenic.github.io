@@ -127,8 +127,11 @@ html body.tema-ceu .painel, html body.tema-ceu #top-bar, html body.tema-ceu #bar
 /* TEMA PAPIRO — papiro em tudo, sem céu. A página inteira é UMA folha de papiro (o fundo da tela, fixo, igual para a barra de cima, que acompanha a rolagem) com UMA moldura em volta
    (body::after, em componentes.css). Nada de papiro em cima de papiro: o cabeçalho do software, o painel de cada ferramenta e a barra de baixo da Mandala ficam lisos, sem papiro nem
    moldura próprios. A Mandala é sempre em tinta (a folha liga sozinha) e o botão céu/papiro não existe neste tema. */
-html body.tema-papiro #main-stage { background: var(--papiro-fundo) !important; background-size: auto !important; background-position: 0 0 !important; background-attachment: fixed !important; }
-html body.tema-papiro #top-bar { background: var(--papiro-fundo) !important; background-attachment: fixed !important; border: 0 !important; border-image: none !important; clip-path: none !important; }
+/* O papel é UM só, no body (rola junto com a página). Antes o #main-stage e a barra de cima tinham cada um o seu papel com background-attachment:fixed: no iPhone, ao dar zoom,
+   o Safari repintava esse fundo (4 degradês) na tela inteira a cada quadro, ficava borrado e a página caía (memória). NUNCA voltar a usar background-attachment:fixed. */
+html body.tema-papiro { background: var(--papiro-fundo) !important; background-size: auto !important; background-position: 0 0 !important; background-attachment: scroll !important; min-height: 100vh; }
+html body.tema-papiro #main-stage { background: transparent !important; }
+html body.tema-papiro #top-bar { background: transparent !important; border: 0 !important; border-image: none !important; clip-path: none !important; }
 html body.tema-papiro #top-bar::before, html body.tema-papiro #top-bar::after { display: none !important; }
 html body.tema-papiro #barra-inferior-mandala { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; border-top: 0 !important; }
 html body.tema-papiro .painel { background: transparent !important; border-image: none !important; border-width: 0 !important; clip-path: none !important; }
