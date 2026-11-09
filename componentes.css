@@ -674,7 +674,7 @@ body:not(.tema-ceu), body.tema-papiro { --moldura-m: .25; --moldura-v: calc(130p
 @media (min-width: 900px) { body:not(.tema-ceu), body.tema-papiro { --moldura-m: .3; } }
 /* a moldura vale no software e nas páginas públicas (formulário, agenda...), menos quando a página está embutida no site do astrólogo (tema "Embutido": classe .embutido no <html>), que já tem a sua */
 html:not(.embutido) body:not(.tema-ceu)::after, html:not(.embutido) body.tema-papiro::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 45;
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 45; /* FIXA na tela (NUNCA absolute inset:0 no body): em página alta virava uma camada gigante e, ao dar zoom no iPhone, estourava a memória e derrubava a página */
     border-style: solid; border-width: var(--moldura-v) var(--moldura-h);
     border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
 }
