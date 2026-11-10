@@ -301,8 +301,8 @@
 #barra-inferior-mandala {
     position: absolute; left: 0; right: 0; bottom: 12px; z-index: 20; box-sizing: border-box;
     background: var(--fundo-creme);
-    border-top: var(--divisa-espessura) solid var(--azul-egipcio-claro);
-    border-bottom: 0; /* igual ao topo, ao contrário: linha em cima, cabeçalho, botões; NENHUMA linha entre cabeçalho e botões nem embaixo dos botões */
+    border-top: 0; /* a linha NÃO é da barra inteira nem do cabeçalho do mapa: é da linha de BOTÕES (ver #barra-linha-botoes) */
+    border-bottom: 0;
     box-shadow: var(--sombra, none);
     padding: 2px 12px;
 }
@@ -325,7 +325,11 @@
 #barra-inferior-rolagem > :last-child { margin-right: auto; }
 /* CABEÇALHO DO MAPA — no mesmo lugar de antes (embaixo): faixa própria em cima da linha de botões, com a linha simples embaixo */
 #barra-inferior-mandala #cabecalho-barra-mandala { display: block; background: none; box-shadow: none; border-top: 0; width: 100%; min-width: 0; overflow: hidden; margin: 0; padding: 4px 10px 0; box-sizing: border-box; border-bottom: 0; }
-#barra-linha-botoes { position: relative; }
+/* A LINHA É DA BARRA DE BOTÕES, nunca do cabeçalho do mapa (10/11/2026): o espelho da barra de cima (botões, 16px, linha de 2px, 6px), então aqui é 6px, linha de 2px, 16px, botões.
+   Tela estreita (uma barra só de botões, embaixo do cabeçalho do mapa): UMA linha, em cima da barra de botões. Tela larga (botões | cabeçalho | botões): DUAS linhas, uma em cima
+   de cada grupo de botões, e NENHUMA em cima do cabeçalho (bloco @media min-width 1100px, mais abaixo). Mesma espessura e mesma distância da linha da barra de cima (.top-bar-linha-baixo). */
+#barra-linha-botoes { position: relative; border-top: 2px solid var(--azul-egipcio-claro); margin-top: 6px; padding-top: 16px; }
+#barra-linha-botoes > .barra-seta { top: 16px; }
 /* UMA divisa entre CADA botão (igual à barra de cima): os botões, o seletor Dia e os dois grupos, todos separados por linha de 2px */
 #barra-inferior-mandala :is(.icon-btn, .botao-icone, .time-select) { border-left: 2px solid var(--azul-egipcio-claro) !important; border-radius: 0; align-self: stretch; }
 /* O stepper de tempo (< Dia >) e o zoom (− 100% +) são UMA peça cada: a divisa fica só na frente da peça, nunca dentro dela */
@@ -708,6 +712,7 @@ html body:not(.tema-ceu).topbar-fixo #top-bar, html body.tema-papiro.topbar-fixo
     #barra-inferior-mandala #mandala-actions-overlay { order: 1; margin: 0; }
     #barra-inferior-mandala #cabecalho-barra-mandala { order: 2; flex: 1 1 0; width: auto; padding: 0 12px; border-bottom: 0; border-left: 2px solid var(--azul-egipcio-claro); border-right: 2px solid var(--azul-egipcio-claro); margin: 0 6px; }
     #barra-inferior-mandala #mandala-controls-overlay { order: 3; margin: 0; }
+    #barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay { border-top: 2px solid var(--azul-egipcio-claro); padding-top: 16px; margin-top: 6px; align-self: stretch; }
 }
 
 
@@ -721,7 +726,10 @@ html body:not(.tema-ceu).topbar-fixo #top-bar, html body.tema-papiro.topbar-fixo
     #top-bar .menu-toggle-btn, #top-bar .icon-btn { padding: 5px 12px; }
     #barra-inferior-mandala :is(#mandala-actions-overlay, #mandala-controls-overlay) :is(.icon-btn, .botao-icone) { padding: 4px 8px; }
     #barra-inferior-mandala #cabecalho-barra-mandala { padding-top: 0; }
+    #barra-linha-botoes { margin-top: 2px; padding-top: 8px; }
+    #barra-linha-botoes > .barra-seta { top: 8px; }
 }
+@media (max-height: 760px) and (min-width: 1100px) { #barra-inferior-mandala #mandala-actions-overlay, #barra-inferior-mandala #mandala-controls-overlay { padding-top: 8px; margin-top: 2px; } }
 
 /* MANDALA: a imagem da mandala é a estrela e fica INTEIRA na tela — no celular ocupa praticamente a largura toda (só uma pequena margem) e no desktop/iPad cabe na altura que sobra depois do cabeçalho
    do software. O cabeçalho do mapa e os botões vêm logo ABAIXO dela, na rolagem da página (se não couberem na primeira tela, ficam mais para baixo). Nada some. */
