@@ -14,16 +14,24 @@
     if (lona) return;
     lona = document.createElement('canvas');
     lona.setAttribute('aria-hidden', 'true');
-    lona.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;z-index:2147483000;pointer-events:none';
+    lona.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;z-index:2147483000;pointer-events:none';
     document.body.appendChild(lona);
     g = lona.getContext('2d');
     medir();
     window.addEventListener('resize', medir);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', medir);
   }
+  /* A lona é medida pelo retângulo DELA na tela, nunca por window.innerWidth: com o zoom de pinça (ele apresenta os mapas com zoom) o innerWidth
+     encolhe e o risco saía fora do lugar. Com zoom a lona ganha mais pontos, para o risco não ficar borrado. */
+  var caixa = { left: 0, top: 0, width: 1, height: 1 };
   function medir() {
     if (!lona) return;
-    dpr = Math.max(1, window.devicePixelRatio || 1);
-    lona.width = Math.round(window.innerWidth * dpr); lona.height = Math.round(window.innerHeight * dpr);
+    caixa = lona.getBoundingClientRect();
+    var zoom = (window.visualViewport && window.visualViewport.scale) || 1;
+    dpr = Math.max(1, window.devicePixelRatio || 1) * Math.min(4, Math.max(1, zoom));
+    dpr = Math.min(dpr, Math.sqrt(16e6 / Math.max(1, caixa.width * caixa.height)));
+    var w = Math.max(1, Math.round(caixa.width * dpr)), h = Math.max(1, Math.round(caixa.height * dpr));
+    if (lona.width !== w || lona.height !== h) { lona.width = w; lona.height = h; }
   }
 
   function tracar(r, largura, cor, brilho) {
@@ -43,7 +51,7 @@
     var agora = Date.now();
     riscos = riscos.filter(function (r) { return !r.fim || agora - r.fim < DURA + SOME; });
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    g.clearRect(0, 0, caixa.width, caixa.height);
     g.lineCap = 'round'; g.lineJoin = 'round';
     riscos.forEach(function (r) {
       var idade = r.fim ? agora - r.fim : 0;
@@ -57,12 +65,13 @@
   function animar() { if (!rodando) { rodando = true; requestAnimationFrame(quadro); } }
 
   function risca(e) { return ligado && (e.pointerType === 'pen' || e.pointerType === 'mouse'); }
-  function ponto(e) { return [e.clientX + window.scrollX, e.clientY + window.scrollY]; }
+  function ponto(e) { return [e.clientX - caixa.left + window.scrollX, e.clientY - caixa.top + window.scrollY]; }
 
   function desce(e) {
     if (!risca(e) || foraDoRisco(e.target)) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
+    medir();
     atual = { id: e.pointerId, p: [ponto(e)], fim: 0 };
     riscos.push(atual); animar();
   }
