@@ -5,7 +5,7 @@
 * { box-sizing: border-box; }
 body {
   background-color: var(--fundo-creme); color: var(--preto-tinta);
-  display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; gap: 16px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; position: relative; /* a moldura (body::after, componentes.css) mede o body inteiro, não só a primeira tela */ padding: 20px; gap: 16px;
 }
 .form-powered-by { font-size: 9px; font-weight: 600; color: var(--preto-tinta); opacity: .6; text-transform: uppercase; letter-spacing: 0.1em; }
 .form-card { width: 100%; max-width: 440px; padding: 28px 28px 24px; position: relative; }
