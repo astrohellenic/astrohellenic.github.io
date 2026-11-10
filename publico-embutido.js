@@ -15,18 +15,27 @@
     }
     return Math.max(h, Math.ceil(fim));
   }
-  function avisar() {
+  function avisar(repetir) {
     pendente = false;
+    if (!document.body) return;
     var h = medir();
-    if (Math.abs(h - ultima) < 2) return;
+    if (repetir !== true && Math.abs(h - ultima) < 2) return;
     ultima = h;
     window.parent.postMessage({ tipo: 'astrohellenic-altura', altura: h }, '*');
   }
   function agendar() { if (pendente) return; pendente = true; (window.requestAnimationFrame || setTimeout)(avisar); }
   window.addEventListener('load', avisar);
   window.addEventListener('resize', avisar);
-  if (window.ResizeObserver) new ResizeObserver(agendar).observe(document.body);
-  /* o que entra ou muda dentro da página (um fato novo, uma mensagem) também avisa, mesmo sem a caixa do body mudar */
-  if (window.MutationObserver) new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
-  setInterval(avisar, 700); /* rede de segurança: se algum aviso falhar, em instantes a altura se acerta sozinha */
+  /* Este script é carregado no <head>, quando o <body> ainda NÃO existe: observar o body aqui dava erro e o script parava nesta linha (nada abaixo rodava; a altura só era
+     avisada uma vez, no "load", e o quadro ficava pequeno e travado quando o conteúdo chegava depois). Por isso os observadores só são ligados com o body pronto. */
+  function ligar() {
+    if (window.ResizeObserver) new ResizeObserver(agendar).observe(document.body);
+    /* o que entra ou muda dentro da página (um fato novo, uma mensagem) também avisa, mesmo sem a caixa do body mudar */
+    if (window.MutationObserver) new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+    avisar();
+  }
+  if (document.body) ligar(); else document.addEventListener('DOMContentLoaded', ligar);
+  /* rede de segurança: a altura é avisada de novo o tempo todo, MESMO sem mudar. Se a página de fora perdeu ou recusou um aviso (aconteceu no iPhone: o quadro ficou
+     pequeno e travado), o seguinte acerta. Não voltar a avisar só quando muda. */
+  setInterval(function () { avisar(true); }, 700);
 })();
