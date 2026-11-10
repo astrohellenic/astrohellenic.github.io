@@ -1,4 +1,4 @@
-/* Caneta laser: com o botão ligado (barra de cima, ao lado da engrenagem), a caneta (Apple Pencil) ou o mouse riscam por cima de
+/* Caneta laser: com o botão ligado (pequeno, na beira direita da tela; só aparece em aparelho com caneta), a caneta (Apple Pencil) ou o mouse riscam por cima de
    qualquer tela do software, e o risco some sozinho alguns segundos depois. O DEDO continua funcionando normal (rolar, tocar):
    só a caneta e o mouse riscam. A barra de cima nunca é riscada (para trocar de ferramenta e desligar o laser).
    Nada é salvo: é só para apontar e mostrar durante um atendimento ou uma live. Esc também desliga. */
@@ -8,7 +8,30 @@
   var ligado = false, lona = null, g = null, dpr = 1, riscos = [], atual = null, rodando = false, ultimoRisco = 0;
 
   function botao() { return document.getElementById('btn-laser'); }
-  function foraDoRisco(alvo) { return !!(alvo && alvo.closest && alvo.closest('#top-bar')); }
+  function foraDoRisco(alvo) { return !!(alvo && alvo.closest && alvo.closest('#top-bar, #btn-laser')); }
+
+  /* O botão NÃO fica na barra de ferramentas (não é uma ferramenta que se abre: é usado por cima delas) e só existe em aparelho com CANETA:
+     aparece, pequeno, na beira direita da tela, na primeira vez que a caneta (Apple Pencil) encosta ou passa perto da tela, e o aparelho
+     lembra disso (é coisa do aparelho: celular sem caneta nunca mostra nada). */
+  var CHAVE = 'astro_tem_caneta';
+  function criarBotao() {
+    if (botao() || !document.body) return;
+    var b = document.createElement('button');
+    b.id = 'btn-laser'; b.type = 'button'; b.title = 'Caneta laser'; b.setAttribute('aria-label', 'Caneta laser'); b.setAttribute('aria-pressed', 'false');
+    b.style.cssText = 'position:fixed;right:calc(28px + env(safe-area-inset-right));top:50%;transform:translateY(-50%);z-index:2147483001;width:40px;height:40px;padding:0;margin:0;border:0;background:transparent;color:var(--ocre,#B5852F);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.8;-webkit-tap-highlight-color:transparent;touch-action:manipulation';
+    b.innerHTML = '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M26,46 L50,22 L42,14 L18,38 Z"/><line x1="18" y1="38" x2="26" y2="46"/><path d="M18,38 L12,52 L26,46"/><line x1="6" y1="40" x2="3" y2="38"/><line x1="24" y1="58" x2="26" y2="61"/><line x1="7" y1="57" x2="4" y2="60"/></svg>';
+    b.addEventListener('click', function () { ligar(!ligado); });
+    document.body.appendChild(b);
+  }
+  function viuCaneta(e) {
+    if (e.pointerType !== 'pen' || botao()) return;
+    try { localStorage.setItem(CHAVE, '1'); } catch (x) { /* sem armazenamento */ }
+    criarBotao();
+  }
+  document.addEventListener('pointerdown', viuCaneta, true);
+  document.addEventListener('pointermove', viuCaneta, true);
+  var jaTem = false; try { jaTem = localStorage.getItem(CHAVE) === '1'; } catch (x) { /* sem armazenamento */ }
+  if (jaTem) { if (document.body) criarBotao(); else document.addEventListener('DOMContentLoaded', criarBotao); }
 
   function criarLona() {
     if (lona) return;
@@ -105,7 +128,7 @@
   function ligar(sim) {
     ligado = !!sim;
     if (ligado) criarLona();
-    var b = botao(); if (b) { b.classList.toggle('ativo', ligado); b.setAttribute('aria-pressed', ligado ? 'true' : 'false'); }
+    var b = botao(); if (b) { b.style.color = ligado ? 'var(--terracota,#A03E25)' : 'var(--ocre,#B5852F)'; b.style.opacity = ligado ? '1' : '.8'; b.setAttribute('aria-pressed', ligado ? 'true' : 'false'); }
     document.documentElement.style.cursor = ligado ? 'crosshair' : '';
   }
   window.alternarCanetaLaser = function () { ligar(!ligado); };
