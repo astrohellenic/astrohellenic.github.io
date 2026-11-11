@@ -51,13 +51,13 @@ function oeFuso(lat, lon, ano, mes, dia, hora, minuto) {
 }
 
 /* ---------- o mapa pelo motor de astrologia (mandala.js: executarCalculoInterno) ---------- */
+const _oeCache = {};   // o mapa e a Revolução Solar não mudam: pedir ao motor uma vez só por endereço (folhear os dias não repete o pedido)
 async function oeBuscarMapa(nasc, fetchFn) {
   const f = fetchFn || fetch;
   const p2 = (n) => String(n).padStart(2, '0');
   const url = `${OE_MOTOR}/index?data=${nasc.ano}-${p2(nasc.mes)}-${p2(nasc.dia)}&hora=${p2(nasc.hora)}:${p2(nasc.min)}&fuso=${nasc.fuso}&lat=${nasc.lat}&lon=${nasc.lon}`;
-  const res = await f(url);
-  if (!res.ok) throw new Error('motor ' + res.status);
-  const j = await res.json(), pl = j.planetas || {}, asc = j.ascendente || {};
+  if (!_oeCache[url]) { const res = await f(url); if (!res.ok) throw new Error('motor ' + res.status); _oeCache[url] = await res.json(); }
+  const j = _oeCache[url], pl = j.planetas || {}, asc = j.ascendente || {};
   const g = (x) => (x ? Number(x.grau_absoluto) : 0);
   return {
     asc: ((OE_SIGNOS_INDEX[asc.signo] || 0) * 30) + (parseFloat(asc.grau) || 0),
@@ -140,9 +140,8 @@ function oeDecenios(m, nascDate, agora) {
 async function oeInicioRevolucaoSolar(nasc, anoAlvo, fetchFn) {
   const f = fetchFn || fetch, p2 = (n) => String(n).padStart(2, '0');
   const url = `${OE_MOTOR}/revolucao?data=${nasc.ano}-${p2(nasc.mes)}-${p2(nasc.dia)}&hora=${p2(nasc.hora)}:${p2(nasc.min)}&lat=${nasc.lat}&lon=${nasc.lon}&fuso=${nasc.fuso}&ano=${anoAlvo}`;
-  const res = await f(url);
-  if (!res.ok) return null;
-  const j = await res.json(), me = j.momento_exato || {};
+  if (!_oeCache[url]) { const res = await f(url); if (!res.ok) return null; _oeCache[url] = await res.json(); }
+  const j = _oeCache[url], me = j.momento_exato || {};
   let anoR = anoAlvo, mesR = nasc.mes - 1, diaR = nasc.dia, horaR = 12, minR = 0;
   if (me.data_utc && me.data_utc.includes('-')) { const d = me.data_utc.split('-'); anoR = parseInt(d[0]) || anoAlvo; mesR = (parseInt(d[1]) || 1) - 1; diaR = parseInt(d[2]) || nasc.dia; }
   if (me.hora_local && me.hora_local.includes(':')) { const h = me.hora_local.split(':'); horaR = parseInt(h[0]) || 0; minR = parseInt(h[1]) || 0; }
