@@ -75,6 +75,17 @@ function oeLotes(m) {
   return { dia, fortune: fort, spirit: esp, venus: eros };
 }
 
+/* ---------- seita de cada planeta (planetIcons.js: planetaEstaNaSeita): true = na seita do mapa, false = fora ---------- */
+function oeSeitaDosPlanetas(m) {
+  const diurno = ((m.Sun - m.asc + 360) % 360) >= 180;
+  const mercOriental = ((m.Sun - m.Mercury + 360) % 360) < 180;
+  const r = {};
+  ['Sun', 'Jupiter', 'Saturn'].forEach(p => { r[p] = diurno; });
+  ['Moon', 'Venus', 'Mars'].forEach(p => { r[p] = !diurno; });
+  r.Mercury = diurno ? mercOriental : !mercOriental;
+  return r;
+}
+
 /* ---------- Circumambulação pelo Ascendente ---------- */
 function oeCircumambulacao(m, nascDate, lat, agora) {
   const tabela = rqCircumambulacao(m.asc, nascDate, lat);
@@ -176,6 +187,7 @@ async function ondeEstouHoje(nasc, agora, fetchFn) {
   const lotes = oeLotes(m);
   return {
     seita: lotes.dia ? 'diurno' : 'noturno',
+    planetasNaSeita: oeSeitaDosPlanetas(m),
     circumambulacao: oeCircumambulacao(m, nascDate, n.lat, agora),
     liberacao: {
       fortune: oeLiberacao(lotes.fortune, lotes.fortune, false, nascDate, agora),
@@ -188,4 +200,4 @@ async function ondeEstouHoje(nasc, agora, fetchFn) {
 }
 
 if (typeof window !== 'undefined') window.ondeEstouHoje = ondeEstouHoje;
-if (typeof module !== 'undefined' && module.exports) module.exports = { ondeEstouHoje, oeBuscarMapa, oeLotes, oeCircumambulacao, oeLiberacao, oeDecenios, oeProfeccao, oeFuso };
+if (typeof module !== 'undefined' && module.exports) module.exports = { oeSeitaDosPlanetas, ondeEstouHoje, oeBuscarMapa, oeLotes, oeCircumambulacao, oeLiberacao, oeDecenios, oeProfeccao, oeFuso };
