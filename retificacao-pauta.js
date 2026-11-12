@@ -111,8 +111,10 @@ function rzPautaSvg(opc) {
   const xDe = (dd) => {   // posição (x) de uma data dentro DESTA passagem; null se nenhum termo dela cobre a data
     for (const term of passagem.terms) {
       if (term.startDate && term.endDate && dd >= term.startDate && dd < term.endDate) {
+        // no termo em que o ponto de partida cai no meio, o tempo só cobre do ponto de partida até o fim do termo
+        const g0 = (ehPrimeira && natalDegInSign > term.termStartDeg && natalDegInSign < term.termEndDeg) ? natalDegInSign : term.termStartDeg;
         const frac = Math.max(0, Math.min(1, (dd.getTime() - term.startDate.getTime()) / (term.endDate.getTime() - term.startDate.getTime())));
-        return x0 + ((term.termStartDeg + frac * (term.termEndDeg - term.termStartDeg)) * scale);
+        return x0 + ((g0 + frac * (term.termEndDeg - g0)) * scale);
       }
     }
     return null;

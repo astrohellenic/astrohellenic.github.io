@@ -9,6 +9,7 @@
 let rzFichaInfo = null;           // { enviado_em, temFatosDoCliente } da ficha do mapa em tela (null = ainda não existe ficha)
 let rzSalvarTimer = null;
 let rzSalvando = false;
+let rzClienteEm = null;           // `enviado_em` dos fatos do cliente que já foram para a lista do astrólogo (para só trazer o que é novo)
 
 function rzMapaIdAtual() { return (typeof currentMapaId !== 'undefined' && currentMapaId) ? String(currentMapaId) : null; }
 
@@ -25,6 +26,7 @@ function rzTrabalhoParaSalvar() {
     origemHorario: rzOrigemHorario,
     conclusao: rzConclusao,
     anexos: rzAnexos,
+    clienteEm: rzClienteEm,
     abertas: rzAbertas,
     feitos: rzFeitos,
     fatos: rzFatos.map(f => ({ id: f.id, data: f.data, ate: f.ate, periodo: !!f.periodo, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto, conf: f.conf, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
@@ -51,10 +53,31 @@ function rzAplicarFicha(r, linha) {
         tecnicas: (Array.isArray(f.tecnicas) && f.tecnicas.length ? f.tecnicas : []).map(x => ({ tipo: x.tipo === 'zr' ? 'zr' : 'circ', chave: x.chave }))
       }));
     }
-  } else if (Array.isArray(linha.fatos) && linha.fatos.length) {
-    rzFatos = linha.fatos.map(f => { const n = rzFatoVazio(++rzFatoSeq); n.data = f.data || ''; if (f.ate) { n.ate = f.ate; n.periodo = true; } n.texto = f.texto || ''; return n; });
+    rzClienteEm = t.clienteEm || null;
   }
+  rzTrazerFatosDoCliente(linha);
 }
+
+/* Os fatos que o cliente enviou entram na lista do astrólogo. Antes só entravam quando ele nunca tinha salvado nada: bastava abrir a ferramenta antes
+   do envio (salva sozinha, com um fato vazio) para os fatos do cliente nunca mais aparecerem. Agora, a cada envio novo, o que ainda não está na lista
+   (mesma data e mesmo texto) é acrescentado, e o fato vazio que só estava de espaço reservado sai. */
+function rzTrazerFatosDoCliente(linha) {
+  if (!Array.isArray(linha.fatos) || !linha.fatos.length) return;
+  if (rzClienteEm && rzClienteEm === linha.enviado_em) return;   // este envio já foi trazido
+  const chave = (f) => (f.data || '') + '|' + (f.ate || '') + '|' + String(f.texto || '').trim();
+  const jaTem = new Set(rzFatos.map(chave));
+  const novos = [];
+  linha.fatos.forEach(f => {
+    const n = rzFatoVazio(++rzFatoSeq); n.data = f.data || ''; if (f.ate) { n.ate = f.ate; n.periodo = true; } n.texto = f.texto || '';
+    if (jaTem.has(chave(n))) return;
+    jaTem.add(chave(n)); novos.push(n);
+  });
+  if (!novos.length) { rzClienteEm = linha.enviado_em || rzClienteEm; return; }
+  rzFatos = rzFatos.filter(f => f.data || f.texto || f.conf).concat(novos);
+  rzClienteEm = linha.enviado_em || rzClienteEm;
+  rzFichaPrecisaSalvar = true;
+}
+let rzFichaPrecisaSalvar = false;
 
 /* Busca a ficha do mapa em tela. Qualquer falha = segue sem ficha (a ferramenta continua funcionando, só não salva). */
 async function rzCarregarFicha(r) {
@@ -66,7 +89,23 @@ async function rzCarregarFicha(r) {
     if (error || !data) return;
     rzFichaInfo = { enviado_em: data.enviado_em, temFatosDoCliente: Array.isArray(data.fatos) && data.fatos.length > 0 };
     rzAplicarFicha(r, data);
+    if (rzFichaPrecisaSalvar) { rzFichaPrecisaSalvar = false; rzAgendarSalvar(); }
   } catch (e) { console.warn('Ficha da retificação não carregou:', e); }
+}
+
+/* Reabriu a ferramenta no mesmo mapa (ela não recarrega a ficha): confere só se o cliente enviou fatos novos desde então. */
+async function rzAtualizarFatosDoCliente() {
+  const db = rzClienteSupabase(), mapa = rzMapaIdAtual();
+  if (!db || !mapa) return false;
+  try {
+    const { data, error } = await db.from('retificacoes').select('fatos, enviado_em').eq('mapa_id', mapa).maybeSingle();
+    if (error || !data) return false;
+    rzFichaInfo = { enviado_em: data.enviado_em, temFatosDoCliente: Array.isArray(data.fatos) && data.fatos.length > 0 };
+    const antes = rzFatos.length;
+    rzTrazerFatosDoCliente(data);
+    if (rzFichaPrecisaSalvar) { rzFichaPrecisaSalvar = false; rzAgendarSalvar(); }
+    return rzFatos.length !== antes;
+  } catch (e) { return false; }
 }
 
 function rzMostrarStatusSalvo(texto) { const el = document.getElementById('rzSalvoStatus'); if (el) el.textContent = texto; }
@@ -141,4 +180,4 @@ function rzFichaAviso() {
   return `<div class="rz-fonte" style="margin-bottom:8px; color:var(--terracota); font-weight:700;">O cliente ainda não enviou os fatos da vida dele.</div>` + botao;
 }
 
-if (typeof window !== 'undefined') Object.assign(window, { rzAgendarSalvar, rzSalvarFicha, rzCopiarLinkFatos });
+if (typeof window !== 'undefined') Object.assign(window, { rzAtualizarFatosDoCliente, rzAgendarSalvar, rzSalvarFicha, rzCopiarLinkFatos });

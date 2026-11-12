@@ -519,8 +519,10 @@ async function rzExecutar() {
       rzAssinatura = assinatura;
       rzFinalSel = rzSelecaoPadrao(r);
       rzMapaFinalSvg = null;
-      rzAbertas = {}; rzFeitos = {}; rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null;
+      rzAbertas = {}; rzFeitos = {}; rzFatos = [rzFatoVazio(++rzFatoSeq)]; rzConclusao = ''; rzAnexos = []; rzOrigemHorario = ''; rzFichaInfo = null; rzClienteEm = null;
       if (typeof rzCarregarFicha === 'function') await rzCarregarFicha(r);      // o que já foi salvo para este cliente (e os fatos que ele enviou)
+    } else if (typeof rzAtualizarFatosDoCliente === 'function') {
+      await rzAtualizarFatosDoCliente();      // mesmo mapa: o cliente pode ter enviado os fatos enquanto a ferramenta estava aberta
     }
     area.innerHTML = rzMontarResultado(r);
     const cab = document.getElementById('rzCabecalho');
