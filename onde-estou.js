@@ -109,7 +109,9 @@ function oeLiberacao(grauLote, grauFortuna, ehEspirito, nascDate, agora) {
   const inicio = (ehEspirito && signoLote === signoFort) ? (signoLote + 1) % 12 : signoLote;
   const r = rqLiberacaoEm(inicio, nascDate, agora);
   if (!r) return null;
-  return ['l1', 'l2', 'l3', 'l4'].map((k, i) => (r[k] ? { nivel: i + 1, signIdx: r[k].signIdx, de: r[k].start, ate: r[k].end, lysis: !!r[k].isLysis } : null));
+  /* PICO: o signo do nível é angular (casas 1, 4, 7 ou 10) a partir da Fortuna, sempre a Fortuna (liberacao.js: angularSignsFromFort). SALTO: o período é o Lysis (isLysis). */
+  const f = Math.floor(grauFortuna / 30), angulares = [f, (f + 3) % 12, (f + 6) % 12, (f + 9) % 12];
+  return ['l1', 'l2', 'l3', 'l4'].map((k, i) => (r[k] ? { nivel: i + 1, signIdx: r[k].signIdx, de: r[k].start, ate: r[k].end, lysis: !!r[k].isLysis, pico: angulares.includes(r[k].signIdx) } : null));
 }
 
 /* ---------- Decênios (decenios.js: calcularDeceniosAutomatico; a luz da seita começa) ---------- */
