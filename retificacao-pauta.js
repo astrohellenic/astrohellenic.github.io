@@ -15,9 +15,11 @@ function rzPautaSvg(opc) {
   const boxHeight = RZ_PAUTA_BOX, k = RZ_PAUTA_K;
   const yOffset = 10;
   let rowHtml = '';
+  let extra = 0;     // altura a mais no alto, para as fileiras extras de rótulos de aspecto
 
   // Moldura da Pauta: só uma linha fina em cima e outra embaixo, sem os lados, cantos retos.
-  rowHtml += `<line x1="10" y1="${yOffset}" x2="910" y2="${yOffset}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/><line x1="10" y1="${yOffset + boxHeight}" x2="910" y2="${yOffset + boxHeight}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+  rowHtml += `<line x1="10" y1="${yOffset + boxHeight}" x2="910" y2="${yOffset + boxHeight}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
+  const linhaTopo = `<line x1="10" y1="${yOffset}" x2="910" y2="${yOffset}" stroke="var(--azul-egipcio-claro)" stroke-width="1"/>`;
 
   // Ícone Monoline do Signo
   rowHtml += `<g transform="translate(18, ${yOffset + Math.round(38 * k)})">${getSignSVGDir(passagem.signIdx, Math.round(34 * k))}</g>`;
@@ -60,31 +62,35 @@ function rzPautaSvg(opc) {
     }
   });
 
-  // Raios dos aspectos
+  // Raios dos aspectos. O rótulo (idade, data, aspecto e planeta) fica SEMPRE em cima do próprio raio: quando dois rótulos se encostam,
+  // um sobe para uma fileira de cima (a linha do raio sobe junto), em vez de ser empurrado de lado para cima de outro trecho da régua.
   const raiosDoSigno = raios.filter(r => r.signIdx === passagem.signIdx && !(ehPrimeira && r.degInSign < natalDegInSign)).sort((a, b) => a.degInSign - b.degInSign);
-  const LARG_ROTULO = 80, xMinRotulo = 56, xMaxRotulo = 888;
-  const posRotulos = raiosDoSigno.map(r => ({ xRay: x0 + (r.degInSign * scale), cx: x0 + (r.degInSign * scale) }));
-  posRotulos.forEach((p, i) => { p.cx = Math.max(p.cx, xMinRotulo); if (i > 0) p.cx = Math.max(p.cx, posRotulos[i - 1].cx + LARG_ROTULO); });
-  for (let i = posRotulos.length - 1; i >= 0; i--) {
-    const teto = (i === posRotulos.length - 1) ? xMaxRotulo : posRotulos[i + 1].cx - LARG_ROTULO;
-    posRotulos[i].cx = Math.min(posRotulos[i].cx, teto);
-  }
+  const LARG_ROTULO = 80, xMinRotulo = 56, xMaxRotulo = 888, ALTURA_FILEIRA = 30;
+  const fileiras = [];   // fileiras[f] = centros dos rótulos já colocados nela
+  const posRotulos = raiosDoSigno.map(r => {
+    const xRay = x0 + (r.degInSign * scale), cx = Math.max(xMinRotulo, Math.min(xMaxRotulo, xRay));
+    let f = 0;
+    while (fileiras[f] && fileiras[f].some(c => Math.abs(c - cx) < LARG_ROTULO)) f++;
+    (fileiras[f] = fileiras[f] || []).push(cx);
+    return { xRay, cx, f };
+  });
+  extra = Math.max(0, fileiras.length - 1) * ALTURA_FILEIRA;
   raiosDoSigno.forEach((r, idxRaio) => {
-    const { xRay, cx } = posRotulos[idxRaio];
-    const yTop = yAspectLine;
-    rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k)}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="var(--azul-egipcio-escuro)" stroke-width="0.8" opacity="0.7"/>`;
+    const { xRay, cx, f } = posRotulos[idxRaio];
+    const yTop = yAspectLine, sobe = f * ALTURA_FILEIRA;
+    rowHtml += `<line x1="${xRay}" y1="${yTop - Math.round(10 * k) - sobe}" x2="${xRay}" y2="${yBaseline - Math.round(4 * k)}" stroke="var(--azul-egipcio-escuro)" stroke-width="0.8" opacity="0.7"/>`;
     if (Math.abs(cx - xRay) > 0.5) {
       const xFim = cx > xRay ? cx - 14 : cx + 19;
-      rowHtml += `<line x1="${xRay}" y1="${yTop}" x2="${xFim}" y2="${yTop}" stroke="var(--azul-egipcio-escuro)" stroke-width="0.8" opacity="0.7"/>`;
+      rowHtml += `<line x1="${xRay}" y1="${yTop - sobe}" x2="${xFim}" y2="${yTop - sobe}" stroke="var(--azul-egipcio-escuro)" stroke-width="0.8" opacity="0.7"/>`;
     }
-    rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k)}" font-size="7.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="middle">${r.idadeTxt}</text>`;
-    rowHtml += `<text x="${cx}" y="${yTop - Math.round(13 * k)}" font-size="7" font-weight="600" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle">${r.exactDate}</text>`;
+    rowHtml += `<text x="${cx}" y="${yTop - Math.round(21 * k) - sobe}" font-size="7.5" font-weight="800" fill="var(--azul-egipcio-escuro)" text-anchor="middle">${r.idadeTxt}</text>`;
+    rowHtml += `<text x="${cx}" y="${yTop - Math.round(13 * k) - sobe}" font-size="7" font-weight="600" fill="var(--preto-tinta)" fill-opacity=".75" text-anchor="middle">${r.exactDate}</text>`;
     const aspectSVG = getAspectSymbolSVGDir(r.aspectType);
     const isPlanetaReal = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].includes(r.planetId);
     const iconSVG = isPlanetaReal ? getPlanet3DSVGDir(r.planetId) : getItemSVGDir(r.planetId === 'Syz' ? 'Sizígia' : r.planetId);
     const escalaIcone = isPlanetaReal ? ((r.planetId === 'Saturn') ? 0.95 : 0.75) : 1;
-    rowHtml += `<g transform="translate(${cx - 13}, ${yTop - 7})">${aspectSVG}</g>`;
-    rowHtml += `<g transform="translate(${cx + 1}, ${yTop - 9}) scale(${escalaIcone})">${iconSVG}</g>`;
+    rowHtml += `<g transform="translate(${cx - 13}, ${yTop - 7 - sobe})">${aspectSVG}</g>`;
+    rowHtml += `<g transform="translate(${cx + 1}, ${yTop - 9 - sobe}) scale(${escalaIcone})">${iconSVG}</g>`;
   });
 
   // Marca da posição natal inicial (só na primeira pauta)
@@ -158,7 +164,7 @@ function rzPautaSvg(opc) {
     });
   });
 
-  return `<svg viewBox="0 0 920 ${20 + RZ_PAUTA_LINHA}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${rowHtml}</svg>`;
+  return `<svg viewBox="0 0 920 ${20 + RZ_PAUTA_LINHA + extra}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block;">${linhaTopo}<g transform="translate(0, ${extra})">${rowHtml}</g></svg>`;
 }
 
 /* A pauta do signo em que cai UMA data (a "linha do signo" daquele fato), com a marca do fato. null se nenhuma passagem cobre a data. */

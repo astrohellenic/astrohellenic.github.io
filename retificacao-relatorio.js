@@ -150,7 +150,7 @@ function rzRelMontarPaginas() {
   const grupos = new Map();
   ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push(rzMarcadorDoFato(f, numero[f.id])); }); });
   const tabelasTecnicas = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1))
-    .flatMap(g => g.t.tipo === 'circ' ? rzRelPautasCirc(ctx, g.t.chave, g.fatos) : rzRelTabelaDaTela(rzMontarTabelaZR(ctx, g.t.chave, g.fatos)));
+    .flatMap(g => g.t.tipo === 'circ' ? rzRelPautasCirc(ctx, g.t.chave, g.fatos) : rzRelJunto(`<div class="rz-sub">${rzZrTitulo(g.t.chave)}</div>`, rzZrBlocos(ctx, g.t.chave, g.fatos)));
   const nSim = ordenados.filter(f => f.conf === 'sim').length, nParte = ordenados.filter(f => f.conf === 'parte').length, nNao = ordenados.filter(f => f.conf === 'nao').length;
   const resumo = ordenados.some(f => f.conf)
     ? `<p>O horário ${hFinal} é confirmado por <strong>${nSim}</strong> de ${ordenados.length} ${ordenados.length === 1 ? 'fato' : 'fatos'}${nParte ? `, em parte por ${nParte}` : ''}${nNao ? ` e não é confirmado por ${nNao}` : ''}.</p>` : '';

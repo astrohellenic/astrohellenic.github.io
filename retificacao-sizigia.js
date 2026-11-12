@@ -817,9 +817,9 @@ function rzLinhaTecnica(ctx, t, d, n, paraRelatorio, dFim) {
       : `${cab('Circumambulação')} <span class="texto-apagado">nenhum período cobre essa data</span>`;
   }
   const z = rqLiberacaoEm(ctx.signoZR(t.chave), ctx.nasc, d);
-  const niv = (n, x) => x ? `<span class="texto-apagado">nível ${n}</span> ${rzSignoHtml(x.signIdx, 18)} <span class="texto-apagado">${rzDataBR(x.start)} a ${rzDataBR(x.end)}</span>` : '';
+  const niv = (n, x) => x ? `<span class="texto-apagado">nível ${n}</span> ${rzSignoHtml(x.signIdx, 18)} <span class="texto-apagado">${rzDataHoraZR(x.start, n >= 4 || (n >= 3 && x.end - x.start < 3 * 86400000))} a ${rzDataHoraZR(x.end, n >= 4 || (n >= 3 && x.end - x.start < 3 * 86400000))}</span>` : '';
   return z
-    ? `${cab('Liberação')} ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''}`
+    ? `${cab('Liberação')} ${niv(1, z.l1)} ${z.l2 ? '→ ' + niv(2, z.l2) : ''} ${z.l3 ? '→ ' + niv(3, z.l3) : ''} ${z.l4 ? '→ ' + niv(4, z.l4) : ''}`
     : `${cab('Liberação')} <span class="texto-apagado">nenhum período cobre essa data</span>`;
 }
 
@@ -917,36 +917,42 @@ function rzMontarTabelaCirc(ctx, chave, fatos) {
     <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Signo</th><th>Termo</th><th>Planeta</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
 }
 
-/* Liberação a partir de um lote: níveis 1, 2 e 3 só nos ramos onde há fato. O número do fato aparece na linha do nível mais fundo em que ele cai. */
-function rzMontarTabelaZR(ctx, lote, fatos) {
-  fatos = rzExpandirPeriodos(fatos);
-  const l1 = []; let ini = new Date(ctx.nasc);
-  for (let i = 0; i < 12; i++) { const sign = (ctx.signoZR(lote) + i) % 12; const fim = rqFimZR(ini, RQ_ZR_ANOS[sign]); l1.push({ signIdx: sign, start: new Date(ini), end: fim }); ini = new Date(fim); }
-  const faixa = (lista, fs) => {
-    const marc = fs.map(f => ({ f, i: lista.findIndex(x => f.d >= x.start && f.d < x.end) })).filter(m => m.i >= 0);
-    if (!marc.length) return [];
-    const de = Math.min.apply(null, marc.map(m => m.i)), ate = Math.max.apply(null, marc.map(m => m.i));
-    return lista.slice(de, ate + 1).map((x, k) => ({ x, fatos: marc.filter(m => m.i === de + k).map(m => m.f) }));
+/* Data (e hora, nos períodos curtos) de um limite de período da Liberação */
+function rzDataHoraZR(dt, comHora) { return rzDataBR(dt) + (comHora ? ` ${rzP2(dt.getHours())}:${rzP2(dt.getMinutes())}` : ''); }
+
+/* Liberação a partir de um lote: para cada fato, os 4 níveis em que ele cai. Cada nível é uma barra do período inteiro (começo e fim embaixo)
+   com a marca do fato exatamente no dia em que ele cai. O fato não tem horário (conta-se ao meio-dia): no nível 4 o horário é aproximado. */
+function rzZrBlocoFato(ctx, lote, n, d, rotulo) {
+  const z = rqLiberacaoEm(ctx.signoZR(lote), ctx.nasc, d);
+  const cab = `<div style="display:flex; align-items:center; gap:8px; margin:0 0 4px;"><span class="rz-num">${n}</span><strong>${rzDataBR(d)}</strong>${rotulo ? `<span class="texto-apagado">${rotulo}</span>` : ''}<span class="texto-apagado">${rqIdade(ctx.nasc, d)}</span></div>`;
+  if (!z) return `<div class="rz-zr-fato" style="margin:0 0 14px;">${cab}<div class="texto-apagado">nenhum período cobre essa data</div></div>`;
+  const linha = (nivel, x) => {
+    if (!x) return '';
+    const dur = x.end.getTime() - x.start.getTime();
+    const curto = nivel >= 4 || dur < 3 * 86400000;
+    const pct = Math.max(0, Math.min(100, (d.getTime() - x.start.getTime()) / dur * 100));
+    return `<div style="display:flex; align-items:flex-start; gap:8px; margin:0 0 5px;">
+      <div style="width:44px; flex:none; display:flex; align-items:center; gap:4px;"><span class="texto-apagado" style="font-size:11px; width:10px;">${nivel}</span>${rzSignoHtml(x.signIdx, 18)}</div>
+      <div style="flex:1; min-width:0;">
+        <div style="position:relative; height:14px; border:1px solid var(--azul-egipcio-escuro, #1034A6); box-sizing:border-box;"><div style="position:absolute; top:-3px; bottom:-3px; left:${pct.toFixed(2)}%; width:3px; margin-left:-1.5px; background:var(--terracota, #A03E25);"></div></div>
+        <div style="display:flex; justify-content:space-between; gap:8px; font-size:10.5px; margin-top:1px;" class="texto-apagado"><span>${rzDataHoraZR(x.start, curto)}</span><span>${rzDataHoraZR(x.end, curto)}</span></div>
+      </div></div>`;
   };
-  const linhas = [];
-  faixa(l1, fatos).forEach(a => {
-    linhas.push({ nivel: 1, ...a });
-    if (!a.fatos.length) return;
-    faixa(rqSubperiodos(2, a.x.signIdx, a.x.start, a.x.end), a.fatos).forEach(b => {
-      linhas.push({ nivel: 2, ...b });
-      if (!b.fatos.length) return;
-      faixa(rqSubperiodos(3, b.x.signIdx, b.x.start, b.x.end), b.fatos).forEach(c => linhas.push({ nivel: 3, ...c }));
-    });
+  return `<div class="rz-zr-fato" style="margin:0 0 14px;">${cab}${linha(1, z.l1)}${linha(2, z.l2)}${linha(3, z.l3)}${linha(4, z.l4)}</div>`;
+}
+/* os blocos (um por fato; período = começo e fim) */
+function rzZrBlocos(ctx, lote, fatos) {
+  const blocos = [];
+  fatos.slice().sort((x, y) => x.n - y.n).forEach(f => {
+    if (f.dFim) { blocos.push(rzZrBlocoFato(ctx, lote, f.n, f.d, 'começo')); blocos.push(rzZrBlocoFato(ctx, lote, f.n, f.dFim, 'fim')); }
+    else blocos.push(rzZrBlocoFato(ctx, lote, f.n, f.d, ''));
   });
-  if (!linhas.length) return '';
-  const corpo = linhas.map(l => {
-    // o número fica só na linha mais funda em que o fato cai: nas linhas de cima, quando o fato continua no nível de baixo, não repete
-    const filhos = linhas.some(o => o.nivel === l.nivel + 1 && o.x.start >= l.x.start && o.x.end <= l.x.end);
-    const nums = (filhos ? [] : l.fatos).map(f => `<span class="rz-num">${f.n}</span>`).join(' ');
-    return `<tr><td style="padding-left:${(l.nivel - 1) * 16 + 4}px;${l.nivel === 1 ? ' font-weight:700;' : ''}"><span class="texto-apagado" style="font-size:11px;">${l.nivel}</span> ${rzSignoHtml(l.x.signIdx, l.nivel === 1 ? 18 : 16)}</td><td>${rzDataBR(l.x.start)} a ${rzDataBR(l.x.end)}</td><td>${nums}</td></tr>`;
-  }).join('');
-  return `<details ${rzAberto('zr|${lote}')} ontoggle="rzAbriu('zr|${lote}', this.open)" style="margin-bottom:10px;"><summary>${rzIconeAfeta(lote, 16)} Liberação (${RZ_LOTE_NOME[lote]}): onde cada fato cai</summary>
-    <div class="rz-rolagem"><table class="tabela-epoca"><tr><th>Nível e signo</th><th>Período</th><th>Fatos</th></tr>${corpo}</table></div></details>`;
+  return blocos;
+}
+function rzZrTitulo(lote) { return `${rzIconeAfeta(lote, 16)} Liberação (${RZ_LOTE_NOME[lote]}): onde cada fato cai`; }
+function rzMontarTabelaZR(ctx, lote, fatos) {
+  return `<details ${rzAberto('zr|${lote}')} ontoggle="rzAbriu('zr|${lote}', this.open)" style="margin-bottom:10px;"><summary>${rzZrTitulo(lote)}</summary>
+    <div style="padding-top:6px;">${rzZrBlocos(ctx, lote, fatos).join('')}</div></details>`;
 }
 
 /* Quais sanfonas estão abertas/fechadas (seções, técnicas da Visão geral): o que foi fechado continua fechado ao recarregar (vai na ficha, junto com o resto do trabalho) */
