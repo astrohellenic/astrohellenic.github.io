@@ -93,10 +93,11 @@ function oeCircumambulacao(m, nascDate, lat, agora) {
   const termo = linha ? { signIdx: linha.signIdx, planetId: linha.termPlanetId, de: linha.startDate, ate: linha.endDate } : null;
   /* o aspecto: o raio (aktinobolia) mais recente que o ponto já passou, contado em anos de ascensão desde o Ascendente */
   const raios = rqRaiosAspectos({ Sun: m.Sun, Moon: m.Moon, Mercury: m.Mercury, Venus: m.Venus, Mars: m.Mars, Jupiter: m.Jupiter, Saturn: m.Saturn }, m.asc, nascDate, lat);
+  /* o aspecto de hoje começa na data do raio exato mais recente e termina na data do raio seguinte */
+  const datas = raios.map(r => ({ r, data: new Date(nascDate.getTime() + Number(r.yearsOld) * 365.25 * OE_DIA_MS) })).sort((x, y) => x.data - y.data);
   let atual = null;
-  raios.forEach(r => {
-    const data = new Date(nascDate.getTime() + Number(r.yearsOld) * 365.25 * OE_DIA_MS);
-    if (data <= agora && (!atual || data > atual.data)) atual = { planetId: r.planetId, tipo: r.aspectType, signIdx: r.signIdx, degInSign: r.degInSign, data };
+  datas.forEach((x, i) => {
+    if (x.data <= agora) { const prox = datas[i + 1]; atual = { planetId: x.r.planetId, tipo: x.r.aspectType, signIdx: x.r.signIdx, degInSign: x.r.degInSign, de: x.data, data: x.data, ate: prox ? prox.data : null }; }
   });
   return { termo, aspecto: atual };
 }
