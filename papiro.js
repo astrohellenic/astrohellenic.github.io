@@ -80,7 +80,7 @@ function paletaEpoca(escuro) {
   const chave = escuro ? 'e' : (sulfite ? 's' : 'c');
   if (__paletaEpocaCache[chave]) return __paletaEpocaCache[chave];
   const reserva = sulfite
-    ? { azulEscuro: '#0C34B1', azulClaro: '#01C7FC', pretoTinta: '#1C1C1C', ocre: '#B8860B', terracota: '#BB0C34', laranja: '#FC8520', marrom: '#734028', cinza: '#808A91', verde: '#004E38', fundoCreme: '#FFFFFF' }
+    ? { azulEscuro: '#01C7FC', azulClaro: '#0C34B1', pretoTinta: '#1C1C1C', ocre: '#B8860B', terracota: '#BB0C34', laranja: '#FC8520', marrom: '#734028', cinza: '#808A91', verde: '#004E38', fundoCreme: '#FFFFFF' }
     : escuro
     ? { azulEscuro: '#5F80E7', azulClaro: '#4A8DD4', pretoTinta: '#E2E8F0', ocre: '#D9AE3F', terracota: '#CF6044', laranja: '#F28A33', marrom: '#AE7C4E', cinza: '#A3ADB5', verde: '#5FA073', fundoCreme: '#1C1917' }
     : { azulEscuro: '#1034A6', azulClaro: '#1F5FA3', pretoTinta: '#1A1410', ocre: '#B5852F', terracota: '#A03E25', laranja: '#D0610F', marrom: '#6B4A2B', cinza: '#6B7780', verde: '#4A7C59', fundoCreme: '#FFFDF5' };
