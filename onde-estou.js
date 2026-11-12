@@ -90,7 +90,7 @@ function oeSeitaDosPlanetas(m) {
 function oeCircumambulacao(m, nascDate, lat, agora) {
   const tabela = rqCircumambulacao(m.asc, nascDate, lat);
   const linha = rqLinhaCircumambulacao(tabela, agora);
-  const termo = linha ? { signIdx: linha.signIdx, planetId: linha.termPlanetId, ate: linha.endDate } : null;
+  const termo = linha ? { signIdx: linha.signIdx, planetId: linha.termPlanetId, de: linha.startDate, ate: linha.endDate } : null;
   /* o aspecto: o raio (aktinobolia) mais recente que o ponto já passou, contado em anos de ascensão desde o Ascendente */
   const raios = rqRaiosAspectos({ Sun: m.Sun, Moon: m.Moon, Mercury: m.Mercury, Venus: m.Venus, Mars: m.Mars, Jupiter: m.Jupiter, Saturn: m.Saturn }, m.asc, nascDate, lat);
   let atual = null;
@@ -108,7 +108,7 @@ function oeLiberacao(grauLote, grauFortuna, ehEspirito, nascDate, agora) {
   const inicio = (ehEspirito && signoLote === signoFort) ? (signoLote + 1) % 12 : signoLote;
   const r = rqLiberacaoEm(inicio, nascDate, agora);
   if (!r) return null;
-  return ['l1', 'l2', 'l3', 'l4'].map((k, i) => (r[k] ? { nivel: i + 1, signIdx: r[k].signIdx, ate: r[k].end, lysis: !!r[k].isLysis } : null));
+  return ['l1', 'l2', 'l3', 'l4'].map((k, i) => (r[k] ? { nivel: i + 1, signIdx: r[k].signIdx, de: r[k].start, ate: r[k].end, lysis: !!r[k].isLysis } : null));
 }
 
 /* ---------- Decênios (decenios.js: calcularDeceniosAutomatico; a luz da seita começa) ---------- */
@@ -134,10 +134,10 @@ function oeDecenios(m, nascDate, agora) {
           let q = new Date(ini2);
           for (let j = 0; j < 7; j++) {
             const p3 = ordem[(idx2 + j) % 7], ini3 = new Date(q), fim3 = new Date(ini3.getTime() + (p3.minorYears / 129) * p2.days * OE_DIA_MS);
-            if (agora >= ini3 && agora < fim3) return [{ nivel: 1, planetId: p1.id, ate: fim1 }, { nivel: 2, planetId: p2.id, ate: fim2 }, { nivel: 3, planetId: p3.id, ate: fim3 }];
+            if (agora >= ini3 && agora < fim3) return [{ nivel: 1, planetId: p1.id, de: ini1, ate: fim1 }, { nivel: 2, planetId: p2.id, de: ini2, ate: fim2 }, { nivel: 3, planetId: p3.id, de: ini3, ate: fim3 }];
             q = fim3;
           }
-          return [{ nivel: 1, planetId: p1.id, ate: fim1 }, { nivel: 2, planetId: p2.id, ate: fim2 }];
+          return [{ nivel: 1, planetId: p1.id, de: ini1, ate: fim1 }, { nivel: 2, planetId: p2.id, de: ini2, ate: fim2 }];
         }
         p = fim2;
       }
@@ -170,10 +170,14 @@ async function oeProfeccao(m, nasc, nascDate, agora, fetchFn) {
   if (!inicio) inicio = new Date(anoAlvo, nascDate.getMonth(), nascDate.getDate(), nascDate.getHours(), nascDate.getMinutes()).getTime();
   const t = agora.getTime();
   const mes = Math.floor((t - inicio) / OE_MES_MS);
-  if (mes < 0 || mes > 11) return { idade, ano: { signIdx: signoAno }, mes: null, passo: null };
+  if (mes < 0 || mes > 11) return { idade, ano: { signIdx: signoAno, de: new Date(inicio), ate: new Date(inicio + 12 * OE_MES_MS) }, mes: null, passo: null };
   const signoMes = (signoAno + mes) % 12, iniMes = inicio + mes * OE_MES_MS;
   const passo = Math.min(11, Math.floor((t - iniMes) / OE_PASSO_MS));
-  return { idade, ano: { signIdx: signoAno }, mes: { num: mes + 1, signIdx: signoMes }, passo: { num: passo + 1, signIdx: (signoMes + passo) % 12 } };
+  const D = (ms) => new Date(ms);
+  return { idade,
+    ano: { signIdx: signoAno, de: D(inicio), ate: D(inicio + 12 * OE_MES_MS) },
+    mes: { num: mes + 1, signIdx: signoMes, de: D(iniMes), ate: D(iniMes + OE_MES_MS) },
+    passo: { num: passo + 1, signIdx: (signoMes + passo) % 12, de: D(iniMes + passo * OE_PASSO_MS), ate: D(iniMes + (passo + 1) * OE_PASSO_MS) } };
 }
 
 /* ---------- tudo junto ----------
