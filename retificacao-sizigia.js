@@ -490,7 +490,7 @@ function iniciarModuloRetificacaoSizigia() {
       /* painel fixo das duas mandalas: preso na tela (position: fixed), ao lado dos dados em tela larga e embaixo em tela estreita */
       #rz-container.rz-com-painel { width: auto !important; margin-right: calc(46vw + 16px); }
       #rzPainel.rz-painel { position: fixed; z-index: 20; top: var(--rz-topo, 80px); right: 8px; width: 46vw; height: calc(100vh - var(--rz-topo, 80px) - 8px); box-sizing: border-box; padding: 8px; overflow: hidden; display: flex; flex-direction: column; border: var(--contorno-fino) solid var(--azul-egipcio-claro); }
-      #rzPainel .rz-painel-abas, #rzFocoMand .rz-painel-abas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 6px; }
+      #rzPainel .rz-seletor .rz-painel-abas, #rzPainel .rz-painel-abas, #rzFocoMand .rz-painel-abas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 6px; }
       #rzPainel .botao-texto.rz-sel, #rzFocoMand .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
       #rzPainel .rz-tiles, #rzFocoMand .rz-tiles { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: flex-start; justify-content: center; }
       #rzPainel .rz-tile, #rzFocoMand .rz-tile { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
@@ -1098,7 +1098,7 @@ function rzFocoPintar() {
   if (!resumo && !f) { rzFocoFechar(); return; }
   const i = resumo ? ids.length : ids.indexOf(f.id);
   const barra = `<div class="rz-foco-barra">
-      <button type="button" class="botao-texto" style="color:var(--terracota);" onclick="rzFocoFechar()">← Voltar</button>
+      <button type="button" class="botao-texto" onclick="rzFocoFechar()">← Voltar</button>
       <span class="rotulo-fixo">${resumo ? 'Resumo de todos os fatos' : `Fato ${i + 1} de ${ids.length}`}</span>
       <span style="display:flex; gap:6px;">
         <button type="button" class="botao-texto" ${i === 0 && !resumo ? 'disabled style="opacity:.4;"' : ''} onclick="rzFocoIr(-1)">‹ Anterior</button>
@@ -1115,6 +1115,7 @@ function rzFocoPintar() {
   rzPainelPintar();
 }
 if (typeof window !== 'undefined') Object.assign(window, { rzFocoAbrir, rzFocoFechar, rzFocoIr });
+if (typeof document !== 'undefined') document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && rzFocoId !== null) rzFocoFechar(); });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
@@ -1230,6 +1231,15 @@ function rzPainelPosicionar() {
   const topo = Math.max(0, tb ? tb.getBoundingClientRect().bottom : 0) + 6;
   document.documentElement.style.setProperty('--rz-topo', topo + 'px');
 }
+/* Escolha do horário retificado, sempre à vista (no painel e na tela cheia): um botão por candidato e o ajuste em minutos. Nada é escolhido sozinho depois que você escolhe. */
+function rzSeletorHorario() {
+  const r = rzUltimo, sel = rzFinalSel; if (!r || !sel) return '';
+  const fuso = r.entrada.fuso, nome = { ptolomeu: 'Ptolomeu', valens: 'Valens' };
+  const bts = r.candidatos.map((c, i) => c.horario ? `<button type="button" class="botao-texto${i === sel.idx ? ' rz-sel' : ''}" onclick="rzEscolherCandidato(${i})">${nome[c.regra]} ${rzFmtHora(c.horario.ms, fuso).slice(0, 5)}</button>` : '').join(' ');
+  const aj = sel.ajusteMin;
+  return `<div class="rz-seletor"><div class="rotulo-fixo" style="text-align:center;">Horário retificado: ${rzFmtHora(rzMsFinal(r, sel), fuso).slice(0, 5)}</div>
+    <div class="rz-painel-abas">${bts} <button type="button" class="botao-texto" onclick="rzAjustar(-1)">−1 min</button> <button type="button" class="botao-texto" onclick="rzAjustar(1)">+1 min</button>${aj ? ` <span class="texto-apagado" style="font-size:12px;">ajuste ${aj > 0 ? '+' : '−'}${Math.abs(aj)} min</span>` : ''}</div></div>`;
+}
 function rzPainelModoTrocar(m) { rzPainelModo = m; rzPainelPintar(); }
 function rzPainelPintar() {
   const el = document.getElementById('rzPainel'), r = rzUltimo; if (!el || !r || !rzFinalSel) return;
@@ -1243,7 +1253,7 @@ function rzPainelPintar() {
   const tEst = tile('est', 'Horário estimado', estMs, rzMandalaEst && rzMandalaEst.ms === estMs ? rzMandalaEst.url : null);
   const tRet = tile('ret', 'Horário retificado', retMs, rzMapaFinalSvg && rzMapaFinalSvg.ms === retMs ? rzMapaFinalSvg.url : null);
   const bt = (m, rot) => `<button type="button" class="botao-texto ${rzPainelModo === m ? 'rz-sel' : ''}" onclick="rzPainelModoTrocar('${m}')">${rot}</button>`;
-  const htmlPainel = `<div class="rz-painel-abas">${bt('dois', 'Os dois')} ${bt('est', 'Estimado')} ${bt('ret', 'Retificado')}</div>
+  const htmlPainel = `${rzSeletorHorario()}<div class="rz-painel-abas">${bt('dois', 'Os dois')} ${bt('est', 'Estimado')} ${bt('ret', 'Retificado')}</div>
     <div class="rz-tiles">${rzPainelModo !== 'ret' ? tEst : ''}${rzPainelModo !== 'est' ? tRet : ''}</div>`;
   alvos.forEach(a => { a.innerHTML = htmlPainel; });
 }
