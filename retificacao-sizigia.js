@@ -861,7 +861,6 @@ function rzMontarFatos(r) {
   if (!ctx) { rzVgHtml = ''; return `<div class="texto-apagado rz-fonte">Escolha um horário acima.</div>`; }
   const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
   const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });   // 1, 2, 3... na ordem de data
-  const btnConf = (f, v, rot) => `<button type="button" class="botao-texto${f.conf === v ? ' rz-sel' : ''}" onclick="rzFatoConf(${f.id}, '${v}')">${rot}</button>`;
   const seletor = (f, k, t) => {
     const lista = t.tipo === 'circ' ? RZ_AFETAS : RZ_LOTES;
     const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : (RZ_AFETA_TITULO[c] || RZ_AFETA_NOME[c]);
@@ -905,7 +904,6 @@ function rzMontarFatos(r) {
         <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'circ')">+ Circumambulação</button>
         <button type="button" class="botao-texto" onclick="rzTecAdd(${f.id}, 'zr')">+ Liberação</button>
       </div>
-      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">O horário confirma este fato?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
       </div>
     </div>`;
   };
@@ -915,18 +913,14 @@ function rzMontarFatos(r) {
   ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push(rzMarcadorDoFato(f, numero[f.id])); }); });
   const ordemG = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1));
   const tabelas = ordemG.map(g => g.t.tipo === 'circ' ? rzMontarPautasCirc(ctx, g.t.chave, g.fatos) : rzMontarTabelaZR(ctx, g.t.chave, g.fatos)).join('');
-  const n = (v) => rzFatos.filter(f => f.conf === v).length;
-  const resumo = rzFatos.some(f => f.conf)
-    ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
+  const resumo = '';
   rzVgHtml = tabelas ? `<div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>${tabelas}` : `<div class="texto-apagado rz-fonte">Preencha a data de um fato para ver as linhas.</div>`;
-  const confTxt = { sim: 'Sim', parte: 'Em parte', nao: 'Não' };
   const resumoFato = (f) => {
     const d = f.data ? rzDataDoFato(f) : null, dFim = d ? rzDataFimDoFato(f) : null, antes = d && d < ctx.nasc;
     const tec = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-tec"><div style="display:flex; gap:8px; align-items:center; font-size:13px; font-weight:700;"><span style="display:inline-flex; width:24px;">${rzIconeSeletor(t.chave, t.tipo)}</span>${t.tipo === 'circ' ? 'Circumambulação' : 'Liberação'}</div><div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], false, dFim)}</div></div>`).join('');
     return `<div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;"><span class="rz-num">${numero[f.id]}</span>
-        <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? `<span class="texto-apagado" style="font-size:12px;">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}
-        <span class="rz-escolhido" style="margin-left:auto;">${f.conf ? 'O horário confirma: ' + confTxt[f.conf] : 'sem resposta'}</span></div>
+        <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? `<span class="texto-apagado" style="font-size:12px;">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}</div>
       <div style="white-space:pre-wrap; font-size:14px; margin:6px 0;">${escapeHtml(f.texto) || '<span class="texto-apagado">sem texto</span>'}</div>
       ${tec}
       <div style="margin-top:6px;"><button type="button" class="botao-texto" onclick="rzFocoAbrir(${f.id})">Abrir este fato</button></div>

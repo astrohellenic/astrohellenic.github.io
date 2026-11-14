@@ -139,21 +139,18 @@ function rzRelMontarPaginas() {
   // 5. Fatos da vida × técnicas
   const ordenados = rzFatos.slice().filter(f => f.data || f.texto).sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
   const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });
-  const rotConf = { sim: 'Sim', parte: 'Em parte', nao: 'Não' };
   const cartoes = ordenados.map(f => {
     const d = f.data ? rzDataDoFato(f) : null;
     const dFim = d ? rzDataFimDoFato(f) : null;
     const antes = d && d < ctx.nasc;
     const linhas = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], true, dFim)}</div>`).join('');
-    return `<div class="rz-fato-rel"><div><span class="rz-num">${numero[f.id]}</span> <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? ` <span class="texto-apagado">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}</div>${f.texto ? `<div class="rz-texto">${escapeHtml(f.texto)}</div>` : ''}${antes ? '<div class="texto-apagado">Data anterior ao nascimento.</div>' : ''}${linhas}<div class="texto-apagado" style="font-size:11.5px; margin-top:3px;">Confirma: <strong>${f.conf ? rotConf[f.conf] : '—'}</strong></div></div>`;
+    return `<div class="rz-fato-rel"><div><span class="rz-num">${numero[f.id]}</span> <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? ` <span class="texto-apagado">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}</div>${f.texto ? `<div class="rz-texto">${escapeHtml(f.texto)}</div>` : ''}${antes ? '<div class="texto-apagado">Data anterior ao nascimento.</div>' : ''}${linhas}</div>`;
   });
   const grupos = new Map();
   ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push(rzMarcadorDoFato(f, numero[f.id])); }); });
   const tabelasTecnicas = Array.from(grupos.values()).sort((x, y) => (x.t.tipo === y.t.tipo ? 0 : x.t.tipo === 'circ' ? -1 : 1))
     .flatMap(g => g.t.tipo === 'circ' ? rzRelPautasCirc(ctx, g.t.chave, g.fatos) : rzRelJunto(`<div class="rz-sub">${rzZrTitulo(g.t.chave)}</div>`, rzZrBlocos(ctx, g.t.chave, g.fatos)));
-  const nSim = ordenados.filter(f => f.conf === 'sim').length, nParte = ordenados.filter(f => f.conf === 'parte').length, nNao = ordenados.filter(f => f.conf === 'nao').length;
-  const resumo = ordenados.some(f => f.conf)
-    ? `<p>O horário ${hFinal} é confirmado por <strong>${nSim}</strong> de ${ordenados.length} ${ordenados.length === 1 ? 'fato' : 'fatos'}${nParte ? `, em parte por ${nParte}` : ''}${nNao ? ` e não é confirmado por ${nNao}` : ''}.</p>` : '';
+  const resumo = '';
   secao('Confirmação pelos fatos da vida', [
     `<p>O horário calculado foi comparado com os fatos datados da vida${nome ? ' de ' + escapeHtml(nome) : ''}, pelas técnicas indicadas em cada fato. Cada linha mostra o que a técnica indica para a data.</p>`,
     ...cartoes,
