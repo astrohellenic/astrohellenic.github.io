@@ -450,7 +450,7 @@ function iniciarModuloRetificacaoSizigia() {
       /* campos como no resto do software (componentes.css, .janela): de uma linha = só a linha embaixo; textarea = contorno fino; nunca cantos arredondados */
       #rz-container input[type="text"], #rz-container input[type="date"] { background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
       #rz-container input[type="text"]:focus, #rz-container input[type="date"]:focus { border-bottom-color: var(--terracota); }
-      #rz-container textarea { width: 100%; min-height: 54px; resize: vertical; background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; box-sizing: border-box; }
+      #rz-container textarea { width: 100%; min-height: 54px; resize: none; overflow: hidden; line-height: 1.5; background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 8px; border: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; box-sizing: border-box; }
       #rz-container textarea:focus { border-color: var(--terracota); }
 
       #rz-container input[type="date"] { min-height: 36px; min-width: 160px; }   /* no iPad, data vazia sem isso some */
@@ -521,6 +521,19 @@ function iniciarModuloRetificacaoSizigia() {
 }
 if (typeof window !== 'undefined') window.iniciarModuloRetificacaoSizigia = iniciarModuloRetificacaoSizigia;
 
+/* Toda caixa de texto cresce até mostrar o texto INTEIRO: nunca rolagem por dentro da caixinha. */
+function rzAutoCrescer(raiz) {
+  (raiz || document).querySelectorAll('#rz-container textarea, #rzFoco textarea').forEach(t => {
+    if (!t.offsetParent) return;                       // fechada (sanfona): mede quando abrir
+    t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px';
+  });
+}
+function rzAutoCrescerLigar() {
+  const c = document.getElementById('rz-container'); if (!c || c.__rzAuto) return; c.__rzAuto = true;
+  c.addEventListener('input', (ev) => { if (ev.target && ev.target.tagName === 'TEXTAREA') rzAutoCrescer(ev.target.parentNode); });
+  c.addEventListener('toggle', () => rzAutoCrescer(), true);
+  window.addEventListener('resize', () => rzAutoCrescer());
+}
 function rzMensagem(texto) { return `<div style="font-size:13px; font-weight:600; text-align:center; padding:16px 0;">${escapeHtml(texto)}</div>`; }
 
 /* lê o mapa em tela → entrada do cálculo (ou { erro }) */
@@ -557,6 +570,7 @@ async function rzExecutar() {
     }
     area.innerHTML = rzMontarResultado(r);
     rzPainelMontar();
+    rzAutoCrescerLigar(); rzAutoCrescer();
     const cab = document.getElementById('rzCabecalho');
     if (cab && rzMapaFinalSvg && rzMapaFinalSvg.cabecalho) cab.innerHTML = rzMapaFinalSvg.cabecalho;    // reabriu: o cabeçalho segue mostrando o horário retificado
   } catch (err) {
@@ -1021,6 +1035,7 @@ function rzRedesenharFatos() {
   const vg = document.getElementById('rzVisaoGeral'); if (vg) vg.innerHTML = rzVgHtml;
   rzAtualizarProgresso();
   rzFocoPintar();
+  rzAutoCrescer();
 }
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
