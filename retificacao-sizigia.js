@@ -472,12 +472,14 @@ function iniciarModuloRetificacaoSizigia() {
       body.tema-ceu #rzFoco, body.tema-ceu #rzPainel.rz-painel { background-color: #E6D3A0; }
       body.tema-ceu #rzFoco::before, body.tema-ceu #rzPainel.rz-painel::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--papiro-fundo); }
       /* um fato por vez, em tela cheia */
-      #rzFoco { position: fixed; z-index: 30; top: var(--rz-topo, 80px); left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; padding: 8px 14px; box-sizing: border-box; overscroll-behavior: contain; }
+      #rzFoco { position: fixed; z-index: 1000; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; padding: 4px 10px; box-sizing: border-box; overscroll-behavior: contain;
+        /* a tela cheia é uma TELA: leva a sua própria moldura fechada (em cima, embaixo e dos lados), por cima de tudo */
+        border-style: solid; border-width: var(--moldura-v, 32px) var(--moldura-h, 20px); border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round; }
       #rzFoco .rz-foco-barra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
       #rzFoco .rz-foco-corpo { flex: 1; min-height: 0; display: flex; gap: 16px; margin: 8px 0; }
       #rzFoco .rz-foco-fato { flex: 1 1 52%; min-width: 0; overflow-y: auto; padding-right: 6px; }
       #rzFoco .rz-foco-mand { flex: 1 1 48%; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
-      #rzFoco .rz-foco-mand .rz-tile img { max-height: calc(100vh - var(--rz-topo, 80px) - 170px); }
+      #rzFoco .rz-foco-mand .rz-tile img { max-height: calc(100vh - 2 * var(--moldura-v, 32px) - 230px); }
       #rzFoco button[onclick^="rzFatoAlternar"] { display: none; }
       #rzFoco textarea { min-height: 150px; font-size: 15px; line-height: 1.5; overflow: hidden; resize: none; }
       #rzFoco .rz-linha-tecnica { font-size: 13.5px; }
