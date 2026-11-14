@@ -8,12 +8,13 @@
 const RODA_ESTILOS = {
   frances: {
     nome: 'Estilo francês',
-    raios: { Aspects: 110, SignSector: 215, Dodec: 238, Termos: 262 },
+    decanos: true,                // anel dos decanos por dentro; termos no meio e dodecatemória por fora (a borda de fora cresceu de 262 pra 285)
+    raios: { Aspects: 110, SignSector: 215, Decanos: 238, TermosFim: 261, Termos: 285 },
     faixaZodiaco: false,          // signos num anel por dentro (números das casas e glifos), divisas em linha cheia até o miolo
     aneisTracejados: false,
     eixosTracejados: false,       // ASC-DSC / MC-IC em traço liso
     reticulosTracejados: false,   // sem tracejado em volta dos ícones calculados (nodos, sizígia, lotes, ângulos)
-    raioLotes: 276,               // lotes logo por fora do anel dos termos
+    raioLotes: 299,               // lotes logo por fora dos anéis
     raioDestaque: 399,            // até onde vão as fatias e as etiquetas de destaque de signo das ferramentas (Profecção, Sinastria)
     fioPlanetaDe: 'Termos',       // o fio dos planetas/lotes sai do anel dos termos...
     planetaComDesvio: true        // ...e conjunções coladas são empurradas (aShift/rOffset)
@@ -53,7 +54,7 @@ RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, 
 RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   nome: 'Estilo comum',
   invertido: true,
-  decanos: false,                 // sem anel de decanos (por enquanto só nos Astro Hellenic)
+  decanos: true,                  // anel dos decanos na borda de dentro (régua de graus); termos no meio, dodecatemória na borda (498)
   aneisPorSigno: false,           // o comum tem os anéis inteiros
   reguaTermosPraFora: false,      // o comum tem a sua própria régua (borda de dentro dos termos, pra dentro)
   fioLoteDe: null,
@@ -61,11 +62,12 @@ RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   faixaZodiaco: false,            // sem a faixa dupla na cor do elemento: signos em linha única, como no francês
   raios: { Aspects: 150, SignSector: 233, Dodec: 256, Termos: 280 }, // miolo maior
   signos: { fora: 300, numero: 176, glifo: 216, glifoTam: 42 },   // número da casa e glifo logo depois do miolo: a cunha inteira entre duas divisas é o signo e a casa  // anel dos signos (de raios.SignSector até 'fora')
-  raioLotes: 420,                 // pontos calculados (lotes, nodos, sizígia) encostados nos dentinhos da régua de graus (446, dentinhos de até 12)
-  raioAngulos: 413,               // ASC/DSC/MC/IC também encostados nos dentinhos
+  raioLotes: 403,                 // pontos calculados (lotes, nodos, sizígia) encostados nos dentinhos da régua de graus (446, dentinhos de até 12)
+  raioAngulos: 396,               // ASC/DSC/MC/IC também encostados nos dentinhos
   raioPlanetas: 343,             // eclíptica dos planetas: entre o anel dos signos (até 300) e os termos (a partir de 446)
-  anelTermos: [446, 472],         // termos logo por fora da faixa dos planetas
-  anelDodec: [472, 498],          // dodecatemória na borda — a roda inteira tem o MESMO tamanho do Astro Hellenic (borda em 498)
+  anelDecanos: [429, 452],        // decanos: o mais interno, onde fica a régua de graus
+  anelTermos: [452, 475],         // termos logo por fora da faixa dos planetas
+  anelDodec: [475, 498],          // dodecatemória na borda — a roda inteira tem o MESMO tamanho do Astro Hellenic (borda em 498)
   raioDestaque: 498
 });
 /* "Astro Hellenic comum": o comum (termos e dodecatemória por fora, régua de graus, miolo e signos por dentro, sem sombra embaixo dos ícones calculados)
@@ -78,7 +80,7 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
   raioLotes: 172,                 // lotes encostados no miolo (onde ficava o número da casa)
   fioLoteDe: 'Aspects',           // o fio dos lotes vai até a borda do miolo
-  faixaMeia: 95,                  // meia largura da faixa (px): cabe entre o anel dos signos e os termos (446)
+  faixaMeia: 86,                  // meia largura da faixa (px): cabe entre o anel dos signos e os termos (446)
   eclipticaTracejada: true        // só a linha da eclíptica é tracejada
 });
 
@@ -422,10 +424,11 @@ function desenharRodaSVG(o) {
   // Anéis da dodecatemória e dos termos: nos estilos de sempre ficam logo por fora do SignSector (dodecatemória por dentro, termos por fora);
   // no "invertido" ficam por fora da faixa dos planetas (termos por dentro, dodecatemória na borda).
   const inv = !!estiloRoda.invertido;
-  const comDecanos = !!estiloRoda.decanos && !inv; // anel dos decanos: o mais interno; depois termos e, por fora, dodecatemória
-  const aDec = comDecanos ? [R.SignSector, R.Decanos] : null;
+  const comDecanos = !!estiloRoda.decanos; // anel dos decanos: o mais interno; depois termos e, por fora, dodecatemória
+  const aDec = comDecanos ? (inv ? estiloRoda.anelDecanos : [R.SignSector, R.Decanos]) : null;
   const aDod = inv ? estiloRoda.anelDodec : comDecanos ? [R.TermosFim, R.Termos] : [R.SignSector, R.Dodec];
   const aTer = inv ? estiloRoda.anelTermos : comDecanos ? [R.Decanos, R.TermosFim] : [R.Dodec, R.Termos];
+  const aBordaDentro = inv ? (comDecanos ? aDec[0] : aTer[0]) : null; // invertido: a borda de dentro de todos os anéis de fora (régua de graus, onde chegam os fios)
 
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
      aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
@@ -635,8 +638,8 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     : fn(corPadrao);
   if (!porSigno) svg += emitirTracejado(cor =>
     (inv
-      ? [[aTer[0], 2], [aTer[1], 1.5], [aDod[1], 2]] // borda de dentro dos termos, a que divide termos/dodecatemória e a da borda; os círculos em volta do anel dos signos não existem
-      : [[R.SignSector, 2], [R.Dodec, 1.5], [R.Termos, 2]]
+      ? (comDecanos ? [[aDec[0], 2], [aDec[1], 1.5], [aTer[1], 1.5], [aDod[1], 2]] : [[aTer[0], 2], [aTer[1], 1.5], [aDod[1], 2]]) // borda de dentro dos termos, a que divide termos/dodecatemória e a da borda; os círculos em volta do anel dos signos não existem
+      : (comDecanos ? [[R.SignSector, 2], [aDec[1], 1.5], [aTer[1], 1.5], [R.Termos, 2]] : [[R.SignSector, 2], [R.Dodec, 1.5], [R.Termos, 2]])
     ).map(([rr, sw]) => `<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="${cor}" stroke-width="${sw}"${tracejadoCeu}/>`).join(''), goldColor);
 
   /* ORDEM DE CAMADAS DA RODA (pedido do astrólogo, 28/09/2026): a
@@ -654,7 +657,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     let out = '';
     for (let i = 0; i < 12; i++) {
       const pt1 = polarToCart(cx, cy, R.Aspects, eclToScreenAngle(i * 30, house1RefAbs));
-      const pt2 = polarToCart(cx, cy, inv ? aTer[0] : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
+      const pt2 = polarToCart(cx, cy, inv ? aBordaDentro : R_OuterLine, eclToScreenAngle(i * 30, house1RefAbs));
       out += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${cor}" stroke-width="1.8"/>`;
     }
     return out;
@@ -698,6 +701,15 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     return out;
   }, goldColor);
 
+  if (comDecanos && !porSigno) svg += emitirTracejado(cor => { // divisas dos decanos (de 10° em 10°)
+    let out = '';
+    for (let k = 0; k < 36; k++) {
+      const ang = eclToScreenAngle(k * 10, house1RefAbs), a = polarToCart(cx, cy, aDec[0], ang), b = polarToCart(cx, cy, aDec[1], ang);
+      out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`;
+    }
+    return out;
+  }, goldColor);
+
   // Régua de graus. No invertido ela faz parte do círculo da borda de dentro dos termos, então tem a MESMA cor dele (no Céu, o branco/azul-tinta
   // adaptativo); nos outros estilos continua na cor de sempre.
   const reguaTermos = cor => {
@@ -705,7 +717,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
     for (let deg = 0; deg < 360; deg++) {
       const aScreen = eclToScreenAngle(deg, house1RefAbs);
       const tickLen = inv ? ((deg % 10 === 0) ? 18 : ((deg % 5 === 0) ? 12 : 7)) : ((deg % 10 === 0) ? 12 : ((deg % 5 === 0) ? 8 : 4));
-      const rRegua = inv ? aTer[0] : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
+      const rRegua = inv ? aBordaDentro : R.Termos; // invertido: a régua de graus fica na borda de dentro dos termos, dentinhos pra dentro (os fios dos planetas chegam nela)
       const p1 = polarToCart(cx, cy, rRegua, aScreen);
       const p2 = polarToCart(cx, cy, estiloRoda.reguaTermosPraFora ? rRegua + tickLen : rRegua - tickLen, aScreen);
       out += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${cor}" stroke-width="${deg % 10 === 0 ? 1.5 : 0.8}"/>`;
@@ -898,7 +910,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
 
     // Fio do ponto até os dentinhos de grau: lotes → régua do anel indicado em fioLoteDe (se o estilo tiver); o resto → régua do anel dos termos
     const fioLoteMiolo = inv && item.type === 'lot' && estiloRoda.fioLoteDe; // lotes do Astro Hellenic comum: encostados no miolo, fio pra dentro
-    const rFio = fioLoteMiolo ? R[estiloRoda.fioLoteDe] : inv ? aTer[0] : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
+    const rFio = fioLoteMiolo ? R[estiloRoda.fioLoteDe] : inv ? aBordaDentro : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
     const fioPraFora = (inv && !fioLoteMiolo) || rFio > raioEfetivo; // anel por fora do ponto: o fio sai pra fora; por dentro: pra dentro
     const p1 = polarToCart(cx, cy, rFio, item.aScreen);
     const dFio = item.type === 'lot' ? 12 : 19;
@@ -956,9 +968,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
       const aPonto = estiloRoda.planetaComDesvio ? item.aShift : item.aScreen;
       const pPonto = polarToCart(cx, cy, rPonto, aPonto);
       const recuoFio = temaCeu ? 10 : 19; // o ponto de luz é menor que o ícone
-      const p1c = polarToCart(cx, cy, inv ? aTer[0] : R[estiloRoda.fioPlanetaDe], item.aScreen);
+      const p1c = polarToCart(cx, cy, inv ? aBordaDentro : R[estiloRoda.fioPlanetaDe], item.aScreen);
       const p2c = polarToCart(cx, cy, inv ? rPonto + recuoFio : rPonto - recuoFio, aPonto);
-      if (!inv || rPonto + recuoFio < aTer[0]) svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
+      if (!inv || rPonto + recuoFio < aBordaDentro) svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
       /* PINTURA (tema): no Céu o planeta é um ponto de luz com o glifo ACIMA e o grau ABAIXO; nos outros temas é o
          ícone do tema (esférico/simples/tinta) com o grau abaixo. */
