@@ -908,14 +908,14 @@ function rzMontarFatos(r) {
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
         ${foco ? '' : `<button type="button" class="botao-texto" onclick="rzFocoAbrir(${f.id})" title="Abrir só este fato, em tela cheia, com as duas mandalas">Ver inteiro</button>`}
         <input type="checkbox" class="rz-feito" title="Marcar este fato como feito" ${f.feito ? 'checked' : ''} onchange="rzFatoFeito(${f.id}, this.checked)">
-        <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
-        <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}" onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
-        ${f.periodo ? `<span style="color:var(--azul-egipcio-escuro);">até</span><span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Fim do período"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.ate}" onchange="rzFatoAte(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>` : ''}
-        <button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>
+        <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}"${f.doCliente ? ' disabled' : ''} onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
+        <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}"${f.doCliente ? ' disabled' : ''} onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
+        ${f.periodo ? `<span style="color:var(--azul-egipcio-escuro);">até</span><span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Fim do período"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.ate}"${f.doCliente ? ' disabled' : ''} onchange="rzFatoAte(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>` : ''}
+        ${f.doCliente ? '' : `<button type="button" class="botao-icone" onclick="rzFatoRemover(${f.id})" title="Remover este fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button>`}
       </div>
       ${aberto ? '' : `<div class="texto-apagado" style="font-size:12.5px;">${escapeHtml(resumoF)}</div>`}
       <div style="${aberto ? '' : 'display:none;'}">
-      <textarea placeholder="O que aconteceu nessa data" oninput="rzFatoTexto(${f.id}, this.value)">${escapeHtml(f.texto)}</textarea>
+      <textarea placeholder="O que aconteceu nessa data"${f.doCliente ? ' readonly title="Texto enviado pelo cliente: não se edita"' : ''} oninput="rzFatoTexto(${f.id}, this.value)">${escapeHtml(f.texto)}</textarea>
       ${!d ? '<div class="texto-apagado rz-fonte">Preencha a data para ver as linhas.</div>' : antes ? '<div class="rz-linha-tecnica texto-apagado">Data anterior ao nascimento.</div>' : `<div class="texto-apagado" style="font-size:11.5px;">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</div>`}
       ${tecnicas}
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
@@ -1043,7 +1043,7 @@ function rzRedesenharFatos() {
 }
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
-function rzFatoRemover(id) { rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
+function rzFatoRemover(id) { const fc = rzFatoPorId(id); if (fc && fc.doCliente) return; rzFatos = rzFatos.filter(f => f.id !== id); if (!rzFatos.length) rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
 /* Mudou a data: só guarda. Redesenhar na hora destruiria a caixa e fecharia o calendário no iPad (ele abre, "escolhe" hoje e fecha). Redesenha quando o calendário fecha. */
 let rzDataTimer = null;
 function rzFatoData(id, v) {
@@ -1058,11 +1058,11 @@ function rzFatoAte(id, v) {
   clearTimeout(rzDataTimer);
   rzDataTimer = setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 1200);
 }
-function rzFatoPeriodo(id) { const f = rzFatoPorId(id); if (f) { f.periodo = !f.periodo; rzRedesenharFatos(); } rzMudou(); }
+function rzFatoPeriodo(id) { const f = rzFatoPorId(id); if (f && !f.doCliente) { f.periodo = !f.periodo; rzRedesenharFatos(); } rzMudou(); }
 function rzFatoAlternar(id) { const f = rzFatoPorId(id); if (f) { f.aberto = f.aberto === false; rzRedesenharFatos(); } rzMudou(); }
 function rzFatosAbrirTodos(aberto) { rzFatos.forEach(f => { f.aberto = aberto; }); rzRedesenharFatos(); rzMudou(); }
 function rzFatoDataFechou() { clearTimeout(rzDataTimer); setTimeout(() => { const a = document.activeElement; if (!a || a.type !== 'date') rzRedesenharFatos(); }, 150); }
-function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f) f.texto = v; rzMudou(); }
+function rzFatoTexto(id, v) { const f = rzFatoPorId(id); if (f && !f.doCliente) f.texto = v; rzMudou(); }
 function rzFatoConf(id, v) { const f = rzFatoPorId(id); if (f) { f.conf = (f.conf === v) ? '' : v; rzRedesenharFatos(); } rzMudou(); }
 function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.push({ tipo, chave: tipo === 'circ' ? 'ASC' : 'fortune' }); rzRedesenharFatos(); } rzMudou(); }
 function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }

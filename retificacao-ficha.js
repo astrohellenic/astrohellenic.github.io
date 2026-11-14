@@ -29,7 +29,7 @@ function rzTrabalhoParaSalvar() {
     clienteEm: rzClienteEm,
     abertas: rzAbertas,
     feitos: rzFeitos,
-    fatos: rzFatos.map(f => ({ id: f.id, data: f.data, ate: f.ate, periodo: !!f.periodo, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto, conf: f.conf, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
+    fatos: rzFatos.map(f => ({ id: f.id, data: f.data, ate: f.ate, periodo: !!f.periodo, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto, doCliente: !!f.doCliente, tecnicas: f.tecnicas.map(t => ({ tipo: t.tipo, chave: t.chave })) }))
   };
 }
 
@@ -49,7 +49,7 @@ function rzAplicarFicha(r, linha) {
     rzFeitos = (t.feitos && typeof t.feitos === 'object') ? t.feitos : {};
     if (Array.isArray(t.fatos) && t.fatos.length) {
       rzFatos = t.fatos.map(f => ({
-        id: ++rzFatoSeq, data: f.data || '', ate: f.ate || '', periodo: !!f.periodo && !!f.ate, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto || '', conf: f.conf || '',
+        id: ++rzFatoSeq, data: f.data || '', ate: f.ate || '', periodo: !!f.periodo && !!f.ate, aberto: f.aberto !== false, feito: !!f.feito, texto: f.texto || '', doCliente: !!f.doCliente,
         tecnicas: (Array.isArray(f.tecnicas) && f.tecnicas.length ? f.tecnicas : []).map(x => ({ tipo: x.tipo === 'zr' ? 'zr' : 'circ', chave: x.chave }))
       }));
     }
@@ -63,12 +63,15 @@ function rzAplicarFicha(r, linha) {
    (mesma data e mesmo texto) é acrescentado, e o fato vazio que só estava de espaço reservado sai. */
 function rzTrazerFatosDoCliente(linha) {
   if (!Array.isArray(linha.fatos) || !linha.fatos.length) return;
-  if (rzClienteEm && rzClienteEm === linha.enviado_em) return;   // este envio já foi trazido
   const chave = (f) => (f.data || '') + '|' + (f.ate || '') + '|' + String(f.texto || '').trim();
+  // o que o cliente enviou NÃO se edita (nem data, nem período, nem texto): marca como do cliente tudo o que bate com o envio
+  const doEnvio = new Set(linha.fatos.map(f => chave({ data: f.data, ate: f.ate || '', texto: f.texto })));
+  rzFatos.forEach(f => { if (doEnvio.has(chave(f))) f.doCliente = true; });
+  if (rzClienteEm && rzClienteEm === linha.enviado_em) return;   // este envio já foi trazido
   const jaTem = new Set(rzFatos.map(chave));
   const novos = [];
   linha.fatos.forEach(f => {
-    const n = rzFatoVazio(++rzFatoSeq); n.data = f.data || ''; if (f.ate) { n.ate = f.ate; n.periodo = true; } n.texto = f.texto || '';
+    const n = rzFatoVazio(++rzFatoSeq); n.data = f.data || ''; if (f.ate) { n.ate = f.ate; n.periodo = true; } n.texto = f.texto || ''; n.doCliente = true;
     if (jaTem.has(chave(n))) return;
     jaTem.add(chave(n)); novos.push(n);
   });
