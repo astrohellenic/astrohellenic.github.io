@@ -20,12 +20,14 @@ const RODA_ESTILOS = {
   },
   astrohellenic: {
     nome: 'Estilo Astro Hellenic',
-    raios: { Aspects: 110, SignSector: 233, Dodec: 256, Termos: 280 },
+    // Anéis de dentro pra fora: DECANOS (SignSector→Decanos), TERMOS (Decanos→TermosFim) e DODECATEMÓRIA (TermosFim→Termos). 'Termos' é a borda de fora de tudo.
+    decanos: true,                // anel dos decanos (36, na ordem caldaica a partir de Marte em Áries), o mais interno — as divisões menores ficam por fora, onde se veem melhor
+    raios: { Aspects: 110, SignSector: 210, Decanos: 233, TermosFim: 256, Termos: 280 },
     faixaZodiaco: true,           // faixa do zodíaco na eclíptica, com os planetas dentro
     aneisTracejados: true,
     eixosTracejados: true,
     reticulosTracejados: true,    // tracejado em volta dos ícones que não são do céu de verdade (nodos, sizígia, lotes, ângulos) — em qualquer tema
-    raioLotes: 209,               // lotes por dentro, ENCOSTADOS nos dentinhos de graus do anel SignSector (que apontam pro miolo)
+    raioLotes: 186,               // lotes por dentro, ENCOSTADOS nos dentinhos de graus do anel SignSector (que apontam pro miolo)
     fioLoteDe: 'SignSector',      // o fio dos lotes vai até esses dentinhos
     aneisPorSigno: true,          // termos e dodecatemória no campo de cada signo, na cor dele (vale pro tracejado e pro reto)
     reguaTermosPraFora: true,     // dentinhos do anel dos termos apontam pra FORA, na direção dos planetas
@@ -51,6 +53,7 @@ RODA_ESTILOS.astrohellenic_reto = Object.assign({}, RODA_ESTILOS.astrohellenic, 
 RODA_ESTILOS.comum = Object.assign({}, RODA_ESTILOS.astrohellenic_reto, {
   nome: 'Estilo comum',
   invertido: true,
+  decanos: false,                 // sem anel de decanos (por enquanto só nos Astro Hellenic)
   aneisPorSigno: false,           // o comum tem os anéis inteiros
   reguaTermosPraFora: false,      // o comum tem a sua própria régua (borda de dentro dos termos, pra dentro)
   fioLoteDe: null,
@@ -419,8 +422,10 @@ function desenharRodaSVG(o) {
   // Anéis da dodecatemória e dos termos: nos estilos de sempre ficam logo por fora do SignSector (dodecatemória por dentro, termos por fora);
   // no "invertido" ficam por fora da faixa dos planetas (termos por dentro, dodecatemória na borda).
   const inv = !!estiloRoda.invertido;
-  const aDod = inv ? estiloRoda.anelDodec : [R.SignSector, R.Dodec];
-  const aTer = inv ? estiloRoda.anelTermos : [R.Dodec, R.Termos];
+  const comDecanos = !!estiloRoda.decanos && !inv; // anel dos decanos: o mais interno; depois termos e, por fora, dodecatemória
+  const aDec = comDecanos ? [R.SignSector, R.Decanos] : null;
+  const aDod = inv ? estiloRoda.anelDodec : comDecanos ? [R.TermosFim, R.Termos] : [R.SignSector, R.Dodec];
+  const aTer = inv ? estiloRoda.anelTermos : comDecanos ? [R.Decanos, R.TermosFim] : [R.Dodec, R.Termos];
 
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
      aproximada acima do horizonte ASC-DSC) decide a cor do céu. */
@@ -731,11 +736,13 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
       const blocoSigno = (cor) => { let svg = ''; // (svg local: a peça do signo sai inteira, numa cor só, e no Céu é desenhada uma vez por metade)
       const A = eclToScreenAngle(i * 30, house1RefAbs), a1 = A - INS, a2 = A - 30 + INS;
       const P = (rr, a) => polarToCart(cx, cy, rr, a);
-      // contorno do campo: três arcos (SignSector, Dodec, Termos) e as duas laterais
-      [R.SignSector, R.Dodec, R.Termos].forEach((rr, k) => {
+      // contorno do campo: arcos (borda de dentro, entre os anéis e borda de fora) e as duas laterais
+      (comDecanos ? [R.SignSector, aDec[1], aTer[1], R.Termos] : [R.SignSector, R.Dodec, R.Termos]).forEach((rr, k, lista) => {
         const s = P(rr, a1), e = P(rr, a2);
-        svg += `<path d="M${s.x.toFixed(1)} ${s.y.toFixed(1)} A${rr} ${rr} 0 0 0 ${e.x.toFixed(1)} ${e.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="${k === 1 ? 1.5 : 2}"${tracejadoCeu}/>`;
+        svg += `<path d="M${s.x.toFixed(1)} ${s.y.toFixed(1)} A${rr} ${rr} 0 0 0 ${e.x.toFixed(1)} ${e.y.toFixed(1)}" fill="none" stroke="${cor}" stroke-width="${(k > 0 && k < lista.length - 1) ? 1.5 : 2}"${tracejadoCeu}/>`;
       });
+      // divisas dos decanos (10° e 20° do signo)
+      if (comDecanos) for (let d = 1; d < 3; d++) { const ang = eclToScreenAngle(i * 30 + d * 10, house1RefAbs), s = P(aDec[0], ang), e = P(aDec[1], ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; }
       [[a1, a2], [a2, a1]].forEach(([ang, pra]) => { // cada lateral deslocada meia largura pra dentro do signo (a vizinha faz o mesmo do outro lado): coladas, sem vão
         const s = P(R.SignSector, ang), e = P(R.Termos, ang), n = Math.hypot(e.x - s.x, e.y - s.y) || 1;
         let nx = -(e.y - s.y) / n, ny = (e.x - s.x) / n;
@@ -743,10 +750,10 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
         if ((l1.x - l0.x) * nx + (l1.y - l0.y) * ny < 0) { nx = -nx; ny = -ny; }
         svg += `<line x1="${(s.x + nx).toFixed(1)}" y1="${(s.y + ny).toFixed(1)}" x2="${(e.x + nx).toFixed(1)}" y2="${(e.y + ny).toFixed(1)}" stroke="${cor}" stroke-width="2"${tracejadoCeu}/>`; });
       // divisas da dodecatemória (de 2,5° em 2,5°, só as de dentro do signo)
-      for (let d = 1; d < 12; d++) { const ang = eclToScreenAngle(i * 30 + d * 2.5, house1RefAbs), s = P(R.SignSector, ang), e = P(R.Dodec, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; }
+      for (let d = 1; d < 12; d++) { const ang = eclToScreenAngle(i * 30 + d * 2.5, house1RefAbs), s = P(aDod[0], ang), e = P(aDod[1], ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; }
       // divisas dos termos (só as de dentro do signo)
       let prev = 0;
-      EGYPTIAN_TERMS[i].forEach(term => { if (prev > 0) { const ang = eclToScreenAngle(i * 30 + prev, house1RefAbs), s = P(R.Dodec, ang), e = P(R.Termos, ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; } prev = term.deg; });
+      EGYPTIAN_TERMS[i].forEach(term => { if (prev > 0) { const ang = eclToScreenAngle(i * 30 + prev, house1RefAbs), s = P(aTer[0], ang), e = P(aTer[1], ang); svg += `<line x1="${s.x.toFixed(1)}" y1="${s.y.toFixed(1)}" x2="${e.x.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${cor}" stroke-width="1.2"${tracejadoFinoCeu}/>`; } prev = term.deg; });
       // dentinhos de grau: os dos graus 1 a 29 (o 0 cai na folga entre os signos); de dentro (pra dentro) e de fora (pra fora)
       for (let g = 1; g < 30; g++) {
         const ang = eclToScreenAngle(i * 30 + g, house1RefAbs);
@@ -855,6 +862,18 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
       svg += termoSvg;
       prev = term.deg;
     });
+  }
+
+  /* DECANOS: 36 ícones (3 por signo) no anel mais interno, os planetas na ordem caldaica a partir de Marte no 1º decano de Áries
+     (Marte, Sol, Vênus, Mercúrio, Lua, Saturno, Júpiter, e de novo). Mesma cor dos ícones dos termos. */
+  if (comDecanos) {
+    const DECANO_PLANETAS = ['Mars', 'Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter'];
+    const decanoIconTamanho = 16;
+    for (let k = 0; k < 36; k++) {
+      const pDec = polarToCart(cx, cy, (aDec[0] + aDec[1]) / 2, eclToScreenAngle(k * 10 + 5, house1RefAbs));
+      svg += getIconeTermoSVG(DECANO_PLANETAS[k % 7], decanoIconTamanho, epoca ? pal.ocre : goldColor)
+        .replace('<svg ', `<svg x="${pDec.x - decanoIconTamanho / 2}" y="${pDec.y - decanoIconTamanho / 2}" `);
+    }
   }
 
   /* ETIQUETAS: faixas sólidas na borda externa, uma ao lado da outra (de/ate = deslocamento a partir de raioDestaque). */
