@@ -467,6 +467,10 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .rz-fato { padding: 10px 0; }
       #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
+      /* fundo OPACO (senão o que está atrás aparece por baixo): cor lisa + o papiro por cima no Tema Céu */
+      #rzFoco, #rzPainel.rz-painel { isolation: isolate; background-color: var(--fundo-creme, #fff); color: var(--preto-tinta); }
+      body.tema-ceu #rzFoco, body.tema-ceu #rzPainel.rz-painel { background-color: #E6D3A0; }
+      body.tema-ceu #rzFoco::before, body.tema-ceu #rzPainel.rz-painel::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--papiro-fundo); }
       /* um fato por vez, em tela cheia */
       #rzFoco { position: fixed; z-index: 30; top: var(--rz-topo, 80px); left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; padding: 8px 14px; box-sizing: border-box; overscroll-behavior: contain; }
       #rzFoco .rz-foco-barra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
@@ -1073,7 +1077,7 @@ let rzFocoRef = null;     // { ordenados, numero, htmlFato, resumoFato, resumoCo
 function rzFocoAbrir(id) {
   const cont = document.getElementById('rz-container'); if (!cont) return;
   rzFocoId = id;
-  if (!document.getElementById('rzFoco')) { const o = document.createElement('div'); o.id = 'rzFoco'; o.className = 'painel rz-foco'; cont.appendChild(o); }
+  if (!document.getElementById('rzFoco')) { const o = document.createElement('div'); o.id = 'rzFoco'; o.className = 'rz-foco'; cont.appendChild(o); }
   rzRedesenharFatos();
 }
 function rzFocoFechar() { rzFocoId = null; const o = document.getElementById('rzFoco'); if (o) o.remove(); }
@@ -1211,7 +1215,7 @@ function rzPainelMontar() {
   const velho = document.getElementById('rzPainel'); if (velho) velho.remove();
   const cont = document.getElementById('rz-container'); if (!cont) return;
   const el = document.createElement('aside');
-  el.id = 'rzPainel'; el.className = 'painel rz-painel';
+  el.id = 'rzPainel'; el.className = 'rz-painel';
   cont.parentNode.appendChild(el);
   cont.classList.add('rz-com-painel');
   if (!rzPainelOuvindo) {
