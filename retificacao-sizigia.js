@@ -743,16 +743,10 @@ function rzMontarHorarioFinal(r) {
   const orig = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000;
   const dif = Math.round((ms - orig) / 60000);
   const difTxt = dif === 0 ? 'o mesmo horário' : `${dif > 0 ? 'mais' : 'menos'} ${Math.abs(dif)} min`;
-  const bt = (rot, min) => `<button type="button" class="botao-texto" onclick="rzAjustar(${min})">${rot}</button>`;
-  const aj = sel.ajusteMin;
   return `
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Escolha o candidato que os fatos da vida sustentam. O método dá um horário aproximado: o ajuste fino, em minutos, é feito abaixo.</div>
     <div class="cartao">${opcoes}</div>
     <div class="cartao" style="border-top:0;">
-      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px;">
-        ${bt('−5 min', -5)} ${bt('−1 min', -1)} ${bt('+1 min', 1)} ${bt('+5 min', 5)} ${aj ? bt('zerar ajuste', -aj) : ''}
-        <span class="texto-apagado" style="font-size:12px;">ajuste: ${aj === 0 ? 'nenhum' : (aj > 0 ? '+' : '−') + Math.abs(aj) + ' min'}</span>
-      </div>
       <div class="rz-rolagem"><table class="tabela-epoca">
         <tr><td><strong>Horário retificado</strong></td><td><strong class="rz-escolhido">${rzFmtHora(ms, fuso).slice(0, 5)}</strong></td></tr>
         <tr><td><strong>Diferença para o horário estimado</strong></td><td>${difTxt}</td></tr>
@@ -906,7 +900,7 @@ function rzMontarFatos(r) {
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
         <button type="button" onclick="rzFatoAlternar(${f.id})" title="${aberto ? 'Fechar este fato' : 'Abrir este fato'}" style="background:none; border:0; padding:4px; cursor:pointer; display:inline-flex; align-items:center;"><svg viewBox="0 0 12 12" width="14" height="14" style="transform:rotate(${aberto ? 90 : 0}deg);"><polygon points="2,1 11,6 2,11" fill="var(--azul-egipcio-escuro)"/></svg></button>
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
-        ${foco ? '' : `<button type="button" class="botao-texto" onclick="rzFocoAbrir(${f.id})" title="Abrir só este fato, em tela cheia, com as duas mandalas">Ver inteiro</button>`}
+        ${foco ? '' : `<button type="button" class="botao-texto janela-sec" onclick="rzFocoAbrir(${f.id})" title="Abrir só este fato, em tela cheia, com as duas mandalas">Ver inteiro</button>`}
         <input type="checkbox" class="rz-feito" title="Marcar este fato como feito" ${f.feito ? 'checked' : ''} onchange="rzFatoFeito(${f.id}, this.checked)">
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}"${f.doCliente ? ' disabled' : ''} onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
         <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}"${f.doCliente ? ' disabled' : ''} onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
@@ -941,14 +935,14 @@ function rzMontarFatos(r) {
         <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? `<span class="texto-apagado" style="font-size:12px;">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}</div>
       <div style="white-space:pre-wrap; font-size:14px; margin:6px 0;">${escapeHtml(f.texto) || '<span class="texto-apagado">sem texto</span>'}</div>
       ${tec}
-      <div style="margin-top:6px;"><button type="button" class="botao-texto" onclick="rzFocoAbrir(${f.id})">Abrir este fato</button></div>
+      <div style="margin-top:6px;"><button type="button" class="botao-texto janela-sec" onclick="rzFocoAbrir(${f.id})">Abrir este fato</button></div>
     </div>`;
   };
   rzFocoRef = { ordenados, numero, htmlFato, resumoFato, resumoConf: resumo };
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário acima e tudo se recalcula.</div>
-    ${ordenados.length ? `<div style="margin-bottom:8px;"><button type="button" class="botao-texto" onclick="rzFocoAbrir(${ordenados[0].id})">Começar pelo primeiro fato (tela cheia)</button></div>` : ''}
+    ${ordenados.length ? `<div style="margin-bottom:8px;"><button type="button" class="botao-texto janela-sec" onclick="rzFocoAbrir(${ordenados[0].id})">Começar pelo primeiro fato (tela cheia)</button></div>` : ''}
     <div style="display:flex; gap:6px; margin-bottom:4px;"><button type="button" class="botao-texto janela-sec" onclick="rzFatosAbrirTodos(true)">Abrir todos</button><button type="button" class="botao-texto janela-sec" onclick="rzFatosAbrirTodos(false)">Fechar todos</button></div>
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
@@ -1098,11 +1092,11 @@ function rzFocoPintar() {
   if (!resumo && !f) { rzFocoFechar(); return; }
   const i = resumo ? ids.length : ids.indexOf(f.id);
   const barra = `<div class="rz-foco-barra">
-      <button type="button" class="botao-texto" onclick="rzFocoFechar()">← Voltar</button>
+      <button type="button" class="botao-texto janela-sec" style="color:var(--terracota);" onclick="rzFocoFechar()">← Voltar</button>
       <span class="rotulo-fixo">${resumo ? 'Resumo de todos os fatos' : `Fato ${i + 1} de ${ids.length}`}</span>
       <span style="display:flex; gap:6px;">
-        <button type="button" class="botao-texto" ${i === 0 && !resumo ? 'disabled style="opacity:.4;"' : ''} onclick="rzFocoIr(-1)">‹ Anterior</button>
-        ${resumo ? '<button type="button" class="botao-texto" onclick="rzFocoFechar()">Fechar</button>' : `<button type="button" class="botao-texto" onclick="rzFocoIr(1)">${i === ids.length - 1 ? 'Ver o resumo ›' : 'Próximo ›'}</button>`}
+        <button type="button" class="botao-texto janela-sec" ${i === 0 && !resumo ? 'disabled style="opacity:.4;"' : ''} onclick="rzFocoIr(-1)">‹ Anterior</button>
+        ${resumo ? '<button type="button" class="botao-texto janela-sec" onclick="rzFocoFechar()">Fechar</button>' : `<button type="button" class="botao-texto janela-sec" onclick="rzFocoIr(1)">${i === ids.length - 1 ? 'Ver o resumo ›' : 'Próximo ›'}</button>`}
       </span></div>`;
   const corpo = resumo
     ? `<div class="rz-foco-corpo"><div class="rz-foco-fato" style="flex:1 1 100%;">${ref.resumoConf || ''}${ref.ordenados.map(ref.resumoFato).join('')}</div></div>`
@@ -1232,13 +1226,26 @@ function rzPainelPosicionar() {
   document.documentElement.style.setProperty('--rz-topo', topo + 'px');
 }
 /* Escolha do horário retificado, sempre à vista (no painel e na tela cheia): um botão por candidato e o ajuste em minutos. Nada é escolhido sozinho depois que você escolhe. */
+let rzPasso = 1;      // quanto o stepper avança, em minutos (só da tela; não é salvo)
 function rzSeletorHorario() {
   const r = rzUltimo, sel = rzFinalSel; if (!r || !sel) return '';
   const fuso = r.entrada.fuso, nome = { ptolomeu: 'Ptolomeu', valens: 'Valens' };
-  const bts = r.candidatos.map((c, i) => c.horario ? `<button type="button" class="botao-texto${i === sel.idx ? ' rz-sel' : ''}" onclick="rzEscolherCandidato(${i})">${nome[c.regra]} ${rzFmtHora(c.horario.ms, fuso).slice(0, 5)}</button>` : '').join(' ');
+  const linhas = r.candidatos.map((c, i) => c.horario ? `<label style="display:flex; align-items:center; gap:8px; padding:3px 0; font-size:13px; cursor:pointer;"><input type="radio" name="rzCandPainel" ${i === sel.idx ? 'checked' : ''} onchange="rzEscolherCandidato(${i})"> <span>${nome[c.regra]}</span> ${rzPlanetaRetroHtml(r, c.id, 20)} <strong>${rzFmtHora(c.horario.ms, fuso).slice(0, 5)}</strong></label>` : '').join('');
   const aj = sel.ajusteMin;
-  return `<div class="rz-seletor"><div class="rotulo-fixo" style="text-align:center;">Horário retificado: ${rzFmtHora(rzMsFinal(r, sel), fuso).slice(0, 5)}</div>
-    <div class="rz-painel-abas">${bts} <button type="button" class="botao-texto" onclick="rzAjustar(-1)">−1 min</button> <button type="button" class="botao-texto" onclick="rzAjustar(1)">+1 min</button>${aj ? ` <span class="texto-apagado" style="font-size:12px;">ajuste ${aj > 0 ? '+' : '−'}${Math.abs(aj)} min</span>` : ''}</div></div>`;
+  const opc = [[1, '1 minuto'], [5, '5 minutos'], [10, '10 minutos'], [30, '30 minutos'], [60, '1 hora']].map(([v, t]) => `<option value="${v}"${v === rzPasso ? ' selected' : ''}>${t}</option>`).join('');
+  return `<div class="rz-seletor" style="margin-bottom:8px;">
+    <div style="display:flex; flex-wrap:wrap; gap:4px 24px; align-items:center; justify-content:center;">
+      <div>${linhas}</div>
+      <div style="text-align:center;">
+        <div class="rotulo-fixo">Horário retificado: ${rzFmtHora(rzMsFinal(r, sel), fuso).slice(0, 5)}</div>
+        <div class="time-stepper" style="justify-content:center;">
+          <button type="button" class="botao-icone" onclick="rzAjustar(-rzPasso)" title="Voltar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="40,12 20,32 40,52"/></svg></button>
+          <select class="time-select" onchange="rzPasso = Number(this.value)" title="Quanto andar em cada passo">${opc}</select>
+          <button type="button" class="botao-icone" onclick="rzAjustar(rzPasso)" title="Avançar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="24,12 44,32 24,52"/></svg></button>
+        </div>
+        ${aj ? `<div class="texto-apagado" style="font-size:12px;">ajuste ${aj > 0 ? '+' : '−'}${Math.abs(aj)} min</div>` : ''}
+      </div>
+    </div></div>`;
 }
 function rzPainelModoTrocar(m) { rzPainelModo = m; rzPainelPintar(); }
 function rzPainelPintar() {
@@ -1252,8 +1259,7 @@ function rzPainelPintar() {
   const tile = (modo, rot, ms, url) => `<div class="rz-tile"><div class="rotulo-fixo" style="text-align:center;">${rot} · ${hh(ms)}</div>${url ? `<img src="${url}" alt="${rot}" onclick="rzPainelModoTrocar('${rzPainelModo === 'dois' ? modo : 'dois'}')">` : aguarda}</div>`;
   const tEst = tile('est', 'Horário estimado', estMs, rzMandalaEst && rzMandalaEst.ms === estMs ? rzMandalaEst.url : null);
   const tRet = tile('ret', 'Horário retificado', retMs, rzMapaFinalSvg && rzMapaFinalSvg.ms === retMs ? rzMapaFinalSvg.url : null);
-  const bt = (m, rot) => `<button type="button" class="botao-texto ${rzPainelModo === m ? 'rz-sel' : ''}" onclick="rzPainelModoTrocar('${m}')">${rot}</button>`;
-  const htmlPainel = `${rzSeletorHorario()}<div class="rz-painel-abas">${bt('dois', 'Os dois')} ${bt('est', 'Estimado')} ${bt('ret', 'Retificado')}</div>
+  const htmlPainel = `${rzSeletorHorario()}
     <div class="rz-tiles">${rzPainelModo !== 'ret' ? tEst : ''}${rzPainelModo !== 'est' ? tRet : ''}</div>`;
   alvos.forEach(a => { a.innerHTML = htmlPainel; });
 }
