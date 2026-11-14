@@ -435,7 +435,7 @@ function rzPlanetaRetroHtml(r, id, tam) { return `<span style="display:inline-fl
 function iniciarModuloRetificacaoSizigia() {
   const container = document.getElementById('mandala-container');
   if (!container) return;
-  rzUltimo = null;
+  rzUltimo = null; rzFocoId = null; rzFocoRef = null;
   container.innerHTML = `
     <style>
       #rz-container .rz-rolagem { overflow-x: auto; }
@@ -467,18 +467,34 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .rz-fato { padding: 10px 0; }
       #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
+      /* um fato por vez, em tela cheia */
+      #rzFoco { position: fixed; z-index: 30; top: var(--rz-topo, 80px); left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; padding: 8px 14px; box-sizing: border-box; overscroll-behavior: contain; }
+      #rzFoco .rz-foco-barra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+      #rzFoco .rz-foco-corpo { flex: 1; min-height: 0; display: flex; gap: 16px; margin: 8px 0; }
+      #rzFoco .rz-foco-fato { flex: 1 1 52%; min-width: 0; overflow-y: auto; padding-right: 6px; }
+      #rzFoco .rz-foco-mand { flex: 1 1 48%; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+      #rzFoco .rz-foco-mand .rz-tile img { max-height: calc(100vh - var(--rz-topo, 80px) - 170px); }
+      #rzFoco button[onclick^="rzFatoAlternar"] { display: none; }
+      #rzFoco textarea { min-height: 150px; font-size: 15px; line-height: 1.5; overflow: hidden; resize: none; }
+      #rzFoco .rz-linha-tecnica { font-size: 13.5px; }
+      @media (max-width: 899px) {
+        #rzFoco .rz-foco-corpo { flex-direction: column; overflow-y: auto; gap: 8px; }
+        #rzFoco .rz-foco-mand { order: -1; flex: 0 0 auto; }
+        #rzFoco .rz-foco-fato { flex: 0 0 auto; overflow: visible; }
+        #rzFoco .rz-foco-mand .rz-tile img { max-height: 34vh; }
+      }
       /* painel fixo das duas mandalas: preso na tela (position: fixed), ao lado dos dados em tela larga e embaixo em tela estreita */
       #rz-container.rz-com-painel { width: auto !important; margin-right: calc(46vw + 16px); }
       #rzPainel.rz-painel { position: fixed; z-index: 20; top: var(--rz-topo, 80px); right: 8px; width: 46vw; height: calc(100vh - var(--rz-topo, 80px) - 8px); box-sizing: border-box; padding: 8px; overflow: hidden; display: flex; flex-direction: column; border: var(--contorno-fino) solid var(--azul-egipcio-claro); }
-      #rzPainel .rz-painel-abas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 6px; }
-      #rzPainel .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
-      #rzPainel .rz-tiles { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: flex-start; justify-content: center; }
-      #rzPainel .rz-tile { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
-      #rzPainel .rz-tile img { display: block; width: 100%; max-height: calc(100vh - var(--rz-topo, 80px) - 90px); object-fit: contain; cursor: pointer; }
+      #rzPainel .rz-painel-abas, #rzFocoMand .rz-painel-abas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 6px; }
+      #rzPainel .botao-texto.rz-sel, #rzFocoMand .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
+      #rzPainel .rz-tiles, #rzFocoMand .rz-tiles { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: flex-start; justify-content: center; }
+      #rzPainel .rz-tile, #rzFocoMand .rz-tile { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+      #rzPainel .rz-tile img, #rzFocoMand .rz-tile img { display: block; width: 100%; max-height: calc(100vh - var(--rz-topo, 80px) - 90px); object-fit: contain; cursor: pointer; }
       @media (max-width: 899px) {
         #rz-container.rz-com-painel { margin-right: 0; padding-bottom: 44vh; }
         #rzPainel.rz-painel { top: auto; bottom: 0; left: 0; right: 0; width: auto; height: 42vh; }
-        #rzPainel .rz-tile img { max-height: calc(42vh - 80px); }
+        #rzPainel .rz-tile img, #rzFocoMand .rz-tile img { max-height: calc(42vh - 80px); }
       }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
       #rz-container details > summary { cursor: pointer; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
@@ -856,7 +872,7 @@ function rzMontarFatos(r) {
       <div id="${idMenu}" class="menu-flutuante" style="display: none; position: absolute; top: 40px; left: 0; z-index: 9999; width: 44px; box-sizing: border-box;${t.tipo === 'zr' ? ' max-height: 260px; overflow-y: auto;' : ''}">${linhasMenu}</div>   <!-- Circumambulação: o menu abre inteiro, sem rolagem (igual a direcoes.js); Liberação: igual a liberacao.js -->
     </div>`;
   };
-  const linhas = ordenados.map(f => {
+  const htmlFato = (f, foco) => {
     const d = f.data ? rzDataDoFato(f) : null;
     const dFim = d ? rzDataFimDoFato(f) : null;
     const antes = d && d < ctx.nasc;
@@ -866,13 +882,14 @@ function rzMontarFatos(r) {
           <button type="button" class="botao-icone" onclick="rzTecRemover(${f.id}, ${k})" title="Tirar esta técnica do fato" style="margin-left:auto;"><svg class="icone" viewBox="0 0 64 64"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></svg></button></div>
         ${!d ? '' : antes ? '' : `<div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], false, dFim)}</div>`}
       </div>`).join('');
-    const aberto = f.aberto !== false;
+    const aberto = foco || f.aberto !== false;
     const resumoF = (d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data') + (f.texto ? ' · ' + (f.texto.length > 60 ? f.texto.slice(0, 60) + '…' : f.texto) : '');
     return `
     <div class="rz-fato">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px;">
         <button type="button" onclick="rzFatoAlternar(${f.id})" title="${aberto ? 'Fechar este fato' : 'Abrir este fato'}" style="background:none; border:0; padding:4px; cursor:pointer; display:inline-flex; align-items:center;"><svg viewBox="0 0 12 12" width="14" height="14" style="transform:rotate(${aberto ? 90 : 0}deg);"><polygon points="2,1 11,6 2,11" fill="var(--azul-egipcio-escuro)"/></svg></button>
         <span class="rz-num" title="Fato ${numero[f.id]}">${numero[f.id]}</span>
+        ${foco ? '' : `<button type="button" class="botao-texto" onclick="rzFocoAbrir(${f.id})" title="Abrir só este fato, em tela cheia, com as duas mandalas">Ver inteiro</button>`}
         <input type="checkbox" class="rz-feito" title="Marcar este fato como feito" ${f.feito ? 'checked' : ''} onchange="rzFatoFeito(${f.id}, this.checked)">
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--azul-egipcio-escuro);" title="Data do fato"><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg><input type="date" value="${f.data}" onchange="rzFatoData(${f.id}, this.value)" onblur="rzFatoDataFechou()"></span>
         <button type="button" class="botao-texto${f.periodo ? ' rz-sel' : ''}" onclick="rzFatoPeriodo(${f.id})" title="O fato durou um período (de uma data a outra)">Período</button>
@@ -891,7 +908,8 @@ function rzMontarFatos(r) {
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px;"><span class="texto-apagado" style="font-size:12px;">O horário confirma este fato?</span> ${btnConf(f, 'sim', 'Sim')} ${btnConf(f, 'parte', 'Em parte')} ${btnConf(f, 'nao', 'Não')}</div>
       </div>
     </div>`;
-  }).join('');
+  };
+  const linhas = ordenados.map(f => htmlFato(f, false)).join('');
   // uma tabela por técnica + ponto de partida usados, com os fatos que a usam
   const grupos = new Map();
   ordenados.forEach(f => { if (!f.data) return; f.tecnicas.forEach(t => { const k = t.tipo + '|' + t.chave; if (!grupos.has(k)) grupos.set(k, { t, fatos: [] }); const g = grupos.get(k); if (!g.fatos.some(x => x.n === numero[f.id])) g.fatos.push(rzMarcadorDoFato(f, numero[f.id])); }); });
@@ -901,9 +919,24 @@ function rzMontarFatos(r) {
   const resumo = rzFatos.some(f => f.conf)
     ? `<div style="font-size:13px; margin-top:8px;"><strong>${n('sim')}</strong> sim · <strong>${n('parte')}</strong> em parte · <strong>${n('nao')}</strong> não, de ${rzFatos.length} ${rzFatos.length === 1 ? 'fato' : 'fatos'} neste horário.</div>` : '';
   rzVgHtml = tabelas ? `<div class="texto-apagado rz-fonte" style="margin-bottom:8px;">Todas as linhas da Circumambulação e da Liberação em que os fatos caem, cada uma com o número dos fatos.</div>${tabelas}` : `<div class="texto-apagado rz-fonte">Preencha a data de um fato para ver as linhas.</div>`;
+  const confTxt = { sim: 'Sim', parte: 'Em parte', nao: 'Não' };
+  const resumoFato = (f) => {
+    const d = f.data ? rzDataDoFato(f) : null, dFim = d ? rzDataFimDoFato(f) : null, antes = d && d < ctx.nasc;
+    const tec = (!d || antes) ? '' : f.tecnicas.map(t => `<div class="rz-tec"><div style="display:flex; gap:8px; align-items:center; font-size:13px; font-weight:700;"><span style="display:inline-flex; width:24px;">${rzIconeSeletor(t.chave, t.tipo)}</span>${t.tipo === 'circ' ? 'Circumambulação' : 'Liberação'}</div><div class="rz-linha-tecnica">${rzLinhaTecnica(ctx, t, d, numero[f.id], false, dFim)}</div></div>`).join('');
+    return `<div class="rz-fato">
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;"><span class="rz-num">${numero[f.id]}</span>
+        <strong>${d ? rzDataBR(d) + (dFim ? ' a ' + rzDataBR(dFim) : '') : 'sem data'}</strong>${d && !antes ? `<span class="texto-apagado" style="font-size:12px;">${rqIdade(ctx.nasc, d)}${dFim ? ' a ' + rqIdade(ctx.nasc, dFim) : ''}</span>` : ''}
+        <span class="rz-escolhido" style="margin-left:auto;">${f.conf ? 'O horário confirma: ' + confTxt[f.conf] : 'sem resposta'}</span></div>
+      <div style="white-space:pre-wrap; font-size:14px; margin:6px 0;">${escapeHtml(f.texto) || '<span class="texto-apagado">sem texto</span>'}</div>
+      ${tec}
+      <div style="margin-top:6px;"><button type="button" class="botao-texto" onclick="rzFocoAbrir(${f.id})">Abrir este fato</button></div>
+    </div>`;
+  };
+  rzFocoRef = { ordenados, numero, htmlFato, resumoFato, resumoConf: resumo };
   return `
     ${typeof rzFichaAviso === 'function' ? rzFichaAviso() : ''}
     <div class="texto-apagado rz-fonte" style="margin-bottom:6px;">Horário em teste: ${rzFmtHora(ctx.ms, rzUltimo.entrada.fuso).slice(0, 5)}. Cada fato tem as técnicas que você escolher, cada uma partindo do ponto que você escolher. Os fatos aparecem em ordem de data. Ajuste o horário acima e tudo se recalcula.</div>
+    ${ordenados.length ? `<div style="margin-bottom:8px;"><button type="button" class="botao-texto" onclick="rzFocoAbrir(${ordenados[0].id})">Começar pelo primeiro fato (tela cheia)</button></div>` : ''}
     <div style="display:flex; gap:6px; margin-bottom:4px;"><button type="button" class="botao-texto janela-sec" onclick="rzFatosAbrirTodos(true)">Abrir todos</button><button type="button" class="botao-texto janela-sec" onclick="rzFatosAbrirTodos(false)">Fechar todos</button></div>
     ${linhas}
     <div style="margin-top:8px;"><button type="button" class="botao-texto" onclick="rzFatoNovo()">+ Adicionar fato</button></div>
@@ -993,6 +1026,7 @@ function rzRedesenharFatos() {
   el.innerHTML = rzMontarFatos(rzUltimo);
   const vg = document.getElementById('rzVisaoGeral'); if (vg) vg.innerHTML = rzVgHtml;
   rzAtualizarProgresso();
+  rzFocoPintar();
 }
 function rzFatoPorId(id) { return rzFatos.find(f => f.id === id); }
 function rzFatoNovo() { rzFatos.push(rzFatoVazio(++rzFatoSeq)); rzRedesenharFatos(); rzMudou(); }
@@ -1021,6 +1055,53 @@ function rzTecAdd(id, tipo) { const f = rzFatoPorId(id); if (f) { f.tecnicas.pus
 function rzTecRemover(id, k) { const f = rzFatoPorId(id); if (f) { f.tecnicas.splice(k, 1); rzRedesenharFatos(); } rzMudou(); }
 function rzTecTrocar(id, k, chave) { const f = rzFatoPorId(id); if (f && f.tecnicas[k]) { f.tecnicas[k].chave = chave; rzRedesenharFatos(); } rzMudou(); }
 if (typeof window !== 'undefined') Object.assign(window, { rzTecAdd, rzTecRemover, rzTecTrocar, rzFatoNovo, rzFatoRemover, rzFatoAlternar, rzFatosAbrirTodos, rzAbriu, rzFatoData, rzFatoAte, rzFatoPeriodo, rzFatoDataFechou, rzFatoTexto, rzFatoConf });
+
+
+/* ---------- Um fato por vez, em tela cheia (Anterior / Próximo) ----------
+   Fato inteiro e legível à esquerda (data, texto, técnicas, "o horário confirma?"), as duas mandalas à direita, e no fim o resumo de todos. */
+let rzFocoId = null;      // id do fato aberto, 'resumo' ou null (fechado)
+let rzFocoRef = null;     // { ordenados, numero, htmlFato, resumoFato, resumoConf } da última montagem dos fatos
+function rzFocoAbrir(id) {
+  const cont = document.getElementById('rz-container'); if (!cont) return;
+  rzFocoId = id;
+  if (!document.getElementById('rzFoco')) { const o = document.createElement('div'); o.id = 'rzFoco'; o.className = 'painel rz-foco'; cont.appendChild(o); }
+  rzRedesenharFatos();
+}
+function rzFocoFechar() { rzFocoId = null; const o = document.getElementById('rzFoco'); if (o) o.remove(); }
+function rzFocoIr(delta) {
+  const ref = rzFocoRef; if (!ref) return;
+  const ids = ref.ordenados.map(f => f.id);
+  if (rzFocoId === 'resumo') { if (delta < 0 && ids.length) rzFocoAbrir(ids[ids.length - 1]); return; }
+  const i = ids.indexOf(rzFocoId) + delta;
+  rzFocoAbrir(i >= ids.length ? 'resumo' : ids[Math.max(0, i)]);
+}
+function rzFocoPintar() {
+  const o = document.getElementById('rzFoco'), ref = rzFocoRef;
+  if (!o) return;
+  if (rzFocoId === null || !ref) { o.remove(); return; }
+  const ids = ref.ordenados.map(f => f.id);
+  const resumo = rzFocoId === 'resumo';
+  const f = resumo ? null : rzFatoPorId(rzFocoId);
+  if (!resumo && !f) { rzFocoFechar(); return; }
+  const i = resumo ? ids.length : ids.indexOf(f.id);
+  const barra = `<div class="rz-foco-barra">
+      <button type="button" class="botao-texto" style="color:var(--terracota);" onclick="rzFocoFechar()">← Voltar</button>
+      <span class="rotulo-fixo">${resumo ? 'Resumo de todos os fatos' : `Fato ${i + 1} de ${ids.length}`}</span>
+      <span style="display:flex; gap:6px;">
+        <button type="button" class="botao-texto" ${i === 0 && !resumo ? 'disabled style="opacity:.4;"' : ''} onclick="rzFocoIr(-1)">‹ Anterior</button>
+        ${resumo ? '<button type="button" class="botao-texto" onclick="rzFocoFechar()">Fechar</button>' : `<button type="button" class="botao-texto" onclick="rzFocoIr(1)">${i === ids.length - 1 ? 'Ver o resumo ›' : 'Próximo ›'}</button>`}
+      </span></div>`;
+  const corpo = resumo
+    ? `<div class="rz-foco-corpo"><div class="rz-foco-fato" style="flex:1 1 100%;">${ref.resumoConf || ''}${ref.ordenados.map(ref.resumoFato).join('')}</div></div>`
+    : `<div class="rz-foco-corpo"><div class="rz-foco-fato">${ref.htmlFato(f, true)}</div><div class="rz-foco-mand" id="rzFocoMand"></div></div>`;
+  o.innerHTML = barra + corpo + barra;
+  o.querySelectorAll('textarea').forEach(t => {
+    const cresce = () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+    cresce(); t.addEventListener('input', cresce);
+  });
+  rzPainelPintar();
+}
+if (typeof window !== 'undefined') Object.assign(window, { rzFocoAbrir, rzFocoFechar, rzFocoIr });
 
 /* ---------- Seção 6: mandala no horário final ----------
    Não mexe no mapa em tela: guarda o estado global (momento, local, céu, lotes), calcula o céu do horário final (motor, hh:mm), pede o
@@ -1132,14 +1213,14 @@ function rzPainelMontar() {
   rzPainelPintar(); rzPainelPosicionar(); rzPainelAtualizar(true);
 }
 function rzPainelPosicionar() {
-  const el = document.getElementById('rzPainel'); if (!el) return;
   const tb = document.getElementById('top-bar');
   const topo = Math.max(0, tb ? tb.getBoundingClientRect().bottom : 0) + 6;
-  el.style.setProperty('--rz-topo', topo + 'px');
+  document.documentElement.style.setProperty('--rz-topo', topo + 'px');
 }
 function rzPainelModoTrocar(m) { rzPainelModo = m; rzPainelPintar(); }
 function rzPainelPintar() {
   const el = document.getElementById('rzPainel'), r = rzUltimo; if (!el || !r || !rzFinalSel) return;
+  const alvos = [el, document.getElementById('rzFocoMand')].filter(Boolean);
   const e = r.entrada, fuso = e.fuso;
   const estMs = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000;
   const retMs = rzMsFinal(r, rzFinalSel);
@@ -1149,8 +1230,9 @@ function rzPainelPintar() {
   const tEst = tile('est', 'Horário estimado', estMs, rzMandalaEst && rzMandalaEst.ms === estMs ? rzMandalaEst.url : null);
   const tRet = tile('ret', 'Horário retificado', retMs, rzMapaFinalSvg && rzMapaFinalSvg.ms === retMs ? rzMapaFinalSvg.url : null);
   const bt = (m, rot) => `<button type="button" class="botao-texto ${rzPainelModo === m ? 'rz-sel' : ''}" onclick="rzPainelModoTrocar('${m}')">${rot}</button>`;
-  el.innerHTML = `<div class="rz-painel-abas">${bt('dois', 'Os dois')} ${bt('est', 'Estimado')} ${bt('ret', 'Retificado')}</div>
+  const htmlPainel = `<div class="rz-painel-abas">${bt('dois', 'Os dois')} ${bt('est', 'Estimado')} ${bt('ret', 'Retificado')}</div>
     <div class="rz-tiles">${rzPainelModo !== 'ret' ? tEst : ''}${rzPainelModo !== 'est' ? tRet : ''}</div>`;
+  alvos.forEach(a => { a.innerHTML = htmlPainel; });
 }
 function rzPainelAtualizar(logo) {
   if (!document.getElementById('rzPainel')) return;
