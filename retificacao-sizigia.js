@@ -467,6 +467,19 @@ function iniciarModuloRetificacaoSizigia() {
       #rz-container .rz-fato { padding: 10px 0; }
       #rz-container .rz-fato + .rz-fato { border-top: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rz-container .rz-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--ocre); color: var(--terracota); border-radius: 11px; font-size: 12px; font-weight: 700; background: transparent; }
+      /* painel fixo das duas mandalas: preso na tela (position: fixed), ao lado dos dados em tela larga e embaixo em tela estreita */
+      #rz-container.rz-com-painel { width: auto !important; margin-right: calc(46vw + 16px); }
+      #rzPainel.rz-painel { position: fixed; z-index: 20; top: var(--rz-topo, 80px); right: 8px; width: 46vw; height: calc(100vh - var(--rz-topo, 80px) - 8px); box-sizing: border-box; padding: 8px; overflow: hidden; display: flex; flex-direction: column; border: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+      #rzPainel .rz-painel-abas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 6px; }
+      #rzPainel .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
+      #rzPainel .rz-tiles { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: flex-start; justify-content: center; }
+      #rzPainel .rz-tile { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+      #rzPainel .rz-tile img { display: block; width: 100%; max-height: calc(100vh - var(--rz-topo, 80px) - 90px); object-fit: contain; cursor: pointer; }
+      @media (max-width: 899px) {
+        #rz-container.rz-com-painel { margin-right: 0; padding-bottom: 44vh; }
+        #rzPainel.rz-painel { top: auto; bottom: 0; left: 0; right: 0; width: auto; height: 42vh; }
+        #rzPainel .rz-tile img { max-height: calc(42vh - 80px); }
+      }
       #rz-container .rz-linha-tecnica { font-size: 12.5px; line-height: 1.7; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
       #rz-container details > summary { cursor: pointer; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--azul-egipcio-escuro); padding: 6px 0; }
     </style>
@@ -506,6 +519,8 @@ function rzLerMapa() {
 async function rzExecutar() {
   const area = document.getElementById('rzResultado');
   if (!area) return;
+  const painelVelho = document.getElementById('rzPainel'); if (painelVelho) painelVelho.remove();
+  const contRz = document.getElementById('rz-container'); if (contRz) contRz.classList.remove('rz-com-painel');
   const e = rzLerMapa();
   if (e.erro) { area.innerHTML = rzMensagem(e.erro); return; }
   area.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Calculando...</div>`;
@@ -525,6 +540,7 @@ async function rzExecutar() {
       await rzAtualizarFatosDoCliente();      // mesmo mapa: o cliente pode ter enviado os fatos enquanto a ferramenta estava aberta
     }
     area.innerHTML = rzMontarResultado(r);
+    rzPainelMontar();
     const cab = document.getElementById('rzCabecalho');
     if (cab && rzMapaFinalSvg && rzMapaFinalSvg.cabecalho) cab.innerHTML = rzMapaFinalSvg.cabecalho;    // reabriu: o cabeçalho segue mostrando o horário retificado
   } catch (err) {
@@ -715,6 +731,7 @@ function rzRedesenharFinal() {
   const el = document.getElementById('rzFinal'); if (el && rzUltimo) el.innerHTML = rzMontarHorarioFinal(rzUltimo);
   const m = document.getElementById('rzMapaFinal'); if (m && rzUltimo) m.innerHTML = rzMontarMapaFinalCorpo(rzUltimo, true);   // o horário mudou: a mandala gerada ficou velha
   rzRedesenharFatos();
+  rzPainelPintar(); rzPainelAtualizar();
 }
 function rzEscolherCandidato(i) { if (!rzUltimo || !rzUltimo.candidatos[i] || !rzUltimo.candidatos[i].horario) return; rzFinalSel = { idx: i, ajusteMin: 0 }; rzRedesenharFinal(); rzMudou(); }
 function rzAjustar(min) { if (!rzFinalSel) return; rzFinalSel.ajusteMin += min; rzRedesenharFinal(); rzMudou(); }
@@ -1039,18 +1056,15 @@ function rzAbrirSalvarMapa() {
   campo('modalTipoMapa', window.currentMapType || 'Natal');
   window.__novoMapaRetificado = true;   // depois do abrirModalNovoMapa, que zera a marca
 }
-async function rzGerarMandalaFinal() {
-  const r = rzUltimo, sel = rzFinalSel;
-  const alvo = document.getElementById('rzMandalaFinal'), btn = document.getElementById('rzBtnMandala');
-  if (!r || !sel || !alvo) return;
-  if (typeof executarCalculo !== 'function' || typeof desenharRodaSVG !== 'function') { alvo.innerHTML = rzMensagem('A mandala não está disponível nesta tela.'); return; }
-  if (window.__calculosEmAndamento > 0) { alvo.innerHTML = rzMensagem('Espere o cálculo atual terminar e tente de novo.'); return; }
+/* Desenha a mandala de um horário (ms em UT) sem mexer no mapa em tela. Devolve { png, cabecalho }; lança erro com o motivo se não der. */
+async function rzMandalaPng(minutos, retificado) {
+  const r = rzUltimo;
+  if (!r) throw new Error('sem cálculo');
+  if (typeof executarCalculo !== 'function' || typeof desenharRodaSVG !== 'function') throw new Error('A mandala não está disponível nesta tela.');
+  if (window.__calculosEmAndamento > 0) throw new Error('Espere o cálculo atual terminar e tente de novo.');
   const e = r.entrada;
-  const minutos = rzMsFinal(r, sel);
   const d = new Date(minutos + e.fuso * 3600000);          // relógio local do mapa, lido em UTC
   const salvo = { dados: currentCalculatedData, momento: currentMoment, geo: currentGeo, lotes: window.currentLotes, capa: window.ceuFundoCapaUltimo };
-  if (btn) btn.disabled = true;
-  alvo.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Gerando...</div>`;
   let roda = null, cabecalho = null;
   try {
     currentMoment = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes());
@@ -1059,15 +1073,10 @@ async function rzGerarMandalaFinal() {
     const papiro = window.temaMandala === 'ceu';
     // 'claro' + sem fundo: o mesmo que a Mandala manda pro Relatório (no Tema Céu, a roda em tinta sobre papiro)
     roda = papiro ? desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true, tintaPapiro: true }) : desenharRodaSVG({ estiloForcado: 'claro', fundoTransparente: true });
-    if (typeof montarCabecalhoMandalaImagemHTML === 'function') cabecalho = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true, retificado: true });
-  } catch (err) {
-    console.error('Mandala no horário final:', err);
-    alvo.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">Não foi possível gerar a mandala: ${escapeHtml(err.message || String(err))}</div>`;
+    if (typeof montarCabecalhoMandalaImagemHTML === 'function') cabecalho = montarCabecalhoMandalaImagemHTML(currentCalculatedData, null, { tintaSobreFolha: true, retificado: !!retificado });
   } finally {
     currentCalculatedData = salvo.dados; currentMoment = salvo.momento; currentGeo = salvo.geo; window.currentLotes = salvo.lotes; window.ceuFundoCapaUltimo = salvo.capa;
-    if (btn) btn.disabled = false;
   }
-  if (!roda) return;
   // imagem PNG (dataURL): o PDF é montado no servidor, que não enxerga endereços blob:
   const png = await new Promise(resolve => {
     const url = URL.createObjectURL(new Blob([roda.svg], { type: 'image/svg+xml;charset=utf-8' }));
@@ -1076,12 +1085,101 @@ async function rzGerarMandalaFinal() {
     img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
     img.src = url;
   });
-  if (!png) { alvo.innerHTML = rzMensagem('Não foi possível desenhar a mandala.'); return; }
-  rzMapaFinalSvg = { url: png, ms: minutos, cabecalho };
-  alvo.innerHTML = `<img src="${png}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">`;
-  const cab = document.getElementById('rzCabecalho');
-  if (cab && cabecalho) cab.innerHTML = cabecalho;           // o cabeçalho do topo passa a mostrar o horário retificado
+  if (!png) throw new Error('Não foi possível desenhar a mandala.');
+  return { png, cabecalho };
 }
+async function rzGerarMandalaFinal() {
+  const r = rzUltimo, sel = rzFinalSel;
+  const alvo = document.getElementById('rzMandalaFinal'), btn = document.getElementById('rzBtnMandala');
+  if (!r || !sel || !alvo) return;
+  const minutos = rzMsFinal(r, sel);
+  if (btn) btn.disabled = true;
+  alvo.innerHTML = `<div class="texto-apagado" style="font-size:12.5px;">Gerando...</div>`;
+  try {
+    const x = await rzMandalaPng(minutos, true);
+    rzMapaFinalSvg = { url: x.png, ms: minutos, cabecalho: x.cabecalho };
+    alvo.innerHTML = `<img src="${x.png}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">`;
+    const cab = document.getElementById('rzCabecalho');
+    if (cab && x.cabecalho) cab.innerHTML = x.cabecalho;           // o cabeçalho do topo passa a mostrar o horário retificado
+    rzPainelPintar();
+  } catch (err) {
+    console.error('Mandala no horário final:', err);
+    alvo.innerHTML = `<div style="color:var(--terracota); font-weight:700; font-size:13px;">Não foi possível gerar a mandala: ${escapeHtml(err.message || String(err))}</div>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+/* ---------- Painel fixo com as duas mandalas (horário estimado e horário retificado) lado a lado ----------
+   Fica preso na tela (position: fixed, como a barra do editor do Relatório: nada de sticky) e acompanha a rolagem, pra comparar sem subir e descer.
+   Gera sozinho: a do horário estimado ao abrir, a do retificado a cada ajuste (depois de 0,5 s parado). */
+let rzMandalaEst = null;          // { ms, url } da mandala no horário estimado
+let rzPainelModo = 'dois';        // 'dois' | 'est' | 'ret'
+let rzPainelErro = '';
+let rzPainelT = null, rzFila = Promise.resolve(), rzPainelOuvindo = false;
+function rzPainelMontar() {
+  const velho = document.getElementById('rzPainel'); if (velho) velho.remove();
+  const cont = document.getElementById('rz-container'); if (!cont) return;
+  const el = document.createElement('aside');
+  el.id = 'rzPainel'; el.className = 'painel rz-painel';
+  cont.parentNode.appendChild(el);
+  cont.classList.add('rz-com-painel');
+  if (!rzPainelOuvindo) {
+    rzPainelOuvindo = true;
+    const pos = () => rzPainelPosicionar();
+    window.addEventListener('scroll', pos, { passive: true }); window.addEventListener('resize', pos);
+  }
+  rzPainelPintar(); rzPainelPosicionar(); rzPainelAtualizar(true);
+}
+function rzPainelPosicionar() {
+  const el = document.getElementById('rzPainel'); if (!el) return;
+  const tb = document.getElementById('top-bar');
+  const topo = Math.max(0, tb ? tb.getBoundingClientRect().bottom : 0) + 6;
+  el.style.setProperty('--rz-topo', topo + 'px');
+}
+function rzPainelModoTrocar(m) { rzPainelModo = m; rzPainelPintar(); }
+function rzPainelPintar() {
+  const el = document.getElementById('rzPainel'), r = rzUltimo; if (!el || !r || !rzFinalSel) return;
+  const e = r.entrada, fuso = e.fuso;
+  const estMs = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000;
+  const retMs = rzMsFinal(r, rzFinalSel);
+  const hh = (ms) => rzFmtHora(ms, fuso).slice(0, 5);
+  const aguarda = rzPainelErro ? `<div style="color:var(--terracota); font-weight:700; font-size:12px;">${escapeHtml(rzPainelErro)}</div>` : `<div class="texto-apagado" style="font-size:12.5px; padding:30px 0; text-align:center;">Gerando...</div>`;
+  const tile = (modo, rot, ms, url) => `<div class="rz-tile"><div class="rotulo-fixo" style="text-align:center;">${rot} · ${hh(ms)}</div>${url ? `<img src="${url}" alt="${rot}" onclick="rzPainelModoTrocar('${rzPainelModo === 'dois' ? modo : 'dois'}')">` : aguarda}</div>`;
+  const tEst = tile('est', 'Horário estimado', estMs, rzMandalaEst && rzMandalaEst.ms === estMs ? rzMandalaEst.url : null);
+  const tRet = tile('ret', 'Horário retificado', retMs, rzMapaFinalSvg && rzMapaFinalSvg.ms === retMs ? rzMapaFinalSvg.url : null);
+  const bt = (m, rot) => `<button type="button" class="botao-texto ${rzPainelModo === m ? 'rz-sel' : ''}" onclick="rzPainelModoTrocar('${m}')">${rot}</button>`;
+  el.innerHTML = `<div class="rz-painel-abas">${bt('dois', 'Os dois')} ${bt('est', 'Estimado')} ${bt('ret', 'Retificado')}</div>
+    <div class="rz-tiles">${rzPainelModo !== 'ret' ? tEst : ''}${rzPainelModo !== 'est' ? tRet : ''}</div>`;
+}
+function rzPainelAtualizar(logo) {
+  if (!document.getElementById('rzPainel')) return;
+  rzPainelErro = '';
+  clearTimeout(rzPainelT);
+  rzPainelT = setTimeout(() => { rzFila = rzFila.then(rzPainelGerar).catch(() => {}); }, logo ? 50 : 500);
+}
+async function rzPainelGerar(tentativa) {
+  const r = rzUltimo, sel = rzFinalSel; if (!r || !sel || !document.getElementById('rzPainel')) return;
+  const e = r.entrada;
+  const estMs = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - e.fuso * 3600000;
+  const retMs = rzMsFinal(r, sel);
+  try {
+    if (!rzMandalaEst || rzMandalaEst.ms !== estMs) { rzMandalaEst = { ms: estMs, url: (await rzMandalaPng(estMs, false)).png }; rzPainelPintar(); }
+    if (!rzMapaFinalSvg || rzMapaFinalSvg.ms !== retMs) {
+      const x = await rzMandalaPng(retMs, true);
+      rzMapaFinalSvg = { url: x.png, ms: retMs, cabecalho: x.cabecalho };
+      const cab = document.getElementById('rzCabecalho'); if (cab && x.cabecalho) cab.innerHTML = x.cabecalho;
+      const alvo = document.getElementById('rzMandalaFinal');
+      if (alvo) alvo.innerHTML = `<img src="${x.png}" alt="Mandala no horário retificado" style="display:block; width:100%; max-width:760px; margin:0 auto;">`;
+      rzPainelPintar();
+    }
+  } catch (err) {
+    console.error('Painel das mandalas:', err);
+    if (tentativa !== 2) { await new Promise(res => setTimeout(res, 1500)); return rzPainelGerar(2); }
+    rzPainelErro = 'Não foi possível gerar: ' + (err.message || err); rzPainelPintar();
+  }
+}
+if (typeof window !== 'undefined') Object.assign(window, { rzPainelModoTrocar });
 if (typeof window !== 'undefined') window.rzGerarMandalaFinal = rzGerarMandalaFinal; window.rzAbrirSalvarMapa = rzAbrirSalvarMapa;
 
 /* ---------- Salvar na galeria e adicionar ao Relatório (mesmo padrão das outras ferramentas) ---------- */
