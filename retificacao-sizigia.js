@@ -876,7 +876,7 @@ function rzMontarFatos(r) {
   const ordenados = rzFatos.slice().sort((a, b) => (a.data || '9999') < (b.data || '9999') ? -1 : (a.data || '9999') > (b.data || '9999') ? 1 : a.id - b.id);
   const numero = {}; ordenados.forEach((f, i) => { numero[f.id] = i + 1; });   // 1, 2, 3... na ordem de data
   const seletor = (f, k, t) => {
-    const lista = t.tipo === 'circ' ? RZ_AFETAS : RZ_LOTES;
+    const lista = (t.tipo === 'circ' ? RZ_AFETAS : RZ_LOTES).filter(c => typeof loteLiberadoNaRoda !== 'function' || loteLiberadoNaRoda(c)); // só lote que está na mandala
     const rotulo = (c) => c === 'seita' ? `Luminar da seita (${ctx.diurno ? 'Sol' : 'Lua'})` : (RZ_AFETA_TITULO[c] || RZ_AFETA_NOME[c]);
     const idMenu = `rzMenu_${f.id}_${k}`;
     const linhasMenu = lista.map(c => `<div onclick="rzTecTrocar(${f.id}, ${k}, '${c}')" title="${escapeHtml(rotulo(c))}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;${t.tipo === 'zr' ? ' color: var(--azul-egipcio-escuro);' : ''}">${rzIconeSeletor(c, t.tipo)}</div>`).join('');

@@ -453,6 +453,7 @@ function calcularSubperiodosL4(l3SignIdx, l3Start, l3End) {
 }
 
 function renderLiberacaoUI() {
+  if (!loteLiberadoNaRoda(selectedZRPhase)) selectedZRPhase = 'fortune'; // só lote que está na mandala (a Fortuna sempre está)
   const container = document.getElementById("mandala-container");
   if (!container || !currentCalculatedData) return;
 
@@ -619,7 +620,7 @@ function renderLiberacaoUI() {
   const horaH = String(currentMoment.getHours()).padStart(2, '0');
   const minH = String(currentMoment.getMinutes()).padStart(2, '0');
 
-  const loteMenuRowsHTML = lotesInfo.map(l => {
+  const loteMenuRowsHTML = lotesInfo.filter(l => loteLiberadoNaRoda(l.key)).map(l => {
     const label = loteLabelsZR[l.key] || l.key;
     return `<div onclick="alternarLoteLiberacao('${l.key}')" title="${escapeHtml(label)}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center; color: var(--azul-egipcio-escuro);">${getLotIconSVG(l.key)}</div>`;
   }).join('');

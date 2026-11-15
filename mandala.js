@@ -787,9 +787,10 @@ function injetarBotaoRotacaoNaBarraSuperior() {
   const ladoBotao = 44;
   const tamanhoIcone = 28;
 
+  normalizarLoteCasa1(); // só se pode girar a Casa 1 num lote que está na mandala
   const iconContent = getIconeOpcaoRotacaoCasa1(selectedHouse1Lot, tamanhoIcone);
 
-  const itensMenuHTML = OPCOES_ROTACAO_CASA1.map(opcao => `
+  const itensMenuHTML = OPCOES_ROTACAO_CASA1.filter(opcao => loteLiberadoNaRoda(opcao.key)).map(opcao => `
         <div onclick="alternarRotacaoCasa1('${opcao.key}')" title="${opcao.label}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getIconeOpcaoRotacaoCasa1(opcao.key, tamanhoIcone)}</div>`).join('');
 
     btnContainer.innerHTML = `

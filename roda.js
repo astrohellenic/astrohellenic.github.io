@@ -121,8 +121,18 @@ function lotesMandalaAtual() {
   let m = {};
   try { m = JSON.parse(localStorage.getItem('astro_lotes_mandala') || '{}') || {}; } catch (e) {}
   const r = { fortune: true };
-  LOTES_MANDALA_OPCOES.forEach(o => { r[o.chave] = m[o.chave] !== false; });
+  LOTES_MANDALA_OPCOES.forEach(o => { r[o.chave] = m[o.chave] !== false && (typeof lotesLiberadoNoPlano !== 'function' || lotesLiberadoNoPlano(o.chave)); }); // plano Básico: só Fortuna e Espírito
   return r;
+}
+/* O lote só pode ser USADO (girar a Casa 1, escolher na Liberação, na Circumambulação, nas calculadoras...) se está na mandala: vale pras 7 chaves
+   (fortune, spirit, venus, mercury, mars, jupiter, saturn); qualquer outra coisa (ASC, planetas...) passa. */
+function loteLiberadoNaRoda(chave) {
+  const m = lotesMandalaAtual();
+  return !(chave in m) || m[chave];
+}
+/* Se a Casa 1 estava girada num lote que saiu da mandala (ou do plano), volta pro Ascendente. */
+function normalizarLoteCasa1() {
+  if (typeof selectedHouse1Lot !== 'undefined' && selectedHouse1Lot !== 'ASC' && !loteLiberadoNaRoda(selectedHouse1Lot)) selectedHouse1Lot = 'ASC';
 }
 function guardarLoteMandalaAparelho(chave, ligado) {
   let m = {};
@@ -309,6 +319,7 @@ function desenharRodaSVG(o) {
   if (!ferr) window.currentLotes = lotes;
 
   let house1RefAbs = ascAbs;
+  if (!ferr) normalizarLoteCasa1();
   const loteCasa1Efetivo = ferr ? (ferr.loteCasa1 || null) : (selectedHouse1Lot !== "ASC" ? selectedHouse1Lot : null);
   if (loteCasa1Efetivo) {
     const targetLot = lotes.find(l => l.key === loteCasa1Efetivo);

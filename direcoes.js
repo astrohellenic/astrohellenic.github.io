@@ -558,6 +558,7 @@ function renderCircumambulaçõesUI() {
   if (!container || !currentCalculatedData) return;
 
   const data = currentCalculatedData;
+  if (!loteLiberadoNaRoda(selectedAphetesKey)) selectedAphetesKey = 'ASC'; // só lote que está na mandala
   const startAbsDeg = obterGrauEfetivoAfeta(selectedAphetesKey, data);
   const birthDate = new Date(currentMoment);
 
@@ -851,6 +852,7 @@ function renderCircumambulaçõesUI() {
       : getItemSVGDir(af.key === "Syz" ? "Sizígia" : af.key);
   }
 
+  afetasDisponiveis.splice(0, afetasDisponiveis.length, ...afetasDisponiveis.filter(af => loteLiberadoNaRoda(af.key)));
   const afetaAtual = afetasDisponiveis.find(af => af.key === selectedAphetesKey) || afetasDisponiveis[0];
   const iconAtualHTML = iconeAfetaDir(afetaAtual);
 

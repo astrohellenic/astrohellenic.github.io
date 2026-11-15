@@ -315,7 +315,13 @@ function computeAllLotesPrecalculados(data, isDay) {
    PARTE 2 — CALCULADORA LIVRE (ESTADO)
    ========================================== */
 
+// os sete lotes da mandala, na chave da calculadora → na chave da roda (os outros lotes da calculadora não existem na mandala)
+const LOTE_CALC_PARA_MANDALA = { fortuna: 'fortune', espirito: 'spirit', eros: 'venus', necessidade: 'mercury', coragem: 'mars', vitoria: 'jupiter', nemesis: 'saturn' };
 let lotesCalcStartPoint = 'ASC';
+function normalizarPontoPartidaLotes() { // o ponto de partida, se for um lote, precisa estar na mandala
+  const m = LOTE_CALC_PARA_MANDALA[lotesCalcStartPoint];
+  if (m && !loteLiberadoNaRoda(m)) lotesCalcStartPoint = 'ASC';
+}
 let lotesCalcPlanetA = 'Sun';
 let lotesCalcPlanetB = 'Moon';
 let lotesCalcManualSect = null; // null = automático (pela seita do mapa) | true = dia | false = noite
@@ -436,6 +442,7 @@ function renderSeletorLotes(menuId, iconHTML, menuRowsHTML, label) {
    estado global (ponto de partida, Planeta A/B, seita) — usado tanto pra
    desenhar o quadrinho de pré-visualização quanto pra salvar o lote. */
 function calcularResultadoLotesLivre(p, lotesPart1, isDayAuto) {
+  normalizarPontoPartidaLotes();
   const effectiveIsDay = (lotesCalcManualSect !== null) ? lotesCalcManualSect : isDayAuto;
   const startAbs = resolveStartPointAbsLotes(lotesCalcStartPoint, p, lotesPart1);
   const aAbs = absDoPlanetaLotes(lotesCalcPlanetA, p);
@@ -508,6 +515,7 @@ function iniciarModuloLotes() {
 }
 
 function renderLotesUI() {
+  normalizarPontoPartidaLotes();
   const container = document.getElementById("mandala-container");
   if (!container || !currentCalculatedData) return;
 
@@ -574,7 +582,7 @@ function renderLotesUI() {
     { key: 'Mars', label: 'Marte' },
     { key: 'Jupiter', label: 'Júpiter' },
     { key: 'Saturn', label: 'Saturno' },
-    ...lotesPart1.map(l => ({ key: l.key, label: l.nome }))
+    ...lotesPart1.filter(l => loteLiberadoNaRoda(LOTE_CALC_PARA_MANDALA[l.key] || l.key)).map(l => ({ key: l.key, label: l.nome }))
   ];
   const planetOptions = [
     { key: 'Sun', label: 'Sol' },

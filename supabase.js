@@ -323,6 +323,11 @@ function coresNiveisLiberadoNoPlano(cor) {
   if (!cor || cor === 'verde') return true;
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
+/* Lotes: a Fortuna e o Espírito são pra todos os planos (Básico inclusive); os outros cinco são do Essencial pra cima. */
+function lotesLiberadoNoPlano(chave) {
+  if (chave === 'fortune' || chave === 'spirit') return true;
+  return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
+}
 /* Anéis da mandala: os termos são pra todos (Básico inclusive); decanos e dodecatemória são do Essencial pra cima. */
 function aneisLiberadoNoPlano(chave) {
   if (chave === 'termos') return true;
@@ -355,7 +360,7 @@ async function carregarNivelPlano(userId) {
   aplicarVisibilidadeFerramentasAdmin();
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
   aplicarLimiteEstiloPlanetas();
-  if (!aneisLiberadoNoPlano('decanos')) reRenderizarModuloAtivo(); // Básico: a mandala só mostra os termos (a escolha guardada não é apagada)
+  if (!aneisLiberadoNoPlano('decanos') || !lotesLiberadoNoPlano('venus')) reRenderizarModuloAtivo(); // Básico: a mandala só mostra os termos (a escolha guardada não é apagada)
   else if (!coresNiveisLiberadoNoPlano(window.coresNiveis)) reRenderizarModuloAtivo(); // Básico com violeta/ocre guardado: volta a desenhar em verde
   if (!window.temaPapiro && !temaLiberadoNoPlano('claro')) aplicarTemaMandala('papiro'); // Básico só tem o Papiro: qualquer outro tema guardado fica de lado (a escolha não é apagada)
   else if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
@@ -474,6 +479,7 @@ async function salvarCoresNiveis(cor) {
 function salvarLoteMandala(chave) {
   // liga/desliga um lote na roda (a Fortuna não tem chave: sempre aparece): escolha do APARELHO (ver lotesMandalaAtual em roda.js)
   if (chave === 'fortune') return;
+  if (!lotesLiberadoNoPlano(chave)) { alert('Este lote é do plano Essencial ou Pro. No plano Básico a mandala tem a Fortuna e o Espírito.'); return; }
   guardarLoteMandalaAparelho(chave, !lotesMandalaAtual()[chave]);
   reRenderizarModuloAtivo();
   if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();

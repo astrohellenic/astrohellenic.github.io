@@ -196,9 +196,9 @@ function htmlCfgAparencia() {
 
       <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Lotes da mandala</h4>
-        <p class="cfg-card-desc">O lote da Fortuna sempre aparece. Escolha quais dos outros aparecem na roda.</p>
+        <p class="cfg-card-desc">O lote da Fortuna sempre aparece. Escolha quais dos outros aparecem na roda: só os lotes que estão na mandala podem ser usados nas ferramentas (girar a Casa 1, Liberação, Circumambulação...).</p>
         <div class="cfg-opcoes">
-          ${LOTES_MANDALA_OPCOES.map(o => opcao("salvarLoteMandala('" + o.chave + "')", lotesMandalaAtual()[o.chave], '', ROTULOS_LOTE_CASA1[o.chave], '')).join('')}
+          ${LOTES_MANDALA_OPCOES.map(o => opcao("salvarLoteMandala('" + o.chave + "')", lotesMandalaAtual()[o.chave], '', ROTULOS_LOTE_CASA1[o.chave], lotesLiberadoNoPlano(o.chave) ? '' : 'Plano Essencial ou Pro')).join('')}
         </div>
       </div>
 
