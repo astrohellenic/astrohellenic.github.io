@@ -111,7 +111,8 @@ function guardarEstiloMandalaAparelho(estilo, tema) {
 function aneisMandalaAtual() {
   let m = {};
   try { m = JSON.parse(localStorage.getItem('astro_aneis_mandala') || '{}') || {}; } catch (e) {}
-  return { decanos: m.decanos !== false, termos: m.termos !== false, dodec: m.dodec !== false };
+  const livre = k => typeof aneisLiberadoNoPlano !== 'function' || aneisLiberadoNoPlano(k); // Básico: só os termos (a escolha guardada não é apagada)
+  return { decanos: m.decanos !== false && livre('decanos'), termos: m.termos !== false, dodec: m.dodec !== false && livre('dodec') };
 }
 function guardarAneisMandalaAparelho(chave, ligado) {
   const m = aneisMandalaAtual();
