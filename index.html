@@ -1495,7 +1495,16 @@ body:not(.modo-mandala) #mandala-container .painel { margin-left: 0; padding-lef
 
     try {
       const res = isCadastroMode ? await criarConta(email, pass) : await fazerLogin(email, pass);
-      if (res) fecharTelaLogin();
+      if (res) {
+        fecharTelaLogin();
+        /* Entrou (ou criou a conta) SEM recarregar a página: traz agora o que só era trazido ao abrir já logado — principalmente o PLANO
+           (sem ele nada fica bloqueado), mais tema, estilos, mapas e pastas. */
+        try {
+          const { data: { session } } = await (window.supabaseClient || supabaseClient).auth.getSession();
+          if (session && typeof recarregarDefinicoesDaConta === 'function') await recarregarDefinicoesDaConta(session.user);
+          if (typeof carregarPastasSalvas === 'function') carregarPastasSalvas();
+        } catch (e) { console.error(e); }
+      }
     } catch (err) {
       if (errorEl) {
         errorEl.innerText = "Erro de execução: " + err.message;
