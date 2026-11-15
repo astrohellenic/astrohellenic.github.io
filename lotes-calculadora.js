@@ -514,7 +514,30 @@ function iniciarModuloLotes() {
   renderLotesUI();
 }
 
+/* PLANO NA CALCULADORA: a ferramenta só abre depois que o plano carregou (window.nivelPlano). Plano Básico: só a Fortuna e o Espírito são calculados
+   (os outros lotes aparecem travados, SEM a fórmula, senão a pessoa copiava a conta pra Calculadora Livre) e a Calculadora Livre é travada inteira.
+   Essencial e Pro: tudo. */
+function lotesCalcEssencialOuMais() { return !!window.nivelPlano && NIVEIS_COM_TEMAS.includes(window.nivelPlano); }
+function lotesCalcLiberado(chave) { return chave === 'fortuna' || chave === 'espirito' || lotesCalcEssencialOuMais(); }
+let lotesTentativasPlano = 0;
+function renderLoteTravadoHTML(iconHTML, nome) {
+  return `
+    <div class="cartao" style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--azul-egipcio-escuro); flex-shrink: 0; opacity: .5;">${iconHTML}</div>
+        <div class="nome-nivel" style="flex: 1; line-height: 1.25; color: var(--terracota); opacity: .6;">${escapeHtml(nome)}</div>
+      </div>
+      <div class="texto-apagado" style="font-size: 12px;">Plano Essencial ou Pro</div>
+    </div>`;
+}
 function renderLotesUI() {
+  if (!window.nivelPlano) { // espera o plano carregar antes de mostrar qualquer cálculo
+    const cont = document.getElementById("mandala-container");
+    if (cont) cont.innerHTML = `<div class="lotes-outer painel" id="lotes-container" style="width: 100%; min-height: 100%;"><h3 class="lotes-titulo titulo-ferramenta">Calculadora de Lotes</h3><div class="texto-apagado">${lotesTentativasPlano > 40 ? 'Não foi possível carregar o seu plano. Recarregue a página.' : 'Carregando...'}</div></div>`;
+    if (lotesTentativasPlano++ <= 40) setTimeout(() => { if (document.getElementById('lotes-container') && !document.getElementById('lotesConteudoArea')) renderLotesUI(); }, 500); // tenta de novo até o plano chegar (a tela some se ele trocar de ferramenta)
+    return;
+  }
+  lotesTentativasPlano = 0;
   normalizarPontoPartidaLotes();
   const container = document.getElementById("mandala-container");
   if (!container || !currentCalculatedData) return;
@@ -555,7 +578,7 @@ function renderLotesUI() {
       <h4 class="titulo-secao">Lotes Pré-Calculados</h4>
 
       <div class="grade-lotes">
-        ${lotesPart1.map(l => renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda, { key: l.key })).join('')}
+        ${lotesPart1.map(l => lotesCalcLiberado(l.key) ? renderLoteCardHTML(getLoteIconHTMLLotes(l, 24), l.nome, l.deg, p.asc, l.legenda, { key: l.key }) : renderLoteTravadoHTML(getLoteIconHTMLLotes(l, 24), l.nome)).join('')}
       </div>
 
       <hr class="divisa">
@@ -571,6 +594,19 @@ function renderLotesUI() {
       <hr class="divisa">
       ` : ''}
   `;
+
+  /* PARTE 2: CALCULADORA LIVRE — travada no plano Básico (ela mostra a fórmula e deixaria refazer os lotes travados) */
+  if (!lotesCalcEssencialOuMais()) {
+    html += `
+      <h4 class="titulo-secao">Calculadora Livre</h4>
+      <div class="texto-apagado">Plano Essencial ou Pro</div>
+
+      </div>
+    </div>
+  `;
+    container.innerHTML = html;
+    return;
+  }
 
   /* PARTE 2: CALCULADORA LIVRE */
   const startPointOptions = [
@@ -659,7 +695,8 @@ async function capturarLotesSelecionadosParaRelatorio() {
   const todosDisponiveis = lotesPart1.map(l => ({ key: l.key, iconHTML: getLoteIconHTMLLotes(l, 24), nome: l.nome, deg: l.deg, legenda: l.legenda }))
     .concat(lotesCustomSalvos.map(c => ({ key: c.id, iconHTML: getLoteAbbrevIconSVG('✓', 24), nome: c.nome, deg: c.deg, legenda: c.legenda })));
 
-  const selecionados = todosDisponiveis.filter(l => lotesSelecionadosRelatorio.has(l.key));
+  const chavesPre = new Set(lotesPart1.map(l => l.key));
+  const selecionados = todosDisponiveis.filter(l => lotesSelecionadosRelatorio.has(l.key) && (!chavesPre.has(l.key) || lotesCalcLiberado(l.key))); // plano Básico: só Fortuna e Espírito
   if (!selecionados.length) {
     alert('Os lotes marcados não foram encontrados — desmarque e marque de novo.');
     return;
