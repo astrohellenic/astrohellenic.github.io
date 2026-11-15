@@ -262,7 +262,10 @@ function desenharRodaSVG(o) {
   /* "papiroCabecalho" (opcional, só o Relatório com o tema Céu): pinta a
      caixinha de nome/data/cidade como papiro (ver coresCabecalhoPapiro) —
      só cor/textura, o layout do cabeçalho não muda. */
-  const corCabecalhoPng = papiro ? coresCabecalhoTinta() : papiroCabecalho ? coresCabecalhoPapiro() : coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
+  /* Mandala ao vivo no Tema Céu (a imagem que vai pra galeria): o cabeçalho é o de PAPIRO com moldura (regra do Céu), com a altura
+     certa do papiro (antes saía cortado); as margens da imagem ficam só no céu (ver mandala.js). */
+  const papiroCab = papiroCabecalho || (temaEhCeu && !papiro && !estiloForcado && !espacoTransparente && !ferr);
+  const corCabecalhoPng = papiro ? coresCabecalhoTinta() : papiroCab ? coresCabecalhoPapiro() : coresCabecalhoMandala(modoEscuro, corCabecalhoForcada);
 
   /* TINTA DO DISCO EM SI (casas, planetas, graus, eixos, aspectos). No
      Tema Claro é exatamente a paleta de sempre (nada muda). No Tema
@@ -449,7 +452,7 @@ function desenharRodaSVG(o) {
   const R_canvasFerr = Math.max(R_canvasFerrNatural, (ferr && ferr.rCanvasMinimo) || 0);
   const cy = ferr ? R_canvasFerr : R_Ceu + margemVertical;
   const headerY = cy + R_Ceu + margemVertical;
-  const headerH = (!ferr && !papiro && papiroCabecalho && typeof CABECALHO_PAPIRO_ALTURA !== 'undefined') ? CABECALHO_PAPIRO_ALTURA - 5 : 75; // papiro com moldura é mais alto
+  const headerH = (!ferr && !papiro && papiroCab && typeof CABECALHO_PAPIRO_ALTURA !== 'undefined') ? CABECALHO_PAPIRO_ALTURA - 5 : 75; // papiro com moldura é mais alto
   const headerGapBottom = 20;
   /* A largura também precisa acompanhar R_Ceu: sem isso, o céu (que agora
      varia de tamanho por mapa) pode passar dos 480px de raio e ser cortado
