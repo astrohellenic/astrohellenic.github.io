@@ -114,6 +114,22 @@ function aneisMandalaAtual() {
   const livre = k => typeof aneisLiberadoNoPlano !== 'function' || aneisLiberadoNoPlano(k); // Básico: só os termos (a escolha guardada não é apagada)
   return { decanos: m.decanos !== false && livre('decanos'), termos: m.termos !== false, dodec: m.dodec !== false && livre('dodec') };
 }
+/* LOTES NA MANDALA: a Fortuna sempre aparece; os outros seis (espírito, eros, necessidade, coragem, vitória, nêmesis) cada um liga/desliga em Configurações → Aparência.
+   Escolha do APARELHO (localStorage astro_lotes_mandala); padrão: todos ligados. Só esconde o ponto na roda: o cálculo e a Casa 1 pelo lote seguem iguais. */
+const LOTES_MANDALA_OPCOES = ['spirit', 'venus', 'mercury', 'mars', 'jupiter', 'saturn'].map(chave => ({ chave })); // os nomes vêm de ROTULOS_LOTE_CASA1 (mandala.js)
+function lotesMandalaAtual() {
+  let m = {};
+  try { m = JSON.parse(localStorage.getItem('astro_lotes_mandala') || '{}') || {}; } catch (e) {}
+  const r = { fortune: true };
+  LOTES_MANDALA_OPCOES.forEach(o => { r[o.chave] = m[o.chave] !== false; });
+  return r;
+}
+function guardarLoteMandalaAparelho(chave, ligado) {
+  let m = {};
+  try { m = JSON.parse(localStorage.getItem('astro_lotes_mandala') || '{}') || {}; } catch (e) {}
+  m[chave] = !!ligado;
+  try { localStorage.setItem('astro_lotes_mandala', JSON.stringify(m)); } catch (e) {}
+}
 function guardarAneisMandalaAparelho(chave, ligado) {
   const m = aneisMandalaAtual();
   m[chave] = !!ligado;
@@ -368,7 +384,8 @@ function desenharRodaSVG(o) {
   }
 
   /* 5. Adiciona os 7 Lotes */
-  lotes.forEach(lot => {
+  const lotesNaRoda = lotesMandalaAtual();
+  lotes.filter(lot => lotesNaRoda[lot.type] !== false).forEach(lot => { // a Fortuna sempre; os outros conforme a escolha do aparelho
     outerRingItems.push({
       type: "lot",
       label: lot.label,

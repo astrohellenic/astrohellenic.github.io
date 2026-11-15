@@ -471,6 +471,14 @@ async function salvarCoresNiveis(cor) {
   }
 }
 
+function salvarLoteMandala(chave) {
+  // liga/desliga um lote na roda (a Fortuna não tem chave: sempre aparece): escolha do APARELHO (ver lotesMandalaAtual em roda.js)
+  if (chave === 'fortune') return;
+  guardarLoteMandalaAparelho(chave, !lotesMandalaAtual()[chave]);
+  reRenderizarModuloAtivo();
+  if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+}
+
 function salvarAneisMandala(chave) {
   if (!aneisLiberadoNoPlano(chave)) { alert('Decanos e dodecatemória são do plano Essencial ou Pro. No plano Básico a mandala mostra os termos.'); return; }
   // liga/desliga um anel de fora (decanos, termos, dodecatemória): escolha do APARELHO (ver aneisMandalaAtual em roda.js)

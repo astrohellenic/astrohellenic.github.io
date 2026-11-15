@@ -195,6 +195,14 @@ function htmlCfgAparencia() {
       </div>
 
       <div class="cfg-card cfg-card-largo">
+        <h4 class="cfg-card-titulo">Lotes da mandala</h4>
+        <p class="cfg-card-desc">O lote da Fortuna sempre aparece. Escolha quais dos outros aparecem na roda.</p>
+        <div class="cfg-opcoes">
+          ${LOTES_MANDALA_OPCOES.map(o => opcao("salvarLoteMandala('" + o.chave + "')", lotesMandalaAtual()[o.chave], '', ROTULOS_LOTE_CASA1[o.chave], '')).join('')}
+        </div>
+      </div>
+
+      <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Estilo da mandala</h4>
         <p class="cfg-card-desc">Só o <strong>formato</strong> do desenho — onde cada coisa fica. As cores e os ícones não mudam: seguem o tema (Céu, Claro, Escuro, papiro).</p>
         <div class="cfg-opcoes">
