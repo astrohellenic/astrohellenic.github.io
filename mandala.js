@@ -2049,7 +2049,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     ctx.drawImage(imgLoader, 0, 0, canvas.width, canvas.height);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
-       window.lastRenderedPngGaleria = ''; emoldurarCanvasGaleria(canvas).then(cv => { window.lastRenderedPngGaleria = cv.toDataURL('image/png'); }).catch(() => {});
+       window.lastRenderedPngGaleria = ''; /* Tema Céu: a imagem salva é SÓ O CÉU, sem moldura nem papiro nas margens */ ((window.temaMandala === 'ceu' && !papiroNaTela && !estiloForcado) ? Promise.resolve(canvas) : emoldurarCanvasGaleria(canvas)).then(cv => { window.lastRenderedPngGaleria = cv.toDataURL('image/png'); }).catch(() => {});
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">
