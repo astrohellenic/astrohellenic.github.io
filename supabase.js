@@ -465,6 +465,13 @@ async function salvarCoresNiveis(cor) {
   }
 }
 
+function salvarAneisMandala(chave) {
+  // liga/desliga um anel de fora (decanos, termos, dodecatemória): escolha do APARELHO (ver aneisMandalaAtual em roda.js)
+  guardarAneisMandalaAparelho(chave, !aneisMandalaAtual()[chave]);
+  reRenderizarModuloAtivo();
+  if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+}
+
 function salvarEstiloMandala(estilo) {
   // escolha do APARELHO e do tema em uso (ver estiloMandalaAtual em roda.js): não vai mais pra conta
   guardarEstiloMandalaAparelho(estilo);

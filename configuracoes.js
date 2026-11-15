@@ -185,6 +185,16 @@ function htmlCfgAparencia() {
       </div>
 
       <div class="cfg-card cfg-card-largo">
+        <h4 class="cfg-card-titulo">Anéis da mandala</h4>
+        <p class="cfg-card-desc">Escolha o que aparece nos anéis de fora. Pode ligar os três, dois, um ou nenhum.</p>
+        <div class="cfg-opcoes">
+          ${opcao("salvarAneisMandala('decanos')", aneisMandalaAtual().decanos, '', 'Decanos', 'Os 36 decanos, na ordem caldaica a partir de Marte em Áries')}
+          ${opcao("salvarAneisMandala('termos')", aneisMandalaAtual().termos, '', 'Termos', 'Os termos egípcios')}
+          ${opcao("salvarAneisMandala('dodec')", aneisMandalaAtual().dodec, '', 'Dodecatemória', 'As 12 partes de 2°30′ de cada signo')}
+        </div>
+      </div>
+
+      <div class="cfg-card cfg-card-largo">
         <h4 class="cfg-card-titulo">Estilo da mandala</h4>
         <p class="cfg-card-desc">Só o <strong>formato</strong> do desenho — onde cada coisa fica. As cores e os ícones não mudam: seguem o tema (Céu, Claro, Escuro, papiro).</p>
         <div class="cfg-opcoes">
