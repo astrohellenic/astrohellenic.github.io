@@ -978,6 +978,49 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
   };
 
   const corCalc = epoca ? PRETO_TINTA : tinta.inkForte; // cor dos pontos calculados (lotes, nodos, sizígia)
+
+  /* NÚMEROS DOS GRAUS SEM SE SOBREPOR: os ícones ficam sempre no lugar exato (mostram onde cada um está); só o número do grau procura
+     outro lugar perto (do lado, mais abaixo, em cima) quando o de baixo bateria em outro número ou em outro ícone. Quem não bate fica como sempre. */
+  {
+    const discos = [], caixas = [], pos = [];
+    outerRingItems.forEach((item, i) => {
+      let p, r, fs, dy0;
+      if (item.type === 'planet') {
+        const rP = pR + (item.eclLat * latPxPerGrau) + (estiloRoda.planetaComDesvio ? (item.rOffset || 0) : 0);
+        p = polarToCart(cx, cy, rP, estiloRoda.planetaComDesvio ? item.aShift : item.aScreen); r = temaCeu ? 14 : 18; fs = 10.5; dy0 = 27;
+      } else {
+        p = polarToCart(cx, cy, (item.type === 'lot' ? estiloRoda.raioLotes : pR) + (item.rOffset || 0), item.aShift); r = 12; fs = 8;
+        dy0 = item.type === 'lot' ? 17 : item.type === 'syzygy' ? 21 : 19;
+      }
+      pos[i] = { p, r, fs, dy0 };
+      discos.push({ x: p.x, y: p.y, r, i });
+    });
+    eixosInternos.forEach(e => {
+      const a = polarToCart(cx, cy, rEixoInterno, eclToScreenAngle(e.deg, house1RefAbs));
+      discos.push({ x: a.x, y: a.y, r: 14, i: -1 });
+      caixas.push({ x1: a.x - 20, x2: a.x + 20, y1: a.y + 29 - 9, y2: a.y + 29 + 3 });
+    });
+    const bate = (c, dono) => caixas.some(b => c.x1 < b.x2 && c.x2 > b.x1 && c.y1 < b.y2 && c.y2 > b.y1) ||
+      discos.some(d => d.i !== dono && Math.max(c.x1 - d.x, 0, d.x - c.x2) ** 2 + Math.max(c.y1 - d.y, 0, d.y - c.y2) ** 2 < d.r * d.r);
+    const ordem = outerRingItems.map((it, i) => i).sort((a, b) => (outerRingItems[a].type === 'planet' ? 0 : 1) - (outerRingItems[b].type === 'planet' ? 0 : 1));
+    ordem.forEach(i => {
+      const it = outerRingItems[i], q = pos[i];
+      const txt = formatDegMin(it.deg) + (it.retro ? ' ℞' : '');
+      const w = txt.length * q.fs * 0.6 + 4;
+      const cands = [];
+      [0, 12, 24, 36].forEach(ex => [0, 1, -1, 2, -2, 3, -3, 4, -4].forEach(k => cands.push({ dx: k * 12, dy: q.dy0 + ex })));
+      cands.push({ dx: 0, dy: -(q.r + 8) }, { dx: 12, dy: -(q.r + 8) }, { dx: -12, dy: -(q.r + 8) });
+      cands.forEach(c => { c.custo = Math.abs(c.dx) * 0.8 + Math.abs(c.dy - q.dy0); });
+      cands.sort((a, b) => a.custo - b.custo);
+      let esc = cands.find(c => {
+        const x = q.p.x + c.dx, y = q.p.y + c.dy;
+        return !bate({ x1: x - w / 2, x2: x + w / 2, y1: y - q.fs, y2: y + 3 }, i);
+      }) || cands[0];
+      it.rotDx = esc.dx; it.rotDy = esc.dy;
+      const x = q.p.x + esc.dx, y = q.p.y + esc.dy;
+      caixas.push({ x1: x - w / 2, x2: x + w / 2, y1: y - q.fs, y2: y + 3 });
+    });
+  }
   outerRingItems.forEach(item => {
     if (item.type === 'planet') return;
 
@@ -1004,20 +1047,20 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         ${temaCeu ? iconeCalculadoCeuSVG('outro', nodeKey, corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="' + fundoPainelClaro() + '"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', nodeKey, undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
-        <text x="0" y="19" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="${item.rotDx}" y="${item.rotDy}" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "syzygy") {
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         ${temaCeu ? iconeCalculadoCeuSVG('outro', 'sizigia', corCalculadoCeu(pPos.x, pPos.y), true, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="' + fundoPainelClaro() + '"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('outro', 'sizigia', undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
-        <text x="0" y="21" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="${item.rotDx}" y="${item.rotDy}" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     } else if (item.type === "lot") {
       const loteKey = LOTE_ICON_KEY[item.lotType] || 'fortune';
       svg += `<g transform="translate(${pPos.x}, ${pPos.y})">
         ${temaCeu ? iconeCalculadoCeuSVG('lote', loteKey, corCalculadoCeu(pPos.x, pPos.y), false, semReticuloCeu) : `${reticuloTinta(14, corCalc)}${papiro ? '' : '<circle cx="0" cy="0" r="11" fill="' + fundoPainelClaro() + '"/>'}
         <g transform="scale(0.22) translate(-50, -50)">${getIconeFragmento('lote', loteKey, undefined, papiro ? PRETO_TINTA : undefined)}</g>`}
-        <text x="0" y="17" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
+        <text x="${item.rotDx}" y="${item.rotDy}" font-size="8" font-weight="bold" fill="${corCalc}" text-anchor="middle" stroke="${tinta.halo}" stroke-width="3" paint-order="stroke fill">${formatDegMin(item.deg)}</text>
       </g>`;
     }
   });
@@ -1061,13 +1104,13 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
           luaFrac: (1 - Math.cos(elong * Math.PI / 180)) / 2, luaCrescente: elong < 180,
           luaInvertida: (currentGeo && currentGeo.lat < 0)
         });
-        svg += `<text x="${pPonto.x.toFixed(1)}" y="${(pPonto.y + 27).toFixed(1)}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>`;
+        svg += `<text x="${(pPonto.x + item.rotDx).toFixed(1)}" y="${(pPonto.y + item.rotDy).toFixed(1)}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>`;
         return;
       }
 
       svg += `<g transform="translate(${pPonto.x}, ${pPonto.y})">
         <g transform="scale(0.36) translate(-50, -50)">${papiro ? getIconeFragmento('planeta', item.id, data) : (ferr ? ferr.fragmentoPlaneta(item.id) : planetIconFragment(item.id))}</g>
-        <text x="0" y="27" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
+        <text x="${item.rotDx}" y="${item.rotDy}" ${estiloGrau}>${formatDegMin(item.deg)}${retroSymbol}</text>
       </g>`;
     });
 
