@@ -66,6 +66,7 @@ function linhaBarraTempo(inicio, fim, unidade, colunas, momento) {
    - fnIr: nome da função global que abre o período de índice i; glifo(item, tam): HTML do glifo; fmtData(data);
    - fnLista: nome da função global que volta à lista deste nível (n) e limpa a escolha dele e dos de baixo; ligada ao rótulo
      ("Nível 2:") e à primeira linha do menu ("Ver a lista"). Sem ela o cabeçalho só anda entre vizinhos;
+   - momento: data de referência da barra (ex.: a data escolhida na busca); sem ela, agora;
    - rotulo(item): texto antes do glifo (padrão 'Nível n'); unidade: da barrinha; inicio(item)/fim(item): opcionais (padrão item.start / item.end). */
 function cabecalhoNivelTempo(o) {
   const ini = o.inicio || (x => x.start), fim = o.fim || (x => x.end);
@@ -84,7 +85,7 @@ function cabecalhoNivelTempo(o) {
         <span data-html2canvas-ignore="true">${seta(1)}</span>
       </div>
       <div class="texto-apagado" style="text-align: center; font-size: 12px;">${o.fmtData(ini(x))} a ${o.fmtData(fim(x))}</div>
-      ${barraTempo(ini(x), fim(x), 'margin: 6px 16px 0;', 11, o.unidade)}
+      ${barraTempo(ini(x), fim(x), 'margin: 6px 16px 0;', 11, o.unidade, o.momento)}
       <div id="${o.id}MenuNivel${o.n}" class="menu-flutuante" data-html2canvas-ignore="true" style="display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; width: min(360px, 92%); box-sizing: border-box; max-height: 340px; overflow-y: auto;">${itens}</div>
     </div>`;
 }
@@ -92,15 +93,19 @@ function cabecalhoNivelTempo(o) {
 /* BUSCA POR DATA. A ferramenta guarda a data escolhida (Date ao meio-dia, ou null = hoje) e, quando a pessoa toca em Ir,
    abre a árvore até o período que contém a data. O campo NUNCA age sozinho ao mudar (o seletor do iPad dispara "change" com a data
    de hoje no instante em que abre): só o botão Ir leva à data. Tamanho mínimo no campo: vazio com appearance:none some no iPad.
-   Opções: id (do campo), data (Date ou null), fnIr (função global que recebe 'AAAA-MM-DD' ou '' para voltar a hoje). */
+   Opções: id (do campo), data (Date ou null), fnIr (função global que recebe 'AAAA-MM-DD' ou '' para voltar a hoje);
+   rotulo (opcional): texto pequeno antes do campo;
+   fnBarras + barrasNaData (opcionais): botão que alterna as barras entre "como estão na data escolhida" e "como estão hoje". */
 function buscaPorDataHTML(o) {
   const d = o.data;
   const valor = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
   return `<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; color: var(--azul-egipcio-escuro);">
+        ${o.rotulo ? `<span class="texto-apagado" style="font-size: 12px;">${o.rotulo}</span>` : ''}
         <button type="button" class="botao-icone" onclick="const i=document.getElementById('${o.id}'); try { i.showPicker(); } catch (e) { i.focus(); i.click(); }" title="Ir para a data"><svg class="icone" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="3"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="20" y1="6" x2="20" y2="18"/><line x1="44" y1="6" x2="44" y2="18"/></svg></button>
         <input type="date" id="${o.id}" value="${valor}" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; min-height: 36px; min-width: 160px; box-sizing: border-box;">
         <button type="button" class="botao-texto" onclick="const v=document.getElementById('${o.id}').value; if (v) ${o.fnIr}(v);">Ir</button>
         ${d ? `<button type="button" class="botao-texto janela-sec" onclick="${o.fnIr}('')">Hoje</button>` : ''}
+        ${d && o.fnBarras ? `<button type="button" class="botao-texto janela-sec" onclick="${o.fnBarras}()" title="Alterna a porcentagem das barras entre a data escolhida e hoje">Barras: ${o.barrasNaData ? 'na data' : 'hoje'}</button>` : ''}
       </div>`;
 }
 

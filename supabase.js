@@ -323,6 +323,16 @@ function coresNiveisLiberadoNoPlano(cor) {
   if (!cor || cor === 'verde') return true;
   return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
 }
+/* Lotes: a Fortuna e o Espírito são pra todos os planos (Básico inclusive); os outros cinco são do Essencial pra cima. */
+function lotesLiberadoNoPlano(chave) {
+  if (chave === 'fortune' || chave === 'spirit') return true;
+  return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
+}
+/* Anéis da mandala: os termos são pra todos (Básico inclusive); decanos e dodecatemória são do Essencial pra cima. */
+function aneisLiberadoNoPlano(chave) {
+  if (chave === 'termos') return true;
+  return !window.nivelPlano || NIVEIS_COM_TEMAS.includes(window.nivelPlano);
+}
 function aplicarLimiteEstiloPlanetas() {
   if (estiloPlanetasLiberadoNoPlano(window.estiloPlanetas) || window.estiloPlanetas === 'simples') return;
   window.estiloPlanetas = 'simples';
@@ -350,7 +360,8 @@ async function carregarNivelPlano(userId) {
   aplicarVisibilidadeFerramentasAdmin();
   // Quem é do plano Básico e estava com um tema do Essencial (escolhido antes do bloqueio) volta pro Claro.
   aplicarLimiteEstiloPlanetas();
-  if (!coresNiveisLiberadoNoPlano(window.coresNiveis)) reRenderizarModuloAtivo(); // Básico com violeta/ocre guardado: volta a desenhar em verde
+  if (!aneisLiberadoNoPlano('decanos') || !lotesLiberadoNoPlano('venus')) reRenderizarModuloAtivo(); // Básico: a mandala só mostra os termos (a escolha guardada não é apagada)
+  else if (!coresNiveisLiberadoNoPlano(window.coresNiveis)) reRenderizarModuloAtivo(); // Básico com violeta/ocre guardado: volta a desenhar em verde
   if (!window.temaPapiro && !temaLiberadoNoPlano('claro')) aplicarTemaMandala('papiro'); // Básico só tem o Papiro: qualquer outro tema guardado fica de lado (a escolha não é apagada)
   else if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
@@ -463,6 +474,23 @@ async function salvarCoresNiveis(cor) {
   } catch (e) {
     alert("Erro de conexão ao salvar a cor dos níveis.");
   }
+}
+
+function salvarLoteMandala(chave) {
+  // liga/desliga um lote na roda (a Fortuna não tem chave: sempre aparece): escolha do APARELHO (ver lotesMandalaAtual em roda.js)
+  if (chave === 'fortune') return;
+  if (!lotesLiberadoNoPlano(chave)) { alert('Este lote é do plano Essencial ou Pro. No plano Básico a mandala tem a Fortuna e o Espírito.'); return; }
+  guardarLoteMandalaAparelho(chave, !lotesMandalaAtual()[chave]);
+  reRenderizarModuloAtivo();
+  if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
+}
+
+function salvarAneisMandala(chave) {
+  if (!aneisLiberadoNoPlano(chave)) { alert('Decanos e dodecatemória são do plano Essencial ou Pro. No plano Básico a mandala mostra os termos.'); return; }
+  // liga/desliga um anel de fora (decanos, termos, dodecatemória): escolha do APARELHO (ver aneisMandalaAtual em roda.js)
+  guardarAneisMandalaAparelho(chave, !aneisMandalaAtual()[chave]);
+  reRenderizarModuloAtivo();
+  if (typeof atualizarTelaConfiguracoes === 'function') atualizarTelaConfiguracoes();
 }
 
 function salvarEstiloMandala(estilo) {

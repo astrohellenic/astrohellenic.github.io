@@ -1126,23 +1126,23 @@ body {
 <script src="papiro.js?v=20261112a"></script>
 <script src="fontes-imagem.js?v=20261106a"></script>
 <script src="dialogos.js?v=20261010f"></script>
-<script src="supabase.js?v=20261107a"></script>
+<script src="supabase.js?v=20261115c"></script>
 <script src="importacao.js?v=20261027a"></script>
-<script src="planetIcons.js?v=20261106u"></script>
+<script src="planetIcons.js?v=20261114c"></script>
 <script src="matrizVisibilidade.js?v=20261106zu"></script>
 <script src="tabelaTecnica.js?v=20261106zz"></script>
-<script src="mandala.js?v=20261107d"></script>
-<script src="roda.js?v=20261107c"></script>
+<script src="mandala.js?v=20261115b"></script>
+<script src="roda.js?v=20261116e"></script>
 <script src="isopsefia.js?v=20261106f"></script>
-<script src="profeccao.js?v=20261106zz"></script>
+<script src="profeccao.js?v=20261116a"></script>
 <script src="sinastria.js?v=20261106zz"></script>
 <script src="revolucao.js?v=20261030a"></script>
 <script src="revolucaoLunar.js?v=20261009b"></script>
-<script src="camadas-tempo.js?v=20261107d"></script>
-<script src="decenios.js?v=20261106zz"></script>
-<script src="direcoes.js?v=20261106zw"></script>
-<script src="liberacao.js?v=20261109a"></script>
-<script src="lotes-calculadora.js?v=20261106zz"></script>
+<script src="camadas-tempo.js?v=20261116c"></script>
+<script src="decenios.js?v=20261116d"></script>
+<script src="direcoes.js?v=20261115a"></script>
+<script src="liberacao.js?v=20261116b"></script>
+<script src="lotes-calculadora.js?v=20261115b"></script>
 <script src="horas.js?v=20261106zz"></script>
 <script src="fases-vida.js?v=20261106c"></script>
 <script src="duracao-vida.js?v=20261107d"></script>
@@ -1155,7 +1155,7 @@ body {
 <script src="papiro-folha.js?v=20261005a"></script>
 <script src="relatorio.js?v=20261107g"></script>
 <script src="agendamento.js?v=20261106c"></script>
-<script src="configuracoes.js?v=20261106v"></script>
+<script src="configuracoes.js?v=20261115c"></script>
 <script src="financeiro.js?v=20261106f"></script>
 <script src="laser.js?v=20261110b"></script>
 
@@ -1495,7 +1495,16 @@ body:not(.modo-mandala) #mandala-container .painel { margin-left: 0; padding-lef
 
     try {
       const res = isCadastroMode ? await criarConta(email, pass) : await fazerLogin(email, pass);
-      if (res) fecharTelaLogin();
+      if (res) {
+        fecharTelaLogin();
+        /* Entrou (ou criou a conta) SEM recarregar a página: traz agora o que só era trazido ao abrir já logado — principalmente o PLANO
+           (sem ele nada fica bloqueado), mais tema, estilos, mapas e pastas. */
+        try {
+          const { data: { session } } = await (window.supabaseClient || supabaseClient).auth.getSession();
+          if (session && typeof recarregarDefinicoesDaConta === 'function') await recarregarDefinicoesDaConta(session.user);
+          if (typeof carregarPastasSalvas === 'function') carregarPastasSalvas();
+        } catch (e) { console.error(e); }
+      }
     } catch (err) {
       if (errorEl) {
         errorEl.innerText = "Erro de execução: " + err.message;

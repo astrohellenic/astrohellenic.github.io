@@ -787,9 +787,10 @@ function injetarBotaoRotacaoNaBarraSuperior() {
   const ladoBotao = 44;
   const tamanhoIcone = 28;
 
+  normalizarLoteCasa1(); // só se pode girar a Casa 1 num lote que está na mandala
   const iconContent = getIconeOpcaoRotacaoCasa1(selectedHouse1Lot, tamanhoIcone);
 
-  const itensMenuHTML = OPCOES_ROTACAO_CASA1.map(opcao => `
+  const itensMenuHTML = OPCOES_ROTACAO_CASA1.filter(opcao => loteLiberadoNaRoda(opcao.key)).map(opcao => `
         <div onclick="alternarRotacaoCasa1('${opcao.key}')" title="${opcao.label}" style="padding: 4px 0; cursor: pointer; display: flex; justify-content: center;">${getIconeOpcaoRotacaoCasa1(opcao.key, tamanhoIcone)}</div>`).join('');
 
     btnContainer.innerHTML = `
@@ -2048,7 +2049,7 @@ function renderMandala(dadosNovos, onReady, estiloForcado, fundoTransparente, co
     ctx.drawImage(imgLoader, 0, 0, canvas.width, canvas.height);
 
        lastRenderedPngUrl = canvas.toDataURL('image/png');
-       window.lastRenderedPngGaleria = ''; emoldurarCanvasGaleria(canvas).then(cv => { window.lastRenderedPngGaleria = cv.toDataURL('image/png'); }).catch(() => {});
+       window.lastRenderedPngGaleria = ''; /* Tema Céu: a imagem salva é SÓ O CÉU, sem moldura nem papiro nas margens */ ((window.temaMandala === 'ceu' && !papiroNaTela && !estiloForcado) ? Promise.resolve(canvas) : emoldurarCanvasGaleria(canvas)).then(cv => { window.lastRenderedPngGaleria = cv.toDataURL('image/png'); }).catch(() => {});
 
           container.innerHTML = `
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: visible; position: relative;">

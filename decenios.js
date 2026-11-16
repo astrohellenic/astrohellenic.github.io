@@ -50,6 +50,7 @@ let overrideStartPlanet = null;
    Sem nada escolhido, a tela mostra a lista do Nível 1; escolhido o 1, a lista do 2; escolhido o 2, a lista do 3. */
 let decNivel1 = null;
 let decNivel2 = null;
+let barrasNaDataDec = true; // barras mostram o andamento na data buscada (true) ou em relação a hoje (false)
 let dataBuscaDec = null; // data escolhida na busca ("Ir para a data"); null = hoje
 let buscaPendenteDec = false; // a busca (ou o botão Hoje) pede pra árvore abrir até o período da data, no próximo desenho
 
@@ -66,6 +67,60 @@ function iniciarModuloDecenios(redesenho) {
   }
 
   renderDeceniosUI(container);
+}
+
+/* Mandala natal dos Decênios: a MESMA roda das outras ferramentas (desenharRodaSVG, roda.js), igual à da Liberação, com uma adaptação: o nível
+   aqui é um PLANETA, não um signo. Então no lugar da fatia do signo entra um disco em volta do planeta e, no lugar da bordinha de fora, um
+   traço na altura dele. Cores (corNivelMandala) e posição das bordinhas (raioDestaque + 14/24/34) são as mesmas da Liberação; níveis
+   sobrepostos: o disco do nível maior é 8 px mais largo (a espessura da bordinha), então um fica dentro do outro. */
+function gerarMandalaNatalDec(dados, planetasNivel) {
+  if (!dados || !dados.Ascendente) return '';
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const palZ = paletaEpoca(!papiro && document.documentElement.classList.contains('tema-escuro'));
+  const sufixo = `zr${wheelInstanceCounterZR++}`;
+  const niveis = [1, 2, 3].filter(n => planetasNivel[n]);
+  const RAIO_BASE = 22, PASSO = 8, LARGURA_TRACO = 30, SLOT = { 1: [34, 42], 2: [24, 32], 3: [14, 22] };
+  return desenharRodaSVG({
+    tintaPapiro: papiro,
+    ferramenta: {
+      dados,
+      folgaCanvas: 55, // mesma folga da Liberação: a mandala sai do mesmo tamanho
+      fundoDisco: papiro ? 'none' : palZ.fundoCreme,
+      abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+      <defs>${construirDefsPlanetasZR(sufixo)}</defs>
+      <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
+      fragmentoPlaneta: (id) => fragmentoPlaneta3DZR(id, sufixo),
+      glowSol: (pos, raio, tinta) => `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="${tinta.fundoDisco}"/>` +
+        `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="url(#combustionGlow_${sufixo})"/>`,
+      destaques: {
+        // do nível mais fundo (3, o disco maior) para o 1 (o menor, por cima), como as fatias da Liberação
+        discosPlanetas: niveis.slice().reverse().map(n => ({ id: planetasNivel[n], raio: RAIO_BASE + PASSO * (n - 1), cor: corNivelMandala(n, 0.40) })),
+        marcasPlanetas: niveis.slice().reverse().map(n => ({ id: planetasNivel[n], cor: corNivelMandala(n), de: SLOT[n][0], ate: SLOT[n][1], largura: LARGURA_TRACO }))
+      }
+    }
+  }).svg;
+}
+
+/* Planeta de cada nível que a mandala marca: com nada escolhido, o caminho de hoje (ou da data buscada); escolhido o nível 1 e/ou 2, o caminho
+   escolhido; o nível 3, como o nível 4 da Liberação, é o que está ativo na data dentro do nível 2 mostrado. */
+function planetasNiveisDec(result, hoje) {
+  const { timelineL1, sortedPlanets } = result;
+  const porData = { inicio: x => x.startDate, fim: x => x.endDate };
+  let i1 = decNivel1, i2 = decNivel2;
+  if (i1 === null) {
+    i1 = acharPeriodo(timelineL1, hoje, porData.inicio, porData.fim);
+    i2 = i1 === -1 ? -1 : acharPeriodo(timelineL1[i1].subperiods, hoje, porData.inicio, porData.fim);
+  }
+  const r = {};
+  if (i1 === null || i1 === -1) return r;
+  r[1] = timelineL1[i1].planet.id;
+  if (i2 === null || i2 === -1) return r;
+  const x2 = timelineL1[i1].subperiods[i2];
+  r[2] = x2.planet.id;
+  const l3 = calcularSubperiodosL3Dec(x2.planet, x2.startDate, x2.days, sortedPlanets);
+  const k = acharPeriodo(l3, hoje, porData.inicio, porData.fim);
+  if (k !== -1) r[3] = l3[k].planet.id;
+  return r;
 }
 
 function renderDeceniosUI(container) {
@@ -138,16 +193,31 @@ function renderDeceniosUI(container) {
         <button type="button" onclick="salvarDeceniosNaGaleria()" title="Salvar os Decênios como imagem na galeria (com título e cabeçalho)" class="botao-icone">
           <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
-        <button type="button" onclick="capturarDeceniosParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
-          <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-        </button>
+        <div style="position: relative; flex-shrink: 0;">
+          <button type="button" onclick="const m=document.getElementById('decenioMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+          <div id="decenioMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 230px;">
+            <div class="item-menu" onclick="capturarDeceniosParaRelatorio('inteira')">Ferramenta inteira (com cabeçalho)</div>
+            <div class="item-menu" onclick="capturarDeceniosParaRelatorio('mandala')">Só a mandala (com cabeçalho)</div>
+            <div class="item-menu" onclick="capturarDeceniosParaRelatorio('tabela')">Só a tabela</div>
+          </div>
+        </div>
       </div></div>
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
       ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
 
+      <div id="decenioMandalaCapture" class="cartao" style="width: 100%; margin: 0 0 20px; padding: 12px 10px; box-sizing: border-box;">
+        <div style="max-width: max(480px, min(100%, calc(100vh - 260px))); margin: 0 auto;">
+          ${gerarMandalaNatalDec(data, planetasNiveisDec(result, dataBuscaDec ? new Date(dataBuscaDec) : new Date()))}
+        </div>
+      </div>
+
+      <hr class="divisa">
+
       <!-- Busca por data: fora do #decennialsResultsArea, não sai na imagem da galeria nem do relatório. -->
-      ${buscaPorDataHTML({ id: 'decenioBuscaData', data: dataBuscaDec, fnIr: 'irParaDataDecenios' })}
+      ${buscaPorDataHTML({ id: 'decenioBuscaData', data: dataBuscaDec, fnIr: 'irParaDataDecenios', fnBarras: 'alternarBarrasDecenios', barrasNaData: barrasNaDataDec })}
 
       <!-- EXIBIÇÃO DOS RESULTADOS DOS DECÊNIOS -->
       <div id="decennialsResultsArea">
@@ -161,32 +231,108 @@ function renderDeceniosUI(container) {
   encolherTabelasDecVisiveis(container);
 }
 
-/* Botão de galeria: título + cabeçalho padrão + resultados, SÓ AO TOCAR (ver
-   capturarESalvarNaGaleria e gerarImagemHtmlComCabecalho, mandala.js). */
+/* IMAGENS DOS DECÊNIOS (galeria e relatório), do mesmo jeito da Liberação: título + cabeçalho padrão + cartão da mandala saem direto do SVG
+   (rápido); a tabela é HTML e é a única parte que passa pelo html2canvas. "opc": {titulo, cabecalho, mandala, tabela, grande} (booleanos).
+   Devolve o canvas (escala 2). */
+function fundoCapturaDec() {
+  // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
+  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
+  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : fundoPainelClaro();
+}
+
+async function montarImagemDecenios(opc) {
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const fundo = fundoCapturaDec();
+  const arvoreEl = document.getElementById('decennialsResultsArea');
+  const cardEl = document.getElementById('decenioMandalaCapture');
+  const roda = cardEl && cardEl.querySelector('svg');
+  const W = (opc.tabela && arvoreEl) ? Math.max(320, Math.round(arvoreEl.getBoundingClientRect().width)) : 960;
+
+  let y = 0, partes = '';
+  const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
+  if (opc.titulo) {
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">decênios helenísticos</text>`;
+    y += 44;
+  }
+  if (opc.cabecalho) {
+    const k = Math.min(1, W / 960);
+    const grupo = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, 2, cores, null)
+      .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+    partes += `<g transform="translate(${(W - 960 * k) / 2}, ${y}) scale(${k})">${grupo}</g>`;
+    y += (79 * k) + 16;
+  }
+  if (opc.mandala && roda) {
+    const cs = getComputedStyle(cardEl);
+    const borda = parseFloat(cs.borderTopWidth) || 0, raio = parseFloat(cs.borderTopLeftRadius) || 0;
+    const grande = !!opc.grande;
+    const roda_s = grande ? Math.min(900, W - 24) : Math.min(480, W - 24);
+    const alturaCartao = grande ? roda_s : roda_s + 24;
+    const svgRoda = new XMLSerializer().serializeToString(roda)
+      .replace(/ style="[^"]*"/, '')
+      .replace('<svg ', `<svg x="${(W - roda_s) / 2}" y="${y + (grande ? 0 : 12)}" width="${roda_s}" height="${roda_s}" `);
+    const bordaEsq = parseFloat(cs.borderLeftWidth) || 0;
+    const moldura = grande ? '' : bordaEsq > 0
+      ? `<rect x="${borda / 2}" y="${y + borda / 2}" width="${W - borda}" height="${alturaCartao - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`
+      : (borda > 0 ? `<line x1="0" y1="${y + borda / 2}" x2="${W}" y2="${y + borda / 2}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/><line x1="0" y1="${y + alturaCartao - borda / 2}" x2="${W}" y2="${y + alturaCartao - borda / 2}" stroke="${cs.borderBottomColor}" stroke-width="${borda}"/>` : '');
+    partes += `${moldura}${svgRoda}`;
+    y += alturaCartao + 16;
+  }
+  const alturaTopo = y > 0 ? y - 16 : 0;
+
+  let topoCanvas = null;
+  if (alturaTopo > 0) {
+    topoCanvas = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${alturaTopo}" viewBox="0 0 ${W} ${alturaTopo}">${partes}</svg>`, W, alturaTopo, fundo, 2);
+  }
+  let arvoreCanvas = null;
+  if (opc.tabela && arvoreEl) {
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+    arvoreCanvas = await html2canvas(arvoreEl, { backgroundColor: fundo, scale: 2, useCORS: true });
+  }
+  if (!topoCanvas) return arvoreCanvas;
+  if (!arvoreCanvas) return topoCanvas;
+
+  const saida = document.createElement('canvas');
+  saida.width = Math.max(topoCanvas.width, arvoreCanvas.width);
+  saida.height = topoCanvas.height + 32 + arvoreCanvas.height;
+  const ctx = saida.getContext('2d');
+  if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
+  ctx.drawImage(topoCanvas, Math.round((saida.width - topoCanvas.width) / 2), 0);
+  ctx.drawImage(arvoreCanvas, Math.round((saida.width - arvoreCanvas.width) / 2), topoCanvas.height + 32);
+  return saida;
+}
+
+/* Botão de galeria: título + cabeçalho + mandala + tabela, SÓ AO TOCAR (ver capturarESalvarNaGaleria, mandala.js). */
 function salvarDeceniosNaGaleria() {
-  const area = document.getElementById('decennialsResultsArea');
-  if (!area) return;
   capturarESalvarNaGaleria(
-    () => gerarImagemHtmlComCabecalho(area, { titulo: 'DECÊNIOS HELENÍSTICOS', comCabecalho: true, papiro: true }),
+    () => montarImagemDecenios({ titulo: true, cabecalho: true, mandala: true, tabela: true }),
     `Astro_Hellenic_Decenios_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
   );
 }
 window.salvarDeceniosNaGaleria = salvarDeceniosNaGaleria;
 
-/* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho). */
-async function capturarDeceniosParaRelatorio() {
-  const area = document.getElementById('decennialsResultsArea');
-  if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+/* Manda pro Relatório. modo: 'inteira' (cabeçalho + mandala + tabela), 'mandala' (cabeçalho + mandala) ou 'tabela' (só a tabela, sem cabeçalho). */
+async function capturarDeceniosParaRelatorio(modo) {
+  const menu = document.getElementById('decenioMenuRelatorio');
+  if (menu) menu.style.display = 'none';
+  const opc = modo === 'tabela' ? { tabela: true }
+    : modo === 'mandala' ? { cabecalho: true, mandala: true, grande: true }
+    : { cabecalho: true, mandala: true, tabela: true };
+  window.__capturaSemFundo = true;
+  const fundo = fundoCapturaDec();
   try {
-    const papiro = window.temaMandala === 'ceu';
-    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro()); // Tema Céu: imagem sem fundo
-    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
-    const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'));
-    alert(`"Decênios Helenísticos" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+    const bruto = await montarImagemDecenios(opc);
+    if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+    const canvas = recortarCanvasAoConteudo(bruto, fundo);
+    const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandala' ? 'Mandala' : 'Mandala + Tabela';
+    const legenda = modo === 'tabela' ? null : [1, 2, 3].map(n => ({ cor: corNivelMandala(n), texto: `Nível ${n}` }));
+    const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'), legenda);
+    alert(`Decênios Helenísticos (${oQue}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar os Decênios ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    window.__capturaSemFundo = false;
   }
 }
 window.capturarDeceniosParaRelatorio = capturarDeceniosParaRelatorio;
@@ -404,6 +550,7 @@ function irParaDataDecenios(valor) {
   iniciarModuloDecenios(true);
 }
 window.irParaDataDecenios = irParaDataDecenios;
+window.alternarBarrasDecenios = function () { barrasNaDataDec = !barrasNaDataDec; iniciarModuloDecenios(true); };
 
 /* Volta à lista do nível n (cabeçalho do nível: rótulo ou "Ver a lista"): limpa a escolha dele e dos de baixo. */
 function irParaListaDec(n) {
@@ -434,6 +581,7 @@ function renderizarResultadosHTML(res) {
   const { timelineL1, sortedPlanets } = res;
   // "hoje" aqui é o momento que a árvore marca: hoje, ou a data escolhida na busca
   const hoje = dataBuscaDec ? new Date(dataBuscaDec) : new Date();
+  const momentoBarrasDec = (dataBuscaDec && barrasNaDataDec) ? hoje : undefined;
   const formatMin = m => String(m || 0).padStart(2, '0');
 
   const l1Lista = timelineL1;
@@ -458,7 +606,7 @@ function renderizarResultadosHTML(res) {
         <td>${duracao(n, x)}</td>
         <td style="line-height: 1.2;">${dataDec(n, x.startDate)}</td>
         <td style="line-height: 1.2;">${dataDec(n, x.endDate)}</td>
-      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4)}`;
+      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4, momentoBarrasDec)}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetra[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th></tr></thead>
@@ -466,7 +614,7 @@ function renderizarResultadosHTML(res) {
   };
 
   const navNivel = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n],
+    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n], momento: momentoBarrasDec,
     inicio: x => x.startDate, fim: x => x.endDate,
     glifo: (y, tam) => planetaComNome(y.planet.id, tam),
     fmtData: formatDateDec
