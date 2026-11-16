@@ -1246,9 +1246,36 @@ function rzSeletorHorario() {
           <button type="button" class="botao-icone" onclick="rzAjustar(rzPasso)" title="Avançar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="24,12 44,32 24,52"/></svg></button>
         </div>
         ${aj ? `<div class="texto-apagado" style="font-size:12px;">ajuste ${aj > 0 ? '+' : '−'}${Math.abs(aj)} min</div>` : ''}
+        <div style="margin-top:4px;"><button type="button" class="botao-icone" onclick="rzSalvarMandalasLadoALado()" title="Salvar as duas mandalas lado a lado como imagem na galeria"><svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg></button></div>
       </div>
     </div></div>`;
 }
+
+/* Salva as duas mandalas (horário estimado e horário retificado) lado a lado numa imagem só, na galeria. */
+function rzSalvarMandalasLadoALado() {
+  const r = rzUltimo, sel = rzFinalSel;
+  if (!r || !sel) return;
+  const e = r.entrada, fuso = e.fuso;
+  const estMs = Date.UTC(e.ano, e.mes - 1, e.dia, e.hora, e.min, 0) - fuso * 3600000, retMs = rzMsFinal(r, sel);
+  if (!rzMandalaEst || rzMandalaEst.ms !== estMs || !rzMapaFinalSvg || rzMapaFinalSvg.ms !== retMs) { alert('As duas mandalas ainda estão sendo geradas. Espere um instante e tente de novo.'); return; }
+  const hh = (ms) => rzFmtHora(ms, fuso).slice(0, 5);
+  const carrega = (url) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('imagem')); i.src = url; });
+  const nome = (typeof currentSubjectName !== 'undefined' && currentSubjectName) ? currentSubjectName : 'mapa';
+  capturarESalvarNaGaleria(async () => {
+    const [a, b] = await Promise.all([carrega(rzMandalaEst.url), carrega(rzMapaFinalSvg.url)]);
+    const m = 40, topo = 90, w = Math.max(a.width, b.width), h = Math.max(a.height, b.height);
+    const c = document.createElement('canvas'); c.width = w * 2 + m * 3; c.height = h + topo + m;
+    const ctx = c.getContext('2d');
+    if (window.temaMandala !== 'ceu') { ctx.fillStyle = '#F5EFE0'; ctx.fillRect(0, 0, c.width, c.height); }   // no Tema Céu o papiro vai por baixo
+    ctx.fillStyle = '#1A1410'; ctx.textAlign = 'center'; ctx.font = '700 34px Cinzel, Georgia, serif';
+    ctx.fillText('Horário estimado · ' + hh(estMs), m + w / 2, 56);
+    ctx.fillText('Horário retificado · ' + hh(retMs), m * 2 + w * 1.5, 56);
+    ctx.drawImage(a, m + (w - a.width) / 2, topo + (h - a.height) / 2);
+    ctx.drawImage(b, m * 2 + w + (w - b.width) / 2, topo + (h - b.height) / 2);
+    return c;
+  }, `Astro_Hellenic_Retificacao_${nome.replace(/\s+/g, '_')}_${hh(estMs).replace(':', 'h')}_e_${hh(retMs).replace(':', 'h')}.png`);
+}
+if (typeof window !== 'undefined') window.rzSalvarMandalasLadoALado = rzSalvarMandalasLadoALado;
 function rzPainelModoTrocar(m) { rzPainelModo = m; rzPainelPintar(); }
 function rzPainelPintar() {
   const el = document.getElementById('rzPainel'), r = rzUltimo; if (!el || !r || !rzFinalSel) return;
