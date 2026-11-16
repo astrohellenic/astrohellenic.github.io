@@ -417,6 +417,31 @@ function desenharRodaSVG(o) {
   /* LOTES SE SEPARAM À PARTE, DESVIANDO NO ÂNGULO (SEM MUDAR DE RAIO) */
   aplicarDesvioLateralLotes(outerRingItems, 6);
 
+  /* Roda com os lotes na mesma altura dos ângulos (comum, Astro Hellenic comum e colorido): os lotes se afastam de ASC, DSC, MC e IC
+     (e entre si), desviando só no ângulo; o fio continua indo ao grau verdadeiro (usa aScreen). */
+  if (estiloRoda.invertido) {
+    const angsEixos = [ascAbs, (ascAbs + 180) % 360, mcAbs, (mcAbs + 180) % 360].map(d => eclToScreenAngle(d, house1RefAbs));
+    const distEixo = 7, distLote = 6;
+    const dif = (x, y) => ((x - y + 540) % 360) - 180; // x - y no intervalo -180..180
+    const ls = outerRingItems.filter(it => it.type === 'lot');
+    for (let pass = 0; pass < 40; pass++) {
+      let mexeu = false;
+      ls.forEach(l => angsEixos.forEach(ae => {
+        const d = dif(l.aShift, ae);
+        if (Math.abs(d) < distEixo - 0.01) { l.aShift = ae + (d < 0 ? -distEixo : distEixo); mexeu = true; }
+      }));
+      for (let i = 0; i < ls.length; i++) for (let j = i + 1; j < ls.length; j++) {
+        const d = dif(ls[j].aShift, ls[i].aShift);
+        if (Math.abs(d) < distLote - 0.01) {
+          const o = (distLote - Math.abs(d)) / 2, sg = d < 0 ? -1 : 1;
+          ls[i].aShift -= sg * o; ls[j].aShift += sg * o; mexeu = true;
+        }
+      }
+      if (!mexeu) break;
+    }
+    ls.forEach(l => { l.aShift = (l.aShift + 360) % 360; });
+  }
+
   const latPxPerGrau = 12;
 
   /* Raio externo da faixa de céu/espaço: precisa cobrir o ponto mais
