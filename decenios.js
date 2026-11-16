@@ -193,9 +193,16 @@ function renderDeceniosUI(container) {
         <button type="button" onclick="salvarDeceniosNaGaleria()" title="Salvar os Decênios como imagem na galeria (com título e cabeçalho)" class="botao-icone">
           <svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg>
         </button>
-        <button type="button" onclick="capturarDeceniosParaRelatorio()" title="Adicionar ao Relatório (sem cabeçalho)" class="botao-icone">
-          <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
-        </button>
+        <div style="position: relative; flex-shrink: 0;">
+          <button type="button" onclick="const m=document.getElementById('decenioMenuRelatorio'); m.style.display = m.style.display === 'none' ? 'block' : 'none';" title="Adicionar ao Relatório" class="botao-icone">
+            <svg class="icone" viewBox="0 0 64 64"><path d="M14,4 H40 L50,14 V60 H14 Z"/><path d="M40,4 V14 H50"/><line x1="21" y1="28" x2="43" y2="28"/><line x1="21" y1="38" x2="43" y2="38"/><line x1="21" y1="48" x2="35" y2="48"/></svg>
+          </button>
+          <div id="decenioMenuRelatorio" class="menu-flutuante" style="display: none; position: absolute; top: 40px; right: 0; z-index: 9999; min-width: 230px;">
+            <div class="item-menu" onclick="capturarDeceniosParaRelatorio('inteira')">Ferramenta inteira (com cabeçalho)</div>
+            <div class="item-menu" onclick="capturarDeceniosParaRelatorio('mandala')">Só a mandala (com cabeçalho)</div>
+            <div class="item-menu" onclick="capturarDeceniosParaRelatorio('tabela')">Só a tabela</div>
+          </div>
+        </div>
       </div></div>
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
@@ -224,32 +231,108 @@ function renderDeceniosUI(container) {
   encolherTabelasDecVisiveis(container);
 }
 
-/* Botão de galeria: título + cabeçalho padrão + resultados, SÓ AO TOCAR (ver
-   capturarESalvarNaGaleria e gerarImagemHtmlComCabecalho, mandala.js). */
+/* IMAGENS DOS DECÊNIOS (galeria e relatório), do mesmo jeito da Liberação: título + cabeçalho padrão + cartão da mandala saem direto do SVG
+   (rápido); a tabela é HTML e é a única parte que passa pelo html2canvas. "opc": {titulo, cabecalho, mandala, tabela, grande} (booleanos).
+   Devolve o canvas (escala 2). */
+function fundoCapturaDec() {
+  // Imagem pro RELATÓRIO (window.__capturaSemFundo ligado só durante a captura): sem fundo nenhum, só as linhas em tinta.
+  if (typeof window !== 'undefined' && window.temaMandala === 'ceu') return window.__capturaSemFundo ? null : papiroCores().chapado;
+  return document.documentElement.classList.contains('tema-escuro') ? '#1c1917' : fundoPainelClaro();
+}
+
+async function montarImagemDecenios(opc) {
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
+  const fundo = fundoCapturaDec();
+  const arvoreEl = document.getElementById('decennialsResultsArea');
+  const cardEl = document.getElementById('decenioMandalaCapture');
+  const roda = cardEl && cardEl.querySelector('svg');
+  const W = (opc.tabela && arvoreEl) ? Math.max(320, Math.round(arvoreEl.getBoundingClientRect().width)) : 960;
+
+  let y = 0, partes = '';
+  const cores = papiro ? coresCabecalhoTinta() : coresCabecalhoMandala(modoEscuro, null);
+  if (opc.titulo) {
+    partes += `<text x="${W / 2}" y="26" text-anchor="middle" font-family="'Cinzel', serif" font-size="20" font-weight="800" letter-spacing="1" fill="${cores.titulo}">decênios helenísticos</text>`;
+    y += 44;
+  }
+  if (opc.cabecalho) {
+    const k = Math.min(1, W / 960);
+    const grupo = montarCabecalhoMandalaGrupoSVG(currentCalculatedData, 2, cores, null)
+      .replace(/'Cinzel', serif/g, 'serif').replace(/'Montserrat', sans-serif/g, 'sans-serif');
+    partes += `<g transform="translate(${(W - 960 * k) / 2}, ${y}) scale(${k})">${grupo}</g>`;
+    y += (79 * k) + 16;
+  }
+  if (opc.mandala && roda) {
+    const cs = getComputedStyle(cardEl);
+    const borda = parseFloat(cs.borderTopWidth) || 0, raio = parseFloat(cs.borderTopLeftRadius) || 0;
+    const grande = !!opc.grande;
+    const roda_s = grande ? Math.min(900, W - 24) : Math.min(480, W - 24);
+    const alturaCartao = grande ? roda_s : roda_s + 24;
+    const svgRoda = new XMLSerializer().serializeToString(roda)
+      .replace(/ style="[^"]*"/, '')
+      .replace('<svg ', `<svg x="${(W - roda_s) / 2}" y="${y + (grande ? 0 : 12)}" width="${roda_s}" height="${roda_s}" `);
+    const bordaEsq = parseFloat(cs.borderLeftWidth) || 0;
+    const moldura = grande ? '' : bordaEsq > 0
+      ? `<rect x="${borda / 2}" y="${y + borda / 2}" width="${W - borda}" height="${alturaCartao - borda}" rx="${raio}" ry="${raio}" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/>`
+      : (borda > 0 ? `<line x1="0" y1="${y + borda / 2}" x2="${W}" y2="${y + borda / 2}" stroke="${cs.borderTopColor}" stroke-width="${borda}"/><line x1="0" y1="${y + alturaCartao - borda / 2}" x2="${W}" y2="${y + alturaCartao - borda / 2}" stroke="${cs.borderBottomColor}" stroke-width="${borda}"/>` : '');
+    partes += `${moldura}${svgRoda}`;
+    y += alturaCartao + 16;
+  }
+  const alturaTopo = y > 0 ? y - 16 : 0;
+
+  let topoCanvas = null;
+  if (alturaTopo > 0) {
+    topoCanvas = await rasterizarSvgParaCanvas(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${alturaTopo}" viewBox="0 0 ${W} ${alturaTopo}">${partes}</svg>`, W, alturaTopo, fundo, 2);
+  }
+  let arvoreCanvas = null;
+  if (opc.tabela && arvoreEl) {
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas não carregou');
+    arvoreCanvas = await html2canvas(arvoreEl, { backgroundColor: fundo, scale: 2, useCORS: true });
+  }
+  if (!topoCanvas) return arvoreCanvas;
+  if (!arvoreCanvas) return topoCanvas;
+
+  const saida = document.createElement('canvas');
+  saida.width = Math.max(topoCanvas.width, arvoreCanvas.width);
+  saida.height = topoCanvas.height + 32 + arvoreCanvas.height;
+  const ctx = saida.getContext('2d');
+  if (fundo) { ctx.fillStyle = fundo; ctx.fillRect(0, 0, saida.width, saida.height); }
+  ctx.drawImage(topoCanvas, Math.round((saida.width - topoCanvas.width) / 2), 0);
+  ctx.drawImage(arvoreCanvas, Math.round((saida.width - arvoreCanvas.width) / 2), topoCanvas.height + 32);
+  return saida;
+}
+
+/* Botão de galeria: título + cabeçalho + mandala + tabela, SÓ AO TOCAR (ver capturarESalvarNaGaleria, mandala.js). */
 function salvarDeceniosNaGaleria() {
-  const area = document.getElementById('decennialsResultsArea');
-  if (!area) return;
   capturarESalvarNaGaleria(
-    () => gerarImagemHtmlComCabecalho(area, { titulo: 'DECÊNIOS HELENÍSTICOS', comCabecalho: true, papiro: true }),
+    () => montarImagemDecenios({ titulo: true, cabecalho: true, mandala: true, tabela: true }),
     `Astro_Hellenic_Decenios_${(currentSubjectName || 'mapa').replace(/\s+/g, '_')}.png`
   );
 }
 window.salvarDeceniosNaGaleria = salvarDeceniosNaGaleria;
 
-/* Manda pro Relatório SÓ os resultados (sem título nem cabeçalho). */
-async function capturarDeceniosParaRelatorio() {
-  const area = document.getElementById('decennialsResultsArea');
-  if (!area) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+/* Manda pro Relatório. modo: 'inteira' (cabeçalho + mandala + tabela), 'mandala' (cabeçalho + mandala) ou 'tabela' (só a tabela, sem cabeçalho). */
+async function capturarDeceniosParaRelatorio(modo) {
+  const menu = document.getElementById('decenioMenuRelatorio');
+  if (menu) menu.style.display = 'none';
+  const opc = modo === 'tabela' ? { tabela: true }
+    : modo === 'mandala' ? { cabecalho: true, mandala: true, grande: true }
+    : { cabecalho: true, mandala: true, tabela: true };
+  window.__capturaSemFundo = true;
+  const fundo = fundoCapturaDec();
   try {
-    const papiro = window.temaMandala === 'ceu';
-    const modoEscuro = !papiro && document.documentElement.classList.contains('tema-escuro');
-    const fundo = papiro ? null : (modoEscuro ? '#1c1917' : fundoPainelClaro()); // Tema Céu: imagem sem fundo
-    const canvas = recortarCanvasAoConteudo(await gerarImagemHtmlComCabecalho(area, { comCabecalho: false, papiro: true }), fundo);
-    const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'));
-    alert(`"Decênios Helenísticos" foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
+    const bruto = await montarImagemDecenios(opc);
+    if (!bruto) { alert('Tela não encontrada para adicionar ao relatório.'); return; }
+    const canvas = recortarCanvasAoConteudo(bruto, fundo);
+    const oQue = modo === 'tabela' ? 'Tabela' : modo === 'mandala' ? 'Mandala' : 'Mandala + Tabela';
+    const legenda = modo === 'tabela' ? null : [1, 2, 3].map(n => ({ cor: corNivelMandala(n), texto: `Nível ${n}` }));
+    const total = adicionarCapturaRelatorio('decenios', canvas.toDataURL('image/png'), legenda);
+    alert(`Decênios Helenísticos (${oQue}) foi adicionado ao relatório (${total}ª imagem desta ferramenta). Gere o relatório novamente para ver essa página atualizada.`);
   } catch (err) {
     console.error('Erro ao adicionar os Decênios ao relatório:', err);
     alert('Não foi possível adicionar esta tela ao relatório.');
+  } finally {
+    window.__capturaSemFundo = false;
   }
 }
 window.capturarDeceniosParaRelatorio = capturarDeceniosParaRelatorio;
