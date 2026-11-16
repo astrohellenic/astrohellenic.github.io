@@ -77,7 +77,7 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   faixaSemGlifos: true,           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
   signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
   raioLotes: 172,                 // lotes encostados no miolo (onde ficava o número da casa)
-  fioLoteDe: 'Aspects',           // o fio dos lotes vai até a borda do miolo
+  fioLoteDe: null,                // o fio dos lotes vai até a régua de graus do anel de fora (como no comum), nunca pro miolo
   faixaMeia: 86,                  // meia largura da faixa (px): cabe entre o anel dos signos e os termos (446)
   eclipticaTracejada: true        // só a linha da eclíptica é tracejada
 });
