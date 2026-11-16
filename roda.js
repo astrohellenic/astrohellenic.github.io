@@ -77,7 +77,8 @@ RODA_ESTILOS.astrohellenic_comum = Object.assign({}, RODA_ESTILOS.comum, {
   faixaSemGlifos: true,           // glifo e número do signo ficam por dentro (desenhados pelo bloco do comum), não na faixa
   signos: { fora: 300, numero: 204, glifo: 232, glifoTam: 34 }, // de dentro pra fora: lotes (172), número da casa, glifo do signo, faixa
   raioLotes: 172,                 // lotes encostados no miolo (onde ficava o número da casa)
-  fioLoteDe: null,                // o fio dos lotes vai até a régua de graus do anel de fora (como no comum), nunca pro miolo
+  aneis: Object.assign({}, RODA_ESTILOS.comum.aneis, { lotes: ['Aspects', 22] }), // lotes ENCOSTADOS no miolo (150 + 22), não na régua de fora
+  fioLoteDe: 'Aspects',           // o fio dos lotes vai até a borda do miolo
   faixaMeia: 86,                  // meia largura da faixa (px): cabe entre o anel dos signos e os termos (446)
   eclipticaTracejada: true        // só a linha da eclíptica é tracejada
 });
@@ -419,7 +420,7 @@ function desenharRodaSVG(o) {
 
   /* Roda com os lotes na mesma altura dos ângulos (comum, Astro Hellenic comum e colorido): os lotes se afastam de ASC, DSC, MC e IC
      (e entre si), desviando só no ângulo; o fio continua indo ao grau verdadeiro (usa aScreen). */
-  if (estiloRoda.invertido) {
+  if (estiloRoda.invertido && estiloRoda.aneis.lotes[0] === 'borda') { // só quando os lotes ficam na altura dos ângulos (lotes no miolo não encostam neles)
     const angsEixos = [ascAbs, (ascAbs + 180) % 360, mcAbs, (mcAbs + 180) % 360].map(d => eclToScreenAngle(d, house1RefAbs));
     const distEixo = 7, distLote = 6;
     const dif = (x, y) => ((x - y + 540) % 360) - 180; // x - y no intervalo -180..180
@@ -504,7 +505,7 @@ function desenharRodaSVG(o) {
   const bordasAneis = [r0].concat(aneisOn.map((k, i) => r0 + (i + 1) * cfgA.larg)); // n+1 círculos (um só, se nenhum anel está ligado)
   const aBordaDentro = inv ? r0 : null; // invertido: a borda de dentro de todos os anéis de fora (régua de graus, onde chegam os fios)
   const bordaFora = inv ? bordasAneis[nA] : null;
-  { const [refL, dL] = cfgA.lotes; estiloRoda.raioLotes = (refL === 'SignSector' ? R.SignSector : refL === 'Termos' ? R.Termos : r0) + dL; }
+  { const [refL, dL] = cfgA.lotes; estiloRoda.raioLotes = (refL === 'SignSector' ? R.SignSector : refL === 'Termos' ? R.Termos : refL === 'Aspects' ? R.Aspects : r0) + dL; }
   if (inv) { estiloRoda.raioAngulos = r0 + cfgA.angulos; if (estiloRoda.faixaMeia) estiloRoda.faixaMeia = Math.min(120, r0 - pR - 5); }
 
   /* CÉU DO TEMA CÉU — ver montarCeuMandalaSVG. A posição do Sol (altura
