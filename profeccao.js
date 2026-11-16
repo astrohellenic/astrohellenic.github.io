@@ -68,6 +68,13 @@
     };
 
     /* Volta à lista dos 12 meses (cabeçalho do mês: rótulo "Mês 5:" ou "Ver a lista") */
+    /* Data de referência SÓ das barras de porcentagem (não mexe em ano nem em mês escolhidos): null = hoje. */
+    window.profeccaoDataBarras = null;
+    window.definirDataBarrasProfeccao = function(valor) {
+        window.profeccaoDataBarras = dataDoCampoBusca(valor);
+        if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao({ redesenho: true });
+    };
+
     window.irParaListaProfeccao = function() {
         window.expandedProfeccaoMes = null;
         if (typeof window.iniciarModuloProfeccao === 'function') window.iniciarModuloProfeccao({ redesenho: true });
@@ -554,7 +561,7 @@
     async function iniciarModuloProfeccao(opcoes) {
         // Ao abrir a ferramenta (sem opcoes.redesenho): volta ao ano de hoje e já abre no mês de hoje (lista dos passos)
         const abrindo = !(opcoes && opcoes.redesenho);
-        if (abrindo) window.profeccaoOffsetAnos = 0;
+        if (abrindo) { window.profeccaoOffsetAnos = 0; window.profeccaoDataBarras = null; }
         const container = document.getElementById('mandala-container');
         if (!container) return;
 
@@ -625,6 +632,7 @@
         }
 
         const agoraMs = hoje.getTime();
+        const momentoBarras = window.profeccaoDataBarras ? new Date(window.profeccaoDataBarras) : undefined;
         if (abrindo) {
             const mesHoje = acharPeriodo(monthlyCache, agoraMs);
             window.expandedProfeccaoMes = mesHoje !== -1 ? mesHoje : null;
@@ -733,7 +741,8 @@
             <span class="linha-glifo" style="justify-content: center; gap: 6px;"><strong>Ano Profectado:</strong> Casa ${houseNumber} em ${signoComNome(getSignSvgHtml(profectedSignIdx, 18), profectedSignIdx)} Senhor: ${planetaComNome(SIGNS[profectedSignIdx].ruler, 26)}</span>
             ${setaAno(1)}
         </div>
-        ${barraTempo(baseMonthStart, baseMonthStart + 12 * MONTH_MS, 'margin: 0 16px 16px;', 11, 'meses')}
+        ${barraTempo(baseMonthStart, baseMonthStart + 12 * MONTH_MS, 'margin: 0 16px 16px;', 11, 'meses', momentoBarras)}
+        <div data-html2canvas-ignore="true">${buscaPorDataHTML({ id: 'profeccaoBarrasData', data: window.profeccaoDataBarras, fnIr: 'definirDataBarrasProfeccao', rotulo: 'Barras na data' })}</div>
         </div>
 
         <!-- Dois cabeçalhos PADRÃO (função global), cada um acima da sua mandala, lado a lado. -->
@@ -773,7 +782,7 @@
                     <td class="centro">${glifoSigno(x, 20)}</td>
                     <td class="centro">${planetaComNome(SIGNS[x.signIdx].ruler, n === 2 ? 30 : 26)}</td>
                     <td class="centro">${formatarData(x.start)}</td>
-                </tr>${linhaBarraTempo(x.start, x.end, unidade, 4)}`).join('');
+                </tr>${linhaBarraTempo(x.start, x.end, unidade, 4, momentoBarras)}`).join('');
             return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table id="profMensalTable" class="tabela-epoca">
                 <thead><tr><th class="centro">${n === 2 ? 'Mês' : 'Passo (60h)'}</th><th class="centro">Signo</th><th class="centro">Regente</th><th class="centro">${n === 2 ? 'Início do Período' : 'Início do Passo'}</th></tr></thead>
                 <tbody>${linhas}</tbody></table></div>`;
@@ -783,7 +792,7 @@
             html += tabelaNivel(2, listaMeses, 'alternarMesProfeccao', 'dias');
         } else {
             html += cabecalhoNivelTempo({
-                id: 'profeccao', n: 2, lista: listaMeses, idx: mesSel, fnIr: 'alternarMesProfeccao', fnLista: 'irParaListaProfeccao', unidade: 'dias',
+                id: 'profeccao', n: 2, lista: listaMeses, idx: mesSel, fnIr: 'alternarMesProfeccao', fnLista: 'irParaListaProfeccao', unidade: 'dias', momento: momentoBarras,
                 rotulo: x => `Mês ${x.num}`, glifo: glifoSigno, fmtData: formatarData
             }) + tabelaNivel(3, passosDoMes(listaMeses[mesSel]), null, 'horas');
         }
