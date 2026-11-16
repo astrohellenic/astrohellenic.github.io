@@ -693,14 +693,14 @@ function renderLiberacaoUI() {
         <td style="line-height: 1.2;">${dataZR(n, x.start)}</td>
         <td style="line-height: 1.2;">${dataZR(n, x.end)}</td>
         <td class="centro">${status}</td>
-      </tr>${linhaBarraTempo(x.start, x.end, UNIDADE_NIVEL_ZR[n], 5)}`;
+      </tr>${linhaBarraTempo(x.start, x.end, UNIDADE_NIVEL_ZR[n], 5, dataBuscaZR ? hoje : undefined)}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetraZR[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th><th class="centro">Status</th></tr></thead>
       <tbody>${linhas}</tbody></table></div>`;
   };
   const navNivelZR = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'liberacao', n, lista, idx, fnIr, fnLista: 'irParaListaLiberacao', unidade: UNIDADE_NIVEL_ZR[n],
+    id: 'liberacao', n, lista, idx, fnIr, fnLista: 'irParaListaLiberacao', unidade: UNIDADE_NIVEL_ZR[n], momento: dataBuscaZR ? hoje : undefined,
     glifo: (y, tam) => signoComNome(getSignSVGZR(y.signIdx, tam), y.signIdx),
     fmtData: formatarDataBR
   });

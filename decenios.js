@@ -458,7 +458,7 @@ function renderizarResultadosHTML(res) {
         <td>${duracao(n, x)}</td>
         <td style="line-height: 1.2;">${dataDec(n, x.startDate)}</td>
         <td style="line-height: 1.2;">${dataDec(n, x.endDate)}</td>
-      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4)}`;
+      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4, dataBuscaDec ? hoje : undefined)}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetra[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th></tr></thead>
@@ -466,7 +466,7 @@ function renderizarResultadosHTML(res) {
   };
 
   const navNivel = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n],
+    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n], momento: dataBuscaDec ? hoje : undefined,
     inicio: x => x.startDate, fim: x => x.endDate,
     glifo: (y, tam) => planetaComNome(y.planet.id, tam),
     fmtData: formatDateDec
