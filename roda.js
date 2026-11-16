@@ -196,6 +196,8 @@ function desenharRodaSVG(o) {
      loteCasa1 (chave do lote na Casa 1; sem ela, o Ascendente), folgaCanvas (px além do raio dos destaques; padrão 40), rCanvasMinimo (canvas mínimo,
      pra igualar o tamanho de duas rodas lado a lado; a função devolve rCanvasNatural = o que ESTA roda pediria sozinha),
      destaques { fatias:[{signIdx,cor}], faixas:[{signIdx,cor,de,ate}], coroas:[{rulerId, rotulo?:{texto,cor}, preenchimento, contorno, espessura, ponto}],
+     discosPlanetas:[{id,raio,cor}] (disco em volta do planeta, por baixo de tudo, como as fatias; o maior primeiro) e marcasPlanetas:[{id,cor,de,ate,largura}] (traço na borda de fora,
+     na altura do planeta, da espessura das faixas e com a largura dada), para ferramentas em que o nível é um PLANETA e não um signo (Decênios),
      depoisDasFaixas(ctx) (SVG extra da ferramenta, entre as etiquetas e a mancha do Sol; ctx = {cx,cy,house1RefAbs,raioDestaque,lotes,tinta}) }. */
   const ferr = o.ferramenta || null;
   /* Modo claro/escuro do MENU/BARRA (Configurações > Aparência, ver
@@ -656,6 +658,18 @@ ${temaCeu ? ceuMandala.corpo : ''}`;
     }
   }
   if (destaques) (destaques.fatias || []).forEach(f => { svg += fatiaDestaque(f.signIdx, f.cor); });
+  /* Onde o planeta está desenhado (mesma conta da coroa da Liberação): serve ao disco e ao traço dos destaques por PLANETA. */
+  const posicaoPlanetaDestaque = (id) => {
+    const it = outerRingItems.find(x => x.type === 'planet' && x.id === id);
+    if (!it) return null;
+    const r = pR + (it.eclLat * latPxPerGrau) + (estiloRoda.planetaComDesvio ? (it.rOffset || 0) : 0);
+    const ang = estiloRoda.planetaComDesvio ? it.aShift : it.aScreen;
+    return { r, ang, p: polarToCart(cx, cy, r, ang) };
+  };
+  if (destaques) (destaques.discosPlanetas || []).forEach(d => {
+    const pos = posicaoPlanetaDestaque(d.id);
+    if (pos) svg += `<circle cx="${pos.p.x.toFixed(1)}" cy="${pos.p.y.toFixed(1)}" r="${d.raio}" fill="${d.cor}"/>`;
+  });
 
   if (estiloRoda.faixaZodiaco) {
     // Faixa do zodíaco na eclíptica (por trás de tudo). Fora do Tema Céu a linha da eclíptica é de uma cor só.
@@ -966,6 +980,16 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
 
   /* ETIQUETAS: faixas sólidas na borda externa, uma ao lado da outra (de/ate = deslocamento a partir de raioDestaque). */
   if (destaques) (destaques.faixas || []).forEach(f => { svg += faixaDestaque(f.signIdx, f.cor, estiloRoda.raioDestaque + f.de, estiloRoda.raioDestaque + f.ate); });
+  if (destaques) (destaques.marcasPlanetas || []).forEach(m => {
+    const pos = posicaoPlanetaDestaque(m.id);
+    if (!pos) return;
+    const rI = estiloRoda.raioDestaque + m.de, rE = estiloRoda.raioDestaque + m.ate;
+    const meio = (m.largura / ((rI + rE) / 2)) * 180 / Math.PI / 2; // meia largura, em graus, na altura do traço
+    const passos = 6, pf = [], pd = [];
+    for (let s = 0; s <= passos; s++) pf.push(polarToCart(cx, cy, rE, pos.ang - meio + (2 * meio * s / passos)));
+    for (let s = passos; s >= 0; s--) pd.push(polarToCart(cx, cy, rI, pos.ang - meio + (2 * meio * s / passos)));
+    svg += `<path d="${pf.concat(pd).map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')} Z" fill="${m.cor}"/>`;
+  });
   if (destaques && destaques.depoisDasFaixas) svg += destaques.depoisDasFaixas({ cx, cy, house1RefAbs, raioDestaque: estiloRoda.raioDestaque, lotes, tinta });
 
 

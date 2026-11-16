@@ -69,6 +69,60 @@ function iniciarModuloDecenios(redesenho) {
   renderDeceniosUI(container);
 }
 
+/* Mandala natal dos Decênios: a MESMA roda das outras ferramentas (desenharRodaSVG, roda.js), igual à da Liberação, com uma adaptação: o nível
+   aqui é um PLANETA, não um signo. Então no lugar da fatia do signo entra um disco em volta do planeta e, no lugar da bordinha de fora, um
+   traço na altura dele. Cores (corNivelMandala) e posição das bordinhas (raioDestaque + 14/24/34) são as mesmas da Liberação; níveis
+   sobrepostos: o disco do nível maior é 8 px mais largo (a espessura da bordinha), então um fica dentro do outro. */
+function gerarMandalaNatalDec(dados, planetasNivel) {
+  if (!dados || !dados.Ascendente) return '';
+  const papiro = typeof window !== 'undefined' && window.temaMandala === 'ceu';
+  const palZ = paletaEpoca(!papiro && document.documentElement.classList.contains('tema-escuro'));
+  const sufixo = `zr${wheelInstanceCounterZR++}`;
+  const niveis = [1, 2, 3].filter(n => planetasNivel[n]);
+  const RAIO_BASE = 22, PASSO = 8, LARGURA_TRACO = 30, SLOT = { 1: [34, 42], 2: [24, 32], 3: [14, 22] };
+  return desenharRodaSVG({
+    tintaPapiro: papiro,
+    ferramenta: {
+      dados,
+      folgaCanvas: 55, // mesma folga da Liberação: a mandala sai do mesmo tamanho
+      fundoDisco: papiro ? 'none' : palZ.fundoCreme,
+      abertura: ({ canvasSize, fundoDisco }) => `<svg viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+      <defs>${construirDefsPlanetasZR(sufixo)}</defs>
+      <rect width="${canvasSize}" height="${canvasSize}" fill="${fundoDisco}"/>`,
+      fragmentoPlaneta: (id) => fragmentoPlaneta3DZR(id, sufixo),
+      glowSol: (pos, raio, tinta) => `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="${tinta.fundoDisco}"/>` +
+        `<circle cx="${pos.x}" cy="${pos.y}" r="${raio}" fill="url(#combustionGlow_${sufixo})"/>`,
+      destaques: {
+        // do nível mais fundo (3, o disco maior) para o 1 (o menor, por cima), como as fatias da Liberação
+        discosPlanetas: niveis.slice().reverse().map(n => ({ id: planetasNivel[n], raio: RAIO_BASE + PASSO * (n - 1), cor: corNivelMandala(n, 0.40) })),
+        marcasPlanetas: niveis.slice().reverse().map(n => ({ id: planetasNivel[n], cor: corNivelMandala(n), de: SLOT[n][0], ate: SLOT[n][1], largura: LARGURA_TRACO }))
+      }
+    }
+  }).svg;
+}
+
+/* Planeta de cada nível que a mandala marca: com nada escolhido, o caminho de hoje (ou da data buscada); escolhido o nível 1 e/ou 2, o caminho
+   escolhido; o nível 3, como o nível 4 da Liberação, é o que está ativo na data dentro do nível 2 mostrado. */
+function planetasNiveisDec(result, hoje) {
+  const { timelineL1, sortedPlanets } = result;
+  const porData = { inicio: x => x.startDate, fim: x => x.endDate };
+  let i1 = decNivel1, i2 = decNivel2;
+  if (i1 === null) {
+    i1 = acharPeriodo(timelineL1, hoje, porData.inicio, porData.fim);
+    i2 = i1 === -1 ? -1 : acharPeriodo(timelineL1[i1].subperiods, hoje, porData.inicio, porData.fim);
+  }
+  const r = {};
+  if (i1 === null || i1 === -1) return r;
+  r[1] = timelineL1[i1].planet.id;
+  if (i2 === null || i2 === -1) return r;
+  const x2 = timelineL1[i1].subperiods[i2];
+  r[2] = x2.planet.id;
+  const l3 = calcularSubperiodosL3Dec(x2.planet, x2.startDate, x2.days, sortedPlanets);
+  const k = acharPeriodo(l3, hoje, porData.inicio, porData.fim);
+  if (k !== -1) r[3] = l3[k].planet.id;
+  return r;
+}
+
 function renderDeceniosUI(container) {
   const data = currentCalculatedData;
   const ascAbs = data.Ascendente ? data.Ascendente.grau_absoluto : 0;
@@ -146,6 +200,14 @@ function renderDeceniosUI(container) {
 
       <!-- CABEÇALHO PADRÃO (o mesmo de todas as ferramentas). O seletor do planeta inicial fica na barra de botões acima. -->
       ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
+
+      <div id="decenioMandalaCapture" class="cartao" style="width: 100%; margin: 0 0 20px; padding: 12px 10px; box-sizing: border-box;">
+        <div style="max-width: max(480px, min(100%, calc(100vh - 260px))); margin: 0 auto;">
+          ${gerarMandalaNatalDec(data, planetasNiveisDec(result, dataBuscaDec ? new Date(dataBuscaDec) : new Date()))}
+        </div>
+      </div>
+
+      <hr class="divisa">
 
       <!-- Busca por data: fora do #decennialsResultsArea, não sai na imagem da galeria nem do relatório. -->
       ${buscaPorDataHTML({ id: 'decenioBuscaData', data: dataBuscaDec, fnIr: 'irParaDataDecenios', fnBarras: 'alternarBarrasDecenios', barrasNaData: barrasNaDataDec })}
