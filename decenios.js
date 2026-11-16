@@ -50,6 +50,7 @@ let overrideStartPlanet = null;
    Sem nada escolhido, a tela mostra a lista do Nível 1; escolhido o 1, a lista do 2; escolhido o 2, a lista do 3. */
 let decNivel1 = null;
 let decNivel2 = null;
+let barrasNaDataDec = true; // barras mostram o andamento na data buscada (true) ou em relação a hoje (false)
 let dataBuscaDec = null; // data escolhida na busca ("Ir para a data"); null = hoje
 let buscaPendenteDec = false; // a busca (ou o botão Hoje) pede pra árvore abrir até o período da data, no próximo desenho
 
@@ -147,7 +148,7 @@ function renderDeceniosUI(container) {
       ${montarCabecalhoMandalaImagemHTML(data, null, { tintaSobreFolha: true })}
 
       <!-- Busca por data: fora do #decennialsResultsArea, não sai na imagem da galeria nem do relatório. -->
-      ${buscaPorDataHTML({ id: 'decenioBuscaData', data: dataBuscaDec, fnIr: 'irParaDataDecenios' })}
+      ${buscaPorDataHTML({ id: 'decenioBuscaData', data: dataBuscaDec, fnIr: 'irParaDataDecenios', fnBarras: 'alternarBarrasDecenios', barrasNaData: barrasNaDataDec })}
 
       <!-- EXIBIÇÃO DOS RESULTADOS DOS DECÊNIOS -->
       <div id="decennialsResultsArea">
@@ -404,6 +405,7 @@ function irParaDataDecenios(valor) {
   iniciarModuloDecenios(true);
 }
 window.irParaDataDecenios = irParaDataDecenios;
+window.alternarBarrasDecenios = function () { barrasNaDataDec = !barrasNaDataDec; iniciarModuloDecenios(true); };
 
 /* Volta à lista do nível n (cabeçalho do nível: rótulo ou "Ver a lista"): limpa a escolha dele e dos de baixo. */
 function irParaListaDec(n) {
@@ -434,6 +436,7 @@ function renderizarResultadosHTML(res) {
   const { timelineL1, sortedPlanets } = res;
   // "hoje" aqui é o momento que a árvore marca: hoje, ou a data escolhida na busca
   const hoje = dataBuscaDec ? new Date(dataBuscaDec) : new Date();
+  const momentoBarrasDec = (dataBuscaDec && barrasNaDataDec) ? hoje : undefined;
   const formatMin = m => String(m || 0).padStart(2, '0');
 
   const l1Lista = timelineL1;
@@ -458,7 +461,7 @@ function renderizarResultadosHTML(res) {
         <td>${duracao(n, x)}</td>
         <td style="line-height: 1.2;">${dataDec(n, x.startDate)}</td>
         <td style="line-height: 1.2;">${dataDec(n, x.endDate)}</td>
-      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4, dataBuscaDec ? hoje : undefined)}`;
+      </tr>${linhaBarraTempo(x.startDate, x.endDate, UNIDADE_NIVEL_DEC[n], 4, momentoBarrasDec)}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetra[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th></tr></thead>
@@ -466,7 +469,7 @@ function renderizarResultadosHTML(res) {
   };
 
   const navNivel = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n], momento: dataBuscaDec ? hoje : undefined,
+    id: 'decenios', n, lista, idx, fnIr, fnLista: 'irParaListaDec', unidade: UNIDADE_NIVEL_DEC[n], momento: momentoBarrasDec,
     inicio: x => x.startDate, fim: x => x.endDate,
     glifo: (y, tam) => planetaComNome(y.planet.id, tam),
     fmtData: formatDateDec

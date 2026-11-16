@@ -93,7 +93,8 @@ function cabecalhoNivelTempo(o) {
 /* BUSCA POR DATA. A ferramenta guarda a data escolhida (Date ao meio-dia, ou null = hoje) e, quando a pessoa toca em Ir,
    abre a árvore até o período que contém a data. O campo NUNCA age sozinho ao mudar (o seletor do iPad dispara "change" com a data
    de hoje no instante em que abre): só o botão Ir leva à data. Tamanho mínimo no campo: vazio com appearance:none some no iPad.
-   Opções: id (do campo), data (Date ou null), fnIr (função global que recebe 'AAAA-MM-DD' ou '' para voltar a hoje). */
+   Opções: id (do campo), data (Date ou null), fnIr (função global que recebe 'AAAA-MM-DD' ou '' para voltar a hoje);
+   fnBarras + barrasNaData (opcionais): botão que alterna as barras entre "como estão na data escolhida" e "como estão hoje". */
 function buscaPorDataHTML(o) {
   const d = o.data;
   const valor = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
@@ -102,6 +103,7 @@ function buscaPorDataHTML(o) {
         <input type="date" id="${o.id}" value="${valor}" title="Ir para a data" style="background: transparent; color: var(--preto-tinta); font-family: inherit; font-size: 13px; padding: 6px 0; border: 0; border-bottom: var(--contorno-fino) solid var(--azul-egipcio-claro); border-radius: 0; outline: none; -webkit-appearance: none; appearance: none; min-height: 36px; min-width: 160px; box-sizing: border-box;">
         <button type="button" class="botao-texto" onclick="const v=document.getElementById('${o.id}').value; if (v) ${o.fnIr}(v);">Ir</button>
         ${d ? `<button type="button" class="botao-texto janela-sec" onclick="${o.fnIr}('')">Hoje</button>` : ''}
+        ${d && o.fnBarras ? `<button type="button" class="botao-texto janela-sec" onclick="${o.fnBarras}()" title="Alterna a porcentagem das barras entre a data escolhida e hoje">Barras: ${o.barrasNaData ? 'na data' : 'hoje'}</button>` : ''}
       </div>`;
 }
 

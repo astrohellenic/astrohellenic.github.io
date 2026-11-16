@@ -3,6 +3,7 @@
    ========================================== */
 
 let selectedZRPhase = "fortune"; // Fortuna como lote padrão inicial
+let barrasNaDataZR = true; // barras mostram o andamento na data buscada (true) ou em relação a hoje (false)
 let dataBuscaZR = null; // data escolhida na busca ("Ir para a data"); null = hoje
 let expandedL1Index = null; // Detectado automaticamente com base no momento atual
 let expandedL2Key = null; // Guarda a chave do L2 expandido (ex: "0_2")
@@ -262,6 +263,7 @@ function irParaDataLiberacao(valor) {
   renderLiberacaoUI();
 }
 window.irParaDataLiberacao = irParaDataLiberacao;
+window.alternarBarrasLiberacao = function () { barrasNaDataZR = !barrasNaDataZR; renderLiberacaoUI(); };
 
 /* Volta à lista do nível n (cabeçalho do nível: rótulo ou "Ver a lista"): limpa a escolha dele e dos de baixo. */
 function irParaListaLiberacao(n) {
@@ -491,6 +493,7 @@ function renderLiberacaoUI() {
 
   // "hoje" aqui é o momento que a árvore procura: hoje, ou a data escolhida na busca
   const hoje = dataBuscaZR ? new Date(dataBuscaZR) : new Date();
+  const momentoBarrasZR = (dataBuscaZR && barrasNaDataZR) ? hoje : undefined;
 
   /* Caminho (nível 1, 2 e 3) que contém uma data. Serve pra busca por data e pra pintar a mandala no período de hoje. */
   const caminhoPorData = (d) => {
@@ -693,14 +696,14 @@ function renderLiberacaoUI() {
         <td style="line-height: 1.2;">${dataZR(n, x.start)}</td>
         <td style="line-height: 1.2;">${dataZR(n, x.end)}</td>
         <td class="centro">${status}</td>
-      </tr>${linhaBarraTempo(x.start, x.end, UNIDADE_NIVEL_ZR[n], 5, dataBuscaZR ? hoje : undefined)}`;
+      </tr>${linhaBarraTempo(x.start, x.end, UNIDADE_NIVEL_ZR[n], 5, momentoBarrasZR)}`;
     }).join('');
     return `<div class="envolve-tabela" style="padding: 0 0 10px;"><table class="tabela-epoca" style="font-size: ${tamLetraZR[n]}px;">
       <thead><tr><th class="centro">Nível ${n}</th><th>Duração</th><th>Início</th><th>Término</th><th class="centro">Status</th></tr></thead>
       <tbody>${linhas}</tbody></table></div>`;
   };
   const navNivelZR = (n, lista, idx, fnIr) => cabecalhoNivelTempo({
-    id: 'liberacao', n, lista, idx, fnIr, fnLista: 'irParaListaLiberacao', unidade: UNIDADE_NIVEL_ZR[n], momento: dataBuscaZR ? hoje : undefined,
+    id: 'liberacao', n, lista, idx, fnIr, fnLista: 'irParaListaLiberacao', unidade: UNIDADE_NIVEL_ZR[n], momento: momentoBarrasZR,
     glifo: (y, tam) => signoComNome(getSignSVGZR(y.signIdx, tam), y.signIdx),
     fmtData: formatarDataBR
   });
@@ -771,7 +774,7 @@ function renderLiberacaoUI() {
       <hr class="divisa">
 
       <!-- Busca por data: fora do #liberacaoArvoreCapture, não sai na imagem do relatório. -->
-      ${buscaPorDataHTML({ id: 'liberacaoBuscaData', data: dataBuscaZR, fnIr: 'irParaDataLiberacao' })}
+      ${buscaPorDataHTML({ id: 'liberacaoBuscaData', data: dataBuscaZR, fnIr: 'irParaDataLiberacao', fnBarras: 'alternarBarrasLiberacao', barrasNaData: barrasNaDataZR })}
 
       <div id="liberacaoArvoreCapture">
         ${arvoreHTML}
