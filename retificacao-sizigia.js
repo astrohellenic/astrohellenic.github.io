@@ -490,8 +490,8 @@ function iniciarModuloRetificacaoSizigia() {
         #rzFoco .rz-foco-mand .rz-tile img { max-height: 34vh; }
       }
       /* painel fixo das duas mandalas: preso na tela (position: fixed), ao lado dos dados em tela larga e embaixo em tela estreita */
-      #rz-container.rz-com-painel { width: auto !important; margin-right: calc(46vw + 16px); }
-      #rzPainel.rz-painel { position: fixed; z-index: 20; top: var(--rz-topo, 80px); right: 8px; width: 46vw; height: calc(100vh - var(--rz-topo, 80px) - 8px); box-sizing: border-box; padding: 8px; overflow: hidden; display: flex; flex-direction: column; border: var(--contorno-fino) solid var(--azul-egipcio-claro); }
+      #rz-container.rz-com-painel { width: auto !important; margin-right: calc(46vw + 8px); }
+      #rzPainel.rz-painel { position: fixed; z-index: 20; top: var(--rz-topo, 80px); right: calc(var(--moldura-h, 20px) + 8px); width: calc(46vw - var(--moldura-h, 20px)); height: calc(100vh - var(--rz-topo, 80px) - var(--moldura-v, 32px) - 8px); box-sizing: border-box; padding: 8px; overflow: hidden; display: flex; flex-direction: column; border: var(--contorno-fino) solid var(--azul-egipcio-claro); }
       #rzPainel .rz-seletor .rz-painel-abas, #rzPainel .rz-painel-abas, #rzFocoMand .rz-painel-abas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 6px; }
       #rzPainel .botao-texto.rz-sel, #rzFocoMand .botao-texto.rz-sel { border-top-width: 3px; border-bottom-width: 3px; }
       #rzPainel .rz-tiles, #rzFocoMand .rz-tiles { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: flex-start; justify-content: center; }
@@ -1244,9 +1244,9 @@ function rzSeletorHorario() {
           <button type="button" class="botao-icone" onclick="rzAjustar(-rzPasso)" title="Voltar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="40,12 20,32 40,52"/></svg></button>
           <select class="time-select" onchange="rzPasso = Number(this.value)" title="Quanto andar em cada passo">${opc}</select>
           <button type="button" class="botao-icone" onclick="rzAjustar(rzPasso)" title="Avançar no tempo"><svg class="icone" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true"><polyline points="24,12 44,32 24,52"/></svg></button>
+          <button type="button" class="botao-icone" onclick="rzSalvarMandalasLadoALado()" title="Salvar as duas mandalas lado a lado como imagem na galeria"><svg class="icone" viewBox="0 0 64 64" width="22" height="22"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg></button>
         </div>
         ${aj ? `<div class="texto-apagado" style="font-size:12px;">ajuste ${aj > 0 ? '+' : '−'}${Math.abs(aj)} min</div>` : ''}
-        <div style="margin-top:4px;"><button type="button" class="botao-icone" onclick="rzSalvarMandalasLadoALado()" title="Salvar as duas mandalas lado a lado como imagem na galeria"><svg class="icone" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="44" rx="4"/><circle cx="21" cy="25" r="5"/><path d="M6,46 L22,32 L34,43 L44,34 L58,47"/></svg></button></div>
       </div>
     </div></div>`;
 }
