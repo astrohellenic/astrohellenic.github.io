@@ -505,6 +505,10 @@ function desenharRodaSVG(o) {
   const faixaAnel = k => { const i = aneisOn.indexOf(k); return i < 0 ? null : [r0 + i * cfgA.larg, r0 + (i + 1) * cfgA.larg]; };
   const aDec = faixaAnel('decanos'), aTer = faixaAnel('termos'), aDod = faixaAnel('dodec');
   const bordasAneis = [r0].concat(aneisOn.map((k, i) => r0 + (i + 1) * cfgA.larg)); // n+1 círculos (um só, se nenhum anel está ligado)
+  const rPilhaDentro = r0, rPilhaFora = bordasAneis[nA]; // o conjunto de anéis (decanos, termos, dodecatemória) ocupa de r0 até aqui, só os ligados
+  /* Raio de onde o fio guia parte: o fio atravessa TODOS os anéis ligados, saindo da borda do conjunto oposta ao ponto (ponto por fora → parte da borda de dentro;
+     ponto por dentro → parte da borda de fora), pra se ver em que decano, termo e dodecatemória cada ponto cai. Sem anel ligado, fica como o estilo manda. */
+  const rFioAtravessa = (rPonto, rPadrao) => nA === 0 ? rPadrao : (rPonto >= rPilhaFora ? rPilhaDentro : rPonto <= rPilhaDentro ? rPilhaFora : rPadrao);
   const aBordaDentro = inv ? r0 : null; // invertido: a borda de dentro de todos os anéis de fora (régua de graus, onde chegam os fios)
   const bordaFora = inv ? bordasAneis[nA] : null;
   { const [refL, dL] = cfgA.lotes; estiloRoda.raioLotes = (refL === 'SignSector' ? R.SignSector : refL === 'Termos' ? R.Termos : refL === 'Aspects' ? R.Aspects : r0) + dL; }
@@ -1053,8 +1057,9 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
 
     // Fio do ponto até os dentinhos de grau: lotes → régua do anel indicado em fioLoteDe (se o estilo tiver); o resto → régua do anel dos termos
     const fioLoteMiolo = inv && item.type === 'lot' && estiloRoda.fioLoteDe; // lotes do Astro Hellenic comum: encostados no miolo, fio pra dentro
-    const rFio = fioLoteMiolo ? R[estiloRoda.fioLoteDe] : inv ? aBordaDentro : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
-    const fioPraFora = (inv && !fioLoteMiolo) || rFio > raioEfetivo; // anel por fora do ponto: o fio sai pra fora; por dentro: pra dentro
+    const rFioPadrao = fioLoteMiolo ? R[estiloRoda.fioLoteDe] : inv ? aBordaDentro : R[(item.type === 'lot' && estiloRoda.fioLoteDe) ? estiloRoda.fioLoteDe : estiloRoda.fioPlanetaDe];
+    const rFio = fioLoteMiolo ? rFioPadrao : rFioAtravessa(raioEfetivo, rFioPadrao); // lotes colados no miolo não chegam aos anéis: ficam como estão
+    const fioPraFora = (inv && !fioLoteMiolo && rFio < raioEfetivo) || rFio > raioEfetivo; // anel por fora do ponto: o fio sai pra fora; por dentro: pra dentro
     const p1 = polarToCart(cx, cy, rFio, item.aScreen);
     const dFio = item.type === 'lot' ? 12 : 19;
     const p2 = polarToCart(cx, cy, fioPraFora ? raioEfetivo + dFio : raioEfetivo - dFio, item.aShift); // invertido: o fio vai pra fora, até o dentinho do grau
@@ -1111,7 +1116,7 @@ else if (diff === 2) col = tinta.aspectoSextil; // Sextil (azul egípcio claro)
       const aPonto = estiloRoda.planetaComDesvio ? item.aShift : item.aScreen;
       const pPonto = polarToCart(cx, cy, rPonto, aPonto);
       const recuoFio = temaCeu ? 10 : 19; // o ponto de luz é menor que o ícone
-      const p1c = polarToCart(cx, cy, inv ? aBordaDentro : R[estiloRoda.fioPlanetaDe], item.aScreen);
+      const p1c = polarToCart(cx, cy, rFioAtravessa(rPonto, inv ? aBordaDentro : R[estiloRoda.fioPlanetaDe]), item.aScreen);
       const p2c = polarToCart(cx, cy, inv ? rPonto + recuoFio : rPonto - recuoFio, aPonto);
       if (!inv || rPonto + recuoFio < aBordaDentro) svg += `<line x1="${p1c.x}" y1="${p1c.y}" x2="${p2c.x}" y2="${p2c.y}" stroke="${tinta.linhaConectora}" stroke-width="1.2"/>`;
 
