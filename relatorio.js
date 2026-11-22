@@ -2817,7 +2817,7 @@ function atualizarPreviewCapaEditor() {
       const idxAtual = capturas[idxSalvo] ? idxSalvo : capturas.length - 1;
       wrap.innerHTML = capturas.length > 1
         ? `<div class="re-ajuda">Toque na imagem que vai na capa (${capturas.length} capturadas). A escolhida fica fixa, mesmo se você mandar mais imagens pro relatório:</div>
-           <div style="display:flex; flex-wrap:wrap; gap:10px;">${capturas.map((c, i) => `<img src="${c.dataUrl}" class="re-miniatura" data-capa-miniatura-idx="${i}" onclick="escolherCapturaCapaEditor(${i})" style="cursor:pointer; ${i === idxAtual ? 'outline: 3px solid #1F5FA3; outline-offset: 2px;' : ''}">`).join('')}</div>`
+           <div style="display:flex; flex-wrap:wrap; gap:10px;">${capturas.map((c, i) => `<img src="${c.dataUrl}" class="re-miniatura" onclick="escolherCapturaCapaEditor(${i})" style="cursor:pointer; ${i === idxAtual ? 'outline: 3px solid #1F5FA3; outline-offset: 2px;' : ''}">`).join('')}</div>`
         : `<div class="re-ajuda">Prévia da captura:</div><img src="${capturas[0].dataUrl}" class="re-miniatura">`;
     } else {
       wrap.innerHTML = `<div class="re-nota">Nenhuma imagem capturada ainda pra essa opção. ${dicaOndeCapturar[valor]} — depois volte aqui.</div>`;
@@ -2838,18 +2838,6 @@ window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 function escolherCapturaCapaEditor(i) {
   const input = document.getElementById('relCapaCapturaIdx');
   if (input) input.value = String(i);
-  /* NÃO refaz a lista de imagens: apagar e montar de novo faz a área encolher até as imagens recarregarem e a tela pula (o toque "sai do lugar").
-     Só muda o contorno da escolhida, no próprio lugar. */
-  const minis = document.querySelectorAll('#relCapaPreviewWrap [data-capa-miniatura-idx]');
-  if (minis.length) {
-    minis.forEach(m => {
-      const escolhida = parseInt(m.dataset.capaMiniaturaIdx, 10) === i;
-      m.style.outline = escolhida ? '3px solid #1F5FA3' : '';
-      m.style.outlineOffset = escolhida ? '2px' : '';
-    });
-    if (typeof agendarAutoSalvarRelatorio === 'function') agendarAutoSalvarRelatorio();
-    return;
-  }
   atualizarPreviewCapaEditor();
 }
 window.escolherCapturaCapaEditor = escolherCapturaCapaEditor;
