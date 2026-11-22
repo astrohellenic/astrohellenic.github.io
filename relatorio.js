@@ -2817,7 +2817,7 @@ function atualizarPreviewCapaEditor() {
       const idxAtual = capturas[idxSalvo] ? idxSalvo : capturas.length - 1;
       wrap.innerHTML = capturas.length > 1
         ? `<div class="re-ajuda">Toque na imagem que vai na capa (${capturas.length} capturadas). A escolhida fica fixa, mesmo se você mandar mais imagens pro relatório:</div>
-           <div style="display:flex; flex-wrap:wrap; gap:10px;">${capturas.map((c, i) => `<img src="${c.dataUrl}" class="re-miniatura" onclick="escolherCapturaCapaEditor(${i})" style="cursor:pointer; ${i === idxAtual ? 'outline: 3px solid #1F5FA3; outline-offset: 2px;' : ''}">`).join('')}</div>`
+           <div style="display:flex; flex-wrap:wrap; gap:10px;">${capturas.map((c, i) => `<img src="${c.dataUrl}" class="re-miniatura" data-capa-miniatura-idx="${i}" onclick="escolherCapturaCapaEditor(${i})" style="cursor:pointer; ${i === idxAtual ? 'outline: 3px solid #1F5FA3; outline-offset: 2px;' : ''}">`).join('')}</div>`
         : `<div class="re-ajuda">Prévia da captura:</div><img src="${capturas[0].dataUrl}" class="re-miniatura">`;
     } else {
       wrap.innerHTML = `<div class="re-nota">Nenhuma imagem capturada ainda pra essa opção. ${dicaOndeCapturar[valor]} — depois volte aqui.</div>`;
@@ -2838,6 +2838,18 @@ window.atualizarPreviewCapaEditor = atualizarPreviewCapaEditor;
 function escolherCapturaCapaEditor(i) {
   const input = document.getElementById('relCapaCapturaIdx');
   if (input) input.value = String(i);
+  /* NÃO refaz a lista de imagens: apagar e montar de novo faz a área encolher até as imagens recarregarem e a tela pula (o toque "sai do lugar").
+     Só muda o contorno da escolhida, no próprio lugar. */
+  const minis = document.querySelectorAll('#relCapaPreviewWrap [data-capa-miniatura-idx]');
+  if (minis.length) {
+    minis.forEach(m => {
+      const escolhida = parseInt(m.dataset.capaMiniaturaIdx, 10) === i;
+      m.style.outline = escolhida ? '3px solid #1F5FA3' : '';
+      m.style.outlineOffset = escolhida ? '2px' : '';
+    });
+    if (typeof agendarAutoSalvarRelatorio === 'function') agendarAutoSalvarRelatorio();
+    return;
+  }
   atualizarPreviewCapaEditor();
 }
 window.escolherCapturaCapaEditor = escolherCapturaCapaEditor;
@@ -3041,45 +3053,6 @@ function mostrarIndicadorSalvoRelatorio() {
   window.relatorioIndicadorSalvoTimeout = setTimeout(() => {
     if (btn.dataset.rotuloOriginal) btn.innerHTML = btn.dataset.rotuloOriginal;
   }, 1500);
-}
-
-/* A TELA NÃO PODE PULAR AO TOCAR NO EDITOR (22/11/2026).
-   No iPad, tocar num texto (ou no lugar de uma imagem) faz o navegador rolar a página sozinho pra mostrar o cursor: a tela pula, o ponto tocado
-   sai do lugar e o astrólogo tem que tocar de novo (já entrou no lugar errado). Ao encostar o dedo/caneta no formulário, guardamos a rolagem e,
-   por ~1 s, devolvemos a página ao mesmo lugar se o navegador a mexeu. Solta na hora se a pessoa começa a rolar de verdade (arrastar, roda do
-   mouse). Só vale pra toques na parte de cima da tela: embaixo o teclado cobriria o cursor, então ali o navegador pode rolar normalmente. */
-if (!window.relatorioTravaToqueAdicionada) {
-  window.relatorioTravaToqueAdicionada = true;
-  let trava = null;
-  const soltarTrava = () => { if (trava) { trava.ativo = false; trava = null; } };
-  document.addEventListener('pointerdown', (e) => {
-    soltarTrava();
-    if (!e.target.closest || !e.target.closest('#relEditorFormPane')) return;
-    const vv = window.visualViewport;
-    const altura = vv ? vv.height : window.innerHeight;
-    const topoVisivel = vv ? vv.offsetTop : 0;
-    if (e.clientY - topoVisivel > altura * 0.55) return;
-    const t = { ativo: true, x: window.scrollX, y: window.scrollY, px: e.clientX, py: e.clientY, fim: performance.now() + 1000 };
-    trava = t;
-    const passo = () => {
-      if (!t.ativo) return;
-      if (window.scrollY !== t.y || window.scrollX !== t.x) window.scrollTo(t.x, t.y);
-      if (performance.now() < t.fim) requestAnimationFrame(passo);
-      else if (trava === t) trava = null;
-    };
-    requestAnimationFrame(passo);
-  }, true);
-  document.addEventListener('pointermove', (e) => {
-    if (trava && (Math.abs(e.clientX - trava.px) > 10 || Math.abs(e.clientY - trava.py) > 10)) soltarTrava();
-  }, true);
-  document.addEventListener('pointercancel', soltarTrava, true);
-  document.addEventListener('wheel', soltarTrava, { passive: true, capture: true });
-
-  /* SALVAR não pode tirar o foco do texto: tirar o foco fecha o teclado, a tela se mexe e o botão sai de baixo do dedo antes de o toque valer
-     ("aperto Salvar, ele pula e não salva"). Cancelar o pointerdown impede esse blur; o clique continua chegando e salva normalmente. */
-  document.addEventListener('pointerdown', (e) => {
-    if (e.target.closest && e.target.closest('.rel-editor-btn-salvar')) e.preventDefault();
-  }, true);
 }
 
 /* Delegados uma única vez (nunca por render do editor, pra não empilhar
