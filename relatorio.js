@@ -3055,6 +3055,21 @@ function mostrarIndicadorSalvoRelatorio() {
   }, 1500);
 }
 
+/* TOCAR NUM BOTÃO DA BARRA DE CIMA NÃO PODE TIRAR O FOCO DO TEXTO (22/11/2026, visto no vídeo de tela dele).
+   Com o cursor no texto, o iPad (Magic Keyboard) mostra a barra B I U e desloca a página uns 28px. Tocar no botão da imagem (ou Salvar, Prévia...)
+   tirava o foco do texto: essa barra sumia, a página inteira descia de volta e o botão saía de baixo do dedo, então o toque não abria nada
+   (só o segundo toque abria). Cancelar o mousedown (que é quem tira o foco) deixa o texto com o foco: nada se mexe e o clique vale na hora.
+   Campos de escrever dentro da barra continuam normais. */
+if (!window.relatorioBarraSemTirarFocoAdicionado) {
+  window.relatorioBarraSemTirarFocoAdicionado = true;
+  document.addEventListener('mousedown', (e) => {
+    const alvo = e.target;
+    if (!alvo || !alvo.closest || !alvo.closest('#relEditorTabsFixa')) return;
+    if (alvo.closest('input, textarea, [contenteditable="true"]')) return;
+    e.preventDefault();
+  }, true);
+}
+
 /* Delegados uma única vez (nunca por render do editor, pra não empilhar
    listener repetido toda vez que a tela é reconstruída) — cobrem
    digitação nos textos/Quill/nome/título, checkboxes de incluir/excluir
