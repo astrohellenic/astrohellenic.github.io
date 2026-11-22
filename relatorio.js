@@ -3043,6 +3043,45 @@ function mostrarIndicadorSalvoRelatorio() {
   }, 1500);
 }
 
+/* A TELA NÃO PODE PULAR AO TOCAR NO EDITOR (22/11/2026).
+   No iPad, tocar num texto (ou no lugar de uma imagem) faz o navegador rolar a página sozinho pra mostrar o cursor: a tela pula, o ponto tocado
+   sai do lugar e o astrólogo tem que tocar de novo (já entrou no lugar errado). Ao encostar o dedo/caneta no formulário, guardamos a rolagem e,
+   por ~1 s, devolvemos a página ao mesmo lugar se o navegador a mexeu. Solta na hora se a pessoa começa a rolar de verdade (arrastar, roda do
+   mouse). Só vale pra toques na parte de cima da tela: embaixo o teclado cobriria o cursor, então ali o navegador pode rolar normalmente. */
+if (!window.relatorioTravaToqueAdicionada) {
+  window.relatorioTravaToqueAdicionada = true;
+  let trava = null;
+  const soltarTrava = () => { if (trava) { trava.ativo = false; trava = null; } };
+  document.addEventListener('pointerdown', (e) => {
+    soltarTrava();
+    if (!e.target.closest || !e.target.closest('#relEditorFormPane')) return;
+    const vv = window.visualViewport;
+    const altura = vv ? vv.height : window.innerHeight;
+    const topoVisivel = vv ? vv.offsetTop : 0;
+    if (e.clientY - topoVisivel > altura * 0.55) return;
+    const t = { ativo: true, x: window.scrollX, y: window.scrollY, px: e.clientX, py: e.clientY, fim: performance.now() + 1000 };
+    trava = t;
+    const passo = () => {
+      if (!t.ativo) return;
+      if (window.scrollY !== t.y || window.scrollX !== t.x) window.scrollTo(t.x, t.y);
+      if (performance.now() < t.fim) requestAnimationFrame(passo);
+      else if (trava === t) trava = null;
+    };
+    requestAnimationFrame(passo);
+  }, true);
+  document.addEventListener('pointermove', (e) => {
+    if (trava && (Math.abs(e.clientX - trava.px) > 10 || Math.abs(e.clientY - trava.py) > 10)) soltarTrava();
+  }, true);
+  document.addEventListener('pointercancel', soltarTrava, true);
+  document.addEventListener('wheel', soltarTrava, { passive: true, capture: true });
+
+  /* SALVAR não pode tirar o foco do texto: tirar o foco fecha o teclado, a tela se mexe e o botão sai de baixo do dedo antes de o toque valer
+     ("aperto Salvar, ele pula e não salva"). Cancelar o pointerdown impede esse blur; o clique continua chegando e salva normalmente. */
+  document.addEventListener('pointerdown', (e) => {
+    if (e.target.closest && e.target.closest('.rel-editor-btn-salvar')) e.preventDefault();
+  }, true);
+}
+
 /* Delegados uma única vez (nunca por render do editor, pra não empilhar
    listener repetido toda vez que a tela é reconstruída) — cobrem
    digitação nos textos/Quill/nome/título, checkboxes de incluir/excluir
