@@ -775,4 +775,4 @@ html body.tema-ceu .janela::after, html body:not(.tema-ceu) .janela::after {
     border-style: solid; border-width: calc(130px * var(--m)) calc(80px * var(--m));
     border-image: var(--moldura-img, url(moldura-redes.svg?v=1)) 130 80 round;
 }
-.janela > .janela-corpo { padding: calc(18px + 130px * var(--m)) calc(22px + 80px * var(--m)); max-height: calc(88vh - 2px * 130px * var(--m)); }
+.janela > .janela-corpo { padding: calc(18px + 130px * var(--m)) calc(22px + 80px * var(--m)); max-height: calc(88vh - 2 * 130px * var(--m)); }
