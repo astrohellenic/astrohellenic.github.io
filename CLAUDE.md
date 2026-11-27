@@ -1069,3 +1069,12 @@ A linha azul de baixo é o espelho da linha da barra de cima (`.top-bar-linha-ba
 
 ## SQL: NUNCA mandar o mesmo SQL de novo (12/11/2026) — bronca dele
 Só mandar SQL quando ele for **diferente** do que já foi mandado (um que substitui o anterior). Se já mandei, não repito, **nem dizendo "pode rodar de novo sem problema"**: ele acha que é outro e roda duas vezes algo que já tinha feito, e isso atrapalha. Na dúvida, **perguntar "você já rodou o SQL?"**, nunca reenviar. Quando as mensagens dele chegam em sequência, conferir o que ele já disse (ex.: "já rodei") antes de responder.
+
+## ASTROLOGIA É INTERPRETAÇÃO, NÃO MATEMÁTICA (27/11/2026) — bronca dele, vale para TODA conversa sobre astrologia, aqui e no Astro Hellenic
+
+**Astrologia é humanas, não exatas.** O texto antigo dá uma orientação; quem faz astrologia interpreta em cima dela, como na psicanálise a teoria do Freud não traz o paciente que ele vai atender. Ele já xingou o Claude várias vezes por isso: o Claude "poda" a interpretação, só aceita o que está escrito palavra por palavra, trata a astrologia como engenharia.
+- **Quando ele perguntar uma leitura ou trouxer uma observação da vida dele, INTERPRETAR** a partir da lógica dos signos, casas, planetas, níveis e técnicas (ex.: Fortuna em Áries; L1 em Gêmeos e L2 em Peixes são casas cadentes, clima de bastidor e de protelar; o L4 entrando em Áries, o signo da própria Fortuna, é o gatilho em que a coisa sai). Raciocinar, ligar as peças, dizer o que faz sentido.
+- **Nunca** responder "o texto não diz isso" como se isso encerrasse a conversa, nem recusar uma leitura porque falta a frase exata na fonte. A fonte orienta; não limita.
+- Quando algo for hipótese ou leitura do Claude (e não regra das fontes), dizer isso numa frase curta, SEM barrar a leitura. Sugerir como testar na vida dele (outras datas) é bem-vindo.
+- Isto NÃO vale para as apostilas e estudos (aí continua valendo citar a fonte certa, nomes dos antigos sem traduzir, não inventar regra): ali o texto é o que o aluno vai estudar. Vale para a conversa de astrologia e para a análise de casos.
+- Falar a língua dele: nada de jargão que ele não usa ("níveis finos"); L3 e L4 são "os de baixo", L1 e L2 "os de cima".
